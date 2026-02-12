@@ -23,94 +23,101 @@ import net.jami.model.MediaAttribute
  *
  * ## Architecture
  *
- * This implementation uses the Objective-C++ adapters from jami-client-ios as the
- * bridging layer between Kotlin/Native and the C++ libjami library. The adapters
- * (AccountAdapter, CallsAdapter, etc.) wrap C++ calls and convert STL types to
- * Foundation types (NSDictionary, NSArray).
+ * This implementation uses the JamiBridgeWrapper Objective-C++ class from the
+ * JamiBridge library. JamiBridgeWrapper provides a unified interface to libjami
+ * with clean Objective-C types that cinterop can parse.
  *
  * ## Integration Steps
  *
  * 1. Build libjami for iOS (produces libjami.a)
- * 2. Build the adapter framework (JamiAdapters.framework) containing:
- *    - DRingAdapter, AccountAdapter, CallsAdapter, etc.
- *    - Utils.mm for type conversions
- * 3. Configure cinterop in build.gradle.kts:
- *    ```kotlin
- *    iosArm64 {
- *        compilations.getByName("main") {
- *            cinterops {
- *                create("JamiAdapters") {
- *                    defFile("src/nativeInterop/cinterop/libjami.def")
- *                }
- *            }
- *        }
- *    }
+ *    - Copy from gettogether: iosApp/Frameworks/libjami-arm64/libjami.a
+ *    - Or build from jami-daemon source
+ *
+ * 2. Build the JamiBridge static library:
+ *    ```bash
+ *    cd shared/src/nativeInterop/cinterop/JamiBridge
+ *    ./build-jamibridge.sh
  *    ```
+ *
+ * 3. Enable cinterop in build.gradle.kts:
+ *    Set `enableJamiBridgeCinterop = true`
  *
  * ## Callback Pattern
  *
- * The adapters use @objc delegate protocols. This class implements those protocols
- * and forwards events to the DaemonCallbacks interface:
+ * JamiBridgeWrapper uses the JamiBridgeDelegate protocol. This class implements
+ * that protocol and forwards events to the DaemonCallbacks interface:
  *
  * ```kotlin
- * // When adapters are available:
- * class DaemonBridge : NSObject(), AccountAdapterDelegateProtocol, CallsAdapterDelegateProtocol {
- *     override fun accountsChanged() {
- *         callbacks?.onAccountsChanged()
+ * // When cinterop is enabled:
+ * import net.jami.bridge.*
+ *
+ * class DaemonBridgeImpl : NSObject(), JamiBridgeDelegateProtocol {
+ *     private val bridge = JamiBridgeWrapper.shared()
+ *
+ *     init {
+ *         bridge.delegate = this
  *     }
- *     override fun didChangeCallStateWithCallId(callId: String, state: String, ...) {
- *         callbacks?.onCallStateChanged(...)
+ *
+ *     override fun onRegistrationStateChanged(accountId: String, state: JBRegistrationState, ...) {
+ *         callbacks?.onRegistrationStateChanged(accountId, state.toKotlin(), ...)
+ *     }
+ *
+ *     override fun onIncomingCall(accountId: String, callId: String, ...) {
+ *         callbacks?.onIncomingCall(accountId, callId, ...)
  *     }
  * }
  * ```
  *
  * ## Current Status: Stub Implementation
  *
- * This is currently a stub that returns empty/default values. Once the adapter
- * framework is built and cinterop is configured, the real implementation will
- * call the Objective-C adapters.
+ * This is currently a stub that returns empty/default values. Once the JamiBridge
+ * library is built and cinterop is configured, the real implementation will call
+ * JamiBridgeWrapper methods.
+ *
+ * ## JamiBridge API Coverage (71 methods)
+ *
+ * - Daemon Lifecycle: 4 methods (init, start, stop, isRunning)
+ * - Account Management: 14 methods
+ * - Contact Management: 8 methods
+ * - Conversation Management: 11 methods
+ * - Messaging: 4 methods
+ * - Calls: 12 methods
+ * - Conference Calls: 10 methods
+ * - File Transfer: 4 methods
+ * - Video: 5 methods
+ * - Audio Settings: 4 methods
  */
 actual class DaemonBridge actual constructor() {
     private var isInitialized = false
     private var callbacks: DaemonCallbacks? = null
 
-    // When adapters are available, these will be instances of the Objective-C adapter classes:
-    // private var dringAdapter: DRingAdapter? = null
-    // private var accountAdapter: AccountAdapter? = null
-    // private var callsAdapter: CallsAdapter? = null
-    // private var conversationsAdapter: ConversationsAdapter? = null
-    // private var contactsAdapter: ContactsAdapter? = null
-    // private var presenceAdapter: PresenceAdapter? = null
-    // private var dataTransferAdapter: DataTransferAdapter? = null
+    // When JamiBridge cinterop is enabled, use:
+    // import net.jami.bridge.*
+    // private val bridge: JamiBridgeWrapper by lazy { JamiBridgeWrapper.shared() }
 
     // ==================== Lifecycle ====================
 
     actual fun init(callbacks: DaemonCallbacks): Boolean {
         this.callbacks = callbacks
-        // TODO: When adapters are available:
-        // dringAdapter = DRingAdapter()
-        // accountAdapter = AccountAdapter()
-        // accountAdapter?.delegate = this  // Set self as delegate for callbacks
-        // callsAdapter = CallsAdapter()
-        // callsAdapter?.delegate = this
-        // ... etc for all adapters
-        // return dringAdapter?.initDaemon() ?: false
+        // TODO: When JamiBridge cinterop is enabled:
+        // bridge.delegate = createDelegate(callbacks)
+        // bridge.initDaemonWithDataPath(getDataPath())
         isInitialized = true
         return true
     }
 
     actual fun start(): Boolean {
-        // TODO: return dringAdapter?.startDaemon() ?: false
+        // TODO: bridge.startDaemon()
         return isInitialized
     }
 
     actual fun stop() {
-        // TODO: dringAdapter?.fini()
+        // TODO: bridge.stopDaemon()
         isInitialized = false
     }
 
     actual fun isRunning(): Boolean {
-        // TODO: return dringAdapter?.isRunning() ?: false
+        // TODO: return bridge.isDaemonRunning()
         return isInitialized
     }
 
@@ -444,29 +451,53 @@ actual class DaemonBridge actual constructor() {
         // TODO: accountAdapter?.pushNotificationReceived(from, data: data.toNSDictionary())
     }
 
-    // ==================== Callback Delegate Methods ====================
-    // When adapters are available, this class will implement the delegate protocols:
+    // ==================== JamiBridgeDelegate Implementation ====================
     //
-    // AccountAdapterDelegateProtocol:
-    // - accountsChanged()
-    // - accountDetailsChanged(accountId: String, details: NSDictionary)
-    // - registrationStateChanged(accountId: String, state: String, code: Int, details: String)
-    // - knownDevicesChanged(accountId: String, devices: NSDictionary)
-    // - exportOnRingEnded(accountId: String, code: Int, pin: String)
-    // - nameRegistrationEnded(accountId: String, state: Int, name: String)
-    // - registeredNameFound(accountId: String, state: Int, address: String, name: String)
+    // When JamiBridge cinterop is enabled, create a delegate that implements
+    // JamiBridgeDelegateProtocol and forwards events to DaemonCallbacks:
     //
-    // CallsAdapterDelegateProtocol:
-    // - didChangeCallState(callId: String, state: String, accountId: String, stateCode: Int)
-    // - receivingCall(accountId: String, callId: String, fromUri: String, withMedia: NSArray)
-    // - incomingMessage(callId: String, from: String, message: NSDictionary)
-    // - callPlacedOnHold(callId: String, hold: Bool)
-    // - audioMuted(callId: String, muted: Bool)
-    // - videoMuted(callId: String, muted: Bool)
+    // private fun createDelegate(callbacks: DaemonCallbacks) = object : NSObject(), JamiBridgeDelegateProtocol {
     //
-    // ConversationsAdapterDelegateProtocol:
-    // - conversationLoaded(conversationId: String, accountId: String, messages: NSArray)
-    // - conversationReady(accountId: String, conversationId: String)
-    // - messageReceived(accountId: String, conversationId: String, message: SwarmMessageWrap)
-    // - conversationRequestReceived(accountId: String, conversationId: String, metadata: NSDictionary)
+    //     // Account Events
+    //     override fun onRegistrationStateChanged(accountId: String, state: JBRegistrationState, code: Int, detail: String) {
+    //         val stateStr = when(state) {
+    //             JBRegistrationState.JBRegistrationStateRegistered -> "REGISTERED"
+    //             JBRegistrationState.JBRegistrationStateTrying -> "TRYING"
+    //             else -> "UNREGISTERED"
+    //         }
+    //         callbacks.onRegistrationStateChanged(accountId, stateStr, code, detail)
+    //     }
+    //
+    //     override fun onAccountDetailsChanged(accountId: String, details: Map<Any?, *>) {
+    //         callbacks.onAccountDetailsChanged(accountId, details.toStringMap())
+    //     }
+    //
+    //     // Call Events
+    //     override fun onIncomingCall(accountId: String, callId: String, peerId: String, peerDisplayName: String, hasVideo: Boolean) {
+    //         callbacks.onIncomingCall(accountId, callId, peerId)
+    //     }
+    //
+    //     override fun onCallStateChanged(accountId: String, callId: String, state: JBCallState, code: Int) {
+    //         val stateStr = when(state) {
+    //             JBCallState.JBCallStateCurrent -> "CURRENT"
+    //             JBCallState.JBCallStateRinging -> "RINGING"
+    //             JBCallState.JBCallStateIncoming -> "INCOMING"
+    //             JBCallState.JBCallStateHungup -> "HUNGUP"
+    //             JBCallState.JBCallStateOver -> "OVER"
+    //             else -> "INACTIVE"
+    //         }
+    //         callbacks.onCallStateChanged(accountId, callId, stateStr, code)
+    //     }
+    //
+    //     // Conversation Events
+    //     override fun onConversationReady(accountId: String, conversationId: String) {
+    //         callbacks.onConversationReady(accountId, conversationId)
+    //     }
+    //
+    //     override fun onMessageReceived(accountId: String, conversationId: String, message: JBSwarmMessage) {
+    //         callbacks.onMessageReceived(accountId, conversationId, message.toKotlinSwarmMessage())
+    //     }
+    //
+    //     // ... implement remaining delegate methods
+    // }
 }

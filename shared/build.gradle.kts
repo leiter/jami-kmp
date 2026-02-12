@@ -5,11 +5,11 @@ plugins {
     alias(libs.plugins.sqldelight)
 }
 
-// Set to true when Objective-C++ adapters are built as a framework
-// Note: The libjami C++ headers cannot be used directly - cinterop only supports C APIs
-// iOS/macOS integration requires Objective-C++ adapters from jami-client-ios
-val enableCinterop = false
-val libjamiHeadersPath = "${projectDir}/src/nativeInterop/cinterop/headers"
+// Set to true when JamiBridge Objective-C++ wrapper is compiled as a static library
+// The JamiBridgeWrapper.mm must be compiled and linked with libjami.a first
+// See: shared/src/nativeInterop/cinterop/JamiBridge/README.md for build instructions
+val enableJamiBridgeCinterop = false
+val jamiBridgePath = "${projectDir}/src/nativeInterop/cinterop"
 val libjamiLibPath = "${projectDir}/src/nativeInterop/cinterop/lib"
 
 kotlin {
@@ -32,12 +32,12 @@ kotlin {
             baseName = "JamiShared"
             isStatic = true
         }
-        if (enableCinterop) {
+        if (enableJamiBridgeCinterop) {
             iosTarget.compilations.getByName("main") {
                 cinterops {
-                    create("libjami") {
-                        defFile(project.file("src/nativeInterop/cinterop/libjami.def"))
-                        includeDirs(libjamiHeadersPath)
+                    create("JamiBridge") {
+                        defFile(project.file("src/nativeInterop/cinterop/JamiBridge.def"))
+                        includeDirs(jamiBridgePath)
                     }
                 }
             }
@@ -53,12 +53,12 @@ kotlin {
             baseName = "JamiShared"
             isStatic = true
         }
-        if (enableCinterop) {
+        if (enableJamiBridgeCinterop) {
             macosTarget.compilations.getByName("main") {
                 cinterops {
-                    create("libjami") {
-                        defFile(project.file("src/nativeInterop/cinterop/libjami.def"))
-                        includeDirs(libjamiHeadersPath)
+                    create("JamiBridge") {
+                        defFile(project.file("src/nativeInterop/cinterop/JamiBridge.def"))
+                        includeDirs(jamiBridgePath)
                     }
                 }
             }

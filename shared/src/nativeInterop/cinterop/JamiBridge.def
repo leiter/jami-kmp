@@ -1,0 +1,24 @@
+package = net.jami.bridge
+
+# JamiBridge cinterop definition for Kotlin/Native
+# This provides the bridge between libjami C++ and Kotlin/Native via Objective-C
+
+headers = JamiBridge/JamiBridgeWrapper.h
+headerFilter = JamiBridge/**
+
+# Compile options - include Foundation framework
+compilerOpts = -framework Foundation
+
+# Linker options - link against libjami and the compiled JamiBridge
+# Note: JamiBridgeWrapper.mm must be compiled into a static library or framework
+# and linked here. The libjami.a must also be linked.
+#
+# To build JamiBridge as a static library:
+# 1. Compile JamiBridgeWrapper.mm with clang++
+# 2. Create a static library with ar
+# 3. Link both libjami.a and libJamiBridge.a
+#
+# linkerOpts = -framework Foundation -L${projectDir}/src/nativeInterop/cinterop/lib -ljami -lJamiBridge -lc++
+
+# For now, we'll document the build process and the DaemonBridge will use stubs
+# until the JamiBridge library is built.
