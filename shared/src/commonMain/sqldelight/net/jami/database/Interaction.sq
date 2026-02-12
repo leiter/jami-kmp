@@ -1,0 +1,152 @@
+-- Interaction table for storing messages, calls, and file transfers
+-- Matches the schema from Android (OrmLite) and iOS (SQLite Swift)
+
+CREATE TABLE interaction (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    daemon_id TEXT,
+    account_id TEXT NOT NULL,
+    conversation_id TEXT NOT NULL,
+    author TEXT,
+    timestamp INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'UNKNOWN',
+    body TEXT,
+    is_read INTEGER NOT NULL DEFAULT 0,
+    is_notified INTEGER NOT NULL DEFAULT 0,
+    extra_data TEXT,
+    parent_id TEXT,
+    duration INTEGER DEFAULT 0,
+    transfer_status TEXT,
+    file_path TEXT,
+    display_name TEXT,
+    FOREIGN KEY (conversation_id) REFERENCES conversation(id) ON DELETE CASCADE
+);
+
+-- Index for faster conversation-based queries
+CREATE INDEX interaction_conversation_idx ON interaction(conversation_id);
+
+-- Index for timestamp-based sorting
+CREATE INDEX interaction_timestamp_idx ON interaction(timestamp);
+
+-- Index for daemon_id lookups
+CREATE INDEX interaction_daemon_id_idx ON interaction(daemon_id);
+
+-- Index for unread messages
+CREATE INDEX interaction_unread_idx ON interaction(conversation_id, is_read) WHERE is_read = 0;
+
+-- Get all interactions for a conversation
+selectByConversation:
+SELECT * FROM interaction
+WHERE conversation_id = ? AND account_id = ?
+ORDER BY timestamp ASC;
+
+-- Get interactions for a conversation with pagination
+selectByConversationPaged:
+SELECT * FROM interaction
+WHERE conversation_id = ? AND account_id = ?
+ORDER BY timestamp DESC
+LIMIT ? OFFSET ?;
+
+-- Get a specific interaction by ID
+selectById:
+SELECT * FROM interaction
+WHERE id = ?;
+
+-- Get interaction by daemon ID
+selectByDaemonId:
+SELECT * FROM interaction
+WHERE daemon_id = ? AND account_id = ?;
+
+-- Get unread interactions for a conversation
+selectUnreadByConversation:
+SELECT * FROM interaction
+WHERE conversation_id = ? AND account_id = ? AND is_read = 0
+ORDER BY timestamp ASC;
+
+-- Get the last interaction for a conversation
+selectLastByConversation:
+SELECT * FROM interaction
+WHERE conversation_id = ? AND account_id = ?
+ORDER BY timestamp DESC
+LIMIT 1;
+
+-- Get interactions by type
+selectByType:
+SELECT * FROM interaction
+WHERE conversation_id = ? AND account_id = ? AND type = ?
+ORDER BY timestamp DESC;
+
+-- Insert a new interaction
+insert:
+INSERT INTO interaction(daemon_id, account_id, conversation_id, author, timestamp, type, status, body, is_read, is_notified, extra_data, parent_id, duration, transfer_status, file_path, display_name)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Update interaction status
+updateStatus:
+UPDATE interaction
+SET status = ?
+WHERE id = ?;
+
+-- Mark interaction as read
+markAsRead:
+UPDATE interaction
+SET is_read = 1
+WHERE id = ?;
+
+-- Mark all interactions in conversation as read
+markAllAsRead:
+UPDATE interaction
+SET is_read = 1
+WHERE conversation_id = ? AND account_id = ? AND is_read = 0;
+
+-- Mark interaction as notified
+markAsNotified:
+UPDATE interaction
+SET is_notified = 1
+WHERE id = ?;
+
+-- Update interaction body (for edits)
+updateBody:
+UPDATE interaction
+SET body = ?
+WHERE id = ?;
+
+-- Update transfer status
+updateTransferStatus:
+UPDATE interaction
+SET transfer_status = ?, file_path = ?
+WHERE id = ?;
+
+-- Delete an interaction
+deleteById:
+DELETE FROM interaction
+WHERE id = ?;
+
+-- Delete by daemon ID
+deleteByDaemonId:
+DELETE FROM interaction
+WHERE daemon_id = ? AND account_id = ?;
+
+-- Delete all interactions for a conversation
+deleteByConversation:
+DELETE FROM interaction
+WHERE conversation_id = ? AND account_id = ?;
+
+-- Delete all interactions for an account
+deleteByAccount:
+DELETE FROM interaction
+WHERE account_id = ?;
+
+-- Count unread interactions for a conversation
+countUnreadByConversation:
+SELECT COUNT(*) FROM interaction
+WHERE conversation_id = ? AND account_id = ? AND is_read = 0;
+
+-- Count total interactions for a conversation
+countByConversation:
+SELECT COUNT(*) FROM interaction
+WHERE conversation_id = ? AND account_id = ?;
+
+-- Get last inserted row ID (for getting auto-generated ID)
+lastInsertRowId:
+SELECT last_insert_rowid();

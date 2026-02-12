@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.sqldelight)
 }
 
 // Set to true when libjami headers are available at the configured path
@@ -11,8 +12,10 @@ val libjamiHeadersPath = "/Users/user289697/Documents/JAMI/jami-daemon/src"
 kotlin {
     // Android
     androidTarget {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
         }
     }
 
@@ -82,6 +85,8 @@ kotlin {
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.koin.core)
                 implementation(libs.okio)
+                implementation(libs.sqldelight.runtime)
+                implementation(libs.sqldelight.coroutines)
             }
         }
 
@@ -96,18 +101,21 @@ kotlin {
             dependencies {
                 implementation(libs.kotlinx.coroutines.android)
                 implementation(libs.koin.android)
+                implementation(libs.sqldelight.android)
             }
         }
 
         val iosMain by getting {
             dependencies {
                 implementation(libs.ktor.client.darwin)
+                implementation(libs.sqldelight.native)
             }
         }
 
         val macosMain by getting {
             dependencies {
                 implementation(libs.ktor.client.darwin)
+                implementation(libs.sqldelight.native)
             }
         }
 
@@ -115,6 +123,7 @@ kotlin {
             dependencies {
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.ktor.client.cio)
+                implementation(libs.sqldelight.jvm)
             }
         }
 
@@ -143,6 +152,16 @@ android {
     sourceSets {
         getByName("main") {
             java.srcDirs("src/androidMain/java")
+        }
+    }
+}
+
+sqldelight {
+    databases {
+        create("JamiDatabase") {
+            packageName.set("net.jami.database")
+            schemaOutputDirectory.set(file("src/commonMain/sqldelight/databases"))
+            verifyMigrations.set(true)
         }
     }
 }

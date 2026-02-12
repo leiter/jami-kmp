@@ -1,0 +1,68 @@
+-- Conversation table for storing conversation metadata
+-- Matches the schema from Android (OrmLite) and iOS (SQLite Swift)
+
+CREATE TABLE conversation (
+    id TEXT NOT NULL PRIMARY KEY,
+    account_id TEXT NOT NULL,
+    participant TEXT,
+    mode TEXT NOT NULL DEFAULT 'Legacy',
+    extra_data TEXT,
+    last_event_timestamp INTEGER,
+    is_syncing INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL DEFAULT 0
+);
+
+-- Index for faster account-based queries
+CREATE INDEX conversation_account_idx ON conversation(account_id);
+
+-- Index for sorting by last event
+CREATE INDEX conversation_last_event_idx ON conversation(last_event_timestamp);
+
+-- Get all conversations for an account
+selectAllByAccount:
+SELECT * FROM conversation
+WHERE account_id = ?
+ORDER BY last_event_timestamp DESC;
+
+-- Get a specific conversation
+selectById:
+SELECT * FROM conversation
+WHERE id = ? AND account_id = ?;
+
+-- Get conversation by participant (for legacy 1:1 conversations)
+selectByParticipant:
+SELECT * FROM conversation
+WHERE account_id = ? AND participant = ?
+LIMIT 1;
+
+-- Insert a new conversation
+insert:
+INSERT OR REPLACE INTO conversation(id, account_id, participant, mode, extra_data, last_event_timestamp, is_syncing, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Update conversation's last event timestamp
+updateLastEvent:
+UPDATE conversation
+SET last_event_timestamp = ?
+WHERE id = ? AND account_id = ?;
+
+-- Update syncing state
+updateSyncing:
+UPDATE conversation
+SET is_syncing = ?
+WHERE id = ? AND account_id = ?;
+
+-- Delete a conversation
+deleteById:
+DELETE FROM conversation
+WHERE id = ? AND account_id = ?;
+
+-- Delete all conversations for an account
+deleteByAccount:
+DELETE FROM conversation
+WHERE account_id = ?;
+
+-- Count conversations for an account
+countByAccount:
+SELECT COUNT(*) FROM conversation
+WHERE account_id = ?;

@@ -1,0 +1,90 @@
+-- Profile table for storing contact profiles
+-- Used for caching contact display names and avatars
+
+CREATE TABLE profile (
+    uri TEXT NOT NULL,
+    account_id TEXT NOT NULL,
+    display_name TEXT,
+    avatar_path TEXT,
+    description TEXT,
+    registered_name TEXT,
+    is_user INTEGER NOT NULL DEFAULT 0,
+    last_updated INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (uri, account_id)
+);
+
+-- Index for account-based queries
+CREATE INDEX profile_account_idx ON profile(account_id);
+
+-- Index for registered name lookups
+CREATE INDEX profile_registered_name_idx ON profile(registered_name) WHERE registered_name IS NOT NULL;
+
+-- Get profile for a contact
+selectByUri:
+SELECT * FROM profile
+WHERE uri = ? AND account_id = ?;
+
+-- Get all profiles for an account
+selectAllByAccount:
+SELECT * FROM profile
+WHERE account_id = ?
+ORDER BY display_name ASC;
+
+-- Get user's own profile
+selectUserProfile:
+SELECT * FROM profile
+WHERE account_id = ? AND is_user = 1
+LIMIT 1;
+
+-- Search profiles by display name
+searchByName:
+SELECT * FROM profile
+WHERE account_id = ? AND (
+    display_name LIKE '%' || ? || '%' OR
+    registered_name LIKE '%' || ? || '%'
+)
+ORDER BY display_name ASC;
+
+-- Get profile by registered name
+selectByRegisteredName:
+SELECT * FROM profile
+WHERE account_id = ? AND registered_name = ?
+LIMIT 1;
+
+-- Insert or update a profile
+upsert:
+INSERT OR REPLACE INTO profile(uri, account_id, display_name, avatar_path, description, registered_name, is_user, last_updated)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Update display name
+updateDisplayName:
+UPDATE profile
+SET display_name = ?, last_updated = ?
+WHERE uri = ? AND account_id = ?;
+
+-- Update avatar path
+updateAvatar:
+UPDATE profile
+SET avatar_path = ?, last_updated = ?
+WHERE uri = ? AND account_id = ?;
+
+-- Update registered name
+updateRegisteredName:
+UPDATE profile
+SET registered_name = ?, last_updated = ?
+WHERE uri = ? AND account_id = ?;
+
+-- Delete a profile
+deleteByUri:
+DELETE FROM profile
+WHERE uri = ? AND account_id = ?;
+
+-- Delete all profiles for an account
+deleteByAccount:
+DELETE FROM profile
+WHERE account_id = ?;
+
+-- Count profiles for an account
+countByAccount:
+SELECT COUNT(*) FROM profile
+WHERE account_id = ?;
