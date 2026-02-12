@@ -194,6 +194,18 @@ class ContactService(
         }
     }
 
+    /**
+     * Handle profile received from daemon callback.
+     */
+    internal fun onProfileReceived(accountId: String, peerId: String, vcardPath: String) {
+        scope.launch {
+            val uri = Uri.fromString(peerId)
+            // TODO: Parse VCard file at vcardPath and extract profile
+            // For now, just emit an event that profile was received
+            _contactEvents.emit(ContactEvent.ProfileReceived(accountId, uri, vcardPath))
+        }
+    }
+
     // ==================== Profile ====================
 
     /**
@@ -342,6 +354,7 @@ sealed class ContactEvent {
     data class ContactRemoved(val accountId: String, val contact: Contact, val banned: Boolean) : ContactEvent()
     data class PresenceUpdated(val accountId: String, val contact: Contact) : ContactEvent()
     data class ProfileUpdated(val accountId: String, val uri: Uri, val profile: Profile) : ContactEvent()
+    data class ProfileReceived(val accountId: String, val uri: Uri, val vcardPath: String) : ContactEvent()
 }
 
 /**

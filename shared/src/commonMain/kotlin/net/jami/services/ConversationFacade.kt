@@ -18,8 +18,11 @@ package net.jami.services
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
@@ -41,6 +44,7 @@ import net.jami.model.DataTransfer
 import net.jami.model.Interaction
 import net.jami.model.Media
 import net.jami.model.Profile
+import net.jami.model.SwarmMessage
 import net.jami.model.TextMessage
 import net.jami.model.Uri
 import net.jami.utils.Log
@@ -75,6 +79,9 @@ class ConversationFacade(
 ) {
     private val _currentAccount = MutableStateFlow<Account?>(null)
     val currentAccountFlow: StateFlow<Account?> = _currentAccount.asStateFlow()
+
+    private val _conversationEvents = MutableSharedFlow<ConversationEvent>()
+    val conversationEvents: SharedFlow<ConversationEvent> = _conversationEvents.asSharedFlow()
 
     init {
         // Subscribe to account changes
@@ -729,6 +736,160 @@ class ConversationFacade(
         return emptyList()
     }
 
+    // ==================== Daemon Callback Handlers ====================
+
+    /**
+     * Called when a conversation is ready to use.
+     */
+    internal fun onConversationReady(accountId: String, conversationId: String) {
+        Log.d(TAG, "onConversationReady: $conversationId")
+        // TODO: Load conversation data and notify UI
+    }
+
+    /**
+     * Called when a conversation is removed.
+     */
+    internal fun onConversationRemoved(accountId: String, conversationId: String) {
+        Log.d(TAG, "onConversationRemoved: $conversationId")
+        // TODO: Remove conversation from cache and notify UI
+    }
+
+    /**
+     * Called when a conversation request is received.
+     */
+    internal fun onConversationRequestReceived(accountId: String, conversationId: String, metadata: Map<String, String>) {
+        Log.d(TAG, "onConversationRequestReceived: $conversationId")
+        // TODO: Add to pending requests and notify UI
+    }
+
+    /**
+     * Called when a conversation request is declined.
+     */
+    internal fun onConversationRequestDeclined(accountId: String, conversationId: String) {
+        Log.d(TAG, "onConversationRequestDeclined: $conversationId")
+        // TODO: Remove from pending requests
+    }
+
+    /**
+     * Called when a conversation member event occurs.
+     */
+    internal fun onConversationMemberEvent(accountId: String, conversationId: String, memberId: String, event: Int) {
+        Log.d(TAG, "onConversationMemberEvent: $conversationId member=$memberId event=$event")
+        // TODO: Update member list
+    }
+
+    /**
+     * Called when a message is received.
+     */
+    internal fun onMessageReceived(accountId: String, conversationId: String, message: net.jami.model.SwarmMessage) {
+        Log.d(TAG, "onMessageReceived: $conversationId msgId=${message.id}")
+        scope.launch {
+            _conversationEvents.emit(ConversationEvent.MessageReceived(accountId, conversationId, message))
+        }
+    }
+
+    /**
+     * Called when a message is updated.
+     */
+    internal fun onMessageUpdated(accountId: String, conversationId: String, message: net.jami.model.SwarmMessage) {
+        Log.d(TAG, "onMessageUpdated: $conversationId msgId=${message.id}")
+        scope.launch {
+            _conversationEvents.emit(ConversationEvent.MessageUpdated(accountId, conversationId, message))
+        }
+    }
+
+    /**
+     * Called when messages are found from search.
+     */
+    internal fun onMessagesFound(messageId: Int, accountId: String, conversationId: String, messages: List<Map<String, String>>) {
+        Log.d(TAG, "onMessagesFound: $conversationId found=${messages.size}")
+        // TODO: Emit search results
+    }
+
+    /**
+     * Called when swarm messages are loaded.
+     */
+    internal fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<net.jami.model.SwarmMessage>) {
+        Log.d(TAG, "onSwarmLoaded: $conversationId messages=${messages.size}")
+        scope.launch {
+            _conversationEvents.emit(ConversationEvent.SwarmLoaded(accountId, conversationId, messages))
+        }
+    }
+
+    /**
+     * Called when conversation profile is updated.
+     */
+    internal fun onConversationProfileUpdated(accountId: String, conversationId: String, profile: Map<String, String>) {
+        Log.d(TAG, "onConversationProfileUpdated: $conversationId")
+        // TODO: Update conversation profile in cache
+    }
+
+    /**
+     * Called when conversation preferences are updated.
+     */
+    internal fun onConversationPreferencesUpdated(accountId: String, conversationId: String, preferences: Map<String, String>) {
+        Log.d(TAG, "onConversationPreferencesUpdated: $conversationId")
+        // TODO: Update conversation preferences in cache
+    }
+
+    /**
+     * Called when a reaction is added to a message.
+     */
+    internal fun onReactionAdded(accountId: String, conversationId: String, messageId: String, reaction: Map<String, String>) {
+        Log.d(TAG, "onReactionAdded: $conversationId msgId=$messageId")
+        scope.launch {
+            _conversationEvents.emit(ConversationEvent.ReactionAdded(accountId, conversationId, messageId, reaction))
+        }
+    }
+
+    /**
+     * Called when a reaction is removed from a message.
+     */
+    internal fun onReactionRemoved(accountId: String, conversationId: String, messageId: String, reactionId: String) {
+        Log.d(TAG, "onReactionRemoved: $conversationId msgId=$messageId")
+        scope.launch {
+            _conversationEvents.emit(ConversationEvent.ReactionRemoved(accountId, conversationId, messageId, reactionId))
+        }
+    }
+
+    /**
+     * Called when active calls in a conversation change.
+     */
+    internal fun onActiveCallsChanged(accountId: String, conversationId: String, activeCalls: List<Map<String, String>>) {
+        Log.d(TAG, "onActiveCallsChanged: $conversationId calls=${activeCalls.size}")
+        // TODO: Update active calls in conversation
+    }
+
+    /**
+     * Called when account message status changes.
+     */
+    internal fun onAccountMessageStatusChanged(accountId: String, conversationId: String, messageId: String, contactId: String, status: Int) {
+        Log.d(TAG, "onAccountMessageStatusChanged: $messageId status=$status")
+        scope.launch {
+            _conversationEvents.emit(ConversationEvent.MessageStatusChanged(accountId, conversationId, messageId, contactId, status))
+        }
+    }
+
+    /**
+     * Called when composing status changes.
+     */
+    internal fun onComposingStatusChanged(accountId: String, conversationId: String, contactUri: String, status: Int) {
+        Log.d(TAG, "onComposingStatusChanged: $contactUri status=$status")
+        scope.launch {
+            _conversationEvents.emit(ConversationEvent.ComposingStatusChanged(accountId, conversationId, contactUri, status))
+        }
+    }
+
+    /**
+     * Called when a data transfer event occurs.
+     */
+    internal fun onDataTransferEvent(accountId: String, conversationId: String, interactionId: String, fileId: String, eventCode: Int) {
+        Log.d(TAG, "onDataTransferEvent: $fileId event=$eventCode")
+        scope.launch {
+            _conversationEvents.emit(ConversationEvent.DataTransferEvent(accountId, conversationId, interactionId, fileId, eventCode))
+        }
+    }
+
     companion object {
         private const val TAG = "ConversationFacade"
     }
@@ -783,4 +944,64 @@ data class ConversationList(
             ConversationItemViewModel.Title.None
         }
     }
+}
+
+/**
+ * Events emitted by ConversationFacade for daemon callbacks.
+ */
+sealed class ConversationEvent {
+    data class MessageReceived(
+        val accountId: String,
+        val conversationId: String,
+        val message: SwarmMessage
+    ) : ConversationEvent()
+
+    data class MessageUpdated(
+        val accountId: String,
+        val conversationId: String,
+        val message: SwarmMessage
+    ) : ConversationEvent()
+
+    data class SwarmLoaded(
+        val accountId: String,
+        val conversationId: String,
+        val messages: List<SwarmMessage>
+    ) : ConversationEvent()
+
+    data class ReactionAdded(
+        val accountId: String,
+        val conversationId: String,
+        val messageId: String,
+        val reaction: Map<String, String>
+    ) : ConversationEvent()
+
+    data class ReactionRemoved(
+        val accountId: String,
+        val conversationId: String,
+        val messageId: String,
+        val reactionId: String
+    ) : ConversationEvent()
+
+    data class MessageStatusChanged(
+        val accountId: String,
+        val conversationId: String,
+        val messageId: String,
+        val contactId: String,
+        val status: Int
+    ) : ConversationEvent()
+
+    data class ComposingStatusChanged(
+        val accountId: String,
+        val conversationId: String,
+        val contactUri: String,
+        val status: Int
+    ) : ConversationEvent()
+
+    data class DataTransferEvent(
+        val accountId: String,
+        val conversationId: String,
+        val interactionId: String,
+        val fileId: String,
+        val eventCode: Int
+    ) : ConversationEvent()
 }

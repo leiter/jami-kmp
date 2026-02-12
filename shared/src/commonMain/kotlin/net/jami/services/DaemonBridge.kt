@@ -142,7 +142,11 @@ interface DaemonCallbacks {
     // ==================== Call Callbacks ====================
     fun onCallStateChanged(accountId: String, callId: String, state: String, code: Int)
     fun onIncomingCall(accountId: String, callId: String, from: String)
+    fun onIncomingCallWithMedia(accountId: String, callId: String, from: String, mediaList: List<Map<String, String>>)
     fun onMediaChangeRequested(accountId: String, callId: String, mediaList: List<Map<String, String>>)
+    fun onAudioMuted(callId: String, muted: Boolean)
+    fun onVideoMuted(callId: String, muted: Boolean)
+    fun onMediaNegotiationStatus(callId: String, event: String, mediaList: List<Map<String, String>>)
     fun onConferenceCreated(accountId: String, conversationId: String, confId: String)
     fun onConferenceChanged(accountId: String, confId: String, state: String)
     fun onConferenceRemoved(accountId: String, confId: String)
