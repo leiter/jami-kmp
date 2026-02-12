@@ -103,6 +103,7 @@ kotlin {
                 implementation(libs.koin.android)
                 implementation(libs.sqldelight.android)
                 implementation(libs.zxing.core)
+                implementation(libs.androidx.core)
             }
         }
 

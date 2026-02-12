@@ -14,6 +14,7 @@ androidMinSdk = "24"
 androidCompileSdk = "35"
 androidTargetSdk = "35"
 androidx-activity = "1.9.3"
+androidx-core = "1.15.0"
 androidx-lifecycle = "2.8.7"
 
 [libraries]
@@ -53,6 +54,7 @@ sqldelight-js = { module = "app.cash.sqldelight:web-worker-driver", version.ref 
 
 # Android
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
+androidx-core = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
 
