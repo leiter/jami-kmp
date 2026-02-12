@@ -547,7 +547,7 @@ class ConversationFacade(
             conversation?.findContact(Uri.fromId(id))
                 ?: getContactFromCache(account, Uri.fromId(id))
         }
-        return contactService.observeContact(accountId, contacts, false).first()
+        return contactService.observeContacts(accountId, contacts, false).first()
     }
 
     // ==================== Search ====================
