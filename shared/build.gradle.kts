@@ -138,4 +138,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    // Include SWIG-generated Java sources
+    sourceSets {
+        getByName("main") {
+            java.srcDirs("src/androidMain/java")
+        }
+    }
 }

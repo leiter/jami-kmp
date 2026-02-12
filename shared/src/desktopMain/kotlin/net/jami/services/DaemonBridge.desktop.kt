@@ -23,42 +23,37 @@ import net.jami.utils.Log
 /**
  * Desktop (JVM) implementation of DaemonBridge.
  *
- * Uses the same SWIG-generated JNI bindings as Android.
- * The JamiService class is generated from jami-daemon/bin/jni/jni_interface.i
+ * This is a stub implementation. When the native library is built for desktop,
+ * this can be updated to use the same SWIG JNI bindings as Android.
  *
- * ## Integration Requirements
+ * ## To Enable Full JNI Integration
  *
- * 1. Build libjami for desktop platform (Linux, Windows, or macOS Intel)
- * 2. Generate SWIG bindings by running make-swig.sh
- * 3. Include the generated Java files from net.jami.daemon package
- * 4. Load the native library via System.loadLibrary("jami")
+ * 1. Build libjami for desktop platform (Linux, Windows, or macOS)
+ * 2. The SWIG Java classes in androidMain/java can be shared
+ * 3. Create a separate JVM module or use Gradle's Java compilation support
+ * 4. The implementation pattern is identical to Android (see DaemonBridge.android.kt)
  *
- * Note: The JNI implementation is shared with Android, using the same
- * SWIG-generated classes and native library API.
+ * ## Note
+ *
+ * Gradle KMP doesn't support withJava() when Android plugin is present,
+ * so a separate module would be needed to share Java SWIG classes between
+ * Android and Desktop targets.
  */
 actual class DaemonBridge actual constructor() {
     private var isInitialized = false
     private var callbacks: DaemonCallbacks? = null
 
-    // Callback implementations - must keep references to prevent GC
-    private var configurationCallback: Any? = null
-    private var callCallback: Any? = null
-    private var presenceCallback: Any? = null
-    private var videoCallback: Any? = null
-    private var dataTransferCallback: Any? = null
-    private var conversationCallback: Any? = null
-
     companion object {
         private const val TAG = "DaemonBridge"
+        private var isNativeLoaded = false
 
-        // Load native library for desktop
         init {
             try {
-                // Try to load from java.library.path
                 System.loadLibrary("jami")
+                isNativeLoaded = true
                 Log.i(TAG, "Native library 'jami' loaded successfully")
             } catch (e: UnsatisfiedLinkError) {
-                Log.w(TAG, "Failed to load native library 'jami' - running in stub mode", e)
+                Log.w(TAG, "Native library 'jami' not available - running in stub mode")
             }
         }
     }
@@ -66,65 +61,26 @@ actual class DaemonBridge actual constructor() {
     actual fun init(callbacks: DaemonCallbacks): Boolean {
         this.callbacks = callbacks
 
-        try {
-            // Desktop uses the same callback structure as Android
-            // See DaemonBridge.android.kt for full callback implementation
-
-            /* TODO: Uncomment when SWIG bindings are integrated
-            configurationCallback = object : ConfigurationCallback() {
-                override fun accountsChanged() {
-                    callbacks.onAccountsChanged()
-                }
-                override fun registrationStateChanged(accountId: String, state: String, code: Int, detail: String) {
-                    callbacks.onRegistrationStateChanged(accountId, state, code, detail)
-                }
-                // ... same callbacks as Android
-
-                // Desktop-specific system info
-                override fun getAppDataPath(name: String, ret: StringVect) {
-                    val userHome = System.getProperty("user.home")
-                    ret.add("$userHome/.local/share/jami")
-                }
-
-                override fun getDeviceName(ret: StringVect) {
-                    try {
-                        ret.add(java.net.InetAddress.getLocalHost().hostName)
-                    } catch (e: Exception) {
-                        ret.add("Desktop")
-                    }
-                }
-            }
-
-            // ... create other callbacks same as Android
-
-            JamiService.init(
-                configurationCallback as ConfigurationCallback,
-                callCallback as Callback,
-                presenceCallback as PresenceCallback,
-                dataTransferCallback as DataTransferCallback,
-                videoCallback as VideoCallback,
-                conversationCallback as ConversationCallback
-            )
-            */
-
+        if (!isNativeLoaded) {
+            Log.w(TAG, "Running in stub mode - no native library")
             isInitialized = true
-            Log.i(TAG, "DaemonBridge initialized (desktop)")
             return true
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to initialize daemon", e)
-            return false
         }
+
+        // When native library is available, initialize here
+        // See DaemonBridge.android.kt for full implementation pattern
+        isInitialized = true
+        Log.i(TAG, "DaemonBridge initialized (desktop stub mode)")
+        return true
     }
 
     actual fun start(): Boolean {
-        Log.i(TAG, "Daemon started (desktop)")
+        Log.i(TAG, "Daemon started (desktop stub mode)")
         return isInitialized
     }
 
     actual fun stop() {
         if (isInitialized) {
-            // TODO: JamiService.fini()
             isInitialized = false
             Log.i(TAG, "Daemon stopped (desktop)")
         }
@@ -132,131 +88,131 @@ actual class DaemonBridge actual constructor() {
 
     actual fun isRunning(): Boolean = isInitialized
 
-    // ==================== Account Operations ====================
+    // ==================== Account Operations (Stubs) ====================
 
     actual fun addAccount(details: Map<String, String>): String {
-        // TODO: return JamiService.addAccount(StringMap.toSwig(details))
+        Log.d(TAG, "addAccount called (stub)")
         return ""
     }
 
     actual fun removeAccount(accountId: String) {
-        // TODO: JamiService.removeAccount(accountId)
+        Log.d(TAG, "removeAccount called (stub): $accountId")
     }
 
     actual fun getAccountDetails(accountId: String): Map<String, String> {
-        // TODO: return JamiService.getAccountDetails(accountId).toNative()
+        Log.d(TAG, "getAccountDetails called (stub): $accountId")
         return emptyMap()
     }
 
     actual fun setAccountDetails(accountId: String, details: Map<String, String>) {
-        // TODO: JamiService.setAccountDetails(accountId, StringMap.toSwig(details))
+        Log.d(TAG, "setAccountDetails called (stub): $accountId")
     }
 
     actual fun getAccountList(): List<String> {
-        // TODO: return JamiService.getAccountList().toList()
+        Log.d(TAG, "getAccountList called (stub)")
         return emptyList()
     }
 
     actual fun setAccountActive(accountId: String, active: Boolean) {
-        // TODO: JamiService.setAccountActive(accountId, active)
+        Log.d(TAG, "setAccountActive called (stub): $accountId, active=$active")
     }
 
-    // ==================== Call Operations ====================
+    // ==================== Call Operations (Stubs) ====================
 
     actual fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String {
-        // TODO: return JamiService.placeCallWithMedia(accountId, uri, mediaList.toSwigVectMap())
+        Log.d(TAG, "placeCall called (stub): $accountId -> $uri")
         return ""
     }
 
     actual fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {
-        // TODO: JamiService.acceptWithMedia(accountId, callId, mediaList.toSwigVectMap())
+        Log.d(TAG, "accept called (stub): $callId")
     }
 
     actual fun hangUp(accountId: String, callId: String) {
-        // TODO: JamiService.hangUp(accountId, callId)
+        Log.d(TAG, "hangUp called (stub): $callId")
     }
 
     actual fun hold(accountId: String, callId: String) {
-        // TODO: JamiService.hold(accountId, callId)
+        Log.d(TAG, "hold called (stub): $callId")
     }
 
     actual fun unhold(accountId: String, callId: String) {
-        // TODO: JamiService.unhold(accountId, callId)
+        Log.d(TAG, "unhold called (stub): $callId")
     }
 
     actual fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean) {
-        // TODO: JamiService.muteLocalMedia(accountId, callId, mediaType, mute)
+        Log.d(TAG, "muteLocalMedia called (stub): $callId, $mediaType, mute=$mute")
     }
 
-    // ==================== Conversation Operations ====================
+    // ==================== Conversation Operations (Stubs) ====================
 
     actual fun getConversations(accountId: String): List<String> {
-        // TODO: return JamiService.getConversations(accountId).toList()
+        Log.d(TAG, "getConversations called (stub): $accountId")
         return emptyList()
     }
 
     actual fun startConversation(accountId: String): String {
-        // TODO: return JamiService.startConversation(accountId)
+        Log.d(TAG, "startConversation called (stub): $accountId")
         return ""
     }
 
     actual fun sendMessage(accountId: String, conversationId: String, message: String, replyTo: String, flag: Int) {
-        // TODO: JamiService.sendMessage(accountId, conversationId, message, replyTo, flag)
+        Log.d(TAG, "sendMessage called (stub): $conversationId")
     }
 
     actual fun loadConversation(accountId: String, conversationId: String, fromMessage: String, size: Int) {
-        // TODO: JamiService.loadConversation(accountId, conversationId, fromMessage, size)
+        Log.d(TAG, "loadConversation called (stub): $conversationId")
     }
 
     actual fun getConversationMembers(accountId: String, conversationId: String): List<Map<String, String>> {
-        // TODO: return JamiService.getConversationMembers(accountId, conversationId).toNative()
+        Log.d(TAG, "getConversationMembers called (stub): $conversationId")
         return emptyList()
     }
 
-    // ==================== Contact Operations ====================
+    // ==================== Contact Operations (Stubs) ====================
 
     actual fun addContact(accountId: String, uri: String) {
-        // TODO: JamiService.addContact(accountId, uri)
+        Log.d(TAG, "addContact called (stub): $uri")
     }
 
     actual fun removeContact(accountId: String, uri: String, ban: Boolean) {
-        // TODO: JamiService.removeContact(accountId, uri, ban)
+        Log.d(TAG, "removeContact called (stub): $uri")
     }
 
     actual fun getContacts(accountId: String): List<Map<String, String>> {
-        // TODO: return JamiService.getContacts(accountId).toNative()
+        Log.d(TAG, "getContacts called (stub): $accountId")
         return emptyList()
     }
 
-    // ==================== Name Lookup ====================
+    // ==================== Name Lookup (Stubs) ====================
 
     actual fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
-        // TODO: return JamiService.lookupName(accountId, nameServiceUrl, name)
+        Log.d(TAG, "lookupName called (stub): $name")
         return false
     }
 
     actual fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean {
-        // TODO: return JamiService.lookupAddress(accountId, nameServiceUrl, address)
+        Log.d(TAG, "lookupAddress called (stub): $address")
         return false
     }
 
     actual fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean {
-        // TODO: return JamiService.registerName(accountId, name, scheme, password)
+        Log.d(TAG, "registerName called (stub): $name")
         return false
     }
 
-    // ==================== Messaging ====================
+    // ==================== Messaging (Stubs) ====================
 
     actual fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {
-        // TODO: JamiService.sendAccountTextMessage(accountId, callIdOrUri, StringMap.toSwig(mapOf("text/plain" to message)))
+        Log.d(TAG, "sendTextMessage called (stub): $callIdOrUri")
     }
 
     actual fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
-        // TODO: JamiService.setIsComposing(accountId, uri, isComposing)
+        Log.d(TAG, "setIsComposing called (stub): $uri, composing=$isComposing")
     }
 
     actual fun cancelMessage(accountId: String, messageId: Long): Boolean {
-        // TODO: return JamiService.cancelMessage(accountId, messageId)
+        Log.d(TAG, "cancelMessage called (stub): $messageId")
         return false
     }
 }
