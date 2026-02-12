@@ -61,6 +61,14 @@ data class Account(
     val hasRegisteredName: Boolean
         get() = registeredName.isNotEmpty()
 
+    // DHT Proxy
+    var isDhtProxyEnabled: Boolean
+        get() = details[ConfigKey.ACCOUNT_PROXY_ENABLED.key]?.toBoolean() ?: false
+        set(value) { details[ConfigKey.ACCOUNT_PROXY_ENABLED.key] = value.toString() }
+
+    // State for username registration in progress
+    var registeringUsername: Boolean = false
+
     enum class RegistrationState {
         UNREGISTERED,
         TRYING,
