@@ -150,3 +150,27 @@ WHERE conversation_id = ? AND account_id = ?;
 -- Get last inserted row ID (for getting auto-generated ID)
 lastInsertRowId:
 SELECT last_insert_rowid();
+
+-- Get smartlist (last interaction per conversation for an account, ordered by timestamp)
+selectSmartlist:
+SELECT * FROM interaction i1
+WHERE account_id = :accountId
+AND timestamp = (
+    SELECT MAX(i2.timestamp)
+    FROM interaction i2
+    WHERE i2.conversation_id = i1.conversation_id AND i2.account_id = :accountId
+)
+ORDER BY timestamp DESC;
+
+-- Mark interaction as notified by daemon ID
+markAsNotifiedByDaemonId:
+UPDATE interaction
+SET is_notified = 1
+WHERE daemon_id = ? AND account_id = ?;
+
+-- Get last notified message for a conversation
+selectLastNotified:
+SELECT daemon_id FROM interaction
+WHERE conversation_id = ? AND account_id = ? AND is_notified = 1
+ORDER BY timestamp DESC
+LIMIT 1;
