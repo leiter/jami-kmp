@@ -17,6 +17,7 @@
 package net.jami.model
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import net.jami.utils.currentTimeMillis
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -253,9 +254,3 @@ class Call(
         const val KEY_CONF_ID = "CONF_ID"
     }
 }
-
-/**
- * Platform-agnostic current time function.
- * Uses expect/actual for platform-specific implementation.
- */
-internal expect fun currentTimeMillis(): Long

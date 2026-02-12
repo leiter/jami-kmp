@@ -555,6 +555,168 @@ jami-client-ios/Ring/Ring/
 - Same `JamiService` SWIG-generated class
 - Similar service implementations
 
+---
+
+## Android/Desktop JNI Integration
+
+### Overview
+
+The Android and Desktop platforms share the same JNI integration using SWIG-generated bindings.
+The integration follows this architecture:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        KMP Services                              │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐         │
+│  │AccountService│  │ CallService │  │ConversationFacade│         │
+│  └──────┬──────┘  └──────┬──────┘  └────────┬────────┘         │
+└─────────┼────────────────┼──────────────────┼───────────────────┘
+          │                │                  │
+          ▼                ▼                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     DaemonBridge (expect/actual)                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  DaemonCallbacks interface (events from native code)     │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  SWIG Director Callbacks                         │
+│  ┌──────────────────┐  ┌─────────────┐  ┌──────────────────┐   │
+│  │ConfigurationCallback│  │  Callback  │  │ConversationCallback│   │
+│  └──────────────────┘  └─────────────┘  └──────────────────┘   │
+│  ┌──────────────────┐  ┌─────────────┐  ┌──────────────────┐   │
+│  │PresenceCallback   │  │VideoCallback│  │DataTransferCallback│   │
+│  └──────────────────┘  └─────────────┘  └──────────────────┘   │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    JamiService (SWIG-generated)                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  init(), placeCall(), hangUp(), sendMessage(), etc.     │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │ JNI
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    libjami (Native C++ Library)                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### SWIG Classes Required
+
+The following SWIG-generated classes must be in `net.jami.daemon` package:
+
+| Class | Purpose |
+|-------|---------|
+| `JamiService` | Static methods for all daemon operations |
+| `Callback` | Director class for call/conference events |
+| `ConfigurationCallback` | Director class for account/config events |
+| `PresenceCallback` | Director class for presence events |
+| `VideoCallback` | Director class for camera/video events |
+| `DataTransferCallback` | Director class for file transfer events |
+| `ConversationCallback` | Director class for messaging events |
+| `StringMap` | `std::map<string,string>` wrapper |
+| `StringVect` | `std::vector<string>` wrapper |
+| `VectMap` | `std::vector<std::map>` wrapper |
+| `IntVect`, `UintVect` | Integer vector wrappers |
+| `Blob` | `std::vector<uint8_t>` for binary data |
+| `SwarmMessage` | Swarm message structure |
+
+### Integration Steps
+
+1. **Build libjami for target platform:**
+   ```bash
+   # Android (requires NDK)
+   cd jami-daemon
+   ./configure --host=aarch64-linux-android --with-contrib=...
+   make
+
+   # Desktop (Linux)
+   ./configure
+   make
+   ```
+
+2. **Generate SWIG bindings:**
+   ```bash
+   cd jami-daemon/bin/jni
+   ./make-swig.sh /path/to/jami-kmp/shared/src/main/java
+   ```
+
+3. **Include SWIG classes in build:**
+   - Copy generated Java files to `shared/src/androidMain/java/net/jami/daemon/`
+   - Or set up Gradle to include from external location
+
+4. **Load native library:**
+   ```kotlin
+   // In DaemonBridge companion object
+   init {
+       System.loadLibrary("jami")
+   }
+   ```
+
+5. **Initialize with callbacks:**
+   ```kotlin
+   // Create callback implementations extending SWIG director classes
+   val configCallback = object : ConfigurationCallback() {
+       override fun accountsChanged() {
+           callbacks.onAccountsChanged()
+       }
+       // ... implement all callback methods
+   }
+
+   // Initialize daemon
+   JamiService.init(
+       configCallback,
+       callCallback,
+       presenceCallback,
+       dataTransferCallback,
+       videoCallback,
+       conversationCallback
+   )
+   ```
+
+### Type Conversions
+
+SWIG types must be converted to/from Kotlin types:
+
+```kotlin
+// StringMap → Map<String, String>
+fun StringMap.toNative(): Map<String, String> {
+    val result = HashMap<String, String>()
+    val keys = keys()
+    for (i in 0 until keys.size.toInt()) {
+        val key = keys[i]
+        result[key] = get(key)
+    }
+    return result
+}
+
+// Map<String, String> → StringMap
+fun Map<String, String>.toSwig(): StringMap {
+    val map = StringMap()
+    forEach { (k, v) -> map[k] = v }
+    return map
+}
+
+// VectMap → List<Map<String, String>>
+fun VectMap.toNative(): List<Map<String, String>> {
+    return (0 until size.toInt()).map { get(it).toNative() }
+}
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `DaemonBridge.android.kt` | Android JNI implementation |
+| `DaemonBridge.desktop.kt` | Desktop JNI implementation |
+| `DaemonCallbacks` | Callback interface (commonMain) |
+| `jami-daemon/bin/jni/jni_interface.i` | Main SWIG interface |
+| `jami-daemon/bin/jni/make-swig.sh` | SWIG generation script |
+
 ### macOS
 
 **Source sets:** `macosMain`, `macosArm64Main`, `macosX64Main`, `macosTest`
@@ -698,10 +860,11 @@ Port remaining models from `libjamiclient/model/`:
 | Uri.kt | 6K | ❌ TODO | Jami URI parsing |
 | Profile.kt | 2K | ❌ TODO | User profile |
 | Codec.kt | 2K | ❌ TODO | Audio/video codecs |
-| Interaction.kt | 10K | ❌ TODO | Base interaction |
-| TextMessage.kt | 2.5K | ❌ TODO | Text messages |
-| DataTransfer.kt | 5K | ❌ TODO | File transfers |
-| CallHistory.kt | 4K | ❌ TODO | Call history |
+| Interaction.kt | 10K | ✅ Done | Base interaction with Flow |
+| TextMessage.kt | 2.5K | ✅ Done | Text messages |
+| DataTransfer.kt | 5K | ✅ Done | File transfers |
+| CallHistory.kt | 4K | ✅ Done | Call history |
+| ContactEvent.kt | 3K | ✅ Done | Contact events |
 
 ### Phase 2: Core Services (Priority: High)
 Port services with RxJava → Flow conversion:
@@ -709,30 +872,32 @@ Port services with RxJava → Flow conversion:
 | Service | Size | Status | Notes |
 |---------|------|--------|-------|
 | AccountService.kt | 78K | 🔶 Partial | Basic structure done, needs full API |
-| DaemonBridge.kt | - | ✅ Stubs | expect/actual pattern established |
-| CallService.kt | 33K | ❌ TODO | Call operations |
-| ConversationFacade.kt | 40K | ❌ TODO | Messaging logic |
-| ContactService.kt | 10K | ❌ TODO | Contact management |
-| HistoryService.kt | 10K | ❌ TODO | Call/message history |
+| DaemonBridge.kt | - | ✅ Done | expect/actual for all 5 platforms |
+| CallService.kt | 33K | ✅ Done | Call/conference operations with Flow |
+| ConversationFacade.kt | 40K | ✅ Done | Messaging logic with Flow |
+| ContactService.kt | 10K | ✅ Stub | Interface + stub implementation |
+| HistoryService.kt | 10K | ✅ Stub | Interface + stub implementation |
 
 ### Phase 3: Platform Services (Priority: Medium)
 Services requiring full expect/actual:
 
 | Service | Status | Platforms |
 |---------|--------|-----------|
-| HardwareService | ❌ TODO | Camera, audio per platform |
-| PreferencesService | ❌ TODO | SharedPrefs/UserDefaults/etc |
-| NotificationService | ❌ TODO | Platform notifications |
-| DeviceRuntimeService | ❌ TODO | File paths, permissions |
-| LogService | ❌ TODO | Platform logging |
+| HardwareService | ✅ Stub | Interface + stub implementation |
+| PreferencesService | ✅ Stub | Interface + stub implementation |
+| NotificationService | ✅ Stub | Interface + stub implementation |
+| DeviceRuntimeService | ✅ Stub | Interface + stub implementation |
+| Log | ✅ Done | Simple logging utility |
 
 ### Phase 4: Utilities (Priority: Medium)
 
 | Utility | Status | Notes |
 |---------|--------|-------|
-| StringUtils.kt | ❌ TODO | String operations |
-| FileUtils.kt | ❌ TODO | Use okio |
-| HashUtils.kt | ❌ TODO | SHA256, MD5 |
+| Log.kt | ✅ Done | Simple logging |
+| Time.kt | ✅ Done | currentTimeMillis expect/actual |
+| StringUtils.kt | ✅ Done | capitalize, toPassword, getFileExtension, isOnlyEmoji, truncate |
+| FileUtils.kt | ✅ Done | expect/actual for file operations (copyFile, moveFile, readBytes, writeBytes) |
+| HashUtils.kt | ✅ Done | MD5, SHA-1, SHA-256, SHA-512 (SHA-512 not on JS) |
 | VCardUtils.kt | ❌ TODO | VCard parsing (complex) |
 | QRCodeUtils.kt | ❌ TODO | expect/actual per platform |
 
@@ -740,18 +905,18 @@ Services requiring full expect/actual:
 
 | Platform | Status | Notes |
 |----------|--------|-------|
-| Android JNI | ❌ TODO | Wire up SWIG bindings |
-| Desktop JNI | ❌ TODO | Share with Android |
-| iOS cinterop | ❌ TODO | Needs libjami build |
-| macOS cinterop | ❌ TODO | Share with iOS |
-| Web REST | ❌ TODO | Design REST bridge API |
+| Android JNI | 🔶 Partial | Structure ready, needs SWIG classes |
+| Desktop JNI | 🔶 Partial | Structure ready, needs native library |
+| iOS cinterop | ✅ Stubs | Needs libjami build |
+| macOS cinterop | ✅ Stubs | Needs libjami build |
+| Web REST | ✅ Stubs | Design REST bridge API |
 
 ### Phase 6: Testing (Priority: Medium)
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Model tests | 🔶 Partial | Account, MediaAttribute done |
-| Service tests | ❌ TODO | Mock DaemonBridge |
+| Model tests | ✅ Done | Uri, Call, Contact, Conversation, Interactions |
+| Service tests | 🔶 Partial | CallService tests done |
 | Integration tests | ❌ TODO | Per platform |
 
 ---

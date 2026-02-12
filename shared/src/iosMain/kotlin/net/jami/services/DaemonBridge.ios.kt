@@ -84,4 +84,8 @@ actual class DaemonBridge actual constructor() {
     actual fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean = false
     actual fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean = false
     actual fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean = false
+
+    actual fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {}
+    actual fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {}
+    actual fun cancelMessage(accountId: String, messageId: Long): Boolean = false
 }

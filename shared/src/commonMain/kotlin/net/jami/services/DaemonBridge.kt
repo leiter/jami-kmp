@@ -50,6 +50,11 @@ expect class DaemonBridge() {
     fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean
     fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean
     fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean
+
+    // Messaging
+    fun sendTextMessage(accountId: String, callIdOrUri: String, message: String)
+    fun setIsComposing(accountId: String, uri: String, isComposing: Boolean)
+    fun cancelMessage(accountId: String, messageId: Long): Boolean
 }
 
 /**
