@@ -17,7 +17,6 @@
 package net.jami.services
 
 import net.jami.model.MediaAttribute
-import net.jami.model.SwarmMessage
 import net.jami.utils.Log
 
 /**
@@ -117,6 +116,66 @@ actual class DaemonBridge actual constructor() {
         Log.d(TAG, "setAccountActive called (stub): $accountId, active=$active")
     }
 
+    actual fun getAccountTemplate(accountType: String): Map<String, String> {
+        Log.d(TAG, "getAccountTemplate called (stub): $accountType")
+        return emptyMap()
+    }
+
+    actual fun getVolatileAccountDetails(accountId: String): Map<String, String> {
+        Log.d(TAG, "getVolatileAccountDetails called (stub): $accountId")
+        return emptyMap()
+    }
+
+    actual fun sendRegister(accountId: String, enable: Boolean) {
+        Log.d(TAG, "sendRegister called (stub): $accountId, enable=$enable")
+    }
+
+    actual fun setAccountsOrder(order: String) {
+        Log.d(TAG, "setAccountsOrder called (stub)")
+    }
+
+    actual fun changeAccountPassword(accountId: String, oldPassword: String, newPassword: String): Boolean {
+        Log.d(TAG, "changeAccountPassword called (stub): $accountId")
+        return false
+    }
+
+    actual fun exportToFile(accountId: String, path: String, scheme: String, password: String): Boolean {
+        Log.d(TAG, "exportToFile called (stub): $accountId -> $path")
+        return false
+    }
+
+    // ==================== Credentials (Stubs) ====================
+
+    actual fun getCredentials(accountId: String): List<Map<String, String>> {
+        Log.d(TAG, "getCredentials called (stub): $accountId")
+        return emptyList()
+    }
+
+    actual fun setCredentials(accountId: String, credentials: List<Map<String, String>>) {
+        Log.d(TAG, "setCredentials called (stub): $accountId")
+    }
+
+    // ==================== Device Management (Stubs) ====================
+
+    actual fun getKnownRingDevices(accountId: String): Map<String, String> {
+        Log.d(TAG, "getKnownRingDevices called (stub): $accountId")
+        return emptyMap()
+    }
+
+    actual fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String) {
+        Log.d(TAG, "revokeDevice called (stub): $accountId, device=$deviceId")
+    }
+
+    actual fun setDeviceName(accountId: String, deviceName: String) {
+        Log.d(TAG, "setDeviceName called (stub): $accountId, name=$deviceName")
+    }
+
+    // ==================== Profile (Stubs) ====================
+
+    actual fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
+        Log.d(TAG, "updateProfile called (stub): $accountId, name=$displayName")
+    }
+
     // ==================== Call Operations (Stubs) ====================
 
     actual fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String {
@@ -169,6 +228,79 @@ actual class DaemonBridge actual constructor() {
         return emptyList()
     }
 
+    actual fun getConversationInfo(accountId: String, conversationId: String): Map<String, String> {
+        Log.d(TAG, "getConversationInfo called (stub): $conversationId")
+        return emptyMap()
+    }
+
+    actual fun removeConversation(accountId: String, conversationId: String) {
+        Log.d(TAG, "removeConversation called (stub): $conversationId")
+    }
+
+    actual fun addConversationMember(accountId: String, conversationId: String, uri: String) {
+        Log.d(TAG, "addConversationMember called (stub): $conversationId, $uri")
+    }
+
+    actual fun removeConversationMember(accountId: String, conversationId: String, uri: String) {
+        Log.d(TAG, "removeConversationMember called (stub): $conversationId, $uri")
+    }
+
+    actual fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {
+        Log.d(TAG, "updateConversationInfo called (stub): $conversationId")
+    }
+
+    actual fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
+        Log.d(TAG, "getConversationPreferences called (stub): $conversationId")
+        return emptyMap()
+    }
+
+    actual fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {
+        Log.d(TAG, "setConversationPreferences called (stub): $conversationId")
+    }
+
+    actual fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int) {
+        Log.d(TAG, "setMessageDisplayed called (stub): $conversationUri, $messageId")
+    }
+
+    actual fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> {
+        Log.d(TAG, "getActiveCalls called (stub): $conversationId")
+        return emptyList()
+    }
+
+    // ==================== Conversation Requests (Stubs) ====================
+
+    actual fun getConversationRequests(accountId: String): List<Map<String, String>> {
+        Log.d(TAG, "getConversationRequests called (stub): $accountId")
+        return emptyList()
+    }
+
+    actual fun acceptConversationRequest(accountId: String, conversationId: String) {
+        Log.d(TAG, "acceptConversationRequest called (stub): $conversationId")
+    }
+
+    actual fun declineConversationRequest(accountId: String, conversationId: String) {
+        Log.d(TAG, "declineConversationRequest called (stub): $conversationId")
+    }
+
+    // ==================== Trust Requests (Stubs) ====================
+
+    actual fun getTrustRequests(accountId: String): List<Map<String, String>> {
+        Log.d(TAG, "getTrustRequests called (stub): $accountId")
+        return emptyList()
+    }
+
+    actual fun acceptTrustRequest(accountId: String, uri: String) {
+        Log.d(TAG, "acceptTrustRequest called (stub): $uri")
+    }
+
+    actual fun discardTrustRequest(accountId: String, uri: String) {
+        Log.d(TAG, "discardTrustRequest called (stub): $uri")
+    }
+
+    actual fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray) {
+        Log.d(TAG, "sendTrustRequest called (stub): $uri")
+    }
+
     // ==================== Contact Operations (Stubs) ====================
 
     actual fun addContact(accountId: String, uri: String) {
@@ -182,6 +314,15 @@ actual class DaemonBridge actual constructor() {
     actual fun getContacts(accountId: String): List<Map<String, String>> {
         Log.d(TAG, "getContacts called (stub): $accountId")
         return emptyList()
+    }
+
+    actual fun getContactDetails(accountId: String, uri: String): Map<String, String> {
+        Log.d(TAG, "getContactDetails called (stub): $uri")
+        return emptyMap()
+    }
+
+    actual fun subscribeBuddy(accountId: String, uri: String, subscribe: Boolean) {
+        Log.d(TAG, "subscribeBuddy called (stub): $uri, subscribe=$subscribe")
     }
 
     // ==================== Name Lookup (Stubs) ====================
@@ -201,6 +342,11 @@ actual class DaemonBridge actual constructor() {
         return false
     }
 
+    actual fun searchUser(accountId: String, query: String): Boolean {
+        Log.d(TAG, "searchUser called (stub): $query")
+        return false
+    }
+
     // ==================== Messaging (Stubs) ====================
 
     actual fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {
@@ -214,5 +360,59 @@ actual class DaemonBridge actual constructor() {
     actual fun cancelMessage(accountId: String, messageId: Long): Boolean {
         Log.d(TAG, "cancelMessage called (stub): $messageId")
         return false
+    }
+
+    // ==================== File Transfer (Stubs) ====================
+
+    actual fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {
+        Log.d(TAG, "sendFile called (stub): $conversationId, $filePath")
+    }
+
+    actual fun downloadFile(accountId: String, conversationId: String, interactionId: String, fileId: String, path: String) {
+        Log.d(TAG, "downloadFile called (stub): $conversationId, $fileId")
+    }
+
+    actual fun cancelDataTransfer(accountId: String, conversationId: String, fileId: String) {
+        Log.d(TAG, "cancelDataTransfer called (stub): $fileId")
+    }
+
+    actual fun fileTransferInfo(accountId: String, conversationId: String, fileId: String): FileTransferInfo? {
+        Log.d(TAG, "fileTransferInfo called (stub): $fileId")
+        return null
+    }
+
+    // ==================== Codec Operations (Stubs) ====================
+
+    actual fun getCodecList(): List<Long> {
+        Log.d(TAG, "getCodecList called (stub)")
+        return emptyList()
+    }
+
+    actual fun getActiveCodecList(accountId: String): List<Long> {
+        Log.d(TAG, "getActiveCodecList called (stub): $accountId")
+        return emptyList()
+    }
+
+    actual fun setActiveCodecList(accountId: String, codecList: List<Long>) {
+        Log.d(TAG, "setActiveCodecList called (stub): $accountId")
+    }
+
+    actual fun getCodecDetails(accountId: String, codecId: Long): Map<String, String> {
+        Log.d(TAG, "getCodecDetails called (stub): $codecId")
+        return emptyMap()
+    }
+
+    // ==================== Push Notifications (Stubs) ====================
+
+    actual fun setPushNotificationToken(token: String) {
+        Log.d(TAG, "setPushNotificationToken called (stub)")
+    }
+
+    actual fun setPushNotificationConfig(config: Map<String, String>) {
+        Log.d(TAG, "setPushNotificationConfig called (stub)")
+    }
+
+    actual fun pushNotificationReceived(from: String, data: Map<String, String>) {
+        Log.d(TAG, "pushNotificationReceived called (stub): $from")
     }
 }
