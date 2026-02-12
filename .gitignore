@@ -1,0 +1,54 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+
+# Kotlin
+.kotlin/
+
+# Android
+local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# iOS
+*.xcworkspace
+*.xcuserdata
+Pods/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Native
+*.framework/
+*.a
+*.so
+*.dylib
+
+# Build outputs
+/shared/build/
+/android-app/build/
+/desktop-app/build/
+/web-app/build/
+/build-logic/build/
+/build-logic/convention/build/
+
+# Generated files
+generated/
+kotlin-js-store/
+
+# Secrets
+*.keystore
+*.jks
+secrets.properties
+google-services.json

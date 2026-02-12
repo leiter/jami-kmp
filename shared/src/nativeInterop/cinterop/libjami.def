@@ -1,0 +1,12 @@
+package = libjami
+headers = jami/jami.h jami/callmanager_interface.h jami/configurationmanager_interface.h jami/conversation_interface.h jami/datatransfer_interface.h jami/presencemanager_interface.h jami/videomanager_interface.h
+headerFilter = jami/**
+
+# TODO: Update these paths to match your local jami-daemon build
+# compilerOpts = -I/Users/user289697/Documents/JAMI/jami-daemon/src
+# linkerOpts = -L/path/to/libjami/build -ljami
+
+# For now, this is a placeholder. The actual cinterop setup requires:
+# 1. Building libjami for the target platform (iOS/macOS)
+# 2. Configuring the correct include paths
+# 3. Linking against the built library
