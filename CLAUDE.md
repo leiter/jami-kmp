@@ -929,12 +929,17 @@ All services ported with RxJava → Flow conversion:
 | Service | Android | Desktop | iOS | macOS | Web |
 |---------|---------|---------|-----|-------|-----|
 | DeviceRuntimeService | ✅ Context | ✅ XDG/AppData | ✅ Foundation | ✅ Foundation | ✅ Virtual FS |
-| HardwareService | ✅ AudioManager | ✅ JavaSound | ⬜ Stub | ⬜ Stub | ⬜ Stub |
+| HardwareService | ✅ AudioManager | ✅ JavaSound | ✅ NSUserDefaults | ✅ NSUserDefaults | ✅ localStorage |
 | Settings | ✅ SharedPrefs | ✅ java.util.prefs | ✅ NSUserDefaults | ✅ NSUserDefaults | ✅ localStorage |
 | QRCodeUtils | ✅ ZXing | ✅ ZXing | ✅ CoreImage | ✅ CoreImage | ✅ Pure Kotlin |
 | DaemonBridge | ⬜ JNI Ready | ⬜ JNI Ready | ⬜ cinterop | ⬜ cinterop | ⬜ REST Ready |
 
 Legend: ✅ = Full impl, ⬜ = Stub (awaiting native library)
+
+Note: HardwareService video/camera methods are stubs on all platforms - actual camera integration requires:
+- Android: Camera2/CameraX
+- iOS/macOS: AVFoundation/AVCaptureSession
+- Web: WebRTC getUserMedia
 
 ### Phase 4: Utilities ✅ COMPLETE
 
@@ -976,7 +981,9 @@ All tests passing on: Desktop, JS Browser, Android Debug/Release, macOS Arm64, i
 
 ### Recent Commits
 ```
-c3b3bfe feat: implement platform-specific DeviceRuntimeService, HardwareService, and QRCodeUtils
+3e44bf8 feat: add HardwareService implementations for iOS, macOS, and Web
+4255f7b docs: update CLAUDE.md with current implementation status
+9a800ab feat: implement platform-specific DeviceRuntimeService, HardwareService, and QRCodeUtils
 429334a feat: implement SqlDelightHistoryService with full database operations
 01b6bee feat: add SQLDelight database layer and ContactService tests
 21e745a test: add AccountService unit tests
