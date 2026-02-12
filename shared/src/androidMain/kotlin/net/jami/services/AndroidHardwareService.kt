@@ -16,6 +16,7 @@
  */
 package net.jami.services
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -87,12 +88,14 @@ class AndroidHardwareService(
     // Connectivity
     // ══════════════════════════════════════════════════════════════════════════
 
+    @SuppressLint("MissingPermission")
     private fun isNetworkConnected(): Boolean {
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
+    @SuppressLint("MissingPermission")
     private fun registerNetworkCallback() {
         val request = NetworkRequest.Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)

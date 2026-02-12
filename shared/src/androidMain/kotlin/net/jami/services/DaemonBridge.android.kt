@@ -61,11 +61,11 @@ actual class DaemonBridge actual constructor() {
 
         init {
             try {
-                System.loadLibrary("jami")
+                System.loadLibrary("jami-core-jni")
                 isNativeLoaded = true
-                Log.i(TAG, "Native library 'jami' loaded successfully")
+                Log.i(TAG, "Native library 'jami-core-jni' loaded successfully")
             } catch (e: UnsatisfiedLinkError) {
-                Log.e(TAG, "Failed to load native library 'jami': ${e.message}")
+                Log.e(TAG, "Failed to load native library 'jami-core-jni': ${e.message}")
             }
         }
     }

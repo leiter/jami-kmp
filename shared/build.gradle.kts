@@ -5,9 +5,12 @@ plugins {
     alias(libs.plugins.sqldelight)
 }
 
-// Set to true when libjami headers are available at the configured path
+// Set to true when Objective-C++ adapters are built as a framework
+// Note: The libjami C++ headers cannot be used directly - cinterop only supports C APIs
+// iOS/macOS integration requires Objective-C++ adapters from jami-client-ios
 val enableCinterop = false
-val libjamiHeadersPath = "/Users/user289697/Documents/JAMI/jami-daemon/src"
+val libjamiHeadersPath = "${projectDir}/src/nativeInterop/cinterop/headers"
+val libjamiLibPath = "${projectDir}/src/nativeInterop/cinterop/lib"
 
 kotlin {
     // Android
@@ -151,10 +154,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    // Include SWIG-generated Java sources
+    // Include SWIG-generated Java sources and native libraries
     sourceSets {
         getByName("main") {
             java.srcDirs("src/androidMain/java")
+            jniLibs.srcDirs("src/androidMain/jniLibs")
         }
     }
 }
