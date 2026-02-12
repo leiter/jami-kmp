@@ -102,6 +102,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.android)
                 implementation(libs.koin.android)
                 implementation(libs.sqldelight.android)
+                implementation(libs.zxing.core)
             }
         }
 
@@ -124,6 +125,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.ktor.client.cio)
                 implementation(libs.sqldelight.jvm)
+                implementation(libs.zxing.core)
             }
         }
 

@@ -16,13 +16,20 @@
  */
 package net.jami.utils
 
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.WriterException
+import com.google.zxing.qrcode.QRCodeWriter
+
 /**
- * Desktop (JVM) implementation of QRCodeUtils.
+ * Desktop (JVM) implementation of QRCodeUtils using ZXing library.
  *
- * TODO: Implement using ZXing when dependency is added.
- * For now, returns null (stub).
+ * Same implementation as Android since both use JVM and ZXing.
  */
 actual object QRCodeUtils {
+    private const val TAG = "QRCodeUtils"
+    private const val QRCODE_IMAGE_PADDING = 1
+
     actual val DEFAULT_SIZE: Int = 256
 
     actual fun encodeStringAsQRCodeData(
@@ -31,9 +38,31 @@ actual object QRCodeUtils {
         backgroundColor: Int,
         size: Int
     ): QRCodeData? {
-        // TODO: Implement using ZXing library
-        // For now, return null as ZXing dependency may not be configured
-        Log.d("QRCodeUtils", "QR code generation not implemented for Desktop")
-        return null
+        if (input.isEmpty()) {
+            return null
+        }
+
+        val qrWriter = QRCodeWriter()
+        val qrImageMatrix = try {
+            val hints = HashMap<EncodeHintType, Int>()
+            hints[EncodeHintType.MARGIN] = QRCODE_IMAGE_PADDING
+            qrWriter.encode(input, BarcodeFormat.QR_CODE, size, size, hints)
+        } catch (e: WriterException) {
+            Log.e(TAG, "Error while encoding QR", e)
+            return null
+        }
+
+        val qrImageWidth = qrImageMatrix.width
+        val qrImageHeight = qrImageMatrix.height
+        val pixels = IntArray(qrImageWidth * qrImageHeight)
+
+        for (row in 0 until qrImageHeight) {
+            val offset = row * qrImageWidth
+            for (column in 0 until qrImageWidth) {
+                pixels[offset + column] = if (qrImageMatrix[column, row]) foregroundColor else backgroundColor
+            }
+        }
+
+        return QRCodeData(pixels, qrImageWidth, qrImageHeight)
     }
 }

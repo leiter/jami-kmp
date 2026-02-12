@@ -1,12 +1,88 @@
 package = libjami
-headers = jami/jami.h jami/callmanager_interface.h jami/configurationmanager_interface.h jami/conversation_interface.h jami/datatransfer_interface.h jami/presencemanager_interface.h jami/videomanager_interface.h
-headerFilter = jami/**
 
-# TODO: Update these paths to match your local jami-daemon build
-# compilerOpts = -I/Users/user289697/Documents/JAMI/jami-daemon/src
-# linkerOpts = -L/path/to/libjami/build -ljami
+# ═══════════════════════════════════════════════════════════════════════════════
+# libjami Kotlin/Native Interop Definition
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# ARCHITECTURE NOTES:
+#
+# The libjami C++ library uses templates, namespaces, and STL types (std::map,
+# std::vector, std::function) which are NOT compatible with Kotlin/Native cinterop.
+# Cinterop only works with C APIs.
+#
+# SOLUTION: Use the Objective-C++ adapters from jami-client-ios as the bridging layer.
+#
+# The iOS client (jami-client-ios) provides Objective-C++ adapters that:
+# 1. Wrap C++ libjami calls in Objective-C methods
+# 2. Convert STL types (std::map, std::vector) to Foundation types (NSDictionary, NSArray)
+# 3. Use @objc delegate protocols for callbacks
+#
+# Kotlin/Native has excellent Objective-C interop, so we can call these adapters directly.
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+# ADAPTERS TO INTEROP WITH (from jami-client-ios/Ring/Ring/Bridging/)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# | Adapter               | Purpose                  | libjami Functions              |
+# |-----------------------|--------------------------|--------------------------------|
+# | DRingAdapter          | Daemon lifecycle         | init, start, fini, version     |
+# | AccountAdapter        | Account CRUD             | addAccount, removeAccount, etc |
+# | CallsAdapter          | Call management          | placeCall, hangUp, hold, etc   |
+# | ConversationsAdapter  | Messaging                | sendMessage, loadConversation  |
+# | ContactsAdapter       | Contact operations       | addContact, removeContact      |
+# | PresenceAdapter       | Presence/subscription    | subscribeBuddy                 |
+# | DataTransferAdapter   | File transfer            | sendFile, downloadFile         |
+# | ProfilesAdapter       | Profile management       | updateProfile                  |
+# | VideoAdapter          | Video I/O                | Video rendering/capture        |
+# | AudioAdapter          | Audio devices            | Audio device selection         |
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+# BUILD REQUIREMENTS
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# 1. Build libjami for iOS/macOS (produces libjami.a or libjami.dylib)
+#
+# 2. Build the Objective-C++ adapters as a framework:
+#    - Include adapters from jami-client-ios/Ring/Ring/Bridging/
+#    - Include Utils.mm for type conversions
+#    - Link against libjami
+#
+# 3. Configure this .def file to reference the adapter headers
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONFIGURATION (uncomment and adjust paths when adapters are available)
+# ═══════════════════════════════════════════════════════════════════════════════
 
-# For now, this is a placeholder. The actual cinterop setup requires:
-# 1. Building libjami for the target platform (iOS/macOS)
-# 2. Configuring the correct include paths
-# 3. Linking against the built library
+# When the adapter framework is built, uncomment these:
+#
+# headers = JamiAdapters/DRingAdapter.h JamiAdapters/AccountAdapter.h \
+#           JamiAdapters/CallsAdapter.h JamiAdapters/ConversationsAdapter.h \
+#           JamiAdapters/ContactsAdapter.h JamiAdapters/PresenceAdapter.h \
+#           JamiAdapters/DataTransferAdapter.h JamiAdapters/ProfilesAdapter.h \
+#           JamiAdapters/Utils.h
+#
+# headerFilter = JamiAdapters/**
+#
+# compilerOpts = -framework Foundation -I/path/to/JamiAdapters/include
+# linkerOpts = -framework Foundation -framework JamiAdapters -L/path/to/lib -ljami
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CALLBACK PATTERN
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# The adapters use @objc delegate protocols for callbacks. In Kotlin/Native:
+#
+# ```kotlin
+# class DaemonBridgeImpl : NSObject(), AccountAdapterDelegateProtocol {
+#     override fun accountsChanged() {
+#         callbacks.onAccountsChanged()
+#     }
+#
+#     override fun accountDetailsChangedWithAccountId(accountId: String, details: Map<Any?, *>) {
+#         val details = (details as Map<String, String>)
+#         callbacks.onAccountDetailsChanged(accountId, details)
+#     }
+# }
+# ```
+#
+# ═══════════════════════════════════════════════════════════════════════════════

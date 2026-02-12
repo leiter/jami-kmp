@@ -20,15 +20,22 @@ package net.jami.utils
  * iOS implementation of QRCodeUtils.
  *
  * TODO: Implement using CoreImage CIFilter ("CIQRCodeGenerator").
- * Example implementation:
- * ```
- * val filter = CIFilter.filterWithName("CIQRCodeGenerator")
- * filter.setValue(data, forKey: "inputMessage")
- * filter.setValue("M", forKey: "inputCorrectionLevel")
- * val outputImage = filter.outputImage
- * ```
+ *
+ * Implementation approach:
+ * 1. Create CIFilter with name "CIQRCodeGenerator"
+ * 2. Set inputMessage (NSData from UTF-8 string)
+ * 3. Set inputCorrectionLevel ("L", "M", "Q", or "H")
+ * 4. Get outputImage (CIImage)
+ * 5. Scale to desired size using CGAffineTransformMakeScale
+ * 6. Render to CGImage using CIContext
+ * 7. Extract pixel data using CGBitmapContext
+ *
+ * For iOS apps using SwiftUI/UIKit, consider using the CIImage directly
+ * with UIImage for display rather than extracting pixels.
  */
 actual object QRCodeUtils {
+    private const val TAG = "QRCodeUtils"
+
     actual val DEFAULT_SIZE: Int = 256
 
     actual fun encodeStringAsQRCodeData(
@@ -37,8 +44,17 @@ actual object QRCodeUtils {
         backgroundColor: Int,
         size: Int
     ): QRCodeData? {
-        // TODO: Implement using CoreImage CIFilter
-        Log.d("QRCodeUtils", "QR code generation not implemented for iOS")
+        if (input.isEmpty()) {
+            return null
+        }
+
+        // TODO: Implement CoreImage QR generation
+        // The full implementation requires:
+        // - CIFilter("CIQRCodeGenerator")
+        // - CIContext for rendering
+        // - CGBitmapContext for pixel extraction
+        // See jami-client-ios for reference implementation
+        Log.w(TAG, "QR code generation not yet implemented for iOS")
         return null
     }
 }
