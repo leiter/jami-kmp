@@ -75,9 +75,11 @@ jami-kmp/
 ├── shared/
 │   └── src/
 │       ├── commonMain/kotlin/net/jami/
+│       │   ├── di/                 # Koin modules (JamiModule, KoinInit)
 │       │   ├── model/              # 17 data classes (Account, Call, Contact, etc.)
 │       │   │   └── interaction/    # Interaction types (TextMessage, CallHistory, etc.)
 │       │   ├── services/           # 11 services with expect declarations
+│       │   ├── database/           # DatabaseDriverFactory
 │       │   ├── domain/             # Use cases
 │       │   └── utils/              # 7 shared utilities
 │       ├── commonTest/kotlin/net/jami/
@@ -85,20 +87,25 @@ jami-kmp/
 │       │   ├── services/           # Service tests (mock-based)
 │       │   └── utils/              # Utility tests
 │       ├── androidMain/kotlin/net/jami/
+│       │   ├── di/                 # PlatformModule.android.kt
 │       │   ├── services/           # AndroidDeviceRuntimeService, AndroidHardwareService
 │       │   │                       # DaemonBridge.android.kt, Settings.android.kt
 │       │   └── utils/              # QRCodeUtils.android.kt, FileUtils, HashUtils, Time
 │       ├── iosMain/kotlin/net/jami/
+│       │   ├── di/                 # PlatformModule.ios.kt
 │       │   ├── services/           # IOSDeviceRuntimeService, DaemonBridge, Settings
 │       │   └── utils/              # QRCodeUtils (CoreImage), HashUtils (CommonCrypto)
 │       ├── macosMain/kotlin/net/jami/
+│       │   ├── di/                 # PlatformModule.macos.kt
 │       │   ├── services/           # MacOSDeviceRuntimeService, DaemonBridge, Settings
 │       │   └── utils/              # QRCodeUtils (CoreImage), HashUtils (CommonCrypto)
 │       ├── desktopMain/kotlin/net/jami/
+│       │   ├── di/                 # PlatformModule.desktop.kt
 │       │   ├── services/           # DesktopDeviceRuntimeService, DesktopHardwareService
 │       │   │                       # DaemonBridge.desktop.kt, Settings.desktop.kt
 │       │   └── utils/              # QRCodeUtils (ZXing), FileUtils, HashUtils, Time
 │       ├── jsMain/kotlin/net/jami/
+│       │   ├── di/                 # PlatformModule.js.kt
 │       │   ├── services/           # WebDeviceRuntimeService, DaemonBridge, Settings
 │       │   └── utils/              # QRCodeUtils (pure Kotlin), HashUtils (pure Kotlin)
 │       └── nativeInterop/cinterop/ # libjami.def for iOS/macOS cinterop
@@ -518,6 +525,141 @@ shared/src/
 
 ---
 
+## Dependency Injection (Koin)
+
+The project uses [Koin](https://insert-koin.io/) for dependency injection across all platforms.
+
+### Module Structure
+
+| File | Location | Purpose |
+|------|----------|---------|
+| `JamiModule.kt` | `commonMain/kotlin/net/jami/di/` | Common services module |
+| `KoinInit.kt` | `commonMain/kotlin/net/jami/di/` | Initialization helper |
+| `PlatformModule.android.kt` | `androidMain/kotlin/net/jami/di/` | Android services |
+| `PlatformModule.desktop.kt` | `desktopMain/kotlin/net/jami/di/` | Desktop services |
+| `PlatformModule.ios.kt` | `iosMain/kotlin/net/jami/di/` | iOS services |
+| `PlatformModule.macos.kt` | `macosMain/kotlin/net/jami/di/` | macOS services |
+| `PlatformModule.js.kt` | `jsMain/kotlin/net/jami/di/` | Web services |
+
+### Services Provided
+
+**JamiModule (Common):**
+- `CoroutineScope` - Application-wide scope with SupervisorJob
+- `DaemonBridge` - Platform-specific daemon bridge
+- `AccountService` - Account management
+- `CallService` - Call handling
+- `ContactService` - Contact management
+- `ConversationFacade` - Messaging coordination
+- `DaemonCallbacksImpl` - Callback orchestrator
+
+**PlatformModule (Per Platform):**
+- `DeviceRuntimeService` - File paths, permissions
+- `HardwareService` - Audio/video hardware
+- `NotificationService` - System notifications
+- `HistoryService` - Database operations
+- `PreferencesService` - App preferences
+- `Settings` - User settings storage
+- `JamiDatabase` - SQLDelight database (not JS)
+
+### Initialization
+
+```kotlin
+// ═══════════════════════════════════════════════════════════════
+// Android (Application.onCreate)
+// ═══════════════════════════════════════════════════════════════
+class JamiApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        startKoin {
+            androidContext(this@JamiApplication)
+            modules(jamiModule, platformModule)
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Desktop / Web
+// ═══════════════════════════════════════════════════════════════
+fun main() {
+    initKoin()
+    // Start app...
+}
+
+// ═══════════════════════════════════════════════════════════════
+// iOS / macOS (Swift)
+// ═══════════════════════════════════════════════════════════════
+@main
+struct JamiApp: App {
+    init() {
+        KoinInitKt.doInitKoin()
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+```
+
+### Injecting Services
+
+```kotlin
+// In a class with KoinComponent
+class MyViewModel : KoinComponent {
+    private val accountService: AccountService by inject()
+    private val callService: CallService by inject()
+}
+
+// Or get directly from Koin
+val accountService = KoinPlatform.getKoin().get<AccountService>()
+```
+
+### Service Dependency Graph
+
+```
+jamiModule (common)
+├── CoroutineScope
+├── DaemonBridge
+├── AccountService ← DaemonBridge, Scope
+├── CallService ← DaemonBridge, AccountService, Scope
+├── ContactService ← Scope, AccountService, DaemonBridge
+├── ConversationFacade ← All services
+└── DaemonCallbacksImpl ← All services, Scope
+
+platformModule (per platform)
+├── DeviceRuntimeService
+├── HardwareService
+├── NotificationService
+├── HistoryService ← JamiDatabase
+├── PreferencesService
+├── Settings
+└── JamiDatabase ← DatabaseDriver
+```
+
+### Adding New Services to DI
+
+1. **Define the service interface/class** in `commonMain/services/`
+2. **Add to JamiModule** if it's cross-platform:
+   ```kotlin
+   // In JamiModule.kt
+   single {
+       MyNewService(
+           dependency1 = get(),
+           dependency2 = get()
+       )
+   }
+   ```
+3. **Or add to PlatformModule** if platform-specific:
+   ```kotlin
+   // In PlatformModule.android.kt (and others)
+   single<MyPlatformService> {
+       AndroidMyPlatformService(androidContext())
+   }
+   ```
+
+---
+
 ## Platform-Specific Notes
 
 ### Android
@@ -864,9 +1006,14 @@ Database/                          # Local storage patterns
 - [x] Unit tests pass in commonTest (32 test classes)
 - [x] Platform-specific tests pass (Android, iOS, macOS, Desktop, JS)
 - [x] DeviceRuntimeService implemented for all 5 platforms
-- [x] HardwareService implemented for Android and Desktop
+- [x] HardwareService implemented for all 5 platforms (audio complete, video stubs)
 - [x] QRCodeUtils implemented for all 5 platforms (CoreImage on iOS/macOS)
 - [x] Settings expect/actual for all 5 platforms
+- [x] Koin DI modules for all 5 platforms
+- [x] DaemonCallbacksImpl orchestrator
+- [x] SwigTypeConverters for Android/Desktop
+- [ ] Native daemon integration (requires native library)
+- [ ] Platform UI apps
 
 ---
 
@@ -881,6 +1028,7 @@ Database/                          # Local storage patterns
 | Utilities | 7 | 7 | ✅ 100% |
 | Test Classes | 32 | 32 | ✅ All Passing |
 | Platform Builds | 5 | 5 | ✅ All Platforms |
+| DI Modules | 7 | 7 | ✅ All Platforms |
 
 ### Phase 1: Core Models ✅ COMPLETE
 
@@ -981,6 +1129,9 @@ All tests passing on: Desktop, JS Browser, Android Debug/Release, macOS Arm64, i
 
 ### Recent Commits
 ```
+d9aa020 feat: add Koin dependency injection modules for all platforms
+a6abac2 feat: add DaemonCallbacksImpl orchestrator and SWIG type converters
+593f98e docs: update platform services matrix with HardwareService implementations
 3e44bf8 feat: add HardwareService implementations for iOS, macOS, and Web
 4255f7b docs: update CLAUDE.md with current implementation status
 9a800ab feat: implement platform-specific DeviceRuntimeService, HardwareService, and QRCodeUtils
@@ -988,11 +1139,6 @@ All tests passing on: Desktop, JS Browser, Android Debug/Release, macOS Arm64, i
 01b6bee feat: add SQLDelight database layer and ContactService tests
 21e745a test: add AccountService unit tests
 a6eec17 feat: implement ContactService and Settings with expect/actual pattern
-222284f feat: add QRCodeUtils with expect/actual pattern
-b73dd4b feat: add Codec model and VCardUtils for KMP
-b50ca0a feat: expand AccountService with comprehensive account management API
-401fe14 feat: expand DaemonBridge API with comprehensive daemon operations
-ae252f7 feat: add Android JNI integration with SWIG bindings
 ```
 
 ### Next Steps (Requires External Dependencies)
