@@ -72,10 +72,10 @@ actual val platformModule: Module = module {
 
     /**
      * Desktop notification service.
-     * TODO: Implement with system tray or native notifications.
+     * Uses Java AWT SystemTray for desktop notifications.
      */
     single<NotificationService> {
-        StubNotificationService()
+        DesktopNotificationService()
     }
 
     /**

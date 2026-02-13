@@ -77,10 +77,10 @@ actual val platformModule: Module = module {
 
     /**
      * macOS notification service.
-     * TODO: Implement with NSUserNotificationCenter.
+     * Uses UNUserNotificationCenter for desktop notifications.
      */
     single<NotificationService> {
-        StubNotificationService()
+        MacOSNotificationService()
     }
 
     /**

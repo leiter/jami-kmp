@@ -59,10 +59,10 @@ actual val platformModule: Module = module {
 
     /**
      * Web notification service.
-     * TODO: Implement with Web Notifications API.
+     * Uses Web Notifications API for browser notifications.
      */
     single<NotificationService> {
-        StubNotificationService()
+        WebNotificationService()
     }
 
     /**

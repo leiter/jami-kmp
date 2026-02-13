@@ -76,10 +76,10 @@ actual val platformModule: Module = module {
 
     /**
      * Android notification service.
-     * TODO: Replace with full Android NotificationManager implementation.
+     * Uses NotificationManager and NotificationCompat for system notifications.
      */
     single<NotificationService> {
-        StubNotificationService()
+        AndroidNotificationService(androidContext())
     }
 
     /**

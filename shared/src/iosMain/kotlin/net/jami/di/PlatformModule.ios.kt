@@ -77,10 +77,10 @@ actual val platformModule: Module = module {
 
     /**
      * iOS notification service.
-     * TODO: Implement with UNUserNotificationCenter and CallKit.
+     * Uses UNUserNotificationCenter for local notifications.
      */
     single<NotificationService> {
-        StubNotificationService()
+        IOSNotificationService()
     }
 
     /**

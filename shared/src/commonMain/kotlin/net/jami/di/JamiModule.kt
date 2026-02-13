@@ -22,6 +22,8 @@ import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import net.jami.repository.DraftRepository
+import net.jami.repository.SettingsRepository
 import net.jami.services.*
 
 /**
@@ -122,6 +124,30 @@ val jamiModule = module {
             callService = get(),
             contactService = get(),
             conversationFacade = get(),
+            scope = get()
+        )
+    }
+
+    // ==================== Repositories ====================
+
+    /**
+     * Settings repository for daemon-backed settings storage.
+     * Settings are stored as JSON in account details and sync via DHT.
+     */
+    single {
+        SettingsRepository(
+            daemonBridge = get(),
+            scope = get()
+        )
+    }
+
+    /**
+     * Draft repository for message drafts.
+     * Drafts are stored in account details and sync across devices.
+     */
+    single {
+        DraftRepository(
+            daemonBridge = get(),
             scope = get()
         )
     }
