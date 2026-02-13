@@ -77,7 +77,9 @@ jami-kmp/
 │       ├── commonMain/kotlin/net/jami/
 │       │   ├── di/                 # Koin modules (JamiModule, KoinInit)
 │       │   ├── model/              # 17 data classes (Account, Call, Contact, etc.)
-│       │   │   └── interaction/    # Interaction types (TextMessage, CallHistory, etc.)
+│       │   │   ├── interaction/    # Interaction types (TextMessage, CallHistory, etc.)
+│       │   │   └── settings/       # SettingsModels.kt (@Serializable settings)
+│       │   ├── repository/         # SettingsRepository, DraftRepository
 │       │   ├── services/           # 11 services with expect declarations
 │       │   ├── database/           # DatabaseDriverFactory
 │       │   ├── domain/             # Use cases
@@ -89,24 +91,27 @@ jami-kmp/
 │       ├── androidMain/kotlin/net/jami/
 │       │   ├── di/                 # PlatformModule.android.kt
 │       │   ├── services/           # AndroidDeviceRuntimeService, AndroidHardwareService
-│       │   │                       # DaemonBridge.android.kt, Settings.android.kt
+│       │   │                       # AndroidNotificationService, DaemonBridge, Settings
 │       │   └── utils/              # QRCodeUtils.android.kt, FileUtils, HashUtils, Time
 │       ├── iosMain/kotlin/net/jami/
 │       │   ├── di/                 # PlatformModule.ios.kt
-│       │   ├── services/           # IOSDeviceRuntimeService, DaemonBridge, Settings
+│       │   ├── services/           # IOSDeviceRuntimeService, IOSNotificationService
+│       │   │                       # DaemonBridge, Settings
 │       │   └── utils/              # QRCodeUtils (CoreImage), HashUtils (CommonCrypto)
 │       ├── macosMain/kotlin/net/jami/
 │       │   ├── di/                 # PlatformModule.macos.kt
-│       │   ├── services/           # MacOSDeviceRuntimeService, DaemonBridge, Settings
+│       │   ├── services/           # MacOSDeviceRuntimeService, MacOSNotificationService
+│       │   │                       # DaemonBridge, Settings
 │       │   └── utils/              # QRCodeUtils (CoreImage), HashUtils (CommonCrypto)
 │       ├── desktopMain/kotlin/net/jami/
 │       │   ├── di/                 # PlatformModule.desktop.kt
 │       │   ├── services/           # DesktopDeviceRuntimeService, DesktopHardwareService
-│       │   │                       # DaemonBridge.desktop.kt, Settings.desktop.kt
+│       │   │                       # DesktopNotificationService, DaemonBridge, Settings
 │       │   └── utils/              # QRCodeUtils (ZXing), FileUtils, HashUtils, Time
 │       ├── jsMain/kotlin/net/jami/
 │       │   ├── di/                 # PlatformModule.js.kt
-│       │   ├── services/           # WebDeviceRuntimeService, DaemonBridge, Settings
+│       │   ├── services/           # WebDeviceRuntimeService, WebNotificationService
+│       │   │                       # DaemonBridge, Settings
 │       │   └── utils/              # QRCodeUtils (pure Kotlin), HashUtils (pure Kotlin)
 │       └── nativeInterop/cinterop/ # libjami.def for iOS/macOS cinterop
 ├── android-app/                    # Android Compose UI (placeholder)
@@ -551,11 +556,13 @@ The project uses [Koin](https://insert-koin.io/) for dependency injection across
 - `ContactService` - Contact management
 - `ConversationFacade` - Messaging coordination
 - `DaemonCallbacksImpl` - Callback orchestrator
+- `SettingsRepository` - Daemon-backed settings persistence (JSON)
+- `DraftRepository` - Message drafts with debounced saves
 
 **PlatformModule (Per Platform):**
 - `DeviceRuntimeService` - File paths, permissions
 - `HardwareService` - Audio/video hardware
-- `NotificationService` - System notifications
+- `NotificationService` - System notifications (platform-specific implementations)
 - `HistoryService` - Database operations
 - `PreferencesService` - App preferences
 - `Settings` - User settings storage
@@ -625,12 +632,14 @@ jamiModule (common)
 ├── CallService ← DaemonBridge, AccountService, Scope
 ├── ContactService ← Scope, AccountService, DaemonBridge
 ├── ConversationFacade ← All services
-└── DaemonCallbacksImpl ← All services, Scope
+├── DaemonCallbacksImpl ← All services, Scope
+├── SettingsRepository ← DaemonBridge, Scope
+└── DraftRepository ← DaemonBridge, Scope
 
 platformModule (per platform)
 ├── DeviceRuntimeService
 ├── HardwareService
-├── NotificationService
+├── NotificationService (platform-specific: Android/iOS/macOS/Desktop/Web)
 ├── HistoryService ← JamiDatabase
 ├── PreferencesService
 ├── Settings
@@ -1012,6 +1021,9 @@ Database/                          # Local storage patterns
 - [x] Koin DI modules for all 5 platforms
 - [x] DaemonCallbacksImpl orchestrator
 - [x] SwigTypeConverters for Android/Desktop
+- [x] NotificationService implemented for all 5 platforms
+- [x] SettingsRepository with daemon-backed JSON persistence
+- [x] DraftRepository with debounced saves
 - [ ] Native daemon integration (requires native library)
 - [ ] Platform UI apps
 
@@ -1029,6 +1041,8 @@ Database/                          # Local storage patterns
 | Test Classes | 32 | 32 | ✅ All Passing |
 | Platform Builds | 5 | 5 | ✅ All Platforms |
 | DI Modules | 7 | 7 | ✅ All Platforms |
+| Repositories | 2 | 2 | ✅ SettingsRepository, DraftRepository |
+| NotificationService | 5 | 5 | ✅ All 5 Platforms |
 
 ### Phase 1: Core Models ✅ COMPLETE
 
@@ -1080,6 +1094,7 @@ All services ported with RxJava → Flow conversion:
 | HardwareService | ✅ AudioManager | ✅ JavaSound | ✅ NSUserDefaults | ✅ NSUserDefaults | ✅ localStorage |
 | Settings | ✅ SharedPrefs | ✅ java.util.prefs | ✅ NSUserDefaults | ✅ NSUserDefaults | ✅ localStorage |
 | QRCodeUtils | ✅ ZXing | ✅ ZXing | ✅ CoreImage | ✅ CoreImage | ✅ Pure Kotlin |
+| NotificationService | ✅ NotificationManager | ✅ SystemTray | ✅ UNUserNotificationCenter | ✅ UNUserNotificationCenter | ✅ Web Notifications API |
 | DaemonBridge | ⬜ JNI Ready | ⬜ JNI Ready | ⬜ cinterop | ⬜ cinterop | ⬜ REST Ready |
 
 Legend: ✅ = Full impl, ⬜ = Stub (awaiting native library)
@@ -1127,8 +1142,48 @@ Note: HardwareService video/camera methods are stubs on all platforms - actual c
 
 All tests passing on: Desktop, JS Browser, Android Debug/Release, macOS Arm64, iOS Simulator Arm64
 
+### Phase 7: Phase 9 Implementation ✅ COMPLETE
+
+#### NotificationService (All 5 Platforms)
+
+| Platform | File | Technologies |
+|----------|------|--------------|
+| Android | `AndroidNotificationService.kt` | NotificationManager, NotificationChannel, NotificationCompat |
+| iOS | `IOSNotificationService.kt` | UNUserNotificationCenter, categories/actions |
+| macOS | `MacOSNotificationService.kt` | UNUserNotificationCenter (shared with iOS) |
+| Desktop | `DesktopNotificationService.kt` | java.awt.SystemTray, TrayIcon |
+| Web | `WebNotificationService.kt` | Web Notifications API (JsNotification external class) |
+
+#### Settings & Preferences (Daemon-Only Storage)
+
+**Architecture:** Settings stored in jami-daemon as JSON payloads with `KMP.` prefix keys.
+- Auto-syncs across devices via DHT
+- No SQLite needed for settings/preferences
+
+**Files Created:**
+- `model/settings/SettingsModels.kt` - All @Serializable data classes:
+  - KmpMeta, UiSettings, Theme, PrivacySettings, NotificationSettings
+  - CallSettings, FileTransferSettings, ConversationSettings
+  - Draft, DraftsContainer, AllSettings, SettingsKeys
+- `repository/SettingsRepository.kt` - Daemon-backed JSON persistence
+- `repository/DraftRepository.kt` - Message drafts with 1500ms debounce
+
+**Storage Keys:**
+| Key | Content |
+|-----|---------|
+| `KMP.Meta` | Schema version, migration info |
+| `KMP.Settings.UI` | Theme, fontSize, language |
+| `KMP.Settings.Privacy` | readReceipts, blockedContacts |
+| `KMP.Settings.Notifications` | enabled, sound, quietHours |
+| `KMP.Settings.Calls` | videoEnabled, autoAnswer |
+| `KMP.Settings.FileTransfer` | autoAccept, maxSize |
+| `KMP.Drafts` | Message drafts per conversation |
+
 ### Recent Commits
 ```
+974cc6c feat: implement Phase 9 - NotificationService, SettingsRepository, DraftRepository
+79cfa5d feat: add JamiBridge Objective-C++ wrapper for iOS/macOS cinterop
+3a73e3e feat: integrate native libraries and SWIG classes for Android JNI
 d9aa020 feat: add Koin dependency injection modules for all platforms
 a6abac2 feat: add DaemonCallbacksImpl orchestrator and SWIG type converters
 593f98e docs: update platform services matrix with HardwareService implementations
@@ -1136,9 +1191,6 @@ a6abac2 feat: add DaemonCallbacksImpl orchestrator and SWIG type converters
 4255f7b docs: update CLAUDE.md with current implementation status
 9a800ab feat: implement platform-specific DeviceRuntimeService, HardwareService, and QRCodeUtils
 429334a feat: implement SqlDelightHistoryService with full database operations
-01b6bee feat: add SQLDelight database layer and ContactService tests
-21e745a test: add AccountService unit tests
-a6eec17 feat: implement ContactService and Settings with expect/actual pattern
 ```
 
 ### Next Steps (Requires External Dependencies)
