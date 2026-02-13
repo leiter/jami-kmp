@@ -7,7 +7,14 @@
 //
 
 #import "JamiBridgeWrapper.h"
+#import <TargetConditionals.h>
+
+// Platform-specific imports
+#if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
+#else
+#import <AppKit/AppKit.h>
+#endif
 
 // C++ Standard Library
 #include <string>
@@ -931,10 +938,10 @@ static JBCallState toCallState(const std::string& state) {
         }));
 
     // =========================================================================
-    // iOS-specific callbacks
+    // iOS/Android-specific callbacks (conditionally compiled)
     // =========================================================================
-
-    // Get app data path - iOS needs to provide the data directory
+#if defined(__ANDROID__) || (defined(TARGET_OS_IOS) && TARGET_OS_IOS)
+    // Get app data path - iOS/Android needs to provide the data directory
     handlers.insert(exportable_callback<ConfigurationSignal::GetAppDataPath>(
         [weakSelf](const std::string& name, std::vector<std::string>* paths) {
             JamiBridgeWrapper *strongSelf = weakSelf;
@@ -946,17 +953,22 @@ static JBCallState toCallState(const std::string& state) {
     // Get device name
     handlers.insert(exportable_callback<ConfigurationSignal::GetDeviceName>(
         [](std::vector<std::string>* names) {
+#if TARGET_OS_IPHONE
             NSString *deviceName = [[UIDevice currentDevice] name];
+#else
+            NSString *deviceName = [[NSHost currentHost] localizedName];
+#endif
             names->push_back(toCppString(deviceName));
         }));
 
     // Get hardware audio format
     handlers.insert(exportable_callback<ConfigurationSignal::GetHardwareAudioFormat>(
         [](std::vector<int32_t>* params) {
-            // iOS standard audio format: 48000 Hz, stereo
+            // Standard audio format: 48000 Hz, stereo
             params->push_back(48000); // Sample rate
             params->push_back(2);     // Channels
         }));
+#endif // iOS/Android callbacks
 
     libjami::registerSignalHandlers(handlers);
     FILE_LOG_I("JamiBridge", @"Signal handlers registered successfully");

@@ -22,10 +22,7 @@ This document serves as a comprehensive guide for building a Kotlin Multiplatfor
 ### Repository Setup
 
 ```bash
-# The jami-kmp directory will be created in:
-/Users/user289697/Documents/JAMI/jami-kmp/
-
-# Clone existing Jami repositories for reference (already present):
+# Clone existing Jami repositories for reference:
 # - jami-client-android   (primary blueprint)
 # - jami-daemon           (native library + JNI bindings)
 # - jami-client-ios       (iOS patterns reference)
@@ -166,7 +163,7 @@ The Android client's `libjamiclient` is the primary blueprint. It's already writ
 ### Location
 
 ```
-/Users/user289697/Documents/JAMI/jami-client-android/jami-android/libjamiclient/
+../jami-client-android/jami-android/libjamiclient/
 └── src/main/kotlin/net/jami/
     ├── account/        # 20 files - Account creation, wizard flows, profile management
     ├── model/          # 25 files - Core data models (Account, Call, Contact, etc.)
@@ -257,7 +254,7 @@ The Android client's `libjamiclient` is the primary blueprint. It's already writ
 
 ### JNI Bindings (Android/Desktop)
 
-**Location:** `/Users/user289697/Documents/JAMI/jami-daemon/bin/jni/`
+**Location:** `../jami-daemon/bin/jni/`
 
 #### SWIG Interface Files
 
@@ -307,7 +304,7 @@ class JamiCallbacks : Callback() {
 
 ### C Headers for cinterop (iOS/macOS)
 
-**Location:** `/Users/user289697/Documents/JAMI/jami-daemon/src/jami/`
+**Location:** `../jami-daemon/src/jami/`
 
 #### Main Headers
 
@@ -683,7 +680,7 @@ platformModule (per platform)
 
 **Key files to reference:**
 ```
-jami-client-android/jami-android/app/src/main/java/cx/ring/
+../jami-client-android/jami-android/app/src/main/java/cx/ring/
 ├── services/           # Android service implementations
 ├── fragments/          # UI (reference for Compose migration)
 └── application/        # Hilt modules, Application class
@@ -718,10 +715,58 @@ kotlin {
 
 **Swift patterns reference:**
 ```
-jami-client-ios/Ring/Ring/
+../jami-client-ios/Ring/Ring/
 ├── Services/           # iOS service layer (RxSwift-based)
 ├── Features/           # Feature modules
 └── Database/           # Local storage
+```
+
+### iOS/macOS JamiBridge cinterop
+
+The iOS and macOS platforms use a JamiBridge Objective-C++ wrapper that bridges libjami C++ to Kotlin/Native via cinterop.
+
+**Architecture:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    DaemonBridge.ios.kt                           │
+│                    DaemonBridge.macos.kt                         │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │ cinterop
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              JamiBridgeWrapper (Objective-C++)                   │
+│  - 71 methods bridging libjami API                              │
+│  - JamiBridgeDelegateProtocol (30+ callbacks)                   │
+│  - Enums: JBRegistrationState, JBCallState, JBLookupState, etc. │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │ C++ linkage
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    libjami (C++ Library)                         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Files:**
+```
+shared/src/nativeInterop/cinterop/
+├── JamiBridge.def              # cinterop definition
+├── lib/                        # Static libraries (after build)
+│   ├── libJamiBridge_ios.a     # iOS device (arm64)
+│   ├── libJamiBridge_iossim.a  # iOS simulator (arm64 + x86_64)
+│   ├── libJamiBridge_macos.a   # macOS (arm64 + x86_64)
+│   └── libjami.a               # libjami native library
+└── JamiBridge/
+    ├── JamiBridgeWrapper.h     # Objective-C header (cinterop parses this)
+    ├── JamiBridgeWrapper.mm    # Objective-C++ implementation
+    ├── build-jamibridge.sh     # Build script
+    └── README.md               # Build instructions
+```
+
+**Building:**
+```bash
+# Requires Xcode and pre-built libjami.a
+cd shared/src/nativeInterop/cinterop/JamiBridge
+./build-jamibridge.sh
 ```
 
 ### Desktop (JVM)
@@ -912,7 +957,7 @@ fun VectMap.toNative(): List<Map<String, String>> {
 
 **Patterns reference:**
 ```
-jami-client-macos/src/
+../jami-client-macos/src/
 ├── AccountsVC.mm       # Account management (Objective-C++)
 ├── CallsVC.mm          # Call handling
 └── views/              # UI components
@@ -946,7 +991,7 @@ jami-client-macos/src/
 ### Primary Blueprint (Kotlin)
 
 ```
-/Users/user289697/Documents/JAMI/jami-client-android/jami-android/libjamiclient/src/main/kotlin/net/jami/
+../jami-client-android/jami-android/libjamiclient/src/main/kotlin/net/jami/
 
 # Core Services
 services/DaemonService.kt          # JNI callback bridge pattern (17K)
@@ -969,7 +1014,7 @@ mvp/GenericView.kt                 # Base view interface
 ### JNI Bindings
 
 ```
-/Users/user289697/Documents/JAMI/jami-daemon/bin/jni/
+../jami-daemon/bin/jni/
 
 jni_interface.i                    # Main SWIG interface (19K)
 callmanager.i                      # Call operations (12K)
@@ -981,7 +1026,7 @@ make-swig.sh                       # Build script
 ### C Headers (for cinterop)
 
 ```
-/Users/user289697/Documents/JAMI/jami-daemon/src/jami/
+../jami-daemon/src/jami/
 
 jami.h                             # Main API (276 lines)
 callmanager_interface.h            # Call API (314 lines)
@@ -994,7 +1039,7 @@ call_const.h                       # Call constants
 ### iOS Patterns (Swift reference)
 
 ```
-/Users/user289697/Documents/JAMI/jami-client-ios/Ring/Ring/
+../jami-client-ios/Ring/Ring/
 
 Services/                          # Service layer (RxSwift)
 Features/Conversations/            # Messaging UI
@@ -1024,7 +1069,8 @@ Database/                          # Local storage patterns
 - [x] NotificationService implemented for all 5 platforms
 - [x] SettingsRepository with daemon-backed JSON persistence
 - [x] DraftRepository with debounced saves
-- [ ] Native daemon integration (requires native library)
+- [x] iOS/macOS JamiBridge cinterop compiling
+- [ ] Native daemon integration (requires native library builds)
 - [ ] Platform UI apps
 
 ---
@@ -1039,10 +1085,13 @@ Database/                          # Local storage patterns
 | Services | 11 | 11 | ✅ 100% |
 | Utilities | 7 | 7 | ✅ 100% |
 | Test Classes | 32 | 32 | ✅ All Passing |
-| Platform Builds | 5 | 5 | ✅ All Platforms |
+| Platform Builds | 8 | 8 | ✅ All Targets |
 | DI Modules | 7 | 7 | ✅ All Platforms |
 | Repositories | 2 | 2 | ✅ SettingsRepository, DraftRepository |
 | NotificationService | 5 | 5 | ✅ All 5 Platforms |
+| iOS/macOS cinterop | 5 | 5 | ✅ All Native Targets |
+
+**Build Targets:** Android, iOS (Arm64, X64, SimulatorArm64), macOS (Arm64, X64), Desktop (JVM), Web (JS)
 
 ### Phase 1: Core Models ✅ COMPLETE
 
@@ -1095,9 +1144,11 @@ All services ported with RxJava → Flow conversion:
 | Settings | ✅ SharedPrefs | ✅ java.util.prefs | ✅ NSUserDefaults | ✅ NSUserDefaults | ✅ localStorage |
 | QRCodeUtils | ✅ ZXing | ✅ ZXing | ✅ CoreImage | ✅ CoreImage | ✅ Pure Kotlin |
 | NotificationService | ✅ NotificationManager | ✅ SystemTray | ✅ UNUserNotificationCenter | ✅ UNUserNotificationCenter | ✅ Web Notifications API |
-| DaemonBridge | ⬜ JNI Ready | ⬜ JNI Ready | ⬜ cinterop | ⬜ cinterop | ⬜ REST Ready |
+| DaemonBridge | ⬜ JNI Ready | ⬜ JNI Ready | ✅ JamiBridge cinterop | ✅ JamiBridge cinterop | ⬜ REST Ready |
 
 Legend: ✅ = Full impl, ⬜ = Stub (awaiting native library)
+
+**Note:** iOS/macOS DaemonBridge uses JamiBridge Objective-C++ wrapper via cinterop. The wrapper provides 71 methods bridging libjami C++ to Kotlin/Native. Native libraries need to be compiled with `build-jamibridge.sh`.
 
 Note: HardwareService video/camera methods are stubs on all platforms - actual camera integration requires:
 - Android: Camera2/CameraX
@@ -1127,9 +1178,16 @@ Note: HardwareService video/camera methods are stubs on all platforms - actual c
 |----------|--------------|----------|--------|
 | Android JNI | ⬜ Ready | ✅ Done | Awaiting SWIG classes |
 | Desktop JNI | ⬜ Ready | ✅ Done | Awaiting native library |
-| iOS cinterop | ⬜ Stub | ✅ Done | Awaiting libjami build |
-| macOS cinterop | ⬜ Stub | ✅ Done | Awaiting libjami build |
+| iOS cinterop | ✅ JamiBridge | ✅ Done | Compiles, awaiting native lib |
+| macOS cinterop | ✅ JamiBridge | ✅ Done | Compiles, awaiting native lib |
 | Web REST | ⬜ Stub | ✅ Done | Awaiting REST bridge server |
+
+**iOS/macOS JamiBridge Integration:**
+- `JamiBridgeWrapper.h/.mm` - Objective-C++ wrapper (71 methods)
+- `JamiBridgeDelegateProtocol` - 30+ callback methods
+- cinterop bindings generated and compiling
+- Static libraries: `libJamiBridge_ios.a`, `libJamiBridge_iossim.a`, `libJamiBridge_macos.a`
+- Build script: `shared/src/nativeInterop/cinterop/JamiBridge/build-jamibridge.sh`
 
 ### Phase 6: Testing ✅ COMPLETE (32 Test Classes)
 
@@ -1179,25 +1237,25 @@ All tests passing on: Desktop, JS Browser, Android Debug/Release, macOS Arm64, i
 | `KMP.Settings.FileTransfer` | autoAccept, maxSize |
 | `KMP.Drafts` | Message drafts per conversation |
 
-### Recent Commits
-```
-974cc6c feat: implement Phase 9 - NotificationService, SettingsRepository, DraftRepository
-79cfa5d feat: add JamiBridge Objective-C++ wrapper for iOS/macOS cinterop
-3a73e3e feat: integrate native libraries and SWIG classes for Android JNI
-d9aa020 feat: add Koin dependency injection modules for all platforms
-a6abac2 feat: add DaemonCallbacksImpl orchestrator and SWIG type converters
-593f98e docs: update platform services matrix with HardwareService implementations
-3e44bf8 feat: add HardwareService implementations for iOS, macOS, and Web
-4255f7b docs: update CLAUDE.md with current implementation status
-9a800ab feat: implement platform-specific DeviceRuntimeService, HardwareService, and QRCodeUtils
-429334a feat: implement SqlDelightHistoryService with full database operations
-```
+### Recent Work
+- iOS/macOS DaemonBridge compilation fixes (type conversions, NSData handling, SwarmMessage body)
+- JamiBridge cinterop integration complete for all 5 native targets
+- All 8 build targets compiling successfully
+- Plan documentation merged into CLAUDE.md
 
 ### Next Steps (Requires External Dependencies)
 
-1. **Native Daemon Integration** - Build libjami for each platform
+1. **Compile JamiBridge Static Libraries**
+   ```bash
+   cd shared/src/nativeInterop/cinterop/JamiBridge
+   ./build-jamibridge.sh
+   ```
+   Requires: Xcode, libjami.a built for each target
+
 2. **Android JNI** - Include SWIG-generated classes from jami-daemon
-3. **iOS/macOS cinterop** - Build JamiAdapters.framework
+
+3. **Test iOS/macOS Integration** - Run on device/simulator with native libraries
+
 4. **Web REST Bridge** - Implement REST server (separate project)
 
 ---

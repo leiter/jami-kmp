@@ -8,7 +8,7 @@ plugins {
 // Set to true when JamiBridge Objective-C++ wrapper is compiled as a static library
 // The JamiBridgeWrapper.mm must be compiled and linked with libjami.a first
 // See: shared/src/nativeInterop/cinterop/JamiBridge/README.md for build instructions
-val enableJamiBridgeCinterop = false
+val enableJamiBridgeCinterop = true
 val jamiBridgePath = "${projectDir}/src/nativeInterop/cinterop"
 val libjamiLibPath = "${projectDir}/src/nativeInterop/cinterop/lib"
 
@@ -23,22 +23,33 @@ kotlin {
     }
 
     // iOS
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
+    val iosArm64Target = iosArm64()
+    val iosX64Target = iosX64()
+    val iosSimArm64Target = iosSimulatorArm64()
+
+    listOf(iosArm64Target, iosX64Target, iosSimArm64Target).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "JamiShared"
             isStatic = true
+            if (enableJamiBridgeCinterop) {
+                linkerOpts("-L$libjamiLibPath", "-lc++")
+            }
         }
         if (enableJamiBridgeCinterop) {
+            val libName = when (iosTarget) {
+                iosArm64Target -> "JamiBridge_ios"
+                else -> "JamiBridge_iossim"  // x64 and simulatorArm64 use simulator lib
+            }
             iosTarget.compilations.getByName("main") {
                 cinterops {
                     create("JamiBridge") {
                         defFile(project.file("src/nativeInterop/cinterop/JamiBridge.def"))
                         includeDirs(jamiBridgePath)
+                        extraOpts("-libraryPath", libjamiLibPath)
                     }
+                }
+                kotlinOptions {
+                    freeCompilerArgs = listOf("-linker-options", "-L$libjamiLibPath -l$libName -ljami -lc++")
                 }
             }
         }
@@ -52,6 +63,9 @@ kotlin {
         macosTarget.binaries.framework {
             baseName = "JamiShared"
             isStatic = true
+            if (enableJamiBridgeCinterop) {
+                linkerOpts("-L$libjamiLibPath", "-lJamiBridge_macos", "-ljami", "-lc++")
+            }
         }
         if (enableJamiBridgeCinterop) {
             macosTarget.compilations.getByName("main") {
@@ -59,7 +73,11 @@ kotlin {
                     create("JamiBridge") {
                         defFile(project.file("src/nativeInterop/cinterop/JamiBridge.def"))
                         includeDirs(jamiBridgePath)
+                        extraOpts("-libraryPath", libjamiLibPath)
                     }
+                }
+                kotlinOptions {
+                    freeCompilerArgs = listOf("-linker-options", "-L$libjamiLibPath -lJamiBridge_macos -ljami -lc++")
                 }
             }
         }

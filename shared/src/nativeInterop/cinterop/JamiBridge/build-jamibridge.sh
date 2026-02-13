@@ -72,13 +72,19 @@ ar rcs "$OUTPUT_DIR/libJamiBridge_macos.a" "$OUTPUT_DIR/JamiBridgeWrapper_macos.
 
 # Build for iOS (if on arm64 Mac)
 if [ "$ARCH" = "arm64" ]; then
+    # Get SDK paths
+    IOS_SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+    IOS_SIM_SDK=$(xcrun --sdk iphonesimulator --show-sdk-path)
+
     echo ""
     echo "=== Compiling for iOS ($IOS_TARGET) ==="
+    echo "Using SDK: $IOS_SDK"
     clang++ -c "$SCRIPT_DIR/JamiBridgeWrapper.mm" \
         -o "$OUTPUT_DIR/JamiBridgeWrapper_ios.o" \
         $CXX_FLAGS \
         $INCLUDE_FLAGS \
-        -target "$IOS_TARGET"
+        -target "$IOS_TARGET" \
+        -isysroot "$IOS_SDK"
 
     echo "Creating libJamiBridge_ios.a..."
     ar rcs "$OUTPUT_DIR/libJamiBridge_ios.a" "$OUTPUT_DIR/JamiBridgeWrapper_ios.o"
@@ -86,11 +92,13 @@ if [ "$ARCH" = "arm64" ]; then
     # Also create iOS simulator build
     echo ""
     echo "=== Compiling for iOS Simulator ==="
+    echo "Using SDK: $IOS_SIM_SDK"
     clang++ -c "$SCRIPT_DIR/JamiBridgeWrapper.mm" \
         -o "$OUTPUT_DIR/JamiBridgeWrapper_iossim.o" \
         $CXX_FLAGS \
         $INCLUDE_FLAGS \
-        -target "arm64-apple-ios14.0-simulator"
+        -target "arm64-apple-ios14.0-simulator" \
+        -isysroot "$IOS_SIM_SDK"
 
     echo "Creating libJamiBridge_iossim.a..."
     ar rcs "$OUTPUT_DIR/libJamiBridge_iossim.a" "$OUTPUT_DIR/JamiBridgeWrapper_iossim.o"
