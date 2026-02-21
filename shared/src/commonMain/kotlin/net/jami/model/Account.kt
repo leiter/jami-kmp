@@ -23,6 +23,9 @@ data class Account(
     val isRegistered: Boolean
         get() = registrationState == RegistrationState.REGISTERED
 
+    val needsMigration: Boolean
+        get() = registrationState == RegistrationState.ERROR_NEED_MIGRATION
+
     val isEnabled: Boolean
         get() = details[ConfigKey.ACCOUNT_ENABLE.key]?.toBoolean() ?: true
 

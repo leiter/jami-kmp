@@ -25,6 +25,7 @@ import org.koin.dsl.module
 import net.jami.repository.DraftRepository
 import net.jami.repository.SettingsRepository
 import net.jami.services.*
+import net.jami.ui.viewmodel.*
 
 /**
  * Common Koin module providing shared services.
@@ -151,6 +152,21 @@ val jamiModule = module {
             scope = get()
         )
     }
+
+    // ==================== ViewModels ====================
+
+    viewModelFactory { ConversationsViewModel(get(), get()) }
+    viewModelFactory { ChatViewModel(get(), get()) }
+    viewModelFactory { AccountCreationViewModel(get(), get()) }
+    viewModelFactory { ImportAccountViewModel(get()) }
+    viewModelFactory { AccountSettingsViewModel(get(), get()) }
+    viewModelFactory { AppSettingsViewModel(get()) }
+    viewModelFactory { CallViewModel(get(), get()) }
+    viewModelFactory { ContactsViewModel(get(), get()) }
+    viewModelFactory { ContactDetailsViewModel(get(), get()) }
+    viewModelFactory { NewConversationViewModel(get(), get(), get()) }
+    viewModelFactory { AboutViewModel() }
+    viewModelFactory { AppViewModel(get()) }
 }
 
 /**
