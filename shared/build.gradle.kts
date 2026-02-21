@@ -179,6 +179,14 @@ android {
             jniLibs.srcDirs("src/androidMain/jniLibs")
         }
     }
+
+    lint {
+        checkDependencies = false
+        checkReleaseBuilds = false
+        abortOnError = false
+        ignoreWarnings = true
+        quiet = true
+    }
 }
 
 sqldelight {

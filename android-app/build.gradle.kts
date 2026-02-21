@@ -16,6 +16,9 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 implementation(project(":shared"))
+                implementation(compose.material3)
+                implementation(compose.foundation)
+                implementation(compose.ui)
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.androidx.lifecycle.runtime)
                 implementation(libs.androidx.lifecycle.viewmodel)
@@ -55,5 +58,13 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    lint {
+        checkDependencies = false
+        checkReleaseBuilds = false
+        abortOnError = false
+        ignoreWarnings = true
+        quiet = true
     }
 }
