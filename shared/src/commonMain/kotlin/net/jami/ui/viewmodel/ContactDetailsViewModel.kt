@@ -29,24 +29,10 @@ import net.jami.model.Uri
 import net.jami.services.ContactEvent
 import net.jami.services.ContactService
 import net.jami.services.ConversationFacade
+import net.jami.ui.contracts.ConversationDetailsContract
 
 /**
- * State for the contact details screen.
- */
-data class ContactDetailsState(
-    val displayName: String = "",
-    val username: String = "",
-    val identityHash: String = "",
-    val avatarUri: String? = null,
-    val isBlocked: Boolean = false,
-    val isLoading: Boolean = false
-)
-
-/**
- * ViewModel for the contact details screen.
- *
- * Displays detailed information about a contact and provides actions
- * for blocking, removing, or starting a conversation with them.
+ * ViewModel for the contact/conversation details screen.
  */
 class ContactDetailsViewModel(
     private val contactService: ContactService,
@@ -54,26 +40,21 @@ class ContactDetailsViewModel(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val _state = MutableStateFlow(ContactDetailsState())
-    val state: StateFlow<ContactDetailsState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(ConversationDetailsContract.State())
+    val state: StateFlow<ConversationDetailsContract.State> = _state.asStateFlow()
 
     private var currentContactUri: Uri? = null
     private var currentAccountId: String? = null
 
     init {
-        // Observe contact updates for real-time changes
         scope.launch {
             contactService.contactEvents.collect { event ->
                 when (event) {
                     is ContactEvent.PresenceUpdated -> {
-                        if (event.contact.uri == currentContactUri) {
-                            refreshContact()
-                        }
+                        if (event.contact.uri == currentContactUri) refreshContact()
                     }
                     is ContactEvent.ProfileUpdated -> {
-                        if (event.uri == currentContactUri) {
-                            refreshContact()
-                        }
+                        if (event.uri == currentContactUri) refreshContact()
                     }
                     is ContactEvent.ContactRemoved -> {
                         if (event.contact.uri == currentContactUri) {
@@ -86,30 +67,29 @@ class ContactDetailsViewModel(
         }
     }
 
-    /**
-     * Load contact details by URI string.
-     *
-     * @param uri URI of the contact to display.
-     */
+    fun onAction(action: ConversationDetailsContract.Action) {
+        when (action) {
+            ConversationDetailsContract.Action.BlockContact -> blockContact()
+            ConversationDetailsContract.Action.RemoveContact -> removeContact()
+        }
+    }
+
     fun loadContact(uri: String) {
         scope.launch {
             _state.value = _state.value.copy(isLoading = true)
             try {
                 val contactUri = Uri.fromString(uri)
                 currentContactUri = contactUri
-
-                // Determine the current account
-                // In a real scenario, accountId would be passed or obtained from AccountService
-                currentAccountId = null // Set from context
+                currentAccountId = null
 
                 val contact = contactService.findContact(currentAccountId ?: "", contactUri)
                 val profile = contactService.loadContactData(contact, currentAccountId ?: "")
 
-                _state.value = ContactDetailsState(
+                _state.value = ConversationDetailsContract.State(
                     displayName = profile.displayName ?: contact.displayUsername,
                     username = contact.username ?: "",
                     identityHash = contact.primaryNumber,
-                    avatarUri = null, // Avatar is ByteArray, would need encoding for display
+                    avatarUri = null,
                     isBlocked = contact.status == Contact.Status.BLOCKED,
                     isLoading = false
                 )
@@ -119,30 +99,22 @@ class ContactDetailsViewModel(
         }
     }
 
-    /**
-     * Block or unblock the current contact.
-     */
-    fun blockContact() {
+    private fun blockContact() {
         scope.launch {
             val accountId = currentAccountId ?: return@launch
             val contactUri = currentContactUri ?: return@launch
             val isCurrentlyBlocked = _state.value.isBlocked
 
             if (isCurrentlyBlocked) {
-                // Unblock by re-adding
                 contactService.addContact(accountId, contactUri)
             } else {
-                // Block (remove with ban)
                 contactService.removeContact(accountId, contactUri, ban = true)
             }
             _state.value = _state.value.copy(isBlocked = !isCurrentlyBlocked)
         }
     }
 
-    /**
-     * Remove the current contact from the contact list.
-     */
-    fun removeContact() {
+    private fun removeContact() {
         scope.launch {
             val accountId = currentAccountId ?: return@launch
             val contactUri = currentContactUri ?: return@launch
@@ -150,25 +122,6 @@ class ContactDetailsViewModel(
         }
     }
 
-    /**
-     * Start or open a conversation with the current contact.
-     *
-     * @return The conversation URI, or null if no contact is loaded.
-     */
-    suspend fun startConversation(): String? {
-        val accountId = currentAccountId ?: return null
-        val contactUri = currentContactUri ?: return null
-        return try {
-            val conversation = conversationFacade.startConversation(accountId, contactUri)
-            conversation.uri.uri
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    /**
-     * Refresh the displayed contact from the cache.
-     */
     private fun refreshContact() {
         val contactUri = currentContactUri ?: return
         val accountId = currentAccountId ?: return
@@ -181,9 +134,6 @@ class ContactDetailsViewModel(
         )
     }
 
-    /**
-     * Cancel the coroutine scope when this ViewModel is no longer needed.
-     */
     fun onCleared() {
         scope.cancel()
     }

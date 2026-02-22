@@ -22,62 +22,34 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import net.jami.di.getViewModel
+import net.jami.ui.components.container.JamiScaffold
+import net.jami.ui.components.navigation.JamiTopBar
+import net.jami.ui.components.navigation.JamiTopBarStyle
+import net.jami.ui.contracts.AboutContract
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.AboutViewModel
 
 /**
  * About screen displaying application information.
  *
- * Shows the Jami text logo, version, description, copyright notice,
- * and license information.
- *
+ * @param state The about screen state.
  * @param onBack Called when the user navigates back.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
+    state: AboutContract.State,
     onBack: () -> Unit,
 ) {
-    val viewModel = getViewModel<AboutViewModel>()
-    val state by viewModel.state.collectAsState()
-
-    Scaffold(
+    JamiScaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "About",
-                        style = JamiTheme.typography.titleMedium,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
-                    titleContentColor = JamiTheme.colors.onSurface,
-                ),
+            JamiTopBar(
+                style = JamiTopBarStyle.Settings,
+                title = "About",
+                onNavigateBack = onBack,
             )
         },
     ) { padding ->
@@ -89,7 +61,6 @@ fun AboutScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            // Jami text logo
             Text(
                 text = "Jami",
                 style = JamiTheme.typography.headlineLarge,
@@ -98,7 +69,6 @@ fun AboutScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.s))
 
-            // Version
             Text(
                 text = "Version ${state.version}",
                 style = JamiTheme.typography.bodyMedium,
@@ -107,7 +77,6 @@ fun AboutScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.xl))
 
-            // Description
             Text(
                 text = state.description,
                 style = JamiTheme.typography.bodyLarge,
@@ -117,7 +86,6 @@ fun AboutScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.xl))
 
-            // Copyright
             Text(
                 text = state.copyright,
                 style = JamiTheme.typography.bodySmall,
@@ -127,7 +95,6 @@ fun AboutScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.m))
 
-            // License
             Text(
                 text = "Licensed under the GNU General Public License v3.0",
                 style = JamiTheme.typography.bodySmall,

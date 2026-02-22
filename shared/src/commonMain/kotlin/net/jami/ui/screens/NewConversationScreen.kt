@@ -22,80 +22,52 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import kotlinx.coroutines.launch
-import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
+import net.jami.ui.components.container.JamiScaffold
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.JamiToggle
+import net.jami.ui.components.inputs.JamiSearchField
+import net.jami.ui.components.navigation.JamiTopBar
+import net.jami.ui.components.navigation.JamiTopBarStyle
+import net.jami.ui.contracts.ContactItem
+import net.jami.ui.contracts.NewConversationContract
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.ContactItem
-import net.jami.ui.viewmodel.NewConversationViewModel
 
 /**
  * New conversation screen for selecting contacts and creating a conversation.
  *
- * Provides search, contact selection (single or group), and a create button.
- *
+ * @param searchState The search state (Tier 2 split).
+ * @param selectionState The selection state (Tier 2 split).
+ * @param onAction Dispatches new conversation actions.
  * @param onBack Called when the user navigates back.
- * @param onConversationCreated Called with the new conversation ID after creation.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewConversationScreen(
+    searchState: NewConversationContract.SearchState,
+    selectionState: NewConversationContract.SelectionState,
+    onAction: (NewConversationContract.Action) -> Unit,
     onBack: () -> Unit,
-    onConversationCreated: (String) -> Unit,
 ) {
-    val viewModel = getViewModel<NewConversationViewModel>()
-    val state by viewModel.state.collectAsState()
-    val coroutineScope = rememberCoroutineScope()
-
-    Scaffold(
+    JamiScaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "New Conversation",
-                        style = JamiTheme.typography.titleMedium,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
-                    titleContentColor = JamiTheme.colors.onSurface,
-                ),
+            JamiTopBar(
+                style = JamiTopBarStyle.Detail,
+                title = "New Conversation",
+                onNavigateBack = onBack,
             )
         },
     ) { padding ->
@@ -104,12 +76,10 @@ fun NewConversationScreen(
                 .fillMaxSize()
                 .padding(padding),
         ) {
-            // Search field
-            OutlinedTextField(
-                value = state.searchQuery,
-                onValueChange = { viewModel.search(it) },
-                placeholder = { Text("Search contacts or Jami ID...") },
-                singleLine = true,
+            JamiSearchField(
+                query = searchState.query,
+                onQueryChange = { onAction(NewConversationContract.Action.Search(it)) },
+                placeholder = "Search contacts or Jami ID...",
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -118,62 +88,49 @@ fun NewConversationScreen(
                     ),
             )
 
-            // Group toggle
             JamiToggle(
                 label = "Create group conversation",
-                checked = state.isGroup,
-                onCheckedChange = { /* Toggle group mode via viewModel if needed */ },
+                checked = selectionState.isGroup,
+                onCheckedChange = { onAction(NewConversationContract.Action.SetIsGroup(it)) },
             )
 
-            // Contact list
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
             ) {
                 items(
-                    items = state.searchResults,
+                    items = searchState.results,
                     key = { it.uri },
                 ) { contact ->
-                    val isSelected = state.selectedContacts.any { it.uri == contact.uri }
+                    val isSelected = selectionState.selectedContacts.any { it.uri == contact.uri }
                     SelectableContactItem(
                         contact = contact,
                         isSelected = isSelected,
                         onClick = {
                             if (isSelected) {
-                                viewModel.removeContact(contact)
+                                onAction(NewConversationContract.Action.RemoveContact(contact))
                             } else {
-                                viewModel.selectContact(contact)
+                                onAction(NewConversationContract.Action.SelectContact(contact))
                             }
                         },
                     )
                 }
             }
 
-            // Create button
             JamiButton(
                 text = "Create",
-                onClick = {
-                    coroutineScope.launch {
-                        val conversationId = viewModel.createConversation()
-                        if (conversationId != null) {
-                            onConversationCreated(conversationId)
-                        }
-                    }
-                },
+                onClick = { onAction(NewConversationContract.Action.CreateConversation) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(JamiTheme.spacing.l),
-                loading = state.isLoading,
-                enabled = state.selectedContacts.isNotEmpty() && !state.isLoading,
+                loading = searchState.isLoading,
+                enabled = selectionState.selectedContacts.isNotEmpty() && !searchState.isLoading,
             )
         }
     }
 }
 
-/**
- * Contact item with a selection indicator (checkbox circle).
- */
 @Composable
 private fun SelectableContactItem(
     contact: ContactItem,

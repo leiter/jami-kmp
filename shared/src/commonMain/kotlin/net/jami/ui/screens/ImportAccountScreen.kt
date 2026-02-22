@@ -25,75 +25,38 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
+import net.jami.ui.components.container.JamiScaffold
+import net.jami.ui.components.inputs.JamiInputText
+import net.jami.ui.components.navigation.JamiTopBar
+import net.jami.ui.components.navigation.JamiTopBarStyle
+import net.jami.ui.contracts.ImportAccountContract
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.ImportAccountViewModel
 
 /**
  * Import account screen for restoring an account from a backup archive.
  *
- * Provides fields for the archive file path and password, then uses
- * [ImportAccountViewModel] to restore the account through the daemon.
- *
+ * @param state The import account state.
+ * @param onAction Dispatches import actions.
  * @param onBack Called when the user navigates back.
- * @param onImported Called after the account is successfully imported.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImportAccountScreen(
+    state: ImportAccountContract.State,
+    onAction: (ImportAccountContract.Action) -> Unit,
     onBack: () -> Unit,
-    onImported: () -> Unit,
 ) {
-    val viewModel = getViewModel<ImportAccountViewModel>()
-    val state by viewModel.state.collectAsState()
-
-    // Navigate when import completes
-    LaunchedEffect(state.isImported) {
-        if (state.isImported) {
-            onImported()
-        }
-    }
-
-    Scaffold(
+    JamiScaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Import Account",
-                        style = JamiTheme.typography.titleMedium,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
-                    titleContentColor = JamiTheme.colors.onSurface,
-                ),
+            JamiTopBar(
+                style = JamiTopBarStyle.Detail,
+                title = "Import Account",
+                onNavigateBack = onBack,
             )
         },
     ) { padding ->
@@ -106,36 +69,30 @@ fun ImportAccountScreen(
         ) {
             Spacer(Modifier.height(JamiTheme.spacing.l))
 
-            // Archive path field
-            OutlinedTextField(
+            JamiInputText(
                 value = state.archivePath,
-                onValueChange = { viewModel.setArchivePath(it) },
-                label = { Text("Archive file path") },
-                placeholder = { Text("/path/to/backup.gz") },
+                onValueChange = { onAction(ImportAccountContract.Action.SetArchivePath(it)) },
+                label = "Archive file path",
+                placeholder = "/path/to/backup.gz",
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Next,
-                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             )
 
             Spacer(Modifier.height(JamiTheme.spacing.m))
 
-            // Password field
-            OutlinedTextField(
+            JamiInputText(
                 value = state.password,
-                onValueChange = { viewModel.setPassword(it) },
-                label = { Text("Password") },
+                onValueChange = { onAction(ImportAccountContract.Action.SetPassword(it)) },
+                label = "Password",
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done,
                 ),
             )
 
-            // Error message
             if (state.error != null) {
                 Spacer(Modifier.height(JamiTheme.spacing.s))
                 Text(
@@ -147,10 +104,9 @@ fun ImportAccountScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.xl))
 
-            // Import button
             JamiButton(
                 text = "Import Account",
-                onClick = { viewModel.importAccount() },
+                onClick = { onAction(ImportAccountContract.Action.Import) },
                 modifier = Modifier.fillMaxWidth(),
                 loading = state.isLoading,
                 enabled = !state.isLoading,

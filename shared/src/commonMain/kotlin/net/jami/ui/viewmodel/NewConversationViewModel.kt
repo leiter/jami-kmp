@@ -20,8 +20,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.jami.model.Contact
@@ -30,25 +33,14 @@ import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.services.ContactService
 import net.jami.services.ConversationFacade
-
-/**
- * State for the new conversation creation screen.
- */
-data class NewConversationState(
-    val searchQuery: String = "",
-    val searchResults: List<ContactItem> = emptyList(),
-    val selectedContacts: List<ContactItem> = emptyList(),
-    val isGroup: Boolean = false,
-    val groupName: String = "",
-    val isLoading: Boolean = false
-)
+import net.jami.ui.contracts.ContactItem
+import net.jami.ui.contracts.NewConversationContract
 
 /**
  * ViewModel for creating a new conversation.
  *
- * Supports searching for contacts by name or Jami ID, selecting
- * one or more contacts, and creating either a 1:1 or group conversation
- * via the daemon.
+ * Exposes split state flows (Tier 2): SearchState and SelectionState.
+ * Emits a one-shot conversationCreated event via SharedFlow.
  */
 class NewConversationViewModel(
     private val contactService: ContactService,
@@ -57,44 +49,56 @@ class NewConversationViewModel(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val _state = MutableStateFlow(NewConversationState())
-    val state: StateFlow<NewConversationState> = _state.asStateFlow()
+    private val _searchState = MutableStateFlow(NewConversationContract.SearchState())
+    val searchState: StateFlow<NewConversationContract.SearchState> = _searchState.asStateFlow()
+
+    private val _selectionState = MutableStateFlow(NewConversationContract.SelectionState())
+    val selectionState: StateFlow<NewConversationContract.SelectionState> = _selectionState.asStateFlow()
+
+    private val _conversationCreated = MutableSharedFlow<String>()
+    val conversationCreated: SharedFlow<String> = _conversationCreated.asSharedFlow()
 
     init {
-        // Observe name lookup results for search
         scope.launch {
             accountService.accountEvents.collect { event ->
                 when (event) {
-                    is AccountEvent.RegisteredNameFound -> {
-                        handleNameFound(event)
-                    }
-                    is AccountEvent.UserSearchEnded -> {
-                        handleSearchResults(event)
-                    }
+                    is AccountEvent.RegisteredNameFound -> handleNameFound(event)
+                    is AccountEvent.UserSearchEnded -> handleSearchResults(event)
                     else -> { /* Other events */ }
                 }
             }
         }
     }
 
-    /**
-     * Search for contacts or Jami IDs.
-     *
-     * @param query Search string (username, display name, or Jami ID hash).
-     */
-    fun search(query: String) {
-        _state.value = _state.value.copy(searchQuery = query)
+    fun onAction(action: NewConversationContract.Action) {
+        when (action) {
+            is NewConversationContract.Action.Search -> search(action.query)
+            is NewConversationContract.Action.SelectContact -> selectContact(action.contact)
+            is NewConversationContract.Action.RemoveContact -> removeContact(action.contact)
+            is NewConversationContract.Action.SetGroupName -> {
+                _selectionState.value = _selectionState.value.copy(groupName = action.name)
+            }
+            is NewConversationContract.Action.SetIsGroup -> {
+                _selectionState.value = _selectionState.value.copy(isGroup = action.isGroup)
+            }
+            NewConversationContract.Action.CreateConversation -> {
+                scope.launch { createConversation() }
+            }
+        }
+    }
+
+    private fun search(query: String) {
+        _searchState.value = _searchState.value.copy(query = query)
 
         if (query.isEmpty()) {
-            _state.value = _state.value.copy(searchResults = emptyList())
+            _searchState.value = _searchState.value.copy(results = emptyList())
             return
         }
 
         scope.launch {
-            _state.value = _state.value.copy(isLoading = true)
+            _searchState.value = _searchState.value.copy(isLoading = true)
             val account = accountService.currentAccount.value ?: return@launch
 
-            // Search locally in cached contacts
             val cachedContacts = contactService.getCachedContacts(account.accountId)
             val lowerQuery = query.lowercase()
             val localResults = cachedContacts
@@ -112,92 +116,64 @@ class NewConversationViewModel(
                     )
                 }
 
-            _state.value = _state.value.copy(searchResults = localResults)
+            _searchState.value = _searchState.value.copy(results = localResults)
 
-            // Also search the name server for remote results
             accountService.searchUser(account.accountId, query)
         }
     }
 
-    /**
-     * Select a contact to add to the new conversation.
-     *
-     * @param contact The contact item to select.
-     */
-    fun selectContact(contact: ContactItem) {
-        val current = _state.value.selectedContacts
+    private fun selectContact(contact: ContactItem) {
+        val current = _selectionState.value.selectedContacts
         if (current.none { it.uri == contact.uri }) {
-            _state.value = _state.value.copy(
+            _selectionState.value = _selectionState.value.copy(
                 selectedContacts = current + contact
             )
         }
     }
 
-    /**
-     * Remove a contact from the selection.
-     *
-     * @param contact The contact item to deselect.
-     */
-    fun removeContact(contact: ContactItem) {
-        val current = _state.value.selectedContacts
-        _state.value = _state.value.copy(
+    private fun removeContact(contact: ContactItem) {
+        val current = _selectionState.value.selectedContacts
+        _selectionState.value = _selectionState.value.copy(
             selectedContacts = current.filter { it.uri != contact.uri }
         )
     }
 
-    /**
-     * Create the conversation with the selected contacts.
-     *
-     * For a single contact, starts a 1:1 conversation.
-     * For multiple contacts (when isGroup is true), creates a group conversation.
-     *
-     * @return The conversation URI if created successfully, null otherwise.
-     */
-    suspend fun createConversation(): String? {
-        val selected = _state.value.selectedContacts
-        if (selected.isEmpty()) return null
+    private suspend fun createConversation() {
+        val selected = _selectionState.value.selectedContacts
+        if (selected.isEmpty()) return
 
-        val account = accountService.currentAccount.value ?: return null
+        val account = accountService.currentAccount.value ?: return
         val accountId = account.accountId
 
-        return try {
-            _state.value = _state.value.copy(isLoading = true)
+        try {
+            _searchState.value = _searchState.value.copy(isLoading = true)
 
-            if (selected.size == 1 && !_state.value.isGroup) {
-                // Start a 1:1 conversation
+            val conversationId = if (selected.size == 1 && !_selectionState.value.isGroup) {
                 val contactUri = Uri.fromString(selected.first().uri)
                 val conversation = conversationFacade.startConversation(accountId, contactUri)
-                _state.value = _state.value.copy(isLoading = false)
                 conversation.uri.uri
             } else {
-                // Create a group conversation
                 val memberUris = selected.map { it.uri }
-                val conversationId = accountService.startConversation(accountId, memberUris)
+                val convId = accountService.startConversation(accountId, memberUris)
 
-                // Set group name if provided
-                val groupName = _state.value.groupName
+                val groupName = _selectionState.value.groupName
                 if (groupName.isNotEmpty()) {
                     accountService.updateConversationInfo(
-                        accountId,
-                        conversationId,
-                        mapOf("title" to groupName)
+                        accountId, convId, mapOf("title" to groupName)
                     )
                 }
-
-                _state.value = _state.value.copy(isLoading = false)
-                conversationId
+                convId
             }
+
+            _searchState.value = _searchState.value.copy(isLoading = false)
+            _conversationCreated.emit(conversationId)
         } catch (e: Exception) {
-            _state.value = _state.value.copy(isLoading = false)
-            null
+            _searchState.value = _searchState.value.copy(isLoading = false)
         }
     }
 
-    /**
-     * Handle a name lookup result from the daemon.
-     */
     private fun handleNameFound(event: AccountEvent.RegisteredNameFound) {
-        val currentQuery = _state.value.searchQuery
+        val currentQuery = _searchState.value.query
         if (event.name != currentQuery && event.address != currentQuery) return
 
         if (event.state == 0 && event.address.isNotEmpty()) {
@@ -209,23 +185,20 @@ class NewConversationViewModel(
                 avatarUri = null
             )
 
-            val existing = _state.value.searchResults
+            val existing = _searchState.value.results
             if (existing.none { it.uri == newResult.uri }) {
-                _state.value = _state.value.copy(
-                    searchResults = existing + newResult,
+                _searchState.value = _searchState.value.copy(
+                    results = existing + newResult,
                     isLoading = false
                 )
             }
         } else {
-            _state.value = _state.value.copy(isLoading = false)
+            _searchState.value = _searchState.value.copy(isLoading = false)
         }
     }
 
-    /**
-     * Handle user search results from the daemon.
-     */
     private fun handleSearchResults(event: AccountEvent.UserSearchEnded) {
-        if (event.query != _state.value.searchQuery) return
+        if (event.query != _searchState.value.query) return
 
         val results = event.results.mapNotNull { result ->
             val address = result["id"] ?: return@mapNotNull null
@@ -247,22 +220,18 @@ class NewConversationViewModel(
             )
         }
 
-        // Merge with existing local results, avoiding duplicates
-        val existing = _state.value.searchResults.associateBy { it.uri }
+        val existing = _searchState.value.results.associateBy { it.uri }
         val merged = existing.toMutableMap()
         for (result in results) {
             merged.putIfAbsent(result.uri, result)
         }
 
-        _state.value = _state.value.copy(
-            searchResults = merged.values.toList(),
+        _searchState.value = _searchState.value.copy(
+            results = merged.values.toList(),
             isLoading = false
         )
     }
 
-    /**
-     * Cancel the coroutine scope when this ViewModel is no longer needed.
-     */
     fun onCleared() {
         scope.cancel()
     }

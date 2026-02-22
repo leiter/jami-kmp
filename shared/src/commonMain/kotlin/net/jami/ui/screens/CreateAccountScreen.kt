@@ -25,75 +25,38 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
+import net.jami.ui.components.container.JamiScaffold
+import net.jami.ui.components.inputs.JamiInputText
+import net.jami.ui.components.navigation.JamiTopBar
+import net.jami.ui.components.navigation.JamiTopBarStyle
+import net.jami.ui.contracts.CreateAccountContract
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.AccountCreationViewModel
 
 /**
  * Account creation screen with username, password, and confirm password fields.
  *
- * Uses [AccountCreationViewModel] to handle account creation through the daemon.
- * Navigates to Home on success.
- *
+ * @param state The account creation state.
+ * @param onAction Dispatches creation actions.
  * @param onBack Called when the user navigates back.
- * @param onAccountCreated Called after the account is successfully created.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateAccountScreen(
+    state: CreateAccountContract.State,
+    onAction: (CreateAccountContract.Action) -> Unit,
     onBack: () -> Unit,
-    onAccountCreated: () -> Unit,
 ) {
-    val viewModel = getViewModel<AccountCreationViewModel>()
-    val state by viewModel.state.collectAsState()
-
-    // Navigate when account is created
-    LaunchedEffect(state.isCreated) {
-        if (state.isCreated) {
-            onAccountCreated()
-        }
-    }
-
-    Scaffold(
+    JamiScaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Create Account",
-                        style = JamiTheme.typography.titleMedium,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
-                    titleContentColor = JamiTheme.colors.onSurface,
-                ),
+            JamiTopBar(
+                style = JamiTopBarStyle.Detail,
+                title = "Create Account",
+                onNavigateBack = onBack,
             )
         },
     ) { padding ->
@@ -106,28 +69,23 @@ fun CreateAccountScreen(
         ) {
             Spacer(Modifier.height(JamiTheme.spacing.l))
 
-            // Username field
-            OutlinedTextField(
+            JamiInputText(
                 value = state.username,
-                onValueChange = { viewModel.setUsername(it) },
-                label = { Text("Username (optional)") },
+                onValueChange = { onAction(CreateAccountContract.Action.SetUsername(it)) },
+                label = "Username (optional)",
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Next,
-                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             )
 
             Spacer(Modifier.height(JamiTheme.spacing.m))
 
-            // Password field
-            OutlinedTextField(
+            JamiInputText(
                 value = state.password,
-                onValueChange = { viewModel.setPassword(it) },
-                label = { Text("Password (optional)") },
+                onValueChange = { onAction(CreateAccountContract.Action.SetPassword(it)) },
+                label = "Password (optional)",
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Next,
@@ -136,21 +94,18 @@ fun CreateAccountScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.m))
 
-            // Confirm password field
-            OutlinedTextField(
+            JamiInputText(
                 value = state.confirmPassword,
-                onValueChange = { viewModel.setConfirmPassword(it) },
-                label = { Text("Confirm Password") },
+                onValueChange = { onAction(CreateAccountContract.Action.SetConfirmPassword(it)) },
+                label = "Confirm Password",
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done,
                 ),
             )
 
-            // Error message
             if (state.error != null) {
                 Spacer(Modifier.height(JamiTheme.spacing.s))
                 Text(
@@ -162,10 +117,9 @@ fun CreateAccountScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.xl))
 
-            // Create button
             JamiButton(
                 text = "Create Account",
-                onClick = { viewModel.createAccount() },
+                onClick = { onAction(CreateAccountContract.Action.CreateAccount) },
                 modifier = Modifier.fillMaxWidth(),
                 loading = state.isLoading,
                 enabled = !state.isLoading,

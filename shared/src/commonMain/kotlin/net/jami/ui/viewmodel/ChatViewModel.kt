@@ -28,44 +28,15 @@ import net.jami.model.Uri
 import net.jami.services.AccountService
 import net.jami.services.ConversationFacade
 import net.jami.services.ConversationEvent
-
-/**
- * Type of message content.
- */
-enum class MessageType {
-    Text,
-    System,
-    Call,
-    Transfer
-}
-
-/**
- * Item representing a single message in the chat.
- */
-data class MessageItem(
-    val id: String,
-    val text: String,
-    val author: String,
-    val timestamp: Long,
-    val isOutgoing: Boolean,
-    val type: MessageType = MessageType.Text
-)
-
-/**
- * State for the chat / conversation detail screen.
- */
-data class ChatState(
-    val messages: List<MessageItem> = emptyList(),
-    val inputText: String = "",
-    val conversationTitle: String = "",
-    val isLoading: Boolean = false
-)
+import net.jami.ui.contracts.ChatContract
+import net.jami.ui.contracts.MessageItem
+import net.jami.ui.contracts.MessageType
 
 /**
  * ViewModel for the chat screen displaying messages in a single conversation.
  *
- * Handles message loading, sending, and real-time updates via
- * ConversationFacade event observation.
+ * Exposes three separate state flows (Tier 1 split) so that keystroke
+ * input changes do not recompose the message list or top bar.
  */
 class ChatViewModel(
     private val conversationFacade: ConversationFacade,
@@ -73,14 +44,19 @@ class ChatViewModel(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val _state = MutableStateFlow(ChatState())
-    val state: StateFlow<ChatState> = _state.asStateFlow()
+    private val _topBarState = MutableStateFlow(ChatContract.TopBarState())
+    val topBarState: StateFlow<ChatContract.TopBarState> = _topBarState.asStateFlow()
+
+    private val _messagesState = MutableStateFlow(ChatContract.MessagesState())
+    val messagesState: StateFlow<ChatContract.MessagesState> = _messagesState.asStateFlow()
+
+    private val _inputState = MutableStateFlow(ChatContract.InputState())
+    val inputState: StateFlow<ChatContract.InputState> = _inputState.asStateFlow()
 
     private var currentConversationId: String? = null
     private var currentAccountId: String? = null
 
     init {
-        // Observe incoming message events for the active conversation
         scope.launch {
             conversationFacade.conversationEvents.collect { event ->
                 val convId = currentConversationId ?: return@collect
@@ -101,14 +77,19 @@ class ChatViewModel(
         }
     }
 
-    /**
-     * Load a conversation by its ID. Sets up observation and loads history.
-     *
-     * @param conversationId The swarm or legacy conversation ID.
-     */
+    fun onAction(action: ChatContract.Action) {
+        when (action) {
+            is ChatContract.Action.UpdateInput -> {
+                _inputState.value = ChatContract.InputState(text = action.text)
+            }
+            ChatContract.Action.SendMessage -> sendMessage()
+            ChatContract.Action.LoadMore -> loadMore()
+        }
+    }
+
     fun loadConversation(conversationId: String) {
         scope.launch {
-            _state.value = _state.value.copy(isLoading = true)
+            _messagesState.value = _messagesState.value.copy(isLoading = true)
             try {
                 val account = accountService.currentAccount.value ?: return@launch
                 currentAccountId = account.accountId
@@ -118,25 +99,21 @@ class ChatViewModel(
                 val conversation = conversationFacade.getConversation(account.accountId, conversationUri)
 
                 val title = conversation?.contact?.displayUsername ?: conversationId
-                _state.value = _state.value.copy(conversationTitle = title)
+                _topBarState.value = ChatContract.TopBarState(conversationTitle = title)
 
-                // Load conversation history via the facade
                 if (conversation != null) {
                     conversationFacade.loadConversationHistory(conversation)
                 }
 
                 loadMessagesFromHistory()
             } catch (e: Exception) {
-                _state.value = _state.value.copy(isLoading = false)
+                _messagesState.value = _messagesState.value.copy(isLoading = false)
             }
         }
     }
 
-    /**
-     * Send the current input text as a message.
-     */
-    fun sendMessage() {
-        val text = _state.value.inputText.trim()
+    private fun sendMessage() {
+        val text = _inputState.value.text.trim()
         if (text.isEmpty()) return
 
         scope.launch {
@@ -144,27 +121,13 @@ class ChatViewModel(
             val conversationId = currentConversationId ?: return@launch
             val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
 
-            // Send via daemon
             accountService.sendConversationMessage(accountId, conversationUri, text)
 
-            // Clear input
-            _state.value = _state.value.copy(inputText = "")
+            _inputState.value = ChatContract.InputState(text = "")
         }
     }
 
-    /**
-     * Update the text input field.
-     *
-     * @param text New input text.
-     */
-    fun updateInput(text: String) {
-        _state.value = _state.value.copy(inputText = text)
-    }
-
-    /**
-     * Load more (older) messages for the current conversation.
-     */
-    fun loadMore() {
+    private fun loadMore() {
         scope.launch {
             val accountId = currentAccountId ?: return@launch
             val conversationId = currentConversationId ?: return@launch
@@ -176,9 +139,6 @@ class ChatViewModel(
         }
     }
 
-    /**
-     * Reload messages from the conversation's in-memory history.
-     */
     private fun loadMessagesFromHistory() {
         val accountId = currentAccountId ?: return
         val conversationId = currentConversationId ?: return
@@ -187,8 +147,6 @@ class ChatViewModel(
 
         if (conversation != null) {
             val history = conversation.getSortedHistory()
-            val account = accountService.currentAccount.value
-            val ownUri = account?.accountId ?: ""
 
             val items = history.map { interaction ->
                 MessageItem(
@@ -200,18 +158,14 @@ class ChatViewModel(
                     type = MessageType.Text
                 )
             }
-            _state.value = _state.value.copy(messages = items, isLoading = false)
+            _messagesState.value = ChatContract.MessagesState(messages = items, isLoading = false)
         } else {
-            _state.value = _state.value.copy(isLoading = false)
+            _messagesState.value = _messagesState.value.copy(isLoading = false)
         }
     }
 
-    /**
-     * Append a newly received message to the current list.
-     */
     private fun appendMessage(event: ConversationEvent.MessageReceived) {
         val msg = event.message
-        val account = accountService.currentAccount.value
         val item = MessageItem(
             id = msg.id,
             text = msg.textContent,
@@ -224,13 +178,10 @@ class ChatViewModel(
                 else -> MessageType.System
             }
         )
-        val current = _state.value.messages
-        _state.value = _state.value.copy(messages = current + item)
+        val current = _messagesState.value.messages
+        _messagesState.value = ChatContract.MessagesState(messages = current + item)
     }
 
-    /**
-     * Cancel the coroutine scope when this ViewModel is no longer needed.
-     */
     fun onCleared() {
         scope.cancel()
     }

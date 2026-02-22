@@ -23,65 +23,36 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import net.jami.di.getViewModel
+import net.jami.ui.components.container.JamiScaffold
 import net.jami.ui.components.content.JamiSectionTitle
 import net.jami.ui.components.content.JamiToggle
+import net.jami.ui.components.navigation.JamiTopBar
+import net.jami.ui.components.navigation.JamiTopBarStyle
+import net.jami.ui.contracts.AppSettingsContract
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.AppSettingsViewModel
 
 /**
  * Application settings screen with toggle rows organized by section.
  *
- * Sections:
- * - Appearance: Dark mode
- * - Privacy: Typing indicators, link preview
- * - System: Push notifications, start on boot, run in background
- *
+ * @param state The settings state.
+ * @param onAction Dispatches settings actions.
  * @param onBack Called when the user navigates back.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppSettingsScreen(
+    state: AppSettingsContract.State,
+    onAction: (AppSettingsContract.Action) -> Unit,
     onBack: () -> Unit,
 ) {
-    val viewModel = getViewModel<AppSettingsViewModel>()
-    val state by viewModel.state.collectAsState()
-
-    Scaffold(
+    JamiScaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Settings",
-                        style = JamiTheme.typography.titleMedium,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
-                    titleContentColor = JamiTheme.colors.onSurface,
-                ),
+            JamiTopBar(
+                style = JamiTopBarStyle.Settings,
+                title = "Settings",
+                onNavigateBack = onBack,
             )
         },
     ) { padding ->
@@ -91,59 +62,56 @@ fun AppSettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState()),
         ) {
-            // Appearance section
             JamiSectionTitle(title = "Appearance")
 
             JamiToggle(
                 label = "Dark mode",
                 description = "Use dark color theme throughout the app",
                 checked = state.isDarkTheme,
-                onCheckedChange = { viewModel.toggleDarkTheme() },
+                onCheckedChange = { onAction(AppSettingsContract.Action.ToggleDarkTheme) },
             )
 
             HorizontalDivider()
 
-            // Privacy section
             JamiSectionTitle(title = "Privacy")
 
             JamiToggle(
                 label = "Typing indicators",
                 description = "Let others see when you are typing",
                 checked = state.isTypingIndicators,
-                onCheckedChange = { viewModel.toggleTypingIndicators() },
+                onCheckedChange = { onAction(AppSettingsContract.Action.ToggleTypingIndicators) },
             )
 
             JamiToggle(
                 label = "Link preview",
                 description = "Show previews for links in messages",
                 checked = state.isLinkPreview,
-                onCheckedChange = { viewModel.toggleLinkPreview() },
+                onCheckedChange = { onAction(AppSettingsContract.Action.ToggleLinkPreview) },
             )
 
             HorizontalDivider()
 
-            // System section
             JamiSectionTitle(title = "System")
 
             JamiToggle(
                 label = "Push notifications",
                 description = "Receive notifications for new messages and calls",
                 checked = state.isPushNotifications,
-                onCheckedChange = { viewModel.togglePushNotifications() },
+                onCheckedChange = { onAction(AppSettingsContract.Action.TogglePushNotifications) },
             )
 
             JamiToggle(
                 label = "Start on boot",
                 description = "Launch Jami when the device starts",
                 checked = state.isStartOnBoot,
-                onCheckedChange = { viewModel.toggleStartOnBoot() },
+                onCheckedChange = { onAction(AppSettingsContract.Action.ToggleStartOnBoot) },
             )
 
             JamiToggle(
                 label = "Run in background",
                 description = "Keep Jami running to receive calls and messages",
                 checked = state.isRunInBackground,
-                onCheckedChange = { viewModel.toggleRunInBackground() },
+                onCheckedChange = { onAction(AppSettingsContract.Action.ToggleRunInBackground) },
             )
 
             Spacer(Modifier.height(JamiTheme.spacing.xxl))

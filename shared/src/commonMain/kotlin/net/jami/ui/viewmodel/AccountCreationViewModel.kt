@@ -28,26 +28,10 @@ import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.services.DaemonBridge
 import net.jami.services.LookupState
-
-/**
- * State for the account creation screen.
- */
-data class AccountCreationState(
-    val username: String = "",
-    val password: String = "",
-    val confirmPassword: String = "",
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val isCreated: Boolean = false,
-    val usernameAvailable: Boolean? = null
-)
+import net.jami.ui.contracts.CreateAccountContract
 
 /**
  * ViewModel for the account creation wizard.
- *
- * Manages the creation of a new Jami account, including username
- * availability checking, password validation, and account registration
- * via the daemon.
  */
 class AccountCreationViewModel(
     private val accountService: AccountService,
@@ -55,69 +39,45 @@ class AccountCreationViewModel(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val _state = MutableStateFlow(AccountCreationState())
-    val state: StateFlow<AccountCreationState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(CreateAccountContract.State())
+    val state: StateFlow<CreateAccountContract.State> = _state.asStateFlow()
 
     init {
-        // Observe account events for creation result and username lookup results
         scope.launch {
             accountService.accountEvents.collect { event ->
                 when (event) {
-                    is AccountEvent.RegistrationStateChanged -> {
-                        handleRegistrationState(event)
-                    }
-                    is AccountEvent.RegisteredNameFound -> {
-                        handleNameLookupResult(event)
-                    }
-                    is AccountEvent.NameRegistrationEnded -> {
-                        handleNameRegistrationResult(event)
-                    }
+                    is AccountEvent.RegistrationStateChanged -> handleRegistrationState(event)
+                    is AccountEvent.RegisteredNameFound -> handleNameLookupResult(event)
+                    is AccountEvent.NameRegistrationEnded -> handleNameRegistrationResult(event)
                     else -> { /* Other events not relevant here */ }
                 }
             }
         }
     }
 
-    /**
-     * Update the username field.
-     *
-     * @param username New username value.
-     */
-    fun setUsername(username: String) {
-        _state.value = _state.value.copy(
-            username = username,
-            usernameAvailable = null,
-            error = null
-        )
+    fun onAction(action: CreateAccountContract.Action) {
+        when (action) {
+            is CreateAccountContract.Action.SetUsername -> {
+                _state.value = _state.value.copy(
+                    username = action.username,
+                    usernameAvailable = null,
+                    error = null
+                )
+            }
+            is CreateAccountContract.Action.SetPassword -> {
+                _state.value = _state.value.copy(password = action.password, error = null)
+            }
+            is CreateAccountContract.Action.SetConfirmPassword -> {
+                _state.value = _state.value.copy(confirmPassword = action.confirmPassword, error = null)
+            }
+            CreateAccountContract.Action.CheckUsername -> checkUsernameAvailability()
+            CreateAccountContract.Action.CreateAccount -> createAccount()
+        }
     }
 
-    /**
-     * Update the password field.
-     *
-     * @param password New password value.
-     */
-    fun setPassword(password: String) {
-        _state.value = _state.value.copy(password = password, error = null)
-    }
-
-    /**
-     * Update the confirm password field.
-     *
-     * @param confirmPassword New confirm password value.
-     */
-    fun setConfirmPassword(confirmPassword: String) {
-        _state.value = _state.value.copy(confirmPassword = confirmPassword, error = null)
-    }
-
-    /**
-     * Create a new Jami account with the current form values.
-     *
-     * Validates passwords match before attempting creation via the daemon.
-     */
-    fun createAccount() {
+    private fun createAccount() {
         val current = _state.value
 
-        // Validate passwords
         if (current.password.isNotEmpty() && current.password != current.confirmPassword) {
             _state.value = current.copy(error = "Passwords do not match")
             return
@@ -132,7 +92,6 @@ class AccountCreationViewModel(
                     password = password
                 )
 
-                // If a username was provided, register it
                 if (current.username.isNotEmpty()) {
                     accountService.registerName(
                         accountId = accountId,
@@ -149,10 +108,7 @@ class AccountCreationViewModel(
         }
     }
 
-    /**
-     * Check if the current username is available on the name server.
-     */
-    fun checkUsernameAvailability() {
+    private fun checkUsernameAvailability() {
         val username = _state.value.username
         if (username.isEmpty()) {
             _state.value = _state.value.copy(usernameAvailable = null)
@@ -160,15 +116,11 @@ class AccountCreationViewModel(
         }
 
         scope.launch {
-            // Use an empty account ID for anonymous lookup
             val currentAccountId = accountService.currentAccount.value?.accountId ?: ""
             accountService.lookupName(currentAccountId, username)
         }
     }
 
-    /**
-     * Handle registration state changes from the daemon.
-     */
     private fun handleRegistrationState(event: AccountEvent.RegistrationStateChanged) {
         when (event.state) {
             "REGISTERED" -> {
@@ -182,16 +134,11 @@ class AccountCreationViewModel(
                     error = "Registration failed: ${event.state}"
                 )
             }
-            "TRYING" -> {
-                // Still in progress, keep loading state
-            }
+            "TRYING" -> { /* Still in progress */ }
             else -> { /* Other states */ }
         }
     }
 
-    /**
-     * Handle username lookup results from the name server.
-     */
     private fun handleNameLookupResult(event: AccountEvent.RegisteredNameFound) {
         val currentUsername = _state.value.username
         if (event.name != currentUsername) return
@@ -201,20 +148,12 @@ class AccountCreationViewModel(
         _state.value = _state.value.copy(usernameAvailable = isAvailable)
     }
 
-    /**
-     * Handle name registration completion.
-     */
     private fun handleNameRegistrationResult(event: AccountEvent.NameRegistrationEnded) {
         if (event.state != 0) {
-            _state.value = _state.value.copy(
-                error = "Username registration failed"
-            )
+            _state.value = _state.value.copy(error = "Username registration failed")
         }
     }
 
-    /**
-     * Cancel the coroutine scope when this ViewModel is no longer needed.
-     */
     fun onCleared() {
         scope.cancel()
     }

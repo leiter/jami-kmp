@@ -26,74 +26,44 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
-
-/**
- * State for the account import screen.
- */
-data class ImportAccountState(
-    val archivePath: String = "",
-    val password: String = "",
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val isImported: Boolean = false
-)
+import net.jami.ui.contracts.ImportAccountContract
 
 /**
  * ViewModel for importing an existing Jami account from a backup archive.
- *
- * Supports importing from a .gz archive file with optional password
- * decryption. Observes daemon registration events to track import progress.
  */
 class ImportAccountViewModel(
     private val accountService: AccountService
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val _state = MutableStateFlow(ImportAccountState())
-    val state: StateFlow<ImportAccountState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(ImportAccountContract.State())
+    val state: StateFlow<ImportAccountContract.State> = _state.asStateFlow()
 
     init {
-        // Observe account events to detect successful import
         scope.launch {
             accountService.accountEvents.collect { event ->
                 when (event) {
-                    is AccountEvent.RegistrationStateChanged -> {
-                        handleRegistrationState(event)
-                    }
-                    is AccountEvent.MigrationEnded -> {
-                        handleMigrationResult(event)
-                    }
+                    is AccountEvent.RegistrationStateChanged -> handleRegistrationState(event)
+                    is AccountEvent.MigrationEnded -> handleMigrationResult(event)
                     else -> { /* Other events not relevant */ }
                 }
             }
         }
     }
 
-    /**
-     * Set the path to the account archive file.
-     *
-     * @param path Absolute path to the .gz archive.
-     */
-    fun setArchivePath(path: String) {
-        _state.value = _state.value.copy(archivePath = path, error = null)
+    fun onAction(action: ImportAccountContract.Action) {
+        when (action) {
+            is ImportAccountContract.Action.SetArchivePath -> {
+                _state.value = _state.value.copy(archivePath = action.path, error = null)
+            }
+            is ImportAccountContract.Action.SetPassword -> {
+                _state.value = _state.value.copy(password = action.password, error = null)
+            }
+            ImportAccountContract.Action.Import -> importAccount()
+        }
     }
 
-    /**
-     * Set the password for archive decryption.
-     *
-     * @param password Archive password.
-     */
-    fun setPassword(password: String) {
-        _state.value = _state.value.copy(password = password, error = null)
-    }
-
-    /**
-     * Import the account from the specified archive.
-     *
-     * Creates a new Jami account using the archive file and password
-     * provided. The daemon will restore the account from the backup.
-     */
-    fun importAccount() {
+    private fun importAccount() {
         val current = _state.value
 
         if (current.archivePath.isEmpty()) {
@@ -109,7 +79,6 @@ class ImportAccountViewModel(
                     password = current.password.ifEmpty { null },
                     archivePath = current.archivePath
                 )
-                // Import progress is tracked via AccountEvent callbacks
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
@@ -119,16 +88,10 @@ class ImportAccountViewModel(
         }
     }
 
-    /**
-     * Handle registration state changes to detect successful import.
-     */
     private fun handleRegistrationState(event: AccountEvent.RegistrationStateChanged) {
         when (event.state) {
             "REGISTERED" -> {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    isImported = true
-                )
+                _state.value = _state.value.copy(isLoading = false, isImported = true)
             }
             "ERROR_GENERIC", "ERROR_AUTH", "ERROR_NETWORK",
             "ERROR_HOST", "ERROR_SERVICE_UNAVAILABLE" -> {
@@ -137,23 +100,15 @@ class ImportAccountViewModel(
                     error = "Import failed: ${event.state}"
                 )
             }
-            "ERROR_NEED_MIGRATION" -> {
-                // Migration will be handled by MigrationEnded event
-            }
+            "ERROR_NEED_MIGRATION" -> { /* Migration handled by MigrationEnded */ }
             else -> { /* Still in progress */ }
         }
     }
 
-    /**
-     * Handle migration result after importing an older-format account.
-     */
     private fun handleMigrationResult(event: AccountEvent.MigrationEnded) {
         when (event.state) {
             "SUCCESS" -> {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    isImported = true
-                )
+                _state.value = _state.value.copy(isLoading = false, isImported = true)
             }
             else -> {
                 _state.value = _state.value.copy(
@@ -164,9 +119,6 @@ class ImportAccountViewModel(
         }
     }
 
-    /**
-     * Cancel the coroutine scope when this ViewModel is no longer needed.
-     */
     fun onCleared() {
         scope.cancel()
     }

@@ -28,35 +28,15 @@ import kotlinx.coroutines.launch
 import net.jami.services.AccountService
 import net.jami.services.ConversationFacade
 import net.jami.services.ConversationEvent
+import net.jami.ui.contracts.ConversationItem
+import net.jami.ui.contracts.HomeContract
+import net.jami.ui.contracts.SearchContract
 
 /**
- * Item representing a conversation in the list.
- */
-data class ConversationItem(
-    val id: String,
-    val displayName: String,
-    val lastMessage: String,
-    val timestamp: Long,
-    val unreadCount: Int,
-    val avatarUri: String?,
-    val isOnline: Boolean
-)
-
-/**
- * State for the conversations list screen.
- */
-data class ConversationsState(
-    val conversations: List<ConversationItem> = emptyList(),
-    val isLoading: Boolean = false,
-    val searchQuery: String = "",
-    val pendingRequests: Int = 0
-)
-
-/**
- * ViewModel for the conversations list screen.
+ * ViewModel for the conversations list (HomeScreen) and search screen.
  *
- * Observes account changes and conversation events to keep the conversation
- * list up to date. Supports search filtering and pull-to-refresh.
+ * Exposes split state flows for HomeScreen (Tier 1) and a single
+ * state flow for SearchScreen (Tier 3).
  */
 class ConversationsViewModel(
     private val accountService: AccountService,
@@ -64,18 +44,24 @@ class ConversationsViewModel(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val _state = MutableStateFlow(ConversationsState())
-    val state: StateFlow<ConversationsState> = _state.asStateFlow()
+    // Home screen split state (Tier 1)
+    private val _conversationsState = MutableStateFlow(HomeContract.ConversationsState())
+    val conversationsState: StateFlow<HomeContract.ConversationsState> = _conversationsState.asStateFlow()
+
+    private val _headerState = MutableStateFlow(HomeContract.HeaderState())
+    val headerState: StateFlow<HomeContract.HeaderState> = _headerState.asStateFlow()
+
+    // Search screen state (Tier 3)
+    private val _searchState = MutableStateFlow(SearchContract.State())
+    val searchState: StateFlow<SearchContract.State> = _searchState.asStateFlow()
 
     init {
-        // Observe current account changes and reload conversations
         scope.launch {
             accountService.currentAccount.filterNotNull().collect { account ->
                 loadConversations()
             }
         }
 
-        // Observe conversation events to refresh the list
         scope.launch {
             conversationFacade.conversationEvents.collect { event ->
                 when (event) {
@@ -90,65 +76,64 @@ class ConversationsViewModel(
         }
     }
 
-    /**
-     * Load conversations for the current account.
-     */
-    fun loadConversations() {
+    fun onHomeAction(action: HomeContract.Action) {
+        when (action) {
+            HomeContract.Action.Refresh -> loadConversations()
+        }
+    }
+
+    fun onSearchAction(action: SearchContract.Action) {
+        when (action) {
+            is SearchContract.Action.Search -> search(action.query)
+        }
+    }
+
+    private fun loadConversations() {
         scope.launch {
-            _state.value = _state.value.copy(isLoading = true)
+            _conversationsState.value = _conversationsState.value.copy(isLoading = true)
             try {
                 val account = accountService.currentAccount.value ?: return@launch
                 val accountId = account.accountId
-                val query = _state.value.searchQuery.lowercase()
 
-                // Get conversation requests count
                 val requests = accountService.getConversationRequests(accountId)
                 val pendingCount = requests.size
 
-                // Build conversation items from the facade
-                // The ConversationFacade provides conversation list via Flow;
-                // here we do a direct snapshot approach for the current account.
-                val conversations = buildConversationItems(accountId, query)
+                val conversations = buildConversationItems(accountId, "")
 
-                _state.value = _state.value.copy(
+                _conversationsState.value = _conversationsState.value.copy(
                     conversations = conversations,
-                    isLoading = false,
+                    isLoading = false
+                )
+                _headerState.value = _headerState.value.copy(
                     pendingRequests = pendingCount
                 )
             } catch (e: Exception) {
-                _state.value = _state.value.copy(isLoading = false)
+                _conversationsState.value = _conversationsState.value.copy(isLoading = false)
             }
         }
     }
 
-    /**
-     * Search conversations by query string.
-     */
-    fun search(query: String) {
-        _state.value = _state.value.copy(searchQuery = query)
-        loadConversations()
+    private fun search(query: String) {
+        _searchState.value = _searchState.value.copy(searchQuery = query)
+        scope.launch {
+            _searchState.value = _searchState.value.copy(isLoading = true)
+            try {
+                val account = accountService.currentAccount.value ?: return@launch
+                val conversations = buildConversationItems(account.accountId, query.lowercase())
+                _searchState.value = _searchState.value.copy(
+                    conversations = conversations,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _searchState.value = _searchState.value.copy(isLoading = false)
+            }
+        }
     }
 
-    /**
-     * Pull-to-refresh: reload conversations from daemon.
-     */
-    fun refresh() {
-        loadConversations()
-    }
-
-    /**
-     * Build conversation item list from the current account.
-     */
     private fun buildConversationItems(accountId: String, query: String): List<ConversationItem> {
-        // In the full implementation, this would use conversationFacade to get
-        // the conversation list and map each Conversation to a ConversationItem.
-        // For now, we provide the structure that the UI layer will consume.
         return emptyList()
     }
 
-    /**
-     * Cancel the coroutine scope when this ViewModel is no longer needed.
-     */
     fun onCleared() {
         scope.cancel()
     }

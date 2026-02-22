@@ -28,84 +28,82 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Videocam
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import net.jami.di.getViewModel
-import net.jami.ui.components.actions.JamiButton
-import net.jami.ui.components.actions.JamiButtonStyle
 import net.jami.ui.components.actions.JamiIconButton
+import net.jami.ui.components.container.JamiScaffold
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.JamiSectionTitle
+import net.jami.ui.components.navigation.JamiTopBar
+import net.jami.ui.components.navigation.JamiTopBarStyle
+import net.jami.ui.components.notification.JamiAlertDialog
+import net.jami.ui.contracts.ConversationDetailsContract
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.ContactDetailsViewModel
-import net.jami.ui.viewmodel.ContactDetailsState
 
 /**
- * Conversation details screen showing participant info, actions, and members.
+ * Conversation details screen showing contact info and actions.
  *
- * Layout:
- * - Top bar: back arrow + "Details"
- * - Avatar and name
- * - Contact ID
- * - Action row: audio call, video call, block, delete conversation
- * - Members list (for group conversations)
- *
- * @param conversationId The conversation to display details for.
+ * @param state The conversation details state.
+ * @param onAction Dispatches detail actions.
  * @param onBack Called when the user navigates back.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConversationDetailsScreen(
-    conversationId: String,
+    state: ConversationDetailsContract.State,
+    onAction: (ConversationDetailsContract.Action) -> Unit,
     onBack: () -> Unit,
 ) {
-    val viewModel = getViewModel<ContactDetailsViewModel>()
-    val state by viewModel.state.collectAsState()
+    var showBlockDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(conversationId) {
-        viewModel.loadContact(conversationId)
+    if (showBlockDialog) {
+        JamiAlertDialog(
+            title = if (state.isBlocked) "Unblock Contact" else "Block Contact",
+            body = if (state.isBlocked) "This contact will be able to send you messages and calls again."
+            else "This contact will no longer be able to send you messages or calls.",
+            onConfirm = {
+                showBlockDialog = false
+                onAction(ConversationDetailsContract.Action.BlockContact)
+            },
+            onDismiss = { showBlockDialog = false },
+            confirmText = if (state.isBlocked) "Unblock" else "Block",
+            isDestructive = !state.isBlocked,
+        )
     }
 
-    Scaffold(
+    if (showDeleteDialog) {
+        JamiAlertDialog(
+            title = "Remove Contact",
+            body = "This will remove the contact and delete the conversation history.",
+            onConfirm = {
+                showDeleteDialog = false
+                onAction(ConversationDetailsContract.Action.RemoveContact)
+            },
+            onDismiss = { showDeleteDialog = false },
+            confirmText = "Remove",
+            isDestructive = true,
+        )
+    }
+
+    JamiScaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Details",
-                        style = JamiTheme.typography.titleMedium,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
-                    titleContentColor = JamiTheme.colors.onSurface,
-                ),
+            JamiTopBar(
+                style = JamiTopBarStyle.Detail,
+                title = "Details",
+                onNavigateBack = onBack,
             )
         },
     ) { padding ->
@@ -118,7 +116,6 @@ fun ConversationDetailsScreen(
         ) {
             Spacer(Modifier.height(JamiTheme.spacing.xl))
 
-            // Avatar
             JamiAvatar(
                 displayName = state.displayName.ifEmpty { "?" },
                 imageUri = state.avatarUri,
@@ -127,14 +124,12 @@ fun ConversationDetailsScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.m))
 
-            // Name
             Text(
                 text = state.displayName.ifEmpty { "Unknown" },
                 style = JamiTheme.typography.titleLarge,
                 color = JamiTheme.colors.onSurface,
             )
 
-            // Username
             if (state.username.isNotEmpty()) {
                 Spacer(Modifier.height(JamiTheme.spacing.xs))
                 Text(
@@ -144,7 +139,6 @@ fun ConversationDetailsScreen(
                 )
             }
 
-            // Identity hash
             if (state.identityHash.isNotEmpty()) {
                 Spacer(Modifier.height(JamiTheme.spacing.xs))
                 Text(
@@ -159,14 +153,12 @@ fun ConversationDetailsScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.xl))
 
-            // Action buttons row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = JamiTheme.spacing.xl),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                // Audio call
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     JamiIconButton(
                         icon = Icons.Default.Call,
@@ -181,7 +173,6 @@ fun ConversationDetailsScreen(
                     )
                 }
 
-                // Video call
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     JamiIconButton(
                         icon = Icons.Default.Videocam,
@@ -196,11 +187,10 @@ fun ConversationDetailsScreen(
                     )
                 }
 
-                // Block
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     JamiIconButton(
                         icon = Icons.Default.Block,
-                        onClick = { viewModel.blockContact() },
+                        onClick = { showBlockDialog = true },
                         contentDescription = if (state.isBlocked) "Unblock" else "Block",
                         tint = JamiTheme.colors.warning,
                     )
@@ -211,11 +201,10 @@ fun ConversationDetailsScreen(
                     )
                 }
 
-                // Delete conversation
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     JamiIconButton(
                         icon = Icons.Default.Delete,
-                        onClick = { viewModel.removeContact() },
+                        onClick = { showDeleteDialog = true },
                         contentDescription = "Delete",
                         tint = JamiTheme.colors.error,
                     )
@@ -230,7 +219,6 @@ fun ConversationDetailsScreen(
             Spacer(Modifier.height(JamiTheme.spacing.xl))
             HorizontalDivider()
 
-            // Members section (visible for group conversations)
             JamiSectionTitle(title = "Members")
 
             if (state.displayName.isEmpty() && !state.isLoading) {
@@ -244,7 +232,6 @@ fun ConversationDetailsScreen(
                     ),
                 )
             } else {
-                // Display the contact as the only member for 1:1 conversations
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

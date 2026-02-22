@@ -41,94 +41,70 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import net.jami.di.getViewModel
+import net.jami.ui.contracts.CallContract
 import net.jami.ui.theme.JamiColors
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.CallViewModel
 
 /**
  * Full-screen call screen with peer info and call controls.
+ * Keeps raw M3 (no JamiScaffold/JamiTopBar) -- fullscreen dark overlay.
  *
- * Layout:
- * - Dark background
- * - Centered: peer name, call status, duration timer
- * - Bottom: control row (mute, speaker, video, end call)
- *
- * @param contactId The contact being called.
- * @param isVideo Whether this is a video call.
+ * @param peerState The peer info state (Tier 1 split).
+ * @param controlsState The controls state (Tier 1 split).
+ * @param timerState The timer state (Tier 1 split).
+ * @param onAction Dispatches call actions.
  * @param onEnd Called when the call ends (to navigate back).
  */
 @Composable
 fun CallScreen(
-    contactId: String,
-    isVideo: Boolean,
+    peerState: CallContract.PeerState,
+    controlsState: CallContract.ControlsState,
+    timerState: CallContract.TimerState,
+    onAction: (CallContract.Action) -> Unit,
     onEnd: () -> Unit,
 ) {
-    val viewModel = getViewModel<CallViewModel>()
-    val state by viewModel.state.collectAsState()
-
-    // Initiate the call on first composition
-    LaunchedEffect(contactId, isVideo) {
-        viewModel.initCall(contactId, isVideo)
-    }
-
-    // Navigate back when call is ended
-    LaunchedEffect(state.callStatus) {
-        if (state.callStatus == "OVER" || state.callStatus == "FAILURE") {
-            onEnd()
-        }
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(JamiColors.DarkBackground),
     ) {
-        // Center content: peer name, status, duration
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Peer name
             Text(
-                text = state.peerName.ifEmpty { contactId },
+                text = peerState.peerName.ifEmpty { peerState.peerUri },
                 style = JamiTheme.typography.headlineMedium,
                 color = Color.White,
             )
 
             Spacer(Modifier.height(JamiTheme.spacing.s))
 
-            // Call status
             Text(
-                text = state.callStatus,
+                text = peerState.callStatus,
                 style = JamiTheme.typography.bodyLarge,
                 color = Color.White.copy(alpha = 0.7f),
             )
 
             Spacer(Modifier.height(JamiTheme.spacing.m))
 
-            // Duration timer
-            if (state.duration > 0) {
+            if (timerState.duration > 0) {
                 Text(
-                    text = formatDuration(state.duration),
+                    text = formatDuration(timerState.duration),
                     style = JamiTheme.typography.titleLarge,
                     color = Color.White,
                 )
             }
         }
 
-        // Bottom controls row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -140,36 +116,32 @@ fun CallScreen(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Mute button
             CallControlButton(
-                icon = if (state.isAudioMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                contentDescription = if (state.isAudioMuted) "Unmute" else "Mute",
-                isActive = state.isAudioMuted,
-                onClick = { viewModel.toggleMute() },
+                icon = if (controlsState.isAudioMuted) Icons.Default.MicOff else Icons.Default.Mic,
+                contentDescription = if (controlsState.isAudioMuted) "Unmute" else "Mute",
+                isActive = controlsState.isAudioMuted,
+                onClick = { onAction(CallContract.Action.ToggleMute) },
             )
 
-            // Speaker button
             CallControlButton(
-                icon = if (state.isSpeakerOn) Icons.Default.VolumeUp
+                icon = if (controlsState.isSpeakerOn) Icons.Default.VolumeUp
                 else Icons.Default.VolumeOff,
-                contentDescription = if (state.isSpeakerOn) "Speaker off" else "Speaker on",
-                isActive = state.isSpeakerOn,
-                onClick = { viewModel.toggleSpeaker() },
+                contentDescription = if (controlsState.isSpeakerOn) "Speaker off" else "Speaker on",
+                isActive = controlsState.isSpeakerOn,
+                onClick = { onAction(CallContract.Action.ToggleSpeaker) },
             )
 
-            // Video button
             CallControlButton(
-                icon = if (state.isVideoMuted) Icons.Default.VideocamOff
+                icon = if (controlsState.isVideoMuted) Icons.Default.VideocamOff
                 else Icons.Default.Videocam,
-                contentDescription = if (state.isVideoMuted) "Enable video" else "Disable video",
-                isActive = !state.isVideoMuted,
-                onClick = { viewModel.toggleVideo() },
+                contentDescription = if (controlsState.isVideoMuted) "Enable video" else "Disable video",
+                isActive = !controlsState.isVideoMuted,
+                onClick = { onAction(CallContract.Action.ToggleVideo) },
             )
 
-            // End call button (red)
             IconButton(
                 onClick = {
-                    viewModel.endCall()
+                    onAction(CallContract.Action.EndCall)
                     onEnd()
                 },
                 modifier = Modifier
@@ -190,9 +162,6 @@ fun CallScreen(
     }
 }
 
-/**
- * Circular call control button with active/inactive state.
- */
 @Composable
 private fun CallControlButton(
     icon: ImageVector,
@@ -221,9 +190,6 @@ private fun CallControlButton(
     }
 }
 
-/**
- * Format call duration in seconds to MM:SS or HH:MM:SS format.
- */
 private fun formatDuration(seconds: Long): String {
     val hours = seconds / 3600
     val minutes = (seconds % 3600) / 60

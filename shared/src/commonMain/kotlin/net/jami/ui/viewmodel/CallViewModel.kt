@@ -28,27 +28,13 @@ import net.jami.model.Call.CallStatus
 import net.jami.model.Uri
 import net.jami.services.AccountService
 import net.jami.services.CallService
-
-/**
- * State for the active call screen.
- */
-data class CallState(
-    val callStatus: String = "",
-    val peerName: String = "",
-    val peerUri: String = "",
-    val duration: Long = 0L,
-    val isAudioMuted: Boolean = false,
-    val isVideoMuted: Boolean = false,
-    val isSpeakerOn: Boolean = false,
-    val isIncoming: Boolean = false
-)
+import net.jami.ui.contracts.CallContract
 
 /**
  * ViewModel for the active call screen.
  *
- * Manages call lifecycle operations (place, accept, end) and media
- * controls (mute audio/video, speaker). Observes call state changes
- * from the daemon via CallService.
+ * Exposes three separate state flows (Tier 1 split) so that the
+ * 1-second timer tick does not recompose the control buttons.
  */
 class CallViewModel(
     private val callService: CallService,
@@ -56,58 +42,66 @@ class CallViewModel(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val _state = MutableStateFlow(CallState())
-    val state: StateFlow<CallState> = _state.asStateFlow()
+    private val _peerState = MutableStateFlow(CallContract.PeerState())
+    val peerState: StateFlow<CallContract.PeerState> = _peerState.asStateFlow()
+
+    private val _controlsState = MutableStateFlow(CallContract.ControlsState())
+    val controlsState: StateFlow<CallContract.ControlsState> = _controlsState.asStateFlow()
+
+    private val _timerState = MutableStateFlow(CallContract.TimerState())
+    val timerState: StateFlow<CallContract.TimerState> = _timerState.asStateFlow()
 
     private var currentCallId: String? = null
     private var currentAccountId: String? = null
 
     init {
-        // Observe call state updates
         scope.launch {
             callService.callUpdates.collect { call ->
                 if (call.daemonId == currentCallId || currentCallId == null) {
                     currentCallId = call.daemonId
                     currentAccountId = call.account
 
-                    _state.value = _state.value.copy(
-                        callStatus = call.callStatus.name,
+                    _peerState.value = CallContract.PeerState(
+                        peerName = _peerState.value.peerName,
                         peerUri = call.peerUri.uri,
-                        isAudioMuted = call.isAudioMuted,
-                        isVideoMuted = call.isVideoMuted,
+                        callStatus = call.callStatus.name,
                         isIncoming = call.isIncoming
                     )
 
-                    // Update duration for ongoing calls
+                    _controlsState.value = CallContract.ControlsState(
+                        isAudioMuted = call.isAudioMuted,
+                        isVideoMuted = call.isVideoMuted,
+                        isSpeakerOn = _controlsState.value.isSpeakerOn
+                    )
+
                     if (call.callStatus == CallStatus.CURRENT && call.timestamp > 0) {
                         val now = net.jami.utils.currentTimeMillis()
-                        _state.value = _state.value.copy(
+                        _timerState.value = CallContract.TimerState(
                             duration = (now - call.timestamp) / 1000
                         )
-                    }
-
-                    // Clean up if call ended
-                    if (call.callStatus == CallStatus.OVER || call.callStatus == CallStatus.FAILURE) {
-                        // Call ended; UI should navigate away
                     }
                 }
             }
         }
     }
 
-    /**
-     * Initiate a new outgoing call.
-     *
-     * @param contactUri URI of the contact to call.
-     * @param isVideo True for a video call, false for audio only.
-     */
+    fun onAction(action: CallContract.Action) {
+        when (action) {
+            CallContract.Action.ToggleMute -> toggleMute()
+            CallContract.Action.ToggleVideo -> toggleVideo()
+            CallContract.Action.ToggleSpeaker -> toggleSpeaker()
+            CallContract.Action.AcceptCall -> acceptCall()
+            CallContract.Action.EndCall -> endCall()
+        }
+    }
+
     fun initCall(contactUri: String, isVideo: Boolean) {
         scope.launch {
             val account = accountService.currentAccount.value ?: return@launch
             currentAccountId = account.accountId
 
             val peerUri = Uri.fromString(contactUri)
-            _state.value = _state.value.copy(
+            _peerState.value = CallContract.PeerState(
                 peerUri = contactUri,
                 peerName = contactUri,
                 callStatus = CallStatus.SEARCHING.name,
@@ -122,65 +116,46 @@ class CallViewModel(
                 )
                 currentCallId = call.daemonId
             } catch (e: Exception) {
-                _state.value = _state.value.copy(
+                _peerState.value = _peerState.value.copy(
                     callStatus = CallStatus.FAILURE.name
                 )
             }
         }
     }
 
-    /**
-     * Accept an incoming call.
-     */
-    fun acceptCall() {
+    private fun acceptCall() {
         val callId = currentCallId ?: return
         val accountId = currentAccountId ?: return
-        callService.accept(accountId, callId, hasVideo = !_state.value.isVideoMuted)
+        callService.accept(accountId, callId, hasVideo = !_controlsState.value.isVideoMuted)
     }
 
-    /**
-     * End (hang up) the current call.
-     */
-    fun endCall() {
+    private fun endCall() {
         val callId = currentCallId ?: return
         val accountId = currentAccountId ?: return
         callService.hangUp(accountId, callId)
     }
 
-    /**
-     * Toggle the audio mute state.
-     */
-    fun toggleMute() {
+    private fun toggleMute() {
         val callId = currentCallId ?: return
         val accountId = currentAccountId ?: return
-        val newMuteState = !_state.value.isAudioMuted
+        val newMuteState = !_controlsState.value.isAudioMuted
         callService.muteLocalMedia(accountId, callId, CallService.MEDIA_TYPE_AUDIO, newMuteState)
-        _state.value = _state.value.copy(isAudioMuted = newMuteState)
+        _controlsState.value = _controlsState.value.copy(isAudioMuted = newMuteState)
     }
 
-    /**
-     * Toggle the video mute state.
-     */
-    fun toggleVideo() {
+    private fun toggleVideo() {
         val callId = currentCallId ?: return
         val accountId = currentAccountId ?: return
-        val newMuteState = !_state.value.isVideoMuted
+        val newMuteState = !_controlsState.value.isVideoMuted
         callService.muteLocalMedia(accountId, callId, CallService.MEDIA_TYPE_VIDEO, newMuteState)
-        _state.value = _state.value.copy(isVideoMuted = newMuteState)
+        _controlsState.value = _controlsState.value.copy(isVideoMuted = newMuteState)
     }
 
-    /**
-     * Toggle the speaker output.
-     * Note: Actual speaker routing is platform-specific and handled by HardwareService.
-     */
-    fun toggleSpeaker() {
-        val newState = !_state.value.isSpeakerOn
-        _state.value = _state.value.copy(isSpeakerOn = newState)
+    private fun toggleSpeaker() {
+        val newState = !_controlsState.value.isSpeakerOn
+        _controlsState.value = _controlsState.value.copy(isSpeakerOn = newState)
     }
 
-    /**
-     * Cancel the coroutine scope when this ViewModel is no longer needed.
-     */
     fun onCleared() {
         scope.cancel()
     }

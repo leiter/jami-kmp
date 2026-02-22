@@ -26,84 +26,46 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.components.actions.JamiButtonStyle
+import net.jami.ui.components.container.JamiScaffold
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
+import net.jami.ui.components.navigation.JamiTopBar
+import net.jami.ui.components.navigation.JamiTopBarStyle
+import net.jami.ui.contracts.BlockedContactsContract
+import net.jami.ui.contracts.ContactItem
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.ContactItem
-import net.jami.ui.viewmodel.ContactsViewModel
 
 /**
  * Blocked contacts screen displaying a list of blocked contacts
  * with an option to unblock each one.
  *
+ * @param state The blocked contacts state.
+ * @param onAction Dispatches blocked contacts actions.
  * @param onBack Called when the user navigates back.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BlockedContactsScreen(
+    state: BlockedContactsContract.State,
+    onAction: (BlockedContactsContract.Action) -> Unit,
     onBack: () -> Unit,
 ) {
-    val viewModel = getViewModel<ContactsViewModel>()
-    val state by viewModel.state.collectAsState()
-
-    // Load contacts on first composition
-    LaunchedEffect(Unit) {
-        viewModel.loadContacts()
-    }
-
-    // For blocked contacts, we filter the list.
-    // In the full implementation, ContactsViewModel would have a separate
-    // blocked contacts flow. Here we show the screen structure.
-    val blockedContacts = state.contacts.filter {
-        // In a real implementation, we would check contact.isBlocked
-        false
-    }
-
-    Scaffold(
+    JamiScaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Blocked Contacts",
-                        style = JamiTheme.typography.titleMedium,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
-                    titleContentColor = JamiTheme.colors.onSurface,
-                ),
+            JamiTopBar(
+                style = JamiTopBarStyle.Detail,
+                title = "Blocked Contacts",
+                onNavigateBack = onBack,
             )
         },
     ) { padding ->
-        if (blockedContacts.isEmpty()) {
-            // Empty state
+        if (state.contacts.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -123,12 +85,14 @@ fun BlockedContactsScreen(
                     .padding(padding),
             ) {
                 items(
-                    items = blockedContacts,
+                    items = state.contacts,
                     key = { it.uri },
                 ) { contact ->
                     BlockedContactItem(
                         contact = contact,
-                        onUnblock = { /* viewModel.unblockContact(contact.uri) */ },
+                        onUnblock = {
+                            onAction(BlockedContactsContract.Action.UnblockContact(contact.uri))
+                        },
                     )
                 }
             }
@@ -136,9 +100,6 @@ fun BlockedContactsScreen(
     }
 }
 
-/**
- * Single blocked contact row with avatar, name, and unblock button.
- */
 @Composable
 private fun BlockedContactItem(
     contact: ContactItem,

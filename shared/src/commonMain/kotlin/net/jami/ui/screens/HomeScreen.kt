@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
@@ -40,11 +39,8 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,26 +48,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import net.jami.di.getViewModel
+import net.jami.ui.components.container.JamiScaffold
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.JamiBadge
 import net.jami.ui.components.content.PresenceStatus
+import net.jami.ui.components.navigation.JamiTopBar
+import net.jami.ui.components.navigation.JamiTopBarStyle
+import net.jami.ui.contracts.ConversationItem
+import net.jami.ui.contracts.HomeContract
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.ConversationItem
-import net.jami.ui.viewmodel.ConversationsViewModel
 
 /**
  * Main home screen displaying the conversation list.
  *
- * Layout:
- * - Top: Search bar row with current user avatar, search placeholder, overflow menu
- * - Content: LazyColumn of conversation items
- * - FAB: "New conversation" button
- *
- * Uses [ConversationsViewModel] for conversation list state.
- *
+ * @param conversationsState The conversations list state (Tier 1 split).
+ * @param headerState The header state (Tier 1 split).
+ * @param onAction Dispatches home actions.
  * @param onConversationClick Called when a conversation item is tapped.
  * @param onSearchClick Called when the search area is tapped.
  * @param onSettingsClick Called when "Account Settings" is selected from the menu.
@@ -81,6 +74,9 @@ import net.jami.ui.viewmodel.ConversationsViewModel
  */
 @Composable
 fun HomeScreen(
+    conversationsState: HomeContract.ConversationsState,
+    headerState: HomeContract.HeaderState,
+    onAction: (HomeContract.Action) -> Unit,
     onConversationClick: (String) -> Unit,
     onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -88,78 +84,43 @@ fun HomeScreen(
     onAboutClick: () -> Unit,
     onNewConversation: () -> Unit,
 ) {
-    val viewModel = getViewModel<ConversationsViewModel>()
-    val state by viewModel.state.collectAsState()
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Scaffold(
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onNewConversation,
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                    )
+    JamiScaffold(
+        topBar = {
+            JamiTopBar(
+                style = JamiTopBarStyle.Main,
+                searchContent = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSearchClick() },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        JamiAvatar(
+                            displayName = headerState.userDisplayName.ifEmpty { "Me" },
+                            size = AvatarSize.Small,
+                        )
+
+                        Spacer(Modifier.width(JamiTheme.spacing.m))
+
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = JamiTheme.colors.onSurfaceVariant,
+                        )
+
+                        Spacer(Modifier.width(JamiTheme.spacing.s))
+
+                        Text(
+                            text = "Search conversations...",
+                            style = JamiTheme.typography.bodyMedium,
+                            color = JamiTheme.colors.onSurfaceVariant,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 },
-                text = { Text("New conversation") },
-                containerColor = JamiTheme.colors.primary,
-                contentColor = JamiTheme.colors.onPrimary,
-            )
-        },
-        floatingActionButtonPosition = FabPosition.End,
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-        ) {
-            // Search bar row
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = JamiTheme.spacing.l,
-                        vertical = JamiTheme.spacing.s,
-                    ),
-                shape = RoundedCornerShape(JamiTheme.radius.full),
-                color = JamiTheme.colors.surfaceVariant,
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onSearchClick() }
-                        .padding(
-                            horizontal = JamiTheme.spacing.m,
-                            vertical = JamiTheme.spacing.s,
-                        ),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // Current user avatar
-                    JamiAvatar(
-                        displayName = "Me",
-                        size = AvatarSize.Small,
-                    )
-
-                    Spacer(Modifier.width(JamiTheme.spacing.m))
-
-                    // Search placeholder
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = JamiTheme.colors.onSurfaceVariant,
-                    )
-
-                    Spacer(Modifier.width(JamiTheme.spacing.s))
-
-                    Text(
-                        text = "Search conversations...",
-                        style = JamiTheme.typography.bodyMedium,
-                        color = JamiTheme.colors.onSurfaceVariant,
-                        modifier = Modifier.weight(1f),
-                    )
-
-                    // Overflow menu
+                actions = {
                     Box {
                         IconButton(onClick = { menuExpanded = true }) {
                             Icon(
@@ -195,12 +156,31 @@ fun HomeScreen(
                             )
                         }
                     }
-                }
-            }
-
-            // Conversation list
-            if (state.conversations.isEmpty() && !state.isLoading) {
-                // Empty state
+                },
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onNewConversation,
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                    )
+                },
+                text = { Text("New conversation") },
+                containerColor = JamiTheme.colors.primary,
+                contentColor = JamiTheme.colors.onPrimary,
+            )
+        },
+        floatingActionButtonPosition = FabPosition.End,
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+        ) {
+            if (conversationsState.conversations.isEmpty() && !conversationsState.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -224,7 +204,7 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     items(
-                        items = state.conversations,
+                        items = conversationsState.conversations,
                         key = { it.id },
                     ) { conversation ->
                         ConversationListItem(
@@ -238,12 +218,6 @@ fun HomeScreen(
     }
 }
 
-/**
- * Single conversation item in the list.
- *
- * Displays avatar with presence indicator, display name, timestamp,
- * last message preview, and unread badge.
- */
 @Composable
 private fun ConversationListItem(
     conversation: ConversationItem,
@@ -259,7 +233,6 @@ private fun ConversationListItem(
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Avatar with presence dot
         JamiAvatar(
             displayName = conversation.displayName,
             imageUri = conversation.avatarUri,
@@ -271,7 +244,6 @@ private fun ConversationListItem(
 
         Spacer(Modifier.width(JamiTheme.spacing.m))
 
-        // Name, last message, and timestamp
         Column(
             modifier = Modifier.weight(1f),
         ) {
@@ -319,12 +291,8 @@ private fun ConversationListItem(
     }
 }
 
-/**
- * Format a timestamp (epoch millis) for display in the conversation list.
- */
 private fun formatTimestamp(timestamp: Long): String {
     if (timestamp <= 0L) return ""
-    // Simple relative time formatting
     val now = net.jami.utils.currentTimeMillis()
     val diffSeconds = (now - timestamp) / 1000
     return when {

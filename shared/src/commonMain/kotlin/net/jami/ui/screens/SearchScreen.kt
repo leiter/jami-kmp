@@ -30,74 +30,52 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiFilterChip
+import net.jami.ui.components.container.JamiScaffold
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.PresenceStatus
+import net.jami.ui.components.inputs.JamiSearchField
+import net.jami.ui.components.navigation.JamiTopBar
+import net.jami.ui.components.navigation.JamiTopBarStyle
+import net.jami.ui.contracts.ConversationItem
+import net.jami.ui.contracts.SearchContract
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.ConversationItem
-import net.jami.ui.viewmodel.ConversationsViewModel
 
 /**
  * Search screen for finding conversations and contacts.
  *
- * Provides a search text field, filter chips ("QR Code", "New Group"),
- * and a results list showing matching conversations.
- *
+ * @param state The search state.
+ * @param onAction Dispatches search actions.
  * @param onBack Called when the user navigates back.
  * @param onConversationClick Called when a conversation result is tapped.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
+    state: SearchContract.State,
+    onAction: (SearchContract.Action) -> Unit,
     onBack: () -> Unit,
     onConversationClick: (String) -> Unit,
 ) {
-    val viewModel = getViewModel<ConversationsViewModel>()
-    val state by viewModel.state.collectAsState()
-
-    Scaffold(
+    JamiScaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    OutlinedTextField(
-                        value = state.searchQuery,
-                        onValueChange = { viewModel.search(it) },
-                        placeholder = { Text("Search...") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
+            JamiTopBar(
+                style = JamiTopBarStyle.Main,
+                onNavigateBack = onBack,
+                searchContent = {
+                    JamiSearchField(
+                        query = state.searchQuery,
+                        onQueryChange = { onAction(SearchContract.Action.Search(it)) },
+                        placeholder = "Search...",
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
-                    titleContentColor = JamiTheme.colors.onSurface,
-                ),
             )
         },
     ) { padding ->
@@ -106,7 +84,6 @@ fun SearchScreen(
                 .fillMaxSize()
                 .padding(padding),
         ) {
-            // Filter chips row
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -132,7 +109,6 @@ fun SearchScreen(
                 }
             }
 
-            // Search results list
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
             ) {
@@ -150,9 +126,6 @@ fun SearchScreen(
     }
 }
 
-/**
- * Single search result item displaying avatar, name, and last message.
- */
 @Composable
 private fun SearchResultItem(
     conversation: ConversationItem,

@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,8 +36,19 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import net.jami.di.getViewModel
 import net.jami.ui.screens.*
+import net.jami.ui.viewmodel.AboutViewModel
+import net.jami.ui.viewmodel.AccountCreationViewModel
+import net.jami.ui.viewmodel.AccountSettingsViewModel
+import net.jami.ui.viewmodel.AppSettingsViewModel
 import net.jami.ui.viewmodel.AppState
 import net.jami.ui.viewmodel.AppViewModel
+import net.jami.ui.viewmodel.CallViewModel
+import net.jami.ui.viewmodel.ChatViewModel
+import net.jami.ui.viewmodel.ContactDetailsViewModel
+import net.jami.ui.viewmodel.ContactsViewModel
+import net.jami.ui.viewmodel.ConversationsViewModel
+import net.jami.ui.viewmodel.ImportAccountViewModel
+import net.jami.ui.viewmodel.NewConversationViewModel
 
 /**
  * Extract a navigation argument in a KMP-compatible way.
@@ -101,22 +113,46 @@ private fun OnboardingNavigation() {
         }
 
         composable(Screen.CreateAccount.route) {
-            CreateAccountScreen(
-                onBack = { navController.popBackStack() },
-                onAccountCreated = {
+            val viewModel = getViewModel<AccountCreationViewModel>()
+            val state by viewModel.state.collectAsState()
+
+            DisposableEffect(viewModel) {
+                onDispose { viewModel.onCleared() }
+            }
+
+            LaunchedEffect(state.isCreated) {
+                if (state.isCreated) {
                     // No-op: AppViewModel reactively switches to HasAccounts
                     // when AccountService.accounts updates after creation
-                },
+                }
+            }
+
+            CreateAccountScreen(
+                state = state,
+                onAction = viewModel::onAction,
+                onBack = { navController.popBackStack() },
             )
         }
 
         composable(Screen.ImportAccount.route) {
-            ImportAccountScreen(
-                onBack = { navController.popBackStack() },
-                onImported = {
+            val viewModel = getViewModel<ImportAccountViewModel>()
+            val state by viewModel.state.collectAsState()
+
+            DisposableEffect(viewModel) {
+                onDispose { viewModel.onCleared() }
+            }
+
+            LaunchedEffect(state.isImported) {
+                if (state.isImported) {
                     // No-op: AppViewModel reactively switches to HasAccounts
                     // when AccountService.accounts updates after import
-                },
+                }
+            }
+
+            ImportAccountScreen(
+                state = state,
+                onAction = viewModel::onAction,
+                onBack = { navController.popBackStack() },
             )
         }
     }
@@ -138,7 +174,18 @@ private fun MainNavigation(needsMigration: Boolean) {
         // ==================== Main Screens ====================
 
         composable(Screen.Home.route) {
+            val viewModel = getViewModel<ConversationsViewModel>()
+            val conversationsState by viewModel.conversationsState.collectAsState()
+            val headerState by viewModel.headerState.collectAsState()
+
+            DisposableEffect(viewModel) {
+                onDispose { viewModel.onCleared() }
+            }
+
             HomeScreen(
+                conversationsState = conversationsState,
+                headerState = headerState,
+                onAction = viewModel::onHomeAction,
                 onConversationClick = { id ->
                     navController.navigate(Screen.Chat.createRoute(id))
                 },
@@ -161,7 +208,16 @@ private fun MainNavigation(needsMigration: Boolean) {
         }
 
         composable(Screen.Search.route) {
+            val viewModel = getViewModel<ConversationsViewModel>()
+            val state by viewModel.searchState.collectAsState()
+
+            DisposableEffect(viewModel) {
+                onDispose { viewModel.onCleared() }
+            }
+
             SearchScreen(
+                state = state,
+                onAction = viewModel::onSearchAction,
                 onBack = { navController.popBackStack() },
                 onConversationClick = { id ->
                     navController.navigate(Screen.Chat.createRoute(id))
@@ -179,8 +235,25 @@ private fun MainNavigation(needsMigration: Boolean) {
         ) { backStackEntry ->
             val conversationId = backStackEntry.extractArg("conversationId")
             if (conversationId.isEmpty()) return@composable
+
+            val viewModel = getViewModel<ChatViewModel>()
+            val topBarState by viewModel.topBarState.collectAsState()
+            val messagesState by viewModel.messagesState.collectAsState()
+            val inputState by viewModel.inputState.collectAsState()
+
+            LaunchedEffect(conversationId) {
+                viewModel.loadConversation(conversationId)
+            }
+
+            DisposableEffect(viewModel) {
+                onDispose { viewModel.onCleared() }
+            }
+
             ChatScreen(
-                conversationId = conversationId,
+                topBarState = topBarState,
+                messagesState = messagesState,
+                inputState = inputState,
+                onAction = viewModel::onAction,
                 onBack = { navController.popBackStack() },
                 onCallClick = { contactId, isVideo ->
                     navController.navigate(Screen.Call.createRoute(contactId, isVideo))
@@ -201,8 +274,21 @@ private fun MainNavigation(needsMigration: Boolean) {
         ) { backStackEntry ->
             val conversationId = backStackEntry.extractArg("conversationId")
             if (conversationId.isEmpty()) return@composable
+
+            val viewModel = getViewModel<ContactDetailsViewModel>()
+            val state by viewModel.state.collectAsState()
+
+            LaunchedEffect(conversationId) {
+                viewModel.loadContact(conversationId)
+            }
+
+            DisposableEffect(viewModel) {
+                onDispose { viewModel.onCleared() }
+            }
+
             ConversationDetailsScreen(
-                conversationId = conversationId,
+                state = state,
+                onAction = viewModel::onAction,
                 onBack = { navController.popBackStack() },
             )
         }
@@ -219,9 +305,25 @@ private fun MainNavigation(needsMigration: Boolean) {
             val contactId = backStackEntry.extractArg("contactId")
             if (contactId.isEmpty()) return@composable
             val isVideo = backStackEntry.savedStateHandle.get<Boolean>("isVideo") ?: false
+
+            val viewModel = getViewModel<CallViewModel>()
+            val peerState by viewModel.peerState.collectAsState()
+            val controlsState by viewModel.controlsState.collectAsState()
+            val timerState by viewModel.timerState.collectAsState()
+
+            LaunchedEffect(contactId, isVideo) {
+                viewModel.initCall(contactId, isVideo)
+            }
+
+            DisposableEffect(viewModel) {
+                onDispose { viewModel.onCleared() }
+            }
+
             CallScreen(
-                contactId = contactId,
-                isVideo = isVideo,
+                peerState = peerState,
+                controlsState = controlsState,
+                timerState = timerState,
+                onAction = viewModel::onAction,
                 onEnd = { navController.popBackStack() },
             )
         }
@@ -229,20 +331,49 @@ private fun MainNavigation(needsMigration: Boolean) {
         // ==================== New Conversation ====================
 
         composable(Screen.NewConversation.route) {
-            NewConversationScreen(
-                onBack = { navController.popBackStack() },
-                onConversationCreated = { id ->
+            val viewModel = getViewModel<NewConversationViewModel>()
+            val searchState by viewModel.searchState.collectAsState()
+            val selectionState by viewModel.selectionState.collectAsState()
+
+            LaunchedEffect(Unit) {
+                viewModel.conversationCreated.collect { id ->
                     navController.navigate(Screen.Chat.createRoute(id)) {
                         popUpTo(Screen.Home.route)
                     }
-                },
+                }
+            }
+
+            DisposableEffect(viewModel) {
+                onDispose { viewModel.onCleared() }
+            }
+
+            NewConversationScreen(
+                searchState = searchState,
+                selectionState = selectionState,
+                onAction = viewModel::onAction,
+                onBack = { navController.popBackStack() },
             )
         }
 
         // ==================== Settings ====================
 
         composable(Screen.AccountSettings.route) {
+            val viewModel = getViewModel<AccountSettingsViewModel>()
+            val profileState by viewModel.profileState.collectAsState()
+            val devicesState by viewModel.devicesState.collectAsState()
+
+            LaunchedEffect(Unit) {
+                viewModel.loadAccount()
+            }
+
+            DisposableEffect(viewModel) {
+                onDispose { viewModel.onCleared() }
+            }
+
             AccountSettingsScreen(
+                profileState = profileState,
+                devicesState = devicesState,
+                onAction = viewModel::onAction,
                 onBack = { navController.popBackStack() },
                 onBlockedContacts = {
                     navController.navigate(Screen.BlockedContacts.route)
@@ -251,13 +382,35 @@ private fun MainNavigation(needsMigration: Boolean) {
         }
 
         composable(Screen.AppSettings.route) {
+            val viewModel = getViewModel<AppSettingsViewModel>()
+            val state by viewModel.state.collectAsState()
+
+            DisposableEffect(viewModel) {
+                onDispose { viewModel.onCleared() }
+            }
+
             AppSettingsScreen(
+                state = state,
+                onAction = viewModel::onAction,
                 onBack = { navController.popBackStack() },
             )
         }
 
         composable(Screen.BlockedContacts.route) {
+            val viewModel = getViewModel<ContactsViewModel>()
+            val state by viewModel.blockedContactsState.collectAsState()
+
+            LaunchedEffect(Unit) {
+                viewModel.loadContacts()
+            }
+
+            DisposableEffect(viewModel) {
+                onDispose { viewModel.onCleared() }
+            }
+
             BlockedContactsScreen(
+                state = state,
+                onAction = viewModel::onAction,
                 onBack = { navController.popBackStack() },
             )
         }
@@ -265,7 +418,15 @@ private fun MainNavigation(needsMigration: Boolean) {
         // ==================== About ====================
 
         composable(Screen.About.route) {
+            val viewModel = getViewModel<AboutViewModel>()
+            val state by viewModel.state.collectAsState()
+
+            DisposableEffect(viewModel) {
+                onDispose { viewModel.onCleared() }
+            }
+
             AboutScreen(
+                state = state,
                 onBack = { navController.popBackStack() },
             )
         }

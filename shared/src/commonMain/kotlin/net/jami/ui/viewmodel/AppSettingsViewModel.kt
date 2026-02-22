@@ -26,19 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.jami.model.settings.Theme
 import net.jami.repository.SettingsRepository
-
-/**
- * State for the application settings screen.
- */
-data class AppSettingsState(
-    val isDarkTheme: Boolean = false,
-    val isTypingIndicators: Boolean = true,
-    val isLinkPreview: Boolean = true,
-    val isScreenshotBlocking: Boolean = false,
-    val isStartOnBoot: Boolean = false,
-    val isRunInBackground: Boolean = false,
-    val isPushNotifications: Boolean = true
-)
+import net.jami.ui.contracts.AppSettingsContract
 
 /**
  * ViewModel for the application-wide settings screen.
@@ -53,11 +41,10 @@ class AppSettingsViewModel(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val _state = MutableStateFlow(AppSettingsState())
-    val state: StateFlow<AppSettingsState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(AppSettingsContract.State())
+    val state: StateFlow<AppSettingsContract.State> = _state.asStateFlow()
 
     init {
-        // Load initial settings from repository
         scope.launch {
             settingsRepository.uiSettings.collect { uiSettings ->
                 _state.value = _state.value.copy(
@@ -82,72 +69,43 @@ class AppSettingsViewModel(
         }
     }
 
-    /**
-     * Toggle the dark theme setting.
-     */
-    fun toggleDarkTheme() {
-        val newValue = !_state.value.isDarkTheme
-        _state.value = _state.value.copy(isDarkTheme = newValue)
-        settingsRepository.updateTheme(if (newValue) Theme.DARK else Theme.LIGHT)
+    fun onAction(action: AppSettingsContract.Action) {
+        when (action) {
+            AppSettingsContract.Action.ToggleDarkTheme -> {
+                val newValue = !_state.value.isDarkTheme
+                _state.value = _state.value.copy(isDarkTheme = newValue)
+                settingsRepository.updateTheme(if (newValue) Theme.DARK else Theme.LIGHT)
+            }
+            AppSettingsContract.Action.ToggleTypingIndicators -> {
+                val newValue = !_state.value.isTypingIndicators
+                _state.value = _state.value.copy(isTypingIndicators = newValue)
+                settingsRepository.updateTypingIndicators(newValue)
+            }
+            AppSettingsContract.Action.ToggleLinkPreview -> {
+                val newValue = !_state.value.isLinkPreview
+                _state.value = _state.value.copy(isLinkPreview = newValue)
+                settingsRepository.updateShowLinkPreviews(newValue)
+            }
+            AppSettingsContract.Action.ToggleScreenshotBlocking -> {
+                val newValue = !_state.value.isScreenshotBlocking
+                _state.value = _state.value.copy(isScreenshotBlocking = newValue)
+            }
+            AppSettingsContract.Action.ToggleStartOnBoot -> {
+                val newValue = !_state.value.isStartOnBoot
+                _state.value = _state.value.copy(isStartOnBoot = newValue)
+            }
+            AppSettingsContract.Action.ToggleRunInBackground -> {
+                val newValue = !_state.value.isRunInBackground
+                _state.value = _state.value.copy(isRunInBackground = newValue)
+            }
+            AppSettingsContract.Action.TogglePushNotifications -> {
+                val newValue = !_state.value.isPushNotifications
+                _state.value = _state.value.copy(isPushNotifications = newValue)
+                settingsRepository.updateNotificationsEnabled(newValue)
+            }
+        }
     }
 
-    /**
-     * Toggle the typing indicators setting.
-     */
-    fun toggleTypingIndicators() {
-        val newValue = !_state.value.isTypingIndicators
-        _state.value = _state.value.copy(isTypingIndicators = newValue)
-        settingsRepository.updateTypingIndicators(newValue)
-    }
-
-    /**
-     * Toggle the link preview setting.
-     */
-    fun toggleLinkPreview() {
-        val newValue = !_state.value.isLinkPreview
-        _state.value = _state.value.copy(isLinkPreview = newValue)
-        settingsRepository.updateShowLinkPreviews(newValue)
-    }
-
-    /**
-     * Toggle the screenshot blocking setting.
-     * This is a local-only setting (not synced via daemon).
-     */
-    fun toggleScreenshotBlocking() {
-        val newValue = !_state.value.isScreenshotBlocking
-        _state.value = _state.value.copy(isScreenshotBlocking = newValue)
-    }
-
-    /**
-     * Toggle the start-on-boot setting.
-     * This is a local-only setting (platform-specific behavior).
-     */
-    fun toggleStartOnBoot() {
-        val newValue = !_state.value.isStartOnBoot
-        _state.value = _state.value.copy(isStartOnBoot = newValue)
-    }
-
-    /**
-     * Toggle the run-in-background setting.
-     * This is a local-only setting (platform-specific behavior).
-     */
-    fun toggleRunInBackground() {
-        val newValue = !_state.value.isRunInBackground
-        _state.value = _state.value.copy(isRunInBackground = newValue)
-    }
-
-    /**
-     * Toggle the push notifications setting.
-     */
-    fun togglePushNotifications() {
-        val newValue = !_state.value.isPushNotifications
-        _state.value = _state.value.copy(isPushNotifications = newValue)
-        settingsRepository.updateNotificationsEnabled(newValue)
-    }
-
-    /**
-     * Cancel the coroutine scope when this ViewModel is no longer needed.
-     */
     fun onCleared() {
         scope.cancel()
     }

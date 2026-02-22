@@ -23,23 +23,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-
-/**
- * State for the about screen.
- */
-data class AboutState(
-    val version: String = VERSION,
-    val copyright: String = COPYRIGHT,
-    val description: String = DESCRIPTION
-) {
-    companion object {
-        const val VERSION = "1.0.0"
-        const val COPYRIGHT = "Copyright (C) 2004-2025 Savoir-faire Linux Inc."
-        const val DESCRIPTION =
-            "Jami is free software for universal communication that respects the " +
-            "freedom and privacy of its users. Jami is a GNU project."
-    }
-}
+import net.jami.ui.contracts.AboutContract
 
 /**
  * ViewModel for the about screen.
@@ -50,13 +34,24 @@ data class AboutState(
 class AboutViewModel {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val _state = MutableStateFlow(AboutState())
-    val state: StateFlow<AboutState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(
+        AboutContract.State(
+            version = VERSION,
+            copyright = COPYRIGHT,
+            description = DESCRIPTION,
+        )
+    )
+    val state: StateFlow<AboutContract.State> = _state.asStateFlow()
 
-    /**
-     * Cancel the coroutine scope when this ViewModel is no longer needed.
-     */
     fun onCleared() {
         scope.cancel()
+    }
+
+    companion object {
+        const val VERSION = "1.0.0"
+        const val COPYRIGHT = "Copyright (C) 2004-2025 Savoir-faire Linux Inc."
+        const val DESCRIPTION =
+            "Jami is free software for universal communication that respects the " +
+                "freedom and privacy of its users. Jami is a GNU project."
     }
 }

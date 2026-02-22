@@ -16,7 +16,6 @@
  */
 package net.jami.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,137 +25,85 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Videocam
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import net.jami.di.getViewModel
+import net.jami.ui.components.actions.JamiIconButton
+import net.jami.ui.components.container.JamiScaffold
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
+import net.jami.ui.components.inputs.JamiMessageInput
+import net.jami.ui.components.navigation.JamiTopBar
+import net.jami.ui.components.navigation.JamiTopBarStyle
+import net.jami.ui.contracts.ChatContract
+import net.jami.ui.contracts.MessageItem
+import net.jami.ui.contracts.MessageType
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.ChatViewModel
-import net.jami.ui.viewmodel.MessageItem
-import net.jami.ui.viewmodel.MessageType
 
 /**
  * Chat screen for viewing and sending messages in a conversation.
  *
- * Layout:
- * - Top bar: back arrow, avatar + name, phone and video call buttons
- * - Content: reversed LazyColumn of messages with bubbles
- * - Bottom: message input bar with send button
- *
- * @param conversationId The conversation to display.
+ * @param topBarState The top bar state (Tier 1 split).
+ * @param messagesState The messages state (Tier 1 split).
+ * @param inputState The input state (Tier 1 split).
+ * @param onAction Dispatches chat actions.
  * @param onBack Called when the user navigates back.
  * @param onCallClick Called when a call button is tapped with (contactId, isVideo).
  * @param onDetailsClick Called when the conversation title/avatar is tapped.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    conversationId: String,
+    topBarState: ChatContract.TopBarState,
+    messagesState: ChatContract.MessagesState,
+    inputState: ChatContract.InputState,
+    onAction: (ChatContract.Action) -> Unit,
     onBack: () -> Unit,
     onCallClick: (String, Boolean) -> Unit,
     onDetailsClick: () -> Unit,
 ) {
-    val viewModel = getViewModel<ChatViewModel>()
-    val state by viewModel.state.collectAsState()
     val listState = rememberLazyListState()
 
-    // Load conversation on first composition
-    LaunchedEffect(conversationId) {
-        viewModel.loadConversation(conversationId)
-    }
-
-    // Scroll to bottom when new messages arrive
-    LaunchedEffect(state.messages.size) {
-        if (state.messages.isNotEmpty()) {
+    LaunchedEffect(messagesState.messages.size) {
+        if (messagesState.messages.isNotEmpty()) {
             listState.animateScrollToItem(0)
         }
     }
 
-    Scaffold(
+    JamiScaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        JamiAvatar(
-                            displayName = state.conversationTitle,
-                            size = AvatarSize.Small,
-                        )
-                        Spacer(Modifier.width(JamiTheme.spacing.m))
-                        Text(
-                            text = state.conversationTitle,
-                            style = JamiTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
+            JamiTopBar(
+                style = JamiTopBarStyle.Detail,
+                onNavigateBack = onBack,
+                title = topBarState.conversationTitle,
                 actions = {
-                    // Audio call button
-                    IconButton(
-                        onClick = { onCallClick(conversationId, false) },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Call,
-                            contentDescription = "Audio call",
-                            tint = JamiTheme.colors.onSurface,
-                        )
-                    }
-                    // Video call button
-                    IconButton(
-                        onClick = { onCallClick(conversationId, true) },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Videocam,
-                            contentDescription = "Video call",
-                            tint = JamiTheme.colors.onSurface,
-                        )
-                    }
+                    JamiIconButton(
+                        icon = Icons.Default.Call,
+                        onClick = { onCallClick(topBarState.conversationTitle, false) },
+                        contentDescription = "Audio call",
+                        tint = JamiTheme.colors.onSurface,
+                    )
+                    JamiIconButton(
+                        icon = Icons.Default.Videocam,
+                        onClick = { onCallClick(topBarState.conversationTitle, true) },
+                        contentDescription = "Video call",
+                        tint = JamiTheme.colors.onSurface,
+                    )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
-                    titleContentColor = JamiTheme.colors.onSurface,
-                ),
             )
         },
     ) { padding ->
@@ -165,7 +112,6 @@ fun ChatScreen(
                 .fillMaxSize()
                 .padding(padding),
         ) {
-            // Messages list (reversed so newest at bottom)
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -176,7 +122,7 @@ fun ChatScreen(
                 verticalArrangement = Arrangement.spacedBy(JamiTheme.spacing.xs),
             ) {
                 items(
-                    items = state.messages.reversed(),
+                    items = messagesState.messages.reversed(),
                     key = { it.id },
                 ) { message ->
                     when (message.type) {
@@ -186,20 +132,15 @@ fun ChatScreen(
                 }
             }
 
-            // Message input bar
-            MessageInputBar(
-                value = state.inputText,
-                onValueChange = { viewModel.updateInput(it) },
-                onSend = { viewModel.sendMessage() },
+            JamiMessageInput(
+                message = inputState.text,
+                onMessageChange = { onAction(ChatContract.Action.UpdateInput(it)) },
+                onSend = { onAction(ChatContract.Action.SendMessage) },
             )
         }
     }
 }
 
-/**
- * Chat message bubble. Outgoing messages are right-aligned with primary
- * color, incoming messages are left-aligned with surface variant color.
- */
 @Composable
 private fun ChatBubble(message: MessageItem) {
     val isOutgoing = message.isOutgoing
@@ -249,9 +190,6 @@ private fun ChatBubble(message: MessageItem) {
     }
 }
 
-/**
- * System message displayed centered with subdued styling.
- */
 @Composable
 private fun SystemMessage(message: MessageItem) {
     Box(
@@ -269,60 +207,6 @@ private fun SystemMessage(message: MessageItem) {
     }
 }
 
-/**
- * Message input bar with text field and send button.
- */
-@Composable
-private fun MessageInputBar(
-    value: String,
-    onValueChange: (String) -> Unit,
-    onSend: () -> Unit,
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = JamiTheme.colors.surface,
-        tonalElevation = 2.dp,
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = JamiTheme.spacing.m,
-                    vertical = JamiTheme.spacing.s,
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            OutlinedTextField(
-                value = value,
-                onValueChange = onValueChange,
-                placeholder = { Text("Message") },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(JamiTheme.radius.xl),
-                maxLines = 4,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { onSend() }),
-            )
-
-            Spacer(Modifier.width(JamiTheme.spacing.s))
-
-            IconButton(
-                onClick = onSend,
-                enabled = value.isNotBlank(),
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Send",
-                    tint = if (value.isNotBlank()) JamiTheme.colors.primary
-                    else JamiTheme.colors.onDisabled,
-                )
-            }
-        }
-    }
-}
-
-/**
- * Format a message timestamp for display.
- */
 private fun formatMessageTime(timestamp: Long): String {
     if (timestamp <= 0L) return ""
     val totalSeconds = timestamp / 1000

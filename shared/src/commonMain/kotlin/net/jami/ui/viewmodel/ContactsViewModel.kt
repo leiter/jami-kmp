@@ -29,29 +29,11 @@ import net.jami.model.Contact
 import net.jami.services.AccountService
 import net.jami.services.ContactEvent
 import net.jami.services.ContactService
+import net.jami.ui.contracts.BlockedContactsContract
+import net.jami.ui.contracts.ContactItem
 
 /**
- * Item representing a contact in the contacts list.
- */
-data class ContactItem(
-    val uri: String,
-    val displayName: String,
-    val username: String,
-    val presenceStatus: Contact.PresenceStatus,
-    val avatarUri: String?
-)
-
-/**
- * State for the contacts list screen.
- */
-data class ContactsState(
-    val contacts: List<ContactItem> = emptyList(),
-    val searchQuery: String = "",
-    val isLoading: Boolean = false
-)
-
-/**
- * ViewModel for the contacts list screen.
+ * ViewModel for the contacts list and blocked contacts screens.
  *
  * Loads contacts from the daemon, supports search filtering, and
  * observes contact events (added, removed, presence changes) for
@@ -63,18 +45,16 @@ class ContactsViewModel(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val _state = MutableStateFlow(ContactsState())
-    val state: StateFlow<ContactsState> = _state.asStateFlow()
+    private val _blockedContactsState = MutableStateFlow(BlockedContactsContract.State())
+    val blockedContactsState: StateFlow<BlockedContactsContract.State> = _blockedContactsState.asStateFlow()
 
     init {
-        // Reload contacts when the active account changes
         scope.launch {
             accountService.currentAccount.filterNotNull().collect {
                 loadContacts()
             }
         }
 
-        // Observe contact events for real-time updates
         scope.launch {
             contactService.contactEvents.collect { event ->
                 when (event) {
@@ -90,51 +70,39 @@ class ContactsViewModel(
         }
     }
 
-    /**
-     * Load contacts from the daemon for the current account.
-     */
+    fun onAction(action: BlockedContactsContract.Action) {
+        when (action) {
+            is BlockedContactsContract.Action.UnblockContact -> {
+                scope.launch {
+                    val account = accountService.currentAccount.value ?: return@launch
+                    val uri = net.jami.model.Uri.fromString(action.uri)
+                    contactService.addContact(account.accountId, uri)
+                    refreshContactList()
+                }
+            }
+        }
+    }
+
     fun loadContacts() {
         scope.launch {
-            _state.value = _state.value.copy(isLoading = true)
+            _blockedContactsState.value = _blockedContactsState.value.copy(isLoading = true)
             try {
                 val account = accountService.currentAccount.value ?: return@launch
                 contactService.loadContacts(account.accountId)
                 refreshContactList()
             } catch (e: Exception) {
-                _state.value = _state.value.copy(isLoading = false)
+                _blockedContactsState.value = _blockedContactsState.value.copy(isLoading = false)
             }
         }
     }
 
-    /**
-     * Filter the contacts list by a search query.
-     *
-     * @param query Search string to filter contacts by name or URI.
-     */
-    fun search(query: String) {
-        _state.value = _state.value.copy(searchQuery = query)
-        refreshContactList()
-    }
-
-    /**
-     * Refresh the contact list from the cache, applying the current search filter.
-     */
     private fun refreshContactList() {
         val account = accountService.currentAccount.value ?: return
         val cachedContacts = contactService.getCachedContacts(account.accountId)
-        val query = _state.value.searchQuery.lowercase()
 
-        val items = cachedContacts
+        val blockedItems = cachedContacts
             .filter { contact ->
-                contact.status != Contact.Status.BLOCKED
-            }
-            .filter { contact ->
-                if (query.isEmpty()) true
-                else {
-                    val name = contact.displayUsername.lowercase()
-                    val uri = contact.uri.uri.lowercase()
-                    name.contains(query) || uri.contains(query)
-                }
+                contact.status == Contact.Status.BLOCKED
             }
             .map { contact ->
                 ContactItem(
@@ -147,15 +115,12 @@ class ContactsViewModel(
             }
             .sortedBy { it.displayName.lowercase() }
 
-        _state.value = _state.value.copy(
-            contacts = items,
+        _blockedContactsState.value = _blockedContactsState.value.copy(
+            contacts = blockedItems,
             isLoading = false
         )
     }
 
-    /**
-     * Cancel the coroutine scope when this ViewModel is no longer needed.
-     */
     fun onCleared() {
         scope.cancel()
     }

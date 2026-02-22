@@ -28,76 +28,49 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Devices
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import net.jami.di.getViewModel
+import net.jami.ui.components.container.JamiScaffold
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.JamiSectionTitle
+import net.jami.ui.components.navigation.JamiTopBar
+import net.jami.ui.components.navigation.JamiTopBarStyle
+import net.jami.ui.contracts.AccountSettingsContract
+import net.jami.ui.contracts.DeviceItem
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.AccountSettingsViewModel
-import net.jami.ui.viewmodel.DeviceItem
 
 /**
  * Account settings screen displaying profile info, linked devices,
  * and navigation to sub-settings.
  *
+ * @param profileState The profile state (Tier 2 split).
+ * @param devicesState The devices state (Tier 2 split).
+ * @param onAction Dispatches settings actions.
  * @param onBack Called when the user navigates back.
  * @param onBlockedContacts Called when "Blocked Contacts" is tapped.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountSettingsScreen(
+    profileState: AccountSettingsContract.ProfileState,
+    devicesState: AccountSettingsContract.DevicesState,
+    onAction: (AccountSettingsContract.Action) -> Unit,
     onBack: () -> Unit,
     onBlockedContacts: () -> Unit,
 ) {
-    val viewModel = getViewModel<AccountSettingsViewModel>()
-    val state by viewModel.state.collectAsState()
-
-    LaunchedEffect(Unit) {
-        viewModel.loadAccount()
-    }
-
-    Scaffold(
+    JamiScaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Account Settings",
-                        style = JamiTheme.typography.titleMedium,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
-                    titleContentColor = JamiTheme.colors.onSurface,
-                ),
+            JamiTopBar(
+                style = JamiTopBarStyle.Settings,
+                title = "Account Settings",
+                onNavigateBack = onBack,
             )
         },
     ) { padding ->
@@ -107,7 +80,6 @@ fun AccountSettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState()),
         ) {
-            // Profile section
             JamiSectionTitle(title = "Profile")
 
             Column(
@@ -118,36 +90,32 @@ fun AccountSettingsScreen(
             ) {
                 Spacer(Modifier.height(JamiTheme.spacing.m))
 
-                // Large avatar
                 JamiAvatar(
-                    displayName = state.displayName.ifEmpty { "User" },
+                    displayName = profileState.displayName.ifEmpty { "User" },
                     size = AvatarSize.XLarge,
                 )
 
                 Spacer(Modifier.height(JamiTheme.spacing.m))
 
-                // Display name (editable)
                 Text(
-                    text = state.displayName.ifEmpty { "No display name" },
+                    text = profileState.displayName.ifEmpty { "No display name" },
                     style = JamiTheme.typography.titleLarge,
                     color = JamiTheme.colors.onSurface,
                 )
 
-                // Username
-                if (state.username.isNotEmpty()) {
+                if (profileState.username.isNotEmpty()) {
                     Spacer(Modifier.height(JamiTheme.spacing.xs))
                     Text(
-                        text = state.username,
+                        text = profileState.username,
                         style = JamiTheme.typography.bodyMedium,
                         color = JamiTheme.colors.onSurfaceVariant,
                     )
                 }
 
-                // Identity hash
-                if (state.identityHash.isNotEmpty()) {
+                if (profileState.identityHash.isNotEmpty()) {
                     Spacer(Modifier.height(JamiTheme.spacing.xs))
                     Text(
-                        text = state.identityHash,
+                        text = profileState.identityHash,
                         style = JamiTheme.typography.bodySmall,
                         color = JamiTheme.colors.onSurfaceVariant,
                         maxLines = 1,
@@ -160,10 +128,9 @@ fun AccountSettingsScreen(
 
             HorizontalDivider()
 
-            // Devices section
             JamiSectionTitle(title = "Linked Devices")
 
-            if (state.devices.isEmpty()) {
+            if (devicesState.devices.isEmpty()) {
                 Text(
                     text = "No linked devices",
                     style = JamiTheme.typography.bodyMedium,
@@ -174,49 +141,26 @@ fun AccountSettingsScreen(
                     ),
                 )
             } else {
-                state.devices.forEach { device ->
+                devicesState.devices.forEach { device ->
                     DeviceListItem(device = device)
                 }
             }
 
             HorizontalDivider()
 
-            // Settings links
             JamiSectionTitle(title = "Settings")
 
-            SettingsLinkRow(
-                label = "Blocked Contacts",
-                onClick = onBlockedContacts,
-            )
-
-            SettingsLinkRow(
-                label = "Account",
-                onClick = { /* Navigate to account sub-settings */ },
-            )
-
-            SettingsLinkRow(
-                label = "Media",
-                onClick = { /* Navigate to media settings */ },
-            )
-
-            SettingsLinkRow(
-                label = "Messages",
-                onClick = { /* Navigate to message settings */ },
-            )
-
-            SettingsLinkRow(
-                label = "Advanced",
-                onClick = { /* Navigate to advanced settings */ },
-            )
+            SettingsLinkRow(label = "Blocked Contacts", onClick = onBlockedContacts)
+            SettingsLinkRow(label = "Account", onClick = { /* Navigate to account sub-settings */ })
+            SettingsLinkRow(label = "Media", onClick = { /* Navigate to media settings */ })
+            SettingsLinkRow(label = "Messages", onClick = { /* Navigate to message settings */ })
+            SettingsLinkRow(label = "Advanced", onClick = { /* Navigate to advanced settings */ })
 
             Spacer(Modifier.height(JamiTheme.spacing.xxl))
         }
     }
 }
 
-/**
- * Row displaying a linked device.
- */
 @Composable
 private fun DeviceListItem(device: DeviceItem) {
     Row(
@@ -253,9 +197,6 @@ private fun DeviceListItem(device: DeviceItem) {
     }
 }
 
-/**
- * Clickable settings row with label and chevron.
- */
 @Composable
 private fun SettingsLinkRow(
     label: String,

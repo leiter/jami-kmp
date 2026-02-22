@@ -28,34 +28,13 @@ import net.jami.model.ConfigKey
 import net.jami.repository.SettingsRepository
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
-
-/**
- * Item representing a linked device.
- */
-data class DeviceItem(
-    val deviceId: String,
-    val deviceName: String,
-    val isCurrent: Boolean
-)
-
-/**
- * State for the account settings screen.
- */
-data class AccountSettingsState(
-    val displayName: String = "",
-    val username: String = "",
-    val identityHash: String = "",
-    val avatarUri: String? = null,
-    val devices: List<DeviceItem> = emptyList(),
-    val isLoading: Boolean = false
-)
+import net.jami.ui.contracts.AccountSettingsContract
+import net.jami.ui.contracts.DeviceItem
 
 /**
  * ViewModel for the account settings screen.
  *
- * Displays and allows editing of account profile information, linked
- * devices management, and account export. Observes daemon events for
- * device changes and profile updates.
+ * Exposes split state flows (Tier 2): ProfileState and DevicesState.
  */
 class AccountSettingsViewModel(
     private val accountService: AccountService,
@@ -63,11 +42,13 @@ class AccountSettingsViewModel(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val _state = MutableStateFlow(AccountSettingsState())
-    val state: StateFlow<AccountSettingsState> = _state.asStateFlow()
+    private val _profileState = MutableStateFlow(AccountSettingsContract.ProfileState())
+    val profileState: StateFlow<AccountSettingsContract.ProfileState> = _profileState.asStateFlow()
+
+    private val _devicesState = MutableStateFlow(AccountSettingsContract.DevicesState())
+    val devicesState: StateFlow<AccountSettingsContract.DevicesState> = _devicesState.asStateFlow()
 
     init {
-        // Observe device and profile changes
         scope.launch {
             accountService.accountEvents.collect { event ->
                 when (event) {
@@ -75,28 +56,51 @@ class AccountSettingsViewModel(
                         updateDevices(event.accountId, event.devices)
                     }
                     is AccountEvent.DeviceRevocationEnded -> {
-                        if (event.state == 0) {
-                            loadAccount()
-                        }
+                        if (event.state == 0) loadAccount()
                     }
-                    is AccountEvent.ProfileReceived -> {
-                        loadAccount()
-                    }
-                    is AccountEvent.DetailsChanged -> {
-                        loadAccount()
-                    }
+                    is AccountEvent.ProfileReceived -> loadAccount()
+                    is AccountEvent.DetailsChanged -> loadAccount()
                     else -> { /* Other events */ }
                 }
             }
         }
     }
 
-    /**
-     * Load the current account details and populate the state.
-     */
+    fun onAction(action: AccountSettingsContract.Action) {
+        when (action) {
+            is AccountSettingsContract.Action.UpdateDisplayName -> {
+                scope.launch {
+                    val account = accountService.currentAccount.value ?: return@launch
+                    accountService.updateProfile(account.accountId, action.name)
+                    _profileState.value = _profileState.value.copy(displayName = action.name)
+                }
+            }
+            is AccountSettingsContract.Action.RevokeDevice -> {
+                scope.launch {
+                    val account = accountService.currentAccount.value ?: return@launch
+                    accountService.revokeDevice(
+                        accountId = account.accountId,
+                        deviceId = action.deviceId,
+                        scheme = AccountService.ACCOUNT_SCHEME_PASSWORD,
+                        password = action.password
+                    )
+                }
+            }
+            is AccountSettingsContract.Action.ExportAccount -> {
+                val account = accountService.currentAccount.value ?: return
+                accountService.exportToFile(
+                    accountId = account.accountId,
+                    path = action.path,
+                    scheme = AccountService.ACCOUNT_SCHEME_PASSWORD,
+                    password = action.password
+                )
+            }
+        }
+    }
+
     fun loadAccount() {
         scope.launch {
-            _state.value = _state.value.copy(isLoading = true)
+            _devicesState.value = _devicesState.value.copy(isLoading = true)
             try {
                 val account = accountService.currentAccount.value ?: return@launch
                 val accountId = account.accountId
@@ -104,9 +108,14 @@ class AccountSettingsViewModel(
                 val displayName = account.details[ConfigKey.ACCOUNT_DISPLAYNAME.key] ?: ""
                 val username = account.volatileDetails[ConfigKey.ACCOUNT_REGISTERED_NAME.key] ?: ""
                 val identityHash = account.details[ConfigKey.ACCOUNT_USERNAME.key] ?: ""
-                val deviceName = account.details[ConfigKey.ACCOUNT_DEVICE_NAME.key] ?: ""
 
-                // Load known devices
+                _profileState.value = AccountSettingsContract.ProfileState(
+                    displayName = displayName,
+                    username = username,
+                    identityHash = identityHash,
+                    avatarUri = null,
+                )
+
                 val knownDevices = accountService.getKnownRingDevices(accountId)
                 val currentDeviceId = account.details[ConfigKey.ACCOUNT_DEVICE_ID.key] ?: ""
                 val deviceItems = knownDevices.map { (id, name) ->
@@ -117,71 +126,16 @@ class AccountSettingsViewModel(
                     )
                 }
 
-                _state.value = AccountSettingsState(
-                    displayName = displayName,
-                    username = username,
-                    identityHash = identityHash,
-                    avatarUri = null,
+                _devicesState.value = AccountSettingsContract.DevicesState(
                     devices = deviceItems,
-                    isLoading = false
+                    isLoading = false,
                 )
             } catch (e: Exception) {
-                _state.value = _state.value.copy(isLoading = false)
+                _devicesState.value = _devicesState.value.copy(isLoading = false)
             }
         }
     }
 
-    /**
-     * Update the display name for the current account.
-     *
-     * @param name New display name.
-     */
-    fun updateDisplayName(name: String) {
-        scope.launch {
-            val account = accountService.currentAccount.value ?: return@launch
-            accountService.updateProfile(account.accountId, name)
-            _state.value = _state.value.copy(displayName = name)
-        }
-    }
-
-    /**
-     * Revoke (unlink) a device from the current account.
-     *
-     * @param deviceId ID of the device to revoke.
-     * @param password Account password required for revocation.
-     */
-    fun revokeDevice(deviceId: String, password: String) {
-        scope.launch {
-            val account = accountService.currentAccount.value ?: return@launch
-            accountService.revokeDevice(
-                accountId = account.accountId,
-                deviceId = deviceId,
-                scheme = AccountService.ACCOUNT_SCHEME_PASSWORD,
-                password = password
-            )
-        }
-    }
-
-    /**
-     * Export the current account to a file.
-     *
-     * @param path Destination file path.
-     * @param password Account password for encryption.
-     * @return True if export succeeded.
-     */
-    fun exportAccount(path: String, password: String): Boolean {
-        val account = accountService.currentAccount.value ?: return false
-        return accountService.exportToFile(
-            accountId = account.accountId,
-            path = path,
-            scheme = AccountService.ACCOUNT_SCHEME_PASSWORD,
-            password = password
-        )
-    }
-
-    /**
-     * Update the device list from a daemon event.
-     */
     private fun updateDevices(accountId: String, devices: Map<String, String>) {
         val account = accountService.currentAccount.value ?: return
         if (account.accountId != accountId) return
@@ -194,12 +148,9 @@ class AccountSettingsViewModel(
                 isCurrent = id == currentDeviceId
             )
         }
-        _state.value = _state.value.copy(devices = deviceItems)
+        _devicesState.value = _devicesState.value.copy(devices = deviceItems)
     }
 
-    /**
-     * Cancel the coroutine scope when this ViewModel is no longer needed.
-     */
     fun onCleared() {
         scope.cancel()
     }
