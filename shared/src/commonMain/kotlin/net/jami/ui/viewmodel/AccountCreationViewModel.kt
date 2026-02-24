@@ -62,17 +62,25 @@ class AccountCreationViewModel(
         when (action) {
             is CreateAccountContract.Action.SetUsername -> {
                 checkJob?.cancel()
+                val lowered = action.username.lowercase()
                 _state.value = _state.value.copy(
-                    username = action.username,
+                    username = lowered,
                     usernameAvailable = null,
                     isCheckingUsername = false,
+                    usernameError = null,
                     error = null
                 )
-                if (action.username.isNotEmpty()) {
-                    checkJob = scope.launch {
-                        delay(350)
-                        _state.value = _state.value.copy(isCheckingUsername = true)
-                        checkUsernameAvailability()
+                if (lowered.isNotEmpty()) {
+                    if (!isUsernameValid(lowered)) {
+                        _state.value = _state.value.copy(
+                            usernameError = "Username can only contain letters, numbers, hyphens, and underscores"
+                        )
+                    } else if (lowered.length >= 3) {
+                        checkJob = scope.launch {
+                            delay(350)
+                            _state.value = _state.value.copy(isCheckingUsername = true)
+                            checkUsernameAvailability()
+                        }
                     }
                 }
             }
@@ -157,14 +165,39 @@ class AccountCreationViewModel(
 
     private fun handleNameLookupResult(event: AccountEvent.RegisteredNameFound) {
         val currentUsername = _state.value.username
-        if (event.name != currentUsername) return
+        if (event.query != currentUsername) return
 
         val lookupState = LookupState.fromInt(event.state)
-        val isAvailable = lookupState == LookupState.NotFound
-        _state.value = _state.value.copy(
-            usernameAvailable = isAvailable,
-            isCheckingUsername = false
-        )
+        when (lookupState) {
+            LookupState.NotFound -> {
+                _state.value = _state.value.copy(
+                    usernameAvailable = true,
+                    isCheckingUsername = false,
+                    usernameError = null
+                )
+            }
+            LookupState.Success -> {
+                _state.value = _state.value.copy(
+                    usernameAvailable = false,
+                    isCheckingUsername = false,
+                    usernameError = "Username already taken"
+                )
+            }
+            LookupState.Invalid -> {
+                _state.value = _state.value.copy(
+                    usernameAvailable = false,
+                    isCheckingUsername = false,
+                    usernameError = "Invalid username"
+                )
+            }
+            LookupState.NetworkError -> {
+                _state.value = _state.value.copy(
+                    usernameAvailable = null,
+                    isCheckingUsername = false,
+                    usernameError = "Network error, could not check username"
+                )
+            }
+        }
     }
 
     private fun handleNameRegistrationResult(event: AccountEvent.NameRegistrationEnded) {
@@ -175,5 +208,11 @@ class AccountCreationViewModel(
 
     fun onCleared() {
         scope.cancel()
+    }
+
+    companion object {
+        private val USERNAME_REGEX = Regex("^[a-zA-Z0-9_-]+$")
+
+        fun isUsernameValid(name: String): Boolean = USERNAME_REGEX.matches(name)
     }
 }

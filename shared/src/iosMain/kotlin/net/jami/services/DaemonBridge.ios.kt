@@ -562,7 +562,7 @@ private class JamiBridgeDelegateImpl(
             JBLookupState.JBLookupStateError -> 3
             else -> 3
         }
-        callbacks.onRegisteredNameFound(accountId, stateInt, address, name)
+        callbacks.onRegisteredNameFound(accountId, name, stateInt, address, name)
     }
 
     override fun onKnownDevicesChanged(accountId: String, devices: Map<Any?, *>) {

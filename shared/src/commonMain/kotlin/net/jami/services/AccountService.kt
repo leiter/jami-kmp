@@ -648,16 +648,23 @@ class AccountService(
         detail: String
     ) {
         scope.launch {
+            // If account is not yet in the map (e.g., newly imported), load it first
+            if (accountsMap[accountId] == null) {
+                loadAccounts()
+            }
+
             accountsMap[accountId]?.let { account ->
                 account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATUS.key] = state
                 account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATE_CODE.key] = code.toString()
                 account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATE_DESC.key] = detail
-
                 _accounts.value = accountsMap.values.toList()
-                _accountEvents.emit(
-                    AccountEvent.RegistrationStateChanged(accountId, state, code, detail)
-                )
             }
+
+            // Always emit the event even if account is not in map yet,
+            // so ViewModels (e.g., ImportAccountViewModel) can react to it
+            _accountEvents.emit(
+                AccountEvent.RegistrationStateChanged(accountId, state, code, detail)
+            )
         }
     }
 
@@ -715,12 +722,13 @@ class AccountService(
 
     internal fun onRegisteredNameFound(
         accountId: String,
+        query: String,
         state: Int,
         address: String,
         name: String
     ) {
         scope.launch {
-            _accountEvents.emit(AccountEvent.RegisteredNameFound(accountId, state, address, name))
+            _accountEvents.emit(AccountEvent.RegisteredNameFound(accountId, query, state, address, name))
         }
     }
 
@@ -837,6 +845,7 @@ sealed class AccountEvent {
 
     data class RegisteredNameFound(
         val accountId: String,
+        val query: String,
         val state: Int,
         val address: String,
         val name: String

@@ -180,7 +180,7 @@ interface DaemonCallbacks {
 
     // ==================== Name Service Callbacks ====================
     fun onNameRegistrationEnded(accountId: String, state: Int, name: String)
-    fun onRegisteredNameFound(accountId: String, state: Int, address: String, name: String)
+    fun onRegisteredNameFound(accountId: String, query: String, state: Int, address: String, name: String)
     fun onUserSearchEnded(accountId: String, state: Int, query: String, results: List<Map<String, String>>)
 
     // ==================== Data Transfer Callbacks ====================

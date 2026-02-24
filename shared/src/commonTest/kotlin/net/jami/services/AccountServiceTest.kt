@@ -105,11 +105,13 @@ class AccountServiceTest {
     fun testAccountEventRegisteredNameFound() {
         val event = AccountEvent.RegisteredNameFound(
             accountId = "acc123",
+            query = "testuser",
             state = 0,
             address = "abc123def",
             name = "testuser"
         )
         assertEquals("acc123", event.accountId)
+        assertEquals("testuser", event.query)
         assertEquals(0, event.state)
         assertEquals("abc123def", event.address)
         assertEquals("testuser", event.name)

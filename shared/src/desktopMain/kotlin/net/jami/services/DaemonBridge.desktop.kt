@@ -16,6 +16,11 @@
  */
 package net.jami.services
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import net.jami.model.MediaAttribute
 import net.jami.utils.Log
 
@@ -41,6 +46,7 @@ import net.jami.utils.Log
 actual class DaemonBridge actual constructor() {
     private var isInitialized = false
     private var callbacks: DaemonCallbacks? = null
+    private val stubScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     companion object {
         private const val TAG = "DaemonBridge"
@@ -329,7 +335,11 @@ actual class DaemonBridge actual constructor() {
 
     actual fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
         Log.d(TAG, "lookupName called (stub): $name")
-        return false
+        stubScope.launch {
+            delay(300)
+            callbacks?.onRegisteredNameFound(accountId, name, LookupState.NotFound.value, "", name)
+        }
+        return true
     }
 
     actual fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean {

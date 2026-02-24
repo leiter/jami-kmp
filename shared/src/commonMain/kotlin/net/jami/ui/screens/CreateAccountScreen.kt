@@ -69,6 +69,8 @@ fun CreateAccountScreen(
         ) {
             Spacer(Modifier.height(JamiTheme.spacing.l))
 
+            val hasUsernameError = state.usernameError != null
+
             JamiInputText(
                 value = state.username,
                 onValueChange = { onAction(CreateAccountContract.Action.SetUsername(it)) },
@@ -76,8 +78,8 @@ fun CreateAccountScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                isError = state.usernameAvailable == false,
-                errorMessage = if (state.usernameAvailable == false) "Username already taken" else null,
+                isError = hasUsernameError,
+                errorMessage = state.usernameError,
             )
 
             if (state.isCheckingUsername) {
@@ -135,8 +137,12 @@ fun CreateAccountScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.xl))
 
-            val usernameBlocking = state.username.isNotEmpty() &&
-                (state.isCheckingUsername || state.usernameAvailable != true)
+            val usernameBlocking = state.username.isNotEmpty() && (
+                state.isCheckingUsername ||
+                state.usernameError != null ||
+                state.username.length < 3 ||
+                state.usernameAvailable != true
+            )
 
             JamiButton(
                 text = "Create Account",

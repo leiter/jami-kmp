@@ -473,7 +473,7 @@ actual class DaemonBridge actual constructor() {
 
         // Note: SWIG signature is (accountId, query, state, address, name)
         override fun registeredNameFound(accountId: String, query: String, state: Int, address: String, name: String) {
-            callbacks.onRegisteredNameFound(accountId, state, address, name)
+            callbacks.onRegisteredNameFound(accountId, query, state, address, name)
         }
 
         // Note: SWIG uses Blob for payload, we convert to ByteArray

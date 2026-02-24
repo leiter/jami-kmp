@@ -30,6 +30,7 @@ object CreateAccountContract {
         val isCreated: Boolean = false,
         val usernameAvailable: Boolean? = null,
         val isCheckingUsername: Boolean = false,
+        val usernameError: String? = null,
     )
 
     sealed interface Action {
