@@ -18,8 +18,10 @@ package net.jami.ui.viewmodel
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,6 +43,7 @@ class AccountCreationViewModel(
 
     private val _state = MutableStateFlow(CreateAccountContract.State())
     val state: StateFlow<CreateAccountContract.State> = _state.asStateFlow()
+    private var checkJob: Job? = null
 
     init {
         scope.launch {
@@ -58,11 +61,20 @@ class AccountCreationViewModel(
     fun onAction(action: CreateAccountContract.Action) {
         when (action) {
             is CreateAccountContract.Action.SetUsername -> {
+                checkJob?.cancel()
                 _state.value = _state.value.copy(
                     username = action.username,
                     usernameAvailable = null,
+                    isCheckingUsername = false,
                     error = null
                 )
+                if (action.username.isNotEmpty()) {
+                    checkJob = scope.launch {
+                        delay(350)
+                        _state.value = _state.value.copy(isCheckingUsername = true)
+                        checkUsernameAvailability()
+                    }
+                }
             }
             is CreateAccountContract.Action.SetPassword -> {
                 _state.value = _state.value.copy(password = action.password, error = null)
@@ -70,13 +82,17 @@ class AccountCreationViewModel(
             is CreateAccountContract.Action.SetConfirmPassword -> {
                 _state.value = _state.value.copy(confirmPassword = action.confirmPassword, error = null)
             }
-            CreateAccountContract.Action.CheckUsername -> checkUsernameAvailability()
             CreateAccountContract.Action.CreateAccount -> createAccount()
         }
     }
 
     private fun createAccount() {
         val current = _state.value
+
+        if (current.username.isNotEmpty() && current.usernameAvailable != true) {
+            _state.value = current.copy(error = "Username not available")
+            return
+        }
 
         if (current.password.isNotEmpty() && current.password != current.confirmPassword) {
             _state.value = current.copy(error = "Passwords do not match")
@@ -145,7 +161,10 @@ class AccountCreationViewModel(
 
         val lookupState = LookupState.fromInt(event.state)
         val isAvailable = lookupState == LookupState.NotFound
-        _state.value = _state.value.copy(usernameAvailable = isAvailable)
+        _state.value = _state.value.copy(
+            usernameAvailable = isAvailable,
+            isCheckingUsername = false
+        )
     }
 
     private fun handleNameRegistrationResult(event: AccountEvent.NameRegistrationEnded) {
