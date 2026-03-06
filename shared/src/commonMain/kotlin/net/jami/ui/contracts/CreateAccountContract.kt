@@ -31,12 +31,14 @@ object CreateAccountContract {
         val usernameAvailable: Boolean? = null,
         val isCheckingUsername: Boolean = false,
         val usernameError: String? = null,
+        val passwordVisible: Boolean = false,
     )
 
     sealed interface Action {
         data class SetUsername(val username: String) : Action
         data class SetPassword(val password: String) : Action
         data class SetConfirmPassword(val confirmPassword: String) : Action
+        data object TogglePasswordVisibility : Action
         data object CreateAccount : Action
     }
 }

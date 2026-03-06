@@ -110,6 +110,7 @@ val jamiModule = module {
             hardwareService = get(),
             deviceRuntimeService = get(),
             preferencesService = get(),
+            daemonBridge = get(),
             scope = get()
         )
     }
@@ -155,7 +156,7 @@ val jamiModule = module {
 
     // ==================== ViewModels ====================
 
-    viewModelFactory { ConversationsViewModel(get(), get()) }
+    viewModelFactory { ConversationsViewModel(get(), get(), get()) }
     viewModelFactory { ChatViewModel(get(), get()) }
     viewModelFactory { AccountCreationViewModel(get(), get()) }
     viewModelFactory { ImportAccountViewModel(get()) }

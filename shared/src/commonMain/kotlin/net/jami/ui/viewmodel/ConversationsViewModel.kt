@@ -25,12 +25,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import net.jami.model.Conversation
 import net.jami.services.AccountService
 import net.jami.services.ConversationFacade
 import net.jami.services.ConversationEvent
+import net.jami.services.DaemonBridge
 import net.jami.ui.contracts.ConversationItem
 import net.jami.ui.contracts.HomeContract
 import net.jami.ui.contracts.SearchContract
+import net.jami.utils.Log
 
 /**
  * ViewModel for the conversations list (HomeScreen) and search screen.
@@ -40,7 +43,8 @@ import net.jami.ui.contracts.SearchContract
  */
 class ConversationsViewModel(
     private val accountService: AccountService,
-    private val conversationFacade: ConversationFacade
+    private val conversationFacade: ConversationFacade,
+    private val daemonBridge: DaemonBridge
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -56,19 +60,33 @@ class ConversationsViewModel(
     val searchState: StateFlow<SearchContract.State> = _searchState.asStateFlow()
 
     init {
+        // Observe current account and its conversations via Account StateFlow
         scope.launch {
             accountService.currentAccount.filterNotNull().collect { account ->
-                loadConversations()
+                // Collect conversationsSubject from Account model
+                scope.launch {
+                    account.conversationsSubject.collect { conversations ->
+                        updateConversationsState(conversations)
+                    }
+                }
+                // Also update header
+                updateHeaderState(account)
             }
         }
 
+        // Refresh on conversation events
         scope.launch {
             conversationFacade.conversationEvents.collect { event ->
                 when (event) {
+                    is ConversationEvent.ConversationReady,
+                    is ConversationEvent.ConversationRemoved,
                     is ConversationEvent.MessageReceived,
                     is ConversationEvent.MessageUpdated,
                     is ConversationEvent.MessageStatusChanged -> {
-                        loadConversations()
+                        // Re-read from Account model
+                        val account = accountService.currentAccount.value ?: return@collect
+                        updateConversationsState(account.conversationsSubject.value)
+                        updateHeaderState(account)
                     }
                     else -> { /* Other events don't require list refresh */ }
                 }
@@ -78,7 +96,10 @@ class ConversationsViewModel(
 
     fun onHomeAction(action: HomeContract.Action) {
         when (action) {
-            HomeContract.Action.Refresh -> loadConversations()
+            HomeContract.Action.Refresh -> {
+                val account = accountService.currentAccount.value ?: return
+                account.conversationChanged()
+            }
         }
     }
 
@@ -88,29 +109,55 @@ class ConversationsViewModel(
         }
     }
 
-    private fun loadConversations() {
-        scope.launch {
-            _conversationsState.value = _conversationsState.value.copy(isLoading = true)
+    private fun updateConversationsState(conversations: List<Conversation>) {
+        val items = conversations.mapNotNull { conversation ->
             try {
-                val account = accountService.currentAccount.value ?: return@launch
-                val accountId = account.accountId
-
-                val requests = accountService.getConversationRequests(accountId)
-                val pendingCount = requests.size
-
-                val conversations = buildConversationItems(accountId, "")
-
-                _conversationsState.value = _conversationsState.value.copy(
-                    conversations = conversations,
-                    isLoading = false
-                )
-                _headerState.value = _headerState.value.copy(
-                    pendingRequests = pendingCount
-                )
+                conversationToItem(conversation)
             } catch (e: Exception) {
-                _conversationsState.value = _conversationsState.value.copy(isLoading = false)
+                Log.w(TAG, "Error mapping conversation: ${e.message}")
+                null
             }
         }
+        _conversationsState.value = _conversationsState.value.copy(
+            conversations = items,
+            isLoading = false
+        )
+    }
+
+    private fun updateHeaderState(account: net.jami.model.Account) {
+        val pendingCount = account.pending.size
+        val displayName = account.details["Account.displayName"]
+            ?: account.volatileDetails["Account.registeredName"]
+            ?: ""
+        _headerState.value = _headerState.value.copy(
+            pendingRequests = pendingCount,
+            userDisplayName = displayName
+        )
+    }
+
+    private fun conversationToItem(conversation: Conversation): ConversationItem {
+        // Build display name from contacts or profile
+        val profile = conversation.profileFlow.value
+        val title = profile.displayName?.takeIf { it.isNotEmpty() }
+            ?: conversation.contact?.displayUsername
+            ?: conversation.uri.rawRingId.take(8) + "..."
+
+        val lastEvent = conversation.lastEvent
+        val lastMessage = when {
+            lastEvent is net.jami.model.TextMessage -> lastEvent.body ?: ""
+            lastEvent != null -> ""
+            else -> ""
+        }
+
+        return ConversationItem(
+            id = conversation.uri.rawRingId,
+            displayName = title,
+            lastMessage = lastMessage,
+            timestamp = lastEvent?.timestamp ?: 0L,
+            unreadCount = 0,
+            avatarUri = null,
+            isOnline = conversation.contact?.isOnline ?: false
+        )
     }
 
     private fun search(query: String) {
@@ -119,7 +166,18 @@ class ConversationsViewModel(
             _searchState.value = _searchState.value.copy(isLoading = true)
             try {
                 val account = accountService.currentAccount.value ?: return@launch
-                val conversations = buildConversationItems(account.accountId, query.lowercase())
+                val lq = query.lowercase()
+                val conversations = account.conversations.values
+                    .filter { conv ->
+                        if (lq.isEmpty()) return@filter true
+                        val profile = conv.profileFlow.value
+                        val name = profile.displayName
+                            ?: conv.contact?.displayUsername
+                            ?: conv.uri.uri
+                        name.lowercase().contains(lq)
+                    }
+                    .mapNotNull { conversationToItem(it) }
+
                 _searchState.value = _searchState.value.copy(
                     conversations = conversations,
                     isLoading = false
@@ -130,8 +188,8 @@ class ConversationsViewModel(
         }
     }
 
-    private fun buildConversationItems(accountId: String, query: String): List<ConversationItem> {
-        return emptyList()
+    companion object {
+        private const val TAG = "ConversationsVM"
     }
 
     fun onCleared() {

@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.VisualTransformation
 import net.jami.ui.theme.JamiTheme
 
 /**
@@ -58,6 +59,8 @@ fun JamiInputText(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     enabled: Boolean = true,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     Column(modifier = modifier) {
         if (label != null) {
@@ -78,6 +81,8 @@ fun JamiInputText(
             singleLine = singleLine,
             maxLines = maxLines,
             keyboardOptions = keyboardOptions,
+            visualTransformation = visualTransformation,
+            trailingIcon = trailingIcon,
             isError = isError,
             placeholder = if (placeholder != null) {
                 {

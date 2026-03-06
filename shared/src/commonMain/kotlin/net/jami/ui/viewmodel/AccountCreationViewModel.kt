@@ -90,6 +90,9 @@ class AccountCreationViewModel(
             is CreateAccountContract.Action.SetConfirmPassword -> {
                 _state.value = _state.value.copy(confirmPassword = action.confirmPassword, error = null)
             }
+            CreateAccountContract.Action.TogglePasswordVisibility -> {
+                _state.value = _state.value.copy(passwordVisible = !_state.value.passwordVisible)
+            }
             CreateAccountContract.Action.CreateAccount -> createAccount()
         }
     }

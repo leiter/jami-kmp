@@ -25,11 +25,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.components.container.JamiScaffold
 import net.jami.ui.components.inputs.JamiInputText
@@ -110,9 +117,24 @@ fun CreateAccountScreen(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Next,
                 ),
+                visualTransformation = if (state.passwordVisible) VisualTransformation.None
+                    else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { onAction(CreateAccountContract.Action.TogglePasswordVisibility) }) {
+                        Icon(
+                            imageVector = if (state.passwordVisible) Icons.Filled.VisibilityOff
+                                else Icons.Filled.Visibility,
+                            contentDescription = if (state.passwordVisible) "Hide password"
+                                else "Show password",
+                        )
+                    }
+                },
             )
 
             Spacer(Modifier.height(JamiTheme.spacing.m))
+
+            val passwordMismatch = state.confirmPassword.isNotEmpty() &&
+                state.password != state.confirmPassword
 
             JamiInputText(
                 value = state.confirmPassword,
@@ -124,6 +146,20 @@ fun CreateAccountScreen(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done,
                 ),
+                visualTransformation = if (state.passwordVisible) VisualTransformation.None
+                    else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { onAction(CreateAccountContract.Action.TogglePasswordVisibility) }) {
+                        Icon(
+                            imageVector = if (state.passwordVisible) Icons.Filled.VisibilityOff
+                                else Icons.Filled.Visibility,
+                            contentDescription = if (state.passwordVisible) "Hide password"
+                                else "Show password",
+                        )
+                    }
+                },
+                isError = passwordMismatch,
+                errorMessage = if (passwordMismatch) "Passwords do not match" else null,
             )
 
             if (state.error != null) {
@@ -149,7 +185,7 @@ fun CreateAccountScreen(
                 onClick = { onAction(CreateAccountContract.Action.CreateAccount) },
                 modifier = Modifier.fillMaxWidth(),
                 loading = state.isLoading,
-                enabled = !state.isLoading && !usernameBlocking,
+                enabled = !state.isLoading && !usernameBlocking && !passwordMismatch,
             )
 
             Spacer(Modifier.height(JamiTheme.spacing.xl))

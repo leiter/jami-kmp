@@ -36,6 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import net.jami.di.getViewModel
 import net.jami.ui.screens.*
+import org.koin.mp.KoinPlatform
 import net.jami.ui.viewmodel.AboutViewModel
 import net.jami.ui.viewmodel.AccountCreationViewModel
 import net.jami.ui.viewmodel.AccountSettingsViewModel
@@ -113,7 +114,7 @@ private fun OnboardingNavigation() {
         }
 
         composable(Screen.CreateAccount.route) {
-            val viewModel = getViewModel<AccountCreationViewModel>()
+            val viewModel = remember { KoinPlatform.getKoin().get<AccountCreationViewModel>() }
             val state by viewModel.state.collectAsState()
 
             DisposableEffect(viewModel) {
@@ -135,7 +136,7 @@ private fun OnboardingNavigation() {
         }
 
         composable(Screen.ImportAccount.route) {
-            val viewModel = getViewModel<ImportAccountViewModel>()
+            val viewModel = remember { KoinPlatform.getKoin().get<ImportAccountViewModel>() }
             val state by viewModel.state.collectAsState()
 
             DisposableEffect(viewModel) {

@@ -38,14 +38,17 @@ import net.jami.model.Call.CallStatus
 import net.jami.model.CallHistory
 import net.jami.model.Conference
 import net.jami.model.Contact
+import net.jami.model.ContactEvent
 import net.jami.model.ContactViewModel
 import net.jami.model.Conversation
 import net.jami.model.DataTransfer
 import net.jami.model.Interaction
 import net.jami.model.Media
+import net.jami.model.MemberRole
 import net.jami.model.Profile
 import net.jami.model.SwarmMessage
 import net.jami.model.TextMessage
+import net.jami.model.TrustRequest
 import net.jami.model.Uri
 import net.jami.utils.Log
 import net.jami.utils.currentTimeMillis
@@ -75,6 +78,7 @@ class ConversationFacade(
     private val hardwareService: HardwareService,
     private val deviceRuntimeService: DeviceRuntimeService,
     private val preferencesService: PreferencesService,
+    private val daemonBridge: DaemonBridge,
     private val scope: CoroutineScope
 ) {
     private val _currentAccount = MutableStateFlow<Account?>(null)
@@ -187,9 +191,7 @@ class ConversationFacade(
     ): String? {
         val lastMessage = readMessagesInternal(conversation) ?: return null
 
-        // Mark the message as read (daemon will handle read receipts)
-        // This would call daemon's setMessageDisplayed
-        // mAccountService.setMessageDisplayed(account.accountId, conversation.uri, lastMessage)
+        accountService.setMessageDisplayed(account.accountId, conversation.uri, lastMessage)
 
         if (cancelNotification) {
             notificationService.cancelTextNotification(account.accountId, conversation.uri)
@@ -225,8 +227,7 @@ class ConversationFacade(
         replyTo: String? = null
     ) {
         if (conversation.isSwarm) {
-            // For swarm: daemon handles message delivery
-            // mAccountService.sendConversationMessage(conversation.accountId, conversation.uri, text, replyTo)
+            accountService.sendConversationMessage(conversation.accountId, conversation.uri, text, replyTo)
             return
         }
 
@@ -285,9 +286,13 @@ class ConversationFacade(
                 conversation.uri.rawRingId,
                 fileName
             )
-            // Move file to conversation directory and send via daemon
-            // moveFile(file, destPath)
-            // mAccountService.sendFile(conversation, destPath)
+            daemonBridge.sendFile(
+                conversation.accountId,
+                conversation.uri.rawRingId,
+                filePath,
+                fileName,
+                ""
+            )
         }
     }
 
@@ -296,8 +301,10 @@ class ConversationFacade(
      */
     suspend fun deleteConversationFile(conversation: Conversation, transfer: DataTransfer) {
         if (transfer.transferStatus == Interaction.TransferStatus.TRANSFER_ONGOING) {
-            // Cancel ongoing transfer via daemon
-            // mAccountService.cancelDataTransfer(...)
+            val fileId = transfer.fileId
+            if (fileId != null) {
+                daemonBridge.cancelDataTransfer(conversation.accountId, conversation.uri.rawRingId, fileId)
+            }
         } else {
             val path = deviceRuntimeService.getConversationPath(
                 conversation.accountId,
@@ -324,7 +331,10 @@ class ConversationFacade(
         if (conversation.isSwarm) {
             if (element is DataTransfer) {
                 if (element.transferStatus == Interaction.TransferStatus.TRANSFER_ONGOING) {
-                    // Cancel transfer via daemon
+                    val fileId = element.fileId
+                    if (fileId != null) {
+                        daemonBridge.cancelDataTransfer(conversation.accountId, conversation.uri.rawRingId, fileId)
+                    }
                 }
                 // Delete actual file
                 val path = deviceRuntimeService.getConversationPath(
@@ -340,8 +350,9 @@ class ConversationFacade(
                     Log.e(TAG, "Can't delete file", e)
                 }
             }
-            // Delete message via daemon
-            // mAccountService.deleteConversationMessage(conversation.accountId, conversation.uri, element.messageId!!)
+            if (element.messageId != null) {
+                accountService.deleteConversationMessage(conversation.accountId, conversation.uri, element.messageId!!)
+            }
         } else {
             try {
                 historyService.deleteInteraction(element.id.toLong(), element.account!!)
@@ -372,8 +383,7 @@ class ConversationFacade(
      */
     fun cancelFileTransfer(accountId: String, conversationId: Uri, messageId: String?, fileId: String?) {
         if (fileId == null) return
-        // Cancel via daemon
-        // mAccountService.cancelDataTransfer(accountId, conversationId.rawRingId, messageId, fileId)
+        daemonBridge.cancelDataTransfer(accountId, conversationId.rawRingId, fileId)
         notificationService.removeTransferNotification(accountId, conversationId, fileId)
     }
 
@@ -394,8 +404,7 @@ class ConversationFacade(
 
     private fun acceptRequest(accountId: String, contactUri: Uri) {
         preferencesService.removeRequestPreferences(accountId, contactUri.rawRingId)
-        // Accept via daemon
-        // mAccountService.acceptTrustRequest(accountId, contactUri)
+        accountService.acceptTrustRequest(accountId, contactUri)
     }
 
     /**
@@ -403,8 +412,7 @@ class ConversationFacade(
      */
     fun discardRequest(accountId: String, contactUri: Uri) {
         preferencesService.removeRequestPreferences(accountId, contactUri.rawRingId)
-        // Discard via daemon
-        // mAccountService.discardTrustRequest(accountId, contactUri)
+        accountService.discardTrustRequest(accountId, contactUri)
     }
 
     // ==================== Conversation Management ====================
@@ -424,20 +432,19 @@ class ConversationFacade(
             val conversation = findSwarmConversation(account, conversationUri.rawRingId)
             if (conversation != null && conversation.mode == Conversation.Mode.OneToOne) {
                 if (!shouldClearConversation) {
-                    // Remove contact for 1:1 conversations
-                    // mAccountService.removeContact(accountId, contact.uri.rawRingId, false)
+                    val contact = conversation.contact
+                    if (contact != null) {
+                        accountService.removeContact(accountId, contact.uri.rawRingId, false)
+                    }
                 } else {
-                    // Remove conversation via daemon
-                    // mAccountService.removeConversation(accountId, conversationUri)
+                    accountService.removeConversation(accountId, conversationUri)
                 }
             } else {
-                // Remove conversation via daemon
-                // mAccountService.removeConversation(accountId, conversationUri)
+                accountService.removeConversation(accountId, conversationUri)
             }
         } else {
             historyService.clearHistory(conversationUri.uri, accountId, true)
-            // Remove contact
-            // mAccountService.removeContact(accountId, conversationUri.rawRingId, false)
+            accountService.removeContact(accountId, conversationUri.rawRingId, false)
         }
     }
 
@@ -449,16 +456,15 @@ class ConversationFacade(
             try {
                 val conversation = startConversation(accountId, conversationUri)
                 val contact = conversation.contact
-                // Remove/block contact via daemon
-                // mAccountService.removeContact(accountId, contact!!.uri.rawRingId, true)
+                if (contact != null) {
+                    accountService.removeContact(accountId, contact.uri.rawRingId, true)
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Error blocking conversation", e)
-                // Remove conversation via daemon
-                // mAccountService.removeConversation(accountId, conversationUri)
+                accountService.removeConversation(accountId, conversationUri)
             }
         } else {
-            // Remove/block contact via daemon
-            // mAccountService.removeContact(accountId, conversationUri.rawRingId, true)
+            accountService.removeContact(accountId, conversationUri.rawRingId, true)
         }
     }
 
@@ -467,9 +473,12 @@ class ConversationFacade(
      */
     suspend fun createConversation(accountId: String, contacts: Collection<Contact>): Conversation {
         val contactIds = contacts.map { it.primaryNumber }
-        // Create via daemon
-        // return mAccountService.startConversation(accountId, contactIds)
-        throw NotImplementedError("createConversation requires daemon integration")
+        val conversationId = accountService.startConversation(accountId, contactIds)
+        // Daemon will fire conversationReady callback
+        val account = accountService.getAccount(accountId)
+            ?: throw IllegalArgumentException("Unknown account: $accountId")
+        return account.getSwarm(conversationId)
+            ?: Conversation(accountId, Uri(Uri.SWARM_SCHEME, conversationId), Conversation.Mode.OneToOne)
     }
 
     /**
@@ -483,7 +492,10 @@ class ConversationFacade(
     }
 
     private fun clearHistoryForAccount(account: Account, contactUri: Uri) {
-        // Clear history in the account's conversation cache
+        val conversation = findConversation(account, contactUri) ?: return
+        scope.launch {
+            conversation.clearHistory(false)
+        }
     }
 
     /**
@@ -493,7 +505,7 @@ class ConversationFacade(
         val accounts = accountService.accounts.value
         historyService.clearHistory(accounts)
         for (account in accounts) {
-            // Clear all conversations in each account
+            account.clearAllHistory()
         }
     }
 
@@ -510,8 +522,8 @@ class ConversationFacade(
         }
 
         return if (conversation.isSwarm) {
-            // Load more from daemon
-            // mAccountService.loadMore(conversation)
+            val lastMessageId = conversation.getSortedHistory().firstOrNull()?.messageId ?: ""
+            daemonBridge.loadConversation(conversation.accountId, conversation.uri.rawRingId, lastMessageId, 32)
             conversation
         } else {
             getConversationHistory(conversation)
@@ -532,11 +544,16 @@ class ConversationFacade(
      * Load the smartlist (recent conversations) for an account.
      */
     private suspend fun loadSmartlist(account: Account) {
-        // Load history for non-swarm conversations
+        // For Jami accounts, swarm conversations are loaded via daemon callbacks (conversationReady)
+        // For SIP accounts, load from local history
         if (!account.isJami) {
             val interactions = historyService.getSmartlist(account.accountId)
             // Process interactions and update conversations
         }
+        // Mark history as loaded so conversationChanged/pendingChanged emit
+        account.historyLoaded = true
+        account.conversationChanged()
+        account.pendingChanged()
     }
 
     // ==================== Profile/Contact Operations ====================
@@ -691,13 +708,11 @@ class ConversationFacade(
 
     private fun findConversation(account: Account?, uri: Uri): Conversation? {
         if (account == null) return null
-        // In full implementation, this would search account's conversation cache
-        return null
+        return account.getByUri(uri)
     }
 
     private fun findSwarmConversation(account: Account, swarmId: String): Conversation? {
-        // In full implementation, this would search account's swarm conversations
-        return null
+        return account.getSwarm(swarmId)
     }
 
     private fun findConversationForCall(
@@ -728,12 +743,11 @@ class ConversationFacade(
     }
 
     private fun getContactFromCache(account: Account, uri: Uri): Contact {
-        return Contact(uri)
+        return account.getContactFromCache(uri)
     }
 
     private fun getConversationsForAccount(account: Account, withBlocked: Boolean = false): List<Conversation> {
-        // In full implementation, this would return account's conversations
-        return emptyList()
+        return account.conversations.values.toList()
     }
 
     // ==================== Daemon Callback Handlers ====================
@@ -743,7 +757,65 @@ class ConversationFacade(
      */
     internal fun onConversationReady(accountId: String, conversationId: String) {
         Log.d(TAG, "onConversationReady: $conversationId")
-        // TODO: Load conversation data and notify UI
+        val account = accountService.getAccount(accountId)
+        if (account == null) {
+            Log.w(TAG, "onConversationReady: account not found")
+            return
+        }
+
+        val info = daemonBridge.getConversationInfo(accountId, conversationId)
+        val modeInt = info["mode"]?.toIntOrNull() ?: 0
+        val mode = Conversation.Mode.entries.getOrElse(modeInt) { Conversation.Mode.OneToOne }
+        val uri = Uri(Uri.SWARM_SCHEME, conversationId)
+
+        var conversation = account.getByUri(uri)
+        var setMode = false
+        if (conversation == null) {
+            conversation = account.newSwarm(conversationId, mode)
+        } else {
+            setMode = mode != conversation.mode
+        }
+
+        // Set profile from conversation info
+        val title = info["title"]
+        val description = info["description"]
+        val avatar = info["avatar"]
+        if (!title.isNullOrEmpty() || !description.isNullOrEmpty()) {
+            conversation.setProfile(Profile(title, avatar?.toByteArray(), description))
+        }
+
+        // Add members
+        val members = daemonBridge.getConversationMembers(accountId, conversationId)
+        for (member in members) {
+            val memberUri = Uri.fromId(member["uri"] ?: continue)
+            val role = MemberRole.fromString(member["role"] ?: "")
+            if (conversation.findContact(memberUri) == null) {
+                val contact = account.getContactFromCache(memberUri)
+                // Mark user's own contact
+                if (memberUri.uri == account.username || memberUri.uri == account.accountId) {
+                    conversation.addContact(Contact(memberUri, isUser = true), role)
+                } else {
+                    conversation.addContact(contact, role)
+                }
+            }
+        }
+
+        account.conversationStarted(conversation, if (setMode) mode else null)
+        account.historyLoaded = true
+        account.conversationChanged()
+
+        // Load initial messages
+        daemonBridge.loadConversation(accountId, conversationId, "", 1)
+
+        // Load preferences
+        val prefs = daemonBridge.getConversationPreferences(accountId, conversationId)
+        if (prefs.isNotEmpty()) {
+            conversation.updatePreferences(prefs)
+        }
+
+        scope.launch {
+            _conversationEvents.emit(ConversationEvent.ConversationReady(accountId, conversationId))
+        }
     }
 
     /**
@@ -751,7 +823,11 @@ class ConversationFacade(
      */
     internal fun onConversationRemoved(accountId: String, conversationId: String) {
         Log.d(TAG, "onConversationRemoved: $conversationId")
-        // TODO: Remove conversation from cache and notify UI
+        val account = accountService.getAccount(accountId)
+        account?.removeSwarm(conversationId)
+        scope.launch {
+            _conversationEvents.emit(ConversationEvent.ConversationRemoved(accountId, conversationId))
+        }
     }
 
     /**
@@ -759,7 +835,24 @@ class ConversationFacade(
      */
     internal fun onConversationRequestReceived(accountId: String, conversationId: String, metadata: Map<String, String>) {
         Log.d(TAG, "onConversationRequestReceived: $conversationId")
-        // TODO: Add to pending requests and notify UI
+        val account = accountService.getAccount(accountId) ?: return
+        val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+        val from = metadata["from"]?.let { Uri.fromId(it) } ?: return
+
+        val modeInt = metadata["mode"]?.toIntOrNull() ?: 0
+        val mode = Conversation.Mode.entries.getOrElse(modeInt) { Conversation.Mode.OneToOne }
+
+        val request = TrustRequest(
+            accountId = accountId,
+            from = from,
+            timestamp = metadata["received"]?.toLongOrNull() ?: currentTimeMillis(),
+            conversationUri = conversationUri,
+            mode = mode
+        )
+        account.addRequest(request)
+        scope.launch {
+            _conversationEvents.emit(ConversationEvent.ConversationReady(accountId, conversationId))
+        }
     }
 
     /**
@@ -767,7 +860,9 @@ class ConversationFacade(
      */
     internal fun onConversationRequestDeclined(accountId: String, conversationId: String) {
         Log.d(TAG, "onConversationRequestDeclined: $conversationId")
-        // TODO: Remove from pending requests
+        val account = accountService.getAccount(accountId) ?: return
+        val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+        account.removeRequest(conversationUri)
     }
 
     /**
@@ -775,15 +870,32 @@ class ConversationFacade(
      */
     internal fun onConversationMemberEvent(accountId: String, conversationId: String, memberId: String, event: Int) {
         Log.d(TAG, "onConversationMemberEvent: $conversationId member=$memberId event=$event")
-        // TODO: Update member list
+        val account = accountService.getAccount(accountId) ?: return
+        val conversation = findSwarmConversation(account, conversationId) ?: return
+        val memberUri = Uri.fromId(memberId)
+        val contact = account.getContactFromCache(memberUri)
+
+        // event: 0=add, 1=join, 2=remove, 3=ban
+        when (event) {
+            0 -> conversation.addContact(contact, MemberRole.INVITED)
+            1 -> conversation.addContact(contact, MemberRole.MEMBER)
+            2 -> conversation.removeContact(contact, MemberRole.LEFT)
+            3 -> conversation.removeContact(contact, MemberRole.BLOCKED)
+        }
     }
 
     /**
      * Called when a message is received.
      */
-    internal fun onMessageReceived(accountId: String, conversationId: String, message: net.jami.model.SwarmMessage) {
+    internal fun onMessageReceived(accountId: String, conversationId: String, message: SwarmMessage) {
         Log.d(TAG, "onMessageReceived: $conversationId msgId=${message.id}")
+        val account = accountService.getAccount(accountId) ?: return
+        val conversation = findSwarmConversation(account, conversationId) ?: return
+
         scope.launch {
+            val interaction = getInteractionFromSwarmMessage(account, conversation, message)
+            conversation.addSwarmElement(interaction, newMessage = true)
+            account.updated(conversation)
             _conversationEvents.emit(ConversationEvent.MessageReceived(accountId, conversationId, message))
         }
     }
@@ -791,9 +903,14 @@ class ConversationFacade(
     /**
      * Called when a message is updated.
      */
-    internal fun onMessageUpdated(accountId: String, conversationId: String, message: net.jami.model.SwarmMessage) {
+    internal fun onMessageUpdated(accountId: String, conversationId: String, message: SwarmMessage) {
         Log.d(TAG, "onMessageUpdated: $conversationId msgId=${message.id}")
+        val account = accountService.getAccount(accountId) ?: return
+        val conversation = findSwarmConversation(account, conversationId) ?: return
+
         scope.launch {
+            val interaction = getInteractionFromSwarmMessage(account, conversation, message)
+            conversation.updateInteraction(interaction)
             _conversationEvents.emit(ConversationEvent.MessageUpdated(accountId, conversationId, message))
         }
     }
@@ -803,15 +920,24 @@ class ConversationFacade(
      */
     internal fun onMessagesFound(messageId: Int, accountId: String, conversationId: String, messages: List<Map<String, String>>) {
         Log.d(TAG, "onMessagesFound: $conversationId found=${messages.size}")
-        // TODO: Emit search results
     }
 
     /**
      * Called when swarm messages are loaded.
      */
-    internal fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<net.jami.model.SwarmMessage>) {
+    internal fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<SwarmMessage>) {
         Log.d(TAG, "onSwarmLoaded: $conversationId messages=${messages.size}")
+        val account = accountService.getAccount(accountId) ?: return
+        val conversation = findSwarmConversation(account, conversationId) ?: return
+
         scope.launch {
+            // Process messages oldest first
+            for (msg in messages.reversed()) {
+                val interaction = getInteractionFromSwarmMessage(account, conversation, msg)
+                conversation.addSwarmElement(interaction, newMessage = false)
+            }
+            account.historyLoaded = true
+            account.updated(conversation)
             _conversationEvents.emit(ConversationEvent.SwarmLoaded(accountId, conversationId, messages))
         }
     }
@@ -821,7 +947,12 @@ class ConversationFacade(
      */
     internal fun onConversationProfileUpdated(accountId: String, conversationId: String, profile: Map<String, String>) {
         Log.d(TAG, "onConversationProfileUpdated: $conversationId")
-        // TODO: Update conversation profile in cache
+        val account = accountService.getAccount(accountId) ?: return
+        val conversation = findSwarmConversation(account, conversationId) ?: return
+        val title = profile["title"]
+        val description = profile["description"]
+        val avatar = profile["avatar"]
+        conversation.setProfile(Profile(title, avatar?.toByteArray(), description))
     }
 
     /**
@@ -829,7 +960,9 @@ class ConversationFacade(
      */
     internal fun onConversationPreferencesUpdated(accountId: String, conversationId: String, preferences: Map<String, String>) {
         Log.d(TAG, "onConversationPreferencesUpdated: $conversationId")
-        // TODO: Update conversation preferences in cache
+        val account = accountService.getAccount(accountId) ?: return
+        val conversation = findSwarmConversation(account, conversationId) ?: return
+        conversation.updatePreferences(preferences)
     }
 
     /**
@@ -837,6 +970,16 @@ class ConversationFacade(
      */
     internal fun onReactionAdded(accountId: String, conversationId: String, messageId: String, reaction: Map<String, String>) {
         Log.d(TAG, "onReactionAdded: $conversationId msgId=$messageId")
+        val account = accountService.getAccount(accountId) ?: return
+        val conversation = findSwarmConversation(account, conversationId) ?: return
+
+        val reactionBody = reaction.toMutableMap()
+        reactionBody["id"] = reaction["id"] ?: ""
+        reactionBody["type"] = "text/plain"
+        reactionBody["linearizedParent"] = ""
+        val reactionInteraction = getInteraction(account, conversation, reactionBody)
+        conversation.addReaction(reactionInteraction, messageId)
+
         scope.launch {
             _conversationEvents.emit(ConversationEvent.ReactionAdded(accountId, conversationId, messageId, reaction))
         }
@@ -847,6 +990,10 @@ class ConversationFacade(
      */
     internal fun onReactionRemoved(accountId: String, conversationId: String, messageId: String, reactionId: String) {
         Log.d(TAG, "onReactionRemoved: $conversationId msgId=$messageId")
+        val account = accountService.getAccount(accountId) ?: return
+        val conversation = findSwarmConversation(account, conversationId) ?: return
+        conversation.removeReaction(messageId, reactionId)
+
         scope.launch {
             _conversationEvents.emit(ConversationEvent.ReactionRemoved(accountId, conversationId, messageId, reactionId))
         }
@@ -857,7 +1004,9 @@ class ConversationFacade(
      */
     internal fun onActiveCallsChanged(accountId: String, conversationId: String, activeCalls: List<Map<String, String>>) {
         Log.d(TAG, "onActiveCallsChanged: $conversationId calls=${activeCalls.size}")
-        // TODO: Update active calls in conversation
+        val account = accountService.getAccount(accountId) ?: return
+        val conversation = findSwarmConversation(account, conversationId) ?: return
+        conversation.setActiveCalls(activeCalls.map { Conversation.ActiveCall(it) })
     }
 
     /**
@@ -875,6 +1024,13 @@ class ConversationFacade(
      */
     internal fun onComposingStatusChanged(accountId: String, conversationId: String, contactUri: String, status: Int) {
         Log.d(TAG, "onComposingStatusChanged: $contactUri status=$status")
+        val account = accountService.getAccount(accountId) ?: return
+        val conversation = findSwarmConversation(account, conversationId) ?: return
+        val contact = conversation.findContact(Uri.fromString(contactUri))
+        if (contact != null) {
+            val composing = if (status != 0) Conversation.ComposingStatus.Active else Conversation.ComposingStatus.Idle
+            conversation.composingStatusChanged(contact, composing)
+        }
         scope.launch {
             _conversationEvents.emit(ConversationEvent.ComposingStatusChanged(accountId, conversationId, contactUri, status))
         }
@@ -888,6 +1044,159 @@ class ConversationFacade(
         scope.launch {
             _conversationEvents.emit(ConversationEvent.DataTransferEvent(accountId, conversationId, interactionId, fileId, eventCode))
         }
+    }
+
+    // ==================== SwarmMessage -> Interaction Converter ====================
+
+    /**
+     * Convert a SwarmMessage into an Interaction including its edits and reactions.
+     */
+    private fun getInteractionFromSwarmMessage(
+        account: Account,
+        conversation: Conversation,
+        message: SwarmMessage
+    ): Interaction {
+        val body = message.body.toMutableMap()
+        body["id"] = message.id
+        body["type"] = message.type
+        body["linearizedParent"] = message.linearizedParent
+
+        val interaction = getInteraction(account, conversation, body)
+
+        // Process edits
+        for (edition in message.editions) {
+            val editBody = edition.toMutableMap()
+            editBody["type"] = edition["type"] ?: "text/plain"
+            editBody["linearizedParent"] = ""
+            val editInteraction = getInteraction(account, conversation, editBody)
+            interaction.addEdit(editInteraction, false)
+        }
+
+        // Process reactions
+        for ((_, reactionValues) in message.reactions) {
+            for (reactionStr in reactionValues) {
+                val reactionBody = mutableMapOf(
+                    "body" to reactionStr,
+                    "type" to "text/plain",
+                    "linearizedParent" to ""
+                )
+                val reactionInteraction = getInteraction(account, conversation, reactionBody)
+                interaction.addReaction(reactionInteraction)
+            }
+        }
+
+        // Process status map
+        val statusMap = message.status.mapValues { Interaction.MessageStates.fromInt(it.value) }
+        interaction.statusMap = statusMap
+
+        return interaction
+    }
+
+    /**
+     * Convert a message body map into the appropriate Interaction subtype.
+     */
+    private fun getInteraction(
+        account: Account,
+        conversation: Conversation,
+        message: Map<String, String>
+    ): Interaction {
+        val id = message["id"] ?: ""
+        val type = message["type"] ?: ""
+        val authorStr = message["author"] ?: ""
+        val parent = message["linearizedParent"]
+        val timestamp = (message["timestamp"]?.toLongOrNull() ?: 0L) * 1000
+        val replyTo = message["reply-to"]
+        val reactTo = message["react-to"]
+        val edit = message["edit"]
+
+        val authorUri = Uri.fromId(authorStr)
+        val contact = conversation.findContact(authorUri)
+            ?: account.getContactFromCache(authorUri)
+
+        val interaction: Interaction = when (type) {
+            "initial" -> {
+                if (conversation.mode == Conversation.Mode.OneToOne) {
+                    val invited = message["invited"] ?: ""
+                    val invitedContact = conversation.findContact(Uri.fromId(invited))
+                        ?: account.getContactFromCache(invited)
+                    invitedContact.addedDate = timestamp
+                    ContactEvent(account.accountId, invitedContact).setEvent(ContactEvent.Event.INVITED)
+                } else {
+                    Interaction(conversation, Interaction.InteractionType.INVALID)
+                }
+            }
+            "member" -> {
+                val action = message["action"] ?: ""
+                val uri = message["uri"] ?: ""
+                val member = conversation.findContact(Uri.fromId(uri))
+                    ?: account.getContactFromCache(uri)
+                member.addedDate = timestamp
+                ContactEvent(account.accountId, member).setEvent(ContactEvent.Event.fromConversationAction(action))
+            }
+            "application/edited-message",
+            "text/plain" -> {
+                TextMessage(
+                    author = authorStr,
+                    account = account.accountId,
+                    timestamp = timestamp,
+                    conversation = conversation,
+                    message = message["body"] ?: "",
+                    isIncoming = !contact.isUser,
+                    replyToId = replyTo
+                )
+            }
+            "application/data-transfer+json" -> {
+                try {
+                    val fileName = message["displayName"] ?: message["body"] ?: ""
+                    val fileId = message["fileId"]
+                    val totalSize = message["totalSize"]?.toLongOrNull() ?: 0L
+                    DataTransfer(
+                        fileId = fileId,
+                        accountId = account.accountId,
+                        peerUri = authorStr,
+                        displayName = fileName,
+                        isOutgoing = contact.isUser,
+                        timestamp = timestamp,
+                        totalSize = totalSize,
+                        bytesProgress = 0L
+                    ).apply {
+                        transferStatus = if (fileId.isNullOrEmpty())
+                            Interaction.TransferStatus.FILE_REMOVED
+                        else
+                            Interaction.TransferStatus.FILE_AVAILABLE
+                    }
+                } catch (e: Exception) {
+                    Interaction(conversation, Interaction.InteractionType.INVALID)
+                }
+            }
+            "application/call-history+json" -> {
+                val callDirection = if (contact.isUser) Call.Direction.OUTGOING else Call.Direction.INCOMING
+                CallHistory(null, account.accountId, authorUri.rawUriString, callDirection, timestamp).apply {
+                    message["duration"]?.toLongOrNull()?.let { duration = it }
+                    message["confId"]?.let { confId = it }
+                    message["device"]?.let { hostDevice = it }
+                    message["uri"]?.let { hostUri = it }
+                }
+            }
+            "application/update-profile" -> Interaction(conversation, Interaction.InteractionType.INVALID)
+            else -> Interaction(conversation, Interaction.InteractionType.INVALID)
+        }
+
+        interaction.replyToId = replyTo
+        interaction.reactToId = reactTo
+        interaction.edit = edit
+        if (interaction.contact == null) {
+            interaction.contact = contact
+        }
+        if (id.isNotEmpty()) {
+            interaction.setSwarmInfo(
+                conversation.uri.rawRingId,
+                id,
+                if (parent.isNullOrEmpty()) null else parent
+            )
+        }
+        interaction.conversation = conversation
+        return interaction
     }
 
     companion object {
@@ -950,6 +1259,16 @@ data class ConversationList(
  * Events emitted by ConversationFacade for daemon callbacks.
  */
 sealed class ConversationEvent {
+    data class ConversationReady(
+        val accountId: String,
+        val conversationId: String
+    ) : ConversationEvent()
+
+    data class ConversationRemoved(
+        val accountId: String,
+        val conversationId: String
+    ) : ConversationEvent()
+
     data class MessageReceived(
         val accountId: String,
         val conversationId: String,
