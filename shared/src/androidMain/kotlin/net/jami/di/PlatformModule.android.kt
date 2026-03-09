@@ -91,10 +91,10 @@ actual val platformModule: Module = module {
 
     /**
      * Preferences service for conversation/app preferences.
-     * TODO: Replace with Android SharedPreferences implementation.
+     * Uses Android SharedPreferences via Settings wrapper.
      */
     single<PreferencesService> {
-        StubPreferencesService()
+        AndroidPreferencesService(get())
     }
 
     /**

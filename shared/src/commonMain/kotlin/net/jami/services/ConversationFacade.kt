@@ -691,13 +691,11 @@ class ConversationFacade(
 
     private fun findConversation(account: Account?, uri: Uri): Conversation? {
         if (account == null) return null
-        // In full implementation, this would search account's conversation cache
-        return null
+        return account.getByUri(uri) ?: account.getByContact(uri)
     }
 
     private fun findSwarmConversation(account: Account, swarmId: String): Conversation? {
-        // In full implementation, this would search account's swarm conversations
-        return null
+        return account.getSwarm(swarmId)
     }
 
     private fun findConversationForCall(
@@ -732,8 +730,15 @@ class ConversationFacade(
     }
 
     private fun getConversationsForAccount(account: Account, withBlocked: Boolean = false): List<Conversation> {
-        // In full implementation, this would return account's conversations
-        return emptyList()
+        val allConversations = account.getConversations()
+        return if (withBlocked) {
+            allConversations.toList()
+        } else {
+            // Filter out blocked contacts (except in group conversations)
+            allConversations.filter { conversation ->
+                conversation.isGroup || conversation.contact?.isBlocked != true
+            }
+        }
     }
 
     // ==================== Daemon Callback Handlers ====================
@@ -743,7 +748,37 @@ class ConversationFacade(
      */
     internal fun onConversationReady(accountId: String, conversationId: String) {
         Log.d(TAG, "onConversationReady: $conversationId")
-        // TODO: Load conversation data and notify UI
+
+        val account = accountService.getAccount(accountId) ?: run {
+            Log.w(TAG, "onConversationReady: account not found: $accountId")
+            return
+        }
+
+        // Get or create the conversation
+        var conversation = account.getSwarm(conversationId)
+        if (conversation == null) {
+            // Create new swarm conversation with default mode
+            conversation = account.newSwarm(conversationId, Conversation.Mode.OneToOne)
+        }
+
+        // Mark as started (adds to active conversations)
+        account.conversationStarted(conversation)
+
+        // Load conversation info from daemon
+        scope.launch {
+            try {
+                val info = daemonBridge.conversationInfos(accountId, conversationId)
+                // Update conversation with info from daemon
+                conversation.mode = when {
+                    info["mode"] == "1" -> Conversation.Mode.OneToOne
+                    else -> Conversation.Mode.Group
+                }
+
+                Log.d(TAG, "onConversationReady: loaded conversation $conversationId")
+            } catch (e: Exception) {
+                Log.e(TAG, "onConversationReady: failed to load conversation info", e)
+            }
+        }
     }
 
     /**
@@ -751,7 +786,15 @@ class ConversationFacade(
      */
     internal fun onConversationRemoved(accountId: String, conversationId: String) {
         Log.d(TAG, "onConversationRemoved: $conversationId")
-        // TODO: Remove conversation from cache and notify UI
+
+        val account = accountService.getAccount(accountId) ?: run {
+            Log.w(TAG, "onConversationRemoved: account not found: $accountId")
+            return
+        }
+
+        // Remove from swarm conversations
+        account.removeSwarm(conversationId)
+        Log.d(TAG, "onConversationRemoved: removed conversation $conversationId")
     }
 
     /**
