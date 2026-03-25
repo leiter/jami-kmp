@@ -16,7 +16,9 @@
  */
 package net.jami.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +42,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,9 +57,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -181,9 +190,26 @@ fun ChatScreen(
                 ) { message ->
                     when (message.type) {
                         MessageType.System -> SystemMessage(message)
-                        else -> ChatBubble(message)
+                        else -> ChatBubble(
+                            message = message,
+                            onDelete = { viewModel.deleteMessage(message.id) },
+                            onEdit = { newText -> viewModel.editMessage(message.id, newText) },
+                        )
                     }
                 }
+            }
+
+            // Typing indicator
+            if (state.isContactTyping) {
+                Text(
+                    text = "typing...",
+                    style = JamiTheme.typography.labelSmall,
+                    color = JamiTheme.colors.onSurfaceVariant,
+                    modifier = Modifier.padding(
+                        horizontal = JamiTheme.spacing.l,
+                        vertical = JamiTheme.spacing.xxs,
+                    ),
+                )
             }
 
             // Message input bar
@@ -199,9 +225,15 @@ fun ChatScreen(
 /**
  * Chat message bubble. Outgoing messages are right-aligned with primary
  * color, incoming messages are left-aligned with surface variant color.
+ * Long-press shows a context menu with Copy, Edit (own messages), and Delete.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ChatBubble(message: MessageItem) {
+private fun ChatBubble(
+    message: MessageItem,
+    onDelete: () -> Unit = {},
+    onEdit: (String) -> Unit = {},
+) {
     val isOutgoing = message.isOutgoing
     val alignment = if (isOutgoing) Alignment.CenterEnd else Alignment.CenterStart
     val bubbleColor = if (isOutgoing) JamiTheme.colors.messageSent
@@ -215,34 +247,75 @@ private fun ChatBubble(message: MessageItem) {
         bottomEnd = if (isOutgoing) JamiTheme.radius.xs else JamiTheme.radius.m,
     )
 
+    var showMenu by remember { mutableStateOf(false) }
+    val clipboardManager = LocalClipboardManager.current
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = JamiTheme.spacing.xxs),
         contentAlignment = alignment,
     ) {
-        Surface(
-            modifier = Modifier.widthIn(max = 280.dp),
-            shape = bubbleShape,
-            color = bubbleColor,
-        ) {
-            Column(
-                modifier = Modifier.padding(
-                    horizontal = JamiTheme.spacing.m,
-                    vertical = JamiTheme.spacing.s,
-                ),
+        Box {
+            Surface(
+                modifier = Modifier
+                    .widthIn(max = 280.dp)
+                    .combinedClickable(
+                        onClick = {},
+                        onLongClick = { showMenu = true },
+                    ),
+                shape = bubbleShape,
+                color = bubbleColor,
             ) {
-                Text(
-                    text = message.text,
-                    style = JamiTheme.typography.bodyMedium,
-                    color = textColor,
+                Column(
+                    modifier = Modifier.padding(
+                        horizontal = JamiTheme.spacing.m,
+                        vertical = JamiTheme.spacing.s,
+                    ),
+                ) {
+                    Text(
+                        text = message.text,
+                        style = JamiTheme.typography.bodyMedium,
+                        color = textColor,
+                    )
+                    Spacer(Modifier.height(JamiTheme.spacing.xxs))
+                    Text(
+                        text = formatMessageTime(message.timestamp),
+                        style = JamiTheme.typography.labelSmall,
+                        color = textColor.copy(alpha = 0.7f),
+                        modifier = Modifier.align(Alignment.End),
+                    )
+                }
+            }
+
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false },
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Copy") },
+                    onClick = {
+                        clipboardManager.setText(AnnotatedString(message.text))
+                        showMenu = false
+                    },
                 )
-                Spacer(Modifier.height(JamiTheme.spacing.xxs))
-                Text(
-                    text = formatMessageTime(message.timestamp),
-                    style = JamiTheme.typography.labelSmall,
-                    color = textColor.copy(alpha = 0.7f),
-                    modifier = Modifier.align(Alignment.End),
+                if (isOutgoing) {
+                    DropdownMenuItem(
+                        text = { Text("Edit") },
+                        onClick = {
+                            showMenu = false
+                            // For now, re-send the message text as an edit.
+                            // A full implementation would open an edit dialog.
+                            onEdit(message.text)
+                        },
+                    )
+                }
+                DropdownMenuItem(
+                    text = { Text("Delete") },
+                    onClick = {
+                        showMenu = false
+                        onDelete()
+                    },
                 )
             }
         }

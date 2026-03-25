@@ -23,12 +23,18 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import net.jami.model.Contact
 import net.jami.model.Uri
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.services.ContactService
+import net.jami.services.ConversationEvent
 import net.jami.services.ConversationFacade
 
 /**
@@ -164,9 +170,20 @@ class NewConversationViewModel(
             _state.value = _state.value.copy(isLoading = true)
 
             if (selected.size == 1 && !_state.value.isGroup) {
-                // Start a 1:1 conversation
+                // Start a 1:1 conversation - add contact first, then find/await conversation
                 val contactUri = Uri.fromString(selected.first().uri)
-                val conversation = conversationFacade.startConversation(accountId, contactUri)
+                accountService.addContact(accountId, contactUri.uri)
+                val conversation = try {
+                    conversationFacade.startConversation(accountId, contactUri)
+                } catch (_: Exception) {
+                    // Conversation may not exist yet - wait for ConversationReady from daemon
+                    conversationFacade.conversationEvents
+                        .filterIsInstance<ConversationEvent.ConversationReady>()
+                        .filter { it.accountId == accountId }
+                        .map { conversationFacade.getConversation(accountId, contactUri) }
+                        .filterNotNull()
+                        .first()
+                }
                 _state.value = _state.value.copy(isLoading = false)
                 conversation.uri.uri
             } else {

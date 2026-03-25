@@ -29,7 +29,7 @@ import net.jami.utils.currentTimeMillis
 class DataTransfer : Interaction {
 
     var totalSize: Long = 0
-        private set
+        internal set
 
     var bytesProgress: Long = 0
 

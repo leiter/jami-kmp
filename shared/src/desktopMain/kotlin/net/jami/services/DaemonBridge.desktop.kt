@@ -38,7 +38,7 @@ import net.jami.utils.Log
  * so a separate module would be needed to share Java SWIG classes between
  * Android and Desktop targets.
  */
-actual class DaemonBridge actual constructor() {
+actual class DaemonBridge() : DaemonBridgeApi {
     private var isInitialized = false
     private var callbacks: DaemonCallbacks? = null
 
@@ -57,7 +57,7 @@ actual class DaemonBridge actual constructor() {
         }
     }
 
-    actual fun init(callbacks: DaemonCallbacks): Boolean {
+    override fun init(callbacks: DaemonCallbacks): Boolean {
         this.callbacks = callbacks
 
         if (!isNativeLoaded) {
@@ -73,346 +73,377 @@ actual class DaemonBridge actual constructor() {
         return true
     }
 
-    actual fun start(): Boolean {
+    override fun start(): Boolean {
         Log.i(TAG, "Daemon started (desktop stub mode)")
         return isInitialized
     }
 
-    actual fun stop() {
+    override fun stop() {
         if (isInitialized) {
             isInitialized = false
             Log.i(TAG, "Daemon stopped (desktop)")
         }
     }
 
-    actual fun isRunning(): Boolean = isInitialized
+    override fun isRunning(): Boolean = isInitialized
 
     // ==================== Account Operations (Stubs) ====================
 
-    actual fun addAccount(details: Map<String, String>): String {
+    override fun addAccount(details: Map<String, String>): String {
         Log.d(TAG, "addAccount called (stub)")
         return ""
     }
 
-    actual fun removeAccount(accountId: String) {
+    override fun removeAccount(accountId: String) {
         Log.d(TAG, "removeAccount called (stub): $accountId")
     }
 
-    actual fun getAccountDetails(accountId: String): Map<String, String> {
+    override fun getAccountDetails(accountId: String): Map<String, String> {
         Log.d(TAG, "getAccountDetails called (stub): $accountId")
         return emptyMap()
     }
 
-    actual fun setAccountDetails(accountId: String, details: Map<String, String>) {
+    override fun setAccountDetails(accountId: String, details: Map<String, String>) {
         Log.d(TAG, "setAccountDetails called (stub): $accountId")
     }
 
-    actual fun getAccountList(): List<String> {
+    override fun getAccountList(): List<String> {
         Log.d(TAG, "getAccountList called (stub)")
         return emptyList()
     }
 
-    actual fun setAccountActive(accountId: String, active: Boolean) {
+    override fun setAccountActive(accountId: String, active: Boolean) {
         Log.d(TAG, "setAccountActive called (stub): $accountId, active=$active")
     }
 
-    actual fun getAccountTemplate(accountType: String): Map<String, String> {
+    override fun getAccountTemplate(accountType: String): Map<String, String> {
         Log.d(TAG, "getAccountTemplate called (stub): $accountType")
         return emptyMap()
     }
 
-    actual fun getVolatileAccountDetails(accountId: String): Map<String, String> {
+    override fun getVolatileAccountDetails(accountId: String): Map<String, String> {
         Log.d(TAG, "getVolatileAccountDetails called (stub): $accountId")
         return emptyMap()
     }
 
-    actual fun sendRegister(accountId: String, enable: Boolean) {
+    override fun sendRegister(accountId: String, enable: Boolean) {
         Log.d(TAG, "sendRegister called (stub): $accountId, enable=$enable")
     }
 
-    actual fun setAccountsOrder(order: String) {
+    override fun setAccountsOrder(order: String) {
         Log.d(TAG, "setAccountsOrder called (stub)")
     }
 
-    actual fun changeAccountPassword(accountId: String, oldPassword: String, newPassword: String): Boolean {
+    override fun changeAccountPassword(accountId: String, oldPassword: String, newPassword: String): Boolean {
         Log.d(TAG, "changeAccountPassword called (stub): $accountId")
         return false
     }
 
-    actual fun exportToFile(accountId: String, path: String, scheme: String, password: String): Boolean {
+    override fun exportToFile(accountId: String, path: String, scheme: String, password: String): Boolean {
         Log.d(TAG, "exportToFile called (stub): $accountId -> $path")
         return false
     }
 
     // ==================== Credentials (Stubs) ====================
 
-    actual fun getCredentials(accountId: String): List<Map<String, String>> {
+    override fun getCredentials(accountId: String): List<Map<String, String>> {
         Log.d(TAG, "getCredentials called (stub): $accountId")
         return emptyList()
     }
 
-    actual fun setCredentials(accountId: String, credentials: List<Map<String, String>>) {
+    override fun setCredentials(accountId: String, credentials: List<Map<String, String>>) {
         Log.d(TAG, "setCredentials called (stub): $accountId")
     }
 
     // ==================== Device Management (Stubs) ====================
 
-    actual fun getKnownRingDevices(accountId: String): Map<String, String> {
+    override fun getKnownRingDevices(accountId: String): Map<String, String> {
         Log.d(TAG, "getKnownRingDevices called (stub): $accountId")
         return emptyMap()
     }
 
-    actual fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String) {
+    override fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String) {
         Log.d(TAG, "revokeDevice called (stub): $accountId, device=$deviceId")
     }
 
-    actual fun setDeviceName(accountId: String, deviceName: String) {
+    override fun setDeviceName(accountId: String, deviceName: String) {
         Log.d(TAG, "setDeviceName called (stub): $accountId, name=$deviceName")
     }
 
     // ==================== Profile (Stubs) ====================
 
-    actual fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
+    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
         Log.d(TAG, "updateProfile called (stub): $accountId, name=$displayName")
     }
 
     // ==================== Call Operations (Stubs) ====================
 
-    actual fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String {
+    override fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String {
         Log.d(TAG, "placeCall called (stub): $accountId -> $uri")
         return ""
     }
 
-    actual fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {
+    override fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {
         Log.d(TAG, "accept called (stub): $callId")
     }
 
-    actual fun hangUp(accountId: String, callId: String) {
+    override fun hangUp(accountId: String, callId: String) {
         Log.d(TAG, "hangUp called (stub): $callId")
     }
 
-    actual fun hold(accountId: String, callId: String) {
+    override fun hold(accountId: String, callId: String) {
         Log.d(TAG, "hold called (stub): $callId")
     }
 
-    actual fun unhold(accountId: String, callId: String) {
+    override fun unhold(accountId: String, callId: String) {
         Log.d(TAG, "unhold called (stub): $callId")
     }
 
-    actual fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean) {
+    override fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean) {
         Log.d(TAG, "muteLocalMedia called (stub): $callId, $mediaType, mute=$mute")
+    }
+
+    // ==================== Conference Operations ====================
+    override fun holdConference(accountId: String, confId: String): Boolean {
+        Log.d(TAG, "holdConference called (stub): $confId")
+        return true
+    }
+
+    override fun unholdConference(accountId: String, confId: String): Boolean {
+        Log.d(TAG, "unholdConference called (stub): $confId")
+        return true
+    }
+
+    override fun setActiveParticipant(accountId: String, confId: String, callId: String) {
+        Log.d(TAG, "setActiveParticipant called (stub): $confId callId=$callId")
+    }
+
+    override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {
+        Log.d(TAG, "setConferenceLayout called (stub): $confId layout=$layout")
     }
 
     // ==================== Conversation Operations (Stubs) ====================
 
-    actual fun getConversations(accountId: String): List<String> {
+    override fun getConversations(accountId: String): List<String> {
         Log.d(TAG, "getConversations called (stub): $accountId")
         return emptyList()
     }
 
-    actual fun startConversation(accountId: String): String {
+    override fun startConversation(accountId: String): String {
         Log.d(TAG, "startConversation called (stub): $accountId")
         return ""
     }
 
-    actual fun sendMessage(accountId: String, conversationId: String, message: String, replyTo: String, flag: Int) {
+    override fun sendMessage(accountId: String, conversationId: String, message: String, replyTo: String, flag: Int) {
         Log.d(TAG, "sendMessage called (stub): $conversationId")
     }
 
-    actual fun loadConversation(accountId: String, conversationId: String, fromMessage: String, size: Int) {
+    override fun loadConversation(accountId: String, conversationId: String, fromMessage: String, size: Int) {
         Log.d(TAG, "loadConversation called (stub): $conversationId")
     }
 
-    actual fun getConversationMembers(accountId: String, conversationId: String): List<Map<String, String>> {
+    override fun getConversationMembers(accountId: String, conversationId: String): List<Map<String, String>> {
         Log.d(TAG, "getConversationMembers called (stub): $conversationId")
         return emptyList()
     }
 
-    actual fun getConversationInfo(accountId: String, conversationId: String): Map<String, String> {
+    override fun getConversationInfo(accountId: String, conversationId: String): Map<String, String> {
         Log.d(TAG, "getConversationInfo called (stub): $conversationId")
         return emptyMap()
     }
 
-    actual fun removeConversation(accountId: String, conversationId: String) {
+    override fun removeConversation(accountId: String, conversationId: String) {
         Log.d(TAG, "removeConversation called (stub): $conversationId")
     }
 
-    actual fun addConversationMember(accountId: String, conversationId: String, uri: String) {
+    override fun addConversationMember(accountId: String, conversationId: String, uri: String) {
         Log.d(TAG, "addConversationMember called (stub): $conversationId, $uri")
     }
 
-    actual fun removeConversationMember(accountId: String, conversationId: String, uri: String) {
+    override fun removeConversationMember(accountId: String, conversationId: String, uri: String) {
         Log.d(TAG, "removeConversationMember called (stub): $conversationId, $uri")
     }
 
-    actual fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {
+    override fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {
         Log.d(TAG, "updateConversationInfo called (stub): $conversationId")
     }
 
-    actual fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
+    override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
         Log.d(TAG, "getConversationPreferences called (stub): $conversationId")
         return emptyMap()
     }
 
-    actual fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {
+    override fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {
         Log.d(TAG, "setConversationPreferences called (stub): $conversationId")
     }
 
-    actual fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int) {
+    override fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int) {
         Log.d(TAG, "setMessageDisplayed called (stub): $conversationUri, $messageId")
     }
 
-    actual fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> {
+    override fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> {
         Log.d(TAG, "getActiveCalls called (stub): $conversationId")
         return emptyList()
     }
 
     // ==================== Conversation Requests (Stubs) ====================
 
-    actual fun getConversationRequests(accountId: String): List<Map<String, String>> {
+    override fun getConversationRequests(accountId: String): List<Map<String, String>> {
         Log.d(TAG, "getConversationRequests called (stub): $accountId")
         return emptyList()
     }
 
-    actual fun acceptConversationRequest(accountId: String, conversationId: String) {
+    override fun acceptConversationRequest(accountId: String, conversationId: String) {
         Log.d(TAG, "acceptConversationRequest called (stub): $conversationId")
     }
 
-    actual fun declineConversationRequest(accountId: String, conversationId: String) {
+    override fun declineConversationRequest(accountId: String, conversationId: String) {
         Log.d(TAG, "declineConversationRequest called (stub): $conversationId")
     }
 
     // ==================== Trust Requests (Stubs) ====================
 
-    actual fun getTrustRequests(accountId: String): List<Map<String, String>> {
+    override fun getTrustRequests(accountId: String): List<Map<String, String>> {
         Log.d(TAG, "getTrustRequests called (stub): $accountId")
         return emptyList()
     }
 
-    actual fun acceptTrustRequest(accountId: String, uri: String) {
+    override fun acceptTrustRequest(accountId: String, uri: String) {
         Log.d(TAG, "acceptTrustRequest called (stub): $uri")
     }
 
-    actual fun discardTrustRequest(accountId: String, uri: String) {
+    override fun discardTrustRequest(accountId: String, uri: String) {
         Log.d(TAG, "discardTrustRequest called (stub): $uri")
     }
 
-    actual fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray) {
+    override fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray) {
         Log.d(TAG, "sendTrustRequest called (stub): $uri")
     }
 
     // ==================== Contact Operations (Stubs) ====================
 
-    actual fun addContact(accountId: String, uri: String) {
+    override fun addContact(accountId: String, uri: String) {
         Log.d(TAG, "addContact called (stub): $uri")
     }
 
-    actual fun removeContact(accountId: String, uri: String, ban: Boolean) {
+    override fun removeContact(accountId: String, uri: String, ban: Boolean) {
         Log.d(TAG, "removeContact called (stub): $uri")
     }
 
-    actual fun getContacts(accountId: String): List<Map<String, String>> {
+    override fun getContacts(accountId: String): List<Map<String, String>> {
         Log.d(TAG, "getContacts called (stub): $accountId")
         return emptyList()
     }
 
-    actual fun getContactDetails(accountId: String, uri: String): Map<String, String> {
+    override fun getContactDetails(accountId: String, uri: String): Map<String, String> {
         Log.d(TAG, "getContactDetails called (stub): $uri")
         return emptyMap()
     }
 
-    actual fun subscribeBuddy(accountId: String, uri: String, subscribe: Boolean) {
+    override fun subscribeBuddy(accountId: String, uri: String, subscribe: Boolean) {
         Log.d(TAG, "subscribeBuddy called (stub): $uri, subscribe=$subscribe")
     }
 
     // ==================== Name Lookup (Stubs) ====================
 
-    actual fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
+    override fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
         Log.d(TAG, "lookupName called (stub): $name")
         return false
     }
 
-    actual fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean {
+    override fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean {
         Log.d(TAG, "lookupAddress called (stub): $address")
         return false
     }
 
-    actual fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean {
+    override fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean {
         Log.d(TAG, "registerName called (stub): $name")
         return false
     }
 
-    actual fun searchUser(accountId: String, query: String): Boolean {
+    override fun searchUser(accountId: String, query: String): Boolean {
         Log.d(TAG, "searchUser called (stub): $query")
         return false
     }
 
     // ==================== Messaging (Stubs) ====================
 
-    actual fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {
+    override fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {
         Log.d(TAG, "sendTextMessage called (stub): $callIdOrUri")
     }
 
-    actual fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
+    override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
         Log.d(TAG, "setIsComposing called (stub): $uri, composing=$isComposing")
     }
 
-    actual fun cancelMessage(accountId: String, messageId: Long): Boolean {
+    override fun cancelMessage(accountId: String, messageId: Long): Boolean {
         Log.d(TAG, "cancelMessage called (stub): $messageId")
         return false
     }
 
     // ==================== File Transfer (Stubs) ====================
 
-    actual fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {
+    override fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {
         Log.d(TAG, "sendFile called (stub): $conversationId, $filePath")
     }
 
-    actual fun downloadFile(accountId: String, conversationId: String, interactionId: String, fileId: String, path: String) {
+    override fun downloadFile(accountId: String, conversationId: String, interactionId: String, fileId: String, path: String) {
         Log.d(TAG, "downloadFile called (stub): $conversationId, $fileId")
     }
 
-    actual fun cancelDataTransfer(accountId: String, conversationId: String, fileId: String) {
+    override fun cancelDataTransfer(accountId: String, conversationId: String, fileId: String) {
         Log.d(TAG, "cancelDataTransfer called (stub): $fileId")
     }
 
-    actual fun fileTransferInfo(accountId: String, conversationId: String, fileId: String): FileTransferInfo? {
+    override fun fileTransferInfo(accountId: String, conversationId: String, fileId: String): FileTransferInfo? {
         Log.d(TAG, "fileTransferInfo called (stub): $fileId")
         return null
     }
 
+    // ==================== Search & History (Stubs) ====================
+
+    override fun searchConversation(accountId: String, conversationId: String, author: String, lastId: String, query: String, type: String, after: Long, before: Long, maxResult: Long, flag: Int): Long {
+        Log.d(TAG, "searchConversation called (stub): $conversationId query=$query")
+        return -1L
+    }
+
+    override fun loadSwarmUntil(accountId: String, conversationId: String, fromMessage: String, toMessage: String): Long {
+        Log.d(TAG, "loadSwarmUntil called (stub): $conversationId")
+        return -1L
+    }
+
     // ==================== Codec Operations (Stubs) ====================
 
-    actual fun getCodecList(): List<Long> {
+    override fun getCodecList(): List<Long> {
         Log.d(TAG, "getCodecList called (stub)")
         return emptyList()
     }
 
-    actual fun getActiveCodecList(accountId: String): List<Long> {
+    override fun getActiveCodecList(accountId: String): List<Long> {
         Log.d(TAG, "getActiveCodecList called (stub): $accountId")
         return emptyList()
     }
 
-    actual fun setActiveCodecList(accountId: String, codecList: List<Long>) {
+    override fun setActiveCodecList(accountId: String, codecList: List<Long>) {
         Log.d(TAG, "setActiveCodecList called (stub): $accountId")
     }
 
-    actual fun getCodecDetails(accountId: String, codecId: Long): Map<String, String> {
+    override fun getCodecDetails(accountId: String, codecId: Long): Map<String, String> {
         Log.d(TAG, "getCodecDetails called (stub): $codecId")
         return emptyMap()
     }
 
     // ==================== Push Notifications (Stubs) ====================
 
-    actual fun setPushNotificationToken(token: String) {
+    override fun setPushNotificationToken(token: String) {
         Log.d(TAG, "setPushNotificationToken called (stub)")
     }
 
-    actual fun setPushNotificationConfig(config: Map<String, String>) {
+    override fun setPushNotificationConfig(config: Map<String, String>) {
         Log.d(TAG, "setPushNotificationConfig called (stub)")
     }
 
-    actual fun pushNotificationReceived(from: String, data: Map<String, String>) {
+    override fun pushNotificationReceived(from: String, data: Map<String, String>) {
         Log.d(TAG, "pushNotificationReceived called (stub): $from")
     }
 }

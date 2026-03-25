@@ -116,6 +116,7 @@ class Conversation(
         private set
     var lastSent: String? = null
         private set
+    var lastElementLoaded: String? = null
 
     // ==================== Composing ====================
 

@@ -31,6 +31,7 @@ import net.jami.daemon.VideoCallback
 import net.jami.daemon.SwarmMessage as SwigSwarmMessage
 import net.jami.model.MediaAttribute
 import net.jami.model.SwarmMessage
+import android.content.Context
 import net.jami.utils.Log
 
 /**
@@ -43,7 +44,7 @@ import net.jami.utils.Log
  *
  * C++ Daemon → SWIG Director Classes → DaemonBridge → DaemonCallbacks interface
  */
-actual class DaemonBridge actual constructor() {
+actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
     private var isInitialized = false
     private var callbacks: DaemonCallbacks? = null
 
@@ -70,7 +71,7 @@ actual class DaemonBridge actual constructor() {
         }
     }
 
-    actual fun init(callbacks: DaemonCallbacks): Boolean {
+    override fun init(callbacks: DaemonCallbacks): Boolean {
         if (!isNativeLoaded) {
             Log.e(TAG, "Cannot initialize - native library not loaded")
             return false
@@ -107,7 +108,7 @@ actual class DaemonBridge actual constructor() {
         }
     }
 
-    actual fun start(): Boolean {
+    override fun start(): Boolean {
         if (!isInitialized) {
             Log.w(TAG, "Cannot start - daemon not initialized")
             return false
@@ -117,7 +118,7 @@ actual class DaemonBridge actual constructor() {
         return true
     }
 
-    actual fun stop() {
+    override fun stop() {
         if (isInitialized) {
             try {
                 JamiService.fini()
@@ -129,79 +130,79 @@ actual class DaemonBridge actual constructor() {
         }
     }
 
-    actual fun isRunning(): Boolean = isInitialized
+    override fun isRunning(): Boolean = isInitialized
 
     // ==================== Account Operations ====================
 
-    actual fun addAccount(details: Map<String, String>): String {
+    override fun addAccount(details: Map<String, String>): String {
         return JamiService.addAccount(StringMap.toSwig(details))
     }
 
-    actual fun removeAccount(accountId: String) {
+    override fun removeAccount(accountId: String) {
         JamiService.removeAccount(accountId)
     }
 
-    actual fun getAccountDetails(accountId: String): Map<String, String> {
+    override fun getAccountDetails(accountId: String): Map<String, String> {
         return JamiService.getAccountDetails(accountId).toNative()
     }
 
-    actual fun setAccountDetails(accountId: String, details: Map<String, String>) {
+    override fun setAccountDetails(accountId: String, details: Map<String, String>) {
         JamiService.setAccountDetails(accountId, StringMap.toSwig(details))
     }
 
-    actual fun getAccountList(): List<String> {
+    override fun getAccountList(): List<String> {
         return JamiService.getAccountList().toList()
     }
 
-    actual fun setAccountActive(accountId: String, active: Boolean) {
+    override fun setAccountActive(accountId: String, active: Boolean) {
         JamiService.setAccountActive(accountId, active)
     }
 
-    actual fun getAccountTemplate(accountType: String): Map<String, String> {
+    override fun getAccountTemplate(accountType: String): Map<String, String> {
         return JamiService.getAccountTemplate(accountType).toNative()
     }
 
-    actual fun getVolatileAccountDetails(accountId: String): Map<String, String> {
+    override fun getVolatileAccountDetails(accountId: String): Map<String, String> {
         return JamiService.getVolatileAccountDetails(accountId).toNative()
     }
 
-    actual fun sendRegister(accountId: String, enable: Boolean) {
+    override fun sendRegister(accountId: String, enable: Boolean) {
         JamiService.sendRegister(accountId, enable)
     }
 
-    actual fun setAccountsOrder(order: String) {
+    override fun setAccountsOrder(order: String) {
         JamiService.setAccountsOrder(order)
     }
 
-    actual fun changeAccountPassword(accountId: String, oldPassword: String, newPassword: String): Boolean {
+    override fun changeAccountPassword(accountId: String, oldPassword: String, newPassword: String): Boolean {
         return JamiService.changeAccountPassword(accountId, oldPassword, newPassword)
     }
 
-    actual fun exportToFile(accountId: String, path: String, scheme: String, password: String): Boolean {
+    override fun exportToFile(accountId: String, path: String, scheme: String, password: String): Boolean {
         return JamiService.exportToFile(accountId, path, scheme, password)
     }
 
     // ==================== Credentials ====================
 
-    actual fun getCredentials(accountId: String): List<Map<String, String>> {
+    override fun getCredentials(accountId: String): List<Map<String, String>> {
         return JamiService.getCredentials(accountId).toNative()
     }
 
-    actual fun setCredentials(accountId: String, credentials: List<Map<String, String>>) {
+    override fun setCredentials(accountId: String, credentials: List<Map<String, String>>) {
         JamiService.setCredentials(accountId, credentials.toSwigVectMap())
     }
 
     // ==================== Device Management ====================
 
-    actual fun getKnownRingDevices(accountId: String): Map<String, String> {
+    override fun getKnownRingDevices(accountId: String): Map<String, String> {
         return JamiService.getKnownRingDevices(accountId).toNative()
     }
 
-    actual fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String) {
+    override fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String) {
         JamiService.revokeDevice(accountId, deviceId, scheme, password)
     }
 
-    actual fun setDeviceName(accountId: String, deviceName: String) {
+    override fun setDeviceName(accountId: String, deviceName: String) {
         val details = JamiService.getAccountDetails(accountId)
         details["Account.deviceName"] = deviceName
         JamiService.setAccountDetails(accountId, details)
@@ -209,199 +210,217 @@ actual class DaemonBridge actual constructor() {
 
     // ==================== Profile ====================
 
-    actual fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
+    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
         JamiService.updateProfile(accountId, displayName, avatar, fileType, flag)
     }
 
     // ==================== Call Operations ====================
 
-    actual fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String {
+    override fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String {
         val swigMedia = mediaList.toSwigVectMap()
         return JamiService.placeCallWithMedia(accountId, uri, swigMedia)
     }
 
-    actual fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {
+    override fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {
         JamiService.acceptWithMedia(accountId, callId, mediaList.toSwigVectMap())
     }
 
-    actual fun hangUp(accountId: String, callId: String) {
+    override fun hangUp(accountId: String, callId: String) {
         JamiService.hangUp(accountId, callId)
     }
 
-    actual fun hold(accountId: String, callId: String) {
+    override fun hold(accountId: String, callId: String) {
         JamiService.hold(accountId, callId)
     }
 
-    actual fun unhold(accountId: String, callId: String) {
+    override fun unhold(accountId: String, callId: String) {
         JamiService.unhold(accountId, callId)
     }
 
-    actual fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean) {
+    override fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean) {
         JamiService.muteLocalMedia(accountId, callId, mediaType, mute)
+    }
+
+    // ==================== Conference Operations ====================
+    override fun holdConference(accountId: String, confId: String): Boolean {
+        return JamiService.holdConference(accountId, confId)
+    }
+
+    override fun unholdConference(accountId: String, confId: String): Boolean {
+        return JamiService.unholdConference(accountId, confId)
+    }
+
+    override fun setActiveParticipant(accountId: String, confId: String, callId: String) {
+        JamiService.setActiveParticipant(accountId, confId, callId)
+    }
+
+    override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {
+        // JamiService doesn't have setConferenceLayout yet - stub
+        Log.d(TAG, "setConferenceLayout called (stub): $confId layout=$layout")
     }
 
     // ==================== Conversation Operations ====================
 
-    actual fun getConversations(accountId: String): List<String> {
+    override fun getConversations(accountId: String): List<String> {
         return JamiService.getConversations(accountId).toList()
     }
 
-    actual fun startConversation(accountId: String): String {
+    override fun startConversation(accountId: String): String {
         return JamiService.startConversation(accountId)
     }
 
-    actual fun sendMessage(accountId: String, conversationId: String, message: String, replyTo: String, flag: Int) {
+    override fun sendMessage(accountId: String, conversationId: String, message: String, replyTo: String, flag: Int) {
         JamiService.sendMessage(accountId, conversationId, message, replyTo, flag)
     }
 
-    actual fun loadConversation(accountId: String, conversationId: String, fromMessage: String, size: Int) {
+    override fun loadConversation(accountId: String, conversationId: String, fromMessage: String, size: Int) {
         JamiService.loadConversation(accountId, conversationId, fromMessage, size.toLong())
     }
 
-    actual fun getConversationMembers(accountId: String, conversationId: String): List<Map<String, String>> {
+    override fun getConversationMembers(accountId: String, conversationId: String): List<Map<String, String>> {
         return JamiService.getConversationMembers(accountId, conversationId).toNative()
     }
 
-    actual fun getConversationInfo(accountId: String, conversationId: String): Map<String, String> {
+    override fun getConversationInfo(accountId: String, conversationId: String): Map<String, String> {
         return JamiService.conversationInfos(accountId, conversationId).toNativeFromUtf8()
     }
 
-    actual fun removeConversation(accountId: String, conversationId: String) {
+    override fun removeConversation(accountId: String, conversationId: String) {
         JamiService.removeConversation(accountId, conversationId)
     }
 
-    actual fun addConversationMember(accountId: String, conversationId: String, uri: String) {
+    override fun addConversationMember(accountId: String, conversationId: String, uri: String) {
         JamiService.addConversationMember(accountId, conversationId, uri)
     }
 
-    actual fun removeConversationMember(accountId: String, conversationId: String, uri: String) {
+    override fun removeConversationMember(accountId: String, conversationId: String, uri: String) {
         JamiService.removeConversationMember(accountId, conversationId, uri)
     }
 
-    actual fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {
+    override fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {
         JamiService.updateConversationInfos(accountId, conversationId, StringMap.toSwig(info))
     }
 
-    actual fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
+    override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
         return JamiService.getConversationPreferences(accountId, conversationId).toNative()
     }
 
-    actual fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {
+    override fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {
         JamiService.setConversationPreferences(accountId, conversationId, StringMap.toSwig(prefs))
     }
 
-    actual fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int) {
+    override fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int) {
         JamiService.setMessageDisplayed(accountId, conversationUri, messageId, status)
     }
 
-    actual fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> {
+    override fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> {
         return JamiService.getActiveCalls(accountId, conversationId).toNative()
     }
 
     // ==================== Conversation Requests ====================
 
-    actual fun getConversationRequests(accountId: String): List<Map<String, String>> {
+    override fun getConversationRequests(accountId: String): List<Map<String, String>> {
         return JamiService.getConversationRequests(accountId).map { it.toNativeFromUtf8() }
     }
 
-    actual fun acceptConversationRequest(accountId: String, conversationId: String) {
+    override fun acceptConversationRequest(accountId: String, conversationId: String) {
         JamiService.acceptConversationRequest(accountId, conversationId)
     }
 
-    actual fun declineConversationRequest(accountId: String, conversationId: String) {
+    override fun declineConversationRequest(accountId: String, conversationId: String) {
         JamiService.declineConversationRequest(accountId, conversationId)
     }
 
     // ==================== Trust Requests ====================
 
-    actual fun getTrustRequests(accountId: String): List<Map<String, String>> {
+    override fun getTrustRequests(accountId: String): List<Map<String, String>> {
         return JamiService.getTrustRequests(accountId).toNative()
     }
 
-    actual fun acceptTrustRequest(accountId: String, uri: String) {
+    override fun acceptTrustRequest(accountId: String, uri: String) {
         JamiService.acceptTrustRequest(accountId, uri)
     }
 
-    actual fun discardTrustRequest(accountId: String, uri: String) {
+    override fun discardTrustRequest(accountId: String, uri: String) {
         JamiService.discardTrustRequest(accountId, uri)
     }
 
-    actual fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray) {
+    override fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray) {
         val blob = Blob(payload)
         JamiService.sendTrustRequest(accountId, uri, blob)
     }
 
     // ==================== Contact Operations ====================
 
-    actual fun addContact(accountId: String, uri: String) {
+    override fun addContact(accountId: String, uri: String) {
         JamiService.addContact(accountId, uri)
     }
 
-    actual fun removeContact(accountId: String, uri: String, ban: Boolean) {
+    override fun removeContact(accountId: String, uri: String, ban: Boolean) {
         JamiService.removeContact(accountId, uri, ban)
     }
 
-    actual fun getContacts(accountId: String): List<Map<String, String>> {
+    override fun getContacts(accountId: String): List<Map<String, String>> {
         return JamiService.getContacts(accountId).toNative()
     }
 
-    actual fun getContactDetails(accountId: String, uri: String): Map<String, String> {
+    override fun getContactDetails(accountId: String, uri: String): Map<String, String> {
         return JamiService.getContactDetails(accountId, uri).toNative()
     }
 
-    actual fun subscribeBuddy(accountId: String, uri: String, subscribe: Boolean) {
+    override fun subscribeBuddy(accountId: String, uri: String, subscribe: Boolean) {
         JamiService.subscribeBuddy(accountId, uri, subscribe)
     }
 
     // ==================== Name Lookup ====================
 
-    actual fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
+    override fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
         return JamiService.lookupName(accountId, nameServiceUrl, name)
     }
 
-    actual fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean {
+    override fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean {
         return JamiService.lookupAddress(accountId, nameServiceUrl, address)
     }
 
-    actual fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean {
+    override fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean {
         return JamiService.registerName(accountId, name, scheme, password)
     }
 
-    actual fun searchUser(accountId: String, query: String): Boolean {
+    override fun searchUser(accountId: String, query: String): Boolean {
         return JamiService.searchUser(accountId, query)
     }
 
     // ==================== Messaging ====================
 
-    actual fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {
+    override fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {
         val payload = StringMap()
         payload["text/plain"] = message
         JamiService.sendAccountTextMessage(accountId, callIdOrUri, payload, 0)
     }
 
-    actual fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
+    override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
         JamiService.setIsComposing(accountId, uri, isComposing)
     }
 
-    actual fun cancelMessage(accountId: String, messageId: Long): Boolean {
+    override fun cancelMessage(accountId: String, messageId: Long): Boolean {
         return JamiService.cancelMessage(accountId, messageId)
     }
 
     // ==================== File Transfer ====================
 
-    actual fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {
+    override fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {
         JamiService.sendFile(accountId, conversationId, filePath, displayName, parent)
     }
 
-    actual fun downloadFile(accountId: String, conversationId: String, interactionId: String, fileId: String, path: String) {
+    override fun downloadFile(accountId: String, conversationId: String, interactionId: String, fileId: String, path: String) {
         JamiService.downloadFile(accountId, conversationId, interactionId, fileId, path)
     }
 
-    actual fun cancelDataTransfer(accountId: String, conversationId: String, fileId: String) {
+    override fun cancelDataTransfer(accountId: String, conversationId: String, fileId: String) {
         JamiService.cancelDataTransfer(accountId, conversationId, fileId)
     }
 
-    actual fun fileTransferInfo(accountId: String, conversationId: String, fileId: String): FileTransferInfo? {
+    override fun fileTransferInfo(accountId: String, conversationId: String, fileId: String): FileTransferInfo? {
         val paths = arrayOfNulls<String>(1)
         val totalSize = LongArray(1)
         val bytesProgress = LongArray(1)
@@ -410,37 +429,47 @@ actual class DaemonBridge actual constructor() {
         return FileTransferInfo(path, totalSize[0], bytesProgress[0])
     }
 
+    // ==================== Search & History ====================
+
+    override fun searchConversation(accountId: String, conversationId: String, author: String, lastId: String, query: String, type: String, after: Long, before: Long, maxResult: Long, flag: Int): Long {
+        return JamiService.searchConversation(accountId, conversationId, author, lastId, query, type, after, before, maxResult, flag)
+    }
+
+    override fun loadSwarmUntil(accountId: String, conversationId: String, fromMessage: String, toMessage: String): Long {
+        return JamiService.loadSwarmUntil(accountId, conversationId, fromMessage, toMessage)
+    }
+
     // ==================== Codec Operations ====================
 
-    actual fun getCodecList(): List<Long> {
+    override fun getCodecList(): List<Long> {
         return JamiService.getCodecList().map { it.toLong() }
     }
 
-    actual fun getActiveCodecList(accountId: String): List<Long> {
+    override fun getActiveCodecList(accountId: String): List<Long> {
         return JamiService.getActiveCodecList(accountId).map { it.toLong() }
     }
 
-    actual fun setActiveCodecList(accountId: String, codecList: List<Long>) {
+    override fun setActiveCodecList(accountId: String, codecList: List<Long>) {
         val uintVect = net.jami.daemon.UintVect()
         codecList.forEach { uintVect.add(it) }
         JamiService.setActiveCodecList(accountId, uintVect)
     }
 
-    actual fun getCodecDetails(accountId: String, codecId: Long): Map<String, String> {
+    override fun getCodecDetails(accountId: String, codecId: Long): Map<String, String> {
         return JamiService.getCodecDetails(accountId, codecId).toNative()
     }
 
     // ==================== Push Notifications ====================
 
-    actual fun setPushNotificationToken(token: String) {
+    override fun setPushNotificationToken(token: String) {
         JamiService.setPushNotificationToken(token)
     }
 
-    actual fun setPushNotificationConfig(config: Map<String, String>) {
+    override fun setPushNotificationConfig(config: Map<String, String>) {
         JamiService.setPushNotificationConfig(StringMap.toSwig(config))
     }
 
-    actual fun pushNotificationReceived(from: String, data: Map<String, String>) {
+    override fun pushNotificationReceived(from: String, data: Map<String, String>) {
         JamiService.pushNotificationReceived(from, StringMap.toSwig(data))
     }
 
@@ -520,6 +549,14 @@ actual class DaemonBridge actual constructor() {
         override fun userSearchEnded(accountId: String, state: Int, query: String, results: VectMap) {
             callbacks.onUserSearchEnded(accountId, state, query, results.toNative())
         }
+
+        override fun getAppDataPath(name: String, ret: StringVect) {
+            when (name) {
+                "files" -> ret.add(context.filesDir.absolutePath)
+                "cache" -> ret.add(context.cacheDir.absolutePath)
+                else -> ret.add(context.getDir(name, Context.MODE_PRIVATE).absolutePath)
+            }
+        }
     }
 
     private fun createCallCallback(callbacks: DaemonCallbacks) = object : Callback() {
@@ -552,7 +589,7 @@ actual class DaemonBridge actual constructor() {
 
     private fun createPresenceCallback(callbacks: DaemonCallbacks) = object : PresenceCallback() {
         override fun newBuddyNotification(accountId: String, buddyUri: String, status: Int, lineStatus: String) {
-            // Presence updates - can be extended if needed
+            callbacks.onNewBuddyNotification(accountId, buddyUri, status, lineStatus)
         }
     }
 

@@ -44,23 +44,26 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import kotlinx.coroutines.launch
 import net.jami.di.getViewModel
+import net.jami.model.Contact
 import net.jami.ui.components.actions.JamiFilterChip
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.PresenceStatus
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.ConversationItem
-import net.jami.ui.viewmodel.ConversationsViewModel
+import net.jami.ui.viewmodel.ContactItem
+import net.jami.ui.viewmodel.NewConversationViewModel
 
 /**
  * Search screen for finding conversations and contacts.
  *
- * Provides a search text field, filter chips ("QR Code", "New Group"),
- * and a results list showing matching conversations.
+ * Uses [NewConversationViewModel] to search both local contacts and
+ * the nameserver for remote results.
  *
  * @param onBack Called when the user navigates back.
  * @param onConversationClick Called when a conversation result is tapped.
@@ -71,8 +74,9 @@ fun SearchScreen(
     onBack: () -> Unit,
     onConversationClick: (String) -> Unit,
 ) {
-    val viewModel = getViewModel<ConversationsViewModel>()
+    val viewModel = getViewModel<NewConversationViewModel>()
     val state by viewModel.state.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -137,12 +141,20 @@ fun SearchScreen(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 items(
-                    items = state.conversations,
-                    key = { it.id },
-                ) { conversation ->
+                    items = state.searchResults,
+                    key = { it.uri },
+                ) { contact ->
                     SearchResultItem(
-                        conversation = conversation,
-                        onClick = { onConversationClick(conversation.id) },
+                        contact = contact,
+                        onClick = {
+                            viewModel.selectContact(contact)
+                            coroutineScope.launch {
+                                val conversationId = viewModel.createConversation()
+                                if (conversationId != null) {
+                                    onConversationClick(conversationId)
+                                }
+                            }
+                        },
                     )
                 }
             }
@@ -151,11 +163,11 @@ fun SearchScreen(
 }
 
 /**
- * Single search result item displaying avatar, name, and last message.
+ * Single search result item displaying avatar, name, and username.
  */
 @Composable
 private fun SearchResultItem(
-    conversation: ConversationItem,
+    contact: ContactItem,
     onClick: () -> Unit,
 ) {
     Row(
@@ -169,32 +181,34 @@ private fun SearchResultItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         JamiAvatar(
-            displayName = conversation.displayName,
-            imageUri = conversation.avatarUri,
+            displayName = contact.displayName,
+            imageUri = contact.avatarUri,
             size = AvatarSize.Medium,
             showPresence = true,
-            presenceStatus = if (conversation.isOnline) PresenceStatus.Online
-            else PresenceStatus.Offline,
+            presenceStatus = if (contact.presenceStatus != Contact.PresenceStatus.OFFLINE)
+                PresenceStatus.Online else PresenceStatus.Offline,
         )
 
         Spacer(Modifier.width(JamiTheme.spacing.m))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = conversation.displayName,
+                text = contact.displayName,
                 style = JamiTheme.typography.titleSmall,
                 color = JamiTheme.colors.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Spacer(Modifier.height(JamiTheme.spacing.xxs))
-            Text(
-                text = conversation.lastMessage,
-                style = JamiTheme.typography.bodyMedium,
-                color = JamiTheme.colors.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (contact.username.isNotEmpty()) {
+                Spacer(Modifier.height(JamiTheme.spacing.xxs))
+                Text(
+                    text = contact.username,
+                    style = JamiTheme.typography.bodyMedium,
+                    color = JamiTheme.colors.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

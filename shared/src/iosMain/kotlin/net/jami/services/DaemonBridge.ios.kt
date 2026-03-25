@@ -29,7 +29,7 @@ import platform.darwin.NSObject
 /**
  * iOS implementation of DaemonBridge using JamiBridge Objective-C++ wrapper via cinterop.
  */
-actual class DaemonBridge actual constructor() {
+actual class DaemonBridge() : DaemonBridgeApi {
     private var isInitialized = false
     private var callbacks: DaemonCallbacks? = null
     private val bridge: JamiBridgeWrapper = JamiBridgeWrapper.shared()
@@ -41,7 +41,7 @@ actual class DaemonBridge actual constructor() {
 
     // ==================== Lifecycle ====================
 
-    actual fun init(callbacks: DaemonCallbacks): Boolean {
+    override fun init(callbacks: DaemonCallbacks): Boolean {
         this.callbacks = callbacks
 
         // Create and set delegate
@@ -76,128 +76,128 @@ actual class DaemonBridge actual constructor() {
         return true
     }
 
-    actual fun start(): Boolean {
+    override fun start(): Boolean {
         if (!isInitialized) return false
         bridge.startDaemon()
         Log.i(TAG, "Daemon started")
         return true
     }
 
-    actual fun stop() {
+    override fun stop() {
         bridge.stopDaemon()
         isInitialized = false
         Log.i(TAG, "Daemon stopped")
     }
 
-    actual fun isRunning(): Boolean = bridge.isDaemonRunning()
+    override fun isRunning(): Boolean = bridge.isDaemonRunning()
 
     // ==================== Account Operations ====================
 
-    actual fun addAccount(details: Map<String, String>): String {
+    override fun addAccount(details: Map<String, String>): String {
         val displayName = details["Account.displayName"] ?: ""
         val password = details["Account.archivePassword"] ?: ""
         return bridge.createAccountWithDisplayName(displayName, password = password) ?: ""
     }
 
-    actual fun removeAccount(accountId: String) {
+    override fun removeAccount(accountId: String) {
         bridge.deleteAccount(accountId)
     }
 
-    actual fun getAccountDetails(accountId: String): Map<String, String> {
+    override fun getAccountDetails(accountId: String): Map<String, String> {
         return bridge.getAccountDetails(accountId)?.toKotlinMap() ?: emptyMap()
     }
 
-    actual fun setAccountDetails(accountId: String, details: Map<String, String>) {
+    override fun setAccountDetails(accountId: String, details: Map<String, String>) {
         bridge.setAccountDetails(accountId, details = details.toNSDictionary())
     }
 
-    actual fun getAccountList(): List<String> {
+    override fun getAccountList(): List<String> {
         return bridge.getAccountIds()?.toKotlinList() ?: emptyList()
     }
 
-    actual fun setAccountActive(accountId: String, active: Boolean) {
+    override fun setAccountActive(accountId: String, active: Boolean) {
         bridge.setAccountActive(accountId, active = active)
     }
 
-    actual fun getAccountTemplate(accountType: String): Map<String, String> {
+    override fun getAccountTemplate(accountType: String): Map<String, String> {
         return emptyMap()
     }
 
-    actual fun getVolatileAccountDetails(accountId: String): Map<String, String> {
+    override fun getVolatileAccountDetails(accountId: String): Map<String, String> {
         return bridge.getVolatileAccountDetails(accountId)?.toKotlinMap() ?: emptyMap()
     }
 
-    actual fun sendRegister(accountId: String, enable: Boolean) {
+    override fun sendRegister(accountId: String, enable: Boolean) {
         bridge.setAccountActive(accountId, active = enable)
     }
 
-    actual fun setAccountsOrder(order: String) {
+    override fun setAccountsOrder(order: String) {
         // Not exposed in JamiBridge
     }
 
-    actual fun changeAccountPassword(accountId: String, oldPassword: String, newPassword: String): Boolean {
+    override fun changeAccountPassword(accountId: String, oldPassword: String, newPassword: String): Boolean {
         return false
     }
 
-    actual fun exportToFile(accountId: String, path: String, scheme: String, password: String): Boolean {
+    override fun exportToFile(accountId: String, path: String, scheme: String, password: String): Boolean {
         return bridge.exportAccount(accountId, toDestinationPath = path, withPassword = password)
     }
 
     // ==================== Credentials ====================
 
-    actual fun getCredentials(accountId: String): List<Map<String, String>> {
+    override fun getCredentials(accountId: String): List<Map<String, String>> {
         return emptyList()
     }
 
-    actual fun setCredentials(accountId: String, credentials: List<Map<String, String>>) {
+    override fun setCredentials(accountId: String, credentials: List<Map<String, String>>) {
         // Not exposed in JamiBridge
     }
 
     // ==================== Device Management ====================
 
-    actual fun getKnownRingDevices(accountId: String): Map<String, String> {
+    override fun getKnownRingDevices(accountId: String): Map<String, String> {
         return emptyMap()
     }
 
-    actual fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String) {
+    override fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String) {
         // Not exposed in JamiBridge
     }
 
-    actual fun setDeviceName(accountId: String, deviceName: String) {
+    override fun setDeviceName(accountId: String, deviceName: String) {
         // Not exposed in JamiBridge
     }
 
     // ==================== Profile ====================
 
-    actual fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
+    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
         bridge.updateProfile(accountId, displayName = displayName, avatarPath = avatar.takeIf { it.isNotEmpty() })
     }
 
     // ==================== Call Operations ====================
 
-    actual fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String {
+    override fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String {
         val hasVideo = mediaList.any { it.mediaType.name == "VIDEO" && it.enabled }
         return bridge.placeCall(accountId, uri = uri, withVideo = hasVideo) ?: ""
     }
 
-    actual fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {
+    override fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {
         val hasVideo = mediaList.any { it.mediaType.name == "VIDEO" && it.enabled }
         bridge.acceptCall(accountId, callId = callId, withVideo = hasVideo)
     }
 
-    actual fun hangUp(accountId: String, callId: String) {
+    override fun hangUp(accountId: String, callId: String) {
         bridge.hangUp(accountId, callId = callId)
     }
 
-    actual fun hold(accountId: String, callId: String) {
+    override fun hold(accountId: String, callId: String) {
         bridge.holdCall(accountId, callId = callId)
     }
 
-    actual fun unhold(accountId: String, callId: String) {
+    override fun unhold(accountId: String, callId: String) {
         bridge.unholdCall(accountId, callId = callId)
     }
 
-    actual fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean) {
+    override fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean) {
         if (mediaType == "MEDIA_TYPE_AUDIO") {
             bridge.muteAudio(accountId, callId = callId, muted = mute)
         } else if (mediaType == "MEDIA_TYPE_VIDEO") {
@@ -205,17 +205,38 @@ actual class DaemonBridge actual constructor() {
         }
     }
 
+    // ==================== Conference Operations ====================
+    override fun holdConference(accountId: String, confId: String): Boolean {
+        Log.d(TAG, "holdConference: $confId")
+        return true // TODO: bridge.holdConference(accountId, confId)
+    }
+
+    override fun unholdConference(accountId: String, confId: String): Boolean {
+        Log.d(TAG, "unholdConference: $confId")
+        return true // TODO: bridge.unholdConference(accountId, confId)
+    }
+
+    override fun setActiveParticipant(accountId: String, confId: String, callId: String) {
+        Log.d(TAG, "setActiveParticipant: $confId callId=$callId")
+        // TODO: bridge.setActiveParticipant(accountId, confId, callId)
+    }
+
+    override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {
+        Log.d(TAG, "setConferenceLayout: $confId layout=$layout")
+        // TODO: bridge.setConferenceLayout(accountId, confId, layout)
+    }
+
     // ==================== Conversation Operations ====================
 
-    actual fun getConversations(accountId: String): List<String> {
+    override fun getConversations(accountId: String): List<String> {
         return bridge.getConversations(accountId)?.toKotlinList() ?: emptyList()
     }
 
-    actual fun startConversation(accountId: String): String {
+    override fun startConversation(accountId: String): String {
         return bridge.startConversation(accountId) ?: ""
     }
 
-    actual fun sendMessage(
+    override fun sendMessage(
         accountId: String,
         conversationId: String,
         message: String,
@@ -225,7 +246,7 @@ actual class DaemonBridge actual constructor() {
         bridge.sendMessage(accountId, conversationId = conversationId, message = message, replyTo = replyTo.takeIf { it.isNotEmpty() })
     }
 
-    actual fun loadConversation(
+    override fun loadConversation(
         accountId: String,
         conversationId: String,
         fromMessage: String,
@@ -234,7 +255,7 @@ actual class DaemonBridge actual constructor() {
         bridge.loadConversationMessages(accountId, conversationId = conversationId, fromMessage = fromMessage, count = size)
     }
 
-    actual fun getConversationMembers(accountId: String, conversationId: String): List<Map<String, String>> {
+    override fun getConversationMembers(accountId: String, conversationId: String): List<Map<String, String>> {
         val members = bridge.getConversationMembers(accountId, conversationId = conversationId) ?: return emptyList()
         @Suppress("UNCHECKED_CAST")
         val memberList = members as? List<Any> ?: return emptyList()
@@ -247,47 +268,47 @@ actual class DaemonBridge actual constructor() {
         }
     }
 
-    actual fun getConversationInfo(accountId: String, conversationId: String): Map<String, String> {
+    override fun getConversationInfo(accountId: String, conversationId: String): Map<String, String> {
         return bridge.getConversationInfo(accountId, conversationId = conversationId)?.toKotlinMap() ?: emptyMap()
     }
 
-    actual fun removeConversation(accountId: String, conversationId: String) {
+    override fun removeConversation(accountId: String, conversationId: String) {
         bridge.removeConversation(accountId, conversationId = conversationId)
     }
 
-    actual fun addConversationMember(accountId: String, conversationId: String, uri: String) {
+    override fun addConversationMember(accountId: String, conversationId: String, uri: String) {
         bridge.addConversationMember(accountId, conversationId = conversationId, contactUri = uri)
     }
 
-    actual fun removeConversationMember(accountId: String, conversationId: String, uri: String) {
+    override fun removeConversationMember(accountId: String, conversationId: String, uri: String) {
         bridge.removeConversationMember(accountId, conversationId = conversationId, contactUri = uri)
     }
 
-    actual fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {
+    override fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {
         bridge.updateConversationInfo(accountId, conversationId = conversationId, info = info.toNSDictionary())
     }
 
-    actual fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
+    override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
         // Not directly exposed in JamiBridge
         return emptyMap()
     }
 
-    actual fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {
+    override fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {
         // Not directly exposed in JamiBridge
     }
 
-    actual fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int) {
+    override fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int) {
         bridge.setMessageDisplayed(accountId, conversationId = conversationUri, messageId = messageId)
     }
 
-    actual fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> {
+    override fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> {
         // JamiBridge getActiveCalls takes only accountId
         return emptyList()
     }
 
     // ==================== Conversation Requests ====================
 
-    actual fun getConversationRequests(accountId: String): List<Map<String, String>> {
+    override fun getConversationRequests(accountId: String): List<Map<String, String>> {
         val requests = bridge.getConversationRequests(accountId) ?: return emptyList()
         @Suppress("UNCHECKED_CAST")
         val requestList = requests as? List<Any> ?: return emptyList()
@@ -301,17 +322,17 @@ actual class DaemonBridge actual constructor() {
         }
     }
 
-    actual fun acceptConversationRequest(accountId: String, conversationId: String) {
+    override fun acceptConversationRequest(accountId: String, conversationId: String) {
         bridge.acceptConversationRequest(accountId, conversationId = conversationId)
     }
 
-    actual fun declineConversationRequest(accountId: String, conversationId: String) {
+    override fun declineConversationRequest(accountId: String, conversationId: String) {
         bridge.declineConversationRequest(accountId, conversationId = conversationId)
     }
 
     // ==================== Trust Requests ====================
 
-    actual fun getTrustRequests(accountId: String): List<Map<String, String>> {
+    override fun getTrustRequests(accountId: String): List<Map<String, String>> {
         val requests = bridge.getTrustRequests(accountId) ?: return emptyList()
         @Suppress("UNCHECKED_CAST")
         val requestList = requests as? List<Any> ?: return emptyList()
@@ -325,29 +346,29 @@ actual class DaemonBridge actual constructor() {
         }
     }
 
-    actual fun acceptTrustRequest(accountId: String, uri: String) {
+    override fun acceptTrustRequest(accountId: String, uri: String) {
         bridge.acceptTrustRequest(accountId, uri = uri)
     }
 
-    actual fun discardTrustRequest(accountId: String, uri: String) {
+    override fun discardTrustRequest(accountId: String, uri: String) {
         bridge.discardTrustRequest(accountId, uri = uri)
     }
 
-    actual fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray) {
+    override fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray) {
         bridge.addContact(accountId, uri = uri)
     }
 
     // ==================== Contact Operations ====================
 
-    actual fun addContact(accountId: String, uri: String) {
+    override fun addContact(accountId: String, uri: String) {
         bridge.addContact(accountId, uri = uri)
     }
 
-    actual fun removeContact(accountId: String, uri: String, ban: Boolean) {
+    override fun removeContact(accountId: String, uri: String, ban: Boolean) {
         bridge.removeContact(accountId, uri = uri, ban = ban)
     }
 
-    actual fun getContacts(accountId: String): List<Map<String, String>> {
+    override fun getContacts(accountId: String): List<Map<String, String>> {
         val contacts = bridge.getContacts(accountId) ?: return emptyList()
         @Suppress("UNCHECKED_CAST")
         val contactList = contacts as? List<Any> ?: return emptyList()
@@ -362,51 +383,51 @@ actual class DaemonBridge actual constructor() {
         }
     }
 
-    actual fun getContactDetails(accountId: String, uri: String): Map<String, String> {
+    override fun getContactDetails(accountId: String, uri: String): Map<String, String> {
         return bridge.getContactDetails(accountId, uri = uri)?.toKotlinMap() ?: emptyMap()
     }
 
-    actual fun subscribeBuddy(accountId: String, uri: String, subscribe: Boolean) {
+    override fun subscribeBuddy(accountId: String, uri: String, subscribe: Boolean) {
         bridge.subscribeBuddy(accountId, uri = uri, flag = subscribe)
     }
 
     // ==================== Name Lookup ====================
 
-    actual fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
+    override fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
         val result = bridge.lookupName(accountId, name = name)
         return result != null && result.state == JBLookupState.JBLookupStateSuccess
     }
 
-    actual fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean {
+    override fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean {
         val result = bridge.lookupAddress(accountId, address = address)
         return result != null && result.state == JBLookupState.JBLookupStateSuccess
     }
 
-    actual fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean {
+    override fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean {
         return bridge.registerName(accountId, name = name, password = password)
     }
 
-    actual fun searchUser(accountId: String, query: String): Boolean {
+    override fun searchUser(accountId: String, query: String): Boolean {
         return false
     }
 
     // ==================== Messaging ====================
 
-    actual fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {
+    override fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {
         // Not directly exposed in JamiBridge
     }
 
-    actual fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
+    override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
         bridge.setIsComposing(accountId, conversationId = uri, isComposing = isComposing)
     }
 
-    actual fun cancelMessage(accountId: String, messageId: Long): Boolean {
+    override fun cancelMessage(accountId: String, messageId: Long): Boolean {
         return false
     }
 
     // ==================== File Transfer ====================
 
-    actual fun sendFile(
+    override fun sendFile(
         accountId: String,
         conversationId: String,
         filePath: String,
@@ -416,7 +437,7 @@ actual class DaemonBridge actual constructor() {
         bridge.sendFile(accountId, conversationId = conversationId, filePath = filePath, displayName = displayName)
     }
 
-    actual fun downloadFile(
+    override fun downloadFile(
         accountId: String,
         conversationId: String,
         interactionId: String,
@@ -426,11 +447,11 @@ actual class DaemonBridge actual constructor() {
         bridge.acceptFileTransfer(accountId, conversationId = conversationId, interactionId = interactionId, fileId = fileId, destinationPath = path)
     }
 
-    actual fun cancelDataTransfer(accountId: String, conversationId: String, fileId: String) {
+    override fun cancelDataTransfer(accountId: String, conversationId: String, fileId: String) {
         bridge.cancelFileTransfer(accountId, conversationId = conversationId, fileId = fileId)
     }
 
-    actual fun fileTransferInfo(accountId: String, conversationId: String, fileId: String): FileTransferInfo? {
+    override fun fileTransferInfo(accountId: String, conversationId: String, fileId: String): FileTransferInfo? {
         val info = bridge.getFileTransferInfo(accountId, conversationId = conversationId, fileId = fileId) ?: return null
         return FileTransferInfo(
             path = info.path ?: "",
@@ -439,35 +460,47 @@ actual class DaemonBridge actual constructor() {
         )
     }
 
+    // ==================== Search & History ====================
+
+    override fun searchConversation(accountId: String, conversationId: String, author: String, lastId: String, query: String, type: String, after: Long, before: Long, maxResult: Long, flag: Int): Long {
+        Log.d(TAG, "searchConversation: $conversationId query=$query")
+        return -1L
+    }
+
+    override fun loadSwarmUntil(accountId: String, conversationId: String, fromMessage: String, toMessage: String): Long {
+        Log.d(TAG, "loadSwarmUntil: $conversationId")
+        return -1L
+    }
+
     // ==================== Codec Operations ====================
 
-    actual fun getCodecList(): List<Long> {
+    override fun getCodecList(): List<Long> {
         return emptyList()
     }
 
-    actual fun getActiveCodecList(accountId: String): List<Long> {
+    override fun getActiveCodecList(accountId: String): List<Long> {
         return emptyList()
     }
 
-    actual fun setActiveCodecList(accountId: String, codecList: List<Long>) {
+    override fun setActiveCodecList(accountId: String, codecList: List<Long>) {
         // Not exposed
     }
 
-    actual fun getCodecDetails(accountId: String, codecId: Long): Map<String, String> {
+    override fun getCodecDetails(accountId: String, codecId: Long): Map<String, String> {
         return emptyMap()
     }
 
     // ==================== Push Notifications ====================
 
-    actual fun setPushNotificationToken(token: String) {
+    override fun setPushNotificationToken(token: String) {
         // Not exposed in current JamiBridge header
     }
 
-    actual fun setPushNotificationConfig(config: Map<String, String>) {
+    override fun setPushNotificationConfig(config: Map<String, String>) {
         // Not exposed
     }
 
-    actual fun pushNotificationReceived(from: String, data: Map<String, String>) {
+    override fun pushNotificationReceived(from: String, data: Map<String, String>) {
         // Not exposed
     }
 }
@@ -778,7 +811,7 @@ private class JamiBridgeDelegateImpl(
     }
 
     override fun onPresenceChanged(accountId: String, uri: String, isOnline: Boolean) {
-        // Not directly mapped - would need a presence callback
+        callbacks.onNewBuddyNotification(accountId, uri, if (isOnline) 1 else 0, "")
     }
 }
 

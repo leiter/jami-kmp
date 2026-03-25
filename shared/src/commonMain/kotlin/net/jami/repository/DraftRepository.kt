@@ -26,7 +26,7 @@ import kotlinx.serialization.json.Json
 import net.jami.model.settings.Draft
 import net.jami.model.settings.DraftsContainer
 import net.jami.model.settings.SettingsKeys
-import net.jami.services.DaemonBridge
+import net.jami.services.DaemonBridgeApi
 import net.jami.utils.Log
 
 /**
@@ -57,7 +57,7 @@ import net.jami.utils.Log
  * ```
  */
 class DraftRepository(
-    private val daemonBridge: DaemonBridge,
+    private val daemonBridge: DaemonBridgeApi,
     private val scope: CoroutineScope
 ) {
     private val json = Json {

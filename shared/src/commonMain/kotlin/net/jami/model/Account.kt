@@ -110,7 +110,7 @@ class Account(
                 return conv
             }
             // Update existing mode
-            existing.mode = mode
+            existing.setMode(mode)
             return existing
         }
     }
@@ -128,7 +128,7 @@ class Account(
             conversations[conversation.uri.uri] = conversation
 
             if (newMode != null) {
-                conversation.mode = newMode
+                conversation.setMode(newMode)
             }
 
             val mode = newMode ?: conversation.mode
@@ -139,7 +139,7 @@ class Account(
                         val key = contact.uri.uri
                         cache.remove(key)
                         conversations.remove(key)
-                        contact.conversationUri = conversation.uri
+                        contact.setConversationUri(conversation.uri)
                     }
                 } catch (e: IllegalStateException) {
                     // Handle edge case where conversation has no primary contact
@@ -158,9 +158,9 @@ class Account(
                 try {
                     val removed = conversations.remove(conversation.uri.uri)
                     val contact = removed?.contact
-                    if (contact != null && contact.conversationUri == conversation.uri) {
+                    if (contact != null && contact.conversationUri.value == conversation.uri) {
                         // Restore contact conversation
-                        contact.conversationUri = contact.uri
+                        contact.setConversationUri(contact.uri)
                     }
                 } catch (_: Exception) {
                     // Ignore cleanup errors

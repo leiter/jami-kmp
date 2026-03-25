@@ -43,7 +43,7 @@ import net.jami.model.Uri
  * - Synchronous daemon calls remain, but callbacks use Flow
  */
 class AccountService(
-    private val daemonBridge: DaemonBridge,
+    private val daemonBridge: DaemonBridgeApi,
     private val scope: CoroutineScope
 ) {
     // ==================== State Flows ====================
@@ -383,6 +383,35 @@ class AccountService(
         return daemonBridge.searchUser(accountId, query)
     }
 
+    // ==================== Conversation History ====================
+
+    /**
+     * Load more messages from a swarm conversation.
+     */
+    fun loadMore(conversation: Conversation, count: Int = 32) {
+        val fromMessage = conversation.lastElementLoaded ?: ""
+        daemonBridge.loadConversation(conversation.accountId, conversation.uri.rawRingId, fromMessage, count)
+    }
+
+    /**
+     * Search within a conversation.
+     */
+    fun searchConversation(
+        accountId: String,
+        conversationUri: Uri,
+        query: String,
+        author: String = "",
+        type: String = "",
+        lastId: String = "",
+        after: Long = 0,
+        before: Long = 0,
+        maxResult: Long = 0
+    ): Long {
+        return daemonBridge.searchConversation(
+            accountId, conversationUri.rawRingId, author, lastId, query, type, after, before, maxResult, 0
+        )
+    }
+
     // ==================== Contact Operations ====================
 
     /**
@@ -513,6 +542,34 @@ class AccountService(
      */
     fun sendConversationReaction(accountId: String, conversationUri: Uri, emoji: String, replyTo: String) {
         sendConversationMessage(accountId, conversationUri, emoji, replyTo, 2)
+    }
+
+    /**
+     * Send a file in a conversation.
+     */
+    fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String = "", parent: String = "") {
+        daemonBridge.sendFile(accountId, conversationId, filePath, displayName, parent)
+    }
+
+    /**
+     * Cancel a data transfer.
+     */
+    fun cancelDataTransfer(accountId: String, conversationId: String, fileId: String) {
+        daemonBridge.cancelDataTransfer(accountId, conversationId, fileId)
+    }
+
+    /**
+     * Download/accept a file transfer.
+     */
+    fun downloadFile(accountId: String, conversationId: String, interactionId: String, fileId: String, path: String) {
+        daemonBridge.downloadFile(accountId, conversationId, interactionId, fileId, path)
+    }
+
+    /**
+     * Get file transfer progress info.
+     */
+    fun fileTransferInfo(accountId: String, conversationId: String, fileId: String): FileTransferInfo? {
+        return daemonBridge.fileTransferInfo(accountId, conversationId, fileId)
     }
 
     /**

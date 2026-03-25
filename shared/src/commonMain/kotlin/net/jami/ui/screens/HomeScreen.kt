@@ -16,6 +16,8 @@
  */
 package net.jami.ui.screens
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,18 +34,25 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -78,7 +87,9 @@ import net.jami.ui.viewmodel.ConversationsViewModel
  * @param onAppSettingsClick Called when "App Settings" is selected from the menu.
  * @param onAboutClick Called when "About" is selected from the menu.
  * @param onNewConversation Called when the FAB is tapped.
+ * @param onRequestsClick Called when the pending requests banner is tapped.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onConversationClick: (String) -> Unit,
@@ -87,6 +98,7 @@ fun HomeScreen(
     onAppSettingsClick: () -> Unit,
     onAboutClick: () -> Unit,
     onNewConversation: () -> Unit,
+    onRequestsClick: () -> Unit = {},
 ) {
     val viewModel = getViewModel<ConversationsViewModel>()
     val state by viewModel.state.collectAsState()
@@ -198,6 +210,43 @@ fun HomeScreen(
                 }
             }
 
+            // Pending requests banner
+            if (state.pendingRequests > 0) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onRequestsClick() }
+                        .padding(
+                            horizontal = JamiTheme.spacing.l,
+                            vertical = JamiTheme.spacing.xs,
+                        ),
+                    color = JamiTheme.colors.accent.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(JamiTheme.radius.m),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                horizontal = JamiTheme.spacing.m,
+                                vertical = JamiTheme.spacing.m,
+                            ),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "${state.pendingRequests} pending invitation${if (state.pendingRequests > 1) "s" else ""}",
+                            style = JamiTheme.typography.titleSmall,
+                            color = JamiTheme.colors.primary,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = JamiTheme.colors.primary,
+                        )
+                    }
+                }
+            }
+
             // Conversation list
             if (state.conversations.isEmpty() && !state.isLoading) {
                 // Empty state
@@ -227,10 +276,48 @@ fun HomeScreen(
                         items = state.conversations,
                         key = { it.id },
                     ) { conversation ->
-                        ConversationListItem(
-                            conversation = conversation,
-                            onClick = { onConversationClick(conversation.id) },
-                        )
+                        val dismissState = rememberSwipeToDismissBoxState()
+
+                        LaunchedEffect(dismissState.currentValue) {
+                            if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+                                viewModel.removeConversation(conversation.id)
+                            }
+                        }
+
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            backgroundContent = {
+                                val color by animateColorAsState(
+                                    when (dismissState.targetValue) {
+                                        SwipeToDismissBoxValue.EndToStart -> JamiTheme.colors.error
+                                        else -> JamiTheme.colors.surface
+                                    }
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(color)
+                                        .padding(horizontal = JamiTheme.spacing.l),
+                                    contentAlignment = Alignment.CenterEnd,
+                                ) {
+                                    if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete",
+                                            tint = JamiTheme.colors.onError,
+                                        )
+                                    }
+                                }
+                            },
+                            enableDismissFromStartToEnd = false,
+                        ) {
+                            Surface(color = JamiTheme.colors.surface) {
+                                ConversationListItem(
+                                    conversation = conversation,
+                                    onClick = { onConversationClick(conversation.id) },
+                                )
+                            }
+                        }
                     }
                 }
             }

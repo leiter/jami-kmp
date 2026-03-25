@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.jami.model.settings.*
-import net.jami.services.DaemonBridge
+import net.jami.services.DaemonBridgeApi
 import net.jami.utils.Log
 
 /**
@@ -49,7 +49,7 @@ import net.jami.utils.Log
  * ```
  */
 class SettingsRepository(
-    private val daemonBridge: DaemonBridge,
+    private val daemonBridge: DaemonBridgeApi,
     private val scope: CoroutineScope
 ) {
     private val json = Json {

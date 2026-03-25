@@ -36,6 +36,10 @@ import net.jami.services.*
  */
 actual val platformModule: Module = module {
 
+    // ==================== Daemon Bridge ====================
+
+    single<DaemonBridgeApi> { DaemonBridge() }
+
     // ==================== Database ====================
 
     /**

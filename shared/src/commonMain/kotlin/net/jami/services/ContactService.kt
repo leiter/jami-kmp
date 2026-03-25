@@ -51,7 +51,7 @@ import net.jami.utils.Log
 class ContactService(
     private val scope: CoroutineScope,
     private val accountService: AccountService,
-    private val daemonBridge: DaemonBridge
+    private val daemonBridge: DaemonBridgeApi
 ) {
     // Contact cache: accountId -> (contactUri -> Contact)
     private val contactCache = mutableMapOf<String, MutableMap<String, Contact>>()
@@ -200,8 +200,23 @@ class ContactService(
     internal fun onProfileReceived(accountId: String, peerId: String, vcardPath: String) {
         scope.launch {
             val uri = Uri.fromString(peerId)
-            // TODO: Parse VCard file at vcardPath and extract profile
-            // For now, just emit an event that profile was received
+            val vcardContent = net.jami.utils.FileUtils.readText(vcardPath)
+            if (vcardContent != null) {
+                val vcard = net.jami.utils.VCardUtils.parseVCard(vcardContent)
+                if (vcard != null && !vcard.isEmpty) {
+                    val profile = Profile(
+                        displayName = vcard.formattedName,
+                        avatar = vcard.photo
+                    )
+                    val cacheKey = "$accountId:${uri.uri}"
+                    profileCache[cacheKey] = profile
+                    val contact = findContactInCache(accountId, uri)
+                    if (contact != null) {
+                        contact.loadedProfile = profile
+                    }
+                    _contactEvents.emit(ContactEvent.ProfileUpdated(accountId, uri, profile))
+                }
+            }
             _contactEvents.emit(ContactEvent.ProfileReceived(accountId, uri, vcardPath))
         }
     }
@@ -217,10 +232,9 @@ class ContactService(
         // Check cache first
         profileCache[cacheKey]?.let { return it }
 
-        // TODO: Load profile from VCard file or daemon
-        // For now, return a profile based on contact username
+        // Return a profile based on contact display name or username
         val profile = Profile(
-            displayName = contact.username ?: contact.displayName,
+            displayName = contact.displayName?.ifEmpty { contact.username } ?: contact.username,
             avatar = null
         )
 

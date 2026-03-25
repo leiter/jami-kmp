@@ -58,7 +58,11 @@ data class ChatState(
     val messages: List<MessageItem> = emptyList(),
     val inputText: String = "",
     val conversationTitle: String = "",
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isContactTyping: Boolean = false,
+    val searchQuery: String = "",
+    val searchResults: List<MessageItem> = emptyList(),
+    val isSearchActive: Boolean = false
 )
 
 /**
@@ -90,9 +94,24 @@ class ChatViewModel(
                             appendMessage(event)
                         }
                     }
+                    is ConversationEvent.MessageUpdated -> {
+                        if (event.conversationId == convId) {
+                            updateMessage(event)
+                        }
+                    }
                     is ConversationEvent.SwarmLoaded -> {
                         if (event.conversationId == convId) {
                             loadMessagesFromHistory()
+                        }
+                    }
+                    is ConversationEvent.ComposingStatusChanged -> {
+                        if (event.conversationId == convId) {
+                            _state.value = _state.value.copy(isContactTyping = event.status != 0)
+                        }
+                    }
+                    is ConversationEvent.MessagesFound -> {
+                        if (event.conversationId == convId) {
+                            handleSearchResults(event.messages)
                         }
                     }
                     else -> { /* Handled elsewhere */ }
@@ -159,6 +178,33 @@ class ChatViewModel(
      */
     fun updateInput(text: String) {
         _state.value = _state.value.copy(inputText = text)
+        val accountId = currentAccountId ?: return
+        val conversationId = currentConversationId ?: return
+        conversationFacade.setIsComposing(accountId, Uri(Uri.SWARM_SCHEME, conversationId), text.isNotEmpty())
+    }
+
+    /**
+     * Delete a message by its ID.
+     */
+    fun deleteMessage(messageId: String) {
+        scope.launch {
+            val accountId = currentAccountId ?: return@launch
+            val conversationId = currentConversationId ?: return@launch
+            val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+            accountService.deleteConversationMessage(accountId, conversationUri, messageId)
+        }
+    }
+
+    /**
+     * Edit a message by its ID.
+     */
+    fun editMessage(messageId: String, newText: String) {
+        scope.launch {
+            val accountId = currentAccountId ?: return@launch
+            val conversationId = currentConversationId ?: return@launch
+            val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+            accountService.editConversationMessage(accountId, conversationUri, newText, messageId)
+        }
     }
 
     /**
@@ -226,6 +272,67 @@ class ChatViewModel(
         )
         val current = _state.value.messages
         _state.value = _state.value.copy(messages = current + item)
+    }
+
+    /**
+     * Update a message in the current list when it's been edited.
+     */
+    private fun updateMessage(event: ConversationEvent.MessageUpdated) {
+        val msg = event.message
+        val current = _state.value.messages
+        val updated = current.map { item ->
+            if (item.id == msg.id) {
+                item.copy(text = msg.textContent)
+            } else {
+                item
+            }
+        }
+        _state.value = _state.value.copy(messages = updated)
+    }
+
+    /**
+     * Search for messages in the current conversation.
+     */
+    fun searchConversation(query: String) {
+        _state.value = _state.value.copy(searchQuery = query, isSearchActive = query.isNotEmpty())
+        if (query.isEmpty()) {
+            _state.value = _state.value.copy(searchResults = emptyList())
+            return
+        }
+        scope.launch {
+            val accountId = currentAccountId ?: return@launch
+            val conversationId = currentConversationId ?: return@launch
+            val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+            accountService.searchConversation(accountId, conversationUri, query)
+        }
+    }
+
+    /**
+     * Close the search UI and clear results.
+     */
+    fun closeSearch() {
+        _state.value = _state.value.copy(
+            searchQuery = "",
+            searchResults = emptyList(),
+            isSearchActive = false
+        )
+    }
+
+    /**
+     * Handle search results from the daemon.
+     */
+    private fun handleSearchResults(messages: List<Map<String, String>>) {
+        val items = messages.map { msg ->
+            MessageItem(
+                id = msg["id"] ?: "",
+                text = msg["body"] ?: "",
+                author = msg["author"] ?: "",
+                timestamp = msg["timestamp"]?.toLongOrNull() ?: 0L,
+                isOutgoing = false,
+                type = MessageType.Text
+            )
+        }
+        _state.value = _state.value.copy(searchResults = items)
     }
 
     /**

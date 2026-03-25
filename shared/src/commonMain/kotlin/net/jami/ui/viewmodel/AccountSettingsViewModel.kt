@@ -28,6 +28,7 @@ import net.jami.model.ConfigKey
 import net.jami.repository.SettingsRepository
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
+import net.jami.services.DeviceRuntimeService
 
 /**
  * Item representing a linked device.
@@ -59,7 +60,8 @@ data class AccountSettingsState(
  */
 class AccountSettingsViewModel(
     private val accountService: AccountService,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val deviceRuntimeService: DeviceRuntimeService? = null
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -171,6 +173,25 @@ class AccountSettingsViewModel(
      */
     fun exportAccount(path: String, password: String): Boolean {
         val account = accountService.currentAccount.value ?: return false
+        return accountService.exportToFile(
+            accountId = account.accountId,
+            path = path,
+            scheme = AccountService.ACCOUNT_SCHEME_PASSWORD,
+            password = password
+        )
+    }
+
+    /**
+     * Export the current account to a generated file path.
+     *
+     * @param password Account password for encryption.
+     * @return True if export succeeded.
+     */
+    fun exportAccount(password: String): Boolean {
+        val account = accountService.currentAccount.value ?: return false
+        val timestamp = net.jami.utils.currentTimeMillis()
+        val dir = deviceRuntimeService?.getTempPath() ?: "/tmp"
+        val path = "$dir/jami_export_${timestamp}.gz"
         return accountService.exportToFile(
             accountId = account.accountId,
             path = path,

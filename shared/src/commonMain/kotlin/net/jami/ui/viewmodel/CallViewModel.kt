@@ -18,11 +18,14 @@ package net.jami.ui.viewmodel
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import net.jami.model.Call.CallStatus
 import net.jami.model.Uri
@@ -40,7 +43,11 @@ data class CallState(
     val isAudioMuted: Boolean = false,
     val isVideoMuted: Boolean = false,
     val isSpeakerOn: Boolean = false,
-    val isIncoming: Boolean = false
+    val isIncoming: Boolean = false,
+    val isOnHold: Boolean = false,
+    val isConference: Boolean = false,
+    val participantCount: Int = 1,
+    val conferenceLayout: Int = 0
 )
 
 /**
@@ -61,6 +68,8 @@ class CallViewModel(
 
     private var currentCallId: String? = null
     private var currentAccountId: String? = null
+    private var durationJob: Job? = null
+    private var callStartTime: Long = 0L
 
     init {
         // Observe call state updates
@@ -70,27 +79,50 @@ class CallViewModel(
                     currentCallId = call.daemonId
                     currentAccountId = call.account
 
+                    val isHold = call.callStatus == CallStatus.HOLD
                     _state.value = _state.value.copy(
                         callStatus = call.callStatus.name,
                         peerUri = call.peerUri.uri,
                         isAudioMuted = call.isAudioMuted,
                         isVideoMuted = call.isVideoMuted,
-                        isIncoming = call.isIncoming
+                        isIncoming = call.isIncoming,
+                        isOnHold = isHold
                     )
 
-                    // Update duration for ongoing calls
-                    if (call.callStatus == CallStatus.CURRENT && call.timestamp > 0) {
-                        val now = net.jami.utils.currentTimeMillis()
-                        _state.value = _state.value.copy(
-                            duration = (now - call.timestamp) / 1000
-                        )
+                    // Start duration timer when call becomes active
+                    if (call.callStatus == CallStatus.CURRENT && durationJob == null) {
+                        callStartTime = if (call.timestamp > 0) call.timestamp
+                            else net.jami.utils.currentTimeMillis()
+                        startDurationTimer()
                     }
 
-                    // Clean up if call ended
+                    // Stop timer if call ended or on hold
                     if (call.callStatus == CallStatus.OVER || call.callStatus == CallStatus.FAILURE) {
-                        // Call ended; UI should navigate away
+                        durationJob?.cancel()
+                        durationJob = null
                     }
                 }
+            }
+        }
+
+        // Observe conference updates
+        scope.launch {
+            callService.conferenceUpdates.collect { conference ->
+                _state.value = _state.value.copy(
+                    isConference = true,
+                    participantCount = conference.participants.size,
+                    isOnHold = conference.state == CallStatus.HOLD
+                )
+            }
+        }
+    }
+
+    private fun startDurationTimer() {
+        durationJob = scope.launch {
+            while (isActive) {
+                val now = net.jami.utils.currentTimeMillis()
+                _state.value = _state.value.copy(duration = (now - callStartTime) / 1000)
+                delay(1000)
             }
         }
     }
@@ -179,9 +211,42 @@ class CallViewModel(
     }
 
     /**
+     * Toggle hold/unhold for the current call.
+     */
+    fun toggleHold() {
+        val callId = currentCallId ?: return
+        val accountId = currentAccountId ?: return
+        if (_state.value.isOnHold) {
+            callService.unhold(accountId, callId)
+        } else {
+            callService.hold(accountId, callId)
+        }
+    }
+
+    /**
+     * Set the conference layout (0 = grid, 1 = one-big).
+     */
+    fun setConferenceLayout(layout: Int) {
+        val callId = currentCallId ?: return
+        val accountId = currentAccountId ?: return
+        callService.setConferenceLayout(accountId, callId, layout)
+        _state.value = _state.value.copy(conferenceLayout = layout)
+    }
+
+    /**
+     * Send an in-call text message.
+     */
+    fun sendCallMessage(text: String) {
+        val accountId = currentAccountId ?: return
+        val callId = currentCallId ?: return
+        callService.sendTextMessage(accountId, callId, text)
+    }
+
+    /**
      * Cancel the coroutine scope when this ViewModel is no longer needed.
      */
     fun onCleared() {
+        durationJob?.cancel()
         scope.cancel()
     }
 }

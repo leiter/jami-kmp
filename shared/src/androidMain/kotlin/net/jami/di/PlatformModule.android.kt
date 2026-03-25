@@ -22,6 +22,7 @@ import org.koin.android.ext.koin.androidContext
 import net.jami.database.DatabaseDriverFactory
 import net.jami.database.JamiDatabase
 import net.jami.services.*
+import net.jami.services.DaemonBridgeApi
 
 /**
  * Android platform module providing Android-specific service implementations.
@@ -39,6 +40,10 @@ import net.jami.services.*
  * ```
  */
 actual val platformModule: Module = module {
+
+    // ==================== Daemon Bridge ====================
+
+    single<DaemonBridgeApi> { DaemonBridge(androidContext()) }
 
     // ==================== Database ====================
 

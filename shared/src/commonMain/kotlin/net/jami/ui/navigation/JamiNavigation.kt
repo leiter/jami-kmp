@@ -104,7 +104,32 @@ private fun OnboardingNavigation() {
             CreateAccountScreen(
                 onBack = { navController.popBackStack() },
                 onAccountCreated = {
-                    // No-op: AppViewModel reactively switches to HasAccounts
+                    navController.navigate(Screen.ProfileSetup.route) {
+                        popUpTo(Screen.CreateAccount.route) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable(Screen.ProfileSetup.route) {
+            ProfileSetupScreen(
+                onSkip = {
+                    navController.navigate(Screen.AccountSummary.route) {
+                        popUpTo(Screen.ProfileSetup.route) { inclusive = true }
+                    }
+                },
+                onComplete = {
+                    navController.navigate(Screen.AccountSummary.route) {
+                        popUpTo(Screen.ProfileSetup.route) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable(Screen.AccountSummary.route) {
+            AccountSummaryScreen(
+                onContinue = {
+                    // AppViewModel reactively switches to HasAccounts
                     // when AccountService.accounts updates after creation
                 },
             )

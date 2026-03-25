@@ -292,6 +292,15 @@ class DaemonCallbacksImpl(
         }
     }
 
+    // ==================== Presence Callbacks ====================
+
+    override fun onNewBuddyNotification(accountId: String, buddyUri: String, status: Int, lineStatus: String) {
+        Log.d(TAG, "onNewBuddyNotification: $buddyUri status=$status")
+        scope.launch {
+            contactService.onPresenceUpdate(accountId, buddyUri, status)
+        }
+    }
+
     // ==================== Contact Callbacks ====================
 
     override fun onContactAdded(accountId: String, uri: String, confirmed: Boolean) {

@@ -43,7 +43,7 @@ import net.jami.model.Uri
  * Changes: RxJava → Kotlin Flow, JamiService → DaemonBridge
  */
 class CallService(
-    private val daemonBridge: DaemonBridge,
+    private val daemonBridge: DaemonBridgeApi,
     private val accountService: AccountService,
     private val scope: CoroutineScope
 ) {
@@ -185,7 +185,9 @@ class CallService(
         if (conf.isSimpleCall) {
             hold(conf.accountId, conf.id)
         } else {
-            // TODO: holdConference via DaemonBridge
+            scope.launch {
+                daemonBridge.holdConference(conf.accountId, conf.id)
+            }
         }
     }
 
@@ -193,7 +195,21 @@ class CallService(
         if (conf.isSimpleCall) {
             unhold(conf.accountId, conf.id)
         } else {
-            // TODO: unholdConference via DaemonBridge
+            scope.launch {
+                daemonBridge.unholdConference(conf.accountId, conf.id)
+            }
+        }
+    }
+
+    fun setActiveParticipant(accountId: String, confId: String, callId: String) {
+        scope.launch {
+            daemonBridge.setActiveParticipant(accountId, confId, callId)
+        }
+    }
+
+    fun setConferenceLayout(accountId: String, confId: String, layout: Int) {
+        scope.launch {
+            daemonBridge.setConferenceLayout(accountId, confId, layout)
         }
     }
 

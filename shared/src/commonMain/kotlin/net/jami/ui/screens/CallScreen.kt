@@ -32,6 +32,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CallEnd
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material.icons.filled.VolumeOff
@@ -109,11 +111,22 @@ fun CallScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.s))
 
+            // Conference indicator
+            if (state.isConference) {
+                Text(
+                    text = "Conference (${state.participantCount} participants)",
+                    style = JamiTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.8f),
+                )
+                Spacer(Modifier.height(JamiTheme.spacing.xs))
+            }
+
             // Call status
             Text(
-                text = state.callStatus,
+                text = if (state.isOnHold) "On Hold" else state.callStatus,
                 style = JamiTheme.typography.bodyLarge,
-                color = Color.White.copy(alpha = 0.7f),
+                color = if (state.isOnHold) Color.Yellow.copy(alpha = 0.9f)
+                    else Color.White.copy(alpha = 0.7f),
             )
 
             Spacer(Modifier.height(JamiTheme.spacing.m))
@@ -164,6 +177,14 @@ fun CallScreen(
                 contentDescription = if (state.isVideoMuted) "Enable video" else "Disable video",
                 isActive = !state.isVideoMuted,
                 onClick = { viewModel.toggleVideo() },
+            )
+
+            // Hold button
+            CallControlButton(
+                icon = if (state.isOnHold) Icons.Default.PlayArrow else Icons.Default.Pause,
+                contentDescription = if (state.isOnHold) "Resume" else "Hold",
+                isActive = state.isOnHold,
+                onClick = { viewModel.toggleHold() },
             )
 
             // End call button (red)

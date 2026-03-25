@@ -18,15 +18,16 @@ package net.jami.ui.viewmodel
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
-import net.jami.services.DaemonBridge
 import net.jami.services.LookupState
 
 /**
@@ -39,7 +40,9 @@ data class AccountCreationState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isCreated: Boolean = false,
-    val usernameAvailable: Boolean? = null
+    val usernameAvailable: Boolean? = null,
+    val usernameCheckInProgress: Boolean = false,
+    val isRegistering: Boolean = false
 )
 
 /**
@@ -50,13 +53,15 @@ data class AccountCreationState(
  * via the daemon.
  */
 class AccountCreationViewModel(
-    private val accountService: AccountService,
-    private val daemonBridge: DaemonBridge
+    private val accountService: AccountService
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     private val _state = MutableStateFlow(AccountCreationState())
     val state: StateFlow<AccountCreationState> = _state.asStateFlow()
+
+    private var lookupJob: Job? = null
+    private var createdAccountId: String? = null
 
     init {
         // Observe account events for creation result and username lookup results
@@ -87,8 +92,18 @@ class AccountCreationViewModel(
         _state.value = _state.value.copy(
             username = username,
             usernameAvailable = null,
+            usernameCheckInProgress = false,
             error = null
         )
+        lookupJob?.cancel()
+        if (username.isNotEmpty()) {
+            lookupJob = scope.launch {
+                _state.value = _state.value.copy(usernameCheckInProgress = true)
+                delay(500)
+                val currentAccountId = accountService.currentAccount.value?.accountId ?: ""
+                accountService.lookupName(currentAccountId, username)
+            }
+        }
     }
 
     /**
@@ -131,14 +146,26 @@ class AccountCreationViewModel(
                     displayName = current.username,
                     password = password
                 )
+                createdAccountId = accountId
 
                 // If a username was provided, register it
                 if (current.username.isNotEmpty()) {
+                    _state.value = _state.value.copy(isRegistering = true)
                     accountService.registerName(
                         accountId = accountId,
                         name = current.username,
                         password = current.password
                     )
+                    // Timeout: if no response in 30s, show error
+                    scope.launch {
+                        delay(30_000)
+                        if (_state.value.isRegistering) {
+                            _state.value = _state.value.copy(
+                                isRegistering = false,
+                                error = "Username registration timed out"
+                            )
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
@@ -146,23 +173,6 @@ class AccountCreationViewModel(
                     error = e.message ?: "Account creation failed"
                 )
             }
-        }
-    }
-
-    /**
-     * Check if the current username is available on the name server.
-     */
-    fun checkUsernameAvailability() {
-        val username = _state.value.username
-        if (username.isEmpty()) {
-            _state.value = _state.value.copy(usernameAvailable = null)
-            return
-        }
-
-        scope.launch {
-            // Use an empty account ID for anonymous lookup
-            val currentAccountId = accountService.currentAccount.value?.accountId ?: ""
-            accountService.lookupName(currentAccountId, username)
         }
     }
 
@@ -198,15 +208,21 @@ class AccountCreationViewModel(
 
         val lookupState = LookupState.fromInt(event.state)
         val isAvailable = lookupState == LookupState.NotFound
-        _state.value = _state.value.copy(usernameAvailable = isAvailable)
+        _state.value = _state.value.copy(
+            usernameAvailable = isAvailable,
+            usernameCheckInProgress = false
+        )
     }
 
     /**
      * Handle name registration completion.
      */
     private fun handleNameRegistrationResult(event: AccountEvent.NameRegistrationEnded) {
-        if (event.state != 0) {
-            _state.value = _state.value.copy(
+        _state.value = if (event.state == 0) {
+            _state.value.copy(isRegistering = false)
+        } else {
+            _state.value.copy(
+                isRegistering = false,
                 error = "Username registration failed"
             )
         }

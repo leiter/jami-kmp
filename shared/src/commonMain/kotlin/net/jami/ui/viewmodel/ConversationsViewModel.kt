@@ -25,6 +25,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import net.jami.model.Contact
+import net.jami.model.TextMessage
+import net.jami.model.Uri
 import net.jami.services.AccountService
 import net.jami.services.ConversationFacade
 import net.jami.services.ConversationEvent
@@ -81,7 +84,10 @@ class ConversationsViewModel(
                 when (event) {
                     is ConversationEvent.MessageReceived,
                     is ConversationEvent.MessageUpdated,
-                    is ConversationEvent.MessageStatusChanged -> {
+                    is ConversationEvent.MessageStatusChanged,
+                    is ConversationEvent.ConversationReady,
+                    is ConversationEvent.ConversationRemoved,
+                    is ConversationEvent.ConversationRequestReceived -> {
                         loadConversations()
                     }
                     else -> { /* Other events don't require list refresh */ }
@@ -137,13 +143,49 @@ class ConversationsViewModel(
     }
 
     /**
+     * Remove a conversation by its ID.
+     */
+    fun removeConversation(conversationId: String) {
+        scope.launch {
+            val accountId = accountService.currentAccount.value?.accountId ?: return@launch
+            val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+            conversationFacade.removeConversation(accountId, conversationUri)
+            loadConversations()
+        }
+    }
+
+    /**
      * Build conversation item list from the current account.
      */
     private fun buildConversationItems(accountId: String, query: String): List<ConversationItem> {
-        // In the full implementation, this would use conversationFacade to get
-        // the conversation list and map each Conversation to a ConversationItem.
-        // For now, we provide the structure that the UI layer will consume.
-        return emptyList()
+        val account = accountService.getAccount(accountId) ?: return emptyList()
+        val conversations = account.getConversations()
+
+        return conversations.mapNotNull { conversation ->
+            val contact = conversation.contact
+            val displayName = conversation.profileFlow.value.displayName?.takeIf { it.isNotBlank() }
+                ?: contact?.displayUsername
+                ?: conversation.uri.rawRingId
+
+            // Filter by query
+            if (query.isNotEmpty() && !displayName.lowercase().contains(query)) {
+                return@mapNotNull null
+            }
+
+            val lastEvent = conversation.lastEvent
+            val lastMessage = if (lastEvent is TextMessage) lastEvent.body ?: "" else ""
+            val timestamp = lastEvent?.timestamp ?: 0L
+
+            ConversationItem(
+                id = conversation.uri.rawRingId,
+                displayName = displayName,
+                lastMessage = lastMessage,
+                timestamp = timestamp,
+                unreadCount = 0,
+                avatarUri = null,
+                isOnline = contact?.isOnline == true
+            )
+        }.sortedByDescending { it.timestamp }
     }
 
     /**

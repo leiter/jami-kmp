@@ -4,29 +4,53 @@ This document serves as a comprehensive guide for building a Kotlin Multiplatfor
 
 ---
 
-## Project Status: Feature-Complete (Kotlin Layer)
+## Project Status
 
-**Last Updated:** February 2026
+**Last Updated:** March 2026
 
-The jami-kmp shared library is **feature-complete at the Kotlin layer**. All models, services, utilities, and platform abstractions are implemented and compiling for all 8 build targets.
+The jami-kmp project includes a **complete shared library** and **Compose Multiplatform UI**, with thin platform wrappers for Android and Desktop. Total codebase: ~42,600 LOC across ~206 files.
+
+### Shared Library (complete)
 
 | Milestone | Status |
 |-----------|--------|
-| Kotlin Source Code | ✅ **140 files complete** |
+| Kotlin Source Code | ✅ **~160 files, ~35,600 LOC** |
 | Models (21) | ✅ All with @Serializable |
 | Services (13) | ✅ All with Flow-based APIs |
 | Platform Abstractions | ✅ 5 platforms via expect/actual |
 | Unit Tests (32 classes) | ✅ All passing |
 | Koin DI | ✅ All platforms configured |
 | SQLDelight Database | ✅ Schemas defined |
-| iOS/macOS cinterop | ✅ JamiBridge wrapper complete |
+| iOS/macOS cinterop | ✅ JamiBridge wrapper complete (71 methods) |
 | Build Targets (8) | ✅ All compiling |
 
-**Pending (External Dependencies):**
-- Native libjami compilation per platform
-- SWIG Java generation for Android/Desktop
+### Compose Multiplatform UI (complete)
+
+| Component | Files | LOC |
+|-----------|-------|-----|
+| Screens (13) | WelcomeScreen, HomeScreen, ChatScreen, CallScreen, CreateAccountScreen, ImportAccountScreen, AccountSettingsScreen, AppSettingsScreen, ConversationDetailsScreen, NewConversationScreen, SearchScreen, BlockedContactsScreen, AboutScreen | 2,807 |
+| ViewModels (12) | AppViewModel, ChatViewModel, CallViewModel, ConversationsViewModel, ContactsViewModel, ContactDetailsViewModel, AccountCreationViewModel, AccountSettingsViewModel, AppSettingsViewModel, ImportAccountViewModel, NewConversationViewModel, AboutViewModel | 2,073 |
+| Components (13) | JamiButton, JamiIconButton, JamiFilterChip, JamiAvatar, JamiBadge, JamiSectionTitle, JamiToggle, JamiSearchField, JamiMessageInput, JamiInputText, JamiTopBar, JamiScaffold, JamiAlertDialog | 1,430 |
+| Theme (5) | JamiTheme, JamiColors, JamiTypography, ThemeTokens, ThemeOverrides | ~500 |
+| Navigation (2) | JamiNavigation, Screen | ~210 |
+| **Total UI** | **45 files** | **~7,020** |
+
+### Platform App Wrappers
+
+| Module | Files | LOC | Status |
+|--------|-------|-----|--------|
+| **android-app** | 2 Kotlin + manifest + theme | ~115 | Working wrapper: MainActivity + JamiApplication (Koin init, daemon lifecycle). Pre-built native libs included (arm64-v8a, x86_64). |
+| **desktop-app** | 1 Kotlin + build config | ~68 | Working wrapper: Main.kt (Koin init, Window + JamiApp). Distribution configured (DMG/MSI/DEB). |
+| **web-app** | build config only | ~29 | Scaffold only |
+
+### Pending (External Dependencies)
+
+- Native libjami compilation for iOS/macOS/Desktop (Android .so files already present)
+- SWIG Java class generation for Desktop (Android classes already generated)
 - JamiBridge static library compilation for iOS/macOS
-- UI applications (Compose/SwiftUI)
+- iOS/macOS app wrappers (SwiftUI entry points)
+- End-to-end integration testing with live daemon
+- Desktop-specific features (system tray, menus, keyboard shortcuts)
 
 ---
 
@@ -80,6 +104,16 @@ The jami-kmp shared library is **feature-complete at the Kotlin layer**. All mod
 # Web/JS
 ./gradlew :shared:jsBrowserTest
 
+# Android app
+./gradlew :android-app:assembleDebug
+./gradlew :android-app:installDebug
+
+# Desktop app
+./gradlew :desktop-app:run
+./gradlew :desktop-app:packageDeb    # Linux
+./gradlew :desktop-app:packageDmg    # macOS
+./gradlew :desktop-app:packageMsi    # Windows
+
 # Run all tests
 ./gradlew allTests
 # Or individual platforms:
@@ -108,6 +142,19 @@ jami-kmp/
 │       │   ├── services/           # 13 services with expect declarations
 │       │   ├── database/           # DatabaseDriverFactory
 │       │   ├── domain/             # Use cases
+│       │   ├── ui/                 # Compose Multiplatform UI (~7,020 LOC)
+│       │   │   ├── JamiApp.kt     # Root composable (entry point for all platforms)
+│       │   │   ├── screens/       # 13 screens (Home, Chat, Call, Settings, etc.)
+│       │   │   ├── viewmodel/     # 12 ViewModels (MVVM)
+│       │   │   ├── components/    # 13 reusable UI components
+│       │   │   │   ├── actions/   # JamiButton, JamiIconButton, JamiFilterChip
+│       │   │   │   ├── content/   # JamiAvatar, JamiBadge, JamiToggle, JamiSectionTitle
+│       │   │   │   ├── inputs/    # JamiSearchField, JamiMessageInput, JamiInputText
+│       │   │   │   ├── navigation/# JamiTopBar
+│       │   │   │   ├── container/ # JamiScaffold
+│       │   │   │   └── notification/# JamiAlertDialog
+│       │   │   ├── navigation/    # JamiNavigation, Screen (route definitions)
+│       │   │   └── theme/         # JamiTheme, JamiColors, JamiTypography, ThemeTokens
 │       │   └── utils/              # 7 shared utilities
 │       ├── commonTest/kotlin/net/jami/
 │       │   ├── model/              # Model unit tests
@@ -148,10 +195,9 @@ jami-kmp/
 │           ├── Interaction.sq      # Message/interaction storage
 │           ├── Conversation.sq     # Conversation data
 │           └── Profile.sq          # Profile storage
-├── android-app/                    # Android Compose UI (placeholder)
-├── ios-app/                        # SwiftUI wrapper (placeholder)
-├── desktop-app/                    # Compose Desktop UI (placeholder)
-├── web-app/                        # Compose for Web / JS (placeholder)
+├── android-app/                    # Android wrapper (MainActivity + JamiApplication + jniLibs)
+├── desktop-app/                    # Desktop wrapper (Main.kt + distribution config)
+├── web-app/                        # Web wrapper (scaffold only)
 └── build-logic/convention/         # Gradle convention plugins
 ```
 
@@ -159,20 +205,24 @@ jami-kmp/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Platform Apps                             │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐│
-│  │ Android  │ │   iOS    │ │ Desktop  │ │  macOS   │ │  Web   ││
-│  │ Compose  │ │ SwiftUI  │ │ Compose  │ │ SwiftUI  │ │Compose ││
-│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └───┬────┘│
-└───────┼────────────┼────────────┼────────────┼───────────┼─────┘
-        │            │            │            │           │
-        ▼            ▼            ▼            ▼           ▼
+│                     Platform App Wrappers                        │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
+│  │  android-app │  │  desktop-app │  │   web-app    │           │
+│  │  (Activity + │  │  (Window +   │  │  (scaffold)  │           │
+│  │   Koin+Daemon│  │   Koin init) │  │              │           │
+│  │   lifecycle) │  │              │  │              │           │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘           │
+└─────────┼─────────────────┼─────────────────┼───────────────────┘
+          │                 │                 │
+          └────────────┐    │    ┌────────────┘
+                       ▼    ▼    ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      shared (commonMain)                         │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
-│  │   domain/   │  │  services/  │  │   model/    │              │
-│  │  Use Cases  │──│ Business    │──│ Data Types  │              │
-│  │             │  │ Logic       │  │             │              │
+│  │    ui/      │  │  services/  │  │   model/    │              │
+│  │ JamiApp()  │──│ Business    │──│ Data Types  │              │
+│  │ 13 screens │  │ Logic       │  │             │              │
+│  │ 12 VMs     │  │             │  │             │              │
 │  └─────────────┘  └──────┬──────┘  └─────────────┘              │
 └──────────────────────────┼──────────────────────────────────────┘
                            │ expect/actual
@@ -711,8 +761,14 @@ platformModule (per platform)
 
 **Source sets:** `androidMain`, `androidUnitTest`, `androidInstrumentedTest`
 
+**App module:** `android-app/` -- thin wrapper with:
+- `JamiApplication.kt` (58 LOC) -- Koin init + daemon start/stop lifecycle
+- `MainActivity.kt` (17 LOC) -- `setContent { JamiApp() }` (shared Compose UI)
+- Pre-built native libraries in `jniLibs/` (arm64-v8a + x86_64)
+- Permissions: INTERNET, RECORD_AUDIO, CAMERA, VIBRATE, POST_NOTIFICATIONS
+
 **Integration points:**
-- Hilt for dependency injection (app module)
+- Koin for dependency injection (not Hilt)
 - JNI via SWIG-generated `JamiService` class
 - Android Camera2/CameraX for video
 - MediaCodec for hardware encoding/decoding
@@ -722,7 +778,7 @@ platformModule (per platform)
 ../jami-client-android/jami-android/app/src/main/java/cx/ring/
 ├── services/           # Android service implementations
 ├── fragments/          # UI (reference for Compose migration)
-└── application/        # Hilt modules, Application class
+└── application/        # Application class
 ```
 
 ### iOS
@@ -812,16 +868,28 @@ cd shared/src/nativeInterop/cinterop/JamiBridge
 
 **Source sets:** `desktopMain`, `desktopTest`
 
+**App module:** `desktop-app/` -- thin wrapper with:
+- `Main.kt` (18 LOC) -- `initKoin()` + `Window(title = "Jami") { JamiApp() }`
+- Distribution configured: DMG (macOS), MSI (Windows), DEB (Linux)
+- Main class: `net.jami.desktop.MainKt`
+
 **Integration points:**
 - Same JNI as Android (SWIG bindings)
 - Java Sound API for audio
 - JavaFX or OpenCV for camera (optional)
-- Compose Desktop for UI
+- Compose Desktop for UI (shared JamiApp composable)
 
 **Shared with Android:**
 - JNI wrapper code can be identical
 - Same `JamiService` SWIG-generated class
 - Similar service implementations
+
+**Missing desktop-specific features:**
+- System tray integration
+- Platform menus (File/Edit/Help)
+- Keyboard shortcuts
+- Window size/position persistence
+- Native file dialogs
 
 ---
 
