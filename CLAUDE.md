@@ -18,7 +18,7 @@ The jami-kmp project includes a **complete shared library** and **Compose Multip
 | Models (21) | ✅ All with @Serializable |
 | Services (13) | ✅ All with Flow-based APIs |
 | Platform Abstractions | ✅ 5 platforms via expect/actual |
-| Unit Tests (32 classes) | ✅ All passing |
+| Unit Tests (51 classes, ~174 tests) | ✅ All passing |
 | Koin DI | ✅ All platforms configured |
 | SQLDelight Database | ✅ Schemas defined |
 | iOS/macOS cinterop | ✅ JamiBridge wrapper complete (71 methods) |
@@ -1352,14 +1352,17 @@ Note: HardwareService video/camera methods are stubs on all platforms - actual c
 - Static libraries: `libJamiBridge_ios.a`, `libJamiBridge_iossim.a`, `libJamiBridge_macos.a`
 - Build script: `shared/src/nativeInterop/cinterop/JamiBridge/build-jamibridge.sh`
 
-### Phase 6: Testing ✅ COMPLETE (32 Test Classes)
+### Phase 6: Testing ✅ COMPLETE (51 Test Classes, ~174 tests)
 
 | Test Category | Test Classes | Status |
 |---------------|--------------|--------|
-| Model Tests | AccountTest, UriTest, CallTest, ContactTest, ConversationTest, MediaTest, MediaAttributeTest, ConfigKeyTest, TrustRequestTest, SwarmMessageTest, InteractionTest | ✅ Pass |
-| Service Tests | CallServiceTest, AccountServiceTest, ContactServiceTest, SqlDelightHistoryServiceTest, HardwareServiceTest, NotificationServiceTest | ✅ Pass |
-| Utility Tests | StringUtilsTest, HashUtilsTest, FileUtilsTest | ✅ Pass |
-| Settings Tests | SettingsTest | ✅ Pass |
+| Model Tests (15) | AccountTest, UriTest, CallTest, ContactTest, ConversationTest, MediaTest, MediaAttributeTest, ConfigKeyTest, TrustRequestTest, SwarmMessageTest, InteractionTest, PhoneTest, CodecTest, ConferenceTest, + more | ✅ Pass |
+| Service Tests (6) | AccountServiceTest, ContactServiceTest, ConversationFacadeTest, SqlDelightHistoryServiceTest, HardwareServiceTest, NotificationServiceTest | ✅ Pass |
+| Service Integration Tests (5) | AccountServiceIntegrationTest, CallServiceIntegrationTest, ContactServiceIntegrationTest, ConversationFacadeIntegrationTest, SettingsRepositoryIntegrationTest | ✅ New |
+| ViewModel Tests (13) | AboutViewModelTest, AppViewModelTest, ProfileSetupViewModelTest, AppSettingsViewModelTest, ImportAccountViewModelTest, AccountCreationViewModelTest, ContactsViewModelTest, ContactDetailsViewModelTest, ConversationsViewModelTest, AccountSettingsViewModelTest, CallViewModelTest, NewConversationViewModelTest, ChatViewModelTest | ✅ New |
+| ViewModel Test Fixture (1) | TestFixtures.kt (factory functions for services and scopes) | ✅ New |
+| Utility Tests (5) | StringUtilsTest, HashUtilsTest, FileUtilsTest, QRCodeUtilsTest, VCardUtilsTest | ✅ Pass |
+| Settings Tests (1) | SettingsTest | ✅ Pass |
 
 All tests passing on: Desktop, JS Browser, Android Debug/Release, macOS Arm64, iOS Simulator Arm64
 

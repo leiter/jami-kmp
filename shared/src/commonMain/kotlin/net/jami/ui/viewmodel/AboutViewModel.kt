@@ -47,8 +47,10 @@ data class AboutState(
  * Provides static application information such as version, copyright,
  * and description. No service dependencies are required.
  */
-class AboutViewModel {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+class AboutViewModel(
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+) {
+    private val scope = scope
 
     private val _state = MutableStateFlow(AboutState())
     val state: StateFlow<AboutState> = _state.asStateFlow()

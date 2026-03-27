@@ -50,9 +50,10 @@ data class ContactDetailsState(
  */
 class ContactDetailsViewModel(
     private val contactService: ContactService,
-    private val conversationFacade: ConversationFacade
+    private val conversationFacade: ConversationFacade,
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = scope
 
     private val _state = MutableStateFlow(ContactDetailsState())
     val state: StateFlow<ContactDetailsState> = _state.asStateFlow()

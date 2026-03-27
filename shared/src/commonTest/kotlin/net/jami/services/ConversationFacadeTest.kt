@@ -58,4 +58,26 @@ class ConversationFacadeTest {
         assertEquals(ConversationItemViewModel.Title.Conversations, ConversationItemViewModel.Title.Conversations)
         assertEquals(ConversationItemViewModel.Title.PublicDirectory, ConversationItemViewModel.Title.PublicDirectory)
     }
+
+    @Test
+    fun testSearchResultWithQuery() {
+        val result = SearchResult("alice", emptyList())
+        assertEquals("alice", result.query)
+        assertTrue(result.result.isEmpty())
+    }
+
+    @Test
+    fun testConversationListIsEmptyByDefault() {
+        val list = ConversationList()
+        assertTrue(list.isEmpty())
+        assertEquals(0, list.getCombinedSize())
+        assertEquals("", list.latestQuery)
+    }
+
+    @Test
+    fun testConversationListWithLatestQuery() {
+        val searchResult = SearchResult("bob", emptyList())
+        val list = ConversationList(searchResult = searchResult, latestQuery = "bob")
+        assertEquals("bob", list.latestQuery)
+    }
 }

@@ -53,9 +53,10 @@ data class AccountCreationState(
  * via the daemon.
  */
 class AccountCreationViewModel(
-    private val accountService: AccountService
+    private val accountService: AccountService,
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = scope
 
     private val _state = MutableStateFlow(AccountCreationState())
     val state: StateFlow<AccountCreationState> = _state.asStateFlow()

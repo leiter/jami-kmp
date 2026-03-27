@@ -339,6 +339,48 @@ class ConversationTest {
     }
 
     @Test
+    fun testConversationModeFromInt() {
+        assertEquals(Conversation.Mode.OneToOne, Conversation.Mode.fromInt(0))
+        assertEquals(Conversation.Mode.AdminInvitesOnly, Conversation.Mode.fromInt(1))
+        assertEquals(Conversation.Mode.InvitesOnly, Conversation.Mode.fromInt(2))
+        assertEquals(Conversation.Mode.Public, Conversation.Mode.fromInt(3))
+    }
+
+    @Test
+    fun testAddMultipleContactsAndRemoveOne() = runTest {
+        val conversation = Conversation(
+            "account1",
+            Uri(Uri.SWARM_SCHEME, "conv123"),
+            mode = Conversation.Mode.InvitesOnly
+        )
+
+        val c1 = Contact(Uri.fromString("jami:peer1"))
+        val c2 = Contact(Uri.fromString("jami:peer2"))
+        val c3 = Contact(Uri.fromString("jami:peer3"))
+        conversation.addContact(c1, MemberRole.MEMBER)
+        conversation.addContact(c2, MemberRole.ADMIN)
+        conversation.addContact(c3, MemberRole.MEMBER)
+        assertEquals(3, conversation.contacts.size)
+
+        conversation.removeContact(c2, MemberRole.LEFT)
+        assertEquals(2, conversation.contacts.size)
+        assertEquals(MemberRole.LEFT, conversation.roles[c2.uri.uri])
+        assertNotNull(conversation.findContact(c1.uri))
+        assertNull(conversation.findContact(c2.uri))
+    }
+
+    @Test
+    fun testConversationWithSyncingMode() {
+        val conversation = Conversation(
+            "account1",
+            Uri(Uri.SWARM_SCHEME, "conv_sync"),
+            mode = Conversation.Mode.Syncing
+        )
+        assertTrue(conversation.isSyncing)
+        assertFalse(conversation.isSwarm)
+    }
+
+    @Test
     fun testActiveCall() {
         val activeCall = Conversation.ActiveCall("conf123", "jami:peer", "device1")
         assertEquals("conf123", activeCall.confId)

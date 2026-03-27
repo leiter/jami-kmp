@@ -59,9 +59,10 @@ data class NewConversationState(
 class NewConversationViewModel(
     private val contactService: ContactService,
     private val conversationFacade: ConversationFacade,
-    private val accountService: AccountService
+    private val accountService: AccountService,
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = scope
 
     private val _state = MutableStateFlow(NewConversationState())
     val state: StateFlow<NewConversationState> = _state.asStateFlow()

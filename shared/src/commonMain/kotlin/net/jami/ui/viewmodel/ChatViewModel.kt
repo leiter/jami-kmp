@@ -73,9 +73,10 @@ data class ChatState(
  */
 class ChatViewModel(
     private val conversationFacade: ConversationFacade,
-    private val accountService: AccountService
+    private val accountService: AccountService,
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = scope
 
     private val _state = MutableStateFlow(ChatState())
     val state: StateFlow<ChatState> = _state.asStateFlow()

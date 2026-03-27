@@ -115,6 +115,59 @@ class CallTest {
     }
 
     @Test
+    fun testCallStateTransitionSearchingToCurrent() {
+        val call = Call(
+            account = "account1",
+            daemonId = "call123",
+            peerUri = Uri.fromString("jami:abc123"),
+            isIncoming = false
+        )
+
+        call.setCallState(Call.CallStatus.SEARCHING)
+        assertTrue(call.callStatus.isRinging)
+        assertFalse(call.callStatus.isOnGoing)
+
+        call.setCallState(Call.CallStatus.CURRENT)
+        assertTrue(call.callStatus.isOnGoing)
+        assertFalse(call.callStatus.isRinging)
+        assertFalse(call.isMissed)
+    }
+
+    @Test
+    fun testCallStateTransitionCurrentToHold() {
+        val call = Call(
+            account = "account1",
+            daemonId = "call123",
+            peerUri = Uri.fromString("jami:abc123"),
+            isIncoming = false
+        )
+
+        call.setCallState(Call.CallStatus.CURRENT)
+        assertTrue(call.callStatus.isOnGoing)
+
+        call.setCallState(Call.CallStatus.HOLD)
+        assertTrue(call.callStatus.isOnGoing)
+        assertEquals(Call.CallStatus.HOLD, call.callStatus)
+    }
+
+    @Test
+    fun testCallStateTransitionCurrentToOver() {
+        val call = Call(
+            account = "account1",
+            daemonId = "call123",
+            peerUri = Uri.fromString("jami:abc123"),
+            isIncoming = false
+        )
+
+        call.setCallState(Call.CallStatus.CURRENT)
+        assertFalse(call.callStatus.isOver)
+
+        call.setCallState(Call.CallStatus.OVER)
+        assertTrue(call.callStatus.isOver)
+        assertFalse(call.callStatus.isOnGoing)
+    }
+
+    @Test
     fun testConferenceParticipant() {
         val call = Call(
             account = "account1",

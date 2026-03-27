@@ -32,8 +32,11 @@ sealed class AppState {
     data class HasAccounts(val needsMigration: Boolean = false) : AppState()
 }
 
-class AppViewModel(private val accountService: AccountService) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+class AppViewModel(
+    private val accountService: AccountService,
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+) {
+    private val scope = scope
     private val _appState = MutableStateFlow<AppState>(AppState.Loading)
     val appState: StateFlow<AppState> = _appState.asStateFlow()
 

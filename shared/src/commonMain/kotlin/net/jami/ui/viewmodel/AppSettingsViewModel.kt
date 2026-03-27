@@ -49,9 +49,10 @@ data class AppSettingsState(
  * cross-device synchronization.
  */
 class AppSettingsViewModel(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = scope
 
     private val _state = MutableStateFlow(AppSettingsState())
     val state: StateFlow<AppSettingsState> = _state.asStateFlow()

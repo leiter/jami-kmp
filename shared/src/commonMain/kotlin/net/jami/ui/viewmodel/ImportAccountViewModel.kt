@@ -45,9 +45,10 @@ data class ImportAccountState(
  * decryption. Observes daemon registration events to track import progress.
  */
 class ImportAccountViewModel(
-    private val accountService: AccountService
+    private val accountService: AccountService,
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = scope
 
     private val _state = MutableStateFlow(ImportAccountState())
     val state: StateFlow<ImportAccountState> = _state.asStateFlow()

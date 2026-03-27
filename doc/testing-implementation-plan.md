@@ -2,149 +2,112 @@
 
 ## Context
 
-jami-kmp has 32 existing tests (19 model, 8 service, 5 utility) but **zero ViewModel tests** and no integration tests. The primary blocker is `expect class DaemonBridge()` — an expect class cannot be subclassed or mocked in commonTest. All 12 ViewModels also hardcode their `CoroutineScope`, making them untestable with `runTest`. This plan introduces testability without changing runtime behavior.
+jami-kmp started with 32 existing tests (19 model, 8 service, 5 utility) but **zero ViewModel tests** and no integration tests. The primary blocker was `expect class DaemonBridge()` — an expect class cannot be subclassed or mocked in commonTest. All 13 ViewModels also hardcoded their `CoroutineScope`, making them untestable with `runTest`. This plan introduced testability without changing runtime behavior.
 
-## Phase 1: Extract DaemonBridgeApi Interface (Unblocks Everything)
+## Phase 1: Extract DaemonBridgeApi Interface -- COMPLETE
 
-**Files to modify:**
-- `shared/src/commonMain/kotlin/net/jami/services/DaemonBridge.kt` — extract interface
-- `shared/src/commonMain/kotlin/net/jami/services/AccountService.kt` — depend on interface
-- `shared/src/commonMain/kotlin/net/jami/services/ConversationFacade.kt` — depend on interface (if it takes DaemonBridge)
-- `shared/src/commonMain/kotlin/net/jami/di/JamiModule.kt` — bind interface to impl
+- Extracted `DaemonBridgeApi` interface with 124 methods from `expect class DaemonBridge`
+- Made `DaemonBridge` implement `DaemonBridgeApi` on all platforms
+- Changed all service constructors to accept `DaemonBridgeApi` instead of `DaemonBridge`
+- Created `StubDaemonBridge` in commonMain with controllable fields
+- Fixed `JAMI_DATADIR` environment variable issue
 
-**Steps:**
-1. Create `DaemonBridgeApi` interface with all 60+ methods currently on `expect class DaemonBridge`
-2. Make `DaemonBridge` implement `DaemonBridgeApi`
-3. Change all service constructors to accept `DaemonBridgeApi` instead of `DaemonBridge`
-4. Update Koin module: `single<DaemonBridgeApi> { DaemonBridge() }`
-5. Keep `FileTransferInfo` and `DaemonCallbacks` unchanged
+## Phase 2: Make ViewModels Testable (Scope Injection) -- COMPLETE
 
-**Pattern reference:** letsJam already does this — `JamiBridge` is an interface with `MockJamiBridge` in tests (`letsJam/shared/src/commonTest/.../MockJamiBridge.kt`, 154 lines).
+- Added optional `scope: CoroutineScope` parameter to all 13 ViewModels
+- Default value preserves backward compatibility (`CoroutineScope(SupervisorJob() + Dispatchers.Default)`)
+- No Koin module changes needed
 
-## Phase 2: Create StubDaemonBridge in commonTest
+## Phase 3: ViewModel Tests -- COMPLETE
 
-**File to create:**
-- `shared/src/commonTest/kotlin/net/jami/services/StubDaemonBridge.kt`
+Created test fixture and 13 test files in `shared/src/commonTest/kotlin/net/jami/viewmodel/`.
 
-**Details:**
-- Implements `DaemonBridgeApi` with no-op/empty defaults
-- Follow existing stub pattern (StubHardwareService, StubNotificationService, etc.)
-- Add controllable fields: `accountList`, `conversationList`, `accountDetails` maps
-- Methods return these controllable values so tests can set up scenarios
+### Test Fixture
+- `TestFixtures.kt` — Factory functions: `makeAccountService`, `makeCallService`, `makeContactService`, `makeConversationFacade`, `makeSettingsRepository`, `makeTestServiceStack`, `prepareAccountInService`, `disposableScope()`, `viewModelScope()`
 
-## Phase 3: Make ViewModels Testable
+### ViewModel Test Files (13 files, ~92 tests)
 
-**Files to modify (all 12 ViewModels):**
-- Add optional `scope: CoroutineScope` constructor parameter defaulting to `CoroutineScope(SupervisorJob() + Dispatchers.Default)`
-- In tests, pass `TestScope()` from kotlinx-coroutines-test (already a dependency)
+| Test File | Tests | Key Scenarios |
+|-----------|-------|---------------|
+| `AboutViewModelTest.kt` | 5 | Initial state values, onCleared |
+| `AppViewModelTest.kt` | 6 | Loading -> NoAccounts, Loading -> HasAccounts |
+| `ProfileSetupViewModelTest.kt` | 8 | setDisplayName, setAvatarPath, saveProfile |
+| `AppSettingsViewModelTest.kt` | 10 | All toggle methods update state |
+| `ImportAccountViewModelTest.kt` | 10 | importAccount, registration/migration events |
+| `AccountCreationViewModelTest.kt` | 11 | create account, name registration events |
+| `ContactsViewModelTest.kt` | 7 | loadContacts, search filter |
+| `ContactDetailsViewModelTest.kt` | 6 | loadContact, block/remove no-ops |
+| `ConversationsViewModelTest.kt` | 9 | loadConversations, search, refresh |
+| `AccountSettingsViewModelTest.kt` | 8 | loadAccount, knownDevicesChanged event |
+| `CallViewModelTest.kt` | 11 | toggleMute/Video/Speaker, call state |
+| `NewConversationViewModelTest.kt` | 9 | search, select/remove contact, createConversation |
+| `ChatViewModelTest.kt` | 13 | updateInput, sendMessage, search |
 
-**Priority order (by complexity and value):**
-1. `AppViewModel` — simplest (57 LOC), validates the pattern
-2. `ConversationsViewModel` — core list screen
-3. `ChatViewModel` — message flow, most complex interactions
-4. `AccountCreationViewModel` — multi-step flow
-5. `CallViewModel` — call state machine
-6. Remaining 7 ViewModels
+### Key Patterns
+- Services use TestScope (`this`) for `advanceUntilIdle()` integration
+- ViewModels use `viewModelScope()` — inherits test scheduler but has independent Job (avoids `UncompletedCoroutinesError` from infinite SharedFlow collectors)
+- `onClearedDoesNotThrow` tests use `disposableScope()` — independent scope that can be cancelled without affecting TestScope
 
-## Phase 4: Write ViewModel Tests
+## Phase 4: Service Integration Tests -- COMPLETE
 
-**Files to create in** `shared/src/commonTest/kotlin/net/jami/ui/viewmodel/`:
+Created 5 integration test files in `shared/src/commonTest/kotlin/net/jami/services/` (38 tests):
 
-### AppViewModelTest (~5 tests)
-- Initial state is Loading
-- Empty account list → NoAccounts
-- Non-empty account list → HasAccounts
-- Account needing migration → HasAccounts(needsMigration=true)
-- onCleared cancels scope
+| Test File | Tests | Key Scenarios |
+|-----------|-------|---------------|
+| `AccountServiceIntegrationTest.kt` | 10 | loadAccounts populates StateFlow, createJamiAccount, removeAccount, event emission |
+| `CallServiceIntegrationTest.kt` | 8 | placeCall, onCallStateChanged, call state transitions, onIncomingCall |
+| `ContactServiceIntegrationTest.kt` | 6 | loadContacts from stub, cache operations, add/remove contact |
+| `ConversationFacadeIntegrationTest.kt` | 6 | startConversation, conversation list, preferences |
+| `SettingsRepositoryIntegrationTest.kt` | 8 | theme/privacy/notification settings, mute/unmute conversation |
 
-### ConversationsViewModelTest (~5 tests)
-- Initial state has empty conversation list
-- Loads conversations from facade
-- Updates on new conversation event
-- Handles conversation removal
-- Search/filter if applicable
+## Phase 5: Strengthen Existing Tests -- COMPLETE
 
-### ChatViewModelTest (~8 tests)
-- loadConversation sets title and messages
-- sendMessage clears input and calls daemon
-- updateInput updates state
-- Incoming MessageReceived appends to list
-- SwarmLoaded triggers history reload
-- loadMore calls facade
-- Empty conversation handled gracefully
-- Loading state transitions
+Added 12 edge-case tests to existing test files:
 
-### AccountCreationViewModelTest (~5 tests)
-- Initial state
-- Username validation
-- Password validation
-- Account creation flow
-- Error handling
+| File | Added | Focus |
+|------|-------|-------|
+| `AccountServiceTest.kt` | +3 | Contact event edge cases, empty messages |
+| `CallTest.kt` | +3 | State transitions (SEARCHING->CURRENT, CURRENT->HOLD, CURRENT->OVER) |
+| `ConversationTest.kt` | +3 | Mode from int, multi-contact management, syncing mode |
+| `ConversationFacadeTest.kt` | +3 | Search result with query, ConversationList defaults |
 
-### CallViewModelTest (~5 tests)
-- Start call state
-- Accept/reject incoming
-- Mute/unmute
-- Hold/unhold
-- Hang up
+## Phase 6: Final Verification -- COMPLETE
 
-**Estimated: ~30-35 ViewModel tests**
+### Summary
 
-## Phase 5: Service Integration Tests
+| Phase | Files Created | Files Modified | Tests Added |
+|-------|-------------|----------------|-------------|
+| 1 — DaemonBridgeApi extraction | 0 | 15+ services/DI | 0 |
+| 2 — Scope injection | 0 | 13 ViewModels | 0 |
+| 3 — ViewModel tests | 14 (13 tests + 1 fixture) | 0 | ~92 |
+| 4 — Integration tests | 5 | 0 | 38 |
+| 5 — Strengthen existing | 0 | 4 test files | 12 |
+| 6 — Verify + docs | 0 | 2 doc files | 0 |
+| **Total** | **19** | **32+** | **~142** |
 
-**File to create:**
-- `shared/src/commonTest/kotlin/net/jami/services/AccountServiceIntegrationTest.kt`
+### Total Test Count
+- **Before:** 32 test classes
+- **After:** 51 test classes (~174 total tests)
 
-**Using StubDaemonBridge to test:**
-- Account loading populates accounts StateFlow
-- Account creation calls bridge and emits update
-- Account removal flow
-- Account detail changes propagate
+### Verification Commands
+```bash
+# ViewModel tests
+./gradlew :shared:desktopTest --tests "net.jami.viewmodel.*"
 
-**File to create:**
-- `shared/src/commonTest/kotlin/net/jami/services/ConversationFacadeIntegrationTest.kt`
+# Integration tests
+./gradlew :shared:desktopTest --tests "net.jami.services.*IntegrationTest"
 
-**Tests:**
-- Loading conversations from bridge
-- Sending messages
-- Receiving messages via callback → Flow emission
-- Conversation history loading
+# Full test suite
+./gradlew :shared:desktopTest
 
-**Estimated: ~15-20 integration tests**
+# Platform builds
+./gradlew :shared:compileKotlinDesktop :shared:compileDebugKotlinAndroid
+```
 
-## Phase 6: Strengthen Existing Tests
+## What We Did NOT Do
 
-- Review 8 existing service tests for gaps
-- Add edge cases to model tests where valuable
-- **Estimated: ~5-10 additional tests**
-
-## Execution Order
-
-| Step | What | Est. Tests | Risk |
-|------|------|-----------|------|
-| 1 | Extract DaemonBridgeApi interface | 0 | Medium — touches many files, must not break builds |
-| 2 | Create StubDaemonBridge | 0 | Low |
-| 3 | Add scope param to AppViewModel | 0 | Low |
-| 4 | AppViewModelTest | 5 | Low — validates the whole approach |
-| 5 | Add scope param to remaining VMs | 0 | Low |
-| 6 | ChatViewModelTest | 8 | Medium — complex interactions |
-| 7 | ConversationsViewModelTest | 5 | Low |
-| 8 | Remaining VM tests | 15 | Low |
-| 9 | Service integration tests | 15-20 | Medium |
-| 10 | Strengthen existing tests | 5-10 | Low |
-
-**Total: ~50-65 new tests**
-
-## What We're NOT Doing
-
-- **No mocking library** — follow existing manual stub pattern
-- **No UI/Compose tests** — low ROI, high complexity, no infrastructure
-- **No platform-specific tests** — focus on commonTest for maximum coverage
+- **No mocking library** — followed existing manual stub pattern
+- **No UI/Compose tests** — low ROI, high complexity
+- **No platform-specific tests** — focused on commonTest for maximum coverage
 - **No test coverage tooling** — premature at this stage
-
-## Verification
-
-1. After Phase 1: `./gradlew :shared:compileKotlinDesktop` (or equivalent) — all platforms still compile
-2. After Phase 2-4: `./gradlew :shared:desktopTest` — new tests pass
-3. After all phases: `./gradlew :shared:allTests` — full test suite green
-4. Android app builds and runs: `./gradlew :android-app:assembleDebug`
+- **No runtime behavior changes** — all ViewModel scope defaults preserved

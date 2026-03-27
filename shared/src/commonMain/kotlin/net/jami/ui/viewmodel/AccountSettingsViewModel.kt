@@ -61,9 +61,10 @@ data class AccountSettingsState(
 class AccountSettingsViewModel(
     private val accountService: AccountService,
     private val settingsRepository: SettingsRepository,
-    private val deviceRuntimeService: DeviceRuntimeService? = null
+    private val deviceRuntimeService: DeviceRuntimeService? = null,
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = scope
 
     private val _state = MutableStateFlow(AccountSettingsState())
     val state: StateFlow<AccountSettingsState> = _state.asStateFlow()

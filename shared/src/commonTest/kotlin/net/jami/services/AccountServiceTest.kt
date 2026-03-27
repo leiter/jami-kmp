@@ -431,6 +431,34 @@ class AccountServiceTest {
         assertFalse(account.isDhtProxyEnabled)
     }
 
+    // ==================== Edge Case Tests ====================
+
+    @Test
+    fun testAccountEventContactAddedNotConfirmed() {
+        val event = AccountEvent.ContactAdded("acc123", "contact456", confirmed = false)
+        assertEquals("acc123", event.accountId)
+        assertEquals("contact456", event.uri)
+        assertFalse(event.confirmed)
+    }
+
+    @Test
+    fun testAccountEventContactRemovedNotBanned() {
+        val event = AccountEvent.ContactRemoved("acc123", "contact456", banned = false)
+        assertFalse(event.banned)
+    }
+
+    @Test
+    fun testIncomingMessageWithEmptyMessages() {
+        val msg = IncomingMessage(
+            accountId = "acc123",
+            messageId = "msg000",
+            callId = null,
+            from = "peer456",
+            messages = emptyMap()
+        )
+        assertTrue(msg.messages.isEmpty())
+    }
+
     // ==================== LookupState Tests ====================
 
     @Test
