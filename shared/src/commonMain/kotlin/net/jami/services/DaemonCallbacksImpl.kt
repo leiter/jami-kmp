@@ -363,10 +363,10 @@ class DaemonCallbacksImpl(
         }
     }
 
-    override fun onRegisteredNameFound(accountId: String, state: Int, address: String, name: String) {
-        Log.d(TAG, "onRegisteredNameFound: $name -> $address state=$state")
+    override fun onRegisteredNameFound(accountId: String, state: Int, address: String, name: String, query: String) {
+        Log.d(TAG, "onRegisteredNameFound: query=$query name=$name address=$address state=$state accountId=$accountId")
         scope.launch {
-            accountService.onRegisteredNameFound(accountId, state, address, name)
+            accountService.onRegisteredNameFound(accountId, state, address, name, query)
         }
     }
 

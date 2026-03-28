@@ -107,7 +107,7 @@ class ImportAccountViewModel(
             try {
                 accountService.createJamiAccount(
                     displayName = "",
-                    password = current.password.ifEmpty { null },
+                    password = current.password,
                     archivePath = current.archivePath
                 )
                 // Import progress is tracked via AccountEvent callbacks

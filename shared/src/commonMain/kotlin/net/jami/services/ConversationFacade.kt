@@ -84,6 +84,9 @@ class ConversationFacade(
     private val _conversationEvents = MutableSharedFlow<ConversationEvent>()
     val conversationEvents: SharedFlow<ConversationEvent> = _conversationEvents.asSharedFlow()
 
+    private val _conversationList = MutableStateFlow(ConversationList())
+    val conversationList: StateFlow<ConversationList> = _conversationList.asStateFlow()
+
     init {
         // Subscribe to account changes
         scope.launch {
@@ -598,6 +601,10 @@ class ConversationFacade(
             val interactions = historyService.getSmartlist(account.accountId)
             // Process interactions and update conversations
         }
+
+        // Publish updated conversation list
+        val conversations = account.getConversations().toList()
+        _conversationList.value = ConversationList(conversations = conversations)
     }
 
     // ==================== Profile/Contact Operations ====================

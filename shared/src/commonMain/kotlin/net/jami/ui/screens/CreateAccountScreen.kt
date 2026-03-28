@@ -17,14 +17,12 @@
 package net.jami.ui.screens
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -114,51 +112,48 @@ fun CreateAccountScreen(
         ) {
             Spacer(Modifier.height(JamiTheme.spacing.l))
 
-            // Username field with availability indicator
+            // Username field with availability check (mandatory)
             OutlinedTextField(
                 value = state.username,
                 onValueChange = { viewModel.setUsername(it) },
-                label = { Text("Username (optional)") },
+                label = { Text("Choose a username") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Next,
-                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 trailingIcon = {
                     if (state.username.isNotEmpty()) {
                         when {
-                            state.usernameCheckInProgress -> {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    strokeWidth = 2.dp,
-                                    color = JamiTheme.colors.onSurfaceVariant,
-                                )
-                            }
-                            state.usernameAvailable == true -> {
-                                Icon(
-                                    imageVector = Icons.Filled.Check,
-                                    contentDescription = "Available",
-                                    tint = JamiTheme.colors.primary,
-                                )
-                            }
-                            state.usernameAvailable == false -> {
-                                Icon(
-                                    imageVector = Icons.Filled.Close,
-                                    contentDescription = "Taken",
-                                    tint = JamiTheme.colors.error,
-                                )
-                            }
+                            state.usernameCheckInProgress -> CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = JamiTheme.colors.onSurfaceVariant,
+                            )
+                            state.usernameAvailable == true -> Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = "Available",
+                                tint = JamiTheme.colors.primary,
+                            )
+                            state.usernameAvailable == false -> Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Taken",
+                                tint = JamiTheme.colors.error,
+                            )
                         }
                     }
                 },
-                supportingText = if (state.usernameAvailable == false) {
-                    { Text("Username is already taken", color = JamiTheme.colors.error) }
-                } else null,
+                supportingText = when {
+                    state.usernameAvailable == false ->
+                        ({ Text("Username is already taken", color = JamiTheme.colors.error) })
+                    state.usernameCheckError != null ->
+                        ({ Text(state.usernameCheckError ?: "", color = JamiTheme.colors.error) })
+                    else -> null
+                },
+                isError = state.usernameAvailable == false,
             )
 
             Spacer(Modifier.height(JamiTheme.spacing.m))
 
-            // Password field
+            // Password field (optional, min 6 chars if set)
             OutlinedTextField(
                 value = state.password,
                 onValueChange = { viewModel.setPassword(it) },
@@ -170,23 +165,33 @@ fun CreateAccountScreen(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Next,
                 ),
+                supportingText = if (state.password.isNotEmpty() && state.password.length < 6) {
+                    { Text("Minimum 6 characters", color = JamiTheme.colors.error) }
+                } else null,
+                isError = state.password.isNotEmpty() && state.password.length < 6,
             )
 
-            Spacer(Modifier.height(JamiTheme.spacing.m))
+            // Confirm password field (only shown when password is entered)
+            if (state.password.isNotEmpty()) {
+                Spacer(Modifier.height(JamiTheme.spacing.m))
 
-            // Confirm password field
-            OutlinedTextField(
-                value = state.confirmPassword,
-                onValueChange = { viewModel.setConfirmPassword(it) },
-                label = { Text("Confirm Password") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done,
-                ),
-            )
+                OutlinedTextField(
+                    value = state.confirmPassword,
+                    onValueChange = { viewModel.setConfirmPassword(it) },
+                    label = { Text("Confirm Password") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                    ),
+                    supportingText = if (state.confirmPassword.isNotEmpty() && state.password != state.confirmPassword) {
+                        { Text("Passwords do not match", color = JamiTheme.colors.error) }
+                    } else null,
+                    isError = state.confirmPassword.isNotEmpty() && state.password != state.confirmPassword,
+                )
+            }
 
             // Error message
             if (state.error != null) {
@@ -200,15 +205,18 @@ fun CreateAccountScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.xl))
 
-            // Create button
-            val canCreate = !state.isLoading && !state.isRegistering
+            // Create button — requires: username set, not taken, not checking, password valid
+            val canCreate = !state.isLoading
+                && state.username.isNotEmpty()
                 && !state.usernameCheckInProgress
                 && state.usernameAvailable != false
+                && (state.password.isEmpty() || state.password.length >= 6)
+                && (state.password.isEmpty() || state.password == state.confirmPassword)
             JamiButton(
-                text = if (state.isRegistering) "Registering username..." else "Create Account",
+                text = "Create Account",
                 onClick = { viewModel.createAccount() },
                 modifier = Modifier.fillMaxWidth(),
-                loading = state.isLoading || state.isRegistering,
+                loading = state.isLoading,
                 enabled = canCreate,
             )
 

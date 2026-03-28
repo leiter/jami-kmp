@@ -112,6 +112,8 @@ val jamiModule = module {
 
     /**
      * Callback orchestrator that routes daemon events to services.
+     * Registered under both the concrete type and the DaemonCallbacks interface
+     * so JamiApplication can inject it as DaemonCallbacks.
      */
     single {
         DaemonCallbacksImpl(
@@ -122,6 +124,7 @@ val jamiModule = module {
             scope = get()
         )
     }
+    single<DaemonCallbacks> { get<DaemonCallbacksImpl>() }
 
     // ==================== Repositories ====================
 

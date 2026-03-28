@@ -31,6 +31,7 @@ import net.jami.model.ConfigKey
 import net.jami.model.Conversation
 import net.jami.model.TrustRequest
 import net.jami.model.Uri
+import net.jami.utils.Log
 
 /**
  * Service for managing Jami accounts.
@@ -156,23 +157,27 @@ class AccountService(
     /**
      * Create a new Jami account.
      */
+    /**
+     * Create a new Jami account, matching the official jami-android-client flow:
+     * start from the daemon's account template so all defaults are present,
+     * then override specific keys.
+     */
     fun createJamiAccount(
         displayName: String,
-        password: String? = null,
+        username: String = "",
+        password: String = "",
         pin: String? = null,
         archivePath: String? = null
     ): String {
-        val details = mutableMapOf(
-            ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI,
-            ConfigKey.ACCOUNT_DISPLAYNAME.key to displayName,
-            ConfigKey.VIDEO_ENABLED.key to "true",
-            ConfigKey.ACCOUNT_AUTOANSWER.key to "false"
-        )
-
-        password?.let { details[ConfigKey.ACCOUNT_ARCHIVE_PASSWORD.key] = it }
+        val details = daemonBridge.getAccountTemplate(AccountConfig.ACCOUNT_TYPE_JAMI).toMutableMap()
+        details[ConfigKey.VIDEO_ENABLED.key] = "true"
+        details[ConfigKey.ACCOUNT_DTMF_TYPE.key] = "sipinfo"
+        details[ConfigKey.ACCOUNT_ALIAS.key] = displayName.ifEmpty { getNewAccountName("Jami") }
+        details[ConfigKey.ACCOUNT_UPNP_ENABLE.key] = "true"
+        if (username.isNotEmpty()) details[ConfigKey.ACCOUNT_REGISTERED_NAME.key] = username
+        if (password.isNotEmpty()) details[ConfigKey.ACCOUNT_ARCHIVE_PASSWORD.key] = password
         pin?.let { details[ConfigKey.ACCOUNT_ARCHIVE_PIN.key] = it }
         archivePath?.let { details[ConfigKey.ACCOUNT_ARCHIVE_PATH.key] = it }
-
         return daemonBridge.addAccount(details)
     }
 
@@ -366,6 +371,7 @@ class AccountService(
      * Look up a registered name.
      */
     fun lookupName(accountId: String, name: String): Boolean {
+        Log.d(TAG, "lookupName: accountId='$accountId' name='$name'")
         return daemonBridge.lookupName(accountId, "", name)
     }
 
@@ -774,10 +780,12 @@ class AccountService(
         accountId: String,
         state: Int,
         address: String,
-        name: String
+        name: String,
+        query: String = ""
     ) {
+        Log.d(TAG, "onRegisteredNameFound: query=$query name=$name address=$address state=$state")
         scope.launch {
-            _accountEvents.emit(AccountEvent.RegisteredNameFound(accountId, state, address, name))
+            _accountEvents.emit(AccountEvent.RegisteredNameFound(accountId, state, address, name, query))
         }
     }
 
@@ -830,6 +838,7 @@ class AccountService(
     }
 
     companion object {
+        private const val TAG = "AccountService"
         const val ACCOUNT_SCHEME_NONE = ""
         const val ACCOUNT_SCHEME_PASSWORD = "password"
         const val ACCOUNT_SCHEME_KEY = "key"
@@ -896,7 +905,8 @@ sealed class AccountEvent {
         val accountId: String,
         val state: Int,
         val address: String,
-        val name: String
+        val name: String,
+        val query: String = ""
     ) : AccountEvent()
 
     data class UserSearchEnded(

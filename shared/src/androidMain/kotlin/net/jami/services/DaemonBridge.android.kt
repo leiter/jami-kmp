@@ -16,6 +16,8 @@
  */
 package net.jami.services
 
+import android.content.Context
+import android.util.Base64
 import net.jami.daemon.Blob
 import net.jami.daemon.Callback
 import net.jami.daemon.ConfigurationCallback
@@ -31,8 +33,11 @@ import net.jami.daemon.VideoCallback
 import net.jami.daemon.SwarmMessage as SwigSwarmMessage
 import net.jami.model.MediaAttribute
 import net.jami.model.SwarmMessage
-import android.content.Context
 import net.jami.utils.Log
+import java.io.File
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
+import java.security.KeyStore
 
 /**
  * Android implementation of DaemonBridge using SWIG-generated JNI bindings.
@@ -80,6 +85,18 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
         this.callbacks = callbacks
 
         try {
+            // Set CA_ROOT_FILE env var so OpenDHT's http.cpp (newTlsClientContext) can
+            // verify HTTPS connections to ns.jami.net. The daemon reads CA_ROOT_FILE
+            // (not SSL_CERT_FILE) and calls ctx->load_verify_file(path).
+            val caPath = getOrExtractCaBundle(context)
+            Log.d(TAG, "CA bundle at: $caPath (${java.io.File(caPath).length()} bytes)")
+            try {
+                android.system.Os.setenv("CA_ROOT_FILE", caPath, true)
+                Log.d(TAG, "Set CA_ROOT_FILE=$caPath")
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not set CA_ROOT_FILE: ${e.message}")
+            }
+
             // Create callback implementations that forward to DaemonCallbacks
             configurationCallback = createConfigurationCallback(callbacks)
             callCallback = createCallCallback(callbacks)
@@ -375,7 +392,10 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
     // ==================== Name Lookup ====================
 
     override fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
-        return JamiService.lookupName(accountId, nameServiceUrl, name)
+        Log.d(TAG, "lookupName: accountId='$accountId' name='$name' nameServiceUrl='$nameServiceUrl'")
+        val result = JamiService.lookupName(accountId, nameServiceUrl, name)
+        Log.d(TAG, "lookupName result=$result")
+        return result
     }
 
     override fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean {
@@ -501,8 +521,10 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
         }
 
         // Note: SWIG signature is (accountId, query, state, address, name)
+        // When state=NOT_FOUND (2), name may be empty — pass query so callers can match by it
         override fun registeredNameFound(accountId: String, query: String, state: Int, address: String, name: String) {
-            callbacks.onRegisteredNameFound(accountId, state, address, name)
+            Log.d(TAG, "registeredNameFound: query=$query name=$name address=$address state=$state accountId=$accountId")
+            callbacks.onRegisteredNameFound(accountId, state, address, name, query)
         }
 
         // Note: SWIG uses Blob for payload, we convert to ByteArray
@@ -551,10 +573,16 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
         }
 
         override fun getAppDataPath(name: String, ret: StringVect) {
+            Log.d(TAG, "getAppDataPath: '$name'")
             when (name) {
                 "files" -> ret.add(context.filesDir.absolutePath)
                 "cache" -> ret.add(context.cacheDir.absolutePath)
-                else -> ret.add(context.getDir(name, Context.MODE_PRIVATE).absolutePath)
+                "ca-bundle" -> ret.add(getOrExtractCaBundle(context))
+                else -> {
+                    val dir = context.getDir(name, Context.MODE_PRIVATE)
+                    Log.d(TAG, "getAppDataPath: '$name' → ${dir.absolutePath}")
+                    ret.add(dir.absolutePath)
+                }
             }
         }
     }
@@ -611,6 +639,50 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
         override fun dataTransferEvent(accountId: String, conversationId: String, interactionId: String, fileId: String, eventCode: Int) {
             callbacks.onDataTransferEvent(accountId, conversationId, interactionId, fileId, eventCode)
         }
+    }
+
+    /**
+     * Returns the path to a PEM CA bundle that libcurl (inside the daemon) uses for HTTPS.
+     * Android's system trust store is not visible to native code, so we extract it once
+     * and write it to a file in the app's private storage.
+     */
+    private fun getOrExtractCaBundle(context: Context): String {
+        // Use cacert.pem from assets (same bundle as official jami-android-client)
+        val caBundleFile = File(context.filesDir, "cacert.pem")
+        if (caBundleFile.exists() && caBundleFile.length() > 0) {
+            return caBundleFile.absolutePath
+        }
+        // Try to copy from assets first (preferred — matches official client)
+        try {
+            context.assets.open("cacert.pem").use { input ->
+                caBundleFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            Log.i(TAG, "CA bundle copied from assets: ${caBundleFile.length()} bytes → ${caBundleFile.absolutePath}")
+            return caBundleFile.absolutePath
+        } catch (e: Exception) {
+            Log.w(TAG, "cacert.pem not in assets, falling back to TrustManager extraction: ${e.message}")
+        }
+        // Fallback: extract from Android's TrustManager
+        try {
+            val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+            tmf.init(null as KeyStore?)
+            val x509tm = tmf.trustManagers.filterIsInstance<X509TrustManager>().firstOrNull()
+            if (x509tm != null) {
+                caBundleFile.bufferedWriter().use { writer ->
+                    x509tm.acceptedIssuers.forEach { cert ->
+                        writer.write("-----BEGIN CERTIFICATE-----\n")
+                        writer.write(Base64.encodeToString(cert.encoded, Base64.DEFAULT))
+                        writer.write("-----END CERTIFICATE-----\n")
+                    }
+                }
+                Log.i(TAG, "CA bundle written: ${x509tm.acceptedIssuers.size} certs → ${caBundleFile.absolutePath}")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to extract CA bundle: ${e.message}")
+        }
+        return caBundleFile.absolutePath
     }
 
     private fun createConversationCallback(callbacks: DaemonCallbacks) = object : ConversationCallback() {

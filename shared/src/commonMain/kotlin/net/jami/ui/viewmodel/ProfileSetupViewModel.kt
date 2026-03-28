@@ -25,13 +25,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.jami.services.AccountService
+import net.jami.utils.Log
 
 data class ProfileSetupState(
     val displayName: String = "",
     val avatarPath: String? = null,
     val isLoading: Boolean = false,
     val isSaved: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )
 
 class ProfileSetupViewModel(
@@ -43,6 +44,10 @@ class ProfileSetupViewModel(
     private val _state = MutableStateFlow(ProfileSetupState())
     val state: StateFlow<ProfileSetupState> = _state.asStateFlow()
 
+    companion object {
+        private const val TAG = "ProfileSetupViewModel"
+    }
+
     fun setDisplayName(name: String) {
         _state.value = _state.value.copy(displayName = name, error = null)
     }
@@ -53,13 +58,18 @@ class ProfileSetupViewModel(
 
     fun saveProfile() {
         val current = _state.value
+        val account = accountService.currentAccount.value ?: run {
+            _state.value = current.copy(isSaved = true)
+            return
+        }
+        val accountId = account.accountId
+
         scope.launch {
             _state.value = current.copy(isLoading = true, error = null)
             try {
-                val account = accountService.currentAccount.value ?: return@launch
-                if (current.displayName.isNotEmpty()) {
+                if (current.displayName.isNotEmpty() || current.avatarPath != null) {
                     accountService.updateProfile(
-                        accountId = account.accountId,
+                        accountId = accountId,
                         displayName = current.displayName,
                         avatar = current.avatarPath ?: "",
                         fileType = if (current.avatarPath != null) "image/png" else "",
@@ -68,6 +78,7 @@ class ProfileSetupViewModel(
                 }
                 _state.value = _state.value.copy(isLoading = false, isSaved = true)
             } catch (e: Exception) {
+                Log.w(TAG, "saveProfile failed: ${e.message}")
                 _state.value = _state.value.copy(
                     isLoading = false,
                     error = e.message ?: "Failed to save profile"

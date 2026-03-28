@@ -42,8 +42,11 @@ import net.jami.services.DaemonBridgeApi
 actual val platformModule: Module = module {
 
     // ==================== Daemon Bridge ====================
+    // Registered under both types: DaemonBridgeApi (used by services) and
+    // DaemonBridge (used by JamiApplication for lifecycle management)
 
-    single<DaemonBridgeApi> { DaemonBridge(androidContext()) }
+    single { DaemonBridge(androidContext()) }
+    single<DaemonBridgeApi> { get<DaemonBridge>() }
 
     // ==================== Database ====================
 

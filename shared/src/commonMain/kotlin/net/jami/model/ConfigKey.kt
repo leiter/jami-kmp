@@ -36,6 +36,9 @@ enum class ConfigKey(val key: String) {
     ACCOUNT_MANAGER_URI("Account.managerUri"),
     ACCOUNT_MANAGER_USERNAME("Account.managerUsername"),
 
+    ACCOUNT_UPNP_ENABLE("Account.upnpEnabled"),
+    ACCOUNT_DTMF_TYPE("Account.dtmfType"),
+
     // DHT
     DHT_PORT("DHT.port"),
     DHT_PUBLIC_IN("DHT.PublicInCalls"),

@@ -618,6 +618,18 @@ class Conversation(
 
         val isGroup: Boolean
             get() = this == AdminInvitesOnly || this == InvitesOnly || this == Public
+
+        companion object {
+            fun fromInt(value: Int): Mode = when (value) {
+                0 -> OneToOne
+                1 -> AdminInvitesOnly
+                2 -> InvitesOnly
+                3 -> Public
+                4 -> Syncing
+                5 -> Legacy
+                else -> Request
+            }
+        }
     }
 
     enum class ComposingStatus {

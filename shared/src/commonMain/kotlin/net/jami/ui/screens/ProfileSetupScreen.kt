@@ -23,7 +23,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -87,7 +89,8 @@ fun ProfileSetupScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = JamiTheme.spacing.l),
+                .padding(horizontal = JamiTheme.spacing.l)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(JamiTheme.spacing.xl))
@@ -117,9 +120,7 @@ fun ProfileSetupScreen(
                 label = { Text("Display name") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Done,
-                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             )
 
             // Error message
@@ -134,13 +135,16 @@ fun ProfileSetupScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.xl))
 
+            val canSave = !state.isLoading
             JamiButton(
-                text = "Save",
+                text = "Continue",
                 onClick = { viewModel.saveProfile() },
                 modifier = Modifier.fillMaxWidth(),
                 loading = state.isLoading,
-                enabled = !state.isLoading && state.displayName.isNotEmpty(),
+                enabled = canSave,
             )
+
+            Spacer(Modifier.height(JamiTheme.spacing.xl))
         }
     }
 }

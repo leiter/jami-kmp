@@ -33,18 +33,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.theme.JamiTheme
-import net.jami.ui.viewmodel.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountSummaryScreen(
     onContinue: () -> Unit,
 ) {
-    val appViewModel = getViewModel<AppViewModel>()
-
     Scaffold(
         topBar = {
             TopAppBar(

@@ -29,6 +29,7 @@ import net.jami.services.AccountService
 sealed class AppState {
     data object Loading : AppState()
     data object NoAccounts : AppState()
+    data object Onboarding : AppState()
     data class HasAccounts(val needsMigration: Boolean = false) : AppState()
 }
 
@@ -40,17 +41,47 @@ class AppViewModel(
     private val _appState = MutableStateFlow<AppState>(AppState.Loading)
     val appState: StateFlow<AppState> = _appState.asStateFlow()
 
+    // When true, account creation is in progress and we stay in Onboarding
+    // instead of switching to HasAccounts. Cleared when the wizard completes.
+    private var onboardingInProgress = false
+
     init {
         scope.launch {
             accountService.loadAccounts()
             accountService.accounts.collect { accountList ->
                 _appState.value = when {
-                    accountList.isEmpty() -> AppState.NoAccounts
+                    accountList.isEmpty() && !onboardingInProgress -> AppState.NoAccounts
+                    onboardingInProgress -> AppState.Onboarding
                     accountList.any { it.needsMigration } ->
                         AppState.HasAccounts(needsMigration = true)
                     else -> AppState.HasAccounts()
                 }
             }
+        }
+    }
+
+    /**
+     * Called when the user starts account creation. Keeps the app in
+     * Onboarding state even after the account is created by the daemon.
+     */
+    fun startOnboarding() {
+        onboardingInProgress = true
+        _appState.value = AppState.Onboarding
+    }
+
+    /**
+     * Called when the user finishes the onboarding wizard (AccountSummary).
+     * Allows the reactive account flow to switch to HasAccounts.
+     */
+    fun finishOnboarding() {
+        onboardingInProgress = false
+        // Re-evaluate state based on current accounts
+        val accountList = accountService.accounts.value
+        _appState.value = when {
+            accountList.isEmpty() -> AppState.NoAccounts
+            accountList.any { it.needsMigration } ->
+                AppState.HasAccounts(needsMigration = true)
+            else -> AppState.HasAccounts()
         }
     }
 

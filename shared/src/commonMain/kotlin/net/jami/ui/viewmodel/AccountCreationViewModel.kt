@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.services.LookupState
+import net.jami.utils.Log
 
 /**
  * State for the account creation screen.
@@ -42,7 +43,8 @@ data class AccountCreationState(
     val isCreated: Boolean = false,
     val usernameAvailable: Boolean? = null,
     val usernameCheckInProgress: Boolean = false,
-    val isRegistering: Boolean = false
+    val isRegistering: Boolean = false,
+    val usernameCheckError: String? = null  // non-null when lookup failed (e.g. network error)
 )
 
 /**
@@ -63,6 +65,10 @@ class AccountCreationViewModel(
 
     private var lookupJob: Job? = null
     private var createdAccountId: String? = null
+
+    companion object {
+        private const val TAG = "AccountCreationViewModel"
+    }
 
     init {
         // Observe account events for creation result and username lookup results
@@ -90,19 +96,29 @@ class AccountCreationViewModel(
      * @param username New username value.
      */
     fun setUsername(username: String) {
+        val trimmed = username.trim()
+        Log.d(TAG, "setUsername: '$trimmed'")
         _state.value = _state.value.copy(
-            username = username,
+            username = trimmed,
             usernameAvailable = null,
             usernameCheckInProgress = false,
+            usernameCheckError = null,
             error = null
         )
         lookupJob?.cancel()
-        if (username.isNotEmpty()) {
+        if (trimmed.isNotEmpty()) {
             lookupJob = scope.launch {
                 _state.value = _state.value.copy(usernameCheckInProgress = true)
                 delay(500)
                 val currentAccountId = accountService.currentAccount.value?.accountId ?: ""
-                accountService.lookupName(currentAccountId, username)
+                Log.d(TAG, "setUsername debounce fired: looking up '$trimmed' with accountId='$currentAccountId'")
+                val result = accountService.lookupName(currentAccountId, trimmed)
+                Log.d(TAG, "setUsername lookupName returned: $result")
+                if (!result) {
+                    // Daemon rejected the call (not initialized or invalid); clear spinner
+                    Log.w(TAG, "lookupName returned false — daemon may not be ready")
+                    _state.value = _state.value.copy(usernameCheckInProgress = false)
+                }
             }
         }
     }
@@ -128,12 +144,34 @@ class AccountCreationViewModel(
     /**
      * Create a new Jami account with the current form values.
      *
-     * Validates passwords match before attempting creation via the daemon.
+     * Mirrors official jami-android-client AccountWizardPresenter:
+     * - username is mandatory and must be available
+     * - password is optional but must be >= 6 chars if set
+     * - calls addAccount immediately and navigates to profile setup
+     * - username is embedded in the account details (ACCOUNT_REGISTERED_NAME)
+     *   and registered by the daemon automatically after DHT connects
      */
     fun createAccount() {
         val current = _state.value
 
-        // Validate passwords
+        // Username is mandatory
+        if (current.username.isEmpty()) {
+            _state.value = current.copy(error = "Username is required")
+            return
+        }
+
+        // Username must be available (or at least not known-taken)
+        if (current.usernameAvailable == false) {
+            _state.value = current.copy(error = "Username is already taken")
+            return
+        }
+
+        // Password validation: optional, but if set must be >= 6 chars
+        if (current.password.isNotEmpty() && current.password.length < 6) {
+            _state.value = current.copy(error = "Password must be at least 6 characters")
+            return
+        }
+
         if (current.password.isNotEmpty() && current.password != current.confirmPassword) {
             _state.value = current.copy(error = "Passwords do not match")
             return
@@ -142,32 +180,15 @@ class AccountCreationViewModel(
         scope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
             try {
-                val password = current.password.ifEmpty { null }
                 val accountId = accountService.createJamiAccount(
                     displayName = current.username,
-                    password = password
+                    username = current.username,
+                    password = current.password
                 )
                 createdAccountId = accountId
-
-                // If a username was provided, register it
-                if (current.username.isNotEmpty()) {
-                    _state.value = _state.value.copy(isRegistering = true)
-                    accountService.registerName(
-                        accountId = accountId,
-                        name = current.username,
-                        password = current.password
-                    )
-                    // Timeout: if no response in 30s, show error
-                    scope.launch {
-                        delay(30_000)
-                        if (_state.value.isRegistering) {
-                            _state.value = _state.value.copy(
-                                isRegistering = false,
-                                error = "Username registration timed out"
-                            )
-                        }
-                    }
-                }
+                Log.d(TAG, "addAccount returned accountId='$accountId' — navigating to profile setup")
+                // Navigate immediately, like the official client; account initializes in background
+                _state.value = _state.value.copy(isLoading = false, isCreated = true)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
@@ -178,25 +199,22 @@ class AccountCreationViewModel(
     }
 
     /**
-     * Handle registration state changes from the daemon.
+     * Handle registration state changes — used for error feedback only.
+     * Navigation no longer waits for REGISTERED state.
      */
     private fun handleRegistrationState(event: AccountEvent.RegistrationStateChanged) {
+        // Only show errors if we're still on this screen (isLoading)
+        if (!_state.value.isLoading) return
         when (event.state) {
-            "REGISTERED" -> {
-                _state.value = _state.value.copy(isLoading = false, isCreated = true)
-            }
             "ERROR_GENERIC", "ERROR_AUTH", "ERROR_NETWORK",
             "ERROR_HOST", "ERROR_SERVICE_UNAVAILABLE",
             "ERROR_NEED_MIGRATION" -> {
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = "Registration failed: ${event.state}"
+                    error = "Account creation failed: ${event.state}"
                 )
             }
-            "TRYING" -> {
-                // Still in progress, keep loading state
-            }
-            else -> { /* Other states */ }
+            else -> {}
         }
     }
 
@@ -205,14 +223,38 @@ class AccountCreationViewModel(
      */
     private fun handleNameLookupResult(event: AccountEvent.RegisteredNameFound) {
         val currentUsername = _state.value.username
-        if (event.name != currentUsername) return
+        // Match by query (the term we searched) because name may be empty when not found
+        val searchTerm = event.query.ifEmpty { event.name }
+        Log.d(TAG, "handleNameLookupResult: query='${event.query}' name='${event.name}' state=${event.state} currentUsername='$currentUsername' searchTerm='$searchTerm'")
+        if (searchTerm != currentUsername) {
+            Log.d(TAG, "handleNameLookupResult: ignoring stale result (searchTerm='$searchTerm' != current='$currentUsername')")
+            return
+        }
 
         val lookupState = LookupState.fromInt(event.state)
-        val isAvailable = lookupState == LookupState.NotFound
-        _state.value = _state.value.copy(
-            usernameAvailable = isAvailable,
-            usernameCheckInProgress = false
-        )
+        Log.d(TAG, "handleNameLookupResult: lookupState=$lookupState")
+        _state.value = when (lookupState) {
+            LookupState.NotFound -> _state.value.copy(
+                usernameAvailable = true,
+                usernameCheckInProgress = false,
+                usernameCheckError = null
+            )
+            LookupState.Success -> _state.value.copy(
+                usernameAvailable = false,
+                usernameCheckInProgress = false,
+                usernameCheckError = null
+            )
+            LookupState.Invalid -> _state.value.copy(
+                usernameAvailable = false,
+                usernameCheckInProgress = false,
+                usernameCheckError = "Invalid username"
+            )
+            LookupState.NetworkError -> _state.value.copy(
+                usernameAvailable = null,  // unknown — don't block the user
+                usernameCheckInProgress = false,
+                usernameCheckError = "Name server unreachable"
+            )
+        }
     }
 
     /**

@@ -66,7 +66,8 @@ fun JamiNavigation() {
 
     when (val state = appState) {
         is AppState.Loading -> LoadingScreen()
-        is AppState.NoAccounts -> OnboardingNavigation()
+        is AppState.NoAccounts -> OnboardingNavigation(appViewModel)
+        is AppState.Onboarding -> OnboardingNavigation(appViewModel)
         is AppState.HasAccounts -> MainNavigation(needsMigration = state.needsMigration)
     }
 }
@@ -82,7 +83,7 @@ private fun LoadingScreen() {
 }
 
 @Composable
-private fun OnboardingNavigation() {
+private fun OnboardingNavigation(appViewModel: AppViewModel) {
     val navController = rememberNavController()
 
     NavHost(
@@ -92,6 +93,7 @@ private fun OnboardingNavigation() {
         composable(Screen.Welcome.route) {
             WelcomeScreen(
                 onCreateAccount = {
+                    appViewModel.startOnboarding()
                     navController.navigate(Screen.CreateAccount.route)
                 },
                 onImportAccount = {
@@ -102,7 +104,10 @@ private fun OnboardingNavigation() {
 
         composable(Screen.CreateAccount.route) {
             CreateAccountScreen(
-                onBack = { navController.popBackStack() },
+                onBack = {
+                    appViewModel.finishOnboarding()
+                    navController.popBackStack()
+                },
                 onAccountCreated = {
                     navController.navigate(Screen.ProfileSetup.route) {
                         popUpTo(Screen.CreateAccount.route) { inclusive = true }
@@ -129,8 +134,7 @@ private fun OnboardingNavigation() {
         composable(Screen.AccountSummary.route) {
             AccountSummaryScreen(
                 onContinue = {
-                    // AppViewModel reactively switches to HasAccounts
-                    // when AccountService.accounts updates after creation
+                    appViewModel.finishOnboarding()
                 },
             )
         }
