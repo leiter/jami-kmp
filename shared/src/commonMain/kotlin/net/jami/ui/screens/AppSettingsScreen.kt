@@ -37,6 +37,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.content.JamiSectionTitle
 import net.jami.ui.components.content.JamiToggle
@@ -66,7 +69,7 @@ fun AppSettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Settings",
+                        text = stringResource(Res.string.screen_title_app_settings),
                         style = JamiTheme.typography.titleMedium,
                     )
                 },
@@ -74,7 +77,7 @@ fun AppSettingsScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.content_desc_back),
                         )
                     }
                 },
@@ -92,11 +95,11 @@ fun AppSettingsScreen(
                 .verticalScroll(rememberScrollState()),
         ) {
             // Appearance section
-            JamiSectionTitle(title = "Appearance")
+            JamiSectionTitle(title = stringResource(Res.string.pref_category_appearance))
 
             JamiToggle(
-                label = "Dark mode",
-                description = "Use dark color theme throughout the app",
+                label = stringResource(Res.string.pref_dark_mode),
+                description = stringResource(Res.string.pref_dark_mode_description),
                 checked = state.isDarkTheme,
                 onCheckedChange = { viewModel.toggleDarkTheme() },
             )
@@ -104,18 +107,18 @@ fun AppSettingsScreen(
             HorizontalDivider()
 
             // Privacy section
-            JamiSectionTitle(title = "Privacy")
+            JamiSectionTitle(title = stringResource(Res.string.pref_category_privacy))
 
             JamiToggle(
-                label = "Typing indicators",
-                description = "Let others see when you are typing",
+                label = stringResource(Res.string.pref_typing_indicators),
+                description = stringResource(Res.string.pref_typing_indicators_description),
                 checked = state.isTypingIndicators,
                 onCheckedChange = { viewModel.toggleTypingIndicators() },
             )
 
             JamiToggle(
-                label = "Link preview",
-                description = "Show previews for links in messages",
+                label = stringResource(Res.string.pref_link_preview),
+                description = stringResource(Res.string.pref_link_preview_description),
                 checked = state.isLinkPreview,
                 onCheckedChange = { viewModel.toggleLinkPreview() },
             )
@@ -123,25 +126,25 @@ fun AppSettingsScreen(
             HorizontalDivider()
 
             // System section
-            JamiSectionTitle(title = "System")
+            JamiSectionTitle(title = stringResource(Res.string.pref_category_system))
 
             JamiToggle(
-                label = "Push notifications",
-                description = "Receive notifications for new messages and calls",
+                label = stringResource(Res.string.pref_push_notifications),
+                description = stringResource(Res.string.pref_push_notifications_description),
                 checked = state.isPushNotifications,
                 onCheckedChange = { viewModel.togglePushNotifications() },
             )
 
             JamiToggle(
-                label = "Start on boot",
-                description = "Launch Jami when the device starts",
+                label = stringResource(Res.string.pref_start_on_boot),
+                description = stringResource(Res.string.pref_start_on_boot_description),
                 checked = state.isStartOnBoot,
                 onCheckedChange = { viewModel.toggleStartOnBoot() },
             )
 
             JamiToggle(
-                label = "Run in background",
-                description = "Keep Jami running to receive calls and messages",
+                label = stringResource(Res.string.pref_run_in_background),
+                description = stringResource(Res.string.pref_run_in_background_description),
                 checked = state.isRunInBackground,
                 onCheckedChange = { viewModel.toggleRunInBackground() },
             )

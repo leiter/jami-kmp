@@ -62,6 +62,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
@@ -114,7 +117,7 @@ fun HomeScreen(
                         contentDescription = null,
                     )
                 },
-                text = { Text("New conversation") },
+                text = { Text(stringResource(Res.string.action_new_conversation)) },
                 containerColor = JamiTheme.colors.primary,
                 contentColor = JamiTheme.colors.onPrimary,
             )
@@ -158,14 +161,14 @@ fun HomeScreen(
                     // Search placeholder
                     Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
+                        contentDescription = stringResource(Res.string.placeholder_search),
                         tint = JamiTheme.colors.onSurfaceVariant,
                     )
 
                     Spacer(Modifier.width(JamiTheme.spacing.s))
 
                     Text(
-                        text = "Search conversations...",
+                        text = stringResource(Res.string.placeholder_search),
                         style = JamiTheme.typography.bodyMedium,
                         color = JamiTheme.colors.onSurfaceVariant,
                         modifier = Modifier.weight(1f),
@@ -176,7 +179,7 @@ fun HomeScreen(
                         IconButton(onClick = { menuExpanded = true }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "Menu",
+                                contentDescription = stringResource(Res.string.content_desc_menu),
                                 tint = JamiTheme.colors.onSurfaceVariant,
                             )
                         }
@@ -185,21 +188,21 @@ fun HomeScreen(
                             onDismissRequest = { menuExpanded = false },
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Account Settings") },
+                                text = { Text(stringResource(Res.string.screen_title_account_settings)) },
                                 onClick = {
                                     menuExpanded = false
                                     onSettingsClick()
                                 },
                             )
                             DropdownMenuItem(
-                                text = { Text("App Settings") },
+                                text = { Text(stringResource(Res.string.menu_app_settings)) },
                                 onClick = {
                                     menuExpanded = false
                                     onAppSettingsClick()
                                 },
                             )
                             DropdownMenuItem(
-                                text = { Text("About") },
+                                text = { Text(stringResource(Res.string.screen_title_about)) },
                                 onClick = {
                                     menuExpanded = false
                                     onAboutClick()
@@ -256,13 +259,13 @@ fun HomeScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "No conversations yet",
+                            text = stringResource(Res.string.home_no_conversation_title),
                             style = JamiTheme.typography.titleMedium,
                             color = JamiTheme.colors.onSurfaceVariant,
                         )
                         Spacer(Modifier.height(JamiTheme.spacing.s))
                         Text(
-                            text = "Start a new conversation to begin messaging",
+                            text = stringResource(Res.string.home_no_conversation_hint),
                             style = JamiTheme.typography.bodyMedium,
                             color = JamiTheme.colors.onSurfaceVariant,
                         )
@@ -303,7 +306,7 @@ fun HomeScreen(
                                     if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
                                         Icon(
                                             imageVector = Icons.Default.Delete,
-                                            contentDescription = "Delete",
+                                            contentDescription = stringResource(Res.string.ic_delete_menu),
                                             tint = JamiTheme.colors.onError,
                                         )
                                     }

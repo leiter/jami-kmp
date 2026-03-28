@@ -49,6 +49,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.theme.JamiTheme
@@ -84,7 +90,7 @@ fun CreateAccountScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Create Account",
+                        text = stringResource(Res.string.action_create_account),
                         style = JamiTheme.typography.titleMedium,
                     )
                 },
@@ -92,7 +98,7 @@ fun CreateAccountScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.content_desc_back),
                         )
                     }
                 },
@@ -116,7 +122,7 @@ fun CreateAccountScreen(
             OutlinedTextField(
                 value = state.username,
                 onValueChange = { viewModel.setUsername(it) },
-                label = { Text("Choose a username") },
+                label = { Text(stringResource(Res.string.prompt_choose_username)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -130,12 +136,12 @@ fun CreateAccountScreen(
                             )
                             state.usernameAvailable == true -> Icon(
                                 imageVector = Icons.Filled.Check,
-                                contentDescription = "Available",
+                                contentDescription = stringResource(Res.string.content_desc_available),
                                 tint = JamiTheme.colors.primary,
                             )
                             state.usernameAvailable == false -> Icon(
                                 imageVector = Icons.Filled.Close,
-                                contentDescription = "Taken",
+                                contentDescription = stringResource(Res.string.content_desc_taken),
                                 tint = JamiTheme.colors.error,
                             )
                         }
@@ -143,7 +149,7 @@ fun CreateAccountScreen(
                 },
                 supportingText = when {
                     state.usernameAvailable == false ->
-                        ({ Text("Username is already taken", color = JamiTheme.colors.error) })
+                        ({ Text(stringResource(Res.string.error_username_taken), color = JamiTheme.colors.error) })
                     state.usernameCheckError != null ->
                         ({ Text(state.usernameCheckError ?: "", color = JamiTheme.colors.error) })
                     else -> null
@@ -157,7 +163,7 @@ fun CreateAccountScreen(
             OutlinedTextField(
                 value = state.password,
                 onValueChange = { viewModel.setPassword(it) },
-                label = { Text("Password (optional)") },
+                label = { Text(stringResource(Res.string.prompt_password_optional)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
@@ -166,7 +172,7 @@ fun CreateAccountScreen(
                     imeAction = ImeAction.Next,
                 ),
                 supportingText = if (state.password.isNotEmpty() && state.password.length < 6) {
-                    { Text("Minimum 6 characters", color = JamiTheme.colors.error) }
+                    { Text(stringResource(Res.string.error_password_min_chars), color = JamiTheme.colors.error) }
                 } else null,
                 isError = state.password.isNotEmpty() && state.password.length < 6,
             )
@@ -178,7 +184,7 @@ fun CreateAccountScreen(
                 OutlinedTextField(
                     value = state.confirmPassword,
                     onValueChange = { viewModel.setConfirmPassword(it) },
-                    label = { Text("Confirm Password") },
+                    label = { Text(stringResource(Res.string.prompt_confirm_password)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
@@ -187,7 +193,7 @@ fun CreateAccountScreen(
                         imeAction = ImeAction.Done,
                     ),
                     supportingText = if (state.confirmPassword.isNotEmpty() && state.password != state.confirmPassword) {
-                        { Text("Passwords do not match", color = JamiTheme.colors.error) }
+                        { Text(stringResource(Res.string.error_passwords_mismatch), color = JamiTheme.colors.error) }
                     } else null,
                     isError = state.confirmPassword.isNotEmpty() && state.password != state.confirmPassword,
                 )
@@ -213,7 +219,7 @@ fun CreateAccountScreen(
                 && (state.password.isEmpty() || state.password.length >= 6)
                 && (state.password.isEmpty() || state.password == state.confirmPassword)
             JamiButton(
-                text = "Create Account",
+                text = stringResource(Res.string.action_create_account),
                 onClick = { viewModel.createAccount() },
                 modifier = Modifier.fillMaxWidth(),
                 loading = state.isLoading,

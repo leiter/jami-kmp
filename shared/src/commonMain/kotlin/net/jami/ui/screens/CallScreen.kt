@@ -52,6 +52,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.theme.JamiColors
 import net.jami.ui.theme.JamiTheme
@@ -123,7 +126,7 @@ fun CallScreen(
 
             // Call status
             Text(
-                text = if (state.isOnHold) "On Hold" else state.callStatus,
+                text = if (state.isOnHold) stringResource(Res.string.call_on_hold) else state.callStatus,
                 style = JamiTheme.typography.bodyLarge,
                 color = if (state.isOnHold) Color.Yellow.copy(alpha = 0.9f)
                     else Color.White.copy(alpha = 0.7f),
@@ -156,7 +159,7 @@ fun CallScreen(
             // Mute button
             CallControlButton(
                 icon = if (state.isAudioMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                contentDescription = if (state.isAudioMuted) "Unmute" else "Mute",
+                contentDescription = if (state.isAudioMuted) stringResource(Res.string.content_desc_unmute) else stringResource(Res.string.content_desc_mute),
                 isActive = state.isAudioMuted,
                 onClick = { viewModel.toggleMute() },
             )
@@ -165,7 +168,7 @@ fun CallScreen(
             CallControlButton(
                 icon = if (state.isSpeakerOn) Icons.Default.VolumeUp
                 else Icons.Default.VolumeOff,
-                contentDescription = if (state.isSpeakerOn) "Speaker off" else "Speaker on",
+                contentDescription = if (state.isSpeakerOn) stringResource(Res.string.content_desc_speaker_off) else stringResource(Res.string.content_desc_speaker_on),
                 isActive = state.isSpeakerOn,
                 onClick = { viewModel.toggleSpeaker() },
             )
@@ -174,7 +177,7 @@ fun CallScreen(
             CallControlButton(
                 icon = if (state.isVideoMuted) Icons.Default.VideocamOff
                 else Icons.Default.Videocam,
-                contentDescription = if (state.isVideoMuted) "Enable video" else "Disable video",
+                contentDescription = if (state.isVideoMuted) stringResource(Res.string.content_desc_enable_video) else stringResource(Res.string.content_desc_disable_video),
                 isActive = !state.isVideoMuted,
                 onClick = { viewModel.toggleVideo() },
             )
@@ -182,7 +185,7 @@ fun CallScreen(
             // Hold button
             CallControlButton(
                 icon = if (state.isOnHold) Icons.Default.PlayArrow else Icons.Default.Pause,
-                contentDescription = if (state.isOnHold) "Resume" else "Hold",
+                contentDescription = if (state.isOnHold) stringResource(Res.string.content_desc_resume) else stringResource(Res.string.content_desc_hold),
                 isActive = state.isOnHold,
                 onClick = { viewModel.toggleHold() },
             )
@@ -203,7 +206,7 @@ fun CallScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.CallEnd,
-                    contentDescription = "End call",
+                    contentDescription = stringResource(Res.string.content_desc_end_call),
                     modifier = Modifier.size(32.dp),
                 )
             }

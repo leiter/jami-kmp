@@ -59,6 +59,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.coroutines.launch
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
@@ -85,6 +88,8 @@ fun AccountSettingsScreen(
     var showExportDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val exportSuccessMsg = stringResource(Res.string.snackbar_export_success)
+    val exportErrorMsg = stringResource(Res.string.snackbar_export_error)
 
     LaunchedEffect(Unit) {
         viewModel.loadAccount()
@@ -99,9 +104,9 @@ fun AccountSettingsScreen(
                 val success = viewModel.exportAccount(password)
                 coroutineScope.launch {
                     if (success) {
-                        snackbarHostState.showSnackbar("Account exported successfully")
+                        snackbarHostState.showSnackbar(exportSuccessMsg)
                     } else {
-                        snackbarHostState.showSnackbar("Export failed. Check password and try again.")
+                        snackbarHostState.showSnackbar(exportErrorMsg)
                     }
                 }
             },
@@ -113,7 +118,7 @@ fun AccountSettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Account Settings",
+                        text = stringResource(Res.string.screen_title_account_settings),
                         style = JamiTheme.typography.titleMedium,
                     )
                 },
@@ -121,7 +126,7 @@ fun AccountSettingsScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.content_desc_back),
                         )
                     }
                 },
@@ -193,11 +198,11 @@ fun AccountSettingsScreen(
             HorizontalDivider()
 
             // Devices section
-            JamiSectionTitle(title = "Linked Devices")
+            JamiSectionTitle(title = stringResource(Res.string.section_linked_devices))
 
             if (state.devices.isEmpty()) {
                 Text(
-                    text = "No linked devices",
+                    text = stringResource(Res.string.empty_linked_devices),
                     style = JamiTheme.typography.bodyMedium,
                     color = JamiTheme.colors.onSurfaceVariant,
                     modifier = Modifier.padding(
@@ -217,32 +222,32 @@ fun AccountSettingsScreen(
             JamiSectionTitle(title = "Settings")
 
             SettingsLinkRow(
-                label = "Export Account",
+                label = stringResource(Res.string.dialog_export_title),
                 onClick = { showExportDialog = true },
             )
 
             SettingsLinkRow(
-                label = "Blocked Contacts",
+                label = stringResource(Res.string.screen_title_blocked_contacts),
                 onClick = onBlockedContacts,
             )
 
             SettingsLinkRow(
-                label = "Account",
+                label = stringResource(Res.string.pref_category_account),
                 onClick = { /* Navigate to account sub-settings */ },
             )
 
             SettingsLinkRow(
-                label = "Media",
+                label = stringResource(Res.string.pref_category_media),
                 onClick = { /* Navigate to media settings */ },
             )
 
             SettingsLinkRow(
-                label = "Messages",
+                label = stringResource(Res.string.pref_category_messages),
                 onClick = { /* Navigate to message settings */ },
             )
 
             SettingsLinkRow(
-                label = "Advanced",
+                label = stringResource(Res.string.pref_category_advanced),
                 onClick = { /* Navigate to advanced settings */ },
             )
 
@@ -263,18 +268,18 @@ private fun ExportAccountDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Export Account") },
+        title = { Text(stringResource(Res.string.dialog_export_title)) },
         text = {
             Column {
                 Text(
-                    text = "Enter your account password to create an encrypted backup.",
+                    text = stringResource(Res.string.dialog_export_message),
                     style = JamiTheme.typography.bodyMedium,
                 )
                 Spacer(Modifier.height(JamiTheme.spacing.m))
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password") },
+                    label = { Text(stringResource(Res.string.prompt_password)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
@@ -286,12 +291,12 @@ private fun ExportAccountDialog(
         },
         confirmButton = {
             TextButton(onClick = { onExport(password) }) {
-                Text("Export")
+                Text(stringResource(Res.string.action_export))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(Res.string.action_cancel))
             }
         },
     )
@@ -326,7 +331,7 @@ private fun DeviceListItem(device: DeviceItem) {
                 color = JamiTheme.colors.onSurface,
             )
             Text(
-                text = if (device.isCurrent) "This device" else device.deviceId,
+                text = if (device.isCurrent) stringResource(Res.string.account_this_device) else device.deviceId,
                 style = JamiTheme.typography.bodySmall,
                 color = JamiTheme.colors.onSurfaceVariant,
                 maxLines = 1,

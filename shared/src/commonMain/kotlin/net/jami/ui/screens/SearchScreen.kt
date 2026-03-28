@@ -49,6 +49,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.coroutines.launch
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.model.Contact
 import net.jami.ui.components.actions.JamiFilterChip
@@ -85,7 +88,7 @@ fun SearchScreen(
                     OutlinedTextField(
                         value = state.searchQuery,
                         onValueChange = { viewModel.search(it) },
-                        placeholder = { Text("Search...") },
+                        placeholder = { Text(stringResource(Res.string.placeholder_search)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -94,7 +97,7 @@ fun SearchScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.content_desc_back),
                         )
                     }
                 },
@@ -122,14 +125,14 @@ fun SearchScreen(
             ) {
                 item {
                     JamiFilterChip(
-                        text = "QR Code",
+                        text = stringResource(Res.string.action_qr_code),
                         onClick = { /* QR scanner */ },
                         leadingIcon = Icons.Default.QrCodeScanner,
                     )
                 }
                 item {
                     JamiFilterChip(
-                        text = "New Group",
+                        text = stringResource(Res.string.action_new_group),
                         onClick = { /* New group */ },
                         leadingIcon = Icons.Default.Groups,
                     )

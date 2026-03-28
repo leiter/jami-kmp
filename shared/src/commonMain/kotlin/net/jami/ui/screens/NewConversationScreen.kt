@@ -48,6 +48,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.coroutines.launch
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.components.content.AvatarSize
@@ -80,7 +83,7 @@ fun NewConversationScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "New Conversation",
+                        text = stringResource(Res.string.screen_title_new_conversation),
                         style = JamiTheme.typography.titleMedium,
                     )
                 },
@@ -88,7 +91,7 @@ fun NewConversationScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.content_desc_back),
                         )
                     }
                 },
@@ -108,7 +111,7 @@ fun NewConversationScreen(
             OutlinedTextField(
                 value = state.searchQuery,
                 onValueChange = { viewModel.search(it) },
-                placeholder = { Text("Search contacts or Jami ID...") },
+                placeholder = { Text(stringResource(Res.string.placeholder_search_contacts)) },
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -120,7 +123,7 @@ fun NewConversationScreen(
 
             // Group toggle
             JamiToggle(
-                label = "Create group conversation",
+                label = stringResource(Res.string.toggle_create_group),
                 checked = state.isGroup,
                 onCheckedChange = { /* Toggle group mode via viewModel if needed */ },
             )
@@ -152,7 +155,7 @@ fun NewConversationScreen(
 
             // Create button
             JamiButton(
-                text = "Create",
+                text = stringResource(Res.string.action_create),
                 onClick = {
                     coroutineScope.launch {
                         val conversationId = viewModel.createConversation()

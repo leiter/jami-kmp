@@ -37,6 +37,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.AboutViewModel
@@ -62,7 +65,7 @@ fun AboutScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "About",
+                        text = stringResource(Res.string.screen_title_about),
                         style = JamiTheme.typography.titleMedium,
                     )
                 },
@@ -70,7 +73,7 @@ fun AboutScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.content_desc_back),
                         )
                     }
                 },
@@ -91,7 +94,7 @@ fun AboutScreen(
         ) {
             // Jami text logo
             Text(
-                text = "Jami",
+                text = stringResource(Res.string.app_name),
                 style = JamiTheme.typography.headlineLarge,
                 color = JamiTheme.colors.primary,
             )
@@ -100,7 +103,7 @@ fun AboutScreen(
 
             // Version
             Text(
-                text = "Version ${state.version}",
+                text = stringResource(Res.string.about_version, state.version),
                 style = JamiTheme.typography.bodyMedium,
                 color = JamiTheme.colors.onSurfaceVariant,
             )
@@ -129,7 +132,7 @@ fun AboutScreen(
 
             // License
             Text(
-                text = "Licensed under the GNU General Public License v3.0",
+                text = stringResource(Res.string.about_license),
                 style = JamiTheme.typography.bodySmall,
                 color = JamiTheme.colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,

@@ -44,6 +44,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.theme.JamiTheme
@@ -69,13 +72,13 @@ fun ProfileSetupScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Set Up Profile",
+                        text = stringResource(Res.string.screen_title_profile_setup),
                         style = JamiTheme.typography.titleMedium,
                     )
                 },
                 actions = {
                     TextButton(onClick = onSkip) {
-                        Text("Skip", color = JamiTheme.colors.primary)
+                        Text(stringResource(Res.string.action_continue), color = JamiTheme.colors.primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -98,7 +101,7 @@ fun ProfileSetupScreen(
             // Avatar placeholder
             Icon(
                 imageVector = Icons.Default.Person,
-                contentDescription = "Profile photo",
+                contentDescription = stringResource(Res.string.content_desc_profile_photo),
                 modifier = Modifier.size(96.dp),
                 tint = JamiTheme.colors.onSurfaceVariant,
             )
@@ -106,7 +109,7 @@ fun ProfileSetupScreen(
             Spacer(Modifier.height(JamiTheme.spacing.m))
 
             Text(
-                text = "Add a profile photo",
+                text = stringResource(Res.string.prompt_add_profile_photo),
                 style = JamiTheme.typography.bodyMedium,
                 color = JamiTheme.colors.onSurfaceVariant,
             )
@@ -117,7 +120,7 @@ fun ProfileSetupScreen(
             OutlinedTextField(
                 value = state.displayName,
                 onValueChange = { viewModel.setDisplayName(it) },
-                label = { Text("Display name") },
+                label = { Text(stringResource(Res.string.prompt_display_name)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -137,7 +140,7 @@ fun ProfileSetupScreen(
 
             val canSave = !state.isLoading
             JamiButton(
-                text = "Continue",
+                text = stringResource(Res.string.action_continue),
                 onClick = { viewModel.saveProfile() },
                 modifier = Modifier.fillMaxWidth(),
                 loading = state.isLoading,

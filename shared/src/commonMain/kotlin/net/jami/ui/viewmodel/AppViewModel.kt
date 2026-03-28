@@ -49,9 +49,14 @@ class AppViewModel(
         scope.launch {
             accountService.loadAccounts()
             accountService.accounts.collect { accountList ->
+                val current = _appState.value
                 _appState.value = when {
-                    accountList.isEmpty() && !onboardingInProgress -> AppState.NoAccounts
                     onboardingInProgress -> AppState.Onboarding
+                    // Once HasAccounts, don't regress to NoAccounts from a transient
+                    // empty list (the daemon may briefly report 0 accounts during
+                    // import/migration). Only explicit removal should go back.
+                    accountList.isEmpty() && current is AppState.HasAccounts -> current
+                    accountList.isEmpty() -> AppState.NoAccounts
                     accountList.any { it.needsMigration } ->
                         AppState.HasAccounts(needsMigration = true)
                     else -> AppState.HasAccounts()

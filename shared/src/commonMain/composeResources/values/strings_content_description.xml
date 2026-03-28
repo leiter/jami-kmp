@@ -1,0 +1,16 @@
+<resources>
+
+    <!-- Strings for xml content description of images -->
+    <string name="contact_quick_call_description">Quick call</string>
+    <string name="contact_picture_description">Contact picture</string>
+    <string name="dial_numeric_pad">Numeric dialpad</string>
+    <string name="contact_unblock">Unblock</string>
+    <string name="video_extensions">Video extensions</string>
+    <string name="file_download_button">Download</string>
+    <string name="control_play">Play</string>
+    <string name="control_replay">Replay</string>
+    <string name="control_pause">Pause</string>
+    <string name="searchbar_navigation_account">Select account</string>
+    <string name="add_conversation_member">Add conversation member</string>
+    <string name="qrcode_to_scan">QR code to scan</string>
+</resources>

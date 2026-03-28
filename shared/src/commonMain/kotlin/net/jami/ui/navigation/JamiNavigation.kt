@@ -143,8 +143,8 @@ private fun OnboardingNavigation(appViewModel: AppViewModel) {
             ImportAccountScreen(
                 onBack = { navController.popBackStack() },
                 onImported = {
-                    // No-op: AppViewModel reactively switches to HasAccounts
-                    // when AccountService.accounts updates after import
+                    // Trigger AppViewModel to re-evaluate state with current accounts
+                    appViewModel.finishOnboarding()
                 },
             )
         }

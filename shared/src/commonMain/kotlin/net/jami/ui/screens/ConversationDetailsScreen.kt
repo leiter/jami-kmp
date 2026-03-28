@@ -48,6 +48,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.components.actions.JamiButtonStyle
@@ -90,7 +93,7 @@ fun ConversationDetailsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Details",
+                        text = stringResource(Res.string.screen_title_details),
                         style = JamiTheme.typography.titleMedium,
                     )
                 },
@@ -98,7 +101,7 @@ fun ConversationDetailsScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.content_desc_back),
                         )
                     }
                 },
@@ -171,11 +174,11 @@ fun ConversationDetailsScreen(
                     JamiIconButton(
                         icon = Icons.Default.Call,
                         onClick = { /* Place audio call */ },
-                        contentDescription = "Audio call",
+                        contentDescription = stringResource(Res.string.content_desc_audio_call),
                         tint = JamiTheme.colors.primary,
                     )
                     Text(
-                        text = "Audio",
+                        text = stringResource(Res.string.action_audio),
                         style = JamiTheme.typography.labelSmall,
                         color = JamiTheme.colors.onSurfaceVariant,
                     )
@@ -186,11 +189,11 @@ fun ConversationDetailsScreen(
                     JamiIconButton(
                         icon = Icons.Default.Videocam,
                         onClick = { /* Place video call */ },
-                        contentDescription = "Video call",
+                        contentDescription = stringResource(Res.string.content_desc_video_call),
                         tint = JamiTheme.colors.primary,
                     )
                     Text(
-                        text = "Video",
+                        text = stringResource(Res.string.action_video),
                         style = JamiTheme.typography.labelSmall,
                         color = JamiTheme.colors.onSurfaceVariant,
                     )
@@ -201,11 +204,11 @@ fun ConversationDetailsScreen(
                     JamiIconButton(
                         icon = Icons.Default.Block,
                         onClick = { viewModel.blockContact() },
-                        contentDescription = if (state.isBlocked) "Unblock" else "Block",
+                        contentDescription = if (state.isBlocked) stringResource(Res.string.action_unblock) else stringResource(Res.string.action_block),
                         tint = JamiTheme.colors.warning,
                     )
                     Text(
-                        text = if (state.isBlocked) "Unblock" else "Block",
+                        text = if (state.isBlocked) stringResource(Res.string.action_unblock) else stringResource(Res.string.action_block),
                         style = JamiTheme.typography.labelSmall,
                         color = JamiTheme.colors.onSurfaceVariant,
                     )
@@ -216,11 +219,11 @@ fun ConversationDetailsScreen(
                     JamiIconButton(
                         icon = Icons.Default.Delete,
                         onClick = { viewModel.removeContact() },
-                        contentDescription = "Delete",
+                        contentDescription = stringResource(Res.string.ic_delete_menu),
                         tint = JamiTheme.colors.error,
                     )
                     Text(
-                        text = "Delete",
+                        text = stringResource(Res.string.ic_delete_menu),
                         style = JamiTheme.typography.labelSmall,
                         color = JamiTheme.colors.onSurfaceVariant,
                     )
@@ -235,7 +238,7 @@ fun ConversationDetailsScreen(
 
             if (state.displayName.isEmpty() && !state.isLoading) {
                 Text(
-                    text = "No members to display",
+                    text = stringResource(Res.string.empty_members),
                     style = JamiTheme.typography.bodyMedium,
                     color = JamiTheme.colors.onSurfaceVariant,
                     modifier = Modifier.padding(

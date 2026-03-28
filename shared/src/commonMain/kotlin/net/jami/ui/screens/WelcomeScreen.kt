@@ -29,6 +29,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.components.actions.JamiButtonStyle
 import net.jami.ui.theme.JamiTheme
@@ -56,7 +59,7 @@ fun WelcomeScreen(
     ) {
         // Jami logo text
         Text(
-            text = "Jami",
+            text = stringResource(Res.string.app_name),
             style = JamiTheme.typography.headlineLarge,
             color = JamiTheme.colors.primary,
         )
@@ -65,8 +68,7 @@ fun WelcomeScreen(
 
         // Description text
         Text(
-            text = "Free and universal communication platform\n" +
-                "that respects the freedom and privacy of its users.",
+            text = stringResource(Res.string.welcome_text),
             style = JamiTheme.typography.bodyLarge,
             color = JamiTheme.colors.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -76,7 +78,7 @@ fun WelcomeScreen(
 
         // Create Account button
         JamiButton(
-            text = "Create Account",
+            text = stringResource(Res.string.action_create_account),
             onClick = onCreateAccount,
             modifier = Modifier.fillMaxWidth(),
             style = JamiButtonStyle.Primary,
@@ -86,7 +88,7 @@ fun WelcomeScreen(
 
         // Import Account button
         JamiButton(
-            text = "Import Account",
+            text = stringResource(Res.string.action_import_account),
             onClick = onImportAccount,
             modifier = Modifier.fillMaxWidth(),
             style = JamiButtonStyle.Secondary,

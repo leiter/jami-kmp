@@ -33,6 +33,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.theme.JamiTheme
 
@@ -46,7 +49,7 @@ fun AccountSummaryScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Account Created",
+                        text = stringResource(Res.string.screen_title_account_created),
                         style = JamiTheme.typography.titleMedium,
                     )
                 },
@@ -66,7 +69,7 @@ fun AccountSummaryScreen(
             Spacer(Modifier.height(JamiTheme.spacing.xl))
 
             Text(
-                text = "Your Jami account is ready!",
+                text = stringResource(Res.string.account_ready_title),
                 style = JamiTheme.typography.headlineSmall,
                 color = JamiTheme.colors.onSurface,
             )
@@ -83,7 +86,7 @@ fun AccountSummaryScreen(
                     modifier = Modifier.padding(JamiTheme.spacing.l),
                 ) {
                     Text(
-                        text = "Account Information",
+                        text = stringResource(Res.string.account_info_title),
                         style = JamiTheme.typography.titleSmall,
                         color = JamiTheme.colors.onSurface,
                     )
@@ -91,8 +94,7 @@ fun AccountSummaryScreen(
                     Spacer(Modifier.height(JamiTheme.spacing.m))
 
                     Text(
-                        text = "Your account has been created and is ready to use. " +
-                            "You can share your Jami ID with others so they can contact you.",
+                        text = stringResource(Res.string.account_ready_description),
                         style = JamiTheme.typography.bodyMedium,
                         color = JamiTheme.colors.onSurfaceVariant,
                     )
@@ -100,7 +102,7 @@ fun AccountSummaryScreen(
                     Spacer(Modifier.height(JamiTheme.spacing.m))
 
                     Text(
-                        text = "Consider backing up your account to avoid losing access to it.",
+                        text = stringResource(Res.string.account_backup_reminder),
                         style = JamiTheme.typography.bodySmall,
                         color = JamiTheme.colors.onSurfaceVariant,
                     )
@@ -110,7 +112,7 @@ fun AccountSummaryScreen(
             Spacer(Modifier.height(JamiTheme.spacing.xl))
 
             JamiButton(
-                text = "Continue to Jami",
+                text = stringResource(Res.string.action_continue_to_jami),
                 onClick = onContinue,
                 modifier = Modifier.fillMaxWidth(),
             )

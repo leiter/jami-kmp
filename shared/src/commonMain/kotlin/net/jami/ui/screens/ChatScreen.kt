@@ -69,6 +69,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
@@ -136,7 +139,7 @@ fun ChatScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.content_desc_back),
                         )
                     }
                 },
@@ -147,7 +150,7 @@ fun ChatScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Call,
-                            contentDescription = "Audio call",
+                            contentDescription = stringResource(Res.string.content_desc_audio_call),
                             tint = JamiTheme.colors.onSurface,
                         )
                     }
@@ -157,7 +160,7 @@ fun ChatScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Videocam,
-                            contentDescription = "Video call",
+                            contentDescription = stringResource(Res.string.content_desc_video_call),
                             tint = JamiTheme.colors.onSurface,
                         )
                     }
@@ -202,7 +205,7 @@ fun ChatScreen(
             // Typing indicator
             if (state.isContactTyping) {
                 Text(
-                    text = "typing...",
+                    text = stringResource(Res.string.conversation_typing),
                     style = JamiTheme.typography.labelSmall,
                     color = JamiTheme.colors.onSurfaceVariant,
                     modifier = Modifier.padding(
@@ -293,7 +296,7 @@ private fun ChatBubble(
                 onDismissRequest = { showMenu = false },
             ) {
                 DropdownMenuItem(
-                    text = { Text("Copy") },
+                    text = { Text(stringResource(Res.string.menu_item_copy)) },
                     onClick = {
                         clipboardManager.setText(AnnotatedString(message.text))
                         showMenu = false
@@ -301,7 +304,7 @@ private fun ChatBubble(
                 )
                 if (isOutgoing) {
                     DropdownMenuItem(
-                        text = { Text("Edit") },
+                        text = { Text(stringResource(Res.string.menu_item_edit)) },
                         onClick = {
                             showMenu = false
                             // For now, re-send the message text as an edit.
@@ -311,7 +314,7 @@ private fun ChatBubble(
                     )
                 }
                 DropdownMenuItem(
-                    text = { Text("Delete") },
+                    text = { Text(stringResource(Res.string.ic_delete_menu)) },
                     onClick = {
                         showMenu = false
                         onDelete()
@@ -368,7 +371,7 @@ private fun MessageInputBar(
             OutlinedTextField(
                 value = value,
                 onValueChange = onValueChange,
-                placeholder = { Text("Message") },
+                placeholder = { Text(stringResource(Res.string.conversation_type_message)) },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(JamiTheme.radius.xl),
                 maxLines = 4,
@@ -384,7 +387,7 @@ private fun MessageInputBar(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Send",
+                    contentDescription = stringResource(Res.string.content_desc_send),
                     tint = if (value.isNotBlank()) JamiTheme.colors.primary
                     else JamiTheme.colors.onDisabled,
                 )

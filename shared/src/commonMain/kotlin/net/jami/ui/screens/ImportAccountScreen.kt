@@ -50,6 +50,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.platform.FilePickerEffect
@@ -99,7 +102,7 @@ fun ImportAccountScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Import Account",
+                        text = stringResource(Res.string.action_import_account),
                         style = JamiTheme.typography.titleMedium,
                     )
                 },
@@ -107,7 +110,7 @@ fun ImportAccountScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.content_desc_back),
                         )
                     }
                 },
@@ -135,8 +138,8 @@ fun ImportAccountScreen(
                 OutlinedTextField(
                     value = state.archivePath,
                     onValueChange = { viewModel.setArchivePath(it) },
-                    label = { Text("Archive file path") },
-                    placeholder = { Text("/path/to/backup.gz") },
+                    label = { Text(stringResource(Res.string.prompt_archive_path)) },
+                    placeholder = { Text(stringResource(Res.string.placeholder_archive_path)) },
                     singleLine = true,
                     readOnly = true,
                     modifier = Modifier.weight(1f),
@@ -148,7 +151,7 @@ fun ImportAccountScreen(
                 OutlinedButton(
                     onClick = { showFilePicker = true },
                 ) {
-                    Text("Browse")
+                    Text(stringResource(Res.string.action_browse))
                 }
             }
 
@@ -158,7 +161,7 @@ fun ImportAccountScreen(
             OutlinedTextField(
                 value = state.password,
                 onValueChange = { viewModel.setPassword(it) },
-                label = { Text("Password") },
+                label = { Text(stringResource(Res.string.prompt_password)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
@@ -182,7 +185,7 @@ fun ImportAccountScreen(
 
             // Import button
             JamiButton(
-                text = "Import Account",
+                text = stringResource(Res.string.action_import_account),
                 onClick = { viewModel.importAccount() },
                 modifier = Modifier.fillMaxWidth(),
                 loading = state.isLoading,

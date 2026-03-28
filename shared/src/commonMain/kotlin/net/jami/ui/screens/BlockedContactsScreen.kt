@@ -42,6 +42,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.components.actions.JamiButtonStyle
@@ -83,7 +86,7 @@ fun BlockedContactsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Blocked Contacts",
+                        text = stringResource(Res.string.screen_title_blocked_contacts),
                         style = JamiTheme.typography.titleMedium,
                     )
                 },
@@ -91,7 +94,7 @@ fun BlockedContactsScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.content_desc_back),
                         )
                     }
                 },
@@ -111,7 +114,7 @@ fun BlockedContactsScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "No blocked contacts",
+                    text = stringResource(Res.string.empty_blocked_contacts),
                     style = JamiTheme.typography.bodyLarge,
                     color = JamiTheme.colors.onSurfaceVariant,
                 )
@@ -180,7 +183,7 @@ private fun BlockedContactItem(
         }
 
         JamiButton(
-            text = "Unblock",
+            text = stringResource(Res.string.action_unblock),
             onClick = onUnblock,
             style = JamiButtonStyle.Secondary,
         )
