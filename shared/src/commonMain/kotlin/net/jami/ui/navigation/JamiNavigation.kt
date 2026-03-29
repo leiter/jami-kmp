@@ -195,6 +195,23 @@ private fun MainNavigation(needsMigration: Boolean) {
                 onConversationClick = { id ->
                     navController.navigate(Screen.Chat.createRoute(id))
                 },
+                onQrScanClick = {
+                    navController.navigate(Screen.QrScan.route)
+                },
+                onNewGroupClick = {
+                    navController.navigate(Screen.NewConversation.route)
+                },
+            )
+        }
+
+        composable(Screen.QrScan.route) {
+            QrScanScreen(
+                onBack = { navController.popBackStack() },
+                onConversationClick = { id ->
+                    navController.navigate(Screen.Chat.createRoute(id)) {
+                        popUpTo(Screen.Home.route)
+                    }
+                },
             )
         }
 

@@ -61,4 +61,5 @@ sealed class Screen(val route: String) {
     data object AppSettings : Screen("app_settings")
     data object About : Screen("about")
     data object BlockedContacts : Screen("blocked_contacts")
+    data object QrScan : Screen("qr_scan")
 }

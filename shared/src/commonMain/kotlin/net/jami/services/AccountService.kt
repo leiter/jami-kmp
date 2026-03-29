@@ -784,6 +784,14 @@ class AccountService(
         query: String = ""
     ) {
         Log.d(TAG, "onRegisteredNameFound: query=$query name=$name address=$address state=$state")
+        // state 0 = success: update the cached contact's username so the UI shows the registered name
+        if (state == 0 && name.isNotEmpty() && address.isNotEmpty()) {
+            getAccount(accountId)?.getContactFromCache(Uri.fromString(address))?.let { contact ->
+                if (contact.username.isNullOrEmpty()) {
+                    contact.username = name
+                }
+            }
+        }
         scope.launch {
             _accountEvents.emit(AccountEvent.RegisteredNameFound(accountId, state, address, name, query))
         }

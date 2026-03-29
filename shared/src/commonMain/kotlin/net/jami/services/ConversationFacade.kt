@@ -40,6 +40,7 @@ import net.jami.model.Conference
 import net.jami.model.Contact
 import net.jami.model.ContactViewModel
 import net.jami.model.Conversation
+import net.jami.model.MemberRole
 import net.jami.model.DataTransfer
 import net.jami.model.Interaction
 import net.jami.model.Media
@@ -571,10 +572,11 @@ class ConversationFacade(
                     val members = daemonBridge.getConversationMembers(account.accountId, convId)
                     for (member in members) {
                         val memberUri = member["uri"] ?: continue
-                        if (conversation.findContact(Uri.fromString(memberUri)) == null) {
-                            val contact = Contact(Uri.fromString(memberUri))
-                            contact.username = member["uri"]
-                            conversation.addContact(contact)
+                        val memberUriParsed = Uri.fromString(memberUri)
+                        if (conversation.findContact(memberUriParsed) == null) {
+                            val contact = account.getContactFromCache(memberUriParsed)
+                            val role = MemberRole.fromString(member["role"] ?: "")
+                            conversation.addContact(contact, role)
                         }
                     }
 
@@ -586,10 +588,13 @@ class ConversationFacade(
 
                     account.conversationStarted(conversation)
 
-                    // Subscribe to presence for each contact
+                    // Subscribe to presence and resolve registered names for each contact
                     for (contact in conversation.contacts) {
                         if (!contact.isUser) {
                             contactService.subscribeBuddy(account.accountId, contact.uri, true)
+                            if (contact.username.isNullOrEmpty()) {
+                                accountService.lookupAddress(account.accountId, contact.uri.rawRingId)
+                            }
                         }
                     }
                 } catch (e: Exception) {
@@ -855,10 +860,11 @@ class ConversationFacade(
                 val members = daemonBridge.getConversationMembers(accountId, conversationId)
                 for (member in members) {
                     val memberUri = member["uri"] ?: continue
-                    if (conversation.findContact(Uri.fromString(memberUri)) == null) {
-                        val contact = Contact(Uri.fromString(memberUri))
-                        contact.username = member["uri"]
-                        conversation.addContact(contact)
+                    val memberUriParsed = Uri.fromString(memberUri)
+                    if (conversation.findContact(memberUriParsed) == null) {
+                        val contact = account.getContactFromCache(memberUriParsed)
+                        val role = MemberRole.fromString(member["role"] ?: "")
+                        conversation.addContact(contact, role)
                     }
                 }
 
@@ -941,10 +947,11 @@ class ConversationFacade(
                 // Rebuild contact list from daemon member data
                 for (member in members) {
                     val memberUri = member["uri"] ?: continue
-                    if (conversation.findContact(Uri.fromString(memberUri)) == null) {
-                        val contact = Contact(Uri.fromString(memberUri))
-                        contact.username = member["uri"]
-                        conversation.addContact(contact)
+                    val memberUriParsed = Uri.fromString(memberUri)
+                    if (conversation.findContact(memberUriParsed) == null) {
+                        val contact = account.getContactFromCache(memberUriParsed)
+                        val role = MemberRole.fromString(member["role"] ?: "")
+                        conversation.addContact(contact, role)
                     }
                 }
             } catch (e: Exception) {

@@ -170,6 +170,18 @@ class Account(
     }
 
     /**
+     * Get or create a Contact from the account's contact cache.
+     * Sets isUser=true when the URI matches the account's own ring ID.
+     * Mirrors Android's Account.getContactFromCache().
+     */
+    fun getContactFromCache(uri: Uri): Contact =
+        synchronized(contacts) {
+            contacts.getOrPut(uri.uri) {
+                Contact(uri, username == uri.rawRingId)
+            }
+        }
+
+    /**
      * Get conversation by URI
      */
     fun getByUri(uri: Uri?): Conversation? {

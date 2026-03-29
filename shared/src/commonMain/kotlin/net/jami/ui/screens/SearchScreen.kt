@@ -80,6 +80,8 @@ import net.jami.ui.viewmodel.NewConversationViewModel
 fun SearchScreen(
     onBack: () -> Unit,
     onConversationClick: (String) -> Unit,
+    onQrScanClick: () -> Unit = {},
+    onNewGroupClick: () -> Unit = {},
 ) {
     val viewModel = getViewModel<NewConversationViewModel>()
     val state by viewModel.state.collectAsState()
@@ -130,14 +132,14 @@ fun SearchScreen(
                 item {
                     JamiFilterChip(
                         text = stringResource(Res.string.action_qr_code),
-                        onClick = { /* QR scanner */ },
+                        onClick = onQrScanClick,
                         leadingIcon = Icons.Default.QrCodeScanner,
                     )
                 }
                 item {
                     JamiFilterChip(
                         text = stringResource(Res.string.action_new_group),
-                        onClick = { /* New group */ },
+                        onClick = onNewGroupClick,
                         leadingIcon = Icons.Default.Groups,
                     )
                 }

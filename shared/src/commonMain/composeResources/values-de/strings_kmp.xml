@@ -59,6 +59,8 @@
     <string name="placeholder_search">Suchen oder hinzufügen</string>
     <string name="action_qr_code">QR-Code</string>
     <string name="action_new_group">Neue Gruppe</string>
+    <string name="screen_title_qr_scan">QR-Code scannen</string>
+    <string name="qr_scan_manual_hint">Oder Jami-ID einfügen</string>
 
     <!-- Details -->
     <string name="screen_title_details">Details</string>

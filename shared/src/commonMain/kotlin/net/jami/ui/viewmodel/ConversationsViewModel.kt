@@ -103,6 +103,15 @@ class ConversationsViewModel(
             }
         }
 
+        // Registered name resolved for a contact — refresh to show username instead of ring ID.
+        scope.launch {
+            accountService.accountEvents.collect { event ->
+                if (event is AccountEvent.RegisteredNameFound && event.state == 0 && event.name.isNotEmpty()) {
+                    loadConversations()
+                }
+            }
+        }
+
         // Own account profile received from another device.
         // Fast path: decode base64 photo from the event payload.
         // Slow path: reload conversations (reads updated profile.vcf the daemon wrote to disk).
