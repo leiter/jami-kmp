@@ -18,8 +18,10 @@ package net.jami.ui.viewmodel
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,19 +32,23 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import net.jami.model.Contact
+import net.jami.model.TextMessage
 import net.jami.model.Uri
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.services.ContactService
 import net.jami.services.ConversationEvent
 import net.jami.services.ConversationFacade
+import net.jami.services.DeviceRuntimeService
+import net.jami.utils.VCardUtils
 
 /**
  * State for the new conversation creation screen.
  */
 data class NewConversationState(
     val searchQuery: String = "",
-    val searchResults: List<ContactItem> = emptyList(),
+    val publicDirectoryResults: List<ContactItem> = emptyList(),
+    val conversationResults: List<ConversationItem> = emptyList(),
     val selectedContacts: List<ContactItem> = emptyList(),
     val isGroup: Boolean = false,
     val groupName: String = "",
@@ -60,24 +66,22 @@ class NewConversationViewModel(
     private val contactService: ContactService,
     private val conversationFacade: ConversationFacade,
     private val accountService: AccountService,
+    private val deviceRuntimeService: DeviceRuntimeService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     private val scope = scope
+    private var searchJob: Job? = null
 
     private val _state = MutableStateFlow(NewConversationState())
     val state: StateFlow<NewConversationState> = _state.asStateFlow()
 
     init {
-        // Observe name lookup results for search
+        // Observe name lookup results for public directory search
         scope.launch {
             accountService.accountEvents.collect { event ->
                 when (event) {
-                    is AccountEvent.RegisteredNameFound -> {
-                        handleNameFound(event)
-                    }
-                    is AccountEvent.UserSearchEnded -> {
-                        handleSearchResults(event)
-                    }
+                    is AccountEvent.RegisteredNameFound -> handleNameFound(event)
+                    is AccountEvent.UserSearchEnded -> handleSearchResults(event)
                     else -> { /* Other events */ }
                 }
             }
@@ -85,65 +89,109 @@ class NewConversationViewModel(
     }
 
     /**
-     * Search for contacts or Jami IDs.
+     * Search for contacts, conversations, or Jami IDs with 300ms debounce.
      *
      * @param query Search string (username, display name, or Jami ID hash).
      */
     fun search(query: String) {
-        _state.value = _state.value.copy(searchQuery = query)
-
-        if (query.isEmpty()) {
-            _state.value = _state.value.copy(searchResults = emptyList())
-            return
-        }
-
-        scope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            val account = accountService.currentAccount.value ?: return@launch
-
-            // Search locally in cached contacts
-            val cachedContacts = contactService.getCachedContacts(account.accountId)
-            val lowerQuery = query.lowercase()
-            val localResults = cachedContacts
-                .filter { contact ->
-                    contact.displayUsername.lowercase().contains(lowerQuery) ||
-                        contact.uri.uri.lowercase().contains(lowerQuery)
-                }
-                .map { contact ->
-                    ContactItem(
-                        uri = contact.uri.uri,
-                        displayName = contact.displayUsername,
-                        username = contact.username ?: "",
-                        presenceStatus = contact.presenceStatus.value,
-                        avatarUri = null
-                    )
-                }
-
-            _state.value = _state.value.copy(searchResults = localResults)
-
-            // Also search the name server for remote results
-            accountService.searchUser(account.accountId, query)
+        _state.value = _state.value.copy(
+            searchQuery = query,
+            publicDirectoryResults = emptyList(),
+            conversationResults = emptyList(),
+        )
+        if (query.isEmpty()) return
+        searchJob?.cancel()
+        searchJob = scope.launch {
+            delay(300)
+            performSearch(query)
         }
     }
 
     /**
+     * Perform the actual search: filter conversations locally and route public directory lookup.
+     */
+    private suspend fun performSearch(query: String) {
+        val account = accountService.currentAccount.value ?: return
+        val accountId = account.accountId
+        val filesDir = deviceRuntimeService.getDataPath()
+        val lowerQuery = query.lowercase()
+
+        // Filter existing conversations by query
+        val convResults = account.getConversations().mapNotNull { conversation ->
+            val contact = conversation.contact
+            val displayName = conversation.profileFlow.value.displayName?.takeIf { it.isNotBlank() }
+                ?: contact?.displayUsername
+                ?: conversation.uri.rawRingId
+            if (!displayName.lowercase().contains(lowerQuery)) return@mapNotNull null
+
+            val lastEvent = conversation.lastEvent
+            val lastMessage = if (lastEvent is TextMessage) lastEvent.body ?: "" else ""
+            val timestamp = lastEvent?.timestamp ?: 0L
+            val avatarBytes = contact?.let { c ->
+                VCardUtils.loadPeerProfileFromDisk(filesDir, accountId, c.uri.rawRingId)
+            }
+
+            ConversationItem(
+                id = conversation.uri.rawRingId,
+                displayName = displayName,
+                lastMessage = lastMessage,
+                timestamp = timestamp,
+                unreadCount = 0,
+                avatarBytes = avatarBytes,
+                isOnline = contact?.isOnline == true
+            )
+        }
+        _state.value = _state.value.copy(conversationResults = convResults)
+
+        // Route public directory lookup: hex ID / username@server / plain name
+        _state.value = _state.value.copy(isLoading = true)
+        when {
+            isJamiId(query) -> {
+                // Show immediately as a tappable result; also resolve username via nameserver
+                _state.value = _state.value.copy(
+                    publicDirectoryResults = listOf(
+                        ContactItem(
+                            uri = query,
+                            displayName = query,
+                            username = "",
+                            presenceStatus = Contact.PresenceStatus.OFFLINE,
+                            avatarUri = null
+                        )
+                    ),
+                    isLoading = true
+                )
+                accountService.lookupAddress(accountId, query)
+            }
+            query.contains("@") -> {
+                // username@nameserver — single nameserver lookup
+                accountService.lookupName(accountId, query)
+            }
+            else -> {
+                // Plain text — both nameserver lookup and JAMS directory search
+                accountService.lookupName(accountId, query)
+                accountService.searchUser(accountId, query)
+            }
+        }
+    }
+
+    /**
+     * Returns true if the query looks like a 40+ char hex Jami ID.
+     */
+    private fun isJamiId(query: String): Boolean =
+        query.length >= 40 && query.all { it.isDigit() || it in 'a'..'f' || it in 'A'..'F' }
+
+    /**
      * Select a contact to add to the new conversation.
-     *
-     * @param contact The contact item to select.
      */
     fun selectContact(contact: ContactItem) {
         val current = _state.value.selectedContacts
         if (current.none { it.uri == contact.uri }) {
-            _state.value = _state.value.copy(
-                selectedContacts = current + contact
-            )
+            _state.value = _state.value.copy(selectedContacts = current + contact)
         }
     }
 
     /**
      * Remove a contact from the selection.
-     *
-     * @param contact The contact item to deselect.
      */
     fun removeContact(contact: ContactItem) {
         val current = _state.value.selectedContacts
@@ -171,13 +219,13 @@ class NewConversationViewModel(
             _state.value = _state.value.copy(isLoading = true)
 
             if (selected.size == 1 && !_state.value.isGroup) {
-                // Start a 1:1 conversation - add contact first, then find/await conversation
+                // Start a 1:1 conversation — add contact first, then find/await conversation
                 val contactUri = Uri.fromString(selected.first().uri)
                 accountService.addContact(accountId, contactUri.uri)
                 val conversation = try {
                     conversationFacade.startConversation(accountId, contactUri)
                 } catch (_: Exception) {
-                    // Conversation may not exist yet - wait for ConversationReady from daemon
+                    // Conversation may not exist yet — wait for ConversationReady from daemon
                     conversationFacade.conversationEvents
                         .filterIsInstance<ConversationEvent.ConversationReady>()
                         .filter { it.accountId == accountId }
@@ -192,7 +240,6 @@ class NewConversationViewModel(
                 val memberUris = selected.map { it.uri }
                 val conversationId = accountService.startConversation(accountId, memberUris)
 
-                // Set group name if provided
                 val groupName = _state.value.groupName
                 if (groupName.isNotEmpty()) {
                     accountService.updateConversationInfo(
@@ -212,11 +259,12 @@ class NewConversationViewModel(
     }
 
     /**
-     * Handle a name lookup result from the daemon.
+     * Handle a name lookup result from the daemon (for "@" queries).
      */
     private fun handleNameFound(event: AccountEvent.RegisteredNameFound) {
         val currentQuery = _state.value.searchQuery
-        if (event.name != currentQuery && event.address != currentQuery) return
+        // Match by the original query sent to daemon, or by the resolved name/address
+        if (event.query != currentQuery && event.name != currentQuery && event.address != currentQuery) return
 
         if (event.state == 0 && event.address.isNotEmpty()) {
             val newResult = ContactItem(
@@ -226,21 +274,24 @@ class NewConversationViewModel(
                 presenceStatus = Contact.PresenceStatus.OFFLINE,
                 avatarUri = null
             )
-
-            val existing = _state.value.searchResults
-            if (existing.none { it.uri == newResult.uri }) {
-                _state.value = _state.value.copy(
-                    searchResults = existing + newResult,
-                    isLoading = false
-                )
+            val existing = _state.value.publicDirectoryResults
+            // Replace placeholder (same URI) or append if new
+            val updated = if (existing.any { it.uri == newResult.uri }) {
+                existing.map { if (it.uri == newResult.uri) newResult else it }
+            } else {
+                existing + newResult
             }
+            _state.value = _state.value.copy(
+                publicDirectoryResults = updated,
+                isLoading = false
+            )
         } else {
             _state.value = _state.value.copy(isLoading = false)
         }
     }
 
     /**
-     * Handle user search results from the daemon.
+     * Handle user search results from the daemon (for plain name queries).
      */
     private fun handleSearchResults(event: AccountEvent.UserSearchEnded) {
         if (event.query != _state.value.searchQuery) return
@@ -255,7 +306,6 @@ class NewConversationViewModel(
                 username.isNotEmpty() -> username
                 else -> address
             }
-
             ContactItem(
                 uri = address,
                 displayName = displayName,
@@ -265,15 +315,15 @@ class NewConversationViewModel(
             )
         }
 
-        // Merge with existing local results, avoiding duplicates
-        val existing = _state.value.searchResults.associateBy { it.uri }
+        // Merge with existing public directory results, avoiding duplicates
+        val existing = _state.value.publicDirectoryResults.associateBy { it.uri }
         val merged = existing.toMutableMap()
         for (result in results) {
             merged.putIfAbsent(result.uri, result)
         }
 
         _state.value = _state.value.copy(
-            searchResults = merged.values.toList(),
+            publicDirectoryResults = merged.values.toList(),
             isLoading = false
         )
     }

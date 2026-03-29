@@ -39,7 +39,7 @@
     <!-- Home -->
     <string name="home_no_conversation_title">No conversations yet</string>
     <string name="home_no_conversation_hint">Start a new conversation to begin messaging</string>
-    <string name="action_new_conversation">New conversation</string>
+    <string name="action_new_conversation">Start conversation</string>
     <string name="menu_app_settings">App Settings</string>
 
     <!-- Chat -->
@@ -58,7 +58,7 @@
     <string name="action_create">Create</string>
 
     <!-- Search -->
-    <string name="placeholder_search">Search…</string>
+    <string name="placeholder_search">Search or add</string>
     <string name="action_qr_code">QR Code</string>
     <string name="action_new_group">New Group</string>
 

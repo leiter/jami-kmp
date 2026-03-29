@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="appbar_gradient_color">#0D47A1</color>
+    <color name="color_bottom_sheet_background">#FFFFFF</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="transparent_grey">#80808080</color>
+    <color name="edit_text_background">#F5F5F5</color>
+    <color name="jami_id_background_color">#E3F2FD</color>
+    <color name="chip_background">#EEEEEE</color>
+    <color name="background">#FFFFFF</color>
+    <color name="color_primary_light_translucent">#401976D2</color>
+    <color name="light_green_300">#AED581</color>
+    <color name="background_status_required">#FFEBEE</color>
+    <color name="conversation_secondary_background">#F5F5F5</color>
+    <color name="icon_color">#757575</color>
+    <color name="grey_400">#BDBDBD</color>
+    <color name="color_primary_dark">#0D47A1</color>
+    <color name="colorPrimaryTranslucent">#801976D2</color>
+    <!-- Standard Material colors referenced by drawable XMLs -->
+    <color name="colorPrimary">#1976D2</color>
+    <color name="colorSecondary">#0277BD</color>
+    <color name="button_border">#BDBDBD</color>
+    <color name="call_missed_text_message">#F44336</color>
+    <color name="color_primary_light">#64B5F6</color>
+    <color name="conversation_primary_background">#FFFFFF</color>
+    <color name="green_A700">#00C853</color>
+    <color name="invitation_drawable_p1_color">#1976D2</color>
+    <color name="invitation_drawable_p2_color">#0D47A1</color>
+    <color name="settings_option_background">#F5F5F5</color>
+    <color name="colorOnSurface">#1C1B1F</color>
+    <color name="transparent">#00000000</color>
+    <color name="tv_contact_background">#FF333333</color>
+</resources>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  German translations for jami-kmp specific strings.
+-->
+<resources>
+    <!-- Welcome / Onboarding -->
+    <string name="action_create_account">Konto erstellen</string>
+    <string name="action_import_account">Konto importieren</string>
+    <string name="welcome_text">Eine freie und universelle Kommunikationsplattform,\ndie die Freiheit und Privatsphäre ihrer Nutzer respektiert.</string>
+
+    <!-- Account Creation -->
+    <string name="prompt_choose_username">Benutzernamen wählen</string>
+    <string name="prompt_password_optional">Passwort (optional)</string>
+    <string name="prompt_confirm_password">Passwort bestätigen</string>
+    <string name="error_username_taken">Dieser Benutzername ist bereits vergeben</string>
+    <string name="error_password_min_chars">Mindestens 6 Zeichen</string>
+    <string name="error_passwords_mismatch">Passwörter stimmen nicht überein.</string>
+
+    <!-- Profile Setup -->
+    <string name="screen_title_profile_setup">Profil einrichten</string>
+    <string name="prompt_add_profile_photo">Profilfoto hinzufügen</string>
+    <string name="prompt_display_name">Anzeigename</string>
+    <string name="action_continue">Weiter</string>
+
+    <!-- Account Summary -->
+    <string name="screen_title_account_created">Konto erstellt</string>
+    <string name="account_ready_title">Ihr Jami-Konto ist bereit!</string>
+    <string name="account_info_title">Kontoinformationen</string>
+    <string name="account_ready_description">Ihr Konto wurde erstellt und ist einsatzbereit. Sie können Ihre Jami-ID mit anderen teilen, damit diese Sie kontaktieren können.</string>
+    <string name="account_backup_reminder">Erwägen Sie, Ihr Konto zu sichern, um den Zugang nicht zu verlieren.</string>
+    <string name="action_continue_to_jami">Weiter zu Jami</string>
+
+    <!-- Import Account -->
+    <string name="prompt_archive_path">Archivdateipfad</string>
+    <string name="placeholder_archive_path">/Pfad/zur/Sicherung.gz</string>
+    <string name="action_browse">Durchsuchen</string>
+
+    <!-- Home -->
+    <string name="home_no_conversation_title">Noch keine Unterhaltungen</string>
+    <string name="home_no_conversation_hint">Starten Sie eine neue Unterhaltung, um Nachrichten zu schreiben</string>
+    <string name="action_new_conversation">Unterhaltung starten</string>
+    <string name="menu_app_settings">App-Einstellungen</string>
+
+    <!-- Chat -->
+    <string name="conversation_type_message">Nachricht</string>
+    <string name="menu_item_copy">Kopieren</string>
+    <string name="menu_item_edit">Bearbeiten</string>
+    <string name="conversation_typing">tippt…</string>
+
+    <!-- Call -->
+    <string name="call_on_hold">Halten</string>
+
+    <!-- New Conversation -->
+    <string name="screen_title_new_conversation">Neue Unterhaltung</string>
+    <string name="placeholder_search_contacts">Kontakte oder Jami-ID suchen…</string>
+    <string name="toggle_create_group">Gruppenunterhaltung erstellen</string>
+
+    <!-- Search -->
+    <string name="placeholder_search">Suchen oder hinzufügen</string>
+    <string name="action_qr_code">QR-Code</string>
+    <string name="action_new_group">Neue Gruppe</string>
+
+    <!-- Details -->
+    <string name="screen_title_details">Details</string>
+    <string name="action_audio">Audio</string>
+    <string name="action_video">Video</string>
+    <string name="action_block">Blockieren</string>
+    <string name="empty_members">Keine Mitglieder vorhanden</string>
+
+    <!-- Settings -->
+    <string name="screen_title_account_settings">Kontoeinstellungen</string>
+    <string name="screen_title_app_settings">Einstellungen</string>
+    <string name="pref_category_appearance">Aussehen</string>
+    <string name="pref_dark_mode">Dunkles Design</string>
+    <string name="pref_dark_mode_description">Immer das dunkle Design aktivieren, anstatt das Systemverhalten zu verwenden</string>
+    <string name="pref_category_privacy">Privatsphäre</string>
+    <string name="pref_typing_indicators">Tipp-Indikatoren</string>
+    <string name="pref_typing_indicators_description">Anzeigen wenn Nachrichten getippt werden.</string>
+    <string name="pref_link_preview">Linkvorschau</string>
+    <string name="pref_link_preview_description">Vorschau erfordert dass Inhalte von Drittanbieter-Servern heruntergeladen werden.</string>
+    <string name="pref_category_system">System</string>
+    <string name="pref_push_notifications">Push-Benachrichtigungen</string>
+    <string name="pref_push_notifications_description">Google-Server verwenden, um Anrufe/Nachrichten im Hintergrund empfangen zu können.</string>
+    <string name="pref_start_on_boot">Jami beim Hochfahren starten</string>
+    <string name="pref_start_on_boot_description">Jami im Hintergrund laufen lassen, wenn das System startet</string>
+    <string name="pref_run_in_background">Im Hintergrund ausführen</string>
+    <string name="pref_run_in_background_description">Ausführung im Hintergrund erlauben, um Anrufe und Nachrichten zu empfangen.</string>
+    <string name="section_linked_devices">Verbundene Geräte</string>
+    <string name="empty_linked_devices">Keine verbundenen Geräte</string>
+    <string name="account_this_device">Dieses Gerät</string>
+    <string name="dialog_export_title">Konto exportieren</string>
+    <string name="dialog_export_message">Geben Sie Ihr Kontopasswort ein, um eine verschlüsselte Sicherungskopie zu erstellen.</string>
+    <string name="action_export">Exportieren</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="snackbar_export_success">Konto erfolgreich exportiert</string>
+    <string name="snackbar_export_error">Export fehlgeschlagen. Passwort überprüfen und erneut versuchen.</string>
+    <string name="pref_category_account">Konto</string>
+    <string name="pref_category_media">Medium</string>
+    <string name="pref_category_messages">Nachrichten</string>
+    <string name="pref_category_advanced">Erweitert</string>
+
+    <!-- Blocked Contacts -->
+    <string name="screen_title_blocked_contacts">Blockierte Kontakte</string>
+    <string name="empty_blocked_contacts">Keine blockierten Kontakte</string>
+    <string name="action_unblock">Blockierung aufheben</string>
+
+    <!-- About -->
+    <string name="screen_title_about">Über Jami</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_license">Lizenziert unter der GNU General Public License v3.0</string>
+
+    <!-- Content Descriptions -->
+    <string name="content_desc_back">Zurück</string>
+    <string name="content_desc_profile_photo">Profilfoto</string>
+    <string name="content_desc_available">Verfügbar</string>
+    <string name="content_desc_taken">Vergeben</string>
+    <string name="content_desc_send">Senden</string>
+    <string name="content_desc_audio_call">Audioanruf</string>
+    <string name="content_desc_video_call">Videoanruf</string>
+    <string name="content_desc_menu">Menü</string>
+    <string name="content_desc_mute">Stummschalten</string>
+    <string name="content_desc_unmute">Stummschaltung aufheben</string>
+    <string name="content_desc_speaker_on">Lautsprecher an</string>
+    <string name="content_desc_speaker_off">Lautsprecher aus</string>
+    <string name="content_desc_enable_video">Video aktivieren</string>
+    <string name="content_desc_disable_video">Video deaktivieren</string>
+    <string name="content_desc_end_call">Anruf beenden</string>
+    <string name="content_desc_hold">Halten</string>
+    <string name="content_desc_resume">Fortsetzen</string>
+</resources>

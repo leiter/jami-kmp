@@ -135,7 +135,7 @@ fun NewConversationScreen(
                     .fillMaxWidth(),
             ) {
                 items(
-                    items = state.searchResults,
+                    items = state.publicDirectoryResults,
                     key = { it.uri },
                 ) { contact ->
                     val isSelected = state.selectedContacts.any { it.uri == contact.uri }

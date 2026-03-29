@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+-->
+<resources>
+    <!-- About -->
+    <string name="submit_issue_title">Problem übermitteln</string>
+    <string name="submit_issue_action_description"><u>Neues Problem erstellen</u></string>
+    <string name="section_license">Lizenz</string>
+    <string name="sponsor_section">Jami ist eine kostenlose Software, die entwickelt und unterstützt wird von</string>
+    <string name="copyright_section">Copyright</string>
+    <string name="contribute_section">Beitragen</string>
+    <string name="version_section">Version</string>
+    <string name="no_browser_app_installed">Keine Webbrowser-App gefunden. Installieren Sie eine, um diese Seite anzuzeigen.</string>
+    <string name="website_chooser_title">Webseite anzeigen mit…</string>
+    <string name="license">Diese Software wird \"wie sie ist\" ohne Gewährleistung irgendwelcher Art zur Verfügung gestellt. Details finden Sie unter <u>GNU General Public License Version 3 oder höher</u></string>
+    <string name="description">Jami ist eine freie Software für universelle Kommunikation und respektiert die Freiheiten und Privatsphäre der Benutzer.</string>
+    <string name="credits">Würdigung</string>
+    <string name="pip_title">Jami-Konferenz</string>
+    <string name="call_service_description">Dieser Dienst ist notwendig, um Anrufe im Vordergrund zu halten. Er läuft nur während eines Anrufs.</string>
+    <string name="data_transfer_service_description">Dieser Dienst ist notwendig, um permanente Benachrichtigungen während der Dateiübertragung anzuzeigen. Er läuft nur während der Dateiübertragung.</string>
+
+    <!-- About dialog -->
+    <string name="thank_note">Wir möchten uns bei unseren Mitwirkenden bedanken, deren langjähriger Einsatz diese Software zu dem gemacht hat, was sie ist.</string>
+    <string name="developers">Entwickler</string>
+    <string name="media">Medium</string>
+    <string name="community_management">Community-Management</string>
+    <string name="special_thanks">Besonderer Dank geht an</string>
+
+    <!-- Menu items -->
+    <string name="menu_item_account_settings">Kontoeinstellungen</string>
+    <string name="menu_item_app_settings">App-Einstellungen</string>
+    <string name="menu_item_about">Über Jami</string>
+    <string name="menu_item_settings">Einstellungen</string>
+
+    <!-- Search -->
+    <string name="searchbar_hint">Suchen oder hinzufügen</string>
+
+    <!-- Errors -->
+    <string name="error_no_network">Keine Netzwerkverbindung</string>
+    <string name="error_account_offline">Das Konto ist offline</string>
+
+    <!-- Notifications -->
+    <string name="notif_missed_incoming_call">Verpasster eingehender Anruf</string>
+    <string name="notif_missed_outgoing_call">Ausgehender Anruf fehlgeschlagen</string>
+    <string name="notif_incoming_call_title">Eingehender Anruf von %1$s</string>
+    <string name="notif_incoming_call">Eingehender Anruf</string>
+
+    <!-- Conversation -->
+    <string name="delete_conversation_confirmation">Möchten Sie diese Unterhaltung wirklich löschen?</string>
+    <string name="switch_conversation">Unterhaltung wechseln</string>
+    <!-- Search sections -->
+    <string name="navigation_item_conversation">Unterhaltungen</string>
+    <string name="search_results_public_directory">Öffentliches Verzeichnis</string>
+</resources>

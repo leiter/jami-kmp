@@ -60,16 +60,20 @@ import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.PresenceStatus
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.ContactItem
+import net.jami.ui.viewmodel.ConversationItem
 import net.jami.ui.viewmodel.NewConversationViewModel
 
 /**
  * Search screen for finding conversations and contacts.
  *
- * Uses [NewConversationViewModel] to search both local contacts and
- * the nameserver for remote results.
+ * Shows two sections:
+ * - "Public directory" — nameserver/DHT lookup results
+ * - "Conversations" — existing conversations matching the query
+ *
+ * Uses [NewConversationViewModel] for search state and lookup routing.
  *
  * @param onBack Called when the user navigates back.
- * @param onConversationClick Called when a conversation result is tapped.
+ * @param onConversationClick Called when a result is tapped.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -139,34 +143,68 @@ fun SearchScreen(
                 }
             }
 
-            // Search results list
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                items(
-                    items = state.searchResults,
-                    key = { it.uri },
-                ) { contact ->
-                    SearchResultItem(
-                        contact = contact,
-                        onClick = {
-                            viewModel.selectContact(contact)
-                            coroutineScope.launch {
-                                val conversationId = viewModel.createConversation()
-                                if (conversationId != null) {
-                                    onConversationClick(conversationId)
+            // Sectioned results list
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+
+                // Public directory section
+                if (state.publicDirectoryResults.isNotEmpty()) {
+                    item(key = "header_public_directory") {
+                        SectionHeader(stringResource(Res.string.search_results_public_directory))
+                    }
+                    items(
+                        items = state.publicDirectoryResults,
+                        key = { "pub_${it.uri}" },
+                    ) { contact ->
+                        SearchResultItem(
+                            contact = contact,
+                            onClick = {
+                                viewModel.selectContact(contact)
+                                coroutineScope.launch {
+                                    val conversationId = viewModel.createConversation()
+                                    if (conversationId != null) onConversationClick(conversationId)
                                 }
-                            }
-                        },
-                    )
+                            },
+                        )
+                    }
+                }
+
+                // Conversations section
+                if (state.conversationResults.isNotEmpty()) {
+                    item(key = "header_conversations") {
+                        SectionHeader(stringResource(Res.string.navigation_item_conversation))
+                    }
+                    items(
+                        items = state.conversationResults,
+                        key = { "conv_${it.id}" },
+                    ) { conversation ->
+                        ConversationSearchItem(
+                            conversation = conversation,
+                            onClick = { onConversationClick(conversation.id) },
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+@Composable
+private fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = JamiTheme.typography.labelMedium,
+        color = JamiTheme.colors.onSurfaceVariant,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = JamiTheme.spacing.l,
+                vertical = JamiTheme.spacing.s,
+            ),
+    )
+}
+
 /**
- * Single search result item displaying avatar, name, and username.
+ * Single search result item for a public directory contact.
  */
 @Composable
 private fun SearchResultItem(
@@ -206,6 +244,57 @@ private fun SearchResultItem(
                 Spacer(Modifier.height(JamiTheme.spacing.xxs))
                 Text(
                     text = contact.username,
+                    style = JamiTheme.typography.bodyMedium,
+                    color = JamiTheme.colors.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Single search result item for an existing conversation.
+ */
+@Composable
+private fun ConversationSearchItem(
+    conversation: ConversationItem,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(
+                horizontal = JamiTheme.spacing.l,
+                vertical = JamiTheme.spacing.m,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        JamiAvatar(
+            displayName = conversation.displayName,
+            avatarBytes = conversation.avatarBytes,
+            size = AvatarSize.Medium,
+            showPresence = true,
+            presenceStatus = if (conversation.isOnline) PresenceStatus.Online
+            else PresenceStatus.Offline,
+        )
+
+        Spacer(Modifier.width(JamiTheme.spacing.m))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = conversation.displayName,
+                style = JamiTheme.typography.titleSmall,
+                color = JamiTheme.colors.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (conversation.lastMessage.isNotEmpty()) {
+                Spacer(Modifier.height(JamiTheme.spacing.xxs))
+                Text(
+                    text = conversation.lastMessage,
                     style = JamiTheme.typography.bodyMedium,
                     color = JamiTheme.colors.onSurfaceVariant,
                     maxLines = 1,

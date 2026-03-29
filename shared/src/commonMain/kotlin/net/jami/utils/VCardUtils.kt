@@ -18,6 +18,7 @@ package net.jami.utils
 
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import net.jami.utils.FileUtils
 
 /**
  * Simple VCard data class for KMP.
@@ -245,6 +246,28 @@ object VCardUtils {
      * Create a default profile VCard with just a UID.
      */
     fun defaultProfile(accountId: String): VCard = VCard(uid = accountId)
+
+    /**
+     * Load the local account profile from disk.
+     * VCard stored at {filesDir}/{accountId}/profile.vcf by the daemon.
+     */
+    fun loadLocalProfileFromDisk(filesDir: String, accountId: String): ByteArray? {
+        val content = FileUtils.readText("$filesDir/$accountId/profile.vcf") ?: return null
+        val vcard = parseVCard(content) ?: return null
+        return vcard.photo
+    }
+
+    /**
+     * Load a peer contact's profile photo from disk.
+     * VCard stored at {filesDir}/{accountId}/profiles/{base64url(peerUri)}.vcf by the daemon.
+     */
+    @OptIn(ExperimentalEncodingApi::class)
+    fun loadPeerProfileFromDisk(filesDir: String, accountId: String, peerUri: String): ByteArray? {
+        val filename = Base64.UrlSafe.encode(peerUri.toByteArray()) + ".vcf"
+        val content = FileUtils.readText("$filesDir/$accountId/profiles/$filename") ?: return null
+        val vcard = parseVCard(content) ?: return null
+        return vcard.photo
+    }
 
     /**
      * Extract a parameter value from a VCard property line.

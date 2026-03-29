@@ -152,7 +152,7 @@ val jamiModule = module {
 
     // ==================== ViewModels ====================
 
-    viewModelFactory { ConversationsViewModel(get(), get()) }
+    viewModelFactory { ConversationsViewModel(get(), get(), get()) }
     viewModelFactory { ChatViewModel(get(), get()) }
     viewModelFactory { AccountCreationViewModel(get()) }
     viewModelFactory { ImportAccountViewModel(get()) }
@@ -161,7 +161,7 @@ val jamiModule = module {
     viewModelFactory { CallViewModel(get(), get()) }
     viewModelFactory { ContactsViewModel(get(), get()) }
     viewModelFactory { ContactDetailsViewModel(get(), get()) }
-    viewModelFactory { NewConversationViewModel(get(), get(), get()) }
+    viewModelFactory { NewConversationViewModel(get(), get(), get(), get()) }
     viewModelFactory { AboutViewModel() }
     viewModelFactory { AppViewModel(get()) }
     viewModelFactory { ProfileSetupViewModel(get()) }

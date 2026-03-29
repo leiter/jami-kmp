@@ -33,11 +33,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,6 +59,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import jami_kmp.shared.generated.resources.Res
@@ -113,13 +113,19 @@ fun HomeScreen(
                 onClick = onNewConversation,
                 icon = {
                     Icon(
-                        imageVector = Icons.Default.Add,
+                        imageVector = Icons.Default.Chat,
                         contentDescription = null,
+                        tint = JamiTheme.colors.onAccent,
                     )
                 },
-                text = { Text(stringResource(Res.string.action_new_conversation)) },
-                containerColor = JamiTheme.colors.primary,
-                contentColor = JamiTheme.colors.onPrimary,
+                text = {
+                    Text(
+                        text = stringResource(Res.string.action_new_conversation),
+                        color = JamiTheme.colors.onAccent,
+                    )
+                },
+                containerColor = JamiTheme.colors.accent,
+                contentColor = JamiTheme.colors.onAccent,
             )
         },
         floatingActionButtonPosition = FabPosition.End,
@@ -145,32 +151,25 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .clickable { onSearchClick() }
                         .padding(
-                            horizontal = JamiTheme.spacing.m,
-                            vertical = JamiTheme.spacing.s,
+                            start = JamiTheme.spacing.m,
                         ),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // Current user avatar
                     JamiAvatar(
                         displayName = "Me",
+                        avatarBytes = state.currentAccountAvatarBytes,
                         size = AvatarSize.Small,
                     )
 
                     Spacer(Modifier.width(JamiTheme.spacing.m))
 
                     // Search placeholder
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = stringResource(Res.string.placeholder_search),
-                        tint = JamiTheme.colors.onSurfaceVariant,
-                    )
-
-                    Spacer(Modifier.width(JamiTheme.spacing.s))
-
                     Text(
                         text = stringResource(Res.string.placeholder_search),
                         style = JamiTheme.typography.bodyMedium,
                         color = JamiTheme.colors.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier.weight(1f),
                     )
 
@@ -352,8 +351,8 @@ private fun ConversationListItem(
         // Avatar with presence dot
         JamiAvatar(
             displayName = conversation.displayName,
-            imageUri = conversation.avatarUri,
-            size = AvatarSize.Medium,
+            avatarBytes = conversation.avatarBytes,
+            size = AvatarSize.Small,
             showPresence = true,
             presenceStatus = if (conversation.isOnline) PresenceStatus.Online
             else PresenceStatus.Offline,

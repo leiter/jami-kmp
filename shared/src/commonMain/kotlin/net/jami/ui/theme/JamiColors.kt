@@ -54,7 +54,7 @@ object JamiColors {
     val Orange700 = Color(0xFFF57C00)
 
     // Dark theme surfaces
-    val DarkBackground = Color(0xFF121212)
-    val DarkSurface = Color(0xFF1E1E1E)
-    val DarkSurfaceVariant = Color(0xFF2D2D2D)
+    val DarkBackground = Color(0xFF1A1A1A)
+    val DarkSurface = Color(0xFF0F0F0F)
+    val DarkSurfaceVariant = Color(0xFF000000)
 }

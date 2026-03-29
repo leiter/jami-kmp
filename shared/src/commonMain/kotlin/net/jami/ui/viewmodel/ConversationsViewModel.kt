@@ -25,12 +25,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import net.jami.model.Contact
 import net.jami.model.TextMessage
 import net.jami.model.Uri
+import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.services.ConversationFacade
 import net.jami.services.ConversationEvent
+import net.jami.services.DeviceRuntimeService
+import net.jami.utils.VCardUtils
 
 /**
  * Item representing a conversation in the list.
@@ -41,7 +46,7 @@ data class ConversationItem(
     val lastMessage: String,
     val timestamp: Long,
     val unreadCount: Int,
-    val avatarUri: String?,
+    val avatarBytes: ByteArray?,
     val isOnline: Boolean
 )
 
@@ -52,7 +57,8 @@ data class ConversationsState(
     val conversations: List<ConversationItem> = emptyList(),
     val isLoading: Boolean = false,
     val searchQuery: String = "",
-    val pendingRequests: Int = 0
+    val pendingRequests: Int = 0,
+    val currentAccountAvatarBytes: ByteArray? = null
 )
 
 /**
@@ -64,6 +70,7 @@ data class ConversationsState(
 class ConversationsViewModel(
     private val accountService: AccountService,
     private val conversationFacade: ConversationFacade,
+    private val deviceRuntimeService: DeviceRuntimeService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     private val scope = scope
@@ -95,6 +102,31 @@ class ConversationsViewModel(
                 }
             }
         }
+
+        // Own account profile received from another device.
+        // Fast path: decode base64 photo from the event payload.
+        // Slow path: reload conversations (reads updated profile.vcf the daemon wrote to disk).
+        scope.launch {
+            accountService.accountEvents.collect { event ->
+                if (event is AccountEvent.ProfileReceived) {
+                    if (event.photo.isNotEmpty()) {
+                        val avatarBytes = decodeProfilePhoto(event.photo)
+                        if (avatarBytes != null) {
+                            _state.value = _state.value.copy(currentAccountAvatarBytes = avatarBytes)
+                        }
+                    }
+                    // Also reload from disk — the daemon writes profile.vcf before firing this callback.
+                    loadConversations()
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalEncodingApi::class)
+    private fun decodeProfilePhoto(photo: String): ByteArray? = try {
+        Base64.decode(photo.replace("\\s".toRegex(), ""))
+    } catch (e: Exception) {
+        null
     }
 
     /**
@@ -112,15 +144,18 @@ class ConversationsViewModel(
                 val requests = accountService.getConversationRequests(accountId)
                 val pendingCount = requests.size
 
+                // Load current account avatar from local VCard
+                val filesDir = deviceRuntimeService.getDataPath()
+                val accountAvatarBytes = VCardUtils.loadLocalProfileFromDisk(filesDir, accountId)
+
                 // Build conversation items from the facade
-                // The ConversationFacade provides conversation list via Flow;
-                // here we do a direct snapshot approach for the current account.
-                val conversations = buildConversationItems(accountId, query)
+                val conversations = buildConversationItems(accountId, query, filesDir)
 
                 _state.value = _state.value.copy(
                     conversations = conversations,
                     isLoading = false,
-                    pendingRequests = pendingCount
+                    pendingRequests = pendingCount,
+                    currentAccountAvatarBytes = accountAvatarBytes ?: _state.value.currentAccountAvatarBytes
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)
@@ -158,7 +193,7 @@ class ConversationsViewModel(
     /**
      * Build conversation item list from the current account.
      */
-    private fun buildConversationItems(accountId: String, query: String): List<ConversationItem> {
+    private fun buildConversationItems(accountId: String, query: String, filesDir: String): List<ConversationItem> {
         val account = accountService.getAccount(accountId) ?: return emptyList()
         val conversations = account.getConversations()
 
@@ -177,13 +212,18 @@ class ConversationsViewModel(
             val lastMessage = if (lastEvent is TextMessage) lastEvent.body ?: "" else ""
             val timestamp = lastEvent?.timestamp ?: 0L
 
+            // Load contact avatar from peer VCard stored by the daemon
+            val avatarBytes = contact?.let { c ->
+                VCardUtils.loadPeerProfileFromDisk(filesDir, accountId, c.uri.rawRingId)
+            }
+
             ConversationItem(
                 id = conversation.uri.rawRingId,
                 displayName = displayName,
                 lastMessage = lastMessage,
                 timestamp = timestamp,
                 unreadCount = 0,
-                avatarUri = null,
+                avatarBytes = avatarBytes,
                 isOnline = contact?.isOnline == true
             )
         }.sortedByDescending { it.timestamp }

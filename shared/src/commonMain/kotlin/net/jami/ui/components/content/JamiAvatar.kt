@@ -16,6 +16,7 @@
  */
 package net.jami.ui.components.content
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -24,16 +25,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.jami.ui.theme.JamiTheme
+import net.jami.ui.utils.toImageBitmap
 import kotlin.math.abs
 
 /**
@@ -56,7 +60,8 @@ enum class PresenceStatus {
  *
  * @param displayName The user's display name used for initials and color generation.
  * @param modifier Modifier applied to the root container.
- * @param imageUri Optional URI of the user's profile image. When null, initials are shown.
+ * @param avatarBytes Optional raw image bytes (JPEG/PNG). When non-null and decodable, the image is shown; otherwise initials are used.
+ * @param imageUri Unused legacy parameter kept for source compatibility.
  * @param size The avatar size preset.
  * @param showPresence Whether to show the presence indicator dot.
  * @param presenceStatus The current presence status.
@@ -65,6 +70,7 @@ enum class PresenceStatus {
 fun JamiAvatar(
     displayName: String,
     modifier: Modifier = Modifier,
+    avatarBytes: ByteArray? = null,
     imageUri: String? = null,
     size: AvatarSize = AvatarSize.Medium,
     showPresence: Boolean = false,
@@ -91,16 +97,18 @@ fun JamiAvatar(
         AvatarSize.XLarge -> 18.dp
     }
 
+    val bitmap = remember(avatarBytes) { avatarBytes?.toImageBitmap() }
+
     Box(modifier = modifier.size(avatarDp)) {
         // Avatar circle
-        if (imageUri != null) {
-            // When an image URI is provided, show a placeholder circle.
-            // Actual image loading should be handled by the platform (e.g. Coil, Kamel).
-            // The component exposes the URI so the caller can integrate their image loader.
-            InitialsCircle(
-                displayName = displayName,
-                avatarDp = avatarDp,
-                textStyle = initialsStyle,
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(avatarDp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop,
             )
         } else {
             InitialsCircle(

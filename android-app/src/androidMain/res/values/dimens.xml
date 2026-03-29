@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="conversation_message_radius">12dp</dimen>
+    <dimen name="edit_text_radius">8dp</dimen>
+    <dimen name="reaction_chip_background_radius">16dp</dimen>
+    <dimen name="account_unread_radius">10dp</dimen>
+    <dimen name="conversation_message_minor_radius">4dp</dimen>
+    <dimen name="bottom_sheet_radius">16dp</dimen>
+    <dimen name="file_background_padding">8dp</dimen>
+    <dimen name="file_background_radius">8dp</dimen>
+</resources>

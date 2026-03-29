@@ -43,22 +43,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import jami_kmp.shared.generated.resources.Res
-import jami_kmp.shared.generated.resources.*
-import org.jetbrains.compose.resources.stringResource
-import jami_kmp.shared.generated.resources.Res
-import jami_kmp.shared.generated.resources.*
-import org.jetbrains.compose.resources.stringResource
+import jami_kmp.shared.generated.resources.action_create_account
+import jami_kmp.shared.generated.resources.content_desc_available
+import jami_kmp.shared.generated.resources.content_desc_back
+import jami_kmp.shared.generated.resources.content_desc_taken
+import jami_kmp.shared.generated.resources.error_password_min_chars
+import jami_kmp.shared.generated.resources.error_passwords_mismatch
+import jami_kmp.shared.generated.resources.error_username_taken
+import jami_kmp.shared.generated.resources.prompt_choose_username
+import jami_kmp.shared.generated.resources.prompt_confirm_password
+import jami_kmp.shared.generated.resources.prompt_password_optional
 import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.AccountCreationViewModel
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Account creation screen with username, password, and confirm password fields.
