@@ -1,5 +1,7 @@
 package net.jami.model
 
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
@@ -20,6 +22,11 @@ class Account(
     val devices: MutableMap<String, String> = mutableMapOf()
 ) {
     // Conversation caches (not serialized - rebuilt from database on load)
+    @Transient
+    private val conversationsLock = SynchronizedObject()
+    @Transient
+    private val contactsLock = SynchronizedObject()
+
     @Transient
     private val conversations = mutableMapOf<String, Conversation>()
 
@@ -96,13 +103,13 @@ class Account(
      * Get a swarm conversation by ID
      */
     fun getSwarm(conversationId: String): Conversation? =
-        synchronized(conversations) { swarmConversations[conversationId] }
+        synchronized(conversationsLock) { swarmConversations[conversationId] }
 
     /**
      * Create or update a swarm conversation
      */
     fun newSwarm(conversationId: String, mode: Conversation.Mode): Conversation {
-        synchronized(conversations) {
+        synchronized(conversationsLock) {
             val existing = swarmConversations[conversationId]
             if (existing == null) {
                 val conv = Conversation(accountId, Uri(Uri.SWARM_SCHEME, conversationId), mode)
@@ -119,7 +126,7 @@ class Account(
      * Mark a conversation as started (add to active conversations)
      */
     fun conversationStarted(conversation: Conversation, newMode: Conversation.Mode? = null) {
-        synchronized(conversations) {
+        synchronized(conversationsLock) {
             if (conversation.isSwarm) {
                 // Remove from pending requests
                 pending.remove(conversation.uri.uri)
@@ -152,7 +159,7 @@ class Account(
      * Remove a swarm conversation
      */
     fun removeSwarm(conversationId: String) {
-        synchronized(conversations) {
+        synchronized(conversationsLock) {
             val conversation = swarmConversations.remove(conversationId)
             if (conversation != null) {
                 try {
@@ -175,7 +182,7 @@ class Account(
      * Mirrors Android's Account.getContactFromCache().
      */
     fun getContactFromCache(uri: Uri): Contact =
-        synchronized(contacts) {
+        synchronized(contactsLock) {
             contacts.getOrPut(uri.uri) {
                 Contact(uri, username == uri.rawRingId)
             }
@@ -187,7 +194,7 @@ class Account(
     fun getByUri(uri: Uri?): Conversation? {
         if (uri == null) return null
         val key = uri.uri
-        synchronized(conversations) {
+        synchronized(conversationsLock) {
             return conversations[key] ?: pending[key] ?: cache[key]
         }
     }
@@ -196,7 +203,7 @@ class Account(
      * Get conversation by contact
      */
     fun getByContact(contactUri: Uri): Conversation? {
-        synchronized(conversations) {
+        synchronized(conversationsLock) {
             // First check if there's a direct match
             conversations[contactUri.uri]?.let { return it }
 
@@ -206,37 +213,29 @@ class Account(
             }?.let { return it }
 
             // Check pending conversations
-            pending.values.find { conv ->
+            return pending.values.find { conv ->
                 conv.contact?.uri == contactUri
-            }?.let { return it }
-
-            return null
+            }
         }
     }
 
     /**
      * Get all active conversations
      */
-    fun getConversations(): Collection<Conversation> {
-        synchronized(conversations) {
-            return conversations.values.toList()
-        }
-    }
+    fun getConversations(): Collection<Conversation> =
+        synchronized(conversationsLock) { conversations.values.toList() }
 
     /**
      * Get all pending conversations (requests)
      */
-    fun getPending(): Collection<Conversation> {
-        synchronized(pending) {
-            return pending.values.toList()
-        }
-    }
+    fun getPending(): Collection<Conversation> =
+        synchronized(conversationsLock) { pending.values.toList() }
 
     /**
      * Add a pending conversation request
      */
     fun addPendingConversation(conversation: Conversation) {
-        synchronized(pending) {
+        synchronized(conversationsLock) {
             pending[conversation.uri.uri] = conversation
         }
     }
@@ -245,7 +244,7 @@ class Account(
      * Remove a pending request
      */
     fun removePendingConversation(uri: Uri) {
-        synchronized(pending) {
+        synchronized(conversationsLock) {
             pending.remove(uri.uri)
         }
     }
@@ -253,26 +252,20 @@ class Account(
     /**
      * Check if a contact exists
      */
-    fun isContact(uri: Uri): Boolean {
-        synchronized(contacts) {
-            return contacts.containsKey(uri.uri)
-        }
-    }
+    fun isContact(uri: Uri): Boolean =
+        synchronized(contactsLock) { contacts.containsKey(uri.uri) }
 
     /**
      * Get or create contact
      */
-    fun getContact(uri: Uri): Contact {
-        synchronized(contacts) {
-            return contacts.getOrPut(uri.uri) { Contact(uri) }
-        }
-    }
+    fun getContact(uri: Uri): Contact =
+        synchronized(contactsLock) { contacts.getOrPut(uri.uri) { Contact(uri) } }
 
     /**
      * Add contact to cache
      */
     fun addContact(contact: Contact) {
-        synchronized(contacts) {
+        synchronized(contactsLock) {
             contacts[contact.uri.uri] = contact
         }
     }
