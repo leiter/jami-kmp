@@ -16,6 +16,7 @@
  */
 package net.jami.ui.viewmodel
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -71,15 +72,12 @@ class AccountCreationViewModel(
     }
 
     init {
-        // Observe account events for creation result and username lookup results
+        // Observe account events for creation result and post-creation name registration
         scope.launch {
             accountService.accountEvents.collect { event ->
                 when (event) {
                     is AccountEvent.RegistrationStateChanged -> {
                         handleRegistrationState(event)
-                    }
-                    is AccountEvent.RegisteredNameFound -> {
-                        handleNameLookupResult(event)
                     }
                     is AccountEvent.NameRegistrationEnded -> {
                         handleNameRegistrationResult(event)
@@ -91,9 +89,10 @@ class AccountCreationViewModel(
     }
 
     /**
-     * Update the username field.
+     * Update the username field and trigger an availability check.
      *
-     * @param username New username value.
+     * Debounces 500ms, then calls [AccountService.findRegistrationByName] which
+     * suspends until the daemon responds — fully self-contained, no ambient event matching.
      */
     fun setUsername(username: String) {
         val trimmed = username.trim()
@@ -106,18 +105,48 @@ class AccountCreationViewModel(
             error = null
         )
         lookupJob?.cancel()
-        if (trimmed.isNotEmpty()) {
-            lookupJob = scope.launch {
-                _state.value = _state.value.copy(usernameCheckInProgress = true)
-                delay(500)
-                val currentAccountId = accountService.currentAccount.value?.accountId ?: ""
-                Log.d(TAG, "setUsername debounce fired: looking up '$trimmed' with accountId='$currentAccountId'")
-                val result = accountService.lookupName(currentAccountId, trimmed)
-                Log.d(TAG, "setUsername lookupName returned: $result")
-                if (!result) {
-                    // Daemon rejected the call (not initialized or invalid); clear spinner
-                    Log.w(TAG, "lookupName returned false — daemon may not be ready")
-                    _state.value = _state.value.copy(usernameCheckInProgress = false)
+        if (trimmed.isEmpty()) return
+        lookupJob = scope.launch {
+            _state.value = _state.value.copy(usernameCheckInProgress = true)
+            delay(500)
+            if (trimmed != _state.value.username) return@launch  // stale after debounce
+            val accountId = accountService.currentAccount.value?.accountId ?: ""
+            Log.d(TAG, "setUsername debounce fired: looking up '$trimmed' accountId='$accountId'")
+            try {
+                val result = accountService.findRegistrationByName(accountId, "", trimmed)
+                if (trimmed != _state.value.username) return@launch  // stale after await
+                Log.d(TAG, "setUsername result: state=${result.state} name=${result.name}")
+                _state.value = when (result.state) {
+                    LookupState.NotFound -> _state.value.copy(
+                        usernameAvailable = true,
+                        usernameCheckInProgress = false,
+                        usernameCheckError = null
+                    )
+                    LookupState.Success -> _state.value.copy(
+                        usernameAvailable = false,
+                        usernameCheckInProgress = false,
+                        usernameCheckError = null
+                    )
+                    LookupState.Invalid -> _state.value.copy(
+                        usernameAvailable = false,
+                        usernameCheckInProgress = false,
+                        usernameCheckError = "Invalid username"
+                    )
+                    LookupState.NetworkError -> _state.value.copy(
+                        usernameAvailable = null,
+                        usernameCheckInProgress = false,
+                        usernameCheckError = "Name server unreachable"
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "setUsername lookup failed: ${e.message}")
+                if (trimmed == _state.value.username) {
+                    _state.value = _state.value.copy(
+                        usernameCheckInProgress = false,
+                        usernameCheckError = "Lookup failed"
+                    )
                 }
             }
         }
@@ -215,45 +244,6 @@ class AccountCreationViewModel(
                 )
             }
             else -> {}
-        }
-    }
-
-    /**
-     * Handle username lookup results from the name server.
-     */
-    private fun handleNameLookupResult(event: AccountEvent.RegisteredNameFound) {
-        val currentUsername = _state.value.username
-        // Match by query (the term we searched) because name may be empty when not found
-        val searchTerm = event.query.ifEmpty { event.name }
-        Log.d(TAG, "handleNameLookupResult: query='${event.query}' name='${event.name}' state=${event.state} currentUsername='$currentUsername' searchTerm='$searchTerm'")
-        if (searchTerm != currentUsername) {
-            Log.d(TAG, "handleNameLookupResult: ignoring stale result (searchTerm='$searchTerm' != current='$currentUsername')")
-            return
-        }
-
-        val lookupState = LookupState.fromInt(event.state)
-        Log.d(TAG, "handleNameLookupResult: lookupState=$lookupState")
-        _state.value = when (lookupState) {
-            LookupState.NotFound -> _state.value.copy(
-                usernameAvailable = true,
-                usernameCheckInProgress = false,
-                usernameCheckError = null
-            )
-            LookupState.Success -> _state.value.copy(
-                usernameAvailable = false,
-                usernameCheckInProgress = false,
-                usernameCheckError = null
-            )
-            LookupState.Invalid -> _state.value.copy(
-                usernameAvailable = false,
-                usernameCheckInProgress = false,
-                usernameCheckError = "Invalid username"
-            )
-            LookupState.NetworkError -> _state.value.copy(
-                usernameAvailable = null,  // unknown — don't block the user
-                usernameCheckInProgress = false,
-                usernameCheckError = "Name server unreachable"
-            )
         }
     }
 

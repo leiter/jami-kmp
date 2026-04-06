@@ -19,6 +19,7 @@ package net.jami.viewmodel
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.services.StubDaemonBridge
+import net.jami.services.StubDeviceRuntimeService
 import net.jami.ui.viewmodel.ConversationsViewModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -31,7 +32,7 @@ class ConversationsViewModelTest {
     fun initialStateHasEmptyConversations() = runTest {
         val stub = StubDaemonBridge()
         val services = makeTestServiceStack(stub, this)
-        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, viewModelScope())
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), viewModelScope())
         advanceUntilIdle()
         assertTrue(vm.state.value.conversations.isEmpty())
     }
@@ -40,7 +41,7 @@ class ConversationsViewModelTest {
     fun initialSearchQueryIsEmpty() = runTest {
         val stub = StubDaemonBridge()
         val services = makeTestServiceStack(stub, this)
-        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, viewModelScope())
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), viewModelScope())
         assertEquals("", vm.state.value.searchQuery)
     }
 
@@ -48,7 +49,7 @@ class ConversationsViewModelTest {
     fun loadConversationsWithNoAccountReturnsEmpty() = runTest {
         val stub = StubDaemonBridge()
         val services = makeTestServiceStack(stub, this)
-        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, viewModelScope())
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), viewModelScope())
         vm.loadConversations()
         advanceUntilIdle()
         assertTrue(vm.state.value.conversations.isEmpty())
@@ -59,7 +60,7 @@ class ConversationsViewModelTest {
     fun searchUpdatesQuery() = runTest {
         val stub = StubDaemonBridge()
         val services = makeTestServiceStack(stub, this)
-        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, viewModelScope())
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), viewModelScope())
         vm.search("alice")
         assertEquals("alice", vm.state.value.searchQuery)
     }
@@ -69,7 +70,7 @@ class ConversationsViewModelTest {
         val stub = StubDaemonBridge()
         val services = makeTestServiceStack(stub, this)
         prepareAccountInService(stub, services.accountService)
-        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, viewModelScope())
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), viewModelScope())
         advanceUntilIdle()
         vm.search("alice")
         advanceUntilIdle()
@@ -80,7 +81,7 @@ class ConversationsViewModelTest {
     fun refreshDoesNotCrash() = runTest {
         val stub = StubDaemonBridge()
         val services = makeTestServiceStack(stub, this)
-        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, viewModelScope())
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), viewModelScope())
         vm.refresh()
         advanceUntilIdle()
         assertFalse(vm.state.value.isLoading)
@@ -90,7 +91,7 @@ class ConversationsViewModelTest {
     fun removeConversationWithNoAccountDoesNotCrash() = runTest {
         val stub = StubDaemonBridge()
         val services = makeTestServiceStack(stub, this)
-        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, viewModelScope())
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), viewModelScope())
         vm.removeConversation("conv123")
         advanceUntilIdle()
         // No crash
@@ -101,7 +102,7 @@ class ConversationsViewModelTest {
         val stub = StubDaemonBridge()
         val services = makeTestServiceStack(stub, this)
         prepareAccountInService(stub, services.accountService)
-        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, viewModelScope())
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), viewModelScope())
         advanceUntilIdle()
         vm.loadConversations()
         advanceUntilIdle()
@@ -112,7 +113,7 @@ class ConversationsViewModelTest {
     fun onClearedDoesNotThrow() = runTest {
         val stub = StubDaemonBridge()
         val services = makeTestServiceStack(stub, this)
-        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, disposableScope())
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), disposableScope())
         vm.onCleared()
     }
 }

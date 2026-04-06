@@ -254,6 +254,10 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
         JamiService.unhold(accountId, callId)
     }
 
+    override fun resume(accountId: String, callId: String): Boolean {
+        return JamiService.resume(accountId, callId)
+    }
+
     override fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean) {
         JamiService.muteLocalMedia(accountId, callId, mediaType, mute)
     }
@@ -265,6 +269,10 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
 
     override fun unholdConference(accountId: String, confId: String): Boolean {
         return JamiService.unholdConference(accountId, confId)
+    }
+
+    override fun resumeConference(accountId: String, confId: String): Boolean {
+        return JamiService.resumeConference(accountId, confId)
     }
 
     override fun setActiveParticipant(accountId: String, confId: String, callId: String) {

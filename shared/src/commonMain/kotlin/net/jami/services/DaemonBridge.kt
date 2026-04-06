@@ -48,11 +48,13 @@ interface DaemonBridgeApi {
     fun hangUp(accountId: String, callId: String)
     fun hold(accountId: String, callId: String)
     fun unhold(accountId: String, callId: String)
+    fun resume(accountId: String, callId: String): Boolean
     fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean)
 
     // ==================== Conference Operations ====================
     fun holdConference(accountId: String, confId: String): Boolean
     fun unholdConference(accountId: String, confId: String): Boolean
+    fun resumeConference(accountId: String, confId: String): Boolean
     fun setActiveParticipant(accountId: String, confId: String, callId: String)
     fun setConferenceLayout(accountId: String, confId: String, layout: Int)
 
@@ -267,10 +269,12 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun hangUp(accountId: String, callId: String) {}
     override fun hold(accountId: String, callId: String) {}
     override fun unhold(accountId: String, callId: String) {}
+    override fun resume(accountId: String, callId: String): Boolean = true
     override fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean) {}
 
     override fun holdConference(accountId: String, confId: String): Boolean = true
     override fun unholdConference(accountId: String, confId: String): Boolean = true
+    override fun resumeConference(accountId: String, confId: String): Boolean = true
     override fun setActiveParticipant(accountId: String, confId: String, callId: String) {}
     override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {}
 
@@ -323,8 +327,9 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun setActiveCodecList(accountId: String, codecList: List<Long>) {}
     override fun getCodecDetails(accountId: String, codecId: Long): Map<String, String> = emptyMap()
 
-    override fun searchConversation(accountId: String, conversationId: String, author: String, lastId: String, query: String, type: String, after: Long, before: Long, maxResult: Long, flag: Int): Long = 0L
-    override fun loadSwarmUntil(accountId: String, conversationId: String, fromMessage: String, toMessage: String): Long = 0L
+    private var nextTaskId: Long = 1L
+    override fun searchConversation(accountId: String, conversationId: String, author: String, lastId: String, query: String, type: String, after: Long, before: Long, maxResult: Long, flag: Int): Long = nextTaskId++
+    override fun loadSwarmUntil(accountId: String, conversationId: String, fromMessage: String, toMessage: String): Long = nextTaskId++
 
     override fun setPushNotificationToken(token: String) {}
     override fun setPushNotificationConfig(config: Map<String, String>) {}

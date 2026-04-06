@@ -16,19 +16,25 @@
  */
 package net.jami.services
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 import net.jami.model.Account
 import net.jami.model.AccountConfig
 import net.jami.model.AccountCredentials
 import net.jami.model.ConfigKey
 import net.jami.model.Conversation
+import net.jami.model.SwarmMessage
 import net.jami.model.TrustRequest
 import net.jami.model.Uri
 import net.jami.utils.Log
@@ -60,6 +66,15 @@ class AccountService(
 
     private val _incomingMessages = MutableSharedFlow<IncomingMessage>()
     val incomingMessages: SharedFlow<IncomingMessage> = _incomingMessages.asSharedFlow()
+
+    // Structured RegisteredName results for findRegistrationByName / findRegistrationByAddress
+    private val _registeredNames = MutableSharedFlow<RegisteredName>(extraBufferCapacity = 64)
+
+    // Task ID -> deferred for loadSwarmUntil results
+    private val loadingTasks = mutableMapOf<Long, CompletableDeferred<List<SwarmMessage>>>()
+
+    // Task ID -> SharedFlow for searchConversation streaming results
+    private val conversationSearches = mutableMapOf<Long, MutableSharedFlow<ConversationSearchResult>>()
 
     private val accountsMap = mutableMapOf<String, Account>()
 
@@ -357,18 +372,20 @@ class AccountService(
     // ==================== Name Service ====================
 
     /**
-     * Register a username on the name server.
+     * Register a username on the name server (fire-and-forget).
+     * Result arrives via [onNameRegistrationEnded] callback → [AccountEvent.NameRegistrationEnded].
      */
-    fun registerName(accountId: String, name: String, scheme: String = "", password: String = ""): Boolean {
+    fun registerName(accountId: String, name: String, scheme: String = "", password: String = "") {
         accountsMap[accountId]?.let { account ->
-            if (account.registeringUsername) return false
+            if (account.registeringUsername) return
             account.registeringUsername = true
         }
-        return daemonBridge.registerName(accountId, name, scheme, password)
+        daemonBridge.registerName(accountId, name, scheme, password)
     }
 
     /**
-     * Look up a registered name.
+     * Look up a registered name (low-level, fire-and-forget).
+     * Prefer [findRegistrationByName] for an awaitable result.
      */
     fun lookupName(accountId: String, name: String): Boolean {
         Log.d(TAG, "lookupName: accountId='$accountId' name='$name'")
@@ -376,10 +393,45 @@ class AccountService(
     }
 
     /**
-     * Look up an address on the name server.
+     * Look up an address on the name server (low-level, fire-and-forget).
+     * Prefer [findRegistrationByAddress] for an awaitable result.
      */
     fun lookupAddress(accountId: String, address: String): Boolean {
         return daemonBridge.lookupAddress(accountId, "", address)
+    }
+
+    /**
+     * Look up a username and suspend until the daemon responds.
+     * Mirrors Android's AccountService.findRegistrationByName().
+     */
+    suspend fun findRegistrationByName(accountId: String, nameserver: String, name: String): RegisteredName {
+        if (name.isEmpty()) return RegisteredName(accountId, name, name)
+        val deferred = CompletableDeferred<RegisteredName>()
+        val job = scope.launch {
+            _registeredNames
+                .filter { it.accountId == accountId && it.query == name }
+                .first()
+                .let { deferred.complete(it) }
+        }
+        daemonBridge.lookupName(accountId, nameserver, name)
+        return deferred.await().also { job.cancel() }
+    }
+
+    /**
+     * Look up an address and suspend until the daemon responds.
+     * Mirrors Android's AccountService.findRegistrationByAddress().
+     */
+    suspend fun findRegistrationByAddress(accountId: String, nameserver: String, address: String): RegisteredName {
+        require(address.isNotEmpty()) { "Address cannot be empty" }
+        val deferred = CompletableDeferred<RegisteredName>()
+        val job = scope.launch {
+            _registeredNames
+                .filter { it.accountId == accountId && it.query == address }
+                .first()
+                .let { deferred.complete(it) }
+        }
+        daemonBridge.lookupAddress(accountId, nameserver, address)
+        return deferred.await().also { job.cancel() }
     }
 
     /**
@@ -393,14 +445,54 @@ class AccountService(
 
     /**
      * Load more messages from a swarm conversation.
+     *
+     * Suspends until the daemon callback ([onSwarmLoaded]) resolves the in-flight deferred.
+     * Concurrent callers receive the same deferred (deduplication).
      */
-    fun loadMore(conversation: Conversation, count: Int = 32) {
-        val fromMessage = conversation.lastElementLoaded ?: ""
-        daemonBridge.loadConversation(conversation.accountId, conversation.uri.rawRingId, fromMessage, count)
+    suspend fun loadMore(conversation: Conversation, count: Int = 32): Conversation {
+        if (conversation.mode == Conversation.Mode.Syncing ||
+            conversation.mode == Conversation.Mode.Request
+        ) return conversation
+
+        val deferred = conversation.loadingMutex.withLock { conversation.startLoading() }
+        if (!deferred.isCompleted) {
+            daemonBridge.loadConversation(
+                conversation.accountId,
+                conversation.uri.rawRingId,
+                conversation.lastElementLoaded ?: "",
+                count
+            )
+        }
+        return deferred.await()
+    }
+
+    /**
+     * Load messages between two message IDs (inclusive).
+     * Suspends until the daemon callback resolves.
+     */
+    suspend fun loadUntil(
+        conversation: Conversation,
+        from: String = "",
+        until: String = ""
+    ): List<SwarmMessage> {
+        if (conversation.mode == Conversation.Mode.Syncing ||
+            conversation.mode == Conversation.Mode.Request
+        ) return emptyList()
+
+        val deferred = CompletableDeferred<List<SwarmMessage>>()
+        val taskId = daemonBridge.loadSwarmUntil(
+            conversation.accountId,
+            conversation.uri.rawRingId,
+            from,
+            until
+        )
+        loadingTasks[taskId] = deferred
+        return deferred.await()
     }
 
     /**
      * Search within a conversation.
+     * Returns a [Flow] that emits batches of results and completes when the search is done.
      */
     fun searchConversation(
         accountId: String,
@@ -412,10 +504,45 @@ class AccountService(
         after: Long = 0,
         before: Long = 0,
         maxResult: Long = 0
-    ): Long {
-        return daemonBridge.searchConversation(
+    ): Flow<ConversationSearchResult> {
+        val flow = MutableSharedFlow<ConversationSearchResult>(extraBufferCapacity = 64)
+        val taskId = daemonBridge.searchConversation(
             accountId, conversationUri.rawRingId, author, lastId, query, type, after, before, maxResult, 0
         )
+        conversationSearches[taskId] = flow
+        return flow
+    }
+
+    /**
+     * Called when swarm history is loaded (pagination result from daemon).
+     * Resolves the Conversation's loading deferred and any loadUntil tasks.
+     */
+    internal fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<SwarmMessage>) {
+        val task = loadingTasks.remove(id)
+        val conversation = getAccount(accountId)?.getSwarm(conversationId)
+        if (conversation != null) {
+            if (messages.isNotEmpty()) conversation.lastElementLoaded = messages.last().id
+            conversation.stopLoading()?.complete(conversation)
+        }
+        task?.complete(messages)
+        scope.launch {
+            _accountEvents.emit(AccountEvent.SwarmLoaded(accountId, conversationId, messages))
+        }
+    }
+
+    /**
+     * Called when search results arrive from daemon.
+     * Emits to the matching search Flow; completes the Flow when conversationId is empty.
+     */
+    internal fun onMessagesFound(id: Long, accountId: String, conversationId: String, messages: List<Map<String, String>>) {
+        if (conversationId.isEmpty()) {
+            conversationSearches.remove(id)
+            return
+        }
+        if (messages.isNotEmpty()) {
+            val flow = conversationSearches[id] ?: return
+            scope.launch { flow.emit(ConversationSearchResult(messages)) }
+        }
     }
 
     // ==================== Contact Operations ====================
@@ -792,7 +919,15 @@ class AccountService(
                 }
             }
         }
+        val registeredName = RegisteredName(
+            accountId = accountId,
+            query = query.ifEmpty { name },
+            name = name,
+            address = address,
+            state = LookupState.fromInt(state)
+        )
         scope.launch {
+            _registeredNames.emit(registeredName)
             _accountEvents.emit(AccountEvent.RegisteredNameFound(accountId, state, address, name, query))
         }
     }
@@ -946,7 +1081,30 @@ sealed class AccountEvent {
         val name: String,
         val photo: String
     ) : AccountEvent()
+
+    data class SwarmLoaded(
+        val accountId: String,
+        val conversationId: String,
+        val messages: List<SwarmMessage>
+    ) : AccountEvent()
 }
+
+/**
+ * A batch of search results from [AccountService.searchConversation].
+ */
+data class ConversationSearchResult(val messages: List<Map<String, String>>)
+
+/**
+ * Result of a name-server lookup (name ↔ address).
+ * Mirrors Android's AccountService.RegisteredName data class.
+ */
+data class RegisteredName(
+    val accountId: String,
+    val query: String,
+    val name: String,
+    val address: String = "",
+    val state: LookupState = LookupState.Success
+)
 
 /**
  * Lookup state for name registration.

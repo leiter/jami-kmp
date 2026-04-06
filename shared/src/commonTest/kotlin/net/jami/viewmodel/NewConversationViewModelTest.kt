@@ -20,6 +20,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.model.Contact
 import net.jami.services.StubDaemonBridge
+import net.jami.services.StubDeviceRuntimeService
 import net.jami.ui.viewmodel.ContactItem
 import net.jami.ui.viewmodel.NewConversationViewModel
 import kotlin.test.Test
@@ -38,7 +39,7 @@ class NewConversationViewModelTest {
         val contactService = makeContactService(stub, accountService, scope)
         val callService = makeCallService(stub, accountService, scope)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, scope)
-        return NewConversationViewModel(contactService, facade, accountService, scope)
+        return NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), scope)
     }
 
     @Test
@@ -46,7 +47,7 @@ class NewConversationViewModelTest {
         val stub = StubDaemonBridge()
         val vm = makeVm(stub, this)
         assertEquals("", vm.state.value.searchQuery)
-        assertTrue(vm.state.value.searchResults.isEmpty())
+        assertTrue(vm.state.value.publicDirectoryResults.isEmpty())
         assertTrue(vm.state.value.selectedContacts.isEmpty())
         assertFalse(vm.state.value.isGroup)
         assertFalse(vm.state.value.isLoading)
@@ -61,7 +62,7 @@ class NewConversationViewModelTest {
         vm.search("")
         advanceUntilIdle()
         assertEquals("", vm.state.value.searchQuery)
-        assertTrue(vm.state.value.searchResults.isEmpty())
+        assertTrue(vm.state.value.publicDirectoryResults.isEmpty())
     }
 
     @Test
@@ -153,13 +154,13 @@ class NewConversationViewModelTest {
         val contactService = makeContactService(stub, accountService, this)
         val callService = makeCallService(stub, accountService, this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = NewConversationViewModel(contactService, facade, accountService, viewModelScope())
+        val vm = NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), viewModelScope())
         vm.search("alice")
         // Simulate daemon returning a name lookup result
         accountService.onRegisteredNameFound(TEST_ACCOUNT_ID, 0, "abc123def", "alice")
         advanceUntilIdle()
         // Result should be added to search results
-        assertTrue(vm.state.value.searchResults.any { it.username == "alice" })
+        assertTrue(vm.state.value.publicDirectoryResults.any { it.username == "alice" })
     }
 
     @Test
@@ -169,7 +170,7 @@ class NewConversationViewModelTest {
         val contactService = makeContactService(stub, accountService, this)
         val callService = makeCallService(stub, accountService, this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = NewConversationViewModel(contactService, facade, accountService, disposableScope())
+        val vm = NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), disposableScope())
         vm.onCleared()
     }
 }

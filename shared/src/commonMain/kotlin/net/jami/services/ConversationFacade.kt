@@ -38,6 +38,7 @@ import net.jami.model.Call.CallStatus
 import net.jami.model.CallHistory
 import net.jami.model.Conference
 import net.jami.model.Contact
+import net.jami.model.ContactEvent
 import net.jami.model.ContactViewModel
 import net.jami.model.Conversation
 import net.jami.model.MemberRole
@@ -530,8 +531,7 @@ class ConversationFacade(
         }
 
         return if (conversation.isSwarm) {
-            accountService.loadMore(conversation)
-            conversation
+            accountService.loadMore(conversation)  // suspends until daemon callback
         } else {
             getConversationHistory(conversation)
         }
@@ -962,10 +962,18 @@ class ConversationFacade(
 
     /**
      * Called when a message is received.
+     * Adds the message to the conversation model before emitting the event so that
+     * any handler calling loadMessagesFromHistory() sees the updated history.
      */
     internal fun onMessageReceived(accountId: String, conversationId: String, message: net.jami.model.SwarmMessage) {
         Log.d(TAG, "onMessageReceived: $conversationId msgId=${message.id}")
+        val account = accountService.getAccount(accountId)
+        val conversation = account?.getSwarm(conversationId)
         scope.launch {
+            if (account != null && conversation != null) {
+                val interaction = swarmMessageToInteraction(account, conversation, message)
+                conversation.addSwarmElement(interaction, true)
+            }
             _conversationEvents.emit(ConversationEvent.MessageReceived(accountId, conversationId, message))
         }
     }
@@ -982,9 +990,11 @@ class ConversationFacade(
 
     /**
      * Called when messages are found from search.
+     * Delegates task resolution to AccountService, then emits the conversation event.
      */
     internal fun onMessagesFound(messageId: Int, accountId: String, conversationId: String, messages: List<Map<String, String>>) {
         Log.d(TAG, "onMessagesFound: $conversationId found=${messages.size}")
+        accountService.onMessagesFound(messageId.toLong(), accountId, conversationId, messages)
         scope.launch {
             _conversationEvents.emit(ConversationEvent.MessagesFound(accountId, conversationId, messages))
         }
@@ -992,12 +1002,80 @@ class ConversationFacade(
 
     /**
      * Called when swarm messages are loaded.
+     * Delegates task resolution to AccountService (completes loadMore/loadUntil deferreds),
+     * populates the conversation model with Interaction objects, then emits the event.
+     * Populating the model first ensures loadMessagesFromHistory() in the ViewModel sees
+     * a non-empty getSortedHistory() when it runs in response to this event.
      */
     internal fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<net.jami.model.SwarmMessage>) {
         Log.d(TAG, "onSwarmLoaded: $conversationId messages=${messages.size}")
+        accountService.onSwarmLoaded(id, accountId, conversationId, messages)
+
+        val account = accountService.getAccount(accountId)
+        val conversation = account?.getSwarm(conversationId)
+
         scope.launch {
+            if (account != null && conversation != null) {
+                for (message in messages) {
+                    val interaction = swarmMessageToInteraction(account, conversation, message)
+                    conversation.addSwarmElement(interaction, false)
+                }
+            }
             _conversationEvents.emit(ConversationEvent.SwarmLoaded(accountId, conversationId, messages))
         }
+    }
+
+    /**
+     * Converts a SwarmMessage from the daemon into an Interaction suitable for the conversation model.
+     * Mirrors Android's AccountService.getInteractionFromSwarmMessage().
+     *
+     * Field mappings:
+     * - message.id → interaction.messageId (via setSwarmInfo)
+     * - message.linearizedParent → interaction.parentId (via setSwarmInfo)
+     * - message.body["author"] → interaction.author
+     * - message.timestamp * 1000 → interaction.timestamp (daemon: seconds, model: ms)
+     * - message.body["body"] → interaction.body (text content)
+     * - message.status → interaction.statusMap
+     */
+    private fun swarmMessageToInteraction(account: Account, conversation: Conversation, message: SwarmMessage): Interaction {
+        val author = message.author
+        val timestamp = message.timestamp * 1000L
+        val authorUri = Uri.fromString(author)
+        val contact = conversation.findContact(authorUri) ?: account.getContactFromCache(authorUri)
+
+        val interaction: Interaction = when (message.type) {
+            "initial" -> ContactEvent(account.accountId, contact).setEvent(ContactEvent.Event.INVITED)
+            "member" -> {
+                val action = message.body["action"] ?: ""
+                ContactEvent(account.accountId, contact).setEvent(ContactEvent.Event.fromConversationAction(action))
+            }
+            "text/plain", "application/edited-message" -> TextMessage(
+                author = author.ifEmpty { null },
+                account = account.accountId,
+                timestamp = timestamp,
+                conversation = conversation,
+                message = message.textContent,
+                isIncoming = !contact.isUser,
+                replyToId = message.replyTo.ifEmpty { null }
+            )
+            "application/call-history+json" -> CallHistory(
+                daemonId = null,
+                account = account.accountId,
+                contactNumber = author.ifEmpty { null },
+                direction = if (contact.isUser) Call.Direction.OUTGOING else Call.Direction.INCOMING,
+                timestamp = timestamp
+            )
+            else -> Interaction(account.accountId).also { it.timestamp = timestamp }
+        }
+
+        interaction.contact = contact
+        interaction.account = account.accountId
+        interaction.reactToId = message.body["react-to"]?.ifEmpty { null }
+        interaction.edit = message.body["edit"]?.ifEmpty { null }
+        interaction.setSwarmInfo(conversation.uri.rawRingId, message.id, message.linearizedParent.ifEmpty { null })
+        interaction.statusMap = message.status.mapValues { Interaction.MessageStates.fromInt(it.value) }
+
+        return interaction
     }
 
     /**

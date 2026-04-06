@@ -197,6 +197,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.unholdCall(accountId, callId = callId)
     }
 
+    override fun resume(accountId: String, callId: String): Boolean {
+        bridge.unholdCall(accountId, callId = callId)
+        return true
+    }
+
     override fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean) {
         if (mediaType == "MEDIA_TYPE_AUDIO") {
             bridge.muteAudio(accountId, callId = callId, muted = mute)
@@ -214,6 +219,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun unholdConference(accountId: String, confId: String): Boolean {
         Log.d(TAG, "unholdConference: $confId")
         return true // TODO: bridge.unholdConference(accountId, confId)
+    }
+
+    override fun resumeConference(accountId: String, confId: String): Boolean {
+        Log.d(TAG, "resumeConference: $confId")
+        return true // TODO: bridge.resumeConference(accountId, confId)
     }
 
     override fun setActiveParticipant(accountId: String, confId: String, callId: String) {

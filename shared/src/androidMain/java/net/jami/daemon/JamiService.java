@@ -49,6 +49,14 @@ public class JamiService {
     return JamiServiceJNI.unhold(accountId, callId);
   }
 
+  public static boolean resume(String accountId, String callId) {
+    return JamiServiceJNI.resume(accountId, callId);
+  }
+
+  public static boolean resumeConference(String accountId, String confId) {
+    return JamiServiceJNI.resumeConference(accountId, confId);
+  }
+
   public static boolean muteLocalMedia(String accountId, String callId, String mediaType, boolean mute) {
     return JamiServiceJNI.muteLocalMedia(accountId, callId, mediaType, mute);
   }

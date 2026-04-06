@@ -150,6 +150,8 @@ public class JamiServiceJNI {
   public final static native boolean hangUp(String jarg1, String jarg2);
   public final static native boolean hold(String jarg1, String jarg2);
   public final static native boolean unhold(String jarg1, String jarg2);
+  public final static native boolean resume(String jarg1, String jarg2);
+  public final static native boolean resumeConference(String jarg1, String jarg2);
   public final static native boolean muteLocalMedia(String jarg1, String jarg2, String jarg3, boolean jarg4);
   public final static native boolean transfer(String jarg1, String jarg2, String jarg3);
   public final static native boolean attendedTransfer(String jarg1, String jarg2, String jarg3);

@@ -199,6 +199,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "unhold called (stub): $callId")
     }
 
+    override fun resume(accountId: String, callId: String): Boolean {
+        Log.d(TAG, "resume called (stub): $callId")
+        return true
+    }
+
     override fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean) {
         Log.d(TAG, "muteLocalMedia called (stub): $callId, $mediaType, mute=$mute")
     }
@@ -211,6 +216,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun unholdConference(accountId: String, confId: String): Boolean {
         Log.d(TAG, "unholdConference called (stub): $confId")
+        return true
+    }
+
+    override fun resumeConference(accountId: String, confId: String): Boolean {
+        Log.d(TAG, "resumeConference called (stub): $confId")
         return true
     }
 

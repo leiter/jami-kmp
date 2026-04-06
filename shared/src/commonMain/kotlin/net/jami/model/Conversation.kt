@@ -16,6 +16,7 @@
  */
 package net.jami.model
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.sync.Mutex
 
 /**
  * Represents a conversation in Jami.
@@ -117,6 +119,32 @@ class Conversation(
     var lastSent: String? = null
         private set
     var lastElementLoaded: String? = null
+
+    // ==================== Pagination State ====================
+
+    /** Mutex protecting [_loadingDeferred] from concurrent access. */
+    val loadingMutex = Mutex()
+
+    private var _loadingDeferred: CompletableDeferred<Conversation>? = null
+
+    /**
+     * Returns the existing in-flight load deferred (deduplication) or creates a new one.
+     * Caller must hold [loadingMutex].
+     */
+    internal fun startLoading(): CompletableDeferred<Conversation> {
+        _loadingDeferred?.let { return it }
+        return CompletableDeferred<Conversation>().also { _loadingDeferred = it }
+    }
+
+    /**
+     * Clears the in-flight deferred and returns it so the caller can complete it.
+     * Caller must hold [loadingMutex] or call from the single writer path.
+     */
+    internal fun stopLoading(): CompletableDeferred<Conversation>? {
+        val d = _loadingDeferred
+        _loadingDeferred = null
+        return d
+    }
 
     // ==================== Composing ====================
 
