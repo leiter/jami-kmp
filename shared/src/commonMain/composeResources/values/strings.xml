@@ -642,6 +642,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="welcome_jami_description">Share your Jami identifier in order to be contacted more easily!</string>
 
     <!--  Conversation details  -->
+    <string name="content_desc_back">Back</string>
+    <string name="action_audio">Audio</string>
+    <string name="action_video">Video</string>
     <string name="details">Details</string>
     <string name="secure_p2p_connection">Secure peer-to-peer connection</string>
     <string name="swarm_type">Conversation type</string>

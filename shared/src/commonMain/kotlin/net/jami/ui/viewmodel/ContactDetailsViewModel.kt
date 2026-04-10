@@ -25,7 +25,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.jami.model.Contact
+import net.jami.model.Conversation
 import net.jami.model.Uri
+import net.jami.services.AccountService
 import net.jami.services.ContactEvent
 import net.jami.services.ContactService
 import net.jami.services.ConversationFacade
@@ -37,9 +39,11 @@ data class ContactDetailsState(
     val displayName: String = "",
     val username: String = "",
     val identityHash: String = "",
-    val avatarUri: String? = null,
+    val avatarBytes: ByteArray? = null,
     val isBlocked: Boolean = false,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val conversationType: String = "",
+    val swarmId: String = "",
 )
 
 /**
@@ -49,6 +53,7 @@ data class ContactDetailsState(
  * for blocking, removing, or starting a conversation with them.
  */
 class ContactDetailsViewModel(
+    private val accountService: AccountService,
     private val contactService: ContactService,
     private val conversationFacade: ConversationFacade,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -88,31 +93,52 @@ class ContactDetailsViewModel(
     }
 
     /**
-     * Load contact details by URI string.
+     * Load contact details by conversation URI/ID string.
      *
-     * @param uri URI of the contact to display.
+     * @param uri URI or raw ring ID of the conversation/contact to display.
      */
     fun loadContact(uri: String) {
         scope.launch {
             _state.value = _state.value.copy(isLoading = true)
             try {
+                val account = accountService.currentAccount.value ?: return@launch
+                val accountId = account.accountId
+                currentAccountId = accountId
+
                 val contactUri = Uri.fromString(uri)
                 currentContactUri = contactUri
 
-                // Determine the current account
-                // In a real scenario, accountId would be passed or obtained from AccountService
-                currentAccountId = null // Set from context
+                // Find the conversation first (conversationId may be a swarm ID)
+                val conversation = account.getConversations().firstOrNull { conv ->
+                    conv.uri.rawRingId == contactUri.rawRingId ||
+                        conv.contact?.uri?.rawRingId == contactUri.rawRingId
+                }
 
-                val contact = contactService.findContact(currentAccountId ?: "", contactUri)
-                val profile = contactService.loadContactData(contact, currentAccountId ?: "")
+                // Resolve the contact — prefer the conversation's contact for correct name lookup
+                val resolvedContact = conversation?.contact
+                val contact = resolvedContact
+                    ?: contactService.findContact(accountId, contactUri)
+                val profile = contactService.loadContactData(contact, accountId)
+
+                val convType = when (conversation?.mode) {
+                    Conversation.Mode.OneToOne -> "Private"
+                    Conversation.Mode.AdminInvitesOnly -> "Group (admin invites)"
+                    Conversation.Mode.InvitesOnly -> "Group (invite only)"
+                    Conversation.Mode.Public -> "Public group"
+                    Conversation.Mode.Legacy -> "Legacy"
+                    else -> ""
+                }
+                val swarmId = if (conversation?.isSwarm == true) conversation.uri.uri else ""
 
                 _state.value = ContactDetailsState(
                     displayName = profile.displayName ?: contact.displayUsername,
                     username = contact.username ?: "",
                     identityHash = contact.primaryNumber,
-                    avatarUri = null, // Avatar is ByteArray, would need encoding for display
+                    avatarBytes = profile.avatar,
                     isBlocked = contact.status == Contact.Status.BLOCKED,
-                    isLoading = false
+                    isLoading = false,
+                    conversationType = convType,
+                    swarmId = swarmId,
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)
@@ -130,10 +156,8 @@ class ContactDetailsViewModel(
             val isCurrentlyBlocked = _state.value.isBlocked
 
             if (isCurrentlyBlocked) {
-                // Unblock by re-adding
                 contactService.addContact(accountId, contactUri)
             } else {
-                // Block (remove with ban)
                 contactService.removeContact(accountId, contactUri, ban = true)
             }
             _state.value = _state.value.copy(isBlocked = !isCurrentlyBlocked)
@@ -168,17 +192,16 @@ class ContactDetailsViewModel(
     }
 
     /**
-     * Refresh the displayed contact from the cache.
+     * Refresh the displayed contact from the cache (presence/profile changes).
      */
     private fun refreshContact() {
         val contactUri = currentContactUri ?: return
         val accountId = currentAccountId ?: return
         val contact = contactService.findContactInCache(accountId, contactUri) ?: return
-
         _state.value = _state.value.copy(
             displayName = contact.displayUsername,
             username = contact.username ?: "",
-            isBlocked = contact.status == Contact.Status.BLOCKED
+            isBlocked = contact.status == Contact.Status.BLOCKED,
         )
     }
 
