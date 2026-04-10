@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">Διαγραφή</string>
+    <string name="ic_advanced_menu">Προχωρημένες ρυθμίσεις</string>
+    <string name="ic_blacklist_menu">Μπλοκαρισμένες επαφές</string>
+    <string name="add_ring_account_title">Προσθήκη λογαριασμού</string>
+    <string name="add_sip_account_title">Προσθήκη λογαριασμού SIP</string>
+    <string name="ring_account_default_name">Λογαριασμός Jami %1$s</string>
+    <string name="prompt_alias">Ψευδώνυμο</string>
+    <string name="prompt_hostname">Hostname</string>
+    <string name="prompt_username">Όνομα χρήστη</string>
+    <string name="prompt_password">Σύνθημα</string>
+    <string name="action_create">Δημιουργία λογαριασμού</string>
+    <string name="action_create_short">Δημιουργία</string>
+    <string name="action_register">Εγγραφή</string>
+    <string name="action_settings">Ρυθμίσεις</string>
+    <string name="error_field_required">Υποχρεωτικό πεδίο</string>
+    <string name="dialog_wait_create">Εισαγωγή λογαριασμού</string>
+    <string name="dialog_wait_create_details">Παρακαλώ περιμένετε για την εισαγωγή του νέου λογαριασμού</string>
+    <string name="dialog_wait_update">Αναβάθμιση λογαριασμού</string>
+    <string name="dialog_wait_update_details">Παρακαλώ περιμένετε για την αναβάθμιση του λογαριασμού σας...</string>
+    <string name="account_type_ip2ip">Λογαριασμός IP</string>
+    <string name="help_ring">Ένας λογαριασμός Jami σας επιτρέπει να επικοινωνείτε με ασφάλεια μέσω ενός πλήρως αποκεντρωμένου δικτύου peer-to-peer</string>
+    <string name="help_sip_title">Προσθήκη λογαριασμού SIP</string>
+    <string name="account_delete_dialog_message">Η ενέργεια δεν μπορεί να αναιρεθεί.</string>
+    <string name="empty_account_list">Κανένας εγγεγραμμένος λογαριασμός</string>
+    <string name="normal_accounts_titles">Λογαριασμοί</string>
+    <string name="normal_devices_titles">Συνδεδεμένες συσκευές</string>
+    <string name="account_device_revoke">Αφαίρεση συσκευής</string>
+    <string name="account_device_revocation_success_title">Επιτυχής</string>
+    <string name="account_device_revocation_success">Η συσκευή αφαιρέθηκε!</string>
+    <string name="account_device_revocation_unknown_device">Άγνωστη συσκευή.</string>
+    <string name="account_device_revocation_error_unknown">Άγνωστο σφάλμα.</string>
+    <string name="account_password_change">Αλλαγή κωδικού</string>
+    <string name="account_password_set">Εγκαταστήστε κωδικό πρόσβασης</string>
+    <string name="account_password_summary">Διαχείρηση του κωδικού του λογαριασμού σας</string>
+    <string name="account_password_change_wait_message">Αλλαγή κωδικού λογαριασμού</string>
+    <string name="account_preferences_basic_tab">Γενικά</string>
+    <string name="account_basic_category">Βασικές Ρυθμίσεις</string>
+    <string name="account_hostname_label">Hostname</string>
+    <string name="account_bootstrap_label">Πυροσκόπηση</string>
+    <string name="account_name_server_label">Διοικητής ονόματος</string>
+    <string name="account_username_label">Όνομα χρήστη</string>
+    <string name="account_password_label">Κωδικός</string>
+    <string name="account_optionnal_category">Προαιρετικές ρυθμίσεις</string>
+    <string name="account_useragent_label">Πράκτορας χρήστη</string>
+    <string name="account_autoanswer_label">Αυτόματη απάντηση</string>
+    <string name="account_rendezvous_label">Τρόπος Συνεδρίασης</string>
+    <string name="account_rendezvous_summary">Στην κατάσταση συνάντησης, οι εισερχόμενες κλήσεις θα προστεθούν σε αίθουσα συνεδριάσεων.</string>
+    <string name="account_upnp_label">Ενεργοποίηση UPnP</string>
+    <string name="account_proxy_field">Διαμεσολαβητής</string>
+    <string name="account_audio_label">Ήχος</string>
+    <string name="account_preferences_media_tab">Μέσα</string>
+    <string name="account_ringtone_label">Ringtones</string>
+    <string name="account_ringtone_enabled_label">Ενεργοποίηση ringtones</string>
+    <string name="account_ringtone_path_label">Δρόμο χτυπήματος</string>
+    <string name="account_ringtone_custom_label">Χρησιμοποιήστε εξατομικευμένο χτυπήμα</string>
+    <string name="account_ringtone_title">Επιλογή ringtone</string>
+    <string name="account_ringtone_summary">Επιλέξτε ένα χτυπήμα ή επιλέξτε το δικό σας</string>
+    <string name="account_video_label">Βίντεο</string>
+    <string name="account_video_enable">Ενεργοποίηση βίντεο</string>
+    <string name="account_preferences_advanced_tab">Για προχωρημένους</string>
+    <string name="account_call_settings_title">Ρυθμίσεις κλήσης</string>
+    <string name="account_dht_public_in_calls_label">Να επιτρέπονται κλήσεις από άγνωστες επαφές</string>
+    <string name="account_registration_exp_label">Λήξη εγγραφής</string>
+    <string name="account_local_interface_label">Τοπική διεπαφή</string>
+    <string name="account_local_port_label">Τοπική θύρα</string>
+    <string name="account_stun_enable_label">Χρήση STUN</string>
+    <string name="account_accept_files">Αυτόματη αποδοχή εισερχομένων αρχείων</string>
+    <string name="account_conversation_settings_title">Ρυθμίσεις συνομιλίας</string>
+    <string name="account_accept_files_max_size">Μέγιστο μέγεθος αρχείου για να γίνει αυτόματα αποδεκτή</string>
+    <string name="account_accept_files_never">Ποτέ μην αποδέχεσαι αυτόματα</string>
+    <string name="account_accept_files_always">Πάντα να δέχεσαι αυτόματα</string>
+    <string name="size_mb">%1$d MB</string>
+    <string name="account_turn_enable_label">Χρήση TURN</string>
+    <string name="account_turn_server_label">Διαμεσολαβητής TURN</string>
+    <string name="account_turn_username_label">Όνομα χρήστη TURN</string>
+    <string name="account_turn_password_label">Κωδικός TURN</string>
+    <string name="account_published_same_as_local_label">Εκδόθηκε με την ίδια τοπική</string>
+    <string name="account_published_port_label">Εκδοθείσα Λιμάνια</string>
+    <string name="account_published_address_label">Δημοσιευμένη διεύθυνση</string>
+    <string name="disabled">Αναπηρία</string>
+    <string name="enabled">Ενεργοποιημένο</string>
+    <string name="default_value">Προεπιλογή</string>
+    <string name="account_proxy_label">Διαμεσολαβητής DHT</string>
+    <string name="account_proxy_enable_label">Χρησιμοποιήστε DHT proxy</string>
+    <string name="account_proxy_server_label">Δικτυακή διεύθυνση DHT</string>
+    <string name="account_proxy_server_list_label">Δικτυακή διεύθυνση λίστας DHT proxy</string>
+    <string name="account_sip_proxy_label">Διαμεσολαβητής</string>
+    <string name="account_peer_discovery_label">Τοπική ανακάλυψη ομοτίμων</string>
+    <string name="account_peer_discovery_enable_label">Επιτρέψτε την τοπική ανακάλυψη ομοτίμων</string>
+    <string name="account_peer_discovery_enable_summary">Συνδέστε με άλλους κόμβους DHT που διαφημίζουν στο τοπικό μας δίκτυο</string>
+    <string name="account_credentials_label">Πιστογραφίες</string>
+    <string name="account_credentials_edit">Τροποποίηση διαπιστευτήτων</string>
+    <string name="account_credentials_add">Προσθήκη πιστοποιήσεων</string>
+    <string name="account_preferences_security_tab">Ασφάλεια</string>
+    <string name="account_srtp_switch_label">Κρυπτογράφηση ροών μέσων (SRTP)</string>
+    <string name="account_tls_transport_switch_label">Χρησιμοποιήστε TLS Transport</string>
+    <string name="account_tls_password_label">Συνθηματικό ιδιωτικού κλειδιού</string>
+    <string name="account_rtp_max_port">Μέγιστη</string>
+    <string name="account_rtp_min_port">Λεπτομέτρου</string>
+    <string name="account_new_device_password">Εισάγετε κύριο κωδικό πρόσβασης για να ξεκλειδώσετε λογαριασμό</string>
+    <string name="error_password_char_count">το ελάχιστο 6 χαρακτήρες</string>
+    <string name="export_account_wait_title">Σε παρακαλώ, περίμενε...</string>
+    <string name="export_account_wait_message">Πληροφορίες λογαριασμού εξαγωγής</string>
+    <string name="account_export_file">Αντίγραφο ασφαλείας λογαριασμού</string>
+    <string name="account_export_file_summary">Κάντε αντίγραφο ασφαλείας του λογαριασμού σας στην συσκευή σας για να το αποκαταστήσετε αργότερα.</string>
+    <string name="account_enter_password">Εισάγετε τον κωδικό πρόσβασης</string>
+    <string name="account_contact_me">Επικοινωνήστε μαζί μου για την Τζάμι!</string>
+    <string name="update_account">Ενημερώστε λογαριασμό</string>
+    <string name="account_migration">Το λογαριασμό σας στο Τζάμι μπορεί να ενημερωθεί. Παρακαλώ εισάγετε το κωδικό πρόσβασης σας.</string>
+    <string name="ring_account">Λογαριασμός Τζάμι</string>
+    <string name="sip_account">Λογαριασμός SIP</string>
+    <string name="ring_account_identity">Ταυτότητα</string>
+    <string name="account_migration_title_dialog">Μεταφορά λογαριασμού</string>
+    <string name="account_update_needed">Απαιτείται ενημέρωση</string>
+    <string name="account_sip_cannot_be_registered_message">Μπορείτε να συνεχίσετε με τη διαδικασία δημιουργίας λογαριασμού ή να επεξεργαστείτε τις πληροφορίες σας εδώ.</string>
+    <string name="account_no_network_title">Σφάλμα δικτύου</string>
+    <string name="account_device_added_title">Προσθήκη συσκευής λογαριασμού</string>
+    <string name="account_device_updated_title">Ενημερωμένη συσκευή λογαριασμού</string>
+    <string name="account_sip_register_anyway">Καταχωρήστε έτσι κι αλλιώς.</string>
+    <string name="account_tv_settings_header">Ρυθμίσεις λογαριασμού</string>
+    <string name="account_tv_advance_settings_header">Προχωρημένες ρυθμίσεις</string>
+    <string name="account_tv_add_contact">Προσθήκη επαφής</string>
+    <string name="account_tv_advanced_settings">Αλλαγή των γενικών ρυθμίσεων</string>
+    <string name="account_tv_about">Σχετικά με το Jami</string>
+    <string name="tv_about_version">Έκδοση</string>
+    <string name="tv_about_license">Άδεια</string>
+    <string name="tv_about_author">Δικαιώματα του δημιουργού</string>
+    <string name="tv_about_credits">Συντελεστές</string>
+    <string name="account_link_device">Συνδέστε από άλλη συσκευή</string>
+    <string name="account_link_button">Συνδέστε από το δίκτυο</string>
+    <string name="account_link_archive_button">Συνδέστε από την υποστήριξη</string>
+    <string name="account_new_button">Δημιουργήστε λογαριασμό Jami</string>
+    <string name="account_link_export_button">Σύνδεση νέας συσκευής</string>
+    <string name="account_link_show_button">Δείξτε %d περισσότερες συνδεδεμένες συσκευές</string>
+    <string name="account_link_hide_button">Κρύψτε το συνδεδεμένο όργανο</string>
+    <string name="account_end_export_button">Κοντά</string>
+    <string name="account_export_title">Λογαριασμός σύνδεσης με άλλες συσκευές</string>
+    <string name="account_connect_server_button">Συνδέστε τον διακομιστή διαχείρισης</string>
+    <string name="account_connect_button">Σύνδεση</string>
+    <string name="help_credentials_enter">Εισάγετε τα στοιχεία διαπιστώσεων της οργάνωσής σας</string>
+    <string name="help_connect_password_enter">Εισάγετε τον κωδικό πρόσβασης της οργάνωσης σας</string>
+    <string name="account_connect_prompt_username">Όνομα χρήστη</string>
+    <string name="account_connect_server">Συνδέστε τον διακομιστή διαχείρισης</string>
+    <string name="error_username_empty">Εισάγετε όνομα χρήστη</string>
+    <string name="register_name">Πληροφορική ονομασία</string>
+    <string name="registered_username">Καταχωρισμένο όνομα χρήστη</string>
+    <string name="register_username">Καταχώρηση δημόσιου ονόματος χρήστη</string>
+    <string name="register_recommended">Προτεινόμενα</string>
+    <string name="username_already_taken">Το όνομα χρήστη ήδη χρησιμοποιείται</string>
+    <string name="invalid_username">Μη έγκυρο όνομα χρήστη</string>
+    <string name="unknown_error">Αγνωστός σφάλμα. Παρακαλούμε ελέγξτε την σύνδεση του δικτύου σας!</string>
+    <string name="account_status_connecting">Συνδέεται</string>
+    <string name="account_status_connection_error">Λάθος σύνδεσης</string>
+    <string name="account_status_online">Συνδεδεμένος</string>
+    <string name="account_status_unknown">Άγνωστοι</string>
+    <string name="account_status_offline">Απαλλαγή</string>
+    <string name="account_status_error">Σφάλμα</string>
+    <string name="account_creation_home">Καλώς ήλθατε στο Jami</string>
+    <string name="account_creation_profile">Δημιουργήστε το προφίλ σας</string>
+    <string name="account_creation_ring">Δημιουργήστε το λογαριασμό σας στο Jami</string>
+    <string name="account_revoke_device_hint">Εισάγετε κωδικό πρόσβασης για να επιβεβαιώσετε</string>
+    <string name="enter_password">Εισάγετε τον κωδικό πρόσβασης</string>
+    <string name="revoke_device_title">Αφαίρεση συσκευής</string>
+    <string name="revoke_device_wait_title">Σε παρακαλώ, περίμενε...</string>
+    <string name="revoke_device_wait_message">Συσκευή ανάκλησης</string>
+    <string name="rename_device_title">Μετανόμευση αυτής της συσκευής</string>
+    <string name="rename_device_button">Επανακατακατηγορία</string>
+    <string name="account_rename_device_hint">Επιλέξτε νέο όνομα συσκευής</string>
+    <string name="account_device_this_indicator">Αυτή η συσκευή</string>
+    <string name="account_disabled_indicator">Αναπηρία</string>
+    <string name="error_format_not_supported">Η μορφή δεν υποστιρίζεται.</string>
+    <string name="account_link_device_title">Σύνδεση νέας συσκευής</string>
+    <string name="account_link_device_button">Σύνδεση</string>
+</resources>

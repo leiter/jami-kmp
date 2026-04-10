@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="call_error_no_microphone">कॉल रद्द. किसी माइक्रोफ़ोन का पता नहीं चला.</string>
+    <string name="call_error_no_camera_no_microphone">कॉल रद्द. किसी कैमरे या माइक्रोफ़ोन का पता नहीं चला.</string>
+    <string name="call_human_state_searching">खोज</string>
+    <string name="call_human_state_incoming">आने वाला</string>
+    <string name="call_human_state_connecting">कनेक्ट करना</string>
+    <string name="call_human_state_ringing">बज रहा है</string>
+    <string name="call_human_state_current">बात करना</string>
+    <string name="call_human_state_hungup">खत्म हो गया</string>
+    <string name="call_human_state_busy">व्यस्त</string>
+    <string name="call_human_state_failure">असफल</string>
+    <string name="call_human_state_hold">रखो</string>
+    <string name="call_human_state_unhold">रोकना</string>
+    <string name="call_human_state_over">खत्म हो गया</string>
+    <string name="call_moderator">संयोजक</string>
+    <string name="call_muted">चुप</string>
+    <string name="call_handRaised">हाथ उठाया</string>
+</resources>

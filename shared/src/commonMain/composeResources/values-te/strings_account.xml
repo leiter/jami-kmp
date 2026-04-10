@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">తొలగించు</string>
+    <string name="ic_advanced_menu">అధునాతన సెట్టింగులు</string>
+    <string name="ic_blacklist_menu">అడ్డుకున్న పరిచయాలు</string>
+    <string name="add_ring_account_title">ఖాతా జోడించండి</string>
+    <string name="add_sip_account_title">SIP ఖాతాను జోడించండి</string>
+    <string name="ring_account_default_name">జామి ఖాతా %1$s</string>
+    <string name="prompt_alias">అలియాస్</string>
+    <string name="prompt_hostname">హోస్ట్ పేరు</string>
+    <string name="prompt_username">వాడుకరి పేరు</string>
+    <string name="prompt_password">పాస్వర్డ్</string>
+    <string name="action_create">ఖాతాను సృష్టించు</string>
+    <string name="action_create_short">సృష్టించు</string>
+    <string name="action_register">నమోదు</string>
+    <string name="action_settings">సెట్టింగులు</string>
+    <string name="error_field_required">ఈ ఫీల్డ్ అవసరం</string>
+    <string name="dialog_wait_create">ఖాతా జోడించడం</string>
+    <string name="dialog_wait_create_details">దయచేసి మీ కొత్త ఖాతా జోడించే వరకు వేచి ఉండండి.</string>
+    <string name="dialog_wait_update">ఖాతా నవీకరణ</string>
+    <string name="dialog_wait_update_details">దయచేసి మీ కొత్త ఖాతా నవీకరించబడినప్పుడు వేచి ఉండండి.</string>
+    <string name="account_type_ip2ip">ఐపి ఖాతా</string>
+    <string name="help_ring">జామి ఖాతా మీకు పూర్తిగా పంపిణీ చేయబడిన నెట్వర్క్ ద్వారా సురక్షితంగా పీర్-టు-పీర్ వ్యక్తులతో సంప్రదించడానికి అనుమతిస్తుంది.</string>
+    <string name="help_sip_title">SIP ఖాతాను జోడించండి</string>
+    <string name="account_delete_dialog_message">ఈ చర్యను తిరస్కరించలేము.</string>
+    <string name="empty_account_list">ఖాతా నమోదు చేయలేదు</string>
+    <string name="normal_accounts_titles">ఖాతాలు</string>
+    <string name="normal_devices_titles">లింక్ చేయబడిన పరికరాలు</string>
+    <string name="account_device_revoke">ఉపకరణాన్ని రద్దు చేయడం</string>
+    <string name="account_device_revocation_success_title">విజయం</string>
+    <string name="account_device_revocation_success">పరికరం ఇప్పుడు రద్దు!</string>
+    <string name="account_device_revocation_unknown_device">తెలియని పరికరం.</string>
+    <string name="account_device_revocation_error_unknown">తెలియని లోపం.</string>
+    <string name="account_password_change">పాస్వర్డ్ మార్చు</string>
+    <string name="account_password_set">పాస్వర్డ్ సెట్</string>
+    <string name="account_password_summary">మీ ఖాతా పాస్వర్డ్ను నిర్వహించండి.</string>
+    <string name="account_password_change_wait_message">ఖాతా పాస్వర్డ్ మార్చడం</string>
+    <string name="account_preferences_basic_tab">జనరల్</string>
+    <string name="account_basic_category">ప్రాథమిక సెట్టింగులు</string>
+    <string name="account_hostname_label">హోస్ట్ పేరు</string>
+    <string name="account_bootstrap_label">బూట్స్ట్రాప్</string>
+    <string name="account_name_server_label">పేరు సర్వర్</string>
+    <string name="account_username_label">వాడుకరి పేరు</string>
+    <string name="account_password_label">పాస్వర్డ్</string>
+    <string name="account_optionnal_category">ఐచ్ఛిక సెట్టింగులు</string>
+    <string name="account_useragent_label">వినియోగదారు ఏజెంట్</string>
+    <string name="account_autoanswer_label">ఆటో జవాబు</string>
+    <string name="account_rendezvous_label">సమావేశం మోడ్</string>
+    <string name="account_rendezvous_summary">రిసెప్షన్ మోడ్ లో, ఇన్కమింగ్ కాల్స్ సమావేశ గదికి జోడించబడతాయి.</string>
+    <string name="account_upnp_label">UPnP ని సక్రియం చేయండి</string>
+    <string name="account_proxy_field">ప్రాక్సీ</string>
+    <string name="account_audio_label">ఆడియో</string>
+    <string name="account_preferences_media_tab">మీడియా</string>
+    <string name="account_ringtone_label">రింగ్ టోన్</string>
+    <string name="account_ringtone_enabled_label">రింగ్ టోన్లను యాక్టివేట్ చేయండి</string>
+    <string name="account_ringtone_path_label">రింగ్టోన్ మార్గం</string>
+    <string name="account_ringtone_custom_label">కస్టమ్ రింగ్టోన్ ఉపయోగించండి</string>
+    <string name="account_ringtone_title">రింగ్ టోన్ ఎంచుకోండి</string>
+    <string name="account_ringtone_summary">ఒక రింగ్టోన్ ఎంచుకోండి లేదా మీ స్వంత ఎంచుకోండి</string>
+    <string name="account_video_label">వీడియో</string>
+    <string name="account_video_enable">వీడియోను ప్రారంభించండి</string>
+    <string name="account_preferences_advanced_tab">ఆధునిక</string>
+    <string name="account_call_settings_title">కాల్ సెట్టింగులు</string>
+    <string name="account_dht_public_in_calls_label">తెలియని పరిచయాల నుండి ఇన్కమింగ్ కాల్స్ అనుమతించు</string>
+    <string name="account_registration_exp_label">నమోదు గడువు ముగిసింది</string>
+    <string name="account_local_interface_label">స్థానిక ఇంటర్ఫేస్</string>
+    <string name="account_local_port_label">స్థానిక నౌకాశ్రయం</string>
+    <string name="account_stun_enable_label">STUN ను ఉపయోగించండి</string>
+    <string name="account_accept_files">స్వయంచాలకంగా ఇన్కమింగ్ ఫైళ్ళను అంగీకరించండి</string>
+    <string name="account_conversation_settings_title">సంభాషణ సెట్టింగులు</string>
+    <string name="account_accept_files_max_size">స్వయంచాలకంగా అంగీకరించడానికి గరిష్ట ఫైల్ పరిమాణం</string>
+    <string name="account_accept_files_never">ఎప్పుడూ స్వయంచాలకంగా అంగీకరించవద్దు</string>
+    <string name="account_accept_files_always">ఎల్లప్పుడూ స్వయంచాలకంగా అంగీకరించండి</string>
+    <string name="size_mb">%1$d MB</string>
+    <string name="account_turn_enable_label">TURN ను ఉపయోగించండి</string>
+    <string name="account_turn_server_label">టర్న్ సర్వర్</string>
+    <string name="account_turn_username_label">TURN వాడుకరి పేరు</string>
+    <string name="account_turn_password_label">టర్న్ పాస్వర్డ్</string>
+    <string name="account_published_same_as_local_label">స్థానిక ప్రచురణతో సమానం</string>
+    <string name="account_published_port_label">ప్రచురించిన పోర్ట్</string>
+    <string name="account_published_address_label">ప్రచురించిన చిరునామా</string>
+    <string name="disabled">వైకల్యాలు</string>
+    <string name="enabled">అనుమతి</string>
+    <string name="default_value">డిఫాల్ట్</string>
+    <string name="account_proxy_label">DHT ప్రాక్సీ</string>
+    <string name="account_proxy_enable_label">DHT ప్రాక్సీని ఉపయోగించు</string>
+    <string name="account_proxy_server_label">DHT ప్రాక్సీ చిరునామా</string>
+    <string name="account_proxy_server_list_label">DHT ప్రాక్సీ జాబితా URL</string>
+    <string name="account_sip_proxy_label">ప్రాక్సీ</string>
+    <string name="account_peer_discovery_label">స్థానిక సహచరుల ఆవిష్కరణ</string>
+    <string name="account_peer_discovery_enable_label">స్థానిక సహచరుల అన్వేషణను ప్రారంభించండి</string>
+    <string name="account_peer_discovery_enable_summary">మా స్థానిక నెట్వర్క్లో ప్రకటనలు చేసే ఇతర DHT నోడ్లకు కనెక్ట్ అవ్వండి</string>
+    <string name="account_credentials_label">సర్టిఫికేట్లు</string>
+    <string name="account_credentials_edit">క్రెడింటల్లను సవరించు</string>
+    <string name="account_credentials_add">ఆధారాలను జోడించండి</string>
+    <string name="account_preferences_security_tab">భద్రత</string>
+    <string name="account_srtp_switch_label">మీడియా స్ట్రీమ్లను (SRTP) గుప్తీకరించండి</string>
+    <string name="account_tls_transport_switch_label">TLS రవాణాను ఉపయోగించు</string>
+    <string name="account_tls_password_label">ప్రైవేట్ కీ పాస్వర్డ్</string>
+    <string name="account_rtp_max_port">గరిష్టం</string>
+    <string name="account_rtp_min_port">కనీస</string>
+    <string name="account_new_device_password">ఖాతాను అన్లాక్ చేయడానికి ప్రధాన పాస్వర్డ్ను నమోదు చేయండి</string>
+    <string name="error_password_char_count">6 అక్షరాలు</string>
+    <string name="export_account_wait_title">దయచేసి వేచి ఉండండి.</string>
+    <string name="export_account_wait_message">ఎగుమతి ఖాతా సమాచారం</string>
+    <string name="account_export_file">బ్యాకప్ ఖాతా</string>
+    <string name="account_export_file_summary">మీ ఖాతాను మీ పరికరంలో బ్యాకప్ చేసి, తరువాత దాన్ని పునరుద్ధరించండి.</string>
+    <string name="account_enter_password">పాస్వర్డ్ను నమోదు చేయండి</string>
+    <string name="account_contact_me">Jami వద్ద నాకు సంప్రదించండి!</string>
+    <string name="update_account">ఖాతా నవీకరణ</string>
+    <string name="account_migration">మీ జమీ ఖాతా నవీకరించబడుతుంది. దయచేసి మీ పాస్వర్డ్ను నమోదు చేయండి.</string>
+    <string name="ring_account">జామి ఖాతా</string>
+    <string name="sip_account">SIP ఖాతా</string>
+    <string name="ring_account_identity">గుర్తింపు</string>
+    <string name="account_migration_title_dialog">ఖాతా వలస</string>
+    <string name="account_update_needed">నవీకరణ అవసరం</string>
+    <string name="account_sip_cannot_be_registered_message">మీరు ఖాతా సృష్టి ప్రక్రియను కొనసాగించవచ్చు లేదా మీ సమాచారాన్ని ఇక్కడ సవరించవచ్చు. ఖాతా సెట్టింగులలో తరువాత ఎడిషన్ ఇప్పటికీ సాధ్యమే.</string>
+    <string name="account_no_network_title">నెట్వర్క్ లోపం</string>
+    <string name="account_device_added_title">ఖాతా పరికరం జోడించబడింది</string>
+    <string name="account_device_updated_title">ఖాతా పరికరం నవీకరించబడింది</string>
+    <string name="account_sip_register_anyway">ఏమైనప్పటికీ నమోదు</string>
+    <string name="account_tv_settings_header">ఖాతా సెట్టింగులు</string>
+    <string name="account_tv_advance_settings_header">అధునాతన సెట్టింగులు</string>
+    <string name="account_tv_add_contact">పరిచయం జోడించండి</string>
+    <string name="account_tv_advanced_settings">సాధారణ సెట్టింగులను మార్చు</string>
+    <string name="account_tv_about">జామి గురించి</string>
+    <string name="tv_about_version">వెర్షన్</string>
+    <string name="tv_about_license">లైసెన్స్</string>
+    <string name="tv_about_author">రచయిత హక్కులు</string>
+    <string name="tv_about_credits">క్రెడిట్స్</string>
+    <string name="account_link_device">మరొక పరికరము నుండి కనెక్ట్</string>
+    <string name="account_link_button">నెట్వర్క్ నుండి కనెక్ట్</string>
+    <string name="account_link_archive_button">బ్యాకప్ నుండి కనెక్ట్</string>
+    <string name="account_new_button">జమి ఖాతాను సృష్టించు</string>
+    <string name="account_link_export_button">కొత్త పరికరానికి లింక్</string>
+    <string name="account_link_show_button">%d మరింత లింక్ చేయబడిన పరికరాన్ని చూపించు</string>
+    <string name="account_link_hide_button">లింక్ చేయబడిన పరికరాన్ని దాచండి</string>
+    <string name="account_end_export_button">దగ్గరగా</string>
+    <string name="account_export_title">ఇతర పరికరాలకు లింక్ ఖాతా</string>
+    <string name="account_connect_server_button">నిర్వహణ సర్వర్కు కనెక్ట్</string>
+    <string name="account_connect_button">కనెక్ట్</string>
+    <string name="help_credentials_enter">మీ సంస్థ యొక్క ఆధారాలను నమోదు చేయండి</string>
+    <string name="help_connect_password_enter">మీ సంస్థ పాస్వర్డ్ను నమోదు చేయండి</string>
+    <string name="account_connect_prompt_username">వాడుకరి పేరు</string>
+    <string name="account_connect_server">నిర్వహణ సర్వర్కు కనెక్ట్</string>
+    <string name="error_username_empty">ఒక వినియోగదారు పేరును నమోదు చేయండి</string>
+    <string name="register_name">రిజిస్టర్ పేరు</string>
+    <string name="registered_username">నమోదు చేసిన వాడుకరి పేరు</string>
+    <string name="register_username">పబ్లిక్ యూజర్ పేరును నమోదు చేయండి</string>
+    <string name="register_recommended">సిఫార్సు</string>
+    <string name="username_already_taken">ఇప్పటికే తీసుకోబడిన వాడుకరి పేరు</string>
+    <string name="invalid_username">చెల్లని వాడుకరి పేరు</string>
+    <string name="unknown_error">తెలియని లోపం. దయచేసి మీ నెట్వర్క్ కనెక్షన్ను తనిఖీ చేయండి!</string>
+    <string name="account_status_connecting">కనెక్షన్</string>
+    <string name="account_status_connection_error">కనెక్షన్ లోపం</string>
+    <string name="account_status_online">ఆన్లైన్</string>
+    <string name="account_status_unknown">తెలియని</string>
+    <string name="account_status_offline">ఆఫ్లైన్</string>
+    <string name="account_status_error">తప్పు</string>
+    <string name="account_creation_home">జామికి స్వాగతం</string>
+    <string name="account_creation_profile">మీ ప్రొఫైల్ను సృష్టించండి</string>
+    <string name="account_creation_ring">మీ జామి ఖాతాను సృష్టించండి</string>
+    <string name="account_revoke_device_hint">నిర్ధారించడానికి పాస్వర్డ్ను నమోదు చేయండి</string>
+    <string name="enter_password">పాస్వర్డ్ను నమోదు చేయండి</string>
+    <string name="revoke_device_title">ఉపకరణాన్ని రద్దు చేయడం</string>
+    <string name="revoke_device_wait_title">దయచేసి వేచి ఉండండి.</string>
+    <string name="revoke_device_wait_message">ఉపసంహరించుకునే పరికరం</string>
+    <string name="rename_device_title">ఈ పరికరాన్ని పేరు మార్చు</string>
+    <string name="rename_device_button">పేరు మార్చు పరికరం</string>
+    <string name="account_rename_device_hint">కొత్త పరికర పేరును ఎంచుకోండి</string>
+    <string name="account_device_this_indicator">ఈ పరికరం</string>
+    <string name="account_disabled_indicator">వైకల్యాలు</string>
+    <string name="error_format_not_supported">ఈ ఫార్మాట్కు మద్దతు లేదు.</string>
+    <string name="account_link_device_title">కొత్త పరికరాన్ని లింక్ చేయండి</string>
+    <string name="account_link_device_button">కనెక్ట్</string>
+</resources>

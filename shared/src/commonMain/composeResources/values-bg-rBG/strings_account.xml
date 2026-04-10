@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">Изтриване</string>
+    <string name="ic_advanced_menu">Разширени настройки</string>
+    <string name="ic_blacklist_menu">Блокирани контакти</string>
+    <string name="add_ring_account_title">Добавяне на акаунт</string>
+    <string name="add_sip_account_title">Добавяне на профил за SIP</string>
+    <string name="ring_account_default_name">акаунт на Jami %1$s</string>
+    <string name="prompt_alias">Псевдоним</string>
+    <string name="prompt_hostname">Име на сървъра</string>
+    <string name="prompt_username">Потребителско име</string>
+    <string name="prompt_password">Парола</string>
+    <string name="action_create">Създаване на профил</string>
+    <string name="action_create_short">Създаване</string>
+    <string name="action_register">Регистриране</string>
+    <string name="action_settings">Настройки</string>
+    <string name="error_field_required">Това поле е задължително</string>
+    <string name="dialog_wait_create">Добавяне на профил</string>
+    <string name="dialog_wait_create_details">Моля, изчакайте докато новият Ви профил бъде добавен…</string>
+    <string name="dialog_wait_update">Обновяване на профила</string>
+    <string name="dialog_wait_update_details">Моля, изчакайте докато новият Ви профил бъде обновен…</string>
+    <string name="account_type_ip2ip">IP профил</string>
+    <string name="help_ring">Jami ви позволява да се свържете с хора безопасно чрез изцяло разпределена мрежова структура.</string>
+    <string name="help_sip_title">Добавяне на профил за SIP</string>
+    <string name="account_delete_dialog_message">Това действие е необратимо.</string>
+    <string name="empty_account_list">Няма регистриран профил</string>
+    <string name="normal_accounts_titles">Профили</string>
+    <string name="normal_devices_titles">Свързани устройства</string>
+    <string name="account_device_revoke">Премахване на устройство</string>
+    <string name="account_device_revocation_success_title">Успешно</string>
+    <string name="account_device_revocation_success">Устройството е премахнато!</string>
+    <string name="account_device_revocation_unknown_device">Неизвестно устройство.</string>
+    <string name="account_device_revocation_error_unknown">Неизвестна грешка.</string>
+    <string name="account_password_change">Промяна на паролата</string>
+    <string name="account_password_set">Настройка на парола</string>
+    <string name="account_password_summary">Управлявай паролата на акаунта си.</string>
+    <string name="account_password_change_wait_message">Промяна на паролата на акаунта</string>
+    <string name="account_preferences_basic_tab">Общи</string>
+    <string name="account_basic_category">Общи настройки</string>
+    <string name="account_hostname_label">Име на сървъра</string>
+    <string name="account_bootstrap_label">Начална установка</string>
+    <string name="account_name_server_label">Именен сървър</string>
+    <string name="account_username_label">Потребителско име</string>
+    <string name="account_password_label">Парола</string>
+    <string name="account_optionnal_category">Незадължителни настройки</string>
+    <string name="account_useragent_label">Потребителски агент</string>
+    <string name="account_autoanswer_label">Авт. отговор</string>
+    <string name="account_rendezvous_label">Режим на среща</string>
+    <string name="account_rendezvous_summary">В режим \"Рендежобъд\" входящите обаждания ще бъдат добавени в конферентна зала.</string>
+    <string name="account_upnp_label">Активиране на UPnP</string>
+    <string name="account_proxy_field">Посредник</string>
+    <string name="account_audio_label">Звук</string>
+    <string name="account_preferences_media_tab">Звук и видео</string>
+    <string name="account_ringtone_label">Тонове за звънене</string>
+    <string name="account_ringtone_enabled_label">Включване на тоновете за звънене</string>
+    <string name="account_ringtone_path_label">Път към тоновете за звънене</string>
+    <string name="account_ringtone_custom_label">Използване на персонализиран тон на звънене</string>
+    <string name="account_ringtone_title">Изберете звънна тона</string>
+    <string name="account_ringtone_summary">Изберете рингтон или изберете свой</string>
+    <string name="account_video_label">Видео</string>
+    <string name="account_video_enable">Активиране на видео</string>
+    <string name="account_preferences_advanced_tab">Разширени</string>
+    <string name="account_call_settings_title">Настройки на обаждането</string>
+    <string name="account_dht_public_in_calls_label">Осигуряване на входящи обаждания от неизвестни контакти</string>
+    <string name="account_registration_exp_label">Срок на регистрацията</string>
+    <string name="account_local_interface_label">Местен интерфейс</string>
+    <string name="account_local_port_label">Местен порт</string>
+    <string name="account_stun_enable_label">Използване на STUN</string>
+    <string name="account_accept_files">Приемайте входящи файлове автоматично</string>
+    <string name="account_conversation_settings_title">Настройки за разговори</string>
+    <string name="account_accept_files_max_size">Максимален размер на файла, който да се приема автоматично</string>
+    <string name="account_accept_files_never">Никога не приемай автоматично.</string>
+    <string name="account_accept_files_always">Винаги автоматично приемайте.</string>
+    <string name="size_mb">%1$d MB</string>
+    <string name="account_turn_enable_label">Използване на TURN</string>
+    <string name="account_turn_server_label">Сървър за TURN</string>
+    <string name="account_turn_username_label">Потребителско име за TURN</string>
+    <string name="account_turn_password_label">Парола за TURN</string>
+    <string name="account_published_same_as_local_label">Публикуваният да е същият като местния</string>
+    <string name="account_published_port_label">Публикуван порт</string>
+    <string name="account_published_address_label">Публикуван адрес</string>
+    <string name="disabled">Опасни</string>
+    <string name="enabled">Включено</string>
+    <string name="default_value">По подразбиране</string>
+    <string name="account_proxy_label">DHT прокси</string>
+    <string name="account_proxy_enable_label">Използвайте DHT прокси</string>
+    <string name="account_proxy_server_label">Адрес на DHT</string>
+    <string name="account_proxy_server_list_label">URL на списъка с DHT прокси</string>
+    <string name="account_sip_proxy_label">Посредник</string>
+    <string name="account_peer_discovery_label">Местни открития на връстници</string>
+    <string name="account_peer_discovery_enable_label">Осигуряване на локалното откриване на връстници</string>
+    <string name="account_peer_discovery_enable_summary">Свържете се с други DHT възли, рекламирани в нашата локална мрежа</string>
+    <string name="account_credentials_label">Идентификационни данни</string>
+    <string name="account_credentials_edit">Редактиране на идентификационните данни</string>
+    <string name="account_credentials_add">Добавяне на идентификационни данни</string>
+    <string name="account_preferences_security_tab">Сигурност</string>
+    <string name="account_srtp_switch_label">Криптирайте медийните потоци (SRTP)</string>
+    <string name="account_tls_transport_switch_label">Използване на TLS</string>
+    <string name="account_tls_password_label">Парола за частен ключ</string>
+    <string name="account_rtp_max_port">Максимален</string>
+    <string name="account_rtp_min_port">Минимален</string>
+    <string name="account_new_device_password">Въведете основната парола, за да отключите профилa</string>
+    <string name="error_password_char_count">Най-малко 6 знака</string>
+    <string name="export_account_wait_title">Моля, изчакайте…</string>
+    <string name="export_account_wait_message">Информация за износната сметка</string>
+    <string name="account_export_file">Резервен профил</string>
+    <string name="account_export_file_summary">Запишете профила си на устройството си, за да го възстановите по-късно.</string>
+    <string name="account_enter_password">Въведете парола</string>
+    <string name="account_contact_me">Свържете се с мен по Джами!</string>
+    <string name="update_account">Обновяване на профила</string>
+    <string name="account_migration">Сметката ви в Jami може да бъде актуализирана. Моля въведете паролата си.</string>
+    <string name="ring_account">Jami профил</string>
+    <string name="sip_account">Сметка за СИП</string>
+    <string name="ring_account_identity">Идентичност</string>
+    <string name="account_migration_title_dialog">Пренасяне на профил</string>
+    <string name="account_update_needed">Нужно е обновяване</string>
+    <string name="account_sip_cannot_be_registered_message">Можете да продължите с процеса по създаване на профил, или да редактирате информацията си тук. Можете да редактирате информацията и по-късно, в настройките на профила.</string>
+    <string name="account_no_network_title">Мрежова грешка</string>
+    <string name="account_device_added_title">Профилът е добавен на устройството</string>
+    <string name="account_device_updated_title">Профилът на устройството е обновен</string>
+    <string name="account_sip_register_anyway">Регистриране въпреки това</string>
+    <string name="account_tv_settings_header">Настройки на сметката</string>
+    <string name="account_tv_advance_settings_header">Разширени настройки</string>
+    <string name="account_tv_add_contact">Добавяне на контакт</string>
+    <string name="account_tv_advanced_settings">Промените общите настройки</string>
+    <string name="account_tv_about">Относно Jami</string>
+    <string name="tv_about_version">Версия</string>
+    <string name="tv_about_license">Лиценз</string>
+    <string name="tv_about_author">Авторски права</string>
+    <string name="tv_about_credits">Заслуги</string>
+    <string name="account_link_device">Свържете се от друго устройство</string>
+    <string name="account_link_button">Свържете се от мрежата</string>
+    <string name="account_link_archive_button">Свържете се от резервното</string>
+    <string name="account_new_button">Създаване на акаунт Jami</string>
+    <string name="account_link_export_button">Свържете ново устройство</string>
+    <string name="account_link_hide_button">Скрийте свързано устройство</string>
+    <string name="account_end_export_button">затваряне</string>
+    <string name="account_export_title">Свързване на акаунт с други устройства</string>
+    <string name="account_connect_server_button">Свързване с сървър за управление</string>
+    <string name="account_connect_button">Свържете се</string>
+    <string name="help_credentials_enter">Введете идентификационните данни на организацията си</string>
+    <string name="help_connect_password_enter">Введете паролата на организацията си</string>
+    <string name="account_connect_prompt_username">Потребителско име</string>
+    <string name="account_connect_server">Свързване с сървър за управление</string>
+    <string name="account_enter_username">Въведете потребителско име</string>
+    <string name="error_username_empty">Въведете потребителско име</string>
+    <string name="register_name">Име на регистъра</string>
+    <string name="registered_username">Регистрирано потребителско име</string>
+    <string name="register_username">Регистриране на публично потребителско име</string>
+    <string name="register_recommended">Препоръчително</string>
+    <string name="username_already_taken">Потребителското име вече е заето</string>
+    <string name="invalid_username">Грешно потребителско име</string>
+    <string name="unknown_error">Неизвестна грешка. Моля, проверете връзката си с мрежата!</string>
+    <string name="account_status_connecting">Свързване</string>
+    <string name="account_status_connection_error">Грешка при свързването</string>
+    <string name="account_status_online">На линия</string>
+    <string name="account_status_unknown">Неизвестно</string>
+    <string name="account_status_offline">Извън линия</string>
+    <string name="account_status_error">Грешка</string>
+    <string name="account_creation_home">Добре дошли в Jami</string>
+    <string name="account_creation_profile">Създаване на профил</string>
+    <string name="account_creation_ring">Създаване на профил в Jami</string>
+    <string name="account_revoke_device_hint">Въведете парола, за да продължите</string>
+    <string name="enter_password">Въведете парола</string>
+    <string name="revoke_device_title">Премахване на устройство</string>
+    <string name="revoke_device_wait_title">Моля, изчакайте…</string>
+    <string name="revoke_device_wait_message">Премахване на устройството</string>
+    <string name="rename_device_title">Преименуване на това устройство</string>
+    <string name="rename_device_button">Преименуване на устройството</string>
+    <string name="account_rename_device_hint">Изберете ново име за устройството</string>
+    <string name="account_device_this_indicator">Това устройство</string>
+    <string name="account_disabled_indicator">Опасни</string>
+    <string name="error_format_not_supported">Този формат не се поддържа.</string>
+    <string name="account_link_device_title">Свържете ново устройство</string>
+    <string name="account_link_device_button">Свържете се</string>
+</resources>

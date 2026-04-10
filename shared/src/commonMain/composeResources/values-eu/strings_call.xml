@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="call_error_no_microphone">Deia bertan behera. Ez da mikrofonorik aurkitu.</string>
+    <string name="call_error_no_camera_no_microphone">Deia bertan behera. Ez da kamera edo mikrofonorik detektatu.</string>
+    <string name="call_human_state_searching">Bilatzen</string>
+    <string name="call_human_state_incoming">Jasotzen</string>
+    <string name="call_human_state_connecting">Konektatzen</string>
+    <string name="call_human_state_ringing">Deitzen</string>
+    <string name="call_human_state_current">Hizketan</string>
+    <string name="call_human_state_hungup">Amaituta</string>
+    <string name="call_human_state_busy">Lanpetuta</string>
+    <string name="call_human_state_failure">Huts eginda</string>
+    <string name="call_human_state_hold">Esperoan</string>
+    <string name="call_human_state_unhold">Jaso esperotik</string>
+    <string name="call_human_state_over">Amaituta</string>
+    <string name="call_moderator">Moderatzailea</string>
+    <string name="call_muted">Isiltasuna</string>
+    <string name="call_handRaised">Eskua altxatuta.</string>
+</resources>

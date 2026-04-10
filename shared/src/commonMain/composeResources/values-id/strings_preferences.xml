@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Jaringan</string>
+    <string name="pref_category_contacts">Kontak</string>
+    <string name="pref_category_video">Video</string>
+    <string name="pref_category_system">Sistem</string>
+    <string name="pref_category_privacy">Privasi</string>
+    <string name="pref_category_diagnostic">Diagnostik</string>
+    <string name="pref_category_appearance">Penampilan</string>
+    <string name="pref_category_connectivity">Konektivitas</string>
+    <string name="pref_category_video_settings">Pengaturan video lanjutan</string>
+    <string name="pref_mobileData_title">Data ponsel</string>
+    <string name="pref_mobileData_summary">Izinkan Jami pada jaringan 3G/LTE tambahan ke Wi-Fi</string>
+    <string name="pref_pushNotifications_title">Notifikasi push</string>
+    <string name="pref_pushNotifications_summary">Gunakan server Google untuk menerima panggilan/pesan di latar belakang</string>
+    <string name="pref_unifiedPush_summary">Gunakan layanan UnifiedPush untuk memungkinkan menerima panggilan/pesan di latar belakang</string>
+    <string name="pref_video_advanced_title">Pengaturan video lanjutan</string>
+    <string name="pref_video_advanced_summary">Ubah bitrate video, resolusi, serta akses fitur eksperimental</string>
+    <string name="pref_hd_summary">Mengirim Video HD</string>
+    <string name="pref_hwEncode_title">Aktifkan pengkodean yang dipercepat</string>
+    <string name="pref_hwEncode_summary">Fitur Eksperimental</string>
+    <string name="pref_videoBitrate_title">Bitrate video</string>
+    <string name="pref_videoBitrate_summary">Pilih bitrate video keluar default (KB/s)</string>
+    <string name="pref_videoResolution_title">Resolusi video</string>
+    <string name="pref_videoResolution_summary">Pilih resolusi keluaran video default</string>
+    <string name="pref_systemContacts_title">Gunakan kontak sistem</string>
+    <string name="pref_systemContacts_summary">Gunakan kontak sistem untuk menampilkan detail penelepon.</string>
+    <string name="pref_systemDialer_title">Lakukan panggilan sistem menggunakan Jami</string>
+    <string name="pref_systemDialer_summary">Gunakan Jami untuk melakukan panggilan sistem jika memungkinkan.</string>
+    <string name="pref_startOnBoot_title">Mulai Jami saat Startup</string>
+    <string name="pref_startOnBoot_summary">Mulai Jami di latar belakang ketika sistem berjalan.</string>
+    <string name="pref_clearHistory_title">Bersihkan riwayat</string>
+    <string name="pref_notification_title">Visibilitas notifikasi</string>
+    <string name="pref_notification_summary">Atur visibilitas notifikasi aplikasi di layar kunci.</string>
+    <string name="pref_blackList_title">Daftar blokir</string>
+    <string name="pref_blackList_summary">Periksa daftar blokir anda</string>
+    <string name="pref_delete_account_title">Hapus akun</string>
+    <string name="pref_newGroup_title">Aktifkan obrolan grup</string>
+    <string name="pref_newGroup_summary">Aktifkan pembuatan grup di Jami.</string>
+    <string name="pref_logs_title">Log diagnostik</string>
+    <string name="pref_logs_summary">Buka pengaturan log diagnostik</string>
+    <string name="pref_logs_start">Mulai logging</string>
+    <string name="pref_logs_stop">Hentikan logging</string>
+    <string name="pref_typing_title">Indikator pengetikan</string>
+    <string name="pref_block_record_title">Cegah tangkapan layar dan rekaman</string>
+    <string name="pref_block_record_summary">Cegah pengambilan tangkapan layar atau rekaman video.</string>
+    <string name="pref_link_preview_title">Pratinjau link web</string>
+    <string name="pref_link_preview_summary">Pratinjau membutuhkan pengunduhan konten dari server pihak ketiga.</string>
+    <string name="connectivity_custom_title">Kustom</string>
+</resources>

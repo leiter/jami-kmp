@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Sieć</string>
+    <string name="pref_category_contacts">Kontakty</string>
+    <string name="pref_category_video">Wideo</string>
+    <string name="pref_category_system">System</string>
+    <string name="pref_category_privacy">Prywatność</string>
+    <string name="pref_category_diagnostic">Diagnostyka</string>
+    <string name="pref_category_appearance">Wygląd</string>
+    <string name="pref_category_connectivity">Łączność</string>
+    <string name="pref_category_extensions">Rozszerzenia</string>
+    <string name="pref_category_video_settings">Zaawansowane ustawienia wideo</string>
+    <string name="pref_mobileData_title">Dane mobilne</string>
+    <string name="pref_mobileData_summary">Pozwól Jami na korzystanie z sieci 3G/LTE dodatkowo oprócz Wi-Fi</string>
+    <string name="pref_pushNotifications_title">Powiadomienia Push</string>
+    <string name="pref_pushNotifications_summary">Używaj serwerów Google, by umożliwić odbieranie wiadomości i rozmów w tle</string>
+    <string name="pref_unifiedPush_summary">Użyj usługi UnifiedPush, aby umożliwić odbieranie połączeń/przesłanek w tle</string>
+    <string name="pref_video_advanced_title">Zaawansowane ustawienia wideo</string>
+    <string name="pref_video_advanced_summary">Zmień bitrate, rozdzielczość wideo, a także uzyskaj dostęp do eksperymentalnych funkcji</string>
+    <string name="pref_hd_summary">Zezwól na wysyłane wideo w jakości HD</string>
+    <string name="pref_hwEncode_title">Włącz przyspieszone kodowanie</string>
+    <string name="pref_hwEncode_summary">Funkcja eksperymentalna</string>
+    <string name="pref_videoBitrate_title">Bitrate wideo</string>
+    <string name="pref_videoBitrate_summary">Wybierz domyślny bitrate wychodzącego wideo (KB/s)</string>
+    <string name="pref_videoResolution_title">Rozdzielczość wideo</string>
+    <string name="pref_videoResolution_summary">Wybierz domyślną rozdzielczość wychodzącego wideo</string>
+    <string name="pref_systemContacts_title">Użyj kontakty z systemu</string>
+    <string name="pref_systemContacts_summary">Użyj kontakty z systemu aby pokazać detale tego który dzwoni</string>
+    <string name="pref_systemDialer_title">Użyj Jami jako zastępstwa dla rozmów systemowych</string>
+    <string name="pref_systemDialer_summary">Użyj Jami jako zastępstwa dla rozmów systemowych, jeżeli możliwe.</string>
+    <string name="pref_startOnBoot_title">Uruchamiaj Jami przy starcie</string>
+    <string name="pref_startOnBoot_summary">Uruchom Jami w tle, podczas uruchamiania systemu.</string>
+    <string name="pref_clearHistory_title">Wyczyść historię</string>
+    <string name="pref_clearHistory_summary">Usuń historię wszystkich rozmów. Tego nie da się cofnąć.</string>
+    <string name="pref_notification_title">Widoczność powiadomień</string>
+    <string name="pref_notification_summary">Ustaw widoczność powiadomień aplikacji na ekranie blokady.</string>
+    <string name="pref_connectivity_title">Tryb połączeń</string>
+    <string name="pref_connectivity_summary">Wybierz jak połączyć Jami do systemu rozproszonego w celu odbierania rozmów i wiadomości.</string>
+    <string name="pref_blackList_title">Czarna lista</string>
+    <string name="pref_blackList_summary">Sprawdź swoją czarną listę</string>
+    <string name="pref_delete_account_title">Usuń konto</string>
+    <string name="pref_delete_account_summary">Usuń konto z tego urządzenia</string>
+    <string name="pref_persistNotification_title">Praca w tle</string>
+    <string name="pref_persistNotification_summary">Pozwól na pracę w tle aby otrzymywać wiadomości i odbierać rozmowy.</string>
+    <string name="pref_newGroup_title">Włącz rozmowę grupową</string>
+    <string name="pref_newGroup_summary">Umożliwić tworzenie grup w Jami.</string>
+    <string name="pref_logs_title">Logi diagnostyczne</string>
+    <string name="pref_logs_summary">Otwórz ustawienia logów diagnostycznych</string>
+    <string name="pref_logs_start">Start logowania</string>
+    <string name="pref_logs_stop">Stop logowania</string>
+    <string name="pref_connection_monitor">Monitor połączeń</string>
+    <string name="pref_connection_monitor_summary">Monitoruj połączenia peer-to-peer</string>
+    <string name="pref_push_notifications_logs_title">Logi powiadomień push</string>
+    <string name="pref_push_notifications_logs_summary">Zobacz logi powiadomień push.</string>
+    <string name="pref_typing_title">Wskaźnik typu</string>
+    <string name="pref_block_record_title">Zablokuj zrzuty ekranu i nagrywanie</string>
+    <string name="pref_block_record_summary">Zablokuj robienie zrzutu ekranu lub nagrywania wideo.</string>
+    <string name="pref_link_preview_title">Podglądy linków</string>
+    <string name="pref_link_preview_summary">Wystarczy pobrać treści z serwerów stron trzecich.</string>
+    <string name="notification_public">Publiczne\n(pokaż powiadomienia i ich zawartość na ekranie blokady)\n</string>
+    <string name="notification_private">Prywatne\n(pokaż powiadomienia, ale ukryj zawartość na ekranie blokady)\n</string>
+    <string name="notification_secret">Tajne\n(nie pokazuj powiadomień na ekranie blokady)\n</string>
+    <string name="connectivity_google_services_title">Serwisy Google</string>
+    <string name="connectivity_google_services_description">Użyj Google Firebase i proxy DHT żeby otrzymywać powiadomienia push.</string>
+    <string name="connectivity_local_node_title">Lokalny węzeł DHT</string>
+    <string name="connectivity_local_node_description">Używaj lokalny węzeł DHT, żeby łączyć się z innymi urządzeniami Jami i kontaktami.</string>
+    <string name="connectivity_unified_push_description">Używaj specyficzny serwer UnifiedPush, żeby otrzymywać powiadomienia push.</string>
+    <string name="connectivity_custom_title">Wartość własna</string>
+    <string name="connectivity_custom_description">Nie używamy żadnych domyślnych ustawień.</string>
+    <string name="pref_enable_extensions_title">Włącz rozszerzenia</string>
+    <string name="pref_enable_extensions_summary">Włącz rozszerzenia i ustaw ich parametry</string>
+    <string name="pref_available_extensions_title">Dostępne rozszerzenia</string>
+    <string name="pref_available_extensions_summary">Zainstalowane rozszerzenia i dodawanie rozszerzeń</string>
+    <string name="fab_extensions_add">Dodaj nowe rozszerzenie</string>
+    <string name="extension_uninstall_title">Usunąć rozszerzenie?</string>
+    <string name="extension_reset_preferences">Zresetuj ustawienia rozszerzenia</string>
+    <string name="extension_reset_preferences_summary">Rozszerzenie przywrócone do ustawień domyślnych</string>
+    <string name="extension_reset_preferences_ask">Przywrócić domyślne ustawienia dla rozszerzeń?</string>
+    <string name="extension_reset_account_preferences_ask">Przywrócić domyślne ustawienia rozszerzeń konta?</string>
+    <string name="extension_successfully_installed">Rozszerzenie <b>%1$s</b> zainstalowane.</string>
+    <string name="extension_install_failure">Błąd instalacji następującego rozszerzenia: <b>%1$s</b></string>
+    <string name="extension_recent_version_exception">Nowsza wersja <b>%1$s</b> jest dostępna.</string>
+    <string name="extension_same_version_exception">Ta sama wersja<b>%1$s</b>jest już zainstalowana. </string>
+    <string name="extension_invalid_signature">%1$s ma nieprawidłowy podpis</string>
+    <string name="extension_invalid_authority">Nastąpił błąd podczas sprawdzania upoważnienia tego rozszerzenia: <b>%1$s</b></string>
+    <string name="extension_invalid_format">Format rozszerzenia nie jest wspierany: <b>%1$s</b></string>
+    <string name="extension_force_install">wymuś\nzainstaluj</string>
+    <string name="extension_path_image_add">Dodaj nowe zdjęcie</string>
+</resources>

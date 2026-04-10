@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Verkko</string>
+    <string name="pref_category_contacts">Yhteystiedot</string>
+    <string name="pref_category_video">Video</string>
+    <string name="pref_category_system">Järjestelmä</string>
+    <string name="pref_category_privacy">Yksityisyys</string>
+    <string name="pref_category_diagnostic">Diagnostiikka</string>
+    <string name="pref_category_appearance">Ulkonäkö</string>
+    <string name="pref_category_connectivity">Yhteydet</string>
+    <string name="pref_category_extensions">Laajennukset</string>
+    <string name="pref_category_video_settings">Videon lisäasetukset</string>
+    <string name="pref_mobileData_title">Mobiilidata</string>
+    <string name="pref_mobileData_summary">Salli Jamin käyttää 3G/LTE-verkkoa wifi-yhteyden lisäksi</string>
+    <string name="pref_pushNotifications_title">Ilmoitukset</string>
+    <string name="pref_pushNotifications_summary">Käytä Google-palvelimia puhelujen/viestien ilmoittamiseen taustalla</string>
+    <string name="pref_unifiedPush_summary">Käytä UnifiedPush-palvelua, jotta puheluja/viestejä voidaan vastaanottaa taustalla</string>
+    <string name="pref_video_advanced_title">Videon lisäasetukset</string>
+    <string name="pref_video_advanced_summary">Muuta videon bittinopeutta, tarkkuutta ja kokeellisia ominaisuuksia</string>
+    <string name="pref_hd_summary">Käytä HD-videon lähettämistä</string>
+    <string name="pref_hwEncode_title">Käytä laitekiihdytettyä koodausta</string>
+    <string name="pref_hwEncode_summary">Kokeellinen ominaisuus</string>
+    <string name="pref_videoBitrate_title">Videon siirtonopeus</string>
+    <string name="pref_videoBitrate_summary">Valitse lähtevän videon oletuslaaduksi (KB/s)</string>
+    <string name="pref_videoResolution_title">Videon tarkkuus</string>
+    <string name="pref_videoResolution_summary">Valitse lähtevän videon oletustarkkuus</string>
+    <string name="pref_systemContacts_title">Käytä laitteen yhteystietoja</string>
+    <string name="pref_systemContacts_summary">Käytä laitteen yhteystietoja nähdäksesi soittajan tiedot.</string>
+    <string name="pref_systemDialer_title">Käytä Jami-puheluita tavallisten puheluiden sijaan</string>
+    <string name="pref_systemDialer_summary">Käytä Jamia puhelujen soittamiseen, kun mahdollista.</string>
+    <string name="pref_startOnBoot_title">Käynnistä Jami käynnistyksen yhteydessä</string>
+    <string name="pref_startOnBoot_summary">Aja Jami taustalle, kun laite käynnistyy.</string>
+    <string name="pref_clearHistory_title">Tyhjennä historia</string>
+    <string name="pref_clearHistory_summary">Tyhjennä kaikki keskusteluhistoria. Tätä toimintoa ei voi perua.</string>
+    <string name="pref_notification_title">Ilmoituksen näkyvyys</string>
+    <string name="pref_notification_summary">Aseta ilmoitusten näkyvyys lukitusnäytöllä.</string>
+    <string name="pref_connectivity_title">Yhdistäminen</string>
+    <string name="pref_connectivity_summary">Valitse, kuinka Jami yhdistetään hajautettuun verkkoon puhelujen sekä viestien vastaanottamista varten.</string>
+    <string name="pref_blackList_title">Estolista</string>
+    <string name="pref_blackList_summary">Tarkista sinun estolista.</string>
+    <string name="pref_delete_account_title">Poista tili</string>
+    <string name="pref_delete_account_summary">Poista tili tältä laitteelta</string>
+    <string name="pref_persistNotification_title">Suorita taustalla</string>
+    <string name="pref_persistNotification_summary">Salli taustalla vastaanottaa puheluita ja viestejä.</string>
+    <string name="pref_newGroup_title">Ryhmäkeskustelu käyttöön</string>
+    <string name="pref_newGroup_summary">Ryhmien luominen käyttöön Jamissa.</string>
+    <string name="pref_logs_title">Diagnostiikkaloki</string>
+    <string name="pref_logs_summary">Avaa diagnostiikkalokin asetukset</string>
+    <string name="pref_logs_start">Aloita kirjaaminen</string>
+    <string name="pref_logs_stop">Lopeta kirjaaminen</string>
+    <string name="pref_connection_monitor">Yhteysmonitori</string>
+    <string name="pref_connection_monitor_summary">Tarkkaile vertaisyhteyksiä</string>
+    <string name="pref_push_notifications_logs_title">Push ilmoituslokit</string>
+    <string name="pref_push_notifications_logs_summary">Tarkastele push-toiminnolla kerättyjä lokeja ilmoitukset.</string>
+    <string name="pref_typing_title">Typpintason indikaattori</string>
+    <string name="pref_typing_summary">Ilmaisee, milloin viestejä kirjoitetaan.</string>
+    <string name="pref_block_record_title">Estä ruudunkaappaus ja tallennus</string>
+    <string name="pref_block_record_summary">Estä ruudunkaappaus tai videon tallennus.</string>
+    <string name="pref_link_preview_title">Linkin esikatselu</string>
+    <string name="pref_link_preview_summary">Esikatselu edellyttää sisällön lataamista kolmannen osapuolen palvelimelta.</string>
+    <string name="notification_public">Julkinen\n(näytä ilmoitukset ja sisältö lukitusnäytöllä)\n</string>
+    <string name="notification_private">Yksityinen\n(näytä ilmoitukset, piilota sisältö lukitusnäytöllä)\n</string>
+    <string name="notification_secret">Salainen\n(ei ilmoituksia lukitusnäytöllä)</string>
+    <string name="connectivity_google_services_title">Googlen palvelut</string>
+    <string name="connectivity_google_services_description">Käytä Google Firebase ja DHT-välityspalvelinta ilmoitusten vastaanottamiseen.</string>
+    <string name="connectivity_local_node_title">Paikallinen DHT-solmu</string>
+    <string name="connectivity_local_node_description">Käytä paikallista DHT-solmua hoitamaan Jamin tietoliikennettä.</string>
+    <string name="connectivity_unified_push_description">Käytä mukautettua UnifiedPush-palvelinta ilmoitusten vastaanottamiseen.</string>
+    <string name="connectivity_custom_title">Oma</string>
+    <string name="connectivity_custom_description">Saatavilla olevista määrityksistä ei ole mitään tällä hetkellä käytössä.</string>
+    <string name="pref_enable_extensions_title">Laajennukset käyttöön</string>
+    <string name="pref_enable_extensions_summary">Laajennukset käyttöön ja aseta niiden parametrit</string>
+    <string name="pref_available_extensions_title">Saatavilla olevat laajennukset</string>
+    <string name="pref_available_extensions_summary">Asennetut laajennukset ja uusia laajennuksia</string>
+    <string name="fab_extensions_add">Lisää uusi laajennus</string>
+    <string name="extension_uninstall_title">Poistetaanko laajennus?</string>
+    <string name="extension_reset_preferences">Nollaa laajennuksen asetukset</string>
+    <string name="extension_reset_preferences_summary">Laajennus palautettu oletuksiin</string>
+    <string name="extension_reset_preferences_ask">Haluatko nollata laajennusten yleiset asetukset?</string>
+    <string name="extension_reset_account_preferences_ask">Haluatko nollata tililaajennuksen asetukset?</string>
+    <string name="extension_successfully_installed">Laajennus <b>%1$s</b> asennettiin.</string>
+    <string name="extension_install_failure">Tapahtui virhe asennettaessa laajennusta: <b>%1$s</b></string>
+    <string name="extension_recent_version_exception">Uudempi versio <b>%1$s</b> on asennettu.</string>
+    <string name="extension_same_version_exception">Sama versio <b>%1$s</b> asennettu.</string>
+    <string name="extension_invalid_signature"><b>%1$s</b> on virheellinen allekirjoitus</string>
+    <string name="extension_invalid_authority">Laajennuksen valtuuksia vahvistettaessa tapahtui virhe: <b>%1$s</b></string>
+    <string name="extension_invalid_format">Virheellinen laajennus: <b>%1$s</b></string>
+    <string name="extension_force_install">pakota\nasennus</string>
+    <string name="extension_path_image_add">Lisää uusi kuva</string>
+</resources>

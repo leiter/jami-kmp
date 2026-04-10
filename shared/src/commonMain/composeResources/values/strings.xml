@@ -462,6 +462,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_message_no_account">Please select an account to share.</string>
     <string name="share_your_account_information">Share my contact information</string>
     <string name="share_contact_information">Share contact information</string>
+    <string name="share_contact_subject">Add this contact on Jami!</string>
+    <string name="share_contact_body">You can add this contact \"%1$s\" on the Jami distributed communication platform: %2$s</string>
     <string name="share_label">Share</string>
     <string name="generic_error_migration">Error</string>
     <string name="generic_error_migration_message">An error occurred while migrating the account.</string>
@@ -651,6 +653,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="Private">Private</string>
     <string name="swarm_id">Swarm ID</string>
     <string name="show_qr_code">Show QR code</string>
+    <string name="qr_scan_instruction">Scan this code with Jami</string>
     <string name="show_certificate">Show certificate</string>
     <string name="mute_conversation">Mute conversation</string>
 

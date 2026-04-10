@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Авырулар</string>
+    <string name="pref_category_contacts">Контактлар</string>
+    <string name="pref_category_video">Видео</string>
+    <string name="pref_category_system">Система</string>
+    <string name="pref_category_privacy">Шәхси мәгълүмат</string>
+    <string name="pref_category_diagnostic">Диагностика</string>
+    <string name="pref_category_appearance">Күренеш</string>
+    <string name="pref_category_connectivity">Бәйләнеш</string>
+    <string name="pref_category_video_settings">Алга таба видео көйләүләр</string>
+    <string name="pref_mobileData_title">Мобиль мәгълүматлар</string>
+    <string name="pref_mobileData_summary">Җәмигә Wi-Fi белән өстәмә рәвештә 3G/LTE челтәрләрендә эшләргә рөхсәт итү</string>
+    <string name="pref_pushNotifications_title">Элементлар</string>
+    <string name="pref_pushNotifications_summary">Фоннарда шалтыратулар/сообщениялар кабул итүне рөхсәт итәр өчен Google серверларын куллан</string>
+    <string name="pref_unifiedPush_summary">Бердәм Пуш хезмәте ярдәмендә фонда шалтыратулар/сообщениялар кабул итү мөмкин</string>
+    <string name="pref_video_advanced_title">Алга таба видео көйләүләр</string>
+    <string name="pref_video_advanced_summary">Видео битү тизлеген, резолюциясен һәм эксперименталь функцияләрне үзгәртү</string>
+    <string name="pref_hd_summary">HD видео җибәрү мөмкинлеге</string>
+    <string name="pref_hwEncode_title">Тизрәк кодлауны булдыру</string>
+    <string name="pref_hwEncode_summary">Эксперименталь үзенчәлек</string>
+    <string name="pref_videoBitrate_title">Видео битү тизлеге</string>
+    <string name="pref_videoBitrate_summary">Кагыйдәсез чыга торган видео битүен (KB/s) сайлагыз</string>
+    <string name="pref_videoResolution_title">Видео төшенчәсе</string>
+    <string name="pref_videoResolution_summary">Чыгыш видеоның алдан билгеләнгән разрешениесен сайлагыз</string>
+    <string name="pref_systemContacts_title">Система контактларын куллану</string>
+    <string name="pref_systemContacts_summary">Телефон номеры буенча хәбәр итү өчен, системадагы контактларны куллан.</string>
+    <string name="pref_systemDialer_title">Jami кулланып система буенча шалтыратулар ясагыз</string>
+    <string name="pref_systemDialer_summary">Мөмкин булганда, Джами белән телефон аша шалтыратыгыз.</string>
+    <string name="pref_startOnBoot_title">Җәмине старттан башлап җибәр</string>
+    <string name="pref_startOnBoot_summary">Система эшли башлагач, Джамины фонында куегыз.</string>
+    <string name="pref_clearHistory_title">Тарих ачык</string>
+    <string name="pref_notification_title">Хабарламаның күренеп торулыгы</string>
+    <string name="pref_notification_summary">Кунакны кулланма экранда кушымта хәбәр итүләрен күрү мөмкинлеге куегыз.</string>
+    <string name="pref_blackList_title">Блоклар исемлеге</string>
+    <string name="pref_blackList_summary">Тәртипләр исемлеген тикшерегез.</string>
+    <string name="pref_delete_account_title">Хисапны бетерү</string>
+    <string name="pref_newGroup_title">Төркем чатын булдыру</string>
+    <string name="pref_newGroup_summary">Җәмидә төркемнәр булдыру мөмкинлеге.</string>
+    <string name="pref_logs_title">Диагностика журналы</string>
+    <string name="pref_logs_summary">Диагностика журналын ачыклау</string>
+    <string name="pref_logs_start">Урманны язарга керегез</string>
+    <string name="pref_logs_stop">Урманны ташлама</string>
+    <string name="pref_typing_title">Типография күрсәткече</string>
+    <string name="pref_block_record_title">Скриншотны һәм язманы туктату</string>
+    <string name="pref_block_record_summary">Скриншотны төшерү яки видеоязманы ясауны туктатыгыз.</string>
+    <string name="pref_link_preview_summary">Пресматривать өченче як серверларыннан контентны йөкләүне таләп итә.</string>
+</resources>

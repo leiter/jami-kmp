@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Réseau</string>
+    <string name="pref_category_contacts">Contacts</string>
+    <string name="pref_category_video">Vidéo</string>
+    <string name="pref_category_system">Système</string>
+    <string name="pref_category_privacy">Vie privée</string>
+    <string name="pref_category_diagnostic">Diagnostics</string>
+    <string name="pref_category_appearance">Apparence</string>
+    <string name="pref_category_connectivity">Connectivité</string>
+    <string name="pref_category_extensions">Extensions</string>
+    <string name="pref_category_video_settings">Paramètres vidéos avancés</string>
+    <string name="pref_mobileData_title">Données mobiles</string>
+    <string name="pref_mobileData_summary">Autoriser Jami sur les réseaux 3G/4G en plus du Wi-Fi</string>
+    <string name="pref_pushNotifications_title">Notifications poussées</string>
+    <string name="pref_pushNotifications_summary">Utiliser les serveurs de Google pour permettre la réception d\'appels/messages en tâche de fond</string>
+    <string name="pref_unifiedPush_summary">Utiliser un service UnifiedPush pour permettre la réception d\'appels/messages en arrière-plan</string>
+    <string name="pref_video_advanced_title">Paramètres vidéos avancés</string>
+    <string name="pref_video_advanced_summary">Modifier le débit vidéo, la résolution et d\'autres fonctionnalités expérimentales</string>
+    <string name="pref_hd_summary">Activer l\'envoi de vidéo HD</string>
+    <string name="pref_hwEncode_title">Activer l\'encodage matériel</string>
+    <string name="pref_hwEncode_summary">Fonctionnalité expérimentale</string>
+    <string name="pref_videoBitrate_title">Débit binaire de la vidéo</string>
+    <string name="pref_videoBitrate_summary">Choisissez le débit binaire de la vidéo sortante par défaut (KB/s)</string>
+    <string name="pref_videoResolution_title">Résolution de la vidéo</string>
+    <string name="pref_videoResolution_summary">Choisissez la résolution sortante de la vidéo par défaut</string>
+    <string name="pref_systemContacts_title">Utiliser les contacts du système</string>
+    <string name="pref_systemContacts_summary">Utiliser les contacts du système pour voir les détails de l\'appelant.</string>
+    <string name="pref_systemDialer_title">Utiliser Jami par défaut pour les appels</string>
+    <string name="pref_systemDialer_summary">Utiliser Jami par défaut pour les appels, si possible</string>
+    <string name="pref_startOnBoot_title">Lancer Jami au démarrage</string>
+    <string name="pref_startOnBoot_summary">Exécuter Jami en tâche de fond au démarrage du système.</string>
+    <string name="pref_clearHistory_title">Effacer l\'historique</string>
+    <string name="pref_clearHistory_summary">Effacer les historiques de toutes les conversations. L\'action est irréversible.</string>
+    <string name="pref_notification_title">Mode d\'affichage des notifications</string>
+    <string name="pref_notification_summary">Options d\'affichage des notifications sur les écrans verrouillés.</string>
+    <string name="pref_connectivity_title">Mode de connectivité</string>
+    <string name="pref_connectivity_summary">Choisir comment connecter Jami au système distribué pour recevoir des appels et des messages.</string>
+    <string name="pref_blackList_title">Liste des comptes bloqués</string>
+    <string name="pref_blackList_summary">Vérifier votre liste des comptes bloqués</string>
+    <string name="pref_delete_account_title">Supprimer le compte</string>
+    <string name="pref_delete_account_summary">Supprimer ce compte de cet appareil</string>
+    <string name="pref_persistNotification_title">Exécuter en arrière-plan</string>
+    <string name="pref_persistNotification_summary">Autoriser l\'exécution en arrière plan pour recevoir des appels ou des messages.</string>
+    <string name="pref_newGroup_title">Activer le clavardage de groupe</string>
+    <string name="pref_newGroup_summary">Activer la création de groupe dans Jami.</string>
+    <string name="pref_logs_title">Journaux de diagnostics</string>
+    <string name="pref_logs_summary">Ouvrir les paramètres des journaux de diagnostics</string>
+    <string name="pref_logs_start">Démarrer la journalisation</string>
+    <string name="pref_logs_stop">Arrêter la journalisation</string>
+    <string name="pref_connection_monitor">Supervision des connexions</string>
+    <string name="pref_connection_monitor_summary">Supervision des connexions pair à pair</string>
+    <string name="pref_push_notifications_logs_title">Journal des notifications poussées</string>
+    <string name="pref_push_notifications_logs_summary">Voir le journal des notifications poussées</string>
+    <string name="pref_typing_title">Indicateur de frappe</string>
+    <string name="pref_typing_summary">Indique lors de l\'écriture d\'un message.</string>
+    <string name="pref_block_record_title">Bloquer la capture d\'écran et l\'enregistrement</string>
+    <string name="pref_block_record_summary">Bloquer la capture d\'écran et l\'enregistrement vidéo</string>
+    <string name="pref_link_preview_title">Aperçu des liens</string>
+    <string name="pref_link_preview_summary">Les prévisualisations requièrent le téléchargement de contenus provenant de serveurs tiers.</string>
+    <string name="notification_public">Public \n(affiche les notifications et leur contenu sur l\'écran verrouillé)\n</string>
+    <string name="notification_private">Privé \n(affiche les notifications mais cache leur contenu sur l\'écran verrouillé)\n</string>
+    <string name="notification_secret">Secret \n(n\'affiche pas les notifications sur l\'écran verrouillé)</string>
+    <string name="connectivity_google_services_title">Services Google</string>
+    <string name="connectivity_google_services_description">Utiliser Google Firebase et un DHT proxy pour recevoir les notifications poussées.</string>
+    <string name="connectivity_local_node_title">Noeud DHT local</string>
+    <string name="connectivity_local_node_description">Utiliser un nœud DHT local pour se connecter aux autres appareils Jami et aux contacts. </string>
+    <string name="connectivity_unified_push_description">Utiliser un serveur de notification poussée unifiée personnalisé pour recevoir des notifications.</string>
+    <string name="connectivity_custom_title">Personnaliser</string>
+    <string name="connectivity_custom_description">N\'utilise actuellement aucun des préréglages de configuration disponibles.</string>
+    <string name="pref_enable_extensions_title">Activer les extensions</string>
+    <string name="pref_enable_extensions_summary">Activer les modules d\'extension et les paramétrer</string>
+    <string name="pref_available_extensions_title">Extensions disponibles</string>
+    <string name="pref_available_extensions_summary">Extensions installées et ajouter de nouvelles extensions</string>
+    <string name="fab_extensions_add">Ajouter un nouveau module d\'extension</string>
+    <string name="extension_uninstall_title">Désinstaller le module d\'extension ?</string>
+    <string name="extension_reset_preferences">Réinitialiser les paramètres du module d\'extension</string>
+    <string name="extension_reset_preferences_summary">Les paramètres des extensions ont été réinitialisés à leur valeur par défaut.</string>
+    <string name="extension_reset_preferences_ask">Voulez-vous réinitialiser les paramètres généraux du module d\'extension ?</string>
+    <string name="extension_reset_account_preferences_ask">Voulez-vous réinitialiser les paramètres généraux du module d\'extension ?</string>
+    <string name="extension_successfully_installed">Le module d\'extension <b>%1$s</b> a été correctement installé.</string>
+    <string name="extension_install_failure">Une erreur s\'est produite pendant l\'installation du module d\'extension : <b>%1$s</b></string>
+    <string name="extension_recent_version_exception">Une version plus récente de <b>%1$s</b> est déjà installée</string>
+    <string name="extension_same_version_exception">La même version de <b>%1$s</b> est déjà installée</string>
+    <string name="extension_invalid_signature"><b>%1$s</b> a une signature invalide</string>
+    <string name="extension_invalid_authority">Une erreur s\'est produite pendant l\'installation du module d\'extension : <b>%1$s</b></string>
+    <string name="extension_invalid_format">Format du module d\'extension invalide : <b>%1$s</b></string>
+    <string name="extension_force_install">Forcer l\'installation</string>
+    <string name="extension_path_image_add">Ajouter une nouvelle image</string>
+</resources>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="call_error">Při zahájení hovoru došlo k chybě.</string>
+    <string name="call_error_no_microphone">Hovor byl zrušen. Nebyl zjištěn žádný mikrofon.</string>
+    <string name="call_error_no_camera_no_microphone">Hovor byl zrušen. Nebyla zjištěna žádná kamera ani mikrofon.</string>
+    <string name="screen_sharing_error">Při spouštění sdílení obrazovky došlo k chybě.</string>
+    <string name="call_human_state_searching">Hledá se</string>
+    <string name="call_human_state_incoming">Příchozí</string>
+    <string name="call_human_state_connecting">Spojuje se</string>
+    <string name="call_human_state_ringing">Vyzvání</string>
+    <string name="call_human_state_current">Probíhá hovor</string>
+    <string name="call_human_state_hungup">Hovor skončil</string>
+    <string name="call_human_state_busy">Zaneprázdněn</string>
+    <string name="call_human_state_failure">Hovor selhal.</string>
+    <string name="call_human_state_hold">Pozastavit</string>
+    <string name="call_human_state_unhold">Pokračovat v hovoru</string>
+    <string name="call_human_state_over">Hovor skončil</string>
+    <string name="call_moderator">Moderator</string>
+    <string name="call_muted">Ztlumené</string>
+    <string name="call_handRaised">Zvednutá ruka</string>
+</resources>

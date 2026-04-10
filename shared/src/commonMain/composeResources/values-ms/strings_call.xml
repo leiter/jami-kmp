@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="call_error_no_microphone">Panggilan dibatalkan. Tiada mikrofon dikesan.</string>
+    <string name="call_error_no_camera_no_microphone">Panggilan dibatalkan. Tiada kamera atau mikrofon dikesan.</string>
+    <string name="call_human_state_searching">തിരയൽ</string>
+    <string name="call_human_state_incoming">വരാനിരിക്കുന്ന</string>
+    <string name="call_human_state_connecting">Menyambung</string>
+    <string name="call_human_state_ringing">Berdering</string>
+    <string name="call_human_state_current">Bercakap</string>
+    <string name="call_human_state_hungup">Selesai</string>
+    <string name="call_human_state_busy">Sibuk</string>
+    <string name="call_human_state_failure">Gagal</string>
+    <string name="call_human_state_hold">Tangguh</string>
+    <string name="call_human_state_unhold">Nyahtangguh</string>
+    <string name="call_human_state_over">Selesai</string>
+    <string name="call_moderator">മോഡറേറ്റർ</string>
+    <string name="call_muted">നിശബ്ദത</string>
+    <string name="call_handRaised">കൈ ഉയര് ത്തുക</string>
+</resources>

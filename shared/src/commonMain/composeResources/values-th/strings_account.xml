@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">ลบ</string>
+    <string name="ic_advanced_menu">ตั้งค่าขั้นสูง</string>
+    <string name="ic_blacklist_menu">ผู้ติดต่อที่ถูกบล็อก</string>
+    <string name="add_ring_account_title">เพิ่มบัญชี</string>
+    <string name="add_sip_account_title">เพิ่มบัญชี SIP</string>
+    <string name="ring_account_default_name">%1$sบัญชี Jami</string>
+    <string name="prompt_alias">นามแฝง</string>
+    <string name="prompt_hostname">ชื่อโฮสต์</string>
+    <string name="prompt_username">ชื่อผู้ใช้</string>
+    <string name="prompt_password">รหัสผ่าน</string>
+    <string name="action_create">สร้างบัญชี</string>
+    <string name="action_create_short">สร้าง</string>
+    <string name="action_register">ลงทะเบียน</string>
+    <string name="action_settings">การตั้งค่า</string>
+    <string name="error_field_required">ต้องระบุข้อมูลในช่องนี้</string>
+    <string name="dialog_wait_create">กำลังเพิ่มบัญชี</string>
+    <string name="dialog_wait_create_details">โปรดรอขณะที่เพิ่มบัญชีใหม่ของคุณ...</string>
+    <string name="dialog_wait_update">กำลังอัปเดตบัญชี</string>
+    <string name="dialog_wait_update_details">โปรดรอสักครู่ในขณะที่บัญชีใหม่ของคุณได้รับการอัปเดต...</string>
+    <string name="account_type_ip2ip">บัญชีไอพี</string>
+    <string name="help_ring">บัญชี Jami ช่วยให้คุณเข้าถึงผู้คนได้อย่างปลอดภัยแบบ peer-to-peer ผ่านเครือข่ายแบบกระจายอย่างสมบูรณ์</string>
+    <string name="help_sip_title">เพิ่มบัญชี SIP</string>
+    <string name="account_delete_dialog_message">การดำเนินการนี้ไม่สามารถยกเลิกได้</string>
+    <string name="empty_account_list">ไม่มีบัญชีที่ลงทะเบียน</string>
+    <string name="normal_accounts_titles">บัญชี</string>
+    <string name="normal_devices_titles">อุปกรณ์ที่เชื่อมโยง</string>
+    <string name="account_device_revoke">เพิกถอนอุปกรณ์</string>
+    <string name="account_device_revocation_success_title">ความสำเร็จ</string>
+    <string name="account_device_revocation_success">อุปกรณ์ถูกเพิกถอนแล้ว!</string>
+    <string name="account_device_revocation_unknown_device">อุปกรณ์ที่ไม่รู้จัก</string>
+    <string name="account_device_revocation_error_unknown">ข้อผิดพลาดที่ไม่รู้จัก</string>
+    <string name="account_password_change">เปลี่ยนรหัสผ่าน</string>
+    <string name="account_password_set">ตั้งรหัสผ่าน</string>
+    <string name="account_password_summary">จัดการรหัสผ่านบัญชีของคุณ</string>
+    <string name="account_password_change_wait_message">การเปลี่ยนรหัสผ่านบัญชี</string>
+    <string name="account_preferences_basic_tab">ทั่วไป</string>
+    <string name="account_basic_category">การตั้งค่าพื้นฐาน</string>
+    <string name="account_hostname_label">ชื่อโฮสต์</string>
+    <string name="account_bootstrap_label">แถวกระดาน</string>
+    <string name="account_name_server_label">เซอร์เวอร์ชื่อ</string>
+    <string name="account_username_label">ชื่อผู้ใช้</string>
+    <string name="account_password_label">รหัสผ่าน</string>
+    <string name="account_optionnal_category">การตั้งค่าเสริม</string>
+    <string name="account_useragent_label">ผู้ใช้งาน</string>
+    <string name="account_autoanswer_label">ตอบอัตโนมัติ</string>
+    <string name="account_rendezvous_label">โหมดนัดพบ</string>
+    <string name="account_rendezvous_summary">ในโหมด Rendezvous การโทรเข้าจะเพิ่มขึ้นในห้องประชุม</string>
+    <string name="account_upnp_label">เปิด UPnP</string>
+    <string name="account_proxy_field">พอร์กส</string>
+    <string name="account_audio_label">เครื่องเสียง</string>
+    <string name="account_preferences_media_tab">สื่อ</string>
+    <string name="account_ringtone_label">เสียงเรียกเข้า</string>
+    <string name="account_ringtone_enabled_label">เปิดใช้งานเสียงเรียกเข้า</string>
+    <string name="account_ringtone_path_label">เส้นทางเสียงแหวน</string>
+    <string name="account_ringtone_custom_label">ใช้ริงโทนที่กำหนดเอง</string>
+    <string name="account_ringtone_title">เลือกเสียงเรียกเข้า</string>
+    <string name="account_ringtone_summary">เลือกเสียงเรียกเข้าหรือเลือกของคุณเอง</string>
+    <string name="account_video_label">วีดีโอ</string>
+    <string name="account_video_enable">เปิดวีดีโอ</string>
+    <string name="account_preferences_advanced_tab">ขั้นสูง</string>
+    <string name="account_call_settings_title">การตั้งค่าการโทร</string>
+    <string name="account_dht_public_in_calls_label">อนุญาตสายเรียกเข้าจากผู้ติดต่อที่ไม่รู้จัก</string>
+    <string name="account_registration_exp_label">การลงทะเบียนหมดอายุ</string>
+    <string name="account_local_interface_label">อินเทอร์เฟซท้องถิ่น</string>
+    <string name="account_local_port_label">ท่าเรือท้องถิ่น</string>
+    <string name="account_stun_enable_label">ใช้ STUN</string>
+    <string name="account_accept_files">ยอมรับไฟล์ที่เข้ามาโดยอัตโนมัติ</string>
+    <string name="account_conversation_settings_title">การตั้งค่าการสนทนา</string>
+    <string name="account_accept_files_max_size">ขนาดไฟล์สูงสุดที่จะยอมรับโดยอัตโนมัติ</string>
+    <string name="account_accept_files_never">ไม่ยอมรับโดยอัตโนมัติ</string>
+    <string name="account_accept_files_always">ยอมรับโดยอัตโนมัติเสมอ</string>
+    <string name="size_mb">%1$d MB</string>
+    <string name="account_turn_enable_label">ใช้ TURN</string>
+    <string name="account_turn_server_label">เซอร์เวอร์ TURN</string>
+    <string name="account_turn_username_label">TURN ชื่อผู้ใช้</string>
+    <string name="account_turn_password_label">ปรสิต TURN</string>
+    <string name="account_published_same_as_local_label">จัดทําในพื้นที่</string>
+    <string name="account_published_port_label">ปิดตั้ง</string>
+    <string name="account_published_address_label">ที่อยู่เผยแพร่</string>
+    <string name="disabled">คนพิการ</string>
+    <string name="enabled">อนุญาต</string>
+    <string name="default_value">ค่าเริ่มต้น</string>
+    <string name="account_proxy_label">DHT แทนตัวแทน</string>
+    <string name="account_proxy_enable_label">ใช้ DHT proxy</string>
+    <string name="account_proxy_server_label">ที่อยู่ตัวแทน DHT</string>
+    <string name="account_proxy_server_list_label">DHT แจ้งจดหมาย URL</string>
+    <string name="account_sip_proxy_label">พอร์กส</string>
+    <string name="account_peer_discovery_label">การค้นพบของเพื่อนร่วมเพศในพื้นที่</string>
+    <string name="account_peer_discovery_enable_label">เปิดใช้งานการค้นพบเพียร์ในพื้นที่</string>
+    <string name="account_peer_discovery_enable_summary">เชื่อมต่อกับ DHT จอดอื่นที่ประกาศในเครือข่ายของเรา</string>
+    <string name="account_credentials_label">ข้อมูลประจำตัว</string>
+    <string name="account_credentials_edit">ปรับแต่งใบรับรอง</string>
+    <string name="account_credentials_add">เพิ่มข้อมูล</string>
+    <string name="account_preferences_security_tab">ความปลอดภัย</string>
+    <string name="account_srtp_switch_label">รายการการเอกสาร (SRTP)</string>
+    <string name="account_tls_transport_switch_label">ใช้ TLS Transport</string>
+    <string name="account_tls_password_label">รหัสผ่านคีย์ส่วนตัว</string>
+    <string name="account_rtp_max_port">สูงสุด</string>
+    <string name="account_rtp_min_port">ต่ำสุด</string>
+    <string name="account_new_device_password">ป้อนรหัสผ่านหลักเพื่อปลดล็อกบัญชี</string>
+    <string name="error_password_char_count">ขั้นต่ำ 6 ตัวอักษร</string>
+    <string name="export_account_wait_title">โปรดรอ…</string>
+    <string name="export_account_wait_message">การส่งออกข้อมูลบัญชี</string>
+    <string name="account_export_file">บาคเกปบัญชี</string>
+    <string name="account_export_file_summary">ทําสํารองบัญชีของคุณในเครื่องของคุณ เพื่อนํากลับมาในภายหลัง</string>
+    <string name="account_enter_password">ใส่รหัสผ่าน</string>
+    <string name="account_contact_me">ติดต่อฉันใน Jami!</string>
+    <string name="update_account">การอัพเดทบัญชี</string>
+    <string name="account_migration">บัญชีของจามิของคุณสามารถปรับปรุงได้ครับ กรุณาใส่รหัสผ่านของคุณ</string>
+    <string name="ring_account">รายการของจามิ</string>
+    <string name="sip_account">บัญชี SIP</string>
+    <string name="ring_account_identity">ตัวตน</string>
+    <string name="account_migration_title_dialog">การย้ายบัญชี</string>
+    <string name="account_update_needed">ปรับปรุงที่จําเป็น</string>
+    <string name="account_sip_cannot_be_registered_message">คุณสามารถต่อเนื่องกับกระบวนการสร้างบัญชี หรือแก้ไขข้อมูลของคุณได้ที่นี่ การแก้ไขยังสามารถเกิดขึ้นได้ในช่วงหลังในการตั้งค่าบัญชี</string>
+    <string name="account_no_network_title">ความผิดพลาดในเครือข่าย</string>
+    <string name="account_device_added_title">รายการอุปกรณ์เพิ่ม</string>
+    <string name="account_device_updated_title">อุปโภคบัญชี</string>
+    <string name="account_sip_register_anyway">ไม่ว่ายังไงก็ลงทะเบียน</string>
+    <string name="account_tv_settings_header">การตั้งค่าบัญชี</string>
+    <string name="account_tv_advance_settings_header">ตั้งค่าขั้นสูง</string>
+    <string name="account_tv_add_contact">เพิ่มติดต่อ</string>
+    <string name="account_tv_advanced_settings">เปลี่ยนการตั้งค่าทั่วไป</string>
+    <string name="account_tv_about">เกี่ยวกับ Jami</string>
+    <string name="tv_about_version">เวอร์ชั่น</string>
+    <string name="tv_about_license">ใบอนุญาต</string>
+    <string name="tv_about_author">อนุญาตผู้เขียน</string>
+    <string name="tv_about_credits">เครดิต</string>
+    <string name="account_link_device">เชื่อมต่อจากอุปกรณ์อื่น</string>
+    <string name="account_link_button">เชื่อมต่อจากเครือข่าย</string>
+    <string name="account_link_archive_button">เชื่อมต่อจากสํารอง</string>
+    <string name="account_new_button">สร้างบัญชี Jami</string>
+    <string name="account_link_export_button">เชื่อมโยงอุปกรณ์ใหม่</string>
+    <string name="account_link_show_button">แสดง %d หน่วยที่เชื่อมต่อมากกว่า</string>
+    <string name="account_link_hide_button">ปิดอุปกรณ์เชื่อมโยง</string>
+    <string name="account_end_export_button">ใกล้</string>
+    <string name="account_export_title">บัญชีเชื่อมต่อกับอุปกรณ์อื่นๆ</string>
+    <string name="account_connect_server_button">เชื่อมต่อเซอร์เวอร์บริหาร</string>
+    <string name="account_connect_button">เชื่อมต่อ</string>
+    <string name="help_credentials_enter">กรอกข้อมูลองค์กรของคุณ</string>
+    <string name="help_connect_password_enter">กรอกรหัสผ่านองค์กรของคุณ</string>
+    <string name="account_connect_prompt_username">ชื่อผู้ใช้</string>
+    <string name="account_connect_server">เชื่อมต่อเซอร์เวอร์บริหาร</string>
+    <string name="error_username_empty">กรอกชื่อผู้ใช้</string>
+    <string name="register_name">ชื่อทะเบียน</string>
+    <string name="registered_username">ชื่อผู้ใช้ที่ลงทะเบียน</string>
+    <string name="register_username">ลงทะเบียนชื่อผู้ใช้สาธารณะ</string>
+    <string name="register_recommended">ข้อเสนอแนะ</string>
+    <string name="username_already_taken">ชื่อผู้ใช้ที่ได้รับแล้ว</string>
+    <string name="invalid_username">ชื่อผู้ใช้งานไม่ถูกต้อง</string>
+    <string name="unknown_error">ความผิดพลาดที่ไม่ทราบครับ ตรวจสอบการเชื่อมต่อเครือข่ายของคุณ</string>
+    <string name="account_status_connecting">กำลังเชื่อมต่อ</string>
+    <string name="account_status_connection_error">ความผิดพลาดการเชื่อมต่อ</string>
+    <string name="account_status_online">ออนไลน์</string>
+    <string name="account_status_unknown">ไม่ทราบ</string>
+    <string name="account_status_offline">ภายนอกระบบ</string>
+    <string name="account_status_error">ข้อผิดพลาด</string>
+    <string name="account_creation_home">ยินดีต้อนรับสู่ Jami</string>
+    <string name="account_creation_profile">สร้างโปรไฟล์ของคุณ</string>
+    <string name="account_creation_ring">สร้างบัญชี Jami</string>
+    <string name="account_revoke_device_hint">กรอกปัสผ่านเพื่อยืนยัน</string>
+    <string name="enter_password">ใส่รหัสผ่าน</string>
+    <string name="revoke_device_title">เพิกถอนอุปกรณ์</string>
+    <string name="revoke_device_wait_title">โปรดรอ…</string>
+    <string name="revoke_device_wait_message">เครื่องเรียกคืน</string>
+    <string name="rename_device_title">เรียกชื่อใหม่ของอุปกรณ์นี้</string>
+    <string name="rename_device_button">เครื่องเปลี่ยนชื่อ</string>
+    <string name="account_rename_device_hint">เลือกชื่ออุปกรณ์ใหม่</string>
+    <string name="account_device_this_indicator">เครื่องนี้</string>
+    <string name="account_disabled_indicator">คนพิการ</string>
+    <string name="error_format_not_supported">ไม่รองรับรูปแบบนี้</string>
+    <string name="account_link_device_title">เชื่อมโยงอุปกรณ์ใหม่</string>
+    <string name="account_link_device_button">เชื่อมต่อ</string>
+</resources>

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">Slet</string>
+    <string name="ic_advanced_menu">Avancerede indstillinger</string>
+    <string name="ic_blacklist_menu">Blokerede kontakter</string>
+    <string name="add_ring_account_title">Tilføj konto</string>
+    <string name="add_sip_account_title">Tilføj SIP-konto</string>
+    <string name="ring_account_default_name">Jami-konto %1$s</string>
+    <string name="prompt_alias">Alias</string>
+    <string name="prompt_hostname">Værtsnavn</string>
+    <string name="prompt_username">Brugernavn</string>
+    <string name="prompt_password">Adgangskode</string>
+    <string name="action_create">Opret konto</string>
+    <string name="action_create_short">Opret</string>
+    <string name="action_register">Registrer</string>
+    <string name="action_settings">Indstillinger</string>
+    <string name="error_field_required">Dette felt er obligatorisk</string>
+    <string name="dialog_wait_create">Tilføjer konto</string>
+    <string name="dialog_wait_create_details">Vent venligst mens din nye konto tilføjes...</string>
+    <string name="dialog_wait_update">Opdaterer konto</string>
+    <string name="dialog_wait_update_details">Vent venligst mens din nye konto opdateres...</string>
+    <string name="account_type_ip2ip">IP-konto</string>
+    <string name="help_ring">En Jami-konto giver mulighed for at du kan være i kontakt med dine medmennesker sikkert. Det gøres ved at lave en enhed-til-enhed kommunikation igennem et fuldstændigt distribueret netværk.</string>
+    <string name="help_sip_title">Tilføj SIP-konto</string>
+    <string name="account_delete_dialog_message">Handlingen kan ikke fortrydes.</string>
+    <string name="empty_account_list">Ingen konto registreret</string>
+    <string name="normal_accounts_titles">Konti</string>
+    <string name="normal_devices_titles">Sammenkædede enheder</string>
+    <string name="account_device_revoke">Tilbagetræk enheden</string>
+    <string name="account_device_revocation_success_title">Lykkedes</string>
+    <string name="account_device_revocation_success">Enheden er nu trukket tilbage!</string>
+    <string name="account_device_revocation_unknown_device">Ukendt enhed.</string>
+    <string name="account_device_revocation_error_unknown">Ukendt fejl.</string>
+    <string name="account_password_change">Skift Kodeord</string>
+    <string name="account_password_set">Vælg Kodeord</string>
+    <string name="account_password_summary">Håndtér dit kodeord.</string>
+    <string name="account_password_change_wait_message">Skifter kodeord</string>
+    <string name="account_preferences_basic_tab">Generelt</string>
+    <string name="account_basic_category">Almindelige Indstillinger</string>
+    <string name="account_hostname_label">Værtsnavn</string>
+    <string name="account_bootstrap_label">Bootstrap</string>
+    <string name="account_name_server_label">Navneserver</string>
+    <string name="account_username_label">Brugernavn</string>
+    <string name="account_password_label">Adgangskode</string>
+    <string name="account_optionnal_category">Valgfrie Indstillinger</string>
+    <string name="account_useragent_label">Brugerklient</string>
+    <string name="account_autoanswer_label">Besvar automatisk</string>
+    <string name="account_rendezvous_label">Rendezvous Mode</string>
+    <string name="account_rendezvous_summary">I Rendezvous-tilstanden vil indkommende opkald blive tilføjet til et konferencerum.</string>
+    <string name="account_upnp_label">Aktivér UPnP</string>
+    <string name="account_proxy_field">Stedfortræder</string>
+    <string name="account_audio_label">Lyd</string>
+    <string name="account_preferences_media_tab">Medier</string>
+    <string name="account_ringtone_label">Ringetoner</string>
+    <string name="account_ringtone_enabled_label">Aktiver ringetoner</string>
+    <string name="account_ringtone_path_label">Ringetone sti</string>
+    <string name="account_ringtone_custom_label">Anvend brugervalgt ringetone</string>
+    <string name="account_ringtone_title">Vælg en ringetone</string>
+    <string name="account_ringtone_summary">Vælg en ringetone eller vælg din egen</string>
+    <string name="account_video_label">Video</string>
+    <string name="account_video_enable">Aktiver video</string>
+    <string name="account_preferences_advanced_tab">Avanceret</string>
+    <string name="account_call_settings_title">Opkaldsindstillinger</string>
+    <string name="account_dht_public_in_calls_label">Tillad indkomne opkald fra ukendte kontakter</string>
+    <string name="account_registration_exp_label">Registreringsudløb</string>
+    <string name="account_local_interface_label">Lokal grænseflade</string>
+    <string name="account_local_port_label">Lokal port</string>
+    <string name="account_stun_enable_label">Brug STUN</string>
+    <string name="account_accept_files">Acceptér filer automatisk</string>
+    <string name="account_conversation_settings_title">Samtaleindstillinger</string>
+    <string name="account_accept_files_max_size">Maksimal filstørrelse til automatisk accept</string>
+    <string name="account_accept_files_never">Acceptér aldrig automatisk</string>
+    <string name="account_accept_files_always">Acceptér altid automatisk</string>
+    <string name="size_mb">%1$d MB</string>
+    <string name="account_turn_enable_label">Brug TURN</string>
+    <string name="account_turn_server_label">TURN-server</string>
+    <string name="account_turn_username_label">TURN-brugernavn</string>
+    <string name="account_turn_password_label">TURN-adgangskode</string>
+    <string name="account_published_same_as_local_label">Publicer samme som lokale</string>
+    <string name="account_published_port_label">Publiceret Port</string>
+    <string name="account_published_address_label">Publiceret Adresse</string>
+    <string name="disabled">Behindret</string>
+    <string name="enabled">Aktiveret</string>
+    <string name="default_value">Standard</string>
+    <string name="account_proxy_label">DHT-proxy</string>
+    <string name="account_proxy_enable_label">Brug DHT-proxy</string>
+    <string name="account_proxy_server_label">Adresse til DHT-proxy</string>
+    <string name="account_proxy_server_list_label">DHT-proxy-liste URL</string>
+    <string name="account_sip_proxy_label">Stedfortræder</string>
+    <string name="account_peer_discovery_label">Lokal peer opdagelse</string>
+    <string name="account_peer_discovery_enable_label">Aktivere lokal peer-opdagelse</string>
+    <string name="account_peer_discovery_enable_summary">Køb til andre DHT-noder, der annoncerer på vores lokale netværk</string>
+    <string name="account_credentials_label">Legitimeringsoplysninger</string>
+    <string name="account_credentials_edit">Rediger Legitimeringsoplysninger</string>
+    <string name="account_credentials_add">Tilføj Legitimeringsoplysninger</string>
+    <string name="account_preferences_security_tab">Sikkerhed</string>
+    <string name="account_srtp_switch_label">Krypter mediestrømme (SRTP)</string>
+    <string name="account_tls_transport_switch_label">Brug TLS-transport</string>
+    <string name="account_tls_password_label">Adgangskode til privat nøgle</string>
+    <string name="account_rtp_max_port">Maksimum</string>
+    <string name="account_rtp_min_port">Minimum</string>
+    <string name="account_new_device_password">Indtast primære adgangskode for at oplåse konto</string>
+    <string name="error_password_char_count">Mindst 6 tegn</string>
+    <string name="export_account_wait_title">Vent venligt...</string>
+    <string name="export_account_wait_message">Eksporterer konto-information</string>
+    <string name="account_export_file">Backupkonto</string>
+    <string name="account_export_file_summary">Du kan sikkerhedskopiere din konto på din enhed for at genoprette den senere.</string>
+    <string name="account_enter_password">Indtast adgangskode</string>
+    <string name="account_contact_me">Kontakt mig på Jami!</string>
+    <string name="update_account">Opdater konto</string>
+    <string name="account_migration">Din Jami-konto kan opdateres.\nSkriv venligst din adgangskode.</string>
+    <string name="ring_account">Jami-konto</string>
+    <string name="sip_account">SIP-konto</string>
+    <string name="ring_account_identity">Identitet</string>
+    <string name="account_migration_title_dialog">Konto-migrering</string>
+    <string name="account_update_needed">Opdatering nødvendig</string>
+    <string name="account_sip_cannot_be_registered_message">Du kan fortsætte med konto-oprettelsen eller redigere informationerne her. Du kan under alle omstændigheder lave ændringer senere under konti-indstillingerne.</string>
+    <string name="account_no_network_title">Netværksfejl</string>
+    <string name="account_device_added_title">Enheds-konto tilføjet</string>
+    <string name="account_device_updated_title">Enheds-konto opdateret</string>
+    <string name="account_sip_register_anyway">Registrer alligevel</string>
+    <string name="account_tv_settings_header">Kontoindstillinger</string>
+    <string name="account_tv_advance_settings_header">Avancerede indstillinger</string>
+    <string name="account_tv_add_contact">Tilføj en kontakt</string>
+    <string name="account_tv_advanced_settings">Ændre de generelle indstillinger</string>
+    <string name="account_tv_about">Om Jami</string>
+    <string name="tv_about_version">Version</string>
+    <string name="tv_about_license">Licens</string>
+    <string name="tv_about_author">Ophavsret</string>
+    <string name="tv_about_credits">Krediteringer</string>
+    <string name="account_link_device">Forbindelse fra et andet udstyr</string>
+    <string name="account_link_button">Opret forbindelse</string>
+    <string name="account_link_archive_button">Forbindelse fra backup</string>
+    <string name="account_new_button">Oprette Jami-konto</string>
+    <string name="account_link_export_button">Tilknyt ny enhed</string>
+    <string name="account_link_show_button">Vis %d flere tilknyttede enheder</string>
+    <string name="account_link_hide_button">Skjul det tilkoblede anordning</string>
+    <string name="account_end_export_button">luk</string>
+    <string name="account_export_title">Link konto til andre enheder</string>
+    <string name="account_connect_server_button">Forbindelse til administrationsserveren</string>
+    <string name="account_connect_button">Køb</string>
+    <string name="help_credentials_enter">Indtast din organisations legitimationsoplysninger</string>
+    <string name="help_connect_password_enter">Indtast dit organisations adgangskode</string>
+    <string name="account_connect_prompt_username">Brugernavn</string>
+    <string name="account_connect_server">Forbindelse til administrationsserveren</string>
+    <string name="account_enter_username">Indtast brugernavn</string>
+    <string name="error_username_empty">Indtast et brugernavn</string>
+    <string name="register_name">Registrer navn</string>
+    <string name="registered_username">Registreret brugernavn</string>
+    <string name="register_username">Registrer offentligt brugernavn</string>
+    <string name="register_recommended">Anbefalet</string>
+    <string name="username_already_taken">Brugernavn er allerede taget</string>
+    <string name="invalid_username">Ugyldigt brugernavn</string>
+    <string name="unknown_error">Ukendt fejl. Kontroller venligst din netforbindelse!</string>
+    <string name="account_status_connecting">Forbinder</string>
+    <string name="account_status_connection_error">Forbindelsesfejl</string>
+    <string name="account_status_online">Forbundet</string>
+    <string name="account_status_unknown">Ukendt</string>
+    <string name="account_status_offline">Ingen forbindelse</string>
+    <string name="account_status_error">Fejl</string>
+    <string name="account_creation_home">Velkommen til Jami</string>
+    <string name="account_creation_profile">Opret din profil</string>
+    <string name="account_creation_ring">Opret din Jami-konto</string>
+    <string name="account_revoke_device_hint">Indtast adgangskode for at bekræfte</string>
+    <string name="enter_password">Indtast adgangskode</string>
+    <string name="revoke_device_title">Tilbagetræk enheden</string>
+    <string name="revoke_device_wait_title">Vent venligt...</string>
+    <string name="revoke_device_wait_message">Tilbagetrækker enhed</string>
+    <string name="rename_device_title">Omdøb denne enhed</string>
+    <string name="rename_device_button">Omdøb enhed</string>
+    <string name="account_rename_device_hint">Vælg nyt enhedsnavn</string>
+    <string name="account_device_this_indicator">Denne enhed</string>
+    <string name="account_disabled_indicator">Behindret</string>
+    <string name="error_format_not_supported">Dette format understøttes ikke.</string>
+    <string name="account_link_device_title">Tilknyt en ny enhed</string>
+    <string name="account_link_device_button">Køb</string>
+</resources>

@@ -31,6 +31,8 @@ import net.jami.services.AccountService
 import net.jami.services.ContactEvent
 import net.jami.services.ContactService
 import net.jami.services.ConversationFacade
+import net.jami.services.DeviceRuntimeService
+import net.jami.utils.VCardUtils
 
 /**
  * State for the contact details screen.
@@ -44,6 +46,7 @@ data class ContactDetailsState(
     val isLoading: Boolean = false,
     val conversationType: String = "",
     val swarmId: String = "",
+    val contactUri: String = "",
 )
 
 /**
@@ -56,6 +59,7 @@ class ContactDetailsViewModel(
     private val accountService: AccountService,
     private val contactService: ContactService,
     private val conversationFacade: ConversationFacade,
+    private val deviceRuntimeService: DeviceRuntimeService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     private val scope = scope
@@ -120,6 +124,12 @@ class ContactDetailsViewModel(
                     ?: contactService.findContact(accountId, contactUri)
                 val profile = contactService.loadContactData(contact, accountId)
 
+                // Load avatar from VCard on disk (same path as NewConversationViewModel)
+                val filesDir = deviceRuntimeService.getDataPath()
+                val avatarBytes = VCardUtils.loadPeerProfileFromDisk(
+                    filesDir, accountId, contact.uri.rawRingId
+                )
+
                 val convType = when (conversation?.mode) {
                     Conversation.Mode.OneToOne -> "Private"
                     Conversation.Mode.AdminInvitesOnly -> "Group (admin invites)"
@@ -134,11 +144,12 @@ class ContactDetailsViewModel(
                     displayName = profile.displayName ?: contact.displayUsername,
                     username = contact.username ?: "",
                     identityHash = contact.primaryNumber,
-                    avatarBytes = profile.avatar,
+                    avatarBytes = avatarBytes ?: profile.avatar,
                     isBlocked = contact.status == Contact.Status.BLOCKED,
                     isLoading = false,
                     conversationType = convType,
                     swarmId = swarmId,
+                    contactUri = contact.uri.uri,
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)

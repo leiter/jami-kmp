@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">നെറ്റ് വർക്ക്</string>
+    <string name="pref_category_contacts">ബന്ധുക്കൾ</string>
+    <string name="pref_category_video">വീഡിയോ</string>
+    <string name="pref_category_system">സിസ്റ്റം</string>
+    <string name="pref_category_privacy">സ്വകാര്യത</string>
+    <string name="pref_category_diagnostic">രോഗനിർണയം</string>
+    <string name="pref_category_appearance">രൂപം</string>
+    <string name="pref_category_connectivity">കണക്റ്റിവിറ്റി</string>
+    <string name="pref_category_extensions">എക്സ്റ്റൻഷനുകൾ</string>
+    <string name="pref_category_video_settings">വിപുലമായ വീഡിയോ ക്രമീകരണങ്ങൾ</string>
+    <string name="pref_mobileData_title">മൊബൈൽ ഡാറ്റ</string>
+    <string name="pref_mobileData_summary">വൈഫൈ കൂടാതെ 3 ജി/എൽടിഇ നെറ്റ്വർക്കുകളിൽ ജാമിക്ക് പ്രവേശനം അനുവദിക്കുക</string>
+    <string name="pref_pushNotifications_title">പുഷ് അറിയിപ്പുകൾ</string>
+    <string name="pref_pushNotifications_summary">പശ്ചാത്തലത്തിൽ കോളുകൾ/ സന്ദേശങ്ങൾ സ്വീകരിക്കാൻ അനുവദിക്കുന്നതിന് Google സെർവറുകൾ ഉപയോഗിക്കുക</string>
+    <string name="pref_unifiedPush_summary">പശ്ചാത്തലത്തിൽ കോളുകൾ/ സന്ദേശങ്ങൾ സ്വീകരിക്കാൻ യൂണിഫൈഡ് പുഷ് സേവനം ഉപയോഗിക്കുക</string>
+    <string name="pref_video_advanced_title">വിപുലമായ വീഡിയോ ക്രമീകരണങ്ങൾ</string>
+    <string name="pref_video_advanced_summary">വീഡിയോ ബിറ്റ് റേറ്റ്, റെസല്യൂഷൻ, കൂടാതെ ആക്സസ് പരീക്ഷണ സവിശേഷതകൾ എന്നിവ മാറ്റുക</string>
+    <string name="pref_hd_summary">എച്ച്ഡി വീഡിയോ അയയ്ക്കുന്നതിനുള്ള പ്രാപ്തതമാക്കൽ</string>
+    <string name="pref_hwEncode_title">വേഗതയേറിയ കോഡിംഗ് പ്രവർത്തനക്ഷമമാക്കുക</string>
+    <string name="pref_hwEncode_summary">പരീക്ഷണ സവിശേഷത</string>
+    <string name="pref_videoBitrate_title">വീഡിയോ ബിറ്റ് റേറ്റ്</string>
+    <string name="pref_videoBitrate_summary">സ്ഥിരസ്ഥിതി ബീറ്റ് റേറ്റ് (KB/s) തിരഞ്ഞെടുക്കുക</string>
+    <string name="pref_videoResolution_title">വീഡിയോ റെസല്യൂഷൻ</string>
+    <string name="pref_videoResolution_summary">സ്ഥിരസ്ഥിതി പുറത്തുവരുന്ന വീഡിയോ റെസല്യൂഷൻ തിരഞ്ഞെടുക്കുക</string>
+    <string name="pref_systemContacts_title">സിസ്റ്റം കോൺടാക്റ്റുകൾ ഉപയോഗിക്കുക</string>
+    <string name="pref_systemContacts_summary">വിളിക്കുന്നവരുടെ വിശദാംശങ്ങള് കാണിക്കുന്നതിന് സിസ്റ്റം കോൺടാക്റ്റുകൾ ഉപയോഗിക്കുക.</string>
+    <string name="pref_systemDialer_title">ജാമി ഉപയോഗിച്ച് സിസ്റ്റം കോളുകൾ നടത്തുക</string>
+    <string name="pref_systemDialer_summary">സാധ്യമാകുമ്പോഴെല്ലാം ജാമി സിസ്റ്റം കോളുകൾ വിളിക്കാന് ഉപയോഗിക്കുക.</string>
+    <string name="pref_startOnBoot_title">ജാമി സ്റ്റാർട്ട് ചെയ്യുമ്പോൾ ആരംഭിക്കുക</string>
+    <string name="pref_startOnBoot_summary">സിസ്റ്റം തുടങ്ങുമ്പോള് ജാമിയെ പശ്ചാത്തലത്തില് വച്ച് ഓടിക്കുക.</string>
+    <string name="pref_clearHistory_title">വ്യക്തമായ ചരിത്രം</string>
+    <string name="pref_notification_title">അറിയിപ്പുകളുടെ ദൃശ്യപരത</string>
+    <string name="pref_notification_summary">അപ്ലിക്കേഷൻ അറിയിപ്പുകളുടെ ദൃശ്യപരത ലോക്ക് സ്ക്രീനിൽ ക്രമീകരിക്കുക.</string>
+    <string name="pref_blackList_title">ബ്ലോക്ക് ലിസ്റ്റ്</string>
+    <string name="pref_blackList_summary">നിങ്ങളുടെ ബ്ലോക്ക് ലിസ്റ്റ് പരിശോധിക്കുക.</string>
+    <string name="pref_delete_account_title">അക്കൌണ്ട് ഇല്ലാതാക്കുക</string>
+    <string name="pref_newGroup_title">ഗ്രൂപ്പ് ചാറ്റ് പ്രവർത്തനക്ഷമമാക്കുക</string>
+    <string name="pref_newGroup_summary">ജാമിയിൽ ഗ്രൂപ്പുകള് സൃഷ്ടിക്കാന് പ്രാപ്തമാക്കുക.</string>
+    <string name="pref_logs_title">രോഗനിർണയ രേഖകൾ</string>
+    <string name="pref_logs_summary">ഡയഗ്നോസ്റ്റിക് ലോഗ് ക്രമീകരണങ്ങൾ തുറക്കുക</string>
+    <string name="pref_logs_start">ലോഗ് ആരംഭിക്കുക</string>
+    <string name="pref_logs_stop">മരം മുറിക്കുന്നത് നിർത്തുക</string>
+    <string name="pref_typing_title">ടൈപ്പിംഗ് സൂചകങ്ങൾ</string>
+    <string name="pref_block_record_title">സ്ക്രീൻഷോട്ടും റെക്കോർഡിംഗും തടയുക</string>
+    <string name="pref_block_record_summary">സ്ക്രീൻഷോട്ട് എടുക്കുകയോ വീഡിയോ റെക്കോർഡ് ചെയ്യുകയോ ചെയ്യുന്നത് തടയുക.</string>
+    <string name="pref_link_preview_title">വെബ് ലിങ്ക് പ്രിവ്യൂകൾ</string>
+    <string name="pref_link_preview_summary">പ്രിവ്യൂ മൂന്നാം കക്ഷി സെർവറുകളിൽ നിന്നും ഉള്ളടക്കം ഡൌൺലോഡ് ചെയ്യണം.</string>
+    <string name="connectivity_custom_title">കസ്റ്റംസ്</string>
+</resources>

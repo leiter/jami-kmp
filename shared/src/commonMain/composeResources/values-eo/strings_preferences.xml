@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Reto</string>
+    <string name="pref_category_contacts">Kontaktoj</string>
+    <string name="pref_category_video">Video</string>
+    <string name="pref_category_system">Sistemo</string>
+    <string name="pref_category_privacy">Privateco</string>
+    <string name="pref_category_diagnostic">Diagnostikoj</string>
+    <string name="pref_category_appearance">Aparicio</string>
+    <string name="pref_category_connectivity">Konektiveco</string>
+    <string name="pref_category_video_settings">Avancitaj videaj agordoj</string>
+    <string name="pref_mobileData_title">Porteblaj datumoj</string>
+    <string name="pref_mobileData_summary">Permesu al Jami uzi 3G/LTE-retojn krom Wi-Fi</string>
+    <string name="pref_pushNotifications_title">Poŝnotifikoj</string>
+    <string name="pref_pushNotifications_summary">Uzu Google-servilon por permesi ricevi vokojn/mesaĝojn en la fono</string>
+    <string name="pref_unifiedPush_summary">Uzu UnifiedPush-servon por permesi ricevi alvokojn/mesaĝojn en la fono</string>
+    <string name="pref_video_advanced_title">Avancitaj videaj agordoj</string>
+    <string name="pref_video_advanced_summary">Ŝanĝu la video bitrate, rezolucio, same kiel aliro eksperimentaj trajtoj</string>
+    <string name="pref_hd_summary">Aktivigu sendadon de HD-video</string>
+    <string name="pref_hwEncode_title">Aktivigu akcelerecan kodadon</string>
+    <string name="pref_hwEncode_summary">Eksperimenta trajto</string>
+    <string name="pref_videoBitrate_title">Video bitrate</string>
+    <string name="pref_videoBitrate_summary">Elektu defaŭlte eliranta video bitfrekvencon (KB/s)</string>
+    <string name="pref_videoResolution_title">Video rezolucio</string>
+    <string name="pref_videoResolution_summary">Elektu defaŭlte la elirantan video-resolucion</string>
+    <string name="pref_systemContacts_title">Uzi sistemajn kontaktojn</string>
+    <string name="pref_systemContacts_summary">Uzi sistemajn kontaktojn por montri detalojn de la vokanto.</string>
+    <string name="pref_systemDialer_title">Metu la telefonvokojn per Jami</string>
+    <string name="pref_systemDialer_summary">Uzu Jami por fari telefonvokojn, kiam eblas.</string>
+    <string name="pref_startOnBoot_title">Komencu Jami sur komenco</string>
+    <string name="pref_startOnBoot_summary">Faru Jami-n en la fono kiam la sistemo komencas.</string>
+    <string name="pref_clearHistory_title">Vakigi historion</string>
+    <string name="pref_notification_title">Vidobleco de la avizo</string>
+    <string name="pref_notification_summary">Agordi la videblecon de aplikaj mesaĝoj sur ŝlosilekrano.</string>
+    <string name="pref_blackList_title">Listo de blokoj</string>
+    <string name="pref_blackList_summary">Kontrolu vian blokliston.</string>
+    <string name="pref_delete_account_title">Forviŝi konton</string>
+    <string name="pref_newGroup_title">Aktivigu grupĉaton</string>
+    <string name="pref_newGroup_summary">Akceli kreadon de grupoj en Jami.</string>
+    <string name="pref_logs_title">Diagnostikaj registroj</string>
+    <string name="pref_logs_summary">Malfermu diagnozajn registrojn</string>
+    <string name="pref_logs_start">Komenci la logadon</string>
+    <string name="pref_logs_stop">Ĉesu arbarigo</string>
+    <string name="pref_typing_title">Indicisto por tajpado</string>
+    <string name="pref_block_record_title">Bloki ekranbildon kaj registradon</string>
+    <string name="pref_block_record_summary">Ne faru ekranbildon aŭ registri videon.</string>
+    <string name="pref_link_preview_summary">Antaŭvidado postulas elŝuti enhavon de triaj serviloj.</string>
+    <string name="connectivity_custom_title">Propra</string>
+</resources>

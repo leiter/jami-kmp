@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">ಜಾಲ</string>
+    <string name="pref_category_contacts">ಸಂಪರ್ಕಗಳು</string>
+    <string name="pref_category_video">ವಿಡಿಯೋ</string>
+    <string name="pref_category_system">ಸಿಸ್ಟಮ್</string>
+    <string name="pref_category_privacy">ಗೌಪ್ಯತೆ</string>
+    <string name="pref_category_diagnostic">ರೋಗನಿರ್ಣಯ</string>
+    <string name="pref_category_appearance">ನೋಟ</string>
+    <string name="pref_category_connectivity">ಸಂಪರ್ಕ</string>
+    <string name="pref_category_video_settings">ಸುಧಾರಿತ ವೀಡಿಯೊ ಸೆಟ್ಟಿಂಗ್ಗಳು</string>
+    <string name="pref_mobileData_title">ಮೊಬೈಲ್ ಡೇಟಾ</string>
+    <string name="pref_mobileData_summary">ವೈ-ಫೈ ಜೊತೆಗೆ 3ಜಿ/ಎಲ್ಟಿಇ ನೆಟ್ವರ್ಕ್ಗಳಲ್ಲಿ ಜಾಮಿಗೆ ಅವಕಾಶ</string>
+    <string name="pref_pushNotifications_title">ಪುಶ್ ಅಧಿಸೂಚನೆಗಳು</string>
+    <string name="pref_pushNotifications_summary">ಹಿನ್ನೆಲೆಯಲ್ಲಿ ಕರೆಗಳು/ಸಂದೇಶಗಳನ್ನು ಸ್ವೀಕರಿಸಲು Google ಸರ್ವರ್ಗಳನ್ನು ಬಳಸಿ</string>
+    <string name="pref_unifiedPush_summary">ಹಿನ್ನೆಲೆಯಲ್ಲಿ ಕರೆಗಳು/ಸಂದೇಶಗಳನ್ನು ಸ್ವೀಕರಿಸಲು ಯುನಿಫೈಡ್ ಪುಶ್ ಸೇವೆಯನ್ನು ಬಳಸಿ</string>
+    <string name="pref_video_advanced_title">ಸುಧಾರಿತ ವೀಡಿಯೊ ಸೆಟ್ಟಿಂಗ್ಗಳು</string>
+    <string name="pref_video_advanced_summary">ವೀಡಿಯೊ ಬಿಟ್ ದರ, ರೆಸಲ್ಯೂಶನ್, ಹಾಗೂ ಪ್ರವೇಶ ಪ್ರಯೋಗಾತ್ಮಕ ವೈಶಿಷ್ಟ್ಯಗಳನ್ನು ಬದಲಾಯಿಸಿ</string>
+    <string name="pref_hd_summary">ಎಚ್ಡಿ ವೀಡಿಯೊ ಕಳುಹಿಸುವಿಕೆಯನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ</string>
+    <string name="pref_hwEncode_title">ವೇಗವರ್ಧಿತ ಕೋಡಿಂಗ್ ಅನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ</string>
+    <string name="pref_hwEncode_summary">ಪ್ರಯೋಗದ ವೈಶಿಷ್ಟ್ಯ</string>
+    <string name="pref_videoBitrate_title">ವೀಡಿಯೊ ಬಿಟ್ ದರ</string>
+    <string name="pref_videoBitrate_summary">ಡೀಫಾಲ್ಟ್ ಔಟ್ಗಾಂಗ್ ವಿಡಿಯೋ ಬಿಟ್ ರೇಟ್ (KB/s) ಆಯ್ಕೆಮಾಡಿ</string>
+    <string name="pref_videoResolution_title">ವೀಡಿಯೊ ರೆಸಲ್ಯೂಶನ್</string>
+    <string name="pref_videoResolution_summary">ಡೀಫಾಲ್ಟ್ ನಿರ್ಗಮನ ವೀಡಿಯೊ ರೆಸಲ್ಯೂಶನ್ ಆಯ್ಕೆಮಾಡಿ</string>
+    <string name="pref_systemContacts_title">ಸಿಸ್ಟಮ್ ಸಂಪರ್ಕಗಳನ್ನು ಬಳಸಿ</string>
+    <string name="pref_systemContacts_summary">ಕರೆ ಮಾಡುವವರ ವಿವರಗಳನ್ನು ತೋರಿಸಲು ಸಿಸ್ಟಮ್ ಸಂಪರ್ಕಗಳನ್ನು ಬಳಸಿ.</string>
+    <string name="pref_systemDialer_title">ಜಾಮಿ ಬಳಸಿ ವ್ಯವಸ್ಥೆಯ ಕರೆಗಳನ್ನು ಮಾಡಿ</string>
+    <string name="pref_systemDialer_summary">ಸಾಧ್ಯವಾದಾಗ ವ್ಯವಸ್ಥೆಯ ಕರೆಗಳನ್ನು ಮಾಡಲು ಜಾಮಿಯನ್ನು ಬಳಸಿ.</string>
+    <string name="pref_startOnBoot_title">ಜಾಮಿ ಆರಂಭಿಕ ಆರಂಭದಲ್ಲಿ ಪ್ರಾರಂಭಿಸಿ</string>
+    <string name="pref_startOnBoot_summary">ವ್ಯವಸ್ಥೆ ಪ್ರಾರಂಭವಾದಾಗ ಜಾಮಿಯನ್ನು ಹಿನ್ನೆಲೆಯಲ್ಲಿ ಚಲಾಯಿಸಿ.</string>
+    <string name="pref_clearHistory_title">ಸ್ಪಷ್ಟ ಇತಿಹಾಸ</string>
+    <string name="pref_notification_title">ಅಧಿಸೂಚನೆಗಳ ಗೋಚರತೆ</string>
+    <string name="pref_notification_summary">ಅಪ್ಲಿಕೇಶನ್ ಅಧಿಸೂಚನೆಗಳ ಗೋಚರತೆಯನ್ನು ಲಾಕ್ ಸ್ಕ್ರೀನ್ನಲ್ಲಿ ಹೊಂದಿಸಿ.</string>
+    <string name="pref_blackList_title">ಬ್ಲಾಕ್ ಪಟ್ಟಿ</string>
+    <string name="pref_blackList_summary">ನಿಮ್ಮ ಬ್ಲಾಕ್ ಪಟ್ಟಿಯನ್ನು ಪರಿಶೀಲಿಸಿ.</string>
+    <string name="pref_delete_account_title">ಖಾತೆಯನ್ನು ಅಳಿಸಿ</string>
+    <string name="pref_newGroup_title">ಗುಂಪು ಚಾಟ್ ಅನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ</string>
+    <string name="pref_newGroup_summary">ಜಾಮಿಯಲ್ಲಿ ಗುಂಪುಗಳನ್ನು ರಚಿಸಲು ಅನುವು ಮಾಡಿಕೊಡಿ.</string>
+    <string name="pref_logs_title">ರೋಗನಿರ್ಣಯ ದಾಖಲೆಗಳು</string>
+    <string name="pref_logs_summary">ಡಯಾಗ್ನೋಸ್ಟಿಕ್ ಲಾಗ್ ಸೆಟ್ಟಿಂಗ್ಗಳನ್ನು ತೆರೆಯಿರಿ</string>
+    <string name="pref_logs_start">ಲಾಗ್ ಹಾಕುವಿಕೆ ಆರಂಭಿಸಿ</string>
+    <string name="pref_logs_stop">ಛೇದಕಗಳನ್ನು ನಿಲ್ಲಿಸಿ</string>
+    <string name="pref_typing_title">ಟೈಪಿಂಗ್ ಸೂಚಕ</string>
+    <string name="pref_block_record_title">ಸ್ಕ್ರೀನ್ಶಾಟ್ ಮತ್ತು ರೆಕಾರ್ಡಿಂಗ್ ಅನ್ನು ನಿರ್ಬಂಧಿಸಿ</string>
+    <string name="pref_block_record_summary">ಸ್ಕ್ರೀನ್ಶಾಟ್ ತೆಗೆಯುವುದನ್ನು ಅಥವಾ ವಿಡಿಯೋ ರೆಕಾರ್ಡಿಂಗ್ ಮಾಡುವುದನ್ನು ತಡೆಗಟ್ಟಿ.</string>
+    <string name="pref_link_preview_title">ವೆಬ್ ಲಿಂಕ್ ಪೂರ್ವವೀಕ್ಷಣೆಗಳು</string>
+    <string name="pref_link_preview_summary">ಪೂರ್ವವೀಕ್ಷಣೆ ಮೂರನೇ ವ್ಯಕ್ತಿಯ ಸರ್ವರ್ಗಳಿಂದ ವಿಷಯವನ್ನು ಡೌನ್ಲೋಡ್ ಮಾಡುವ ಅಗತ್ಯವಿದೆ.</string>
+    <string name="connectivity_custom_title">ಕಸ್ಟಮ್</string>
+</resources>

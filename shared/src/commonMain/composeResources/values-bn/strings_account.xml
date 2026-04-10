@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">মুছে ফেলুন</string>
+    <string name="ic_advanced_menu">উন্নত সেটিংস</string>
+    <string name="ic_blacklist_menu">বন্ধ করা পরিচিতি</string>
+    <string name="add_ring_account_title">অ্যাকাউন্ট যোগ করুন</string>
+    <string name="add_sip_account_title">SIP অ্যাকাউন্ট যোগ করুন</string>
+    <string name="ring_account_default_name">জ্যামি অ্যাকাউন্ট %1$s</string>
+    <string name="prompt_alias">উপনাম</string>
+    <string name="prompt_hostname">হোস্ট নাম</string>
+    <string name="prompt_username">ব্যবহারকারীর নাম</string>
+    <string name="prompt_password">পাসওয়ার্ড</string>
+    <string name="action_create">অ্যাকাউন্ট তৈরি করুন</string>
+    <string name="action_create_short">তৈরি করুন</string>
+    <string name="action_register">নিবন্ধন</string>
+    <string name="action_settings">সেটিং</string>
+    <string name="error_field_required">এই ক্ষেত্রটি প্রয়োজনীয়</string>
+    <string name="dialog_wait_create">যোগ করা অ্যাকাউন্ট</string>
+    <string name="dialog_wait_create_details">দয়া করে আপনার নতুন অ্যাকাউন্ট যোগ করার সময় অপেক্ষা করুন...</string>
+    <string name="dialog_wait_update">অ্যাকাউন্ট আপডেট</string>
+    <string name="dialog_wait_update_details">দয়া করে আপনার নতুন অ্যাকাউন্ট আপডেট হওয়ার জন্য অপেক্ষা করুন...</string>
+    <string name="account_type_ip2ip">আইপি অ্যাকাউন্ট</string>
+    <string name="help_ring">জামি অ্যাকাউন্ট আপনাকে সম্পূর্ণ বিতরণকৃত নেটওয়ার্কের মাধ্যমে নিরাপদে ব্যক্তিদের সাথে যোগাযোগ করতে দেয়।</string>
+    <string name="help_sip_title">SIP অ্যাকাউন্ট যোগ করুন</string>
+    <string name="account_delete_dialog_message">এই পদক্ষেপটি বাতিল করা যাবে না।</string>
+    <string name="empty_account_list">কোন অ্যাকাউন্ট নিবন্ধিত নেই</string>
+    <string name="normal_accounts_titles">অ্যাকাউন্ট</string>
+    <string name="normal_devices_titles">সংযুক্ত ডিভাইস</string>
+    <string name="account_device_revoke">বাতিলকরণ ডিভাইস</string>
+    <string name="account_device_revocation_success_title">সাফল্য</string>
+    <string name="account_device_revocation_success">ডিভাইস এখন প্রত্যাহার করা হয়েছে!</string>
+    <string name="account_device_revocation_unknown_device">অজানা ডিভাইস।</string>
+    <string name="account_device_revocation_error_unknown">অজানা ত্রুটি।</string>
+    <string name="account_password_change">পাসওয়ার্ড পরিবর্তন করুন</string>
+    <string name="account_password_set">পাসওয়ার্ড সেট করুন</string>
+    <string name="account_password_summary">আপনার অ্যাকাউন্টের পাসওয়ার্ড পরিচালনা করুন।</string>
+    <string name="account_password_change_wait_message">অ্যাকাউন্টের পাসওয়ার্ড পরিবর্তন</string>
+    <string name="account_preferences_basic_tab">সাধারণ</string>
+    <string name="account_basic_category">বেসিক সেটিংস</string>
+    <string name="account_hostname_label">হোস্ট নাম</string>
+    <string name="account_bootstrap_label">বুটস্ট্র্যাপ</string>
+    <string name="account_name_server_label">নাম সার্ভার</string>
+    <string name="account_username_label">ব্যবহারকারীর নাম</string>
+    <string name="account_password_label">পাসওয়ার্ড</string>
+    <string name="account_optionnal_category">অপশনাল সেটিং</string>
+    <string name="account_useragent_label">ব্যবহারকারী এজেন্ট</string>
+    <string name="account_autoanswer_label">স্বয়ংক্রিয় উত্তর</string>
+    <string name="account_rendezvous_label">রেন্ডেভমেন্ট মোড</string>
+    <string name="account_rendezvous_summary">রেন্ডেভো মোডে, ইনকামিং কলগুলি একটি কনফারেন্স রুমে যুক্ত করা হবে।</string>
+    <string name="account_upnp_label">UPnP সক্ষম করুন</string>
+    <string name="account_proxy_field">প্রক্সি</string>
+    <string name="account_audio_label">অডিও</string>
+    <string name="account_preferences_media_tab">মিডিয়া</string>
+    <string name="account_ringtone_label">রিংটোন</string>
+    <string name="account_ringtone_enabled_label">রিংটোন সক্রিয় করুন</string>
+    <string name="account_ringtone_path_label">রিংটোন পথ</string>
+    <string name="account_ringtone_custom_label">কাস্টম রিংটোন ব্যবহার করুন</string>
+    <string name="account_ringtone_title">একটি রিংটোন নির্বাচন করুন</string>
+    <string name="account_ringtone_summary">একটি রিংটোন বা আপনার নিজের নির্বাচন করুন</string>
+    <string name="account_video_label">ভিডিও</string>
+    <string name="account_video_enable">ভিডিও সক্ষম করুন</string>
+    <string name="account_preferences_advanced_tab">উন্নত</string>
+    <string name="account_call_settings_title">কল সেটিং</string>
+    <string name="account_dht_public_in_calls_label">অজানা পরিচিতি থেকে ইনকামিং কলগুলিকে অনুমতি দিন</string>
+    <string name="account_registration_exp_label">নিবন্ধন মেয়াদ শেষ</string>
+    <string name="account_local_interface_label">স্থানীয় ইন্টারফেস</string>
+    <string name="account_local_port_label">স্থানীয় বন্দর</string>
+    <string name="account_stun_enable_label">STUN ব্যবহার করুন</string>
+    <string name="account_accept_files">ইনকামিং ফাইলগুলি স্বয়ংক্রিয়ভাবে গ্রহণ করুন</string>
+    <string name="account_conversation_settings_title">কথোপকথন সেটিংস</string>
+    <string name="account_accept_files_max_size">স্বয়ংক্রিয়ভাবে গ্রহণযোগ্য সর্বোচ্চ ফাইলের আকার</string>
+    <string name="account_accept_files_never">কখনোই স্বয়ংক্রিয়ভাবে গ্রহণ করবেন না</string>
+    <string name="account_accept_files_always">সর্বদা স্বয়ংক্রিয়ভাবে গ্রহণ করুন</string>
+    <string name="size_mb">%1$d MB</string>
+    <string name="account_turn_enable_label">TURN ব্যবহার করুন</string>
+    <string name="account_turn_server_label">টার্ন সার্ভার</string>
+    <string name="account_turn_username_label">ইউজার নাম TURN</string>
+    <string name="account_turn_password_label">টার্ন পাসওয়ার্ড</string>
+    <string name="account_published_same_as_local_label">স্থানীয় হিসাবে একই প্রকাশিত</string>
+    <string name="account_published_port_label">প্রকাশিত বন্দর</string>
+    <string name="account_published_address_label">প্রকাশিত ঠিকানা</string>
+    <string name="disabled">অক্ষম</string>
+    <string name="enabled">সক্ষম করা হয়েছে</string>
+    <string name="default_value">ডিফল্ট</string>
+    <string name="account_proxy_label">DHT প্রক্সি</string>
+    <string name="account_proxy_enable_label">DHT প্রক্সি ব্যবহার করুন</string>
+    <string name="account_proxy_server_label">DHT প্রক্সি ঠিকানা</string>
+    <string name="account_proxy_server_list_label">DHT প্রক্সি তালিকা URL</string>
+    <string name="account_sip_proxy_label">প্রক্সি</string>
+    <string name="account_peer_discovery_label">স্থানীয় সমকক্ষ আবিষ্কার</string>
+    <string name="account_peer_discovery_enable_label">স্থানীয় সমকক্ষ আবিষ্কার সক্ষম করুন</string>
+    <string name="account_peer_discovery_enable_summary">আমাদের স্থানীয় নেটওয়ার্কে বিজ্ঞাপন দেওয়া অন্যান্য ডিএইচটি নোডের সাথে সংযোগ স্থাপন করুন</string>
+    <string name="account_credentials_label">ক্রেডিট্যান্সেল</string>
+    <string name="account_credentials_edit">ক্রেডিট্যান্স সম্পাদনা করুন</string>
+    <string name="account_credentials_add">ক্রেডিটাল যুক্ত করুন</string>
+    <string name="account_preferences_security_tab">নিরাপত্তা</string>
+    <string name="account_srtp_switch_label">এনক্রিপ্ট মিডিয়া স্ট্রিম (SRTP)</string>
+    <string name="account_tls_transport_switch_label">TLS পরিবহন ব্যবহার করুন</string>
+    <string name="account_tls_password_label">ব্যক্তিগত কী পাসওয়ার্ড</string>
+    <string name="account_rtp_max_port">সর্বোচ্চ</string>
+    <string name="account_rtp_min_port">সর্বনিম্ন</string>
+    <string name="account_new_device_password">অ্যাকাউন্ট আনলক করতে মূল পাসওয়ার্ড লিখুন</string>
+    <string name="error_password_char_count">৬টি অক্ষর কমপক্ষে</string>
+    <string name="export_account_wait_title">দয়া করে অপেক্ষা করুন...</string>
+    <string name="export_account_wait_message">রপ্তানি অ্যাকাউন্টের তথ্য</string>
+    <string name="account_export_file">ব্যাকআপ অ্যাকাউন্ট</string>
+    <string name="account_export_file_summary">আপনার অ্যাকাউন্টটি আপনার ডিভাইসে ব্যাকআপ করুন পরে এটি পুনরুদ্ধার করতে।</string>
+    <string name="account_enter_password">পাসওয়ার্ড লিখুন</string>
+    <string name="account_contact_me">জামিতে আমার সাথে যোগাযোগ করুন!</string>
+    <string name="update_account">অ্যাকাউন্ট আপডেট</string>
+    <string name="account_migration">আপনার জামি অ্যাকাউন্ট আপডেট করা যাবে। অনুগ্রহ করে আপনার পাসওয়ার্ড লিখুন।</string>
+    <string name="ring_account">জামি অ্যাকাউন্ট</string>
+    <string name="sip_account">এসআইপি অ্যাকাউন্ট</string>
+    <string name="ring_account_identity">পরিচয়</string>
+    <string name="account_migration_title_dialog">অ্যাকাউন্ট মাইগ্রেশন</string>
+    <string name="account_update_needed">আপডেট প্রয়োজন</string>
+    <string name="account_sip_cannot_be_registered_message">আপনি অ্যাকাউন্ট তৈরির প্রক্রিয়াটি চালিয়ে যেতে পারেন অথবা আপনার তথ্য এখানে সম্পাদনা করতে পারেন। অ্যাকাউন্ট সেটিংস পরে সংস্করণ এখনও সম্ভব।</string>
+    <string name="account_no_network_title">নেটওয়ার্ক ত্রুটি</string>
+    <string name="account_device_added_title">অ্যাকাউন্ট ডিভাইস যোগ করা হয়েছে</string>
+    <string name="account_device_updated_title">অ্যাকাউন্ট ডিভাইস আপডেট</string>
+    <string name="account_sip_register_anyway">যাই হোক রেজিস্টার করুন</string>
+    <string name="account_tv_settings_header">অ্যাকাউন্ট সেটিংস</string>
+    <string name="account_tv_advance_settings_header">উন্নত সেটিংস</string>
+    <string name="account_tv_add_contact">যোগাযোগ যোগ করুন</string>
+    <string name="account_tv_advanced_settings">সাধারণ সেটিংস পরিবর্তন করুন</string>
+    <string name="account_tv_about">জামি সম্পর্কে</string>
+    <string name="tv_about_version">সংস্করণ</string>
+    <string name="tv_about_license">লাইসেন্স</string>
+    <string name="tv_about_author">লেখক অধিকার</string>
+    <string name="tv_about_credits">ক্রেডিট</string>
+    <string name="account_link_device">অন্য ডিভাইস থেকে সংযোগ</string>
+    <string name="account_link_button">নেটওয়ার্ক থেকে সংযোগ</string>
+    <string name="account_link_archive_button">ব্যাকআপ থেকে সংযোগ</string>
+    <string name="account_new_button">জামি অ্যাকাউন্ট তৈরি করুন</string>
+    <string name="account_link_export_button">নতুন ডিভাইস লিঙ্ক</string>
+    <string name="account_link_show_button">%d আরো সংযুক্ত ডিভাইস দেখান</string>
+    <string name="account_link_hide_button">সংযুক্ত ডিভাইস লুকান</string>
+    <string name="account_end_export_button">ঘনিষ্ঠ</string>
+    <string name="account_export_title">অন্যান্য ডিভাইসের সাথে লিঙ্ক অ্যাকাউন্ট</string>
+    <string name="account_connect_server_button">ম্যানেজমেন্ট সার্ভারের সাথে সংযোগ স্থাপন</string>
+    <string name="account_connect_button">সংযুক্ত করুন</string>
+    <string name="help_credentials_enter">আপনার প্রতিষ্ঠানের পরিচয়পত্র লিখুন</string>
+    <string name="help_connect_password_enter">আপনার প্রতিষ্ঠানের পাসওয়ার্ড লিখুন</string>
+    <string name="account_connect_prompt_username">ব্যবহারকারীর নাম</string>
+    <string name="account_connect_server">ম্যানেজমেন্ট সার্ভারের সাথে সংযোগ স্থাপন</string>
+    <string name="error_username_empty">একটি ব্যবহারকারীর নাম লিখুন</string>
+    <string name="register_name">নিবন্ধন নাম</string>
+    <string name="registered_username">নিবন্ধিত ব্যবহারকারীর নাম</string>
+    <string name="register_username">জনসাধারণের ব্যবহারকারীর নাম নিবন্ধন করুন</string>
+    <string name="register_recommended">প্রস্তাবিত</string>
+    <string name="username_already_taken">ব্যবহারকারীর নাম ইতিমধ্যেই নেওয়া হয়েছে</string>
+    <string name="invalid_username">অবৈধ ব্যবহারকারীর নাম</string>
+    <string name="unknown_error">অজানা ত্রুটি. দয়া করে আপনার নেটওয়ার্ক সংযোগ পরীক্ষা করুন!</string>
+    <string name="account_status_connecting">সংযোগ</string>
+    <string name="account_status_connection_error">সংযোগ ত্রুটি</string>
+    <string name="account_status_online">অনলাইন</string>
+    <string name="account_status_unknown">অজানা</string>
+    <string name="account_status_offline">অফলাইন</string>
+    <string name="account_status_error">ত্রুটি</string>
+    <string name="account_creation_home">জামিতে স্বাগতম</string>
+    <string name="account_creation_profile">আপনার প্রোফাইল তৈরি করুন</string>
+    <string name="account_creation_ring">আপনার জামি অ্যাকাউন্ট তৈরি করুন</string>
+    <string name="account_revoke_device_hint">নিশ্চিত করার জন্য পাসওয়ার্ড লিখুন</string>
+    <string name="enter_password">পাসওয়ার্ড লিখুন</string>
+    <string name="revoke_device_title">বাতিলকরণ ডিভাইস</string>
+    <string name="revoke_device_wait_title">দয়া করে অপেক্ষা করুন...</string>
+    <string name="revoke_device_wait_message">প্রত্যাহারকারী ডিভাইস</string>
+    <string name="rename_device_title">এই ডিভাইসের নাম পরিবর্তন করুন</string>
+    <string name="rename_device_button">ডিভাইস নাম পরিবর্তন</string>
+    <string name="account_rename_device_hint">নতুন ডিভাইসের নাম নির্বাচন করুন</string>
+    <string name="account_device_this_indicator">এই ডিভাইস</string>
+    <string name="account_disabled_indicator">অক্ষম</string>
+    <string name="error_format_not_supported">এই ফরম্যাট সমর্থিত নয়।</string>
+    <string name="account_link_device_title">একটি নতুন ডিভাইস লিঙ্ক</string>
+    <string name="account_link_device_button">সংযুক্ত করুন</string>
+</resources>

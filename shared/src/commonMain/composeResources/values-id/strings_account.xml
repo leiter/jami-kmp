@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">Hapus</string>
+    <string name="ic_advanced_menu">Pengaturan lanjutan</string>
+    <string name="ic_blacklist_menu">Kontak yang diblokir</string>
+    <string name="add_ring_account_title">Tambah akun</string>
+    <string name="add_sip_account_title">Tambahkan akun SIP</string>
+    <string name="ring_account_default_name">Akun Jami %1$s</string>
+    <string name="prompt_alias">Alias</string>
+    <string name="prompt_hostname">Nama host</string>
+    <string name="prompt_username">Nama pengguna</string>
+    <string name="prompt_password">Kata sandi</string>
+    <string name="action_create">Buat akun</string>
+    <string name="action_create_short">Buat</string>
+    <string name="action_register">Daftar</string>
+    <string name="action_settings">Setelan</string>
+    <string name="error_field_required">Bidang ini harus diisi</string>
+    <string name="dialog_wait_create">Menambahkan akun</string>
+    <string name="dialog_wait_create_details">Mohon tunggu...</string>
+    <string name="dialog_wait_update">Memperbarui akun</string>
+    <string name="dialog_wait_update_details">Mohon tunggu...</string>
+    <string name="account_type_ip2ip">Akun IP</string>
+    <string name="help_ring">Akun Jami memungkinkan Anda untuk menjangkau orang-orang dengan aman secara peer to peer melalui jaringan yang sepenuhnya terdistribusi.</string>
+    <string name="help_sip_title">Tambahkan akun SIP</string>
+    <string name="account_delete_dialog_message">Aksi ini tak bisa dibatalkan</string>
+    <string name="empty_account_list">Tidak ada akun yang terdaftar</string>
+    <string name="normal_accounts_titles">Akun</string>
+    <string name="normal_devices_titles">Perangkat yang terhubung</string>
+    <string name="account_device_revoke">Hapus perangkat</string>
+    <string name="account_device_revocation_success_title">Sukses</string>
+    <string name="account_device_revocation_success">Perangkat telah dihapus</string>
+    <string name="account_device_revocation_unknown_device">Perangkat tidak diketahui.</string>
+    <string name="account_device_revocation_error_unknown">Error tak dikenal.</string>
+    <string name="account_password_change">Ubah kata sandi</string>
+    <string name="account_password_set">Atur kata sandi</string>
+    <string name="account_password_summary">Atur kata sandi akun anda.</string>
+    <string name="account_password_change_wait_message">Mengganti kata sandi akun</string>
+    <string name="account_preferences_basic_tab">Umum</string>
+    <string name="account_basic_category">Pengaturan Dasar</string>
+    <string name="account_hostname_label">Nama host</string>
+    <string name="account_bootstrap_label">Bootstrap</string>
+    <string name="account_name_server_label">Nama peladen</string>
+    <string name="account_username_label">Nama pengguna</string>
+    <string name="account_password_label">Kata sandi</string>
+    <string name="account_optionnal_category">Pengaturan Opsional</string>
+    <string name="account_useragent_label">Agen Pengguna</string>
+    <string name="account_autoanswer_label">Jawab Otomatis</string>
+    <string name="account_rendezvous_label">Mode Pertemuan</string>
+    <string name="account_rendezvous_summary">Dalam mode Rendezvous, panggilan masuk akan ditambahkan ke ruang konferensi.</string>
+    <string name="account_upnp_label">Aktifkan UPnP</string>
+    <string name="account_proxy_field">Proksi</string>
+    <string name="account_audio_label">Suara</string>
+    <string name="account_preferences_media_tab">Media</string>
+    <string name="account_ringtone_label">Nada dering</string>
+    <string name="account_ringtone_enabled_label">Aktifkan nada dering</string>
+    <string name="account_ringtone_path_label">Lokasi nada dering</string>
+    <string name="account_ringtone_custom_label">Gunakan nada dering kustom</string>
+    <string name="account_ringtone_title">Pilih nada dering</string>
+    <string name="account_ringtone_summary">Pilih nada dering</string>
+    <string name="account_video_label">Video</string>
+    <string name="account_video_enable">Aktifkan Video</string>
+    <string name="account_preferences_advanced_tab">Lanjutan</string>
+    <string name="account_call_settings_title">Pengaturan telepon</string>
+    <string name="account_dht_public_in_calls_label">Izinkan panggilan dari kontak tak dikenal</string>
+    <string name="account_registration_exp_label">Registrasi Kedaluarsa</string>
+    <string name="account_local_interface_label">Antarmuka Lokal</string>
+    <string name="account_local_port_label">Port Lokal</string>
+    <string name="account_stun_enable_label">Gunakan TURN</string>
+    <string name="account_accept_files">Terima file masuk secara otomatis</string>
+    <string name="account_conversation_settings_title">Pengaturan obrolan</string>
+    <string name="account_accept_files_max_size">Ukuran maksimal file yang diterima otomatis</string>
+    <string name="account_accept_files_never">Jangan pernah terima secara otomatis</string>
+    <string name="account_accept_files_always">Selalu terima secara otomatis</string>
+    <string name="size_mb">%1$d MB</string>
+    <string name="account_turn_enable_label">Gunakan TURN</string>
+    <string name="account_turn_server_label">Server TURN</string>
+    <string name="account_turn_username_label">Nama pengguna TURN</string>
+    <string name="account_turn_password_label">Kata sandi TURN</string>
+    <string name="account_published_same_as_local_label">Diterbitkan sama dengan lokal</string>
+    <string name="account_published_port_label">Port yang dipublikasikan</string>
+    <string name="account_published_address_label">Alamat yang dipublikasikan</string>
+    <string name="disabled">Dinonaktifan</string>
+    <string name="enabled">Aktifkan</string>
+    <string name="default_value">Bawaan</string>
+    <string name="account_proxy_label">Proksi DHT</string>
+    <string name="account_proxy_enable_label">Gunakan proksi DHT</string>
+    <string name="account_proxy_server_label">Alamat proksi DHT</string>
+    <string name="account_proxy_server_list_label">Daftar URL proksi DHT</string>
+    <string name="account_sip_proxy_label">Proksi</string>
+    <string name="account_peer_discovery_label">Temukan kawan lokal</string>
+    <string name="account_peer_discovery_enable_label">Mengaktifkan penemuan rekan lokal</string>
+    <string name="account_peer_discovery_enable_summary">Terhubung ke node DHT lain yang beriklan di jaringan lokal kita</string>
+    <string name="account_credentials_label">Kredensial</string>
+    <string name="account_credentials_edit">Ubah kredensial</string>
+    <string name="account_credentials_add">Tambahkan kredensial</string>
+    <string name="account_preferences_security_tab">Keamanan</string>
+    <string name="account_srtp_switch_label">Enkripsi media stream (SRTP)</string>
+    <string name="account_tls_transport_switch_label">Gunakan TLS Transport</string>
+    <string name="account_tls_password_label">Kata sandi kunci privat</string>
+    <string name="account_rtp_max_port">Maksimum</string>
+    <string name="account_rtp_min_port">Minimum</string>
+    <string name="account_new_device_password">Masukkan kata sandi utama untuk membuka akun</string>
+    <string name="error_password_char_count">Minimum 6 karakter</string>
+    <string name="export_account_wait_title">Harap tunggu...</string>
+    <string name="export_account_wait_message">Mengekspor informasi akun</string>
+    <string name="account_export_file">Cadangkan akun</string>
+    <string name="account_export_file_summary">Cadangkan akun di perangkat anda untuk memulihkannya nanti.</string>
+    <string name="account_enter_password">Masukan kata sandi</string>
+    <string name="account_contact_me">Hubungi saya di Jami!</string>
+    <string name="update_account">Perbarui akun</string>
+    <string name="account_migration">Akun Jami anda dapat diperbarui. \nSilakan masukkan kata sandi anda.</string>
+    <string name="ring_account">Akun Jami</string>
+    <string name="sip_account">Akun SIP</string>
+    <string name="ring_account_identity">Identitas</string>
+    <string name="account_migration_title_dialog">Migrasi akun</string>
+    <string name="account_update_needed">Perlu diperbarui</string>
+    <string name="account_sip_cannot_be_registered_message">Anda bisa melanjutkan proses pembuatan akun atau mengedit informasi Anda di sini. Edisi masih dimungkinkan nanti dalam pengaturan akun.</string>
+    <string name="account_no_network_title">Galat jaringan</string>
+    <string name="account_device_added_title">Akun perangkat ditambahkan</string>
+    <string name="account_device_updated_title">Akun perangkat diperbarui</string>
+    <string name="account_sip_register_anyway">Daftar saja</string>
+    <string name="account_tv_settings_header">Pengaturan akun</string>
+    <string name="account_tv_advance_settings_header">Pengaturan lanjutan</string>
+    <string name="account_tv_add_contact">Tambah kontak</string>
+    <string name="account_tv_advanced_settings">Ubah pengaturan umum</string>
+    <string name="account_tv_about">Tentang Jami</string>
+    <string name="tv_about_version">Versi</string>
+    <string name="tv_about_license">Lisensi</string>
+    <string name="tv_about_author">Hak pemilik</string>
+    <string name="tv_about_credits">Partisipan</string>
+    <string name="account_link_device">Hubungkan melalui perangkat lain</string>
+    <string name="account_link_button">Hubungkan melalui jaringan</string>
+    <string name="account_link_archive_button">Hubungkan melalui cadangan</string>
+    <string name="account_new_button">Buat akun Jami</string>
+    <string name="account_link_export_button">Tautkan perangkat baru</string>
+    <string name="account_link_show_button">Tampilkan %d lebih banyak perangkat yang ditautkan</string>
+    <string name="account_link_hide_button">Sembunyikan perangkat yang tertaut</string>
+    <string name="account_end_export_button">tutup</string>
+    <string name="account_export_title">Tautkan akun ke perangkat lain</string>
+    <string name="account_connect_server_button">Hubungkan ke peladen manajemen</string>
+    <string name="account_connect_button">Hubungkan</string>
+    <string name="help_credentials_enter">Masukkan kredensial organisasi Anda</string>
+    <string name="help_connect_password_enter">Masukkan kata sandi organisasi Anda</string>
+    <string name="account_connect_prompt_username">Nama pengguna</string>
+    <string name="account_connect_server">Hubungkan ke peladen manajemen</string>
+    <string name="account_enter_username">Masukkan nama pengguna</string>
+    <string name="error_username_empty">Masukkan nama pengguna</string>
+    <string name="register_name">Nama Pendaftar</string>
+    <string name="registered_username">Nama pengguna terdaftar</string>
+    <string name="register_username">Daftar nama pengguna publik</string>
+    <string name="register_recommended">Rekomendasi</string>
+    <string name="username_already_taken">Nama pengguna sudah diambil</string>
+    <string name="invalid_username">Nama pengguna tidak valid</string>
+    <string name="unknown_error">Galat, Silakan periksa koneksi internet anda!</string>
+    <string name="account_status_connecting">Menghubungkan</string>
+    <string name="account_status_connection_error">Koneksi galat</string>
+    <string name="account_status_online">Daring</string>
+    <string name="account_status_unknown">Tidak diketahui</string>
+    <string name="account_status_offline">Luring</string>
+    <string name="account_status_error">Galat</string>
+    <string name="account_creation_home">Selamat datang di Jami</string>
+    <string name="account_creation_profile">Buat profil Anda</string>
+    <string name="account_creation_ring">Buat akun Jami Anda</string>
+    <string name="account_revoke_device_hint">Masukkan kata sandi untuk konfirmasi</string>
+    <string name="enter_password">Masukan kata sandi</string>
+    <string name="revoke_device_title">Hapus perangkat</string>
+    <string name="revoke_device_wait_title">Harap tunggu...</string>
+    <string name="revoke_device_wait_message">Hapus perangkat</string>
+    <string name="rename_device_title">Ubah nama perangkat ini</string>
+    <string name="rename_device_button">Ubah nama perangkat</string>
+    <string name="account_rename_device_hint">Pilih nama perangkat baru</string>
+    <string name="account_device_this_indicator">Perangkat ini</string>
+    <string name="account_disabled_indicator">Dinonaktifan</string>
+    <string name="error_format_not_supported">Format tidak didukung.</string>
+    <string name="account_link_device_title">Hubungkan perangkat baru</string>
+    <string name="account_link_device_button">Hubungkan</string>
+</resources>

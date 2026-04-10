@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">เครือข่าย</string>
+    <string name="pref_category_contacts">ติดต่อ</string>
+    <string name="pref_category_video">วีดีโอ</string>
+    <string name="pref_category_system">ระบบ</string>
+    <string name="pref_category_privacy">ความเป็นส่วนตัว</string>
+    <string name="pref_category_diagnostic">การวินิจฉัย</string>
+    <string name="pref_category_appearance">หน้าตา</string>
+    <string name="pref_category_connectivity">การเชื่อมต่อ</string>
+    <string name="pref_category_video_settings">การตั้งค่าวิดีโอขั้นสูง</string>
+    <string name="pref_mobileData_title">ข้อมูลมือถือ</string>
+    <string name="pref_mobileData_summary">อนุญาต Jami บนเครือข่าย 3G/LTE เพิ่มเติมกับ Wi-Fi</string>
+    <string name="pref_pushNotifications_title">การแจ้งเตือนแบบพุช</string>
+    <string name="pref_pushNotifications_summary">ใช้เซิร์ฟเวอร์ของ Google เพื่ออนุญาตให้รับสาย/ข้อความในพื้นหลัง</string>
+    <string name="pref_unifiedPush_summary">ใช้บริการ UnifiedPush เพื่ออนุญาตรับโทร / ข้อความในพื้นฐาน</string>
+    <string name="pref_video_advanced_title">การตั้งค่าวิดีโอขั้นสูง</string>
+    <string name="pref_video_advanced_summary">เปลี่ยนบิตเรตของวิดีโอ ความละเอียด ตลอดจนเข้าถึงฟีเจอร์ทดลอง</string>
+    <string name="pref_hd_summary">เปิดใช้งานการส่งวิดีโอระดับ HD</string>
+    <string name="pref_hwEncode_title">เปิดใช้งานการเข้ารหัสแบบเร่ง</string>
+    <string name="pref_hwEncode_summary">คุณสมบัติทดลอง</string>
+    <string name="pref_videoBitrate_title">บิตเรตของวิดีโอ</string>
+    <string name="pref_videoBitrate_summary">เลือกบิตเรตวิดีโอขาออกเริ่มต้น (KB/s)</string>
+    <string name="pref_videoResolution_title">ความละเอียดวิดีโอ</string>
+    <string name="pref_videoResolution_summary">เลือกความละเอียดวิดีโอขาออกเริ่มต้น</string>
+    <string name="pref_systemContacts_title">ใช้ผู้ติดต่อระบบ</string>
+    <string name="pref_systemContacts_summary">ใช้ผู้ติดต่อของระบบเพื่อแสดงรายละเอียดผู้โทร</string>
+    <string name="pref_systemDialer_title">โทรระบบโดยใช้ Jami</string>
+    <string name="pref_systemDialer_summary">ใช้ Jami เพื่อโทรออกระบบเมื่อทำได้</string>
+    <string name="pref_startOnBoot_title">ริ่ม Jami เมื่อเริ่มต้นทำงาน</string>
+    <string name="pref_startOnBoot_summary">เรียกใช้ Jami ในพื้นหลังเมื่อระบบเริ่มทำงาน</string>
+    <string name="pref_clearHistory_title">ล้างประวัติ</string>
+    <string name="pref_notification_title">การมองเห็นการแจ้งเตือน</string>
+    <string name="pref_notification_summary">ตั้งค่าการมองเห็นการแจ้งเตือนแอปพลิเคชันบนหน้าจอล็อค</string>
+    <string name="pref_blackList_title">รายการบล็อก</string>
+    <string name="pref_blackList_summary">ตรวจสอบรายการบล็อกของคุณ</string>
+    <string name="pref_delete_account_title">ลบบัญชี</string>
+    <string name="pref_newGroup_title">เปิดใช้งานการแชทเป็นกลุ่ม</string>
+    <string name="pref_newGroup_summary">เปิดใช้งานการสร้างกลุ่มใน Jami</string>
+    <string name="pref_logs_title">บันทึกการวินิจฉัย</string>
+    <string name="pref_logs_summary">เปิดการตั้งค่าบันทึกการวินิจฉัย</string>
+    <string name="pref_logs_start">เริ่มการบันทึก</string>
+    <string name="pref_logs_stop">หยุดการบันทึก</string>
+    <string name="pref_typing_title">ตัวชี้วัดการเติม</string>
+    <string name="pref_block_record_title">บล็อกภาพหน้าจอและการบันทึก</string>
+    <string name="pref_block_record_summary">บล็อกการจับภาพหน้าจอหรือบันทึกวิดีโอ</string>
+    <string name="pref_link_preview_title">ตัวอย่างลิงก์เว็บ</string>
+    <string name="pref_link_preview_summary">การดูก่อนหน้านี้ต้องดาวน์โหลดเนื้อหาจากเซอร์เวอร์พาร์ทที่สาม</string>
+    <string name="connectivity_custom_title">กำหนดเอง</string>
+</resources>

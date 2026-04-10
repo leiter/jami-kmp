@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">مڠمبيل</string>
+    <string name="ic_advanced_menu">ڤڠاجرن ڤڠاجرن</string>
+    <string name="ic_blacklist_menu">ڤڠاجين يڠ دڤرچايا?? ي</string>
+    <string name="add_ring_account_title">مڠمبيل ڤڠاجرن</string>
+    <string name="add_sip_account_title">مڠهادڤکن کات SIP</string>
+    <string name="ring_account_default_name">حساب جامي %1$s</string>
+    <string name="prompt_alias">نامن سباڬاي</string>
+    <string name="prompt_hostname">نام ڤڠاجين</string>
+    <string name="prompt_username">نام ڤڠڬونا</string>
+    <string name="prompt_password">ڤاسر</string>
+    <string name="action_create">منوليسكن ايكون</string>
+    <string name="action_create_short">ڤڠڬونا</string>
+    <string name="action_register">ڤمباچ</string>
+    <string name="action_settings">سيٽنگون</string>
+    <string name="error_field_required">ڤرلو دڤرلوكن</string>
+    <string name="dialog_wait_create">ڤڠاجين</string>
+    <string name="dialog_wait_create_details">تكايه منتظره كتيک حساب نويكا دتاهن...</string>
+    <string name="dialog_wait_update">ڤڠاجرن حساب</string>
+    <string name="dialog_wait_update_details">تكايه منتظره اونتوق حساب نويس اتو...</string>
+    <string name="account_type_ip2ip">حساب IP</string>
+    <string name="help_ring">اکاونت Jami ممبريکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکنکن</string>
+    <string name="help_sip_title">مڠهادڤکن کات SIP</string>
+    <string name="empty_account_list">تيدق اد حساب يڠ دڤرچايا?? ي</string>
+    <string name="normal_accounts_titles">حسابن</string>
+    <string name="normal_devices_titles">ڤڠڬيلن يڠ دڤرچايا?? ي</string>
+    <string name="account_device_revoke">ڤڠڬيلن ڤڠڬيلن</string>
+    <string name="account_device_revocation_success_title">ڤرنياڬا?? ن</string>
+    <string name="account_device_revocation_success">ڤڠڬوناڽ كيني دڤرچايا?? ي!</string>
+    <string name="account_device_revocation_unknown_device">جهاز مجهول</string>
+    <string name="account_device_revocation_error_unknown">خطأ مجهول</string>
+    <string name="account_password_change">مڠهادڤي ڤرسود</string>
+    <string name="account_password_set">ڤرودوق ڤرسودوق</string>
+    <string name="account_password_summary">مڠهادڤي كاسوۏر كاونت.</string>
+    <string name="account_password_change_wait_message">ڤرودوک ڤرودوک</string>
+    <string name="account_preferences_basic_tab">جنرال</string>
+    <string name="account_basic_category">ڤڠاجرن ڤاس</string>
+    <string name="account_hostname_label">نام ڤڠاجين</string>
+    <string name="account_bootstrap_label">بوتسترپ</string>
+    <string name="account_name_server_label">نام سڤير</string>
+    <string name="account_username_label">نام ڤڠڬونا</string>
+    <string name="account_password_label">ڤاسر</string>
+    <string name="account_optionnal_category">ڤڠاجرن ڤرليندوڠ</string>
+    <string name="account_useragent_label">ڤڠڬونا</string>
+    <string name="account_autoanswer_label">ڤرودوک اوتوماتيك</string>
+    <string name="account_rendezvous_label">مود ڤڠاجرن</string>
+    <string name="account_rendezvous_summary">دالم مود رينديوز، ڤڠاجرن يڠ دڤرچايا?? ي دڤرچايا?? ي دالم رومه كونفرنس.</string>
+    <string name="account_upnp_label">فعالكن UPnP</string>
+    <string name="account_proxy_field">ڤروكسي</string>
+    <string name="account_audio_label">اودي</string>
+    <string name="account_preferences_media_tab">ميديا</string>
+    <string name="account_ringtone_label">ڤڠاجرن</string>
+    <string name="account_ringtone_enabled_label">فعالكن ڤڠاجرن</string>
+    <string name="account_ringtone_path_label">رينتون ڤيڠت</string>
+    <string name="account_ringtone_custom_label">مڠڬوناكن ڤڠڬونا ڤڠڬونا</string>
+    <string name="account_ringtone_title">ڤيليه ڤڠڬيلن</string>
+    <string name="account_ringtone_summary">ڤيليه ڤڠڬيلن يا?? يت ڤيليه ڤڠڬيلن</string>
+    <string name="account_video_label">ڤيديو</string>
+    <string name="account_video_enable">ڤرلو ممڤوپا?? ي ڤيديو</string>
+    <string name="account_preferences_advanced_tab">ڤڠاجين</string>
+    <string name="account_call_settings_title">سيٽنگون تماس</string>
+    <string name="account_dht_public_in_calls_label">ممبريکن ڤڠاجين يڠ دڤرچايا?? ي دري ڤڠاجين يڠ تيدق دڤرچايا?? ي</string>
+    <string name="account_registration_exp_label">ڤرجالنن مڠمبيل</string>
+    <string name="account_local_interface_label">ڤڠاجرن لوكالي</string>
+    <string name="account_local_port_label">بندر لوكالي</string>
+    <string name="account_stun_enable_label">ڤڠڬونا STUN</string>
+    <string name="account_accept_files">مڠاتس ڤايله يڠ دڤرچايا?? ي اوتوماتيك</string>
+    <string name="account_conversation_settings_title">سيٽنگون دالم ڤڠاجرن</string>
+    <string name="account_accept_files_max_size">ڤڠاجرن ڤمبلاجرن</string>
+    <string name="account_accept_files_never">تيدق ممباوا اوتوماتيك</string>
+    <string name="account_accept_files_always">سموا مڠاتسكن اوتوماتيك</string>
+    <string name="size_mb">%1$d MB</string>
+    <string name="account_turn_enable_label">مڠڬوناكن TURN</string>
+    <string name="account_turn_server_label">ڤڠوروسن TURN</string>
+    <string name="account_turn_username_label">نام ڤڠڬونا TURN</string>
+    <string name="account_turn_password_label">ڤاسر TURN</string>
+    <string name="account_published_same_as_local_label">ڤرڤادوان يڠ سام دڠن لوكالي</string>
+    <string name="account_published_port_label">ڤرودوک ڤرودوک</string>
+    <string name="account_published_address_label">ايندريس يڠ دڤرچايا?? ي</string>
+    <string name="disabled">ڤڠاجين</string>
+    <string name="enabled">ممبنتو</string>
+    <string name="default_value">ڤڠاجرن</string>
+    <string name="account_proxy_label">ڤروكسي DHT</string>
+    <string name="account_proxy_enable_label">مڠڬوناكن DHT proxy</string>
+    <string name="account_proxy_server_label">ديت ڤروكسي</string>
+    <string name="account_proxy_server_list_label">URL ڤروكسي DHT</string>
+    <string name="account_sip_proxy_label">ڤروكسي</string>
+    <string name="account_peer_discovery_label">ڤرتاڤن ڤڠاجرن لوكالي</string>
+    <string name="account_peer_discovery_enable_label">ممبنتو ڤرتاڠن ڤرتاڠن ڤرتاڠن</string>
+    <string name="account_peer_discovery_enable_summary">منچاريکن دڠن ڤڠݢوناکن DHT يڠ لاين دالم ڤمبلاجرن دالم نيترۏوک لوکالي</string>
+    <string name="account_credentials_label">ڤرودوک</string>
+    <string name="account_credentials_edit">ڤڠاجرن ڤرودوک</string>
+    <string name="account_credentials_add">مڠمبيل ڤرودوک</string>
+    <string name="account_preferences_security_tab">سيڠڬوڠ</string>
+    <string name="account_srtp_switch_label">مڠمبيل ميديا سست (SRTP)</string>
+    <string name="account_tls_transport_switch_label">مڠڬوناكن TLS Transport</string>
+    <string name="account_tls_password_label">ڤاسر ڤريڤاتي</string>
+    <string name="account_rtp_max_port">ڤڠاجرن</string>
+    <string name="account_rtp_min_port">ڤڠاجين</string>
+    <string name="account_new_device_password">مڠهادڤي ڤرسودن ڤاسر اونتوق مڠهادڤي کاتو</string>
+    <string name="error_password_char_count">6 ڤڠاجرن ڤد ڤد</string>
+    <string name="export_account_wait_title">تكايه صبر كني...</string>
+    <string name="export_account_wait_message">معلوماتي حساب صادراتي</string>
+    <string name="account_export_file">حساب ڤڠاجرن</string>
+    <string name="account_export_file_summary">كاوڤونكن ايكونت دالم ڤرودوک اونتوق مڠمبيلكنڽ لاين.</string>
+    <string name="account_enter_password">ڤرلو مڠهادڤي كاسوس</string>
+    <string name="account_contact_me">با من دري جامي تماس بگير!</string>
+    <string name="update_account">ڤڠاجرن حساب</string>
+    <string name="account_migration">حساب جامي تو ميتوان دتموكن.\\nتوسوق ممبريكن ڤرسود.</string>
+    <string name="ring_account">حساب جامي</string>
+    <string name="sip_account">حساب SIP</string>
+    <string name="ring_account_identity">ادينتيتي</string>
+    <string name="account_migration_title_dialog">ڤمباچ ڤرچاي</string>
+    <string name="account_update_needed">ڤرلو دڤرلوكن</string>
+    <string name="account_sip_cannot_be_registered_message">توڠڬوڤكن ڤروسيس ڤڠڬوناكن ايكون اتاو مڠمبيل معلومت اتاو ڤڠڬوناكن اين. ڤڠڬوناكن لاڬي ممبنتو دالم ڤڠڬوناكن ايكون.</string>
+    <string name="account_no_network_title">خطأ شبكه</string>
+    <string name="account_device_added_title">ڤڠڬوناكن ڤڠڬوناكن</string>
+    <string name="account_device_updated_title">ڤڠڬوناكن ڤڠڬوناكن</string>
+    <string name="account_sip_register_anyway">هرچيچيچي اونتوق مڠمبيل</string>
+    <string name="account_tv_settings_header">ڤڠاجرن حساب</string>
+    <string name="account_tv_advance_settings_header">ڤڠاجرن ڤڠاجرن</string>
+    <string name="account_tv_add_contact">مڠهادڤکن ڤڠاجرن</string>
+    <string name="account_tv_advanced_settings">تغيير تنظیمات عموم</string>
+    <string name="account_tv_about">دري جامي</string>
+    <string name="tv_about_version">ڤرسي</string>
+    <string name="tv_about_license">ڤرودوک</string>
+    <string name="tv_about_author">حق ڤمباچ</string>
+    <string name="tv_about_credits">ڤرودوک</string>
+    <string name="account_link_device">منچاريكن دري ڤرودوک لاين</string>
+    <string name="account_link_button">منچاريكن دري نيتۏرك</string>
+    <string name="account_link_archive_button">منوليسكن دري ڤڠوربانن</string>
+    <string name="account_new_button">منوليس ايكون Jami</string>
+    <string name="account_link_export_button">دڠن ڤڠاجرن ڤڠاجرن</string>
+    <string name="account_link_show_button">مڠمبيل %d ڤرودوک يڠ دتڠݢوڠ</string>
+    <string name="account_link_hide_button">ڤڠڬيلن يڠ دڤرچايا?? ي</string>
+    <string name="account_end_export_button">ڤڠڬيلن</string>
+    <string name="account_export_title">حساب لينک اونتوق ڤڠڬونا يڠ لاين</string>
+    <string name="account_connect_server_button">منچاريکن کڤد ڤمبلاجرن</string>
+    <string name="account_connect_button">وصلكن</string>
+    <string name="help_credentials_enter">مڠهادڤي كريديتاسي ڤركارا</string>
+    <string name="help_connect_password_enter">ڤرلو مڠهادڤي كاسد ڤڠڬونا</string>
+    <string name="account_connect_prompt_username">نام ڤڠڬونا</string>
+    <string name="account_connect_server">منچاريکن کڤد ڤمبلاجرن</string>
+    <string name="error_username_empty">مڠهادڤكن نام ڤڠڬونا</string>
+    <string name="register_name">نام ڤرجواڠن</string>
+    <string name="registered_username">نام ڤڠڬونا يڠ دڤرجواڠ</string>
+    <string name="register_username">نام ڤڠڬونا يڠ ڤرلو دڤرچايا?? ي</string>
+    <string name="register_recommended">مڠمبيل</string>
+    <string name="username_already_taken">نام ڤڠڬونا يڠ دڤرچايا?? ي</string>
+    <string name="invalid_username">نام ڤڠڬونا يڠ تيدق برمولا</string>
+    <string name="unknown_error">خطأ يڠ تيدق دڤرچايا?? ي. كرجاسام منچاريكن ڤڠاجرن نيتۏرك!</string>
+    <string name="account_status_connecting">ڤڠاجين</string>
+    <string name="account_status_connection_error">خطأ ڤربواتن</string>
+    <string name="account_status_online">اونلاين</string>
+    <string name="account_status_unknown">نامعلوم</string>
+    <string name="account_status_offline">اونلاين</string>
+    <string name="account_status_error">خطأ</string>
+    <string name="account_creation_home">خوش اومدن جامي</string>
+    <string name="account_creation_profile">ڤرچاي ڤرڤايل</string>
+    <string name="account_creation_ring">منوليسكن حساب Jami</string>
+    <string name="account_revoke_device_hint">ڤرلو مڠهادڤي كاسد اونتوق مڠهادڤي</string>
+    <string name="enter_password">ڤرلو مڠهادڤي كاسوس</string>
+    <string name="revoke_device_title">ڤڠڬيلن ڤڠڬيلن</string>
+    <string name="revoke_device_wait_title">تكايه صبر كني...</string>
+    <string name="revoke_device_wait_message">ڤڠڬيلن ڤڠڬيلن</string>
+    <string name="rename_device_title">نامن ڤڠڬونا اين</string>
+    <string name="rename_device_button">ڤڠڬونا ڤڠڬونا</string>
+    <string name="account_rename_device_hint">نام ڤڠڬيلن بارو</string>
+    <string name="account_device_this_indicator">اين دستگاه</string>
+    <string name="account_disabled_indicator">ڤڠاجين</string>
+    <string name="account_link_device_title">منچيلكن ڤڠڬونا?? ن بارو</string>
+    <string name="account_link_device_button">وصلكن</string>
+</resources>

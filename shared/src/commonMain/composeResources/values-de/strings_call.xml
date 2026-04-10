@@ -6,28 +6,31 @@ This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
 -->
 <resources>
-    <!-- Call error -->
     <string name="call_error">Beim Starten des Anrufs ist ein Fehler aufgetreten.</string>
     <string name="call_error_no_microphone">Anruf abgebrochen. Kein Mikrofon erkannt.</string>
-    <string name="call_error_no_camera_no_microphone">Anruf abgebrochen. Keine Kamera oder kein Mikrofon erkannt.</string>
+    <string name="call_error_no_camera_no_microphone">Anruf abgebrochen. Keine Kamera oder kein Mikrofon erkannt. </string>
     <string name="screen_sharing_error">Beim Starten der Bildschirmfreigabe ist ein Fehler aufgetreten.</string>
-
-    <!-- Call states -->
     <string name="call_human_state_searching">Suchen</string>
     <string name="call_human_state_incoming">Eingehend</string>
     <string name="call_human_state_connecting">Verbindet</string>
     <string name="call_human_state_ringing">Klingelt</string>
     <string name="call_human_state_current">Sprechend</string>
-    <string name="call_human_state_hungup">Beendet</string>
+    <string name="call_human_state_hungup">Über</string>
     <string name="call_human_state_busy">Beschäftigt</string>
     <string name="call_human_state_failure">Fehlgeschlagen</string>
     <string name="call_human_state_hold">Halten</string>
     <string name="call_human_state_unhold">Halten aufheben</string>
-    <string name="call_human_state_over">Beendet</string>
-
-    <!-- Conferences -->
+    <string name="call_human_state_over">Über</string>
     <string name="call_moderator">Moderator</string>
     <string name="call_muted">stummgeschaltet</string>
     <string name="call_handRaised">Hand gehoben</string>

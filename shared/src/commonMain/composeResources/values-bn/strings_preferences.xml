@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">নেটওয়ার্ক</string>
+    <string name="pref_category_contacts">পরিচিতি</string>
+    <string name="pref_category_video">ভিডিও</string>
+    <string name="pref_category_system">পদ্ধতি</string>
+    <string name="pref_category_privacy">গোপনীয়তা</string>
+    <string name="pref_category_diagnostic">রোগ নির্ণয়</string>
+    <string name="pref_category_appearance">চেহারা</string>
+    <string name="pref_category_connectivity">সংযোগ</string>
+    <string name="pref_category_video_settings">উন্নত ভিডিও সেটিংস</string>
+    <string name="pref_mobileData_title">মোবাইল ডেটা</string>
+    <string name="pref_mobileData_summary">উই-ফাই ছাড়াও 3G/LTE নেটওয়ার্কে জামিকে অনুমতি দিন</string>
+    <string name="pref_pushNotifications_title">ধাক্কা বিজ্ঞপ্তি</string>
+    <string name="pref_pushNotifications_summary">ব্যাকগ্রাউন্ডে কল/বার্তা গ্রহণের অনুমতি দেওয়ার জন্য গুগল সার্ভার ব্যবহার করুন</string>
+    <string name="pref_unifiedPush_summary">ব্যাকগ্রাউন্ডে কল/বার্তা গ্রহণের অনুমতি দেওয়ার জন্য ইউনিফাইডপশ পরিষেবা ব্যবহার করুন</string>
+    <string name="pref_video_advanced_title">উন্নত ভিডিও সেটিংস</string>
+    <string name="pref_video_advanced_summary">ভিডিও বিট রেট, রেজোলিউশন এবং অ্যাক্সেস পরীক্ষামূলক বৈশিষ্ট্য পরিবর্তন করুন</string>
+    <string name="pref_hd_summary">এইচডি ভিডিও পাঠানো সক্ষম করুন</string>
+    <string name="pref_hwEncode_title">দ্রুত কোডিং সক্ষম করুন</string>
+    <string name="pref_hwEncode_summary">পরীক্ষামূলক বৈশিষ্ট্য</string>
+    <string name="pref_videoBitrate_title">ভিডিও বিট রেট</string>
+    <string name="pref_videoBitrate_summary">ডিফল্ট বহিরাগত ভিডিও বিট রেট (KB/s) নির্বাচন করুন</string>
+    <string name="pref_videoResolution_title">ভিডিও রেজোলিউশন</string>
+    <string name="pref_videoResolution_summary">ডিফল্টভাবে প্রস্থান ভিডিও রেজোলিউশন নির্বাচন করুন</string>
+    <string name="pref_systemContacts_title">সিস্টেম পরিচিতি ব্যবহার করুন</string>
+    <string name="pref_systemContacts_summary">কলার বিস্তারিত দেখানোর জন্য সিস্টেম পরিচিতি ব্যবহার করুন।</string>
+    <string name="pref_systemDialer_title">জামি ব্যবহার করে সিস্টেম কল করুন</string>
+    <string name="pref_systemDialer_summary">সম্ভব হলে জামিকে ফোন করতে ব্যবহার করুন।</string>
+    <string name="pref_startOnBoot_title">স্টার্টআপের সময় জামি শুরু করুন</string>
+    <string name="pref_startOnBoot_summary">সিস্টেম শুরু হলে জামিকে ব্যাকগ্রাউন্ডে চালাও।</string>
+    <string name="pref_clearHistory_title">পরিষ্কার ইতিহাস</string>
+    <string name="pref_notification_title">বিজ্ঞপ্তি দৃশ্যমানতা</string>
+    <string name="pref_notification_summary">লক স্ক্রিনে অ্যাপ্লিকেশন বিজ্ঞপ্তি দৃশ্যমানতা সেট করুন।</string>
+    <string name="pref_blackList_title">ব্লক তালিকা</string>
+    <string name="pref_blackList_summary">আপনার ব্লক লিস্ট চেক করুন।</string>
+    <string name="pref_delete_account_title">অ্যাকাউন্ট মুছে ফেলুন</string>
+    <string name="pref_newGroup_title">গ্রুপ চ্যাট সক্ষম করুন</string>
+    <string name="pref_newGroup_summary">জামিতে গ্রুপ তৈরি করতে সক্ষম করুন।</string>
+    <string name="pref_logs_title">ডায়াগনস্টিক লগ</string>
+    <string name="pref_logs_summary">খোলা ডায়াগনস্টিক লগ সেটিংস</string>
+    <string name="pref_logs_start">লগিং শুরু করুন</string>
+    <string name="pref_logs_stop">কাঠের কাঠ বন্ধ করুন</string>
+    <string name="pref_typing_title">টাইপিং সূচক</string>
+    <string name="pref_block_record_title">স্ক্রিনশট এবং রেকর্ডিং ব্লক করুন</string>
+    <string name="pref_block_record_summary">স্ক্রিনশট বা ভিডিও রেকর্ডিং বন্ধ করুন।</string>
+    <string name="pref_link_preview_title">ওয়েব সংযোগের প্রাকদর্শন</string>
+    <string name="pref_link_preview_summary">প্রিভিউতে তৃতীয় পক্ষের সার্ভার থেকে সামগ্রী ডাউনলোড করা প্রয়োজন।</string>
+    <string name="connectivity_custom_title">কাস্টম</string>
+</resources>

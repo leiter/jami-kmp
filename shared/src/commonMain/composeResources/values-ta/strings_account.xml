@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">நீக்கவும்</string>
+    <string name="ic_advanced_menu">மேம்பட்ட அமைப்புகள்</string>
+    <string name="ic_blacklist_menu">தடுக்கப்பட்ட தொடர்புகள்</string>
+    <string name="add_ring_account_title">கணக்கை சேர்க்கவும்</string>
+    <string name="add_sip_account_title">SIP கணக்கை சேர்க்கவும்</string>
+    <string name="ring_account_default_name">ஜாமி கணக்கு %1$s</string>
+    <string name="prompt_alias">அனிமேஷன்</string>
+    <string name="prompt_hostname">ஹோஸ்ட் பெயர்</string>
+    <string name="prompt_username">பயனர் பெயர்</string>
+    <string name="prompt_password">கடவுச்சொல்</string>
+    <string name="action_create">கணக்கை உருவாக்கவும்</string>
+    <string name="action_create_short">உருவாக்கு</string>
+    <string name="action_register">பதிவு</string>
+    <string name="action_settings">அமைப்புகள்</string>
+    <string name="error_field_required">இந்த புலம் தேவை</string>
+    <string name="dialog_wait_create">கணக்கு சேர்க்கல்</string>
+    <string name="dialog_wait_create_details">தயவுசெய்து உங்கள் புதிய கணக்கு சேர்க்கப்படும் வரை காத்திருங்கள்.</string>
+    <string name="dialog_wait_update">கணக்கை புதுப்பித்தல்</string>
+    <string name="dialog_wait_update_details">தயவு செய்து உங்கள் புதிய கணக்கு புதுப்பிக்கப்படும் வரை காத்திருங்கள்.</string>
+    <string name="account_type_ip2ip">ஐபி கணக்கு</string>
+    <string name="help_ring">ஜாமி கணக்குகள், முழுமையாக பரவலாகப் பரவலாக உள்ள நெட்வொர்க்குகள் மூலம் பாதுகாப்பாக, ஒருவருக்கொருவர் தொடர்பு கொள்ள உங்களை அனுமதிக்கின்றன.</string>
+    <string name="help_sip_title">SIP கணக்கை சேர்க்கவும்</string>
+    <string name="account_delete_dialog_message">இந்த நடவடிக்கை திரும்பப் பெற முடியாது.</string>
+    <string name="empty_account_list">பதிவு செய்யப்படாத கணக்கு</string>
+    <string name="normal_accounts_titles">கணக்குகள்</string>
+    <string name="normal_devices_titles">இணைக்கப்பட்ட சாதனங்கள்</string>
+    <string name="account_device_revoke">மீளுருவாக்கம் சாதனம்</string>
+    <string name="account_device_revocation_success_title">வெற்றி</string>
+    <string name="account_device_revocation_success">சாதனம் இப்போது திரும்பப் பெறப்பட்டது!</string>
+    <string name="account_device_revocation_unknown_device">அறியப்படாத சாதனம்.</string>
+    <string name="account_device_revocation_error_unknown">அறியப்படாத தவறு.</string>
+    <string name="account_password_change">கடவுச்சொல்லை மாற்றுதல்</string>
+    <string name="account_password_set">கடவுச்சொல்லை அமைத்தல்</string>
+    <string name="account_password_summary">உங்கள் கணக்கு கடவுச்சொல்லை நிர்வகிக்கவும்.</string>
+    <string name="account_password_change_wait_message">கணக்கு கடவுச்சொல்லை மாற்றுதல்</string>
+    <string name="account_preferences_basic_tab">பொது</string>
+    <string name="account_basic_category">அடிப்படை அமைப்புகள்</string>
+    <string name="account_hostname_label">ஹோஸ்ட் பெயர்</string>
+    <string name="account_bootstrap_label">துவக்கப் பட்டியல்</string>
+    <string name="account_name_server_label">பெயர் சேவையகம்</string>
+    <string name="account_username_label">பயனர் பெயர்</string>
+    <string name="account_password_label">கடவுச்சொல்</string>
+    <string name="account_optionnal_category">விருப்ப அமைப்புகள்</string>
+    <string name="account_useragent_label">பயனர் முகவர்</string>
+    <string name="account_autoanswer_label">தானியங்கி பதில்</string>
+    <string name="account_rendezvous_label">சந்திப்பு முறை</string>
+    <string name="account_rendezvous_summary">சந்திப்பு முறையில், வருகிற அழைப்புகள் ஒரு மாநாட்டு அறைக்கு சேர்க்கப்படும்.</string>
+    <string name="account_upnp_label">UPnP ஐ இயக்கு</string>
+    <string name="account_proxy_field">பிரதிநிதி</string>
+    <string name="account_audio_label">கேள்விமாற்றி</string>
+    <string name="account_preferences_media_tab">ஊடகங்கள்</string>
+    <string name="account_ringtone_label">ரிங்டோன்கள்</string>
+    <string name="account_ringtone_enabled_label">ரிங்க்டோன்களை இயக்கவும்</string>
+    <string name="account_ringtone_path_label">ரிங்க்டோன் பாதை</string>
+    <string name="account_ringtone_custom_label">தனிப்பயன் ரிங்டோனை பயன்படுத்தவும்</string>
+    <string name="account_ringtone_title">ஒரு ரிங்டோனைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="account_ringtone_summary">ஒரு ரிங்டோன் தேர்ந்தெடுக்கவும் அல்லது உங்கள் சொந்த தேர்வு</string>
+    <string name="account_video_label">காணொளி</string>
+    <string name="account_video_enable">வீடியோவை இயக்கு</string>
+    <string name="account_preferences_advanced_tab">மேம்படுத்தபட்ட</string>
+    <string name="account_call_settings_title">அழைப்பு அமைப்புகள்</string>
+    <string name="account_dht_public_in_calls_label">அறியப்படாத தொடர்புகளிலிருந்து வரும் அழைப்புகளை அனுமதிக்கவும்</string>
+    <string name="account_registration_exp_label">பதிவு காலம் முடிவடைகிறது</string>
+    <string name="account_local_interface_label">உள்ளூர் இடைமுகம்</string>
+    <string name="account_local_port_label">உள்ளூர் துறைமுகம்</string>
+    <string name="account_stun_enable_label">STUN ஐ பயன்படுத்தவும்</string>
+    <string name="account_accept_files">உள்வரும் கோப்புகளை தானாக ஏற்றுக்கொள்ளவும்</string>
+    <string name="account_conversation_settings_title">உரையாடல் அமைப்புகள்</string>
+    <string name="account_accept_files_max_size">தானாக ஏற்றுக்கொள்ளக்கூடிய அதிகபட்ச கோப்பு அளவு</string>
+    <string name="account_accept_files_never">ஒருபோதும் தானாக ஏற்றுக்கொள்ளாதீர்கள்</string>
+    <string name="account_accept_files_always">எப்போதும் தானாக ஏற்றுக்கொள்ளுங்கள்</string>
+    <string name="size_mb">%1$d MB</string>
+    <string name="account_turn_enable_label">TURN ஐப் பயன்படுத்தவும்</string>
+    <string name="account_turn_server_label">TURN சேவையகம்</string>
+    <string name="account_turn_username_label">பயனர் பெயர் TURN</string>
+    <string name="account_turn_password_label">TURN கடவுச்சொல்</string>
+    <string name="account_published_same_as_local_label">உள்ளூர் பதிப்பு</string>
+    <string name="account_published_port_label">வெளியிடப்பட்ட துறைமுகம்</string>
+    <string name="account_published_address_label">வெளியிடப்பட்ட முகவரி</string>
+    <string name="disabled">இயலாமை</string>
+    <string name="enabled">இயக்கப்பட்ட</string>
+    <string name="default_value">இயல்புநிலை</string>
+    <string name="account_proxy_label">DHT ப்ராக்ஸி</string>
+    <string name="account_proxy_enable_label">DHT ப்ராக்ஸி பயன்படுத்தவும்</string>
+    <string name="account_proxy_server_label">DHT ப்ராக்ஸி முகவரி</string>
+    <string name="account_proxy_server_list_label">DHT ப்ராக்ஸி பட்டியல் URL</string>
+    <string name="account_sip_proxy_label">பிரதிநிதி</string>
+    <string name="account_peer_discovery_label">உள்ளூர் சகாக்களின் கண்டுபிடிப்பு</string>
+    <string name="account_peer_discovery_enable_label">உள்ளூர் சகாக்களைக் கண்டறிவதை இயக்குதல்</string>
+    <string name="account_peer_discovery_enable_summary">எங்கள் உள்ளூர் நெட்வொர்க்கில் விளம்பரப்படுத்தும் மற்ற DHT முனைகளுடன் இணைக்கவும்</string>
+    <string name="account_credentials_label">சான்றிதழ்கள்</string>
+    <string name="account_credentials_edit">சான்றிதழ்களை திருத்தவும்</string>
+    <string name="account_credentials_add">சான்றிதழ்களைச் சேர்க்கவும்</string>
+    <string name="account_preferences_security_tab">பாதுகாப்பு</string>
+    <string name="account_srtp_switch_label">ஊடக ஓட்டங்களை (SRTP) குறியாக்குதல்</string>
+    <string name="account_tls_transport_switch_label">TLS போக்குவரத்தை பயன்படுத்தவும்</string>
+    <string name="account_tls_password_label">தனியார் திறவுகோல் கடவுச்சொல்</string>
+    <string name="account_rtp_max_port">அதிகபட்ச</string>
+    <string name="account_rtp_min_port">குறைந்தபட்ச</string>
+    <string name="account_new_device_password">கணக்கை திறக்க முக்கிய கடவுச்சொல்லை உள்ளிடவும்</string>
+    <string name="error_password_char_count">குறைந்தபட்சம் 6 எழுத்துக்கள்</string>
+    <string name="export_account_wait_title">தயவு செய்து காத்திருங்கள்.</string>
+    <string name="export_account_wait_message">ஏற்றுமதி கணக்கு தகவல்</string>
+    <string name="account_export_file">காப்பு கணக்கு</string>
+    <string name="account_export_file_summary">பின்னர் மீட்டெடுக்க உங்கள் சாதனத்தில் உங்கள் கணக்கை காப்புப் பிரதி எடுக்கவும்.</string>
+    <string name="account_enter_password">கடவுச்சொல்லை உள்ளிடவும்</string>
+    <string name="account_contact_me">ஜாமி மீது என்னை தொடர்பு!</string>
+    <string name="update_account">கணக்கை புதுப்பிக்கவும்</string>
+    <string name="account_migration">உங்கள் ஜாமி கணக்கை புதுப்பிக்க முடியும். தயவுசெய்து உங்கள் கடவுச்சொல்லை உள்ளிடவும்.</string>
+    <string name="ring_account">ஜாமி கணக்கு</string>
+    <string name="sip_account">SIP கணக்கு</string>
+    <string name="ring_account_identity">அடையாளம்</string>
+    <string name="account_migration_title_dialog">கணக்கு இடம்பெயர்வு</string>
+    <string name="account_update_needed">புதுப்பிப்பு தேவை</string>
+    <string name="account_sip_cannot_be_registered_message">கணக்கு உருவாக்கும் செயல்முறையை நீங்கள் தொடரலாம் அல்லது உங்கள் தகவலை இங்கே திருத்தலாம். கணக்கு அமைப்புகளில் பின்னர் பதிப்பு இன்னும் சாத்தியமாகும்.</string>
+    <string name="account_no_network_title">நெட்வொர்க் தவறு</string>
+    <string name="account_device_added_title">கணக்கு சாதனம் சேர்க்கப்பட்டது</string>
+    <string name="account_device_updated_title">கணக்கு சாதனம் புதுப்பிக்கப்பட்டது</string>
+    <string name="account_sip_register_anyway">எப்படியும் பதிவு செய்யுங்கள்</string>
+    <string name="account_tv_settings_header">கணக்கு அமைப்புகள்</string>
+    <string name="account_tv_advance_settings_header">மேம்பட்ட அமைப்புகள்</string>
+    <string name="account_tv_add_contact">தொடர்பு சேர்க்கவும்</string>
+    <string name="account_tv_advanced_settings">பொது அமைப்பை மாற்றவும்</string>
+    <string name="account_tv_about">ஜாமி பற்றி</string>
+    <string name="tv_about_version">பதிப்பு</string>
+    <string name="tv_about_license">உரிமம்</string>
+    <string name="tv_about_author">பதிப்புரிமை</string>
+    <string name="tv_about_credits">கடன்கள்</string>
+    <string name="account_link_device">மற்றொரு சாதனத்திலிருந்து இணைக்கவும்</string>
+    <string name="account_link_button">நெட்வொர்க்கிலிருந்து இணைப்பு</string>
+    <string name="account_link_archive_button">காப்பு இருந்து இணைக்கவும்</string>
+    <string name="account_new_button">ஜாமி கணக்கை உருவாக்கவும்</string>
+    <string name="account_link_export_button">புதிய சாதனத்தை இணைக்கவும்</string>
+    <string name="account_link_show_button">%d இணைக்கப்பட்ட சாதனத்தை காட்டவும்</string>
+    <string name="account_link_hide_button">இணைக்கப்பட்ட சாதனத்தை மறைக்கவும்</string>
+    <string name="account_end_export_button">நெருக்கமான</string>
+    <string name="account_export_title">மற்ற சாதனங்களுடன் இணைப்பு கணக்கு</string>
+    <string name="account_connect_server_button">நிர்வாக சேவையகத்துடன் இணைக்கவும்</string>
+    <string name="account_connect_button">இணைக்கவும்</string>
+    <string name="help_credentials_enter">உங்கள் நிறுவனத்தின் சான்றிதழ்களை உள்ளிடவும்</string>
+    <string name="help_connect_password_enter">உங்கள் நிறுவனத்தின் கடவுச்சொல்லை உள்ளிடவும்</string>
+    <string name="account_connect_prompt_username">பயனர் பெயர்</string>
+    <string name="account_connect_server">நிர்வாக சேவையகத்துடன் இணைக்கவும்</string>
+    <string name="error_username_empty">பயனர்பெயரை உள்ளிடவும்</string>
+    <string name="register_name">பதிவு பெயர்</string>
+    <string name="registered_username">பதிவு செய்யப்பட்ட பயனர் பெயர்</string>
+    <string name="register_username">பொது பயனர்பெயரை பதிவு செய்யவும்</string>
+    <string name="register_recommended">பரிந்துரைக்கப்படுகிறது</string>
+    <string name="username_already_taken">ஏற்கனவே எடுக்கப்பட்ட பயனர் பெயர்</string>
+    <string name="invalid_username">செல்லுபடியற்ற பயனர் பெயர்</string>
+    <string name="unknown_error">அறியப்படாத பிழை. தயவுசெய்து உங்கள் நெட்வொர்க் இணைப்பை சரிபார்க்கவும்!</string>
+    <string name="account_status_connecting">இணைப்பு</string>
+    <string name="account_status_connection_error">இணைப்பு பிழை</string>
+    <string name="account_status_online">இணையத்தில்</string>
+    <string name="account_status_unknown">அறியப்படாதது</string>
+    <string name="account_status_offline">ஆஃப்லைன்</string>
+    <string name="account_status_error">தவறு</string>
+    <string name="account_creation_home">ஜாமிக்கு வரவேற்கிறோம்</string>
+    <string name="account_creation_profile">உங்கள் சுயவிவரத்தை உருவாக்கவும்</string>
+    <string name="account_creation_ring">உங்கள் ஜாமி கணக்கை உருவாக்கவும்</string>
+    <string name="account_revoke_device_hint">உறுதிப்படுத்த கடவுச்சொல்லை உள்ளிடவும்</string>
+    <string name="enter_password">கடவுச்சொல்லை உள்ளிடவும்</string>
+    <string name="revoke_device_title">மீளுருவாக்கம் சாதனம்</string>
+    <string name="revoke_device_wait_title">தயவு செய்து காத்திருங்கள்.</string>
+    <string name="revoke_device_wait_message">மீளுருவாக்கம் செய்யும் சாதனம்</string>
+    <string name="rename_device_title">இந்த சாதனத்தின் பெயரை மாற்றவும்</string>
+    <string name="rename_device_button">பெயர் மாற்றம் செய்யும் சாதனம்</string>
+    <string name="account_rename_device_hint">புதிய சாதன பெயரைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="account_device_this_indicator">இந்த சாதனம்</string>
+    <string name="account_disabled_indicator">இயலாமை</string>
+    <string name="error_format_not_supported">இந்த வடிவம் ஆதரிக்கப்படவில்லை.</string>
+    <string name="account_link_device_title">புதிய சாதனத்தை இணைக்கவும்</string>
+    <string name="account_link_device_button">இணைக்கவும்</string>
+</resources>

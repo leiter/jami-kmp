@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Сеть</string>
+    <string name="pref_category_contacts">Контакты</string>
+    <string name="pref_category_video">Видео</string>
+    <string name="pref_category_system">Система</string>
+    <string name="pref_category_privacy">Конфиденциальность</string>
+    <string name="pref_category_diagnostic">Диагностика</string>
+    <string name="pref_category_appearance">Внешний вид</string>
+    <string name="pref_category_connectivity">Связь</string>
+    <string name="pref_category_extensions">Расширения</string>
+    <string name="pref_category_video_settings">Дополнительные настройки видео</string>
+    <string name="pref_mobileData_title">Мобильные данные</string>
+    <string name="pref_mobileData_summary">Разрешить Jami использовать 3G/LTE сети в дополнение к Wi-Fi</string>
+    <string name="pref_pushNotifications_title">Push-уведомления</string>
+    <string name="pref_pushNotifications_summary">Использовать серверы Google для получения вызовов/сообщений в фоновом режиме</string>
+    <string name="pref_unifiedPush_summary">Используйте службу UnifiedPush для получения звонков и сообщений в фоновом режиме</string>
+    <string name="pref_video_advanced_title">Дополнительные настройки видео</string>
+    <string name="pref_video_advanced_summary">Изменение разрешения и битрейта видео, доступ к экспериментальным функциям</string>
+    <string name="pref_hd_summary">Разрешить отправку видео высокого разрешения</string>
+    <string name="pref_hwEncode_title">Включить аппаратное кодирование</string>
+    <string name="pref_hwEncode_summary">Экспериментальная опция</string>
+    <string name="pref_videoBitrate_title">Скорость передачи видео</string>
+    <string name="pref_videoBitrate_summary">Выбрать битрейт исходящего видео по умолчанию (кБ/с)</string>
+    <string name="pref_videoResolution_title">Разрешение видео</string>
+    <string name="pref_videoResolution_summary">Выбрать разрешение исходящего видео по умолчанию</string>
+    <string name="pref_systemContacts_title">Использовать контакты из адресной книги</string>
+    <string name="pref_systemContacts_summary">Использовать данные из адресной книги для отображения информации о звонящем.</string>
+    <string name="pref_systemDialer_title">Совершать системные звонки с помощью Jami</string>
+    <string name="pref_systemDialer_summary">Использовать Jami для системных звонков, если возможно.</string>
+    <string name="pref_startOnBoot_title">Запускать Jami при старте системы</string>
+    <string name="pref_startOnBoot_summary">Запускать Jami в фоновом режиме во время старта системы.</string>
+    <string name="pref_clearHistory_title">Очистить историю</string>
+    <string name="pref_clearHistory_summary">Очистить историю всех разговоров. Это действие невозможно отменить.</string>
+    <string name="pref_notification_title">Видимость уведомлений</string>
+    <string name="pref_notification_summary">Установить видимость уведомлений приложения на экране блокировки. </string>
+    <string name="pref_connectivity_title">Режим подключения</string>
+    <string name="pref_connectivity_summary">Выберите способ подключения Jami к распределенной системе для приема звонков и сообщений.</string>
+    <string name="pref_blackList_title">Черный список</string>
+    <string name="pref_blackList_summary">Проверить список блокировок</string>
+    <string name="pref_delete_account_title">Удалить учетную запись</string>
+    <string name="pref_delete_account_summary">Удалить учетную запись с этого устройства</string>
+    <string name="pref_persistNotification_title">Фоновый режим работы</string>
+    <string name="pref_persistNotification_summary">Разрешить работать в фоновом режиме для приема звонков и сообщений.</string>
+    <string name="pref_newGroup_title">Включить групповые чаты</string>
+    <string name="pref_newGroup_summary">Включить создание групп в Jami.</string>
+    <string name="pref_logs_title">Диагностические логи</string>
+    <string name="pref_logs_summary">Открыть настройки диагностических логов</string>
+    <string name="pref_logs_start">Начать логирование</string>
+    <string name="pref_logs_stop">Остановить логирование</string>
+    <string name="pref_connection_monitor">Монитор подключений</string>
+    <string name="pref_connection_monitor_summary">Отслеживание одноранговых подключений</string>
+    <string name="pref_push_notifications_logs_title">Журналы push-уведомлений</string>
+    <string name="pref_push_notifications_logs_summary">Просмотр журналов push-уведомлений</string>
+    <string name="pref_typing_title">Индикатор набора сообщения</string>
+    <string name="pref_block_record_title">Отключить снимки и запись экрана</string>
+    <string name="pref_block_record_summary">Отключить снимки и запись экрана</string>
+    <string name="pref_link_preview_title">Предпросмотры ссылок</string>
+    <string name="pref_link_preview_summary">Для предварительного просмотра требуется загрузка содержимого со сторонних серверов.</string>
+    <string name="notification_public">Показать всё \n(отображать уведомления и их содержимое на экране блокировки)\n</string>
+    <string name="notification_private">Скрыть содержимое \n(отображать уведомления на экране блокировки, но скрывать их содержимое)\n</string>
+    <string name="notification_secret">Не показывать\n(не отображать уведомления на экране блокировки)</string>
+    <string name="connectivity_google_services_title">Службы Google</string>
+    <string name="connectivity_google_services_description">Используй Google Firebase и прокси DHT для приема push-уведомлений</string>
+    <string name="connectivity_local_node_title">Локальный узел DHT</string>
+    <string name="connectivity_local_node_description">Используй DHT, подключаясь к другим устройствам и контактам Jami</string>
+    <string name="connectivity_unified_push_description">Клиентский сервер UnifiedPush для получения push-уведомлений.</string>
+    <string name="connectivity_custom_title">Настраиваемый</string>
+    <string name="connectivity_custom_description">Сейчас не используется ни одна из доступных предустановок конфигурации.</string>
+    <string name="pref_enable_extensions_title">Включить расширения</string>
+    <string name="pref_enable_extensions_summary">Включить расширения и настроить их параметры</string>
+    <string name="pref_available_extensions_title">Доступные расширения</string>
+    <string name="pref_available_extensions_summary">Установленные расширения и добавление новых</string>
+    <string name="fab_extensions_add">Добавить новое расширение</string>
+    <string name="extension_uninstall_title">Удалить расширение?</string>
+    <string name="extension_reset_preferences">Сбросить настройки расширения</string>
+    <string name="extension_reset_preferences_summary">Расширение сброшено к настройкам по умолчанию</string>
+    <string name="extension_reset_preferences_ask">Вы хотите сбросить общие настройки расширения?</string>
+    <string name="extension_reset_account_preferences_ask">Вы хотите сбросить настройки расширения аккаунта?</string>
+    <string name="extension_successfully_installed">Расширение <b>%1$s</b> установлено успешно.</string>
+    <string name="extension_install_failure">Произошла ошибка при установке расширения: <b>%1$s</b></string>
+    <string name="extension_recent_version_exception">Уже установлена более новая версия <b>%1$s</b></string>
+    <string name="extension_same_version_exception">Уже установлена та же версия <b>%1$s</b></string>
+    <string name="extension_invalid_signature"><b>%1$s</b> имеет недействительную подпись</string>
+    <string name="extension_invalid_authority">При проверке полномочий произошла ошибка для следующего расширения: <b>%1$s</b></string>
+    <string name="extension_invalid_format">Неверный формат расширения: <b>%1$s</b></string>
+    <string name="extension_force_install">принудительно\nустановить</string>
+    <string name="extension_path_image_add">Добавить новое изображение</string>
+</resources>

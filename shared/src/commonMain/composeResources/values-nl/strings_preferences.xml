@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Netwerk</string>
+    <string name="pref_category_contacts">Contacten</string>
+    <string name="pref_category_video">Video</string>
+    <string name="pref_category_system">Systeem</string>
+    <string name="pref_category_privacy">Privacy</string>
+    <string name="pref_category_diagnostic">Diagnostiek</string>
+    <string name="pref_category_appearance">Uiterlijk</string>
+    <string name="pref_category_connectivity">Connectiviteit</string>
+    <string name="pref_category_video_settings">Geavanceerde video-instellingen</string>
+    <string name="pref_mobileData_title">Mobiele data</string>
+    <string name="pref_mobileData_summary">Sta Jami toe om 3G/LTE-netwerken te gebruiken naast wifi</string>
+    <string name="pref_pushNotifications_title">Pushmeldingen</string>
+    <string name="pref_pushNotifications_summary">Gebruik de servers van Google om oproepen/berichten in de achtergrond te kunnen ontvangen</string>
+    <string name="pref_unifiedPush_summary">Gebruik een UnifiedPush-service om oproepen/berichten in de achtergrond te ontvangen</string>
+    <string name="pref_video_advanced_title">Geavanceerde video-instellingen</string>
+    <string name="pref_video_advanced_summary">Wijzig de videobitrate en -resolutie, evenals de toegang tot experimentele functies</string>
+    <string name="pref_hd_summary">Versturen van video in HD inschakelen</string>
+    <string name="pref_hwEncode_title">Versnelde codering inschakelen</string>
+    <string name="pref_hwEncode_summary">Experimentele functie</string>
+    <string name="pref_videoBitrate_title">Video bitrate</string>
+    <string name="pref_videoBitrate_summary">Selecteer de standaard snelheid van uitgaande video (KB/s)</string>
+    <string name="pref_videoResolution_title">Video resolutie</string>
+    <string name="pref_videoResolution_summary">Selecteer de standaard resolutie van uitgaande video</string>
+    <string name="pref_systemContacts_title">Systeemcontacten gebruiken</string>
+    <string name="pref_systemContacts_summary">Gebruik systeemcontacten om gegevens over de beller te tonen</string>
+    <string name="pref_systemDialer_title">Systeemoproepen plaatsen met Jami</string>
+    <string name="pref_systemDialer_summary">Gebruik Jami wanneer mogelijk voor systeemoproepen.</string>
+    <string name="pref_startOnBoot_title">Jami automatisch starten</string>
+    <string name="pref_startOnBoot_summary">Voer Jami in de achtergrond uit wanneer het systeem gestart wordt.</string>
+    <string name="pref_clearHistory_title">Geschiedenis wissen</string>
+    <string name="pref_notification_title">Notificatie zichtbaarheid</string>
+    <string name="pref_notification_summary">Zichtbaarheid van applicatie-notificaties op het lock scherm</string>
+    <string name="pref_blackList_title">Blockslijst</string>
+    <string name="pref_blackList_summary">Controleer je bloklijst.</string>
+    <string name="pref_delete_account_title">Account verwijderen</string>
+    <string name="pref_newGroup_title">Groepschat inzetten</string>
+    <string name="pref_newGroup_summary">Maak groepen in Jami mogelijk.</string>
+    <string name="pref_logs_title">Diagnostische logs</string>
+    <string name="pref_logs_summary">Open diagnostische loginstellingen</string>
+    <string name="pref_logs_start">Begin met loggen</string>
+    <string name="pref_logs_stop">Stop met het loggen</string>
+    <string name="pref_typing_title">Typingsindicator</string>
+    <string name="pref_block_record_title">Blokkeer schermafdruk en -opname</string>
+    <string name="pref_block_record_summary">Blokkeer het maken van een schermafdruk of scherm video-opnames</string>
+    <string name="pref_link_preview_title">Voorbeelden van links</string>
+    <string name="pref_link_preview_summary">Voorbeeldbeelden vereisen het downloaden van inhoud van servers van derden.</string>
+    <string name="connectivity_custom_title">Aangepast</string>
+</resources>

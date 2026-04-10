@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Netto</string>
+    <string name="pref_category_contacts">Kontakt</string>
+    <string name="pref_category_video">Videoen</string>
+    <string name="pref_category_system">System</string>
+    <string name="pref_category_privacy">Personvernd</string>
+    <string name="pref_category_diagnostic">Diagnostik</string>
+    <string name="pref_category_appearance">Utseendet</string>
+    <string name="pref_category_connectivity">Konektivitet</string>
+    <string name="pref_category_video_settings">Forteljande videoinnstillingar</string>
+    <string name="pref_mobileData_title">Mobildata</string>
+    <string name="pref_mobileData_summary">Lat Jami ha 3G/LTE-nettverk i tillegg til Wi-Fi</string>
+    <string name="pref_pushNotifications_title">Skriv med på nytt</string>
+    <string name="pref_pushNotifications_summary">Bruk Google-server for å gje høve til å motta samtal/meldingar i bakgrunnen</string>
+    <string name="pref_unifiedPush_summary">Bruk ein UnifiedPush-tjeneste for å gje høve til å motta samtal/meldingar i bakgrunnen</string>
+    <string name="pref_video_advanced_title">Forteljande videoinnstillingar</string>
+    <string name="pref_video_advanced_summary">Endra video bitrate, oppløsning og tiltrenging til eksperimentelle funksjoner</string>
+    <string name="pref_hd_summary">Legg til å senda HD video</string>
+    <string name="pref_hwEncode_title">Legg til akselerert koding</string>
+    <string name="pref_hwEncode_summary">Eksperimentell funksjon</string>
+    <string name="pref_videoBitrate_title">Video bitrate</string>
+    <string name="pref_videoBitrate_summary">Velg default utgående video bitrate (KB/s)</string>
+    <string name="pref_videoResolution_title">Video oppløsning</string>
+    <string name="pref_videoResolution_summary">Velg default utgående video oppløsning</string>
+    <string name="pref_systemContacts_title">Bruk systemkontakter</string>
+    <string name="pref_systemContacts_summary">Bruk systemkontakter for å vise opplysningsdetaljer.</string>
+    <string name="pref_systemDialer_title">Legg systemsamtal ved hjelp av Jami</string>
+    <string name="pref_systemDialer_summary">Bruk Jami til å placera systemsamtal når det er mogleg.</string>
+    <string name="pref_startOnBoot_title">Start Jami på start</string>
+    <string name="pref_startOnBoot_summary">La Jami stå i bakgrunnen når systemet startar.</string>
+    <string name="pref_clearHistory_title">Klare historie</string>
+    <string name="pref_notification_title">Siðivhet i meldinga</string>
+    <string name="pref_notification_summary">Sett visible for meldingar på låsskjerma.</string>
+    <string name="pref_blackList_title">Blokklista</string>
+    <string name="pref_blackList_summary">Sjå på blokk-listen din.</string>
+    <string name="pref_delete_account_title">Ta bort kontoen</string>
+    <string name="pref_newGroup_title">Legg til greiningar i gruppe</string>
+    <string name="pref_newGroup_summary">Legg til rette for å oppretta grupper i Jami.</string>
+    <string name="pref_logs_title">Diagnose loggar</string>
+    <string name="pref_logs_summary">Åpne innstillingar på diagnostisk logg</string>
+    <string name="pref_logs_start">Start logging</string>
+    <string name="pref_logs_stop">Sluta å logga</string>
+    <string name="pref_typing_title">Typegjennomføringsindikator</string>
+    <string name="pref_block_record_title">Block skjermbild og opptak</string>
+    <string name="pref_block_record_summary">Blokkar å ta skjermbilder eller opptake av video.</string>
+    <string name="pref_link_preview_title">Førehandsvisingar av nettkoplingar</string>
+    <string name="pref_link_preview_summary">Forhandsvisning krev å laste ned innhald frå tredjepartsserver.</string>
+    <string name="connectivity_custom_title">Kastum</string>
+</resources>

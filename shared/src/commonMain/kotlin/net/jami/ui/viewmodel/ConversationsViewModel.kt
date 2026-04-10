@@ -40,6 +40,18 @@ import net.jami.services.DeviceRuntimeService
 import net.jami.utils.VCardUtils
 
 /**
+ * Item representing an account in the account switcher.
+ */
+data class AccountItem(
+    val accountId: String,
+    val displayName: String,
+    val subtitle: String,
+    val avatarBytes: ByteArray?,
+    val isCurrentAccount: Boolean,
+    val isOnline: Boolean,
+)
+
+/**
  * Item representing a conversation in the list.
  */
 data class ConversationItem(
@@ -64,7 +76,8 @@ data class ConversationsState(
     val pendingRequests: Int = 0,
     val currentAccountAvatarBytes: ByteArray? = null,
     /** True when the current account is registered with the daemon. */
-    val isAccountOnline: Boolean = false
+    val isAccountOnline: Boolean = false,
+    val accounts: List<AccountItem> = emptyList(),
 )
 
 /**
@@ -204,12 +217,15 @@ class ConversationsViewModel(
                 // Build conversation items from the facade
                 val conversations = buildConversationItems(accountId, query, filesDir)
 
+                val accountItems = buildAccountItems(filesDir)
+
                 _state.value = _state.value.copy(
                     conversations = conversations,
                     isLoading = false,
                     pendingRequests = pendingCount,
                     currentAccountAvatarBytes = accountAvatarBytes ?: _state.value.currentAccountAvatarBytes,
-                    isAccountOnline = account.isRegistered
+                    isAccountOnline = account.isRegistered,
+                    accounts = accountItems,
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)
@@ -291,6 +307,32 @@ class ConversationsViewModel(
                 isOnline = contact?.isOnline == true
             )
         }.sortedByDescending { it.timestamp }
+    }
+
+    /**
+     * Switch the active account. The conversation list refreshes automatically via the
+     * currentAccount Flow observer in init.
+     */
+    fun switchAccount(accountId: String) {
+        val account = accountService.getAccount(accountId) ?: return
+        accountService.setCurrentAccount(account)
+    }
+
+    private fun buildAccountItems(filesDir: String): List<AccountItem> {
+        val currentId = accountService.currentAccount.value?.accountId
+        return accountService.accounts.value.map { acc ->
+            val avatarBytes = VCardUtils.loadLocalProfileFromDisk(filesDir, acc.accountId)
+            val name = acc.displayName.ifEmpty { acc.registeredName.ifEmpty { acc.alias.ifEmpty { acc.username } } }
+            val subtitle = if (acc.registeredName.isNotEmpty()) acc.username else ""
+            AccountItem(
+                accountId = acc.accountId,
+                displayName = name.ifEmpty { acc.accountId },
+                subtitle = subtitle,
+                avatarBytes = avatarBytes,
+                isCurrentAccount = acc.accountId == currentId,
+                isOnline = acc.isRegistered,
+            )
+        }
     }
 
     /**

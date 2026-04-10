@@ -16,13 +16,14 @@
  */
 package net.jami.ui.screens
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -30,23 +31,28 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -54,27 +60,44 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.PointMode
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
-import org.jetbrains.compose.resources.stringResource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiIconButton
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.ContactDetailsViewModel
+import net.jami.utils.QRCodeColors
+import net.jami.utils.QRCodeUtils
+import net.jami.utils.shareText
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Conversation details screen mirroring the official Jami Android client layout.
@@ -103,9 +126,62 @@ fun ConversationDetailsScreen(
     val viewModel = getViewModel<ContactDetailsViewModel>()
     val state by viewModel.state.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
+    var showQrSheet by remember { mutableStateOf(false) }
+    var qrBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    val shareSubject = stringResource(Res.string.share_contact_subject)
+    val shareBody = stringResource(Res.string.share_contact_body)
+        .format(
+            state.displayName.ifEmpty { state.identityHash },
+            "https://jami.net",
+        )
+    val clipboardManager = LocalClipboardManager.current
+
+    fun copyToClipboard(value: String) {
+        clipboardManager.setText(AnnotatedString(value))
+    }
 
     LaunchedEffect(conversationId) {
         viewModel.loadContact(conversationId)
+    }
+
+    // Generate QR code bitmap in background when sheet opens
+    LaunchedEffect(showQrSheet, state.contactUri) {
+        if (showQrSheet && state.contactUri.isNotEmpty() && qrBitmap == null) {
+            val bitmap = withContext(Dispatchers.Default) {
+                val qrData = QRCodeUtils.encodeStringAsQRCodeData(
+                    state.contactUri,
+                    QRCodeColors.BLACK,
+                    QRCodeColors.WHITE,
+                ) ?: return@withContext null
+
+                val imageBitmap = ImageBitmap(qrData.width, qrData.height)
+                val canvas = Canvas(imageBitmap)
+
+                val bgPaint = Paint().apply { color = Color.White }
+                canvas.drawRect(
+                    androidx.compose.ui.geometry.Rect(
+                        0f, 0f, qrData.width.toFloat(), qrData.height.toFloat()
+                    ),
+                    bgPaint,
+                )
+
+                val fgPoints = mutableListOf<Float>()
+                for (i in qrData.data.indices) {
+                    if (qrData.data[i] != QRCodeColors.WHITE) {
+                        fgPoints.add((i % qrData.width) + 0.5f)
+                        fgPoints.add((i / qrData.width) + 0.5f)
+                    }
+                }
+                val fgPaint = Paint().apply {
+                    color = Color.Black
+                    strokeWidth = 1f
+                    strokeCap = StrokeCap.Square
+                }
+                canvas.drawRawPoints(PointMode.Points, fgPoints.toFloatArray(), fgPaint)
+                imageBitmap
+            }
+            qrBitmap = bitmap
+        }
     }
 
     Scaffold(
@@ -208,11 +284,90 @@ fun ConversationDetailsScreen(
             when (selectedTab) {
                 0 -> DetailsTabContent(
                     state = state,
-                    onQrClick = onQrClick,
+                    onQrClick = { showQrSheet = true },
+                    onShareClick = { shareText(shareSubject, shareBody) },
                     onBlockClick = { viewModel.blockContact() },
                     onDeleteClick = { viewModel.removeContact() },
+                    onCopyIdentifier = { copyToClipboard(state.identityHash) },
+                    onCopySwarmId = { copyToClipboard(state.swarmId) },
                 )
                 1 -> FilesTabContent()
+            }
+        }
+
+        // QR Code Bottom Sheet
+        if (showQrSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showQrSheet = false },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                containerColor = JamiTheme.colors.surface,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.xl)
+                        .padding(bottom = JamiTheme.spacing.xxl),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    // Header: QR icon + title
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.QrCodeScanner,
+                            contentDescription = null,
+                            tint = JamiTheme.colors.onSurface,
+                        )
+                        Spacer(Modifier.width(JamiTheme.spacing.s))
+                        Text(
+                            text = stringResource(Res.string.show_qr_code),
+                            style = JamiTheme.typography.titleMedium,
+                            color = JamiTheme.colors.onSurface,
+                        )
+                    }
+
+                    Spacer(Modifier.height(JamiTheme.spacing.xl))
+
+                    // QR Code image (white background box)
+                    Box(
+                        modifier = Modifier
+                            .size(240.dp)
+                            .background(Color.White, RoundedCornerShape(JamiTheme.spacing.m)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (qrBitmap != null) {
+                            Image(
+                                bitmap = qrBitmap!!,
+                                contentDescription = stringResource(Res.string.show_qr_code),
+                                modifier = Modifier
+                                    .size(216.dp)
+                                    .padding(JamiTheme.spacing.s),
+                                contentScale = ContentScale.Fit,
+                            )
+                        } else {
+                            CircularProgressIndicator()
+                        }
+                    }
+
+                    Spacer(Modifier.height(JamiTheme.spacing.m))
+
+                    // Subtitle
+                    Text(
+                        text = stringResource(Res.string.qr_scan_instruction),
+                        style = JamiTheme.typography.bodyMedium,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    Spacer(Modifier.height(JamiTheme.spacing.xl))
+
+                    // Share button — triggers native system share sheet
+                    Button(
+                        onClick = { shareText(shareSubject, shareBody) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(50),
+                    ) {
+                        Text(stringResource(Res.string.share_contact_information))
+                    }
+                }
             }
         }
     }
@@ -222,8 +377,11 @@ fun ConversationDetailsScreen(
 private fun DetailsTabContent(
     state: net.jami.ui.viewmodel.ContactDetailsState,
     onQrClick: () -> Unit,
+    onShareClick: () -> Unit,
     onBlockClick: () -> Unit,
     onDeleteClick: () -> Unit,
+    onCopyIdentifier: () -> Unit,
+    onCopySwarmId: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -253,6 +411,7 @@ private fun DetailsTabContent(
                 DetailRow(
                     label = stringResource(Res.string.identifier),
                     value = state.identityHash,
+                    onCopy = onCopyIdentifier,
                 )
 
                 HorizontalDivider(color = JamiTheme.colors.outline.copy(alpha = 0.3f))
@@ -280,7 +439,7 @@ private fun DetailsTabContent(
                             .background(JamiTheme.colors.outline.copy(alpha = 0.3f)),
                     )
                     TextButton(
-                        onClick = { /* Share via system share sheet — future iteration */ },
+                        onClick = onShareClick,
                         modifier = Modifier.weight(1f),
                     ) {
                         Icon(
@@ -324,6 +483,7 @@ private fun DetailsTabContent(
                     DetailRow(
                         label = stringResource(Res.string.swarm_id),
                         value = state.swarmId,
+                        onCopy = onCopySwarmId,
                     )
                 }
             }
@@ -420,19 +580,23 @@ private fun CallActionButton(
 
 /**
  * A single info row with an optional leading icon, label on the left, and value on the right.
+ * When [onCopy] is provided, a copy icon button appears at the trailing edge.
  */
 @Composable
 private fun DetailRow(
     label: String,
     value: String = "",
     leadingIcon: ImageVector? = null,
+    onCopy: (() -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                horizontal = JamiTheme.spacing.l,
-                vertical = JamiTheme.spacing.m,
+                start = JamiTheme.spacing.l,
+                end = if (onCopy != null) JamiTheme.spacing.xs else JamiTheme.spacing.l,
+                top = JamiTheme.spacing.m,
+                bottom = JamiTheme.spacing.m,
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -459,8 +623,21 @@ private fun DetailRow(
                 color = JamiTheme.colors.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.widthIn(max = 160.dp),
+                modifier = Modifier.widthIn(max = 140.dp),
             )
+        }
+        if (onCopy != null) {
+            IconButton(
+                onClick = onCopy,
+                modifier = Modifier.size(36.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = stringResource(Res.string.jami_id_copy),
+                    tint = JamiTheme.colors.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }
     }
 }

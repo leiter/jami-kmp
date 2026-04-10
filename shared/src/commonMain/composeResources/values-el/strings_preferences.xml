@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Δίκτυο</string>
+    <string name="pref_category_contacts">Επαφές</string>
+    <string name="pref_category_video">Βίντεο</string>
+    <string name="pref_category_system">Σύστημα</string>
+    <string name="pref_category_privacy">Απόρρητο</string>
+    <string name="pref_category_diagnostic">Διαγνωστικά</string>
+    <string name="pref_category_appearance">Εμφάνιση</string>
+    <string name="pref_category_connectivity">Συνδεσιμότητα</string>
+    <string name="pref_category_video_settings">Ρυθμίσεις βίντεο για προχωρημένους</string>
+    <string name="pref_mobileData_title">Δεδομένα κινητού</string>
+    <string name="pref_mobileData_summary">Επιτρέψτε στο Jami να χρησιμοποίει 3G/LTE σε συνδυασμό με το Wi-Fi</string>
+    <string name="pref_pushNotifications_title">Ειδοποιήσεις</string>
+    <string name="pref_pushNotifications_summary">Χρησιμοποιήστε τους διακομιστές της Google για να επιτρέψετε την λήψη κλήσεων/ειδοποιήσεων στο υπόβαθρο</string>
+    <string name="pref_unifiedPush_summary">Χρησιμοποιήστε μια υπηρεσία UnifiedPush για να επιτρέψετε την λήψη κλήσεων/ειδοποιήσεων στο φόντο</string>
+    <string name="pref_video_advanced_title">Ρυθμίσεις βίντεο για προχωρημένους</string>
+    <string name="pref_video_advanced_summary">Αλλαγή του bitrate του βίντεο, ανάλυση, καθώς και πρόσβαση πειραματικές λειτουργίες</string>
+    <string name="pref_hd_summary">Επιτρέψτε την αποστολή βίντεο HD</string>
+    <string name="pref_hwEncode_title">Επιτρέψτε την επιταχυνμένη κωδικοποίηση</string>
+    <string name="pref_hwEncode_summary">Επειραματικό χαρακτηριστικό</string>
+    <string name="pref_videoBitrate_title">Ατομικό βίντεο</string>
+    <string name="pref_videoBitrate_summary">Επιλέξτε την προεπιλεγμένη ταχύτητα βιτών βίντεο (KB/s)</string>
+    <string name="pref_videoResolution_title">Ανάλυση βίντεο</string>
+    <string name="pref_videoResolution_summary">Επιλέξτε προεπιλεγμένη ανάλυση βίντεο</string>
+    <string name="pref_systemContacts_title">Χρησιμοποίησε τις επαφές συσκευής</string>
+    <string name="pref_systemContacts_summary">Χρησιμοποίησε τις επαφές συσκευής εμφάνιση των στοιχείων καλούντος.</string>
+    <string name="pref_systemDialer_title">Διενέργεια κλήσεων συστήματος με χρήση του Jami</string>
+    <string name="pref_systemDialer_summary">Χρήση του Jami για κλήσεις συστήματος όπου είναι δυνατό.</string>
+    <string name="pref_startOnBoot_title">Έναρξη του Jami κατά την εκκίνηση</string>
+    <string name="pref_startOnBoot_summary">Κάντε Τζάμι στο φόντο όταν ξεκινήσει το σύστημα.</string>
+    <string name="pref_clearHistory_title">Διαγραφή ιστορικού</string>
+    <string name="pref_notification_title">Ορατότητα ειδοποιήσεων</string>
+    <string name="pref_notification_summary">Εναρτώντας την ορατότητα των ειδοποιήσεων εφαρμογής στην οθόνη κλειδαριού.</string>
+    <string name="pref_blackList_title">Λίστα μπλοκαρισμένων</string>
+    <string name="pref_blackList_summary">Έλεγξε τη λίστα αποκλεισμένων</string>
+    <string name="pref_delete_account_title">Διαγραφή λογαριασμού</string>
+    <string name="pref_newGroup_title">Ενεργοποιήστε ομαδική συνομιλία</string>
+    <string name="pref_newGroup_summary">Επιτρέψτε τη δημιουργία ομάδων στο Jami.</string>
+    <string name="pref_logs_title">Καταγραφέντα διαγνωστικά</string>
+    <string name="pref_logs_summary">Ανοίξτε τις ρυθμίσεις καταγραφής διαγνωστικού</string>
+    <string name="pref_logs_start">Έναρξη καταγραφής</string>
+    <string name="pref_logs_stop">Τερματισμός καταγραφής</string>
+    <string name="pref_typing_title">Δείκτης τυπογραφίας</string>
+    <string name="pref_block_record_title">Κλείστε το screenshot και την εγγραφή</string>
+    <string name="pref_block_record_summary">Αποτρέψτε την λήψη οθόνης ή την ηχογράφηση βίντεο.</string>
+    <string name="pref_link_preview_title">Προεπισκοπήσεις συνδέσεων Web</string>
+    <string name="pref_link_preview_summary">Η προεπισκόπηση απαιτεί την λήψη περιεχομένου από διακομιστές τρίτων.</string>
+    <string name="connectivity_custom_title">Προμηθευτές</string>
+</resources>

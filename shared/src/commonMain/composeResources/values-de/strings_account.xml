@@ -6,14 +6,19 @@ This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
 -->
 <resources>
-    <!-- Account edition -->
     <string name="ic_delete_menu">Löschen</string>
     <string name="ic_advanced_menu">Erweiterte Einstellungen</string>
     <string name="ic_blacklist_menu">Blockierte Kontakte</string>
-
-    <!-- Account creation -->
     <string name="account_selection">Konto auswählen</string>
     <string name="add_ring_account_title">Konto hinzufügen</string>
     <string name="add_sip_account_title">SIP-Konto hinzufügen</string>
@@ -29,24 +34,18 @@ the Free Software Foundation, either version 3 of the License, or
     <string name="action_settings">Einstellungen</string>
     <string name="error_field_required">Dieses Feld ist erforderlich</string>
     <string name="dialog_wait_create">Konto hinzufügen</string>
-    <string name="dialog_wait_create_details">Bitte warten Sie während Ihr neues Konto eingerichtet wird…</string>
+    <string name="dialog_wait_create_details">Bitte warten Sie während Ihr neues Konto eingerichtet wird...</string>
     <string name="dialog_wait_update">Konto wird aktualisiert</string>
     <string name="dialog_wait_update_details">Bitte warten Sie während ihr Konto aktualisiert wird</string>
     <string name="dialog_warn_ip2ip_account_title">Leeres SIP-Konto erstellen?</string>
-    <string name="dialog_warn_ip2ip_account_message">Sie sind dabei, ein SIP-Konto ohne gültigen Hostnamen zu erstellen.
-Sie können nur direkte IP-Anrufe tätigen und empfangen.
-Sie können Ihr Konto später bearbeiten</string>
+    <string name="dialog_warn_ip2ip_account_message">Sie sind dabei, ein SIP-Konto ohne gültigen Hostnamen zu erstellen. Sie können nur direkte IP-Anrufe tätigen und empfangen. Sie können Ihr Konto später bearbeiten</string>
     <string name="account_type_ip2ip">IP-Konto</string>
     <string name="help_ring">Ein Jami-Konto erlaubt es Ihnen andere Menschen auf sichere Art direkt über ein verteiltes Netzwerk zu erreichen</string>
     <string name="help_sip_title">SIP-Konto hinzufügen</string>
     <string name="help_sip">Vorhandenes SIP-Konto konfigurieren</string>
     <string name="create_sip_account">SIP-Konto konfigurieren</string>
-
-    <!-- Account deletion -->
     <string name="account_delete_dialog_title">Konto löschen?</string>
     <string name="account_delete_dialog_message">Diese Aktion kann nicht rückgängig gemacht werden.</string>
-
-    <!-- AccountManagementFragment -->
     <string name="empty_account_list">Kein Konto registriert</string>
     <string name="normal_accounts_titles">Konten</string>
     <string name="normal_devices_titles">Verbundene Geräte</string>
@@ -64,8 +63,6 @@ Sie können Ihr Konto später bearbeiten</string>
     <string name="account_biometric_disable">Biometrische Authentifizierung deaktivieren</string>
     <string name="account_biometric_set">Biometrische Authentifizierung aktivieren</string>
     <string name="account_biometric_summary">Biometrische Authentifizierung für Ihr Konto verwalten.</string>
-
-    <!-- Basic Details -->
     <string name="account_preferences_basic_tab">Allgemein</string>
     <string name="account_basic_category">Grundlegende Einstellungen</string>
     <string name="account_alias_label">Anzeigename</string>
@@ -79,13 +76,9 @@ Sie können Ihr Konto später bearbeiten</string>
     <string name="account_autoanswer_label">Automatisch antworten</string>
     <string name="account_rendezvous_label">Rendezvous-Modus</string>
     <string name="account_rendezvous_summary">Im Rendezvous-Modus werden eingehende Anrufe einem Konferenzraum hinzugefügt.</string>
-    <string name="account_upnp_label">UPnP aktivieren</string>
+    <string name="account_upnp_label"> UPnP aktivieren</string>
     <string name="account_proxy_field">Proxy</string>
-
-    <!-- Extension Details -->
     <string name="account_preferences_extension_tab">Erweiterungen</string>
-
-    <!-- Audio Details -->
     <string name="account_audio_label">Audio</string>
     <string name="account_preferences_media_tab">Medium</string>
     <string name="account_ringtone_label">Klingeltöne</string>
@@ -94,16 +87,12 @@ Sie können Ihr Konto später bearbeiten</string>
     <string name="account_ringtone_custom_label">Eigenen Klingelton benutzen</string>
     <string name="account_ringtone_title">Klingelton auswählen</string>
     <string name="account_ringtone_summary">Wählen Sie einen Klingelton oder nehmen Sie Ihren eigenen</string>
-
-    <!-- Video Details -->
     <string name="account_video_label">Video</string>
     <string name="account_video_enable">Video aktivieren</string>
-
-    <!-- Advanced Details -->
     <string name="account_preferences_advanced_tab">Erweitert</string>
     <string name="account_chat_settings_title">Chat-Einstellungen</string>
     <string name="account_read_receipts_label">Lesebestätigungen</string>
-    <string name="account_read_receipts_summary">Senden und fordern Sie Übermittlungs- und Lesebestätigungen an.</string>
+    <string name="account_read_receipts_summary">Senden und fordern Sie Übermittlungs- und Lesebestätigungen an, die gesendet werden sollen, wenn Nachrichten übermittelt oder gelesen werden.</string>
     <string name="account_call_settings_title">Anrufeinstellungen</string>
     <string name="account_dht_public_in_calls_label">Erlaube eingehende Anrufe von unbekannten Kontakten</string>
     <string name="account_registration_exp_label">Registrierung abgelaufen</string>
@@ -138,8 +127,6 @@ Sie können Ihr Konto später bearbeiten</string>
     <string name="account_peer_discovery_label">Lokale Teilnehmer-Erkennung</string>
     <string name="account_peer_discovery_enable_label">Erlaube das Finden von lokalen Teilnehmern</string>
     <string name="account_peer_discovery_enable_summary">Verbinde zu anderen sich meldenden DHT Knoten in unserem lokalen Netzwerk</string>
-
-    <!-- Security Details -->
     <string name="account_credentials_label">Anmeldeinformationen</string>
     <string name="account_credentials_edit">Anmeldedaten bearbeiten</string>
     <string name="account_credentials_add">Anmeldedaten hinzufügen</string>
@@ -161,19 +148,17 @@ Sie können Ihr Konto später bearbeiten</string>
     <string name="account_rtp_max_port">Maximum</string>
     <string name="account_rtp_min_port">Minimum</string>
     <string name="account_rtp_port_range">Audio-RTP-Portbereich</string>
-
-    <!-- restore/backup -->
     <string name="account_new_device_password">Geben Sie das Hauptpasswort ein, um das Konto zu entsperren</string>
     <string name="error_password_char_count">Mindestens 6 Zeichen</string>
     <string name="error_passwords_not_equals">Passwörter stimmen nicht überein.</string>
     <string name="export_account_wait_title">Bitte warten…</string>
     <string name="export_account_wait_message">Kontodaten werden exportiert</string>
     <string name="account_export_file">Konto sichern</string>
-    <string name="account_export_file_summary">Machen Sie eine Sicherheitskopie Ihrer Benutzerkennung auf ihrem Gerät.</string>
+    <string name="account_export_file_summary">Machen Sie eine Sicherheitskopie Ihrer Benutzerkennung auf ihrem Gerät um sie im Fehlerfall wiederherstellen zu können.</string>
     <string name="account_export_end_decryption_message">Falsches Passwort. Bitte versuchen Sie es erneut mit dem richtigen Passwort.</string>
     <string name="account_enter_password">Passwort eingeben</string>
-    <string name="account_share_body">Kontaktieren Sie mich über „%1$s" auf der Jami-Plattform: %2$s</string>
-    <string name="account_share_body_with_username">Kontaktieren Sie mich über „%1$s" oder meinen öffentlichen Benutzernamen „%2$s" auf Jami: %3$s</string>
+    <string name="account_share_body">Kontaktieren Sie mich über „%1$s“ auf der Jami-Plattform für verteilte Kommunikation: %2$s</string>
+    <string name="account_share_body_with_username">Kontaktieren Sie mich über „%1$s“ oder meinen öffentlichen Benutzernamen „%2$s“ auf der verteilten Kommunikationsplattform Jami:%3$s</string>
     <string name="account_contact_me">Kontaktieren Sie mich über Jami!</string>
     <string name="update_account">Konto aktualisieren</string>
     <string name="account_migration">Ihr Jami-Konto kann aktualisiert werden.\nBitte geben Sie Ihr Passwort ein.</string>
@@ -181,14 +166,14 @@ Sie können Ihr Konto später bearbeiten</string>
     <string name="sip_account">SIP-Konto</string>
     <string name="ring_account_identity">Identität</string>
     <string name="account_migration_title_dialog">Konto-Migration</string>
-    <string name="account_migration_message_dialog">Ihre Konten müssen aktualisiert werden. Möchten Sie zum Bildschirm „Kontoverwaltung" wechseln?</string>
+    <string name="account_migration_message_dialog">Ihre Konten müssen aktualisiert werden. Möchten Sie zum Bildschirm „Kontoverwaltung“ wechseln, um diesen Vorgang auszuführen?</string>
     <string name="account_update_needed">Aktualisierung durchführen</string>
     <string name="account_cannot_be_found_title">Kontofehler</string>
-    <string name="account_cannot_be_found_message">Konto im Jami-Netzwerk konnte nicht gefunden werden.</string>
-    <string name="jams_account_cannot_be_found_message">Beim Verbinden des Kontos ist ein Fehler aufgetreten. Bitte überprüfen Sie Ihre Anmeldedaten.</string>
-    <string name="account_sip_cannot_be_registered_message">Sie können mit dem Kontoerstellungsprozess fortfahren oder Ihre Informationen hier bearbeiten.</string>
+    <string name="account_cannot_be_found_message">Konto im Jami-Netzwerk konnte nicht gefunden werden. Stellen Sie sicher, dass es von einem vorhandenen Gerät auf Jami exportiert wurde und dass die angegebenen Anmeldeinformationen korrekt sind.</string>
+    <string name="jams_account_cannot_be_found_message">Beim Verbinden des Kontos ist ein Fehler aufgetreten. Bitte überprüfen Sie Ihre Anmeldedaten und versuchen Sie es erneut.</string>
+    <string name="account_sip_cannot_be_registered_message">Sie können mit dem Kontoerstellungsprozess fortfahren oder Ihre Informationen hier bearbeiten. Änderungen sind später in den Kontoeinstellungen noch möglich.</string>
     <string name="account_no_network_title">Netzwerkfehler</string>
-    <string name="account_no_network_message">Beim Hinzufügen des Jami-Kontos zum verteilten Netzwerk ist ein Verbindungsfehler aufgetreten.</string>
+    <string name="account_no_network_message">Beim Hinzufügen des Jami-Kontos zum verteilten Netzwerk ist ein Verbindungsfehler aufgetreten. Überprüfen Sie die Konnektivität Ihres Geräts.</string>
     <string name="account_device_added_title">Konto-Gerät hinzugefügt</string>
     <string name="account_device_added_message">Das Jami-Konto wurde auf diesem Gerät erfolgreich eingerichtet.</string>
     <string name="account_device_updated_title">Konto-Gerät aktualisiert</string>
@@ -197,8 +182,6 @@ Sie können Ihr Konto später bearbeiten</string>
     <string name="account_sip_success_title">SIP-Konto registriert</string>
     <string name="account_sip_success_message">SIP-Konto erfolgreich registriert.</string>
     <string name="account_sip_register_anyway">Trotzdem registieren</string>
-
-    <!-- TV -->
     <string name="account_tv_settings_header">Kontoeinstellungen</string>
     <string name="account_tv_advance_settings_header">Erweiterte Einstellungen</string>
     <string name="account_tv_add_contact">Kontakt hinzufügen</string>
@@ -213,6 +196,8 @@ Sie können Ihr Konto später bearbeiten</string>
     <string name="account_link_archive_button">Verbindung vom Backup</string>
     <string name="account_new_button">Erstellen Sie ein Jami-Konto</string>
     <string name="account_link_export_button">Verbinde neues Gerät</string>
+    <string name="account_link_show_button">Zeige weitere %d verbundene Geräte</string>
+    <string name="account_link_hide_button">Verstecke dieses verbundene Gerät</string>
     <string name="account_start_export_button">Authentifizierungscode generieren</string>
     <string name="account_end_export_button">Schließen</string>
     <string name="account_export_title">Konto mit anderen Geräten verbinden</string>
@@ -225,8 +210,6 @@ Sie können Ihr Konto später bearbeiten</string>
     <string name="account_connect_server">Verbindung zum Management-Server</string>
     <string name="account_enter_username">Benutzername eingeben</string>
     <string name="account_enter_servername">Server eingeben</string>
-
-    <!-- Name registration -->
     <string name="error_username_empty">Benutzername eingeben</string>
     <string name="no_registered_name_for_account">Kein registrierter Benutzername</string>
     <string name="username_available">Der Benutzername ist verfügbar.</string>
@@ -245,15 +228,11 @@ Sie können Ihr Konto später bearbeiten</string>
     <string name="account_status_unknown">Unbekannt</string>
     <string name="account_status_offline">Offline</string>
     <string name="account_status_error">Fehler</string>
-
-    <!-- Create account -->
     <string name="account_creation_home">Willkommen bei Jami</string>
     <string name="account_creation_profile">Erstellen Sie Ihr Profil</string>
     <string name="account_creation_ring">Erstellen Sie Ihr Jami-Konto</string>
     <string name="account_sip_cannot_be_registered">Beim Registrieren des SIP-Kontos ist ein Fehler aufgetreten.</string>
     <string name="account_edit_profile">Profil bearbeiten</string>
-
-    <!-- Devices -->
     <string name="account_revoke_device_hint">Passwort zur Bestätigung eingeben</string>
     <string name="enter_password">Passwort eingeben</string>
     <string name="revoke_device_title">Gerät widerrufen</string>
@@ -268,32 +247,28 @@ Sie können Ihr Konto später bearbeiten</string>
     <string name="account_device_this_indicator">Dieses Gerät</string>
     <string name="account_disabled_indicator">Deaktiviert</string>
     <string name="account_device_id">Geräte-ID</string>
-
-    <!-- Link a new device -->
     <string name="error_format_not_supported">Dieses Format wird nicht unterstützt.</string>
     <string name="account_link_info">Scannen Sie in der Jami-App auf dem neuen Gerät den QR-Code oder geben Sie den Authentifizierungscode manuell ein.</string>
     <string name="account_link_device_title">Verbinde ein neues Gerät</string>
     <string name="account_link_password">Dieses Konto ist passwortverschlüsselt. Geben Sie das Passwort ein, um den Authentifizierungscode zu generieren.</string>
     <string name="account_link_generate_button">Generieren</string>
     <string name="account_link_time_valid">Der Authentifizierungscode wird ungültig: %1$s.</string>
-    <string name="account_link_device_info">Wählen Sie „Neues Gerät verknüpfen" aus der anderen Jami-App.</string>
+    <string name="account_link_device_info">Wählen Sie „Neues Gerät verknüpfen“ aus der anderen Jami-App, um den QR-Code oder den Authentifizierungscode anzuzeigen.</string>
     <string name="account_generate_export_device">Auf dem anderen Gerät</string>
-    <string name="account_generate_export_info">Installieren und starten Sie Jami. Wählen Sie „Von einem anderen Gerät importieren" und scannen Sie den QR-Code.</string>
+    <string name="account_generate_export_info">Installieren und starten Sie Jami. Wählen Sie „Von einem anderen Gerät importieren“ und scannen Sie den QR-Code. Alternativ können Sie den PIN-Code manuell eingeben.</string>
     <string name="content_description_qr_generated">Konto-QR-Code</string>
-    <string name="account_generate_export_invalid">Der Authentifizierungscode ist nicht mehr gültig.\nGeben Sie das Passwort ein und generieren Sie ein neues.</string>
-    <string name="account_generate_export_invalid_two">Der Authentifizierungscode ist nicht mehr gültig.\nGenerieren Sie einen neuen.</string>
+    <string name="account_generate_export_invalid">Der Authentifizierungscode ist nicht mehr gültig.\nGeben Sie das Passwort ein und generieren Sie ein neues, um das neue Gerät zu verknüpfen.</string>
+    <string name="account_generate_export_invalid_two">Der Authentifizierungscode ist nicht mehr gültig.\nGenerieren Sie einen neuen, um das neue Gerät zu verknüpfen.</string>
     <string name="help_pin_info">Erforderlich, wenn das Konto passwortverschlüsselt ist.</string>
     <string name="account_link_device_button">Verbinden</string>
-
-    <!-- Biometry -->
     <string name="account_biometry_auth_title">Jami-Konto entsperren</string>
     <string name="account_biometry_auth_message">Biometrie verwenden um Ihr Konto zu entsperren</string>
     <string name="account_biometry_enroll_title">Biometrische Authentifizierung verwenden?</string>
-    <string name="account_biometry_enroll_message">Ihr Gerät unterstützt die sichere biometrische Authentifizierung.</string>
+    <string name="account_biometry_enroll_message">Ihr Gerät unterstützt die sichere biometrische Authentifizierung. Die biometrische oder Geräteauthentifizierung bietet eine bequeme Möglichkeit, den Zugriff auf Ihr Jami-Konto lokal freizuschalten. Sie können Ihr Passwort weiterhin verwenden.</string>
     <string name="account_biometry_enroll_accept">Biometrie verwenden</string>
     <string name="no_thanks">Nein danke</string>
     <string name="account_biometry_enroll_auth_title">Authentifizierung für Ihr Jami-Konto hinzufügen</string>
-    <string name="account_biometry_enroll_auth_message">Als Alternative zu Ihrem Passwort eine sichere biometrische Authentifizierung hinzufügen</string>
+    <string name="account_biometry_enroll_auth_message">Als Alternative zu Ihrem Passwort eine sichere biometrische oder Geräteauthentifizierung hinzufügen</string>
     <string name="account_auth_error">Authentifizierungsfehler: %1$s</string>
     <string name="account_auth_success">Authentifizierung erfolgreich</string>
     <string name="account_auth_key_error">Beim Entschlüsseln des Kontoschlüssels ist ein Fehler aufgetreten.</string>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">నెట్వర్క్</string>
+    <string name="pref_category_contacts">పరిచయాలు</string>
+    <string name="pref_category_video">వీడియో</string>
+    <string name="pref_category_system">సిస్టమ్</string>
+    <string name="pref_category_privacy">గోప్యత</string>
+    <string name="pref_category_diagnostic">రోగ నిర్ధారణ</string>
+    <string name="pref_category_appearance">రూపాన్ని</string>
+    <string name="pref_category_connectivity">కనెక్టివిటీ</string>
+    <string name="pref_category_video_settings">ఆధునిక వీడియో సెట్టింగులు</string>
+    <string name="pref_mobileData_title">మొబైల్ డేటా</string>
+    <string name="pref_mobileData_summary">వై-ఫైతో పాటు 3జీ/ఎల్టీఇ నెట్వర్క్లలో జమీని అనుమతించండి</string>
+    <string name="pref_pushNotifications_title">పుష్ నోటిఫికేషన్లు</string>
+    <string name="pref_pushNotifications_summary">నేపథ్యంలో కాల్స్/సందేశాలు స్వీకరించడానికి గూగుల్ సర్వర్లను ఉపయోగించండి</string>
+    <string name="pref_unifiedPush_summary">నేపథ్యంలో కాల్స్/సందేశాలను స్వీకరించడానికి యూనిఫైడ్ పుష్ సేవను ఉపయోగించండి</string>
+    <string name="pref_video_advanced_title">ఆధునిక వీడియో సెట్టింగులు</string>
+    <string name="pref_video_advanced_summary">వీడియో బిట్ రేట్, రిజల్యూషన్, అలాగే యాక్సెస్ ప్రయోగాత్మక లక్షణాలను మార్చండి</string>
+    <string name="pref_hd_summary">HD వీడియోలను పంపడం ప్రారంభించండి</string>
+    <string name="pref_hwEncode_title">వేగవంతమైన కోడింగ్ను ప్రారంభించండి</string>
+    <string name="pref_hwEncode_summary">ప్రయోగ లక్షణం</string>
+    <string name="pref_videoBitrate_title">వీడియో బిట్ రేటు</string>
+    <string name="pref_videoBitrate_summary">డిఫాల్ట్ అవుట్గోయింగ్ వీడియో బిట్ రేట్ (KB/s) ఎంచుకోండి</string>
+    <string name="pref_videoResolution_title">వీడియో రిజల్యూషన్</string>
+    <string name="pref_videoResolution_summary">డిఫాల్ట్ అవుట్గోయింగ్ వీడియో రిజల్యూషన్ను ఎంచుకోండి</string>
+    <string name="pref_systemContacts_title">సిస్టమ్ పరిచయాలను ఉపయోగించు</string>
+    <string name="pref_systemContacts_summary">కాల్ వివరాలను చూపించడానికి సిస్టమ్ పరిచయాలను ఉపయోగించండి.</string>
+    <string name="pref_systemDialer_title">జమిని ఉపయోగించి సిస్టమ్ కాల్స్ చేయండి</string>
+    <string name="pref_systemDialer_summary">సాధ్యమైనప్పుడు వ్యవస్థ కాల్స్ ఉంచడానికి Jami ఉపయోగించండి.</string>
+    <string name="pref_startOnBoot_title">ప్రారంభంలో జామి ప్రారంభించండి</string>
+    <string name="pref_startOnBoot_summary">వ్యవస్థ ప్రారంభించినప్పుడు నేపథ్యంలో Jami అమలు.</string>
+    <string name="pref_clearHistory_title">స్పష్టమైన చరిత్ర</string>
+    <string name="pref_notification_title">నోటిఫికేషన్ల దృశ్యమానత</string>
+    <string name="pref_notification_summary">లాక్ స్క్రీన్ లో అప్లికేషన్ నోటిఫికేషన్ల దృశ్యమానతను సెట్ చేయండి.</string>
+    <string name="pref_blackList_title">బ్లాక్ జాబితా</string>
+    <string name="pref_blackList_summary">మీ బ్లాక్ జాబితా తనిఖీ.</string>
+    <string name="pref_delete_account_title">ఖాతాను తొలగించు</string>
+    <string name="pref_newGroup_title">సమూహ చాట్ను ప్రారంభించండి</string>
+    <string name="pref_newGroup_summary">జమిలో సమూహాలను సృష్టించడం ప్రారంభించండి.</string>
+    <string name="pref_logs_title">రోగ నిర్ధారణ పత్రాలు</string>
+    <string name="pref_logs_summary">రోగ నిర్ధారణ లాగ్ సెట్టింగులను తెరవండి</string>
+    <string name="pref_logs_start">లాగింగ్ ప్రారంభించండి</string>
+    <string name="pref_logs_stop">చెక్కడం ఆపండి</string>
+    <string name="pref_typing_title">టైపింగ్ సూచిక</string>
+    <string name="pref_block_record_title">స్క్రీన్షాట్ మరియు రికార్డింగ్ను బ్లాక్ చేయండి</string>
+    <string name="pref_block_record_summary">స్క్రీన్షాట్ తీయడం లేదా వీడియో రికార్డింగ్ను నిరోధించండి.</string>
+    <string name="pref_link_preview_title">వెబ్ లింక్ పరిదృశ్యాలు</string>
+    <string name="pref_link_preview_summary">ముందస్తు వీక్షణ మూడవ పార్టీ సర్వర్ల నుండి కంటెంట్ను డౌన్లోడ్ చేసుకోవాలి.</string>
+    <string name="connectivity_custom_title">కస్టమ్</string>
+</resources>

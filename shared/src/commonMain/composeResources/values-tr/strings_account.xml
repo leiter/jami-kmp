@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">Sil</string>
+    <string name="ic_advanced_menu">Gelişmiş ayarlar</string>
+    <string name="ic_blacklist_menu">Engellenmiş kişiler</string>
+    <string name="add_ring_account_title">Hesap ekle</string>
+    <string name="add_sip_account_title">SIP hesabı ekle</string>
+    <string name="ring_account_default_name">Jami hesabı %1$s</string>
+    <string name="prompt_alias">Takma ad</string>
+    <string name="prompt_hostname">Sunucu adı</string>
+    <string name="prompt_username">Kullanıcı adı</string>
+    <string name="prompt_password">Parola</string>
+    <string name="action_create">Hesap oluştur</string>
+    <string name="action_create_short">Oluştur</string>
+    <string name="action_register">Kaydol</string>
+    <string name="action_settings">Ayarlar</string>
+    <string name="error_field_required">Bu alan gerekli</string>
+    <string name="dialog_wait_create">Hesap ekleniyor</string>
+    <string name="dialog_wait_create_details">Yeni hesabınız eklenirken lütfen bekleyin...</string>
+    <string name="dialog_wait_update">Hesap güncelleniyor</string>
+    <string name="dialog_wait_update_details">Yeni hesabınız güncellenirken lütfen bekleyin...</string>
+    <string name="account_type_ip2ip">IP hesabı</string>
+    <string name="help_ring">Jami hesabı, tümüyle dağıtık ağdan insanlara uçtan uca güvenle ulaşmanızı sağlar.</string>
+    <string name="help_sip_title">SIP hesabı ekle</string>
+    <string name="account_delete_dialog_message">Bu eylem geri alınamaz.</string>
+    <string name="empty_account_list">Kayıtlı hesap yok</string>
+    <string name="normal_accounts_titles">Hesaplar</string>
+    <string name="normal_devices_titles">Bağlı Aygıtlar</string>
+    <string name="account_device_revoke">Aygıtı kaldır</string>
+    <string name="account_device_revocation_success_title">Başarılı</string>
+    <string name="account_device_revocation_success">Aygıt şimdi kaldırıldı!</string>
+    <string name="account_device_revocation_unknown_device">Bilinmeyen aygıt.</string>
+    <string name="account_device_revocation_error_unknown">Bilinmeyen hata.</string>
+    <string name="account_password_change">Parolayı Değiştir</string>
+    <string name="account_password_set">Parola Belirle</string>
+    <string name="account_password_summary">Hesap parolanızı yönetin.</string>
+    <string name="account_password_change_wait_message">Hesap parolasını değiştir </string>
+    <string name="account_preferences_basic_tab">Genel</string>
+    <string name="account_basic_category">Temel Ayarlar</string>
+    <string name="account_hostname_label">Sunucu adı</string>
+    <string name="account_bootstrap_label">Önyükleme</string>
+    <string name="account_name_server_label">Ad Sunucusu</string>
+    <string name="account_username_label">Kullanıcı adı</string>
+    <string name="account_password_label">Parola</string>
+    <string name="account_optionnal_category">İsteğe Bağlı Ayarlar</string>
+    <string name="account_useragent_label">Kullanıcı Aracısı</string>
+    <string name="account_autoanswer_label">Kendiliğinden Yanıtla</string>
+    <string name="account_rendezvous_label">Randevu Kipi</string>
+    <string name="account_rendezvous_summary">Randevu kipinde, gelen çağrılar bir konferans odasına eklenecektir.</string>
+    <string name="account_upnp_label">UPnP\'yi etkinleştir</string>
+    <string name="account_proxy_field">Vekil</string>
+    <string name="account_preferences_extension_tab">Uzantılar</string>
+    <string name="account_audio_label">Ses</string>
+    <string name="account_preferences_media_tab">Ortam</string>
+    <string name="account_ringtone_label">Zil sesleri</string>
+    <string name="account_ringtone_enabled_label">Zil seslerini etkinleştir</string>
+    <string name="account_ringtone_path_label">Zil sesi yolu</string>
+    <string name="account_ringtone_custom_label">Özel zil sesi kullan</string>
+    <string name="account_ringtone_title">Zil sesi seç</string>
+    <string name="account_ringtone_summary">Bir zil belirle veya kendin seç</string>
+    <string name="account_video_label">Görüntü</string>
+    <string name="account_video_enable">Görüntüyü Etkinleştir</string>
+    <string name="account_preferences_advanced_tab">Gelişmiş</string>
+    <string name="account_chat_settings_title">Konuşma ayarları</string>
+    <string name="account_call_settings_title">Çağrı ayarları</string>
+    <string name="account_dht_public_in_calls_label">Bilinmeyen kişilerden gelen çağrılara izin ver</string>
+    <string name="account_registration_exp_label">Kaydolma Bitimi</string>
+    <string name="account_local_interface_label">Yerel Arayüz</string>
+    <string name="account_local_port_label">Yerel Bağlantı Noktası</string>
+    <string name="account_stun_enable_label">STUN kullan</string>
+    <string name="account_accept_files">Gelen dosyaları otomatik olarak kabul et</string>
+    <string name="account_conversation_settings_title">Görüşme ayarları</string>
+    <string name="account_accept_files_max_size">Otomatik kabul edilebilir azami dosya boyutu </string>
+    <string name="account_accept_files_never">Asla otomatik olarak kabul etme</string>
+    <string name="account_accept_files_always">Her zaman otomatik kabul et</string>
+    <string name="size_mb">%1$dMB</string>
+    <string name="account_turn_enable_label">TURN kullan</string>
+    <string name="account_turn_server_label">TURN sunucusu</string>
+    <string name="account_turn_username_label">TURN kullanıcı adı</string>
+    <string name="account_turn_password_label">TURN parolası</string>
+    <string name="account_published_same_as_local_label">Yayımlanan yerel ile aynı</string>
+    <string name="account_published_port_label">Yayımlanan Bağlantı Noktası</string>
+    <string name="account_published_address_label">Yayınlanan Adres</string>
+    <string name="disabled">Engelliler</string>
+    <string name="enabled">Etkin</string>
+    <string name="default_value">Varsayılan</string>
+    <string name="account_proxy_label">DHT vekil</string>
+    <string name="account_proxy_enable_label">DHT vekil sunucu kullan</string>
+    <string name="account_proxy_server_label">DHT vekil adresi</string>
+    <string name="account_proxy_server_list_label">DHT vekil listesi URL\'si</string>
+    <string name="account_sip_proxy_label">Vekil</string>
+    <string name="account_peer_discovery_label">Yerel bağlantı bulma</string>
+    <string name="account_peer_discovery_enable_label">Yerel bağlantı bulmayı etkinleştir</string>
+    <string name="account_peer_discovery_enable_summary">Yerel ağımızda tanıtılan diğer DHT düğümlerine bağlan</string>
+    <string name="account_credentials_label">Kimlik Bilgileri</string>
+    <string name="account_credentials_edit">Kimlik bilgilerini düzenle</string>
+    <string name="account_credentials_add">Kimlik bilgisi ekle</string>
+    <string name="account_preferences_security_tab">Güvenlik</string>
+    <string name="account_srtp_switch_label">Ortam akışlarını şifrele (SRTP)</string>
+    <string name="account_tls_transport_switch_label">TLS Taşıyıcı kullan</string>
+    <string name="account_tls_password_label">Özel anahtar parolası</string>
+    <string name="account_rtp_max_port">Azami</string>
+    <string name="account_rtp_min_port">Asgari</string>
+    <string name="account_new_device_password">Hesabın kilidini açmak için ana parolayı gir</string>
+    <string name="error_password_char_count">En az 6 karakter</string>
+    <string name="export_account_wait_title">Lütfen bekleyin...</string>
+    <string name="export_account_wait_message">Hesap bilgilerini dışa aktar</string>
+    <string name="account_export_file">Hesabı yedekle</string>
+    <string name="account_export_file_summary">Daha sonra geri yüklemek için aygıtınızdaki hesabı yedekleyin.</string>
+    <string name="account_enter_password">Parolayı gir</string>
+    <string name="account_contact_me">Benimle Jami\'de iletişime geç!</string>
+    <string name="update_account">Hesabı güncelle</string>
+    <string name="account_migration">Jami hesabınız güncellenebilir.\nParolanızı girin.</string>
+    <string name="ring_account">Jami hesabı </string>
+    <string name="sip_account">SIP hesabı</string>
+    <string name="ring_account_identity">Kimlik</string>
+    <string name="account_migration_title_dialog">Hesap taşıma</string>
+    <string name="account_update_needed">Güncelleme gerekli</string>
+    <string name="account_sip_cannot_be_registered_message">Hesap oluşturma süreciyle devam edebilir ya da bilgilerini burada düzenleyebilirsin. Düzenleme daha sonra hesap ayarlarında yapılabilir.</string>
+    <string name="account_no_network_title">Ağ hatası</string>
+    <string name="account_device_added_title">Hesap aygıtı eklendi</string>
+    <string name="account_device_updated_title">Hesap aygıtı güncellendi</string>
+    <string name="account_sip_register_anyway">Her koşulda kaydol</string>
+    <string name="account_tv_settings_header">Hesap ayarları</string>
+    <string name="account_tv_advance_settings_header">Gelişmiş ayarlar</string>
+    <string name="account_tv_add_contact">Kişi ekle</string>
+    <string name="account_tv_advanced_settings">Genel ayarları değiştir</string>
+    <string name="account_tv_about">Jami Hakkında</string>
+    <string name="tv_about_version">Sürüm</string>
+    <string name="tv_about_license">Lisans</string>
+    <string name="tv_about_author">Yönetici izinleri</string>
+    <string name="tv_about_credits">Emeği geçenler</string>
+    <string name="account_link_device">Başka aygıttan bağlan</string>
+    <string name="account_link_button">Ağdan bağlan</string>
+    <string name="account_link_archive_button">Yedekten bağlan</string>
+    <string name="account_new_button">Jami hesabı oluştur</string>
+    <string name="account_link_export_button">Yeni aygıt bağla</string>
+    <string name="account_link_show_button">Diğer %d bağlı aygıtı göster</string>
+    <string name="account_link_hide_button">Bağlı aygıtı gizle</string>
+    <string name="account_end_export_button">kapat</string>
+    <string name="account_export_title">Hesabı diğer aygıtlara bağla</string>
+    <string name="account_connect_server_button">Yönetim sunucusuna bağlan</string>
+    <string name="account_connect_button">Bağlan</string>
+    <string name="help_credentials_enter">Kuruluş kimlik bilgilerinizi girin</string>
+    <string name="help_connect_password_enter">Kuruluş parolanızı girin</string>
+    <string name="account_connect_prompt_username">Kullanıcı adı</string>
+    <string name="account_connect_server">Yönetim sunucusuna bağlan</string>
+    <string name="account_enter_username">Kullanıcı adını girin</string>
+    <string name="error_username_empty">Kullanıcı adı gir</string>
+    <string name="register_name">Ad Kaydet</string>
+    <string name="registered_username">Kayıtlı kullanıcı adı</string>
+    <string name="register_username">Halka açık kullanıcı adı kaydet</string>
+    <string name="register_recommended">Önerilen</string>
+    <string name="username_already_taken">Kullanıcı adı önceden alınmış</string>
+    <string name="invalid_username">Geçersiz kullanıcı adı</string>
+    <string name="unknown_error">Bilinmeyen hata. Lütfen ağ bağlantınızı denetleyin!</string>
+    <string name="account_status_connecting">Bağlanılıyor</string>
+    <string name="account_status_connection_error">Bağlantı hatası</string>
+    <string name="account_status_online">Çevrim İçi</string>
+    <string name="account_status_unknown">Bilinmeyen</string>
+    <string name="account_status_offline">Çevrim Dışı</string>
+    <string name="account_status_error">Hata</string>
+    <string name="account_creation_home">Jami\'ye Hoşgeldiniz</string>
+    <string name="account_creation_profile">Profilinizi oluşturun</string>
+    <string name="account_creation_ring">Jami hesabınızı oluşturun</string>
+    <string name="account_revoke_device_hint">Onaylamak için parolayı girin</string>
+    <string name="enter_password">Parolayı gir</string>
+    <string name="revoke_device_title">Aygıtı kaldır</string>
+    <string name="revoke_device_wait_title">Lütfen bekleyin...</string>
+    <string name="revoke_device_wait_message">Aygıt iptal ediliyor</string>
+    <string name="rename_device_title">Bu aygıtı yeniden adlandır</string>
+    <string name="rename_device_button">Aygıtı yeniden adlandır</string>
+    <string name="account_rename_device_hint">Yeni aygıt adı seç</string>
+    <string name="account_device_this_indicator">Bu aygıt</string>
+    <string name="account_disabled_indicator">Engelliler</string>
+    <string name="error_format_not_supported">Bu biçim desteklenmiyor.</string>
+    <string name="account_link_device_title">Yeni aygıt bağla</string>
+    <string name="account_link_generate_button">Oluştur</string>
+    <string name="account_generate_export_device">Diğer aygıtta</string>
+    <string name="account_link_device_button">Bağlan</string>
+</resources>

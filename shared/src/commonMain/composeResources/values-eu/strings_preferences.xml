@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Sarea</string>
+    <string name="pref_category_contacts">Kontaktuak</string>
+    <string name="pref_category_video">Bideoa</string>
+    <string name="pref_category_system">Sistema</string>
+    <string name="pref_category_privacy">Pribatutasuna</string>
+    <string name="pref_category_diagnostic">Diagnostikoak</string>
+    <string name="pref_category_appearance">Itxura</string>
+    <string name="pref_category_connectivity">Lotura</string>
+    <string name="pref_category_video_settings">Bideo ezarpen aurreratuak</string>
+    <string name="pref_mobileData_title">Datu mugikorrak</string>
+    <string name="pref_mobileData_summary">Baimendu Jami 3G/LTE sareetan, wifi sareetan gain</string>
+    <string name="pref_pushNotifications_title">Push jakinarazpenak</string>
+    <string name="pref_pushNotifications_summary">Erabili Google zerbitzariak deiak eta mezuak bigarren planoan jasotzea ahalbidetzeko</string>
+    <string name="pref_unifiedPush_summary">UnifiedPush zerbitzua erabili deiak/mezuak atzean jasotzeko</string>
+    <string name="pref_video_advanced_title">Bideo ezarpen aurreratuak</string>
+    <string name="pref_video_advanced_summary">Bideoaren bit-tasa, ebazpena eta sarbide esperimentalaren ezaugarriak aldatu</string>
+    <string name="pref_hd_summary">Gaitu HD bideoa bidaltzea</string>
+    <string name="pref_hwEncode_title">Gaitu kodetze azeleratua</string>
+    <string name="pref_hwEncode_summary">Ezaugarri esperimentala</string>
+    <string name="pref_videoBitrate_title">Bideo bit-tasa</string>
+    <string name="pref_videoBitrate_summary">Irteera bideoa bitratea (KB/s) hautatu</string>
+    <string name="pref_videoResolution_title">Bideoaren ebazpena</string>
+    <string name="pref_videoResolution_summary">Irteera bideoa hautatu</string>
+    <string name="pref_systemContacts_title">Erabili sistemako kontaktuak</string>
+    <string name="pref_systemContacts_summary">Erakutsi sistemako kontaktuak deitzailearen xehetasunak erakusteko.</string>
+    <string name="pref_systemDialer_title">Egin sistemako deiak Jami erabiliz</string>
+    <string name="pref_systemDialer_summary">Erabili Jami sistemako deiak egiteko ahal denean.</string>
+    <string name="pref_startOnBoot_title">Hasi Jami abioan</string>
+    <string name="pref_startOnBoot_summary">Hasi Jami bigarren planoan sistema abiatzean.</string>
+    <string name="pref_clearHistory_title">Garbitu historiala</string>
+    <string name="pref_notification_title">Oharretako ikusgarritasuna</string>
+    <string name="pref_notification_summary">Aplikazioen jakinarazpenak itxita dagoen pantailan ikusgai jartzea.</string>
+    <string name="pref_blackList_title">Blokeen zerrenda</string>
+    <string name="pref_blackList_summary">Begiratu zure blokeo zerrenda.</string>
+    <string name="pref_delete_account_title">Kontua ezabatu</string>
+    <string name="pref_newGroup_title">Talde-txata aktibatu</string>
+    <string name="pref_newGroup_summary">Jami-n taldeak sortzea ahalbidetu.</string>
+    <string name="pref_logs_title">Diagnostikoen egunerokoa</string>
+    <string name="pref_logs_summary">Diagnostikoaren egunerokoaren konfigurazioa ireki</string>
+    <string name="pref_logs_start">Hasten da eguraldia.</string>
+    <string name="pref_logs_stop">Utzi eguraldia.</string>
+    <string name="pref_typing_title">Tipografia-indizatzailea</string>
+    <string name="pref_block_record_title">Ezabatu pantaila-irudia eta grabazioa</string>
+    <string name="pref_block_record_summary">Ez atera pantaila edo grabatu bideo bat.</string>
+    <string name="pref_link_preview_title">Web-esteken aurrebistak</string>
+    <string name="pref_link_preview_summary">Aurreikuspenak behar du hirugarrenen zerbitzarietatik edukiak deskargatzea.</string>
+    <string name="connectivity_custom_title">Pertsonala</string>
+</resources>

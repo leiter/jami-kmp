@@ -28,12 +28,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
@@ -42,13 +45,16 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -71,6 +77,7 @@ import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.JamiBadge
 import net.jami.ui.components.content.PresenceStatus
 import net.jami.ui.theme.JamiTheme
+import net.jami.ui.viewmodel.AccountItem
 import net.jami.ui.viewmodel.ConversationItem
 import net.jami.ui.viewmodel.ConversationsViewModel
 
@@ -102,10 +109,12 @@ fun HomeScreen(
     onAboutClick: () -> Unit,
     onNewConversation: () -> Unit,
     onRequestsClick: () -> Unit = {},
+    onAddAccount: () -> Unit = {},
 ) {
     val viewModel = getViewModel<ConversationsViewModel>()
     val state by viewModel.state.collectAsState()
     var menuExpanded by remember { mutableStateOf(false) }
+    var showAccountPicker by remember { mutableStateOf(false) }
 
     Scaffold(
         floatingActionButton = {
@@ -155,15 +164,23 @@ fun HomeScreen(
                         ),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // Current user avatar with own account online indicator
-                    JamiAvatar(
-                        displayName = "Me",
-                        avatarBytes = state.currentAccountAvatarBytes,
-                        size = AvatarSize.Small,
-                        showPresence = true,
-                        presenceStatus = if (state.isAccountOnline) PresenceStatus.Online
-                        else PresenceStatus.Offline,
-                    )
+                    // Current user avatar — tapping opens account picker
+                    Box(
+                        modifier = Modifier.clickable(
+                            onClick = { showAccountPicker = true },
+                            indication = null,
+                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                        )
+                    ) {
+                        JamiAvatar(
+                            displayName = "Me",
+                            avatarBytes = state.currentAccountAvatarBytes,
+                            size = AvatarSize.Small,
+                            showPresence = true,
+                            presenceStatus = if (state.isAccountOnline) PresenceStatus.Online
+                            else PresenceStatus.Offline,
+                        )
+                    }
 
                     Spacer(Modifier.width(JamiTheme.spacing.m))
 
@@ -326,6 +343,150 @@ fun HomeScreen(
                     }
                 }
             }
+        }
+    }
+
+    // Account picker bottom sheet
+    if (showAccountPicker) {
+        ModalBottomSheet(
+            onDismissRequest = { showAccountPicker = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = JamiTheme.colors.surface,
+        ) {
+            AccountPickerSheet(
+                accounts = state.accounts,
+                onAccountClick = { accountId ->
+                    viewModel.switchAccount(accountId)
+                    showAccountPicker = false
+                },
+                onAddAccount = {
+                    showAccountPicker = false
+                    onAddAccount()
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun AccountPickerSheet(
+    accounts: List<AccountItem>,
+    onAccountClick: (String) -> Unit,
+    onAddAccount: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = JamiTheme.spacing.xl),
+    ) {
+        Text(
+            text = stringResource(Res.string.account_selection),
+            style = JamiTheme.typography.titleMedium,
+            color = JamiTheme.colors.onSurface,
+            modifier = Modifier.padding(
+                horizontal = JamiTheme.spacing.l,
+                vertical = JamiTheme.spacing.m,
+            ),
+        )
+
+        HorizontalDivider(color = JamiTheme.colors.outline.copy(alpha = 0.3f))
+
+        accounts.forEach { account ->
+            AccountPickerRow(
+                account = account,
+                onClick = { onAccountClick(account.accountId) },
+            )
+            HorizontalDivider(color = JamiTheme.colors.outline.copy(alpha = 0.15f))
+        }
+
+        // Add account row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onAddAccount)
+                .padding(
+                    horizontal = JamiTheme.spacing.l,
+                    vertical = JamiTheme.spacing.m,
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        color = JamiTheme.colors.primary.copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(50),
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = JamiTheme.colors.primary,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+            Spacer(Modifier.width(JamiTheme.spacing.m))
+            Text(
+                text = stringResource(Res.string.account_create_title),
+                style = JamiTheme.typography.bodyLarge,
+                color = JamiTheme.colors.primary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun AccountPickerRow(
+    account: AccountItem,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(
+                horizontal = JamiTheme.spacing.l,
+                vertical = JamiTheme.spacing.m,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        JamiAvatar(
+            displayName = account.displayName,
+            avatarBytes = account.avatarBytes,
+            size = AvatarSize.Small,
+            showPresence = true,
+            presenceStatus = if (account.isOnline) PresenceStatus.Online else PresenceStatus.Offline,
+        )
+
+        Spacer(Modifier.width(JamiTheme.spacing.m))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = account.displayName,
+                style = JamiTheme.typography.bodyLarge,
+                color = JamiTheme.colors.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (account.subtitle.isNotEmpty()) {
+                Text(
+                    text = account.subtitle,
+                    style = JamiTheme.typography.bodySmall,
+                    color = JamiTheme.colors.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+
+        if (account.isCurrentAccount) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                tint = JamiTheme.colors.primary,
+                modifier = Modifier.size(20.dp),
+            )
         }
     }
 }

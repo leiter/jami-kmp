@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Netværk</string>
+    <string name="pref_category_contacts">Kontakter</string>
+    <string name="pref_category_video">Video</string>
+    <string name="pref_category_system">System</string>
+    <string name="pref_category_privacy">Privatliv</string>
+    <string name="pref_category_diagnostic">Diagnostik</string>
+    <string name="pref_category_appearance">Udseende</string>
+    <string name="pref_category_connectivity">Forbindelse</string>
+    <string name="pref_category_video_settings">Avancerede videoindstillinger</string>
+    <string name="pref_mobileData_title">Mobildata</string>
+    <string name="pref_mobileData_summary">Tillad Jami at bruge mobilnetværket i tillæg til Wi-Fi</string>
+    <string name="pref_pushNotifications_title">Push-notifikationer</string>
+    <string name="pref_pushNotifications_summary">Brug Google-servere for at tillade modtagelse af opkald/beskeder i baggrunden</string>
+    <string name="pref_unifiedPush_summary">Brug en UnifiedPush-tjeneste til at tillade at modtage opkald/beskeder i baggrunden</string>
+    <string name="pref_video_advanced_title">Avancerede videoindstillinger</string>
+    <string name="pref_video_advanced_summary">Ændre video bitrate, opløsning samt adgang eksperimentelle funktioner</string>
+    <string name="pref_hd_summary">Aktivér afsendelse af HD-video</string>
+    <string name="pref_hwEncode_title">Tillad accelereret indkodning</string>
+    <string name="pref_hwEncode_summary">Eksperimentel funktion</string>
+    <string name="pref_videoBitrate_title">Video bitrate</string>
+    <string name="pref_videoBitrate_summary">Vælg standard output-video bitrate (KB/s)</string>
+    <string name="pref_videoResolution_title">Videoopløsning</string>
+    <string name="pref_videoResolution_summary">Vælg standard udgående videoopløsning</string>
+    <string name="pref_systemContacts_title">Brug systemkontakter</string>
+    <string name="pref_systemContacts_summary">Brug systemkontakter til at vise opkaldsdetaljer</string>
+    <string name="pref_systemDialer_title">Foretag systemopkald med Jami</string>
+    <string name="pref_systemDialer_summary">Brug Jami til at foretage systemopkald, når muligt.</string>
+    <string name="pref_startOnBoot_title">Kør Jami ved opstart</string>
+    <string name="pref_startOnBoot_summary">Kør Jami i baggrunden, når systemet starter.</string>
+    <string name="pref_clearHistory_title">Ryd historiken</string>
+    <string name="pref_notification_title">Beskeders synlighed</string>
+    <string name="pref_notification_summary">Indstil visiteten af applikationsmeddelelser på låseskærmen.</string>
+    <string name="pref_blackList_title">Blockliste</string>
+    <string name="pref_blackList_summary">Tjek din blokliste.</string>
+    <string name="pref_delete_account_title">Slet konto</string>
+    <string name="pref_newGroup_title">Aktivere gruppechat</string>
+    <string name="pref_newGroup_summary">Tillad at oprette grupper i Jami.</string>
+    <string name="pref_logs_title">Diagnostiklog</string>
+    <string name="pref_logs_summary">Åbne indstillinger for diagnostisk log</string>
+    <string name="pref_logs_start">Start logging</string>
+    <string name="pref_logs_stop">Stop med at logge</string>
+    <string name="pref_typing_title">Indikator til indtydning</string>
+    <string name="pref_block_record_title">Block skærmbilleder og optagelse</string>
+    <string name="pref_block_record_summary">Blokker at tage skærmbilleder eller optage videoer.</string>
+    <string name="pref_link_preview_title">Eksempelvisning af weblinks</string>
+    <string name="pref_link_preview_summary">Forhåndsvisning kræver download af indhold fra tredjepartsservere.</string>
+    <string name="connectivity_custom_title">Brugerdefineret</string>
+</resources>

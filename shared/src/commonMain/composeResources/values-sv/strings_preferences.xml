@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Nätverk</string>
+    <string name="pref_category_contacts">Kontakter</string>
+    <string name="pref_category_video">Video</string>
+    <string name="pref_category_system">System</string>
+    <string name="pref_category_privacy">Sekretess</string>
+    <string name="pref_category_diagnostic">Diagnostik</string>
+    <string name="pref_category_appearance">Utseende</string>
+    <string name="pref_category_connectivity">Anslutningsbarhet</string>
+    <string name="pref_category_video_settings">Avancerade video inställningar</string>
+    <string name="pref_mobileData_title">Mobildata</string>
+    <string name="pref_mobileData_summary">Tillåt Jami på 3G/LTE-nätverk, som tillägg till WiFi</string>
+    <string name="pref_pushNotifications_title">Använd aviseringar</string>
+    <string name="pref_pushNotifications_summary">Använd Google-servrar för att ta emot samtal/meddelanden i bakgrunden</string>
+    <string name="pref_unifiedPush_summary">Använd en UnifiedPush-tjänst för att tillåta att ta emot samtal/meddelanden i bakgrunden</string>
+    <string name="pref_video_advanced_title">Avancerade video inställningar</string>
+    <string name="pref_video_advanced_summary">Ändra videons bithastighet, upplösning och få tillgång till experimentella funktioner</string>
+    <string name="pref_hd_summary">Aktivera att skicka HD-video</string>
+    <string name="pref_hwEncode_title">Aktivera accelererad kodning</string>
+    <string name="pref_hwEncode_summary">Experimentell funktion</string>
+    <string name="pref_videoBitrate_title">Videoupplösning</string>
+    <string name="pref_videoBitrate_summary">Ange grundinställd utgående videoströmningshastighet (KB/s) </string>
+    <string name="pref_videoResolution_title">Videoupplösning</string>
+    <string name="pref_videoResolution_summary">Ange grundinställd utgående videoupplösning </string>
+    <string name="pref_systemContacts_title">Använd systemkontakter</string>
+    <string name="pref_systemContacts_summary">Använd systemkontakter för att visa uppringaren info</string>
+    <string name="pref_systemDialer_title">Använd Jami till systemsamtal</string>
+    <string name="pref_systemDialer_summary">Använd om möjligt Jami för systemsamtal.</string>
+    <string name="pref_startOnBoot_title">Starta Jami vid systemstart</string>
+    <string name="pref_startOnBoot_summary">Kör Jami i bakgrunden när systemet startas</string>
+    <string name="pref_clearHistory_title">Rensa historik</string>
+    <string name="pref_notification_title">Synlighet för notiser. </string>
+    <string name="pref_notification_summary">Ange synlighet för appens notiser på låst skärm. </string>
+    <string name="pref_blackList_title">Blocklista</string>
+    <string name="pref_blackList_summary">Kontrollera din blockeringslista. </string>
+    <string name="pref_delete_account_title">Ta bort konto</string>
+    <string name="pref_newGroup_title">Aktivera gruppchat</string>
+    <string name="pref_newGroup_summary">Skapar grupper i Jami.</string>
+    <string name="pref_logs_title">Diagnostiklogg</string>
+    <string name="pref_logs_summary">Öppna inställningar för diagnostiklogg</string>
+    <string name="pref_logs_start">Starta loggning</string>
+    <string name="pref_logs_stop">Avsluta loggning </string>
+    <string name="pref_typing_title">Typindikator</string>
+    <string name="pref_block_record_title">Blockera skärmbildskopia och inspelning </string>
+    <string name="pref_block_record_summary">Blockera skärmbildskopia och videoinspelning </string>
+    <string name="pref_link_preview_title">Förhandsvisningar av länkar</string>
+    <string name="pref_link_preview_summary">Förhandsvisning kräver att du laddar ner innehåll från tredje parts servrar.</string>
+    <string name="connectivity_custom_title">Anpassad</string>
+</resources>

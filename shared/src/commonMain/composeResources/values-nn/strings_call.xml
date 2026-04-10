@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="call_error_no_microphone">Samtale avbrutt. Fant ingen mikrofon.</string>
+    <string name="call_error_no_camera_no_microphone">Samtale avbrutt. Fant ikke noe kamera eller mikrofon.</string>
+    <string name="call_human_state_searching">Søk etter</string>
+    <string name="call_human_state_incoming">Innkommande</string>
+    <string name="call_human_state_connecting">Kopplande</string>
+    <string name="call_human_state_ringing">Ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing ringing</string>
+    <string name="call_human_state_current">Talande</string>
+    <string name="call_human_state_hungup">Over</string>
+    <string name="call_human_state_busy">Eg har fullt ut</string>
+    <string name="call_human_state_failure">Fjellet</string>
+    <string name="call_human_state_hold">Ta vare på</string>
+    <string name="call_human_state_unhold">Ikkje tenk på det</string>
+    <string name="call_human_state_over">Over</string>
+    <string name="call_moderator">Moderatør</string>
+    <string name="call_muted">Stødd</string>
+    <string name="call_handRaised">Hande løypt</string>
+</resources>

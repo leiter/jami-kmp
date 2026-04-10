@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Rete</string>
+    <string name="pref_category_contacts">Contatti</string>
+    <string name="pref_category_video">Video</string>
+    <string name="pref_category_system">Sistema</string>
+    <string name="pref_category_privacy">Privacy</string>
+    <string name="pref_category_diagnostic">Diagnostica</string>
+    <string name="pref_category_appearance">Aspetto</string>
+    <string name="pref_category_connectivity">Connessione</string>
+    <string name="pref_category_extensions">Estensioni</string>
+    <string name="pref_category_video_settings">Impostazioni video avanzate</string>
+    <string name="pref_mobileData_title">Dati mobili</string>
+    <string name="pref_mobileData_summary">Attiva Jami sulle reti 3G/LTE in aggiunta al Wi-Fi</string>
+    <string name="pref_pushNotifications_title">Notifiche</string>
+    <string name="pref_pushNotifications_summary">Usa i server Google per ricevere chiamate/messaggi in background</string>
+    <string name="pref_unifiedPush_summary">Usa un servizio UnifiedPush per ricevere chiamate/messaggi in background</string>
+    <string name="pref_video_advanced_title">Impostazioni video avanzate</string>
+    <string name="pref_video_advanced_summary">Cambia il bitrate del video, la risoluzione e accedi alle funzioni sperimentali</string>
+    <string name="pref_hd_summary">Attiva invio video HD</string>
+    <string name="pref_hwEncode_title">Attiva la codifica accelerata</string>
+    <string name="pref_hwEncode_summary">Funzioni sperimentali</string>
+    <string name="pref_videoBitrate_title">Qualità video</string>
+    <string name="pref_videoBitrate_summary">Seleziona il bitrate video in uscita predefinito (kb/s)</string>
+    <string name="pref_videoResolution_title">Risoluzione video</string>
+    <string name="pref_videoResolution_summary">Seleziona la risoluzione video in uscita</string>
+    <string name="pref_systemContacts_title">Usa i contatti di sistema</string>
+    <string name="pref_systemContacts_summary">Usa i contatti di sistema per mostrare i dettagli di chi chiama. </string>
+    <string name="pref_systemDialer_title">Effettua chiamate di sistema usando Jami</string>
+    <string name="pref_systemDialer_summary">Usa Jami per effettuare le chiamate di sistema quando possibile.</string>
+    <string name="pref_startOnBoot_title">Avvia Jami all\'avvio del sistema</string>
+    <string name="pref_startOnBoot_summary">Esegui Jami in background all\'avvio del sistema.</string>
+    <string name="pref_clearHistory_title">Elimina le conversazioni</string>
+    <string name="pref_clearHistory_summary">Cancella la cronologia di tutte le conversazioni. Questa azione non può essere annullata.</string>
+    <string name="pref_notification_title">Visibilità delle notifiche</string>
+    <string name="pref_notification_summary">Imposta la visibilità delle notifiche dell\'applicazione sulla schermata di blocco.</string>
+    <string name="pref_connectivity_title">Modalità di connessione</string>
+    <string name="pref_connectivity_summary">Scegliere come collegare Jami al sistema distribuito per ricevere chiamate e messaggi.</string>
+    <string name="pref_blackList_title">Contatti bloccati</string>
+    <string name="pref_blackList_summary">Controlla l\'elenco dei contatti bloccati.</string>
+    <string name="pref_delete_account_title">Elimina l\'account</string>
+    <string name="pref_delete_account_summary">Elimina l\'account da questo dispositivo</string>
+    <string name="pref_persistNotification_title">Esegui in background</string>
+    <string name="pref_persistNotification_summary">Consenti l\'esecuzione in background per ricevere chiamate e messaggi.</string>
+    <string name="pref_newGroup_title">Abilita i gruppi</string>
+    <string name="pref_newGroup_summary">Abilita la creazione di gruppi in Jami.</string>
+    <string name="pref_logs_title">Registri di diagnostica</string>
+    <string name="pref_logs_summary">Apri le impostazioni di diagnostica</string>
+    <string name="pref_logs_start">Inizia la diagnostica</string>
+    <string name="pref_logs_stop">Ferma la diagnostica</string>
+    <string name="pref_connection_monitor">Monitoraggio connessione</string>
+    <string name="pref_connection_monitor_summary">Monitoraggio delle connessioni peer to peer</string>
+    <string name="pref_push_notifications_logs_title">Registri dalle notifiche</string>
+    <string name="pref_push_notifications_logs_summary">Mostra i registri acquisiti dalle notifiche.</string>
+    <string name="pref_typing_title">Indicatore di digitazione</string>
+    <string name="pref_typing_summary">Indica quando si sta scrivendo un messaggio.</string>
+    <string name="pref_block_record_title">Blocca schermata e registrazione</string>
+    <string name="pref_block_record_summary">Blocca l\'acquisizione di schermate o registrazione video.</string>
+    <string name="pref_link_preview_title">Anteprime collegamenti Web</string>
+    <string name="pref_link_preview_summary">Le anteprime richiedono di scaricare contenuti da server di terze parti.</string>
+    <string name="notification_public">Pubblico\n(mostra le notifiche e il relativo contenuto nella schermata di blocco)\n</string>
+    <string name="notification_private">Privato\n(mostra le notifiche ma nascondi il loro contenuto nella schermata di blocco)\n</string>
+    <string name="notification_secret">Segreto\n(non mostrare le notifiche nella schermata di blocco)</string>
+    <string name="connectivity_google_services_title">Servizi Google</string>
+    <string name="connectivity_google_services_description">Utilizzare Google Firebase e un proxy DHT per ricevere le notifiche.</string>
+    <string name="connectivity_local_node_title">Nodo DHT locale</string>
+    <string name="connectivity_local_node_description">Utilizzare un nodo DHT locale per connettersi con altri dispositivi e contatti Jami.</string>
+    <string name="connectivity_unified_push_description">Utilizzare un server Unified Push personalizzato per ricevere le notifiche.</string>
+    <string name="connectivity_custom_title">Personalizzata</string>
+    <string name="connectivity_custom_description">Attualmente non si utilizza nessuna delle preimpostazioni disponibili.</string>
+    <string name="pref_enable_extensions_title">Attiva le estensioni</string>
+    <string name="pref_enable_extensions_summary">Attiva le estensioni e imposta i loro parametri</string>
+    <string name="pref_available_extensions_title">Estensioni disponibili</string>
+    <string name="pref_available_extensions_summary">Estensioni installate e aggiunta di nuove estensioni</string>
+    <string name="fab_extensions_add">Aggiungi nuova estensione</string>
+    <string name="extension_uninstall_title">Disinstallare l\'estensione?</string>
+    <string name="extension_reset_preferences">Ripristina le preferenze dell\'estensione</string>
+    <string name="extension_reset_preferences_summary">Estensione ripristinata alle impostazioni predefinite</string>
+    <string name="extension_reset_preferences_ask">Si desidera ripristinare le impostazioni generali dell\'estensione?</string>
+    <string name="extension_reset_account_preferences_ask">Si desidera ripristinare le impostazioni dell\'estensione dell\'account?</string>
+    <string name="extension_successfully_installed">Estensione <b>%1$s</b> installata con successo.</string>
+    <string name="extension_install_failure">Si è verificato un errore durante l\'installazione dell\'estensione: <b>%1$s</b></string>
+    <string name="extension_recent_version_exception">È installata una versione più recente di <b>%1$s</b>.</string>
+    <string name="extension_same_version_exception">È installata la stessa versione di <b>%1$s</b>.</string>
+    <string name="extension_invalid_signature"><b>%1$s</b> ha una firma non valida</string>
+    <string name="extension_invalid_authority">Si è verificato un errore durante la verifica dell\'autorità per la seguente estensione: <b>%1$s</b></string>
+    <string name="extension_invalid_format">Formato estensione non valido: <b>%1$s</b></string>
+    <string name="extension_force_install">forza\ninstallazione</string>
+    <string name="extension_path_image_add">Aggiungi nuova immagine</string>
+</resources>

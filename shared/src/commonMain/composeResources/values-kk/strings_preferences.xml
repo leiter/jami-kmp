@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Желі</string>
+    <string name="pref_category_contacts">Байланыстар</string>
+    <string name="pref_category_video">Видео</string>
+    <string name="pref_category_system">жүйе</string>
+    <string name="pref_category_privacy">Жекешелік</string>
+    <string name="pref_category_diagnostic">Диагностика</string>
+    <string name="pref_category_appearance">Көрініс</string>
+    <string name="pref_category_connectivity">Қосылым</string>
+    <string name="pref_category_video_settings">Жедел бейне параметрлері</string>
+    <string name="pref_mobileData_title">Мобильді деректер</string>
+    <string name="pref_mobileData_summary">Jami-ге Wi-Fi-ге қосымша 3G/LTE желілерінде рұқсат беру</string>
+    <string name="pref_pushNotifications_title">Көшіру хабарламалары</string>
+    <string name="pref_pushNotifications_summary">Google серверлерін қолдана отырып, қоңыраулар/хабарларды қоңырау шалып алуға мүмкіндік береді</string>
+    <string name="pref_unifiedPush_summary">Бағытта шақыру/хабарларды қабылдау үшін UnifiedPush қызметін қолдану</string>
+    <string name="pref_video_advanced_title">Жедел бейне параметрлері</string>
+    <string name="pref_video_advanced_summary">Видеоның биттер жылдамдығын, бейіністі және эксперименталды мүмкіндіктерді өзгерту</string>
+    <string name="pref_hd_summary">HD бейне жіберуді рұқсат ету</string>
+    <string name="pref_hwEncode_title">Жедел кодтауды рұқсат ету</string>
+    <string name="pref_hwEncode_summary">Сынақ ерекшелігі</string>
+    <string name="pref_videoBitrate_title">Видео биттер</string>
+    <string name="pref_videoBitrate_summary">Әдетті шығыс бейне битті (KB/s) таңдаңыз</string>
+    <string name="pref_videoResolution_title">Видеолық бейініс</string>
+    <string name="pref_videoResolution_summary">Әдетті шығыс бейне қалыңдығын таңдау</string>
+    <string name="pref_systemContacts_title">Жүйелік байланыстарды қолдану</string>
+    <string name="pref_systemContacts_summary">Телефонды шақырушының мәліметтерін көрсету үшін жүйелік байланыс телефондарын пайдаланыңыз.</string>
+    <string name="pref_systemDialer_title">Jami арқылы жүйелік шақыруларды орындаңыз</string>
+    <string name="pref_systemDialer_summary">Мүмкін болса, Джами арқылы жүйелік шақырулар жасаңыз.</string>
+    <string name="pref_startOnBoot_title">Жамиді бастау кезінде бастаңыз</string>
+    <string name="pref_startOnBoot_summary">Жүйе басталған кезде Джамиге назар аударыңыз.</string>
+    <string name="pref_clearHistory_title">Тарихты анық</string>
+    <string name="pref_notification_title">Хабарламаның көрінісі</string>
+    <string name="pref_notification_summary">Қолданба хабарламаларын қалқандару экранында көріністі орнату.</string>
+    <string name="pref_blackList_title">Блоктар тізімі</string>
+    <string name="pref_blackList_summary">Блок тізіміңізді тексеріңіз.</string>
+    <string name="pref_delete_account_title">Тіркелгілерді өшіру</string>
+    <string name="pref_newGroup_title">Топтық әңгімелесуді рұқсат ету</string>
+    <string name="pref_newGroup_summary">Jami-де топтарды құруға мүмкіндік береді.</string>
+    <string name="pref_logs_title">Диагностикалық журналдары</string>
+    <string name="pref_logs_summary">Диагностикалық журналды ашу параметрлері</string>
+    <string name="pref_logs_start">Жазбаларды жазуды бастаңыз</string>
+    <string name="pref_logs_stop">Ағаштарды кесуді тоқтату</string>
+    <string name="pref_typing_title">Типолау көрсеткіші</string>
+    <string name="pref_block_record_title">Экран түсірілімін және жазуды бөлеңіз</string>
+    <string name="pref_block_record_summary">Скрийн түсіруді немесе бейне түсіруді тоқтату.</string>
+    <string name="pref_link_preview_title">Веб-сілтеменің алдын ала қарау нұсқалары</string>
+    <string name="pref_link_preview_summary">Алдын ала қарау үшін үшінші тараптың серверлерінен мазмұнды жүктеу қажет.</string>
+    <string name="connectivity_custom_title">Әдеттегі</string>
+</resources>

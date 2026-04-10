@@ -160,7 +160,7 @@ val jamiModule = module {
     viewModelFactory { AppSettingsViewModel(get()) }
     viewModelFactory { CallViewModel(get(), get()) }
     viewModelFactory { ContactsViewModel(get(), get()) }
-    viewModelFactory { ContactDetailsViewModel(get(), get(), get()) }
+    viewModelFactory { ContactDetailsViewModel(get(), get(), get(), get()) }
     viewModelFactory { NewConversationViewModel(get(), get(), get(), get()) }
     viewModelFactory { AboutViewModel() }
     viewModelFactory { AppViewModel(get()) }

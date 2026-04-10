@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="section_license">Ліцэнзія</string>
+    <string name="copyright_section">Аўтарскія правы</string>
+    <string name="contribute_section">Уклад</string>
+    <string name="version_section">Версія</string>
+    <string name="website_chooser_title">Праглядзіце сайт з дапамогай...</string>
+    <string name="license">Гэты праграмны праграмны прадукт прадастаўляецца "як ёсць", без гарантыі якога-небудзь роду. Для падрабязнасці, глядзіце GNU General Public License версія 3 або пазней&lt;/u&gt;</string>
+    <string name="description">Jami з\'яўляецца свабодным праграмным забеспячэннем для універсальнай камунікацыі, якое паважае свабоды і прыватнасць сваіх карыстальнікаў.</string>
+    <string name="credits">Крэдыты</string>
+    <string name="pip_title">Канферэнцыя Джані</string>
+    <string name="call_service_description">Гэты сэрвіс неабходны для таго, каб выклікі працавалі ў першую чаргу. Ён працуе толькі падчас званкоў.</string>
+    <string name="data_transfer_service_description">Гэтая служба неабходная для прагляду пастаянных апавяданняў падчас перадачы файлаў.</string>
+    <string name="media">СМІ</string>
+    <string name="error_no_network">Ніякай сеткавай сувязі</string>
+    <string name="error_account_offline">Рахунак не працуе</string>
+    <string name="ab_action_chat">СМС-паведамленні</string>
+    <string name="menu_item_contact_request">Запыты на кантакт</string>
+    <string name="menu_item_accounts">Кіраванне рахункамі</string>
+    <string name="menu_item_account">Кіраванне рахункам</string>
+    <string name="menu_item_settings">Налады</string>
+    <string name="menu_item_account_settings">Налады ўліковых запісаў</string>
+    <string name="menu_item_share">Падзяліцца маім рахункам</string>
+    <string name="menu_item_about">Пра Джані</string>
+    <string name="video_setting_title">Налады відэа</string>
+    <string name="notif_missed_incoming_call">Адпусцілі ўступаючы званок</string>
+    <string name="notif_missed_outgoing_call">Адпусцілі выхадны званок</string>
+    <string name="notif_incoming_call">Паступны званок</string>
+    <string name="notif_outgoing_call">Выходны званок</string>
+    <string name="notif_channel_calls">Званкі</string>
+    <string name="notif_channel_messages">Паведамленні</string>
+    <string name="notif_channel_file_transfer">Перадача файлаў</string>
+    <string name="notif_group_calls">Званкі</string>
+    <string name="notif_dismiss">Адхіленне</string>
+    <string name="notif_reply">Адказ</string>
+    <string name="location_share_action_stop">Спыніце дзяліцца</string>
+    <string name="location_share_about_title">Інфармацыя пра карту</string>
+    <string name="action_call_maximize">Максімальнае</string>
+    <string name="action_call_minimize">Зніжэнне</string>
+    <string name="action_call_mute">Непаўторны</string>
+    <string name="action_call_unmute">Неўмоўнае</string>
+    <string name="action_call_decline">Падзенне</string>
+    <string name="action_call_mic_mute">Непаўны мікрафон</string>
+    <string name="ab_action_contact_add">Дадаць да кантактаў</string>
+    <string name="ab_action_audio_call">Пачатак аўдыё-запаведзі</string>
+    <string name="ab_action_video_call">Пачатак відэазванку</string>
+    <string name="new_group">Стварыць новую групу</string>
+    <string name="message_failed">Недасягнуты</string>
+    <string name="time_just_now">Толькі што</string>
+    <string name="send_file">Адправіць файл</string>
+    <string name="conversation_share_location">Падзяліцца месцазнаходжаннем</string>
+    <string name="in_reply_to">У адказ на</string>
+    <string name="ringtone_error_title">Памылка</string>
+    <string name="title_activity_qrcode">Падзяліцца маім рахункам</string>
+    <string name="clear_history">Ясна</string>
+    <string name="conversation_details">Падрабязнасць размовы</string>
+    <string name="contact_details">Кантактныя дадзеныя</string>
+    <string name="leave_conversation">Пакіньце размову</string>
+    <string name="conversation_action_history_clear">Ясная гісторыя</string>
+    <string name="remove_conversation">Выключыць размову</string>
+    <string name="conversation_action_block_this">Блокальны кантакт</string>
+    <string name="conversation_action_incoming_call">Паступны званок</string>
+    <string name="conversation_members">Члены</string>
+    <string name="conversation_type_private">Прыватныя</string>
+    <string name="today">Сёння</string>
+    <string name="yesterday">Учора</string>
+    <string name="prompt_new_password_repeat">Пацвердзіце новы пароль</string>
+    <string name="account_create_title">Стварэнне ўліковага запісу Jami</string>
+    <string name="prompt_hint_username">Назва карыстальніка</string>
+    <string name="wizard_next">Далей</string>
+    <string name="wizard_back">Звярніцеся назад</string>
+    <string name="wizard_skip">Скінг</string>
+    <string name="hist_contact_added">Дададзены кантакт</string>
+    <string name="hist_invitation_received">Атрыманая запрашэнне</string>
+    <string name="profile">Профіль</string>
+    <string name="profile_message_warning">Профіль падзяляецца толькі з кантактамі</string>
+    <string name="take_a_photo">Здымайце фота</string>
+    <string name="profile_name_hint">Увядзіце сваё імя</string>
+    <string name="identity">Пазначэнне</string>
+    <string name="identifier">Ідэнтыфікатар</string>
+    <string name="account">Рахунак</string>
+    <string name="link_new_device">Злучыць новае прылада</string>
+    <string name="devices_header">Прылады</string>
+    <string name="devices">Злучаныя прылады</string>
+    <string name="share_label">Падзяліцца</string>
+    <string name="generic_error_migration">Памылка</string>
+    <string name="accept">Прыняць</string>
+    <string name="decline">Падзенне</string>
+    <string name="block">Блокіроўванне</string>
+    <string name="no_blocked_contact">Ніякіх заблакаваных кантактаў</string>
+    <string name="tv_contact_row_header">Кантакты</string>
+    <string name="file_transfer_status_canceled">Скасавана</string>
+    <string name="menu_file_open">Адкрыты файл</string>
+    <string name="menu_file_save">Захаваць файл</string>
+    <string name="menu_file_share">Падзяліцца файлам</string>
+    <string name="menu_message_copy">Копія</string>
+    <string name="menu_message_edit">Выдаваць паведамленне</string>
+    <string name="menu_message_delete">Знішчыць паведамленне</string>
+    <string name="menu_message_cancel">Скасаваць паведамленне</string>
+    <string name="menu_message_reply">Адказ</string>
+    <string name="menu_delete">Знішчыць</string>
+    <string name="navigation_item_conversation">Размовы</string>
+    <string name="navigation_item_contact_request">Запрашэнні</string>
+    <string name="navigation_item_account">Рахунак</string>
+    <string name="tv_media_preview">Перагляд</string>
+    <string name="tv_dialog_send">Пашляць</string>
+    <string name="wizard_status_recommended">Рэкамендуецца</string>
+    <string name="wizard_status_optional">Неабходнае</string>
+    <string name="wizard_status_required">Патрабаваная</string>
+    <string name="wizard_username_info">Выберыце імя карыстальніка для вашага ўліку</string>
+    <string name="wizard_password_skip">Стварэнне ўліковага запісу</string>
+    <string name="wizard_password_switch">Зашыфраваць рахунак з паролем</string>
+    <string name="wizard_profile_info">Профіль падзяляецца толькі з кантактамі</string>
+    <string name="bottomSheet_share_btn">Падзяліцца</string>
+    <string name="bottomSheet_add_participants_btn">Дадаць</string>
+    <string name="bottomSheet_change_camera_btn">Змена</string>
+    <string name="bottomSheet_hangup_btn">Скончыць выклік</string>
+    <string name="bottomSheet_raiseHand_btn">Падыміце руку</string>
+    <string name="uninstall">Адмяніць ўстаноўку</string>
+    <string name="reset">Падстаўка</string>
+    <string name="rename_btn">Пацвердзіць</string>
+    <string name="tab_members">Члены</string>
+    <string name="tab_files">Файлы</string>
+    <string name="tab_settings">Налады</string>
+    <string name="dialog_hint_title">Назва</string>
+    <string name="dialog_hint_description">Апісанне</string>
+    <string name="bottomsheet_remove">Выключыць члена</string>
+    <string name="jami_id_validate">Запіс імя карыстальніка</string>
+    <string name="jami_id_choose_username">Выберыце імя карыстальніка</string>
+    <string name="welcome_jami_title">Сардэчна запрашаем у Джамі</string>
+    <string name="details">Падрабязнасці</string>
+    <string name="Private">Прыватныя</string>
+    <string name="mute_conversation">Маўчаная размова</string>
+    <string name="donation_card_not_now">Не зараз</string>
+    <string name="export_side_step1_code_connect">Злучэнне</string>
+    <string name="export_side_step2_cancel">Скасаваць</string>
+    <string name="export_side_step2_confirm">Пацвердзіць</string>
+    <string name="import_side_step1_share">Падзяліцца</string>
+    <string name="import_side_step2_password_import">Імпарт</string>
+</resources>

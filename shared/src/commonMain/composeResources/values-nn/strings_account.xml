@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">Ta bort</string>
+    <string name="ic_advanced_menu">Forfråte innstillingar</string>
+    <string name="ic_blacklist_menu">Bloka kontakt</string>
+    <string name="add_ring_account_title">Legg til konto</string>
+    <string name="add_sip_account_title">Legg til SIP konto</string>
+    <string name="ring_account_default_name">Jami konto %1$s</string>
+    <string name="prompt_alias">Aliefin</string>
+    <string name="prompt_hostname">Namn på vert</string>
+    <string name="prompt_username">Bruksnamn</string>
+    <string name="prompt_password">Passord</string>
+    <string name="action_create">Skapa konto</string>
+    <string name="action_create_short">Skapa</string>
+    <string name="action_register">Registrer</string>
+    <string name="action_settings">Innstillingar</string>
+    <string name="error_field_required">Dette feltet er nødvendig</string>
+    <string name="dialog_wait_create">Tilleggsrekning</string>
+    <string name="dialog_wait_create_details">Vennligst vent til den nye kontona vert lagt til...</string>
+    <string name="dialog_wait_update">Aktualisering av kontoen</string>
+    <string name="dialog_wait_update_details">Vennligst vent medan den nye kontona dykkar blir oppdatert...</string>
+    <string name="account_type_ip2ip">IP-konto</string>
+    <string name="help_ring">Ein Jami-konto lar deg nå folk trygt i peer to peer gjennom eit fullt distribuert nettverk.</string>
+    <string name="help_sip_title">Legg til SIP konto</string>
+    <string name="account_delete_dialog_message">Denne handlingen kan ikkje bli gjort til nytt.</string>
+    <string name="empty_account_list">Ingen konto registrert</string>
+    <string name="normal_accounts_titles">Rekontering</string>
+    <string name="normal_devices_titles">Kopplande utstyr</string>
+    <string name="account_device_revoke">Einheit for å avbryta</string>
+    <string name="account_device_revocation_success_title">Framgang</string>
+    <string name="account_device_revocation_success">Einheten er no avkalt!</string>
+    <string name="account_device_revocation_wrong_password">Feil passord.</string>
+    <string name="account_device_revocation_unknown_device">Unkjent apparat.</string>
+    <string name="account_device_revocation_error_unknown">Unkjent feil.</string>
+    <string name="account_password_change">Endra passord</string>
+    <string name="account_password_set">Set Passord</string>
+    <string name="account_password_summary">Ta nota til kontoen din.</string>
+    <string name="account_password_change_wait_message">Endring av password til kontoen</string>
+    <string name="account_preferences_basic_tab">Generell</string>
+    <string name="account_basic_category">Grundleg innstilling</string>
+    <string name="account_hostname_label">Namn på vert</string>
+    <string name="account_bootstrap_label">Bootstrap</string>
+    <string name="account_name_server_label">Namnsserver</string>
+    <string name="account_username_label">Bruksnamn</string>
+    <string name="account_password_label">Passord</string>
+    <string name="account_optionnal_category">Velgleg innstilling</string>
+    <string name="account_useragent_label">Brukar-agent</string>
+    <string name="account_autoanswer_label">Auto svar</string>
+    <string name="account_rendezvous_label">Modus for møt</string>
+    <string name="account_rendezvous_summary">I Rendezvous-tilgang blir innkommende samtal tilsatt konferensrommet.</string>
+    <string name="account_upnp_label">Legg UPnP til</string>
+    <string name="account_proxy_field">Styrkemann</string>
+    <string name="account_audio_label">Audio</string>
+    <string name="account_preferences_media_tab">Medeldamedia</string>
+    <string name="account_ringtone_label">Ringar</string>
+    <string name="account_ringtone_enabled_label">Aktivera ringtonar</string>
+    <string name="account_ringtone_path_label">Ringtone-veien</string>
+    <string name="account_ringtone_custom_label">Bruk tilpassing rington</string>
+    <string name="account_ringtone_title">Velg ein ringtone</string>
+    <string name="account_ringtone_summary">Velg ein ringtone eller velg din</string>
+    <string name="account_video_label">Videoen</string>
+    <string name="account_video_enable">Legg videoen til</string>
+    <string name="account_preferences_advanced_tab">Utfordring</string>
+    <string name="account_call_settings_title">Innstillingar på samtal</string>
+    <string name="account_dht_public_in_calls_label">Tillate innkommende samtal frå ukjente kontakt</string>
+    <string name="account_registration_exp_label">Registrering går ut</string>
+    <string name="account_local_interface_label">Lokal grensesnitt</string>
+    <string name="account_local_port_label">Lokal havn</string>
+    <string name="account_stun_enable_label">Bruk STUN</string>
+    <string name="account_accept_files">Ta imot innkommende filer automatisk</string>
+    <string name="account_conversation_settings_title">Innstillingar for samtal</string>
+    <string name="account_accept_files_max_size">Maksimal filstørrelse for å akseptera automatisk</string>
+    <string name="account_accept_files_never">Ikkje ta imot automatisk</string>
+    <string name="account_accept_files_always">Aldri akseptera automatisk</string>
+    <string name="size_mb">%1$d MB</string>
+    <string name="account_turn_enable_label">Bruk TURN</string>
+    <string name="account_turn_server_label">Server til TURN</string>
+    <string name="account_turn_username_label">Brukarnamn TURN</string>
+    <string name="account_turn_password_label">Passord til TURN</string>
+    <string name="account_published_same_as_local_label">Publisert som lokal</string>
+    <string name="account_published_port_label">Utgjeven port</string>
+    <string name="account_published_address_label">Adress publisert</string>
+    <string name="disabled">Dei funksjonshemma</string>
+    <string name="enabled">Tilgjengeleg</string>
+    <string name="default_value">Misligholde</string>
+    <string name="account_proxy_label">DHT-proksie</string>
+    <string name="account_proxy_enable_label">Bruk DHT- proxy</string>
+    <string name="account_proxy_server_label">DHT-prosektoradress</string>
+    <string name="account_proxy_server_list_label">DHT proxy list URL</string>
+    <string name="account_sip_proxy_label">Styrkemann</string>
+    <string name="account_peer_discovery_label">Lokal peer oppdaging</string>
+    <string name="account_peer_discovery_enable_label">Legg til lag for lokal peer-oppdaging</string>
+    <string name="account_peer_discovery_enable_summary">Knyt deg til andre DHT-knodar som annonserer på nettverket vårt</string>
+    <string name="account_credentials_label">Kredensjonskode</string>
+    <string name="account_credentials_edit">Redigera referanse</string>
+    <string name="account_credentials_add">Legg til kjennetegn</string>
+    <string name="account_preferences_security_tab">Tryggleik</string>
+    <string name="account_srtp_switch_label">Kryptar mediastrøymer (SRTP)</string>
+    <string name="account_tls_transport_switch_label">Bruk TLS Transport</string>
+    <string name="account_tls_password_label">Passord med privatnøkkel</string>
+    <string name="account_rtp_max_port">Maksimal</string>
+    <string name="account_rtp_min_port">Minimum</string>
+    <string name="account_new_device_password">Skriv inn hovudpassord for å låsa opp kontoen</string>
+    <string name="error_password_char_count">Minst 6 teikn</string>
+    <string name="error_passwords_not_equals">Passorda er ikkje like.</string>
+    <string name="export_account_wait_title">Vennligst vent...</string>
+    <string name="export_account_wait_message">Informasjon om eksportkontoen</string>
+    <string name="account_export_file">Baksekonto</string>
+    <string name="account_export_file_summary">Du kan lagra kontoen din opp på einheten din for å gjenoppretta den seinare.</string>
+    <string name="account_export_end_decryption_message">Feil passord. Prøv igjen med det rette passordet</string>
+    <string name="account_enter_password">Skriv inn passord</string>
+    <string name="account_contact_me">Kontakt meg på Jami!</string>
+    <string name="update_account">Oppdater kontoen</string>
+    <string name="account_migration">Kontoen på Jami kan oppdaterast. Skriv inn passordet ditt.</string>
+    <string name="ring_account">Jami-kontoen</string>
+    <string name="sip_account">SIP-konto</string>
+    <string name="ring_account_identity">Identitet</string>
+    <string name="account_migration_title_dialog">Migrasjon til konto</string>
+    <string name="account_update_needed">No trengs oppdatering</string>
+    <string name="account_sip_cannot_be_registered_message">Du kan fortsette med kontooppbygginga eller redigera informasjonen din her. Utgåva er òg mogleg seinare i kontoinnstillingane.</string>
+    <string name="account_no_network_title">Netverksfeil</string>
+    <string name="account_device_added_title">Tilsett kontoapparat</string>
+    <string name="account_device_updated_title">Rekontoapparat oppdatert</string>
+    <string name="account_sip_register_anyway">Registrer deg likevel.</string>
+    <string name="account_tv_settings_header">Innstillingar på konto</string>
+    <string name="account_tv_advance_settings_header">Forfråte innstillingar</string>
+    <string name="account_tv_add_contact">Legg til kontakt</string>
+    <string name="account_tv_advanced_settings">Endra dei generelle innstillingane</string>
+    <string name="account_tv_about">Om Jami</string>
+    <string name="tv_about_version">Versionen</string>
+    <string name="tv_about_license">Licens</string>
+    <string name="tv_about_author">Rett til opphavsrett</string>
+    <string name="tv_about_credits">Treningar</string>
+    <string name="account_link_device">Knytte frå ein annan enhet</string>
+    <string name="account_link_button">Knytte frå nettverket</string>
+    <string name="account_link_archive_button">Knytte frå backup</string>
+    <string name="account_new_button">Skapa Jami-konto</string>
+    <string name="account_link_export_button">Link nytt utstyr</string>
+    <string name="account_link_show_button">Visa %d meir knytt til einheten</string>
+    <string name="account_link_hide_button">Skjulde tilkobla tilleg</string>
+    <string name="account_end_export_button">nær</string>
+    <string name="account_export_title">Link konto til andre enheter</string>
+    <string name="account_connect_server_button">Knytte til styringsservern</string>
+    <string name="account_connect_button">Knytta</string>
+    <string name="help_credentials_enter">Skriv inn kjennskap til organisasjonen din</string>
+    <string name="help_connect_password_enter">Skriv inn ordførarens password</string>
+    <string name="account_connect_prompt_username">Bruksnamn</string>
+    <string name="account_connect_server">Knytte til styringsservern</string>
+    <string name="account_enter_username">Skriv inn brukarnamn</string>
+    <string name="error_username_empty">Skriv inn eit brukernavn</string>
+    <string name="register_name">Namn på register</string>
+    <string name="registered_username">Registrert brukernavn</string>
+    <string name="register_username">Registrer offentleg brukernavn</string>
+    <string name="register_recommended">Tilrådeleg</string>
+    <string name="username_already_taken">Nøvn som er tekne</string>
+    <string name="invalid_username">Utilsett brukernavn</string>
+    <string name="unknown_error">Ikkje kjent feil. Vennligst sjekk nettverksanslaget ditt!</string>
+    <string name="account_status_connecting">Kopplande</string>
+    <string name="account_status_connection_error">Fell i samband</string>
+    <string name="account_status_online">På nett</string>
+    <string name="account_status_unknown">Ukenne</string>
+    <string name="account_status_offline">Offline</string>
+    <string name="account_status_error">Feil</string>
+    <string name="account_creation_home">Velkommen til Jami</string>
+    <string name="account_creation_profile">Skapa profil</string>
+    <string name="account_creation_ring">Skapa kontoen til Jami</string>
+    <string name="account_revoke_device_hint">Skriv inn passord for å bekrefta</string>
+    <string name="enter_password">Skriv inn passord</string>
+    <string name="revoke_device_title">Einheit for å avbryta</string>
+    <string name="revoke_device_wait_title">Vennligst vent...</string>
+    <string name="revoke_device_wait_message">Avkallingsapparat</string>
+    <string name="rename_device_title">Namn på denne einheten</string>
+    <string name="rename_device_button">Namneapparat</string>
+    <string name="account_rename_device_hint">Velg nytt enhetnamn</string>
+    <string name="account_device_this_indicator">Denne einheten</string>
+    <string name="account_disabled_indicator">Dei funksjonshemma</string>
+    <string name="error_format_not_supported">Dette formatet er ikkje støtta.</string>
+    <string name="account_link_device_title">Legg ein ny enhet til</string>
+    <string name="account_link_device_button">Knytta</string>
+</resources>

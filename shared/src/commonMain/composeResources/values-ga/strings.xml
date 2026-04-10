@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="section_license">Ceadúnas</string>
+    <string name="copyright_section">Copyright</string>
+    <string name="contribute_section">Cuidiú</string>
+    <string name="version_section">An leagan</string>
+    <string name="website_chooser_title">Féach ar an suíomh Gréasáin ag baint úsáide as...</string>
+    <string name="license">Tá an bogearraí seo ar fáil "mar atá", gan ráthaíocht de chineál ar bith. Le haghaidh sonraí, féach GNU GNU Ceadúnas Poiblí Ginearálta leagan 3 nó níos déanaí&lt;/u&gt;</string>
+    <string name="description">Is bogearraí saor in aisce é Jami do chumarsáid uilethréimhseach a thugann urram do shaoirseanna agus do phríobháideacht a úsáideoirí.</string>
+    <string name="credits">Crídeanna</string>
+    <string name="pip_title">Comhdháil Jami</string>
+    <string name="call_service_description">Tá an tseirbhís seo riachtanach chun do ghlaoí a choinneáil ag rith i d\'ard-scéal.</string>
+    <string name="data_transfer_service_description">Tá an tseirbhís seo riachtanach chun fógraí leanúnacha a thaispeáint le linn aistriú comhaid.</string>
+    <string name="media">Meáin</string>
+    <string name="error_no_network">Ní bheidh aon nasc líonra</string>
+    <string name="error_account_offline">Tá an cuntas ar líne</string>
+    <string name="ab_action_chat">Teachtaireachtaí téacs</string>
+    <string name="menu_item_contact_request">Teachtaireachtaí maidir le teagmháil</string>
+    <string name="menu_item_accounts">Bainistiú ar chuntas</string>
+    <string name="menu_item_account">Bainistiú cuntas</string>
+    <string name="menu_item_settings">Cinntí</string>
+    <string name="menu_item_account_settings">Cinntí cuntas</string>
+    <string name="menu_item_share">Comhroinn mo chuntas</string>
+    <string name="menu_item_about">Maidir le Jami</string>
+    <string name="video_setting_title">Suíomh-bhreathnú</string>
+    <string name="notif_missed_incoming_call">Ag iarraidh glaoch a fháil</string>
+    <string name="notif_missed_outgoing_call">Ag iarraidh glaoch a fháil</string>
+    <string name="notif_incoming_call">Glacadh isteach</string>
+    <string name="notif_outgoing_call">Glacadh amach</string>
+    <string name="notif_channel_calls">Glaoigh</string>
+    <string name="notif_channel_messages">Teachtaireachtaí</string>
+    <string name="notif_channel_file_transfer">Cuairteoirí</string>
+    <string name="notif_group_calls">Glaoigh</string>
+    <string name="notif_dismiss">Cúlghairm</string>
+    <string name="notif_reply">Freagra</string>
+    <string name="location_share_action_stop">Stop ag roinnt</string>
+    <string name="location_share_about_title">Teachtaireachtaí cart</string>
+    <string name="action_call_maximize">A mhéadú</string>
+    <string name="action_call_minimize">Cinntíonn</string>
+    <string name="action_call_mute">Múnla</string>
+    <string name="action_call_unmute">Unmute</string>
+    <string name="action_call_decline">Tarraing</string>
+    <string name="action_call_mic_mute">Micrófón muinte</string>
+    <string name="ab_action_contact_add">Cuir le teagmhálacha</string>
+    <string name="ab_action_audio_call">Tosaigh glao fuaime</string>
+    <string name="ab_action_video_call">Tosaigh glao físe</string>
+    <string name="message_failed">Fágadh</string>
+    <string name="time_just_now">Díreach anois</string>
+    <string name="send_file">Comhad a sheoladh</string>
+    <string name="conversation_share_location">Lonnaithe roinnte</string>
+    <string name="in_reply_to">I dtuarascáil do</string>
+    <string name="ringtone_error_title">Meas</string>
+    <string name="title_activity_qrcode">Comhroinn mo chuntas</string>
+    <string name="clear_history">Clúdach</string>
+    <string name="conversation_details">Níos mó sonraí ag an gcaithne</string>
+    <string name="contact_details">sonraí teagmhála</string>
+    <string name="leave_conversation">Cinnigh comhrá</string>
+    <string name="conversation_action_history_clear">Tuairiscí soiléir</string>
+    <string name="remove_conversation">Scrios an comhrá</string>
+    <string name="conversation_action_block_this">Contae Bloc</string>
+    <string name="conversation_action_incoming_call">Glacadh isteach</string>
+    <string name="conversation_members">Comhaltaí</string>
+    <string name="conversation_type_private">Priontáil</string>
+    <string name="today">Sa lá atá inniu ann</string>
+    <string name="yesterday">An-dè</string>
+    <string name="prompt_new_password_repeat">Déan pasfhocal nua a dhearbhú</string>
+    <string name="account_create_title">Creidigh cuntas Jami</string>
+    <string name="prompt_hint_username">Ainm úsáideora</string>
+    <string name="wizard_next">Next</string>
+    <string name="wizard_back">Ar ais</string>
+    <string name="wizard_skip">Skip</string>
+    <string name="hist_contact_added">Contaeanna a chur leis</string>
+    <string name="hist_invitation_received">Ag iarraidh a fháil</string>
+    <string name="profile">Proifíl</string>
+    <string name="profile_message_warning">Ní roinntear próifíl ach le teagmhálacha</string>
+    <string name="take_a_photo">Déan grianghraf</string>
+    <string name="profile_name_hint">Cuir isteach do ainm</string>
+    <string name="identity">Úinéir</string>
+    <string name="identifier">Cluiche</string>
+    <string name="account">Contae</string>
+    <string name="link_new_device">Déan nasc a dhéanamh ar ghléas nua</string>
+    <string name="devices_header">Iarratais</string>
+    <string name="devices">Feistí ceangailte</string>
+    <string name="share_label">Comhroinnt</string>
+    <string name="generic_error_migration">Meas</string>
+    <string name="accept">Tabhair faoi deara</string>
+    <string name="decline">Tarraing</string>
+    <string name="block">Bloc</string>
+    <string name="no_blocked_contact">Ní thiocfar teagmhálacha</string>
+    <string name="tv_contact_row_header">Contacts</string>
+    <string name="file_transfer_status_canceled">Cealaithe</string>
+    <string name="menu_file_open">Dhomhchlár oscailte</string>
+    <string name="menu_file_save">Fail a shábháil</string>
+    <string name="menu_file_share">Comparáid comhad</string>
+    <string name="menu_message_copy">Cúrsa</string>
+    <string name="menu_message_edit">Teachtaireacht a eisiúint</string>
+    <string name="menu_message_delete">Teachtaireacht a scriosadh</string>
+    <string name="menu_message_cancel">Cealaigh teachtaireacht</string>
+    <string name="menu_message_reply">Freagra</string>
+    <string name="menu_delete">Scriosadh</string>
+    <string name="navigation_item_conversation">Conversations</string>
+    <string name="navigation_item_contact_request">Ceiliúradh</string>
+    <string name="navigation_item_account">Contae</string>
+    <string name="tv_media_preview">Taispeántas réamhshocraithe</string>
+    <string name="tv_dialog_send">Cuir isteach</string>
+    <string name="wizard_status_recommended">Moltar</string>
+    <string name="wizard_status_optional">Roghnach</string>
+    <string name="wizard_status_required">Éilítear</string>
+    <string name="wizard_username_info">Roghnaigh ainm úsáideora do chuntas</string>
+    <string name="wizard_password_skip">Cunntas a chruthú</string>
+    <string name="wizard_password_switch">Criosadh cuntas le pasfhocal</string>
+    <string name="wizard_profile_info">Ní roinntear próifíl ach le teagmhálacha</string>
+    <string name="bottomSheet_share_btn">Comhroinnt</string>
+    <string name="bottomSheet_add_participants_btn">Cuir leis</string>
+    <string name="bottomSheet_change_camera_btn">Athrú</string>
+    <string name="bottomSheet_hangup_btn">Críochnaigh an glao</string>
+    <string name="bottomSheet_raiseHand_btn">Cuir lámh suas</string>
+    <string name="uninstall">De-isintú</string>
+    <string name="reset">Athsheasamh</string>
+    <string name="rename_btn">Cinntíonn</string>
+    <string name="tab_members">Comhaltaí</string>
+    <string name="tab_files">Fioscail</string>
+    <string name="tab_settings">Cinntí</string>
+    <string name="dialog_hint_title">Teideal</string>
+    <string name="dialog_hint_description">Tuairisc</string>
+    <string name="bottomsheet_remove">Cúlghairm a bhaint</string>
+    <string name="jami_id_validate">Ainm úsáideora a chlárú</string>
+    <string name="jami_id_choose_username">Roghnaigh ainm úsáideora</string>
+    <string name="welcome_jami_title">Fáilte go Jami</string>
+    <string name="details">Níos mó</string>
+    <string name="Private">Priontáil</string>
+    <string name="mute_conversation">Cainteas muice</string>
+    <string name="donation_card_not_now">Níos déanaí</string>
+    <string name="export_side_step1_code_connect">Déan nasc</string>
+    <string name="export_side_step2_cancel">Cealaigh</string>
+    <string name="export_side_step2_confirm">Cinntíonn</string>
+    <string name="import_side_step1_share">Comhroinnt</string>
+    <string name="import_side_step2_password_import">Éireodh</string>
+</resources>

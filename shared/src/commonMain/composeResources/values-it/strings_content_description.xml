@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="contact_quick_call_description">Chiamata veloce</string>
+    <string name="contact_picture_description">Foto del contatto</string>
+    <string name="dial_numeric_pad">Tastiera numerica</string>
+    <string name="contact_unblock">Sblocca</string>
+    <string name="video_extensions">Estensioni video</string>
+    <string name="file_download_button">Scarica</string>
+    <string name="control_play">Riproduci</string>
+    <string name="control_replay">Ripeti</string>
+    <string name="control_pause">Pausa</string>
+    <string name="searchbar_navigation_account">Seleziona account</string>
+    <string name="add_conversation_member">Aggiungi un membro alla conversazione</string>
+    <string name="qrcode_to_scan">Codice QR da scansionare</string>
+</resources>

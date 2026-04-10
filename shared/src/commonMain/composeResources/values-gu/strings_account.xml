@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">કાઢી નાખો</string>
+    <string name="ic_advanced_menu">અદ્યતન સેટિંગ્સ</string>
+    <string name="ic_blacklist_menu">અવરોધિત સંપર્કો</string>
+    <string name="add_ring_account_title">એકાઉન્ટ ઉમેરો</string>
+    <string name="add_sip_account_title">SIP એકાઉન્ટ ઉમેરો</string>
+    <string name="ring_account_default_name">જમ્મી એકાઉન્ટ %1$s</string>
+    <string name="prompt_alias">અલીયા</string>
+    <string name="prompt_hostname">હોસ્ટનામ</string>
+    <string name="prompt_username">વપરાશકર્તા નામ</string>
+    <string name="prompt_password">પાસવર્ડ</string>
+    <string name="action_create">એકાઉન્ટ બનાવો</string>
+    <string name="action_create_short">બનાવો</string>
+    <string name="action_register">નોંધણી</string>
+    <string name="action_settings">સેટિંગ્સ</string>
+    <string name="error_field_required">આ ક્ષેત્ર જરૂરી છે</string>
+    <string name="dialog_wait_create">ઉમેરાયેલ ખાતું</string>
+    <string name="dialog_wait_create_details">કૃપા કરીને તમારા નવા એકાઉન્ટને ઉમેરવામાં આવે ત્યાં સુધી રાહ જુઓ.</string>
+    <string name="dialog_wait_update">એકાઉન્ટને અપડેટ કરવું</string>
+    <string name="dialog_wait_update_details">કૃપા કરીને તમારા નવા એકાઉન્ટને અપડેટ કરવામાં આવે ત્યાં સુધી રાહ જુઓ.</string>
+    <string name="account_type_ip2ip">આઇપી એકાઉન્ટ</string>
+    <string name="help_ring">એક જેમી એકાઉન્ટ તમને સંપૂર્ણ રીતે વહેંચાયેલ નેટવર્ક દ્વારા પીઅર-ટુ-પીઅર લોકો સુધી સુરક્ષિત રીતે પહોંચવાની મંજૂરી આપે છે.</string>
+    <string name="help_sip_title">SIP એકાઉન્ટ ઉમેરો</string>
+    <string name="account_delete_dialog_message">આ કાર્યવાહીને રદ કરી શકાતી નથી.</string>
+    <string name="empty_account_list">કોઈ એકાઉન્ટ નોંધાયેલ નથી</string>
+    <string name="normal_accounts_titles">ખાતાઓ</string>
+    <string name="normal_devices_titles">જોડાયેલ ઉપકરણો</string>
+    <string name="account_device_revoke">રિવોક ઉપકરણ</string>
+    <string name="account_device_revocation_success_title">સફળતા</string>
+    <string name="account_device_revocation_success">ઉપકરણ હવે રદ કરવામાં આવી છે!</string>
+    <string name="account_device_revocation_unknown_device">અજ્ઞાત ઉપકરણ.</string>
+    <string name="account_device_revocation_error_unknown">અજ્ઞાત ભૂલ.</string>
+    <string name="account_password_change">પાસવર્ડ બદલવા</string>
+    <string name="account_password_set">પાસવર્ડ સેટ કરો</string>
+    <string name="account_password_summary">તમારા એકાઉન્ટ પાસવર્ડ મેનેજ કરો.</string>
+    <string name="account_password_change_wait_message">એકાઉન્ટ પાસવર્ડ બદલવું</string>
+    <string name="account_preferences_basic_tab">જનરલ</string>
+    <string name="account_basic_category">મૂળભૂત સેટિંગ્સ</string>
+    <string name="account_hostname_label">હોસ્ટનામ</string>
+    <string name="account_bootstrap_label">બુટસ્ટ્રેપ</string>
+    <string name="account_name_server_label">નામ સર્વર</string>
+    <string name="account_username_label">વપરાશકર્તા નામ</string>
+    <string name="account_password_label">પાસવર્ડ</string>
+    <string name="account_optionnal_category">વૈકલ્પિક સેટિંગ્સ</string>
+    <string name="account_useragent_label">વપરાશકર્તા એજન્ટ</string>
+    <string name="account_autoanswer_label">ઓટો જવાબ</string>
+    <string name="account_rendezvous_label">રેન્ડેન્જ મોડ</string>
+    <string name="account_rendezvous_summary">રેન્ડેવોસ મોડમાં, આવનારા કોલ્સને કોન્ફરન્સ રૂમમાં ઉમેરવામાં આવશે.</string>
+    <string name="account_upnp_label">UPnP ને સક્ષમ કરો</string>
+    <string name="account_proxy_field">પ્રોક્સી</string>
+    <string name="account_audio_label">ઑડિઓ</string>
+    <string name="account_preferences_media_tab">મીડિયા</string>
+    <string name="account_ringtone_label">રિંગિંગ્સ</string>
+    <string name="account_ringtone_enabled_label">રિંગટોન સક્રિય કરો</string>
+    <string name="account_ringtone_path_label">રિંગટોન પાથ</string>
+    <string name="account_ringtone_custom_label">કસ્ટમ રિંગટોન વાપરો</string>
+    <string name="account_ringtone_title">રિંગટોન પસંદ કરો</string>
+    <string name="account_ringtone_summary">રિંગટોન પસંદ કરો અથવા તમારી પોતાની પસંદ કરો</string>
+    <string name="account_video_label">વિડિઓ</string>
+    <string name="account_video_enable">વિડિઓ સક્ષમ કરો</string>
+    <string name="account_preferences_advanced_tab">અદ્યતન</string>
+    <string name="account_call_settings_title">કૉલ સેટિંગ્સ</string>
+    <string name="account_dht_public_in_calls_label">અજ્ઞાત સંપર્કોમાંથી આવનારા કૉલ્સને મંજૂરી આપો</string>
+    <string name="account_registration_exp_label">નોંધણી સમાપ્ત થાય છે</string>
+    <string name="account_local_interface_label">સ્થાનિક ઇન્ટરફેસ</string>
+    <string name="account_local_port_label">સ્થાનિક બંદર</string>
+    <string name="account_stun_enable_label">STUN નો ઉપયોગ કરો</string>
+    <string name="account_accept_files">આપમેળે ઇનકમિંગ ફાઇલો સ્વીકારો</string>
+    <string name="account_conversation_settings_title">વાતચીત સેટિંગ્સ</string>
+    <string name="account_accept_files_max_size">આપમેળે સ્વીકારવા માટે મહત્તમ ફાઇલ કદ</string>
+    <string name="account_accept_files_never">ક્યારેય સ્વયંસંચાલિત રીતે સ્વીકારો નહીં</string>
+    <string name="account_accept_files_always">હંમેશા આપોઆપ સ્વીકારો</string>
+    <string name="size_mb">%1$d એમબી</string>
+    <string name="account_turn_enable_label">ટર્નનો ઉપયોગ કરો</string>
+    <string name="account_turn_server_label">ટર્ન સર્વર</string>
+    <string name="account_turn_username_label">ટર્ન વપરાશકર્તા નામ</string>
+    <string name="account_turn_password_label">ટર્ન પાસવર્ડ</string>
+    <string name="account_published_same_as_local_label">સ્થાનિક તરીકે જ પ્રકાશિત</string>
+    <string name="account_published_port_label">પ્રકાશિત પોર્ટ</string>
+    <string name="account_published_address_label">પ્રકાશિત સરનામું</string>
+    <string name="disabled">અપંગ</string>
+    <string name="enabled">સક્ષમ</string>
+    <string name="default_value">ડિફૉલ્ટ</string>
+    <string name="account_proxy_label">ડીએચટી પ્રોક્સી</string>
+    <string name="account_proxy_enable_label">DHT પ્રોક્સીનો ઉપયોગ કરો</string>
+    <string name="account_proxy_server_label">DHT પ્રોક્સી સરનામું</string>
+    <string name="account_proxy_server_list_label">DHT પ્રોક્સી યાદી URL</string>
+    <string name="account_sip_proxy_label">પ્રોક્સી</string>
+    <string name="account_peer_discovery_label">સ્થાનિક સમકક્ષ શોધ</string>
+    <string name="account_peer_discovery_enable_label">સ્થાનિક સમકક્ષ શોધને સક્ષમ કરો</string>
+    <string name="account_peer_discovery_enable_summary">અમારા સ્થાનિક નેટવર્ક પર જાહેરાત અન્ય DHT ગાંઠો સાથે કનેક્ટ</string>
+    <string name="account_credentials_label">પ્રમાણપત્રો</string>
+    <string name="account_credentials_edit">પ્રમાણપત્રો સંપાદિત કરો</string>
+    <string name="account_credentials_add">પ્રમાણપત્રો ઉમેરો</string>
+    <string name="account_preferences_security_tab">સુરક્ષા</string>
+    <string name="account_srtp_switch_label">એન્ક્રિપ્ટ મીડિયા સ્ટ્રીમ્સ (એસઆરટીપી)</string>
+    <string name="account_tls_transport_switch_label">TLS પરિવહનનો ઉપયોગ કરો</string>
+    <string name="account_tls_password_label">ખાનગી કી પાસવર્ડ</string>
+    <string name="account_rtp_max_port">મહત્તમ</string>
+    <string name="account_rtp_min_port">ન્યૂનતમ</string>
+    <string name="account_new_device_password">એકાઉન્ટ અનલૉક કરવા માટે મુખ્ય પાસવર્ડ દાખલ કરો</string>
+    <string name="error_password_char_count">6 અક્ષરો ઓછામાં ઓછા</string>
+    <string name="export_account_wait_title">કૃપા કરીને રાહ જુઓ.</string>
+    <string name="export_account_wait_message">નિકાસ ખાતાની માહિતી</string>
+    <string name="account_export_file">બેકઅપ એકાઉન્ટ</string>
+    <string name="account_export_file_summary">તમારા ઉપકરણ પર તમારા એકાઉન્ટનું બેકઅપ લો જેથી તે પછીથી પુનઃસ્થાપિત થઈ શકે.</string>
+    <string name="account_enter_password">પાસવર્ડ દાખલ કરો</string>
+    <string name="account_contact_me">જમી પર મને સંપર્ક કરો!</string>
+    <string name="update_account">એકાઉન્ટ અપડેટ કરો</string>
+    <string name="account_migration">તમારું જમ્મી એકાઉન્ટ અપડેટ કરી શકાય છે. કૃપા કરીને તમારો પાસવર્ડ દાખલ કરો.</string>
+    <string name="ring_account">જમી એકાઉન્ટ</string>
+    <string name="sip_account">એસઆઈપી ખાતું</string>
+    <string name="ring_account_identity">ઓળખ</string>
+    <string name="account_migration_title_dialog">એકાઉન્ટ સ્થળાંતર</string>
+    <string name="account_update_needed">અપડેટ જરૂરી</string>
+    <string name="account_sip_cannot_be_registered_message">તમે એકાઉન્ટ બનાવવાની પ્રક્રિયા ચાલુ રાખી શકો છો અથવા તમારી માહિતીને અહીં સંપાદિત કરી શકો છો. એકાઉન્ટ સેટિંગ્સમાં પછીથી આવૃત્તિ હજી પણ શક્ય છે.</string>
+    <string name="account_no_network_title">નેટવર્ક ભૂલ</string>
+    <string name="account_device_added_title">એકાઉન્ટ ડિવાઇસ ઉમેર્યું</string>
+    <string name="account_device_updated_title">એકાઉન્ટ ઉપકરણ અપડેટ</string>
+    <string name="account_sip_register_anyway">કોઈપણ રીતે નોંધણી</string>
+    <string name="account_tv_settings_header">એકાઉન્ટ સેટિંગ્સ</string>
+    <string name="account_tv_advance_settings_header">અદ્યતન સેટિંગ્સ</string>
+    <string name="account_tv_add_contact">સંપર્ક ઉમેરો</string>
+    <string name="account_tv_advanced_settings">સામાન્ય સેટિંગ્સ બદલો</string>
+    <string name="account_tv_about">જમી વિશે</string>
+    <string name="tv_about_version">આવૃત્તિ</string>
+    <string name="tv_about_license">લાઇસન્સ</string>
+    <string name="tv_about_author">લેખક અધિકારો</string>
+    <string name="tv_about_credits">ક્રેડિટ્સ</string>
+    <string name="account_link_device">અન્ય ઉપકરણથી કનેક્ટ કરો</string>
+    <string name="account_link_button">નેટવર્કથી કનેક્ટ</string>
+    <string name="account_link_archive_button">બેકઅપ થી કનેક્ટ</string>
+    <string name="account_new_button">Jami એકાઉન્ટ બનાવો</string>
+    <string name="account_link_export_button">લિંક નવી ઉપકરણ</string>
+    <string name="account_link_show_button">%d વધુ જોડાયેલ ઉપકરણ બતાવો</string>
+    <string name="account_link_hide_button">જોડાયેલ ઉપકરણ છુપાવો</string>
+    <string name="account_end_export_button">નજીક</string>
+    <string name="account_export_title">અન્ય ઉપકરણો સાથે લિંક એકાઉન્ટ</string>
+    <string name="account_connect_server_button">મેનેજમેન્ટ સર્વર સાથે કનેક્ટ</string>
+    <string name="account_connect_button">કનેક્ટ કરો</string>
+    <string name="help_credentials_enter">તમારી સંસ્થાની ઓળખપત્રો દાખલ કરો</string>
+    <string name="help_connect_password_enter">તમારી સંસ્થા પાસવર્ડ દાખલ કરો</string>
+    <string name="account_connect_prompt_username">વપરાશકર્તા નામ</string>
+    <string name="account_connect_server">મેનેજમેન્ટ સર્વર સાથે કનેક્ટ</string>
+    <string name="error_username_empty">વપરાશકર્તા નામ દાખલ કરો</string>
+    <string name="register_name">રજિસ્ટર નામ</string>
+    <string name="registered_username">રજિસ્ટર્ડ વપરાશકર્તા નામ</string>
+    <string name="register_username">જાહેર વપરાશકર્તાનામ નોંધણી</string>
+    <string name="register_recommended">ભલામણ</string>
+    <string name="username_already_taken">પહેલેથી જ વપરાશકારનું નામ</string>
+    <string name="invalid_username">અમાન્ય વપરાશકર્તા નામ</string>
+    <string name="unknown_error">અજ્ઞાત ભૂલ. કૃપા કરીને તમારા નેટવર્ક કનેક્શન તપાસો!</string>
+    <string name="account_status_connecting">કનેક્ટિંગ</string>
+    <string name="account_status_connection_error">જોડાણ ભૂલ</string>
+    <string name="account_status_online">ઓનલાઇન</string>
+    <string name="account_status_unknown">અજ્ઞાત</string>
+    <string name="account_status_offline">ઑફલાઇન</string>
+    <string name="account_status_error">ભૂલ</string>
+    <string name="account_creation_home">જમીમાં આપનું સ્વાગત છે</string>
+    <string name="account_creation_profile">તમારી પ્રોફાઇલ બનાવો</string>
+    <string name="account_creation_ring">તમારું જમ્મી એકાઉન્ટ બનાવો</string>
+    <string name="account_revoke_device_hint">ખાતરી કરવા માટે પાસવર્ડ દાખલ કરો</string>
+    <string name="enter_password">પાસવર્ડ દાખલ કરો</string>
+    <string name="revoke_device_title">રિવોક ઉપકરણ</string>
+    <string name="revoke_device_wait_title">કૃપા કરીને રાહ જુઓ.</string>
+    <string name="revoke_device_wait_message">રિવોકિંગ ડિવાઇસ</string>
+    <string name="rename_device_title">આ ઉપકરણનું નામ બદલવું</string>
+    <string name="rename_device_button">નામકરણ ઉપકરણ</string>
+    <string name="account_rename_device_hint">ઉપકરણનું નવું નામ પસંદ કરો</string>
+    <string name="account_device_this_indicator">આ ઉપકરણ</string>
+    <string name="account_disabled_indicator">અપંગ</string>
+    <string name="error_format_not_supported">આ ફોર્મેટને સપોર્ટેડ નથી.</string>
+    <string name="account_link_device_title">નવી ઉપકરણને લિંક કરો</string>
+    <string name="account_link_device_button">કનેક્ટ કરો</string>
+</resources>

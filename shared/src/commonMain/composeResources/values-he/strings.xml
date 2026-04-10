@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="section_license">רישיון</string>
+    <string name="copyright_section">זכויות יוצרים</string>
+    <string name="contribute_section">תרום</string>
+    <string name="version_section">גרסה</string>
+    <string name="website_chooser_title">צפו באתר באמצעות...</string>
+    <string name="license">תוכנת זו מסופקת "כפי שהיא", ללא אחריות של כל סוג. לפרטים, ראה GNU General Public License גרסה 3 או מאוחר יותר&lt;/u&gt;</string>
+    <string name="description">ג\'אמי היא תוכנה חופשית לתקשורת אוניברסלית שמכבדת את החירות והפרטיות של המשתמשים שלה.</string>
+    <string name="credits">שבחים</string>
+    <string name="pip_title">ימי</string>
+    <string name="call_service_description">שירות זה הכרחי כדי לשמור על השיחות שלך פועלות בקודם. הוא פועל רק במהלך השיחות.</string>
+    <string name="data_transfer_service_description">שירות זה הכרחי להציג הודעות מתמשכות במהלך העברת קבצים. הוא פועל רק במהלך העברת קבצים.</string>
+    <string name="media">מדיה</string>
+    <string name="error_no_network">אין חיבור לרשת</string>
+    <string name="error_account_offline">החשבון לא פועל.</string>
+    <string name="ab_action_chat">הודעות טקסט</string>
+    <string name="menu_item_contact_request">בקשות קשר</string>
+    <string name="menu_item_accounts">ניהול חשבונות</string>
+    <string name="menu_item_account">מנהל חשבון</string>
+    <string name="menu_item_settings">הגדרות</string>
+    <string name="menu_item_account_settings">הגדרות החשבון</string>
+    <string name="menu_item_share">לחלוק את החשבון שלי</string>
+    <string name="menu_item_about">על אודות Jami</string>
+    <string name="video_setting_title">הגדרות הוידאו</string>
+    <string name="choose_number">נא לבחור מספר</string>
+    <string name="notif_missed_incoming_call">פספסתי שיחת כניסה</string>
+    <string name="notif_missed_outgoing_call">פספסתי שיחת פנויה</string>
+    <string name="notif_incoming_call">שיחה נכנסת</string>
+    <string name="notif_outgoing_call">שיחה יוצאת</string>
+    <string name="notif_current_call">שיחה יוצאת</string>
+    <string name="notif_channel_calls">שיחות</string>
+    <string name="notif_channel_messages">הודעות</string>
+    <string name="notif_channel_file_transfer">העברת קבצים</string>
+    <string name="notif_group_calls">שיחות</string>
+    <string name="notif_dismiss">פטור</string>
+    <string name="notif_reply">תשובה</string>
+    <string name="location_share_action_stop">תפסיק לחלוק</string>
+    <string name="location_share_about_title">מידע על מפה</string>
+    <string name="you_txt_prefix">אני:</string>
+    <string name="action_call_hangup"> ניתוק</string>
+    <string name="action_call_maximize">שימו את האפס</string>
+    <string name="action_call_minimize">להפחית</string>
+    <string name="action_call_mute">שקט</string>
+    <string name="action_call_unmute">לא נקט</string>
+    <string name="ongoing_call">שיחה יוצאת</string>
+    <string name="hist_in_call">שיחה נכנסת מ%1$s</string>
+    <string name="hist_out_call">שיחה יוצאת אל %1$s</string>
+    <string name="action_call_decline">ירידה</string>
+    <string name="action_call_mic_mute">מיקרופון שקט</string>
+    <string name="ab_action_contact_add">הוסף לקשרים</string>
+    <string name="ab_action_audio_call">תחילת שיחת קול</string>
+    <string name="ab_action_video_call">תתחילו שיחת וידאו</string>
+    <string name="new_group">יצירת קבוצה חדשה</string>
+    <string name="send_message">שליחת הודעה</string>
+    <string name="message_failed">כשל</string>
+    <string name="time_just_now">ממש עכשיו</string>
+    <string name="send_file">שלח קובץ</string>
+    <string name="conversation_share_location">מיקום שיתוף</string>
+    <string name="ongoing_group_call">שיחה יוצאת</string>
+    <string name="in_reply_to">בתשובה</string>
+    <string name="ringtone_error_title">שגיאה</string>
+    <string name="ringtone_error_size_too_big">הקובץ הזה גדול מדי. הגודל המרבי הוא %1$d ק״ב.</string>
+    <string name="ringtone_custom_label">התאמה אישית</string>
+    <string name="title_activity_qrcode">לחלוק את החשבון שלי</string>
+    <string name="clear_history">ניקוי</string>
+    <string name="conversation_details">פרטים בשיחה</string>
+    <string name="contact_details">פרטי קשר</string>
+    <string name="leave_conversation">עזוב את השיחה</string>
+    <string name="conversation_action_history_clear">היסטוריה ברורה</string>
+    <string name="remove_conversation">תבטל את השיחה</string>
+    <string name="conversation_action_block_this">פגע בלוק</string>
+    <string name="conversation_action_incoming_call">שיחה נכנסת</string>
+    <string name="conversation_action_latest">גלול לקצה השיחה</string>
+    <string name="conversation_members">חברי</string>
+    <string name="conversation_type_private">פרטי</string>
+    <string name="conversation_type_group">קבוצה</string>
+    <string name="today">היום</string>
+    <string name="yesterday">אתמול</string>
+    <string name="prompt_new_password_repeat">אישר סיסמה חדשה</string>
+    <string name="account_create_title">ליצור חשבון Jami</string>
+    <string name="prompt_hint_username">שם משתמש</string>
+    <string name="wizard_next">קדימה</string>
+    <string name="wizard_back">חזרה</string>
+    <string name="wizard_skip">דילוג</string>
+    <string name="hist_contact_added">הוספת קשר</string>
+    <string name="hist_invitation_received">הזמנה התקבלה</string>
+    <string name="profile">פרופיל</string>
+    <string name="profile_message_warning">פרופיל משתף רק עם אנשי קשר</string>
+    <string name="take_a_photo">צלם.</string>
+    <string name="profile_name_hint">הכנס את שמך</string>
+    <string name="identity">זהות</string>
+    <string name="identifier">זיהוי</string>
+    <string name="account">חשבון</string>
+    <string name="link_new_device">קישור מכשיר חדש</string>
+    <string name="devices_header">התקנים</string>
+    <string name="devices">מכשירים מחוברים</string>
+    <string name="share_label">שיתוף</string>
+    <string name="generic_error_migration">שגיאה</string>
+    <string name="accept">לקבל</string>
+    <string name="decline">ירידה</string>
+    <string name="block">חסימה</string>
+    <string name="no_blocked_contact">אין קשרים חסומים</string>
+    <string name="tv_contact_row_header">אנשי קשר</string>
+    <string name="file_transfer_status_invalid_file">קובץ לא חוקי</string>
+    <string name="file_transfer_status_canceled">מבוטל</string>
+    <string name="menu_file_open">פתיחת קובץ</string>
+    <string name="menu_file_save">שמירת קובץ</string>
+    <string name="menu_file_share">שיתוף קובץ</string>
+    <string name="menu_message_copy">העתקה</string>
+    <string name="menu_message_edit">עורך הודעה</string>
+    <string name="menu_message_delete">למחוק הודעה</string>
+    <string name="menu_message_cancel">בטל הודעה</string>
+    <string name="menu_message_reply">תשובה</string>
+    <string name="menu_delete">מחיקה</string>
+    <string name="navigation_item_conversation">דיונים</string>
+    <string name="navigation_item_contact_request">הזמנות</string>
+    <string name="navigation_item_account">חשבון</string>
+    <string name="tv_media_preview">תצוגה ראשונה</string>
+    <string name="tv_dialog_send">שליחה</string>
+    <string name="wizard_status_recommended">מומלץ</string>
+    <string name="wizard_status_optional">בחופשי</string>
+    <string name="wizard_status_required">דרישות</string>
+    <string name="wizard_username_info">בחר שם משתמש לחשבון שלך</string>
+    <string name="wizard_password_skip">ליצור חשבון</string>
+    <string name="wizard_password_switch">לחשוף חשבון עם סיסמה</string>
+    <string name="wizard_profile_info">פרופיל משתף רק עם אנשי קשר</string>
+    <string name="bottomSheet_share_btn">שיתוף</string>
+    <string name="bottomSheet_add_participants_btn">הוסף</string>
+    <string name="bottomSheet_change_camera_btn">שינוי</string>
+    <string name="bottomSheet_hangup_btn">סיום השיחה</string>
+    <string name="bottomSheet_raiseHand_btn">תרים את היד.</string>
+    <string name="uninstall">תורידו את ההתקנה</string>
+    <string name="reset">-הקמת מחדש</string>
+    <string name="rename_btn">אישר</string>
+    <string name="tab_members">חברי</string>
+    <string name="tab_files">קבצים</string>
+    <string name="tab_settings">הגדרות</string>
+    <string name="dialog_hint_title">כותרת</string>
+    <string name="dialog_hint_description">תיאור</string>
+    <string name="bottomsheet_remove">הסיר חבר</string>
+    <string name="jami_id_validate">רשום שם משתמש</string>
+    <string name="jami_id_choose_username">בחר שם משתמש</string>
+    <string name="welcome_jami_title">ברוך בואך אל Jami</string>
+    <string name="details">פרטים</string>
+    <string name="Private">פרטי</string>
+    <string name="mute_conversation">שיחה שקטה</string>
+    <string name="donation_card_not_now">לא עכשיו</string>
+    <string name="export_side_step1_code_connect">חיבור</string>
+    <string name="export_side_step2_cancel">ביטול</string>
+    <string name="export_side_step2_confirm">אישר</string>
+    <string name="import_side_step1_share">שיתוף</string>
+    <string name="import_side_step2_password_import">יבוא</string>
+</resources>

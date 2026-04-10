@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">삭제</string>
+    <string name="ic_advanced_menu">고급 설정</string>
+    <string name="ic_blacklist_menu">차단된 연락처</string>
+    <string name="add_ring_account_title">계정 추가</string>
+    <string name="add_sip_account_title">SIP 계정을 추가</string>
+    <string name="ring_account_default_name">자미 계정 %1$s</string>
+    <string name="prompt_alias">별칭</string>
+    <string name="prompt_hostname">호스트명</string>
+    <string name="prompt_username">사용자명</string>
+    <string name="prompt_password">암호</string>
+    <string name="action_create">계정을 생성</string>
+    <string name="action_create_short">생성하기</string>
+    <string name="action_register">등록</string>
+    <string name="action_settings">설정</string>
+    <string name="error_field_required">이 필드는 필요합니다</string>
+    <string name="dialog_wait_create">추가 계좌</string>
+    <string name="dialog_wait_create_details">새로운 계정이 추가되는 동안 기다려 주세요</string>
+    <string name="dialog_wait_update">업데이트 계정</string>
+    <string name="dialog_wait_update_details">새로운 계정이 업데이트되는 동안 기다려 주세요</string>
+    <string name="account_type_ip2ip">IP 계정</string>
+    <string name="help_ring">자미 계정으로 인해 완전히 분산된 네트워크를 통해 안전하게 peer-to-peer으로 사람들을 만날 수 있습니다.</string>
+    <string name="help_sip_title">SIP 계정을 추가</string>
+    <string name="account_delete_dialog_message">이 행동은 되돌릴 수 없습니다.</string>
+    <string name="empty_account_list">등록된 계좌가 없습니다</string>
+    <string name="normal_accounts_titles">회계</string>
+    <string name="normal_devices_titles">연결된 장치</string>
+    <string name="account_device_revoke">취소 장치</string>
+    <string name="account_device_revocation_success_title">성공</string>
+    <string name="account_device_revocation_success">장치가 취소됐어요!</string>
+    <string name="account_device_revocation_unknown_device">알려지지 않은 장치</string>
+    <string name="account_device_revocation_error_unknown">알 수 없는 오류</string>
+    <string name="account_password_change">비밀번호 변경</string>
+    <string name="account_password_set">비밀번호 설정</string>
+    <string name="account_password_summary">계정 비밀번호를 관리하세요.</string>
+    <string name="account_password_change_wait_message">계정 비밀번호 변경</string>
+    <string name="account_preferences_basic_tab">일반</string>
+    <string name="account_basic_category">기본 설정</string>
+    <string name="account_hostname_label">호스트명</string>
+    <string name="account_bootstrap_label">부트 스트랩</string>
+    <string name="account_name_server_label">이름 서버</string>
+    <string name="account_username_label">사용자명</string>
+    <string name="account_password_label">암호</string>
+    <string name="account_optionnal_category">선택적 설정</string>
+    <string name="account_useragent_label">사용자 에이전트</string>
+    <string name="account_autoanswer_label">자동 응답</string>
+    <string name="account_rendezvous_label">회담 모드</string>
+    <string name="account_rendezvous_summary">회담 모드에서는 수신 전화가 회의실에 추가됩니다.</string>
+    <string name="account_upnp_label">UPnP를 활성화</string>
+    <string name="account_proxy_field">프록시</string>
+    <string name="account_audio_label">음향</string>
+    <string name="account_preferences_media_tab">미디어</string>
+    <string name="account_ringtone_label">반지</string>
+    <string name="account_ringtone_enabled_label">윙톤을 활성화</string>
+    <string name="account_ringtone_path_label">윙톤 경로</string>
+    <string name="account_ringtone_custom_label">사용자 지정 반향을 사용</string>
+    <string name="account_ringtone_title">윙톤을 선택</string>
+    <string name="account_ringtone_summary">벨소리를 선택하거나 자신의 소리를 선택하십시오</string>
+    <string name="account_video_label">비디오</string>
+    <string name="account_video_enable">비디오를 활성화</string>
+    <string name="account_preferences_advanced_tab">발전</string>
+    <string name="account_call_settings_title">전화 설정</string>
+    <string name="account_dht_public_in_calls_label">알려지지 않은 연락처에서 수신 전화를 허용</string>
+    <string name="account_registration_exp_label">등록 기간이 만료</string>
+    <string name="account_local_interface_label">로컬 인터페이스</string>
+    <string name="account_local_port_label">지역 항구</string>
+    <string name="account_stun_enable_label">STUN 사용</string>
+    <string name="account_accept_files">자동으로 입력된 파일을 받아</string>
+    <string name="account_conversation_settings_title">대화 설정</string>
+    <string name="account_accept_files_max_size">자동으로 받아 들일 수 있는 최대 파일 크기가</string>
+    <string name="account_accept_files_never">절대 자동으로 받아들이지</string>
+    <string name="account_accept_files_always">항상 자동으로 받아 들인다</string>
+    <string name="size_mb">%1$d MB</string>
+    <string name="account_turn_enable_label">TURN 사용</string>
+    <string name="account_turn_server_label">TURN 서버</string>
+    <string name="account_turn_username_label">TURN 사용자 이름</string>
+    <string name="account_turn_password_label">TURN 비밀번호</string>
+    <string name="account_published_same_as_local_label">지역과 같은 출판</string>
+    <string name="account_published_port_label">출판된 항구</string>
+    <string name="account_published_address_label">공개 주소</string>
+    <string name="disabled">장애인</string>
+    <string name="enabled">허용</string>
+    <string name="default_value">기본값</string>
+    <string name="account_proxy_label">DHT 대리</string>
+    <string name="account_proxy_enable_label">DHT 대리기를 사용</string>
+    <string name="account_proxy_server_label">DHT 프록시 주소</string>
+    <string name="account_proxy_server_list_label">DHT 프록시 목록 URL</string>
+    <string name="account_sip_proxy_label">프록시</string>
+    <string name="account_peer_discovery_label">지역 동학 발견</string>
+    <string name="account_peer_discovery_enable_label">지역 동시 발견을 가능하게 합니다</string>
+    <string name="account_peer_discovery_enable_summary">우리의 로컬 네트워크에 광고하는 다른 DHT 노드에 연결</string>
+    <string name="account_credentials_label">자격증</string>
+    <string name="account_credentials_edit">자격증 편집</string>
+    <string name="account_credentials_add">자격증 추가</string>
+    <string name="account_preferences_security_tab">보안</string>
+    <string name="account_srtp_switch_label">미디어 스트림을 암호화 (SRTP)</string>
+    <string name="account_tls_transport_switch_label">TLS 운송을 사용</string>
+    <string name="account_tls_password_label">개인키 암호</string>
+    <string name="account_rtp_max_port">최대</string>
+    <string name="account_rtp_min_port">최소</string>
+    <string name="account_new_device_password">계정 잠금 해제하려면 메인 비밀번호를 입력하세요</string>
+    <string name="error_password_char_count">최소 6자</string>
+    <string name="export_account_wait_title">잠깐만요</string>
+    <string name="export_account_wait_message">수출 계좌 정보</string>
+    <string name="account_export_file">백업 계좌</string>
+    <string name="account_export_file_summary">나중에 복구하기 위해 계정을 장치에 백업하십시오.</string>
+    <string name="account_enter_password">비밀번호를 입력</string>
+    <string name="account_contact_me">자미에 연락해!</string>
+    <string name="update_account">계정 업데이트</string>
+    <string name="account_migration">자미 계정 업데이트가 가능합니다. 비밀번호를 입력하세요.</string>
+    <string name="ring_account">자미 계정</string>
+    <string name="sip_account">SIP 계좌</string>
+    <string name="ring_account_identity">신분</string>
+    <string name="account_migration_title_dialog">계정 마이그레이션</string>
+    <string name="account_update_needed">업데이트가 필요</string>
+    <string name="account_sip_cannot_be_registered_message">계정 생성 과정 을 계속 하거나 이 부분 에서 정보 를 편집 할 수 있습니다. 계정 설정 에서 나중에 에디션 을 할 수 있습니다.</string>
+    <string name="account_no_network_title">네트워크 오류</string>
+    <string name="account_device_added_title">계정 장치 추가</string>
+    <string name="account_device_updated_title">계정 장치 업데이트</string>
+    <string name="account_sip_register_anyway">어쨌든 등록해</string>
+    <string name="account_tv_settings_header">계정 설정</string>
+    <string name="account_tv_advance_settings_header">고급 설정</string>
+    <string name="account_tv_add_contact">연락처 추가</string>
+    <string name="account_tv_advanced_settings">일반 설정 변경</string>
+    <string name="account_tv_about">자미 에 관한 것</string>
+    <string name="tv_about_version">버전</string>
+    <string name="tv_about_license">면허</string>
+    <string name="tv_about_author">저작권</string>
+    <string name="tv_about_credits">신용</string>
+    <string name="account_link_device">다른 장치에서 연결</string>
+    <string name="account_link_button">네트워크에서 연결</string>
+    <string name="account_link_archive_button">백업에서 연결</string>
+    <string name="account_new_button">Jami 계정을 생성</string>
+    <string name="account_link_export_button">새로운 장치를 연결</string>
+    <string name="account_link_show_button">%d 더 많은 연결된 장치를 표시</string>
+    <string name="account_link_hide_button">연결된 장치를 숨기</string>
+    <string name="account_end_export_button">가까이</string>
+    <string name="account_export_title">다른 장치에 연결된 계정</string>
+    <string name="account_connect_server_button">관리 서버에 연결</string>
+    <string name="account_connect_button">연결</string>
+    <string name="help_credentials_enter">조직의 자격증을 입력하세요</string>
+    <string name="help_connect_password_enter">조직 비밀번호를 입력하세요</string>
+    <string name="account_connect_prompt_username">사용자명</string>
+    <string name="account_connect_server">관리 서버에 연결</string>
+    <string name="error_username_empty">사용자 이름을 입력</string>
+    <string name="register_name">등록 이름</string>
+    <string name="registered_username">등록된 사용자 이름</string>
+    <string name="register_username">공개 사용자 이름을 등록</string>
+    <string name="register_recommended">추천</string>
+    <string name="username_already_taken">이미 사용 이름</string>
+    <string name="invalid_username">유효하지 않은 사용자 이름</string>
+    <string name="unknown_error">알려지지 않은 오류. 네트워크 연결을 확인해 주세요!</string>
+    <string name="account_status_connecting">연결</string>
+    <string name="account_status_connection_error">연결 오류</string>
+    <string name="account_status_online">온라인</string>
+    <string name="account_status_unknown">알 수 없는</string>
+    <string name="account_status_offline">오프라인</string>
+    <string name="account_status_error">오류</string>
+    <string name="account_creation_home">자미에 오신 것을 환영합니다</string>
+    <string name="account_creation_profile">프로필 만들기</string>
+    <string name="account_creation_ring">자미 계정을 생성하세요</string>
+    <string name="account_revoke_device_hint">확인하기 위해 비밀번호를 입력</string>
+    <string name="enter_password">비밀번호를 입력</string>
+    <string name="revoke_device_title">취소 장치</string>
+    <string name="revoke_device_wait_title">잠깐만요</string>
+    <string name="revoke_device_wait_message">취소 장치</string>
+    <string name="rename_device_title">이 장치의 이름을 바꾸</string>
+    <string name="rename_device_button">이름 변경 장치</string>
+    <string name="account_rename_device_hint">새로운 장치 이름을 선택</string>
+    <string name="account_device_this_indicator">이 장치</string>
+    <string name="account_disabled_indicator">장애인</string>
+    <string name="error_format_not_supported">이 형식은 지원되지 않습니다.</string>
+    <string name="account_link_device_title">새로운 장치를 연결</string>
+    <string name="account_link_device_button">연결</string>
+</resources>

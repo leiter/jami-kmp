@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Համացանց</string>
+    <string name="pref_category_contacts">Կոնտակտներ</string>
+    <string name="pref_category_video">Տեսանյութ</string>
+    <string name="pref_category_system">Համակարգ</string>
+    <string name="pref_category_privacy">Անձնական գաղտնիություն</string>
+    <string name="pref_category_diagnostic">Վիրահատականներ</string>
+    <string name="pref_category_appearance">Արտաքին տեսք</string>
+    <string name="pref_category_connectivity">Կապակցվածություն</string>
+    <string name="pref_category_video_settings">Հրատարակված տեսանյութի կարգավորումները</string>
+    <string name="pref_mobileData_title">Մոբիլի տվյալներ</string>
+    <string name="pref_mobileData_summary">Թույլ տվեք Jami- ին 3G / LTE ցանցերում Wi-Fi- ի հետ միասին</string>
+    <string name="pref_pushNotifications_title">Հուշումներ</string>
+    <string name="pref_pushNotifications_summary">Օգտագործեք Google սերվերներ ՝ ֆոնում զանգեր / հաղորդագրություններ ստանալու համար</string>
+    <string name="pref_unifiedPush_summary">Օգտագործեք UnifiedPush ծառայություն ՝ ֆոնում զանգեր / հաղորդագրություններ ստանալու համար</string>
+    <string name="pref_video_advanced_title">Հրատարակված տեսանյութի կարգավորումները</string>
+    <string name="pref_video_advanced_summary">Փոխել տեսանյութի բիթային արագությունը, լուծումը, ինչպես նաեւ մուտք գործել փորձնական հատկությունները</string>
+    <string name="pref_hd_summary">Հեռացնել HD տեսանյութ ուղարկելը</string>
+    <string name="pref_hwEncode_title">Արագացված կոդավորման հնարավորություն</string>
+    <string name="pref_hwEncode_summary">Փորձնական առանձնահատկություն</string>
+    <string name="pref_videoBitrate_title">Տեսանյութի բիթային արագությունը</string>
+    <string name="pref_videoBitrate_summary">Ընտրեք արտադրանքի բիթային արագությունը (KB/s)</string>
+    <string name="pref_videoResolution_title">Տեսանյութի լուծում</string>
+    <string name="pref_videoResolution_summary">Ընտրեք արտադրանքի տեսանյութի կանխարգելված կարգավորումը</string>
+    <string name="pref_systemContacts_title">Օգտագործել համակարգային կոնտակտներ</string>
+    <string name="pref_systemContacts_summary">Օգտագործեք համակարգի կոնտակտները զանգահարողի մանրամասները ցույց տալու համար:</string>
+    <string name="pref_systemDialer_title">Համակարգային զանգեր կատարեք Jami- ի միջոցով</string>
+    <string name="pref_systemDialer_summary">Օգտագործեք Ջամի\' հնարավորության դեպքում համակարգային զանգեր կատարելու համար:</string>
+    <string name="pref_startOnBoot_title">Սկսեք Jami- ն սկսելու համար</string>
+    <string name="pref_startOnBoot_summary">Ջամիին հուշում է համակարգի սկսման ժամանակ:</string>
+    <string name="pref_clearHistory_title">Հստակ պատմություն</string>
+    <string name="pref_notification_title">Հրավերագրության տեսանելիություն</string>
+    <string name="pref_notification_summary">Սահմանեք հավելվածի ծանուցումների տեսանելիությունը փակման էկրանում:</string>
+    <string name="pref_blackList_title">Բլոկային ցուցակ</string>
+    <string name="pref_blackList_summary">Ստուգեք ձեր արգելափակման ցուցակը:</string>
+    <string name="pref_delete_account_title">Հաշիվը ջնջել</string>
+    <string name="pref_newGroup_title">Հավաքային զրույցը հնարավորացնել</string>
+    <string name="pref_newGroup_summary">Թույլ տվեք ստեղծել խմբեր Ջամիում:</string>
+    <string name="pref_logs_title">Դiagնոգոստային օրագրեր</string>
+    <string name="pref_logs_summary">Բաց ախտորոշման օրագրի կարգավորումները</string>
+    <string name="pref_logs_start">Սկսեք բեռնագրումը</string>
+    <string name="pref_logs_stop">Սեղմեք անտառային աշխատանքը</string>
+    <string name="pref_typing_title">Տիպման ցուցիչ</string>
+    <string name="pref_block_record_title">Բլոկել էկրանային նկարը եւ ձայնագրումը</string>
+    <string name="pref_block_record_summary">Պակասեք էկրանային նկարահանումները կամ տեսանյութերը ձայնագրելը:</string>
+    <string name="pref_link_preview_summary">Նախագահում պահանջում է բովանդակություն ներբեռնել երրորդ կողմի սերվերներից:</string>
+    <string name="connectivity_custom_title">Պարբերական</string>
+</resources>

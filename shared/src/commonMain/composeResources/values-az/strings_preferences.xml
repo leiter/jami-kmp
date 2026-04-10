@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">شبکه</string>
+    <string name="pref_category_contacts">تماس</string>
+    <string name="pref_category_video">ویدئو</string>
+    <string name="pref_category_system">Sistem</string>
+    <string name="pref_category_privacy">حریم خصوصی</string>
+    <string name="pref_category_diagnostic">دیآگنوستکس</string>
+    <string name="pref_category_appearance">گؤرونوش</string>
+    <string name="pref_category_connectivity">ارتباط</string>
+    <string name="pref_category_video_settings">گئنیش ویدئو تنظیماتلاری</string>
+    <string name="pref_mobileData_title">موبایل دیتاسی</string>
+    <string name="pref_mobileData_summary">جمی نین Wi-Fi-دن علاوه 3G/LTE شبکه لرینده یئرلشمه سینی ائجازه ور</string>
+    <string name="pref_pushNotifications_title">ایشلتمه خبرلری</string>
+    <string name="pref_pushNotifications_summary">Google server لرینی ایستیفاده ائدیرمک اوچون فوندا چاغیرما/اتینتیشلر آلماق</string>
+    <string name="pref_unifiedPush_summary">بیرلیگینده یاتاقلار/بایرنلرده یاتاقلار آلماق اوچون UnifiedPush خدمتینی ایستیفاده ائدیر</string>
+    <string name="pref_video_advanced_title">گئنیش ویدئو تنظیماتلاری</string>
+    <string name="pref_video_advanced_summary">ویدئوی بیت ریت، رزولوشن و تکزاسین تکزاسینی دَییشدیر</string>
+    <string name="pref_hd_summary">HD ویدئو گؤندرمه یه ائجازه ور</string>
+    <string name="pref_hwEncode_title">سرعتلی کودلاشما ائدیر</string>
+    <string name="pref_hwEncode_summary">تجربات</string>
+    <string name="pref_videoBitrate_title">ویدئوی بیت ریت</string>
+    <string name="pref_videoBitrate_summary">آلتیماژ:</string>
+    <string name="pref_videoResolution_title">ویدئو وضعیتی</string>
+    <string name="pref_videoResolution_summary">آلتیماکی فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فئودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال فودال</string>
+    <string name="pref_systemContacts_title">سیستم تماسونو استفاده کنید</string>
+    <string name="pref_systemContacts_summary">تماس آلماق اوچون سیستم تماسلارینی ائشلَت.</string>
+    <string name="pref_systemDialer_title">Jami ایستیفاده ائدرک سیستم تماسونو یئرله ییر</string>
+    <string name="pref_systemDialer_summary">امکان اولاندا جامی-دن سیستم تماسونو آل.</string>
+    <string name="pref_startOnBoot_title">جمیو با شروع شروع کنید</string>
+    <string name="pref_startOnBoot_summary">سیستم باشلادیغی زامان جمیی آرخادا قوی.</string>
+    <string name="pref_clearHistory_title">واضح تاریخ</string>
+    <string name="pref_notification_title">اطلاعیه لرین گؤرونوشو</string>
+    <string name="pref_notification_summary">قفل اِشیتمه سینده ایستیفاده ائدیرمه لرینین گؤرونوشونو تنظیم ائدیر.</string>
+    <string name="pref_blackList_title">بلاک لیستی</string>
+    <string name="pref_blackList_summary">بلاک لئستینی چک.</string>
+    <string name="pref_delete_account_title">حسابي سيندير</string>
+    <string name="pref_newGroup_title">گروه چیتی فعال ائتمک</string>
+    <string name="pref_newGroup_summary">جامی دا گروهلار یاراتماق ائدک.</string>
+    <string name="pref_logs_title">دیآگنوستک یازیلار</string>
+    <string name="pref_logs_summary">آچیق دیآگنوستاتیک دوققلو قورولوشلار</string>
+    <string name="pref_logs_start">لوقونلاشما باشلا</string>
+    <string name="pref_logs_stop">چوبانليق اتمهيي</string>
+    <string name="pref_typing_title">تایپلاشما مؤدّی</string>
+    <string name="pref_block_record_title">سکرین شات و ضبطی بلاک</string>
+    <string name="pref_block_record_summary">سکرین عکس آلماغی یا ویدئو ضبط ائتمه یه مانع اول.</string>
+    <string name="pref_link_preview_summary">پیش نمایش اوچونجو طرفین سرورلاریندان محتوا آلتیندا آلینما لازیمدیر.</string>
+    <string name="connectivity_custom_title">آدامی</string>
+</resources>

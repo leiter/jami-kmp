@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">नेटवर्क</string>
+    <string name="pref_category_contacts">संपर्क</string>
+    <string name="pref_category_video">वीडियो </string>
+    <string name="pref_category_system">सिस्टम</string>
+    <string name="pref_category_privacy">गोपनीयता</string>
+    <string name="pref_category_diagnostic">निदान</string>
+    <string name="pref_category_appearance">उपस्थिति</string>
+    <string name="pref_category_connectivity">कनेक्टिविटी</string>
+    <string name="pref_category_video_settings">उन्नत वीडियो सेटिंग्स</string>
+    <string name="pref_mobileData_title">मोबाइल डेटा</string>
+    <string name="pref_mobileData_summary">वाई-फाई के अतिरिक्त 3जी/एलटीई नेटवर्क पर जामी को अनुमति दें</string>
+    <string name="pref_pushNotifications_title">पुश सूचनाएं</string>
+    <string name="pref_pushNotifications_summary">पृष्ठभूमि में कॉल/संदेश प्राप्त करने की अनुमति देने के लिए Google सर्वर का उपयोग करें</string>
+    <string name="pref_unifiedPush_summary">पृष्ठभूमि में कॉल/संदेश प्राप्त करने की अनुमति देने के लिए एक UnifiedPush सेवा का उपयोग करें</string>
+    <string name="pref_video_advanced_title">उन्नत वीडियो सेटिंग्स</string>
+    <string name="pref_video_advanced_summary">वीडियो बिटरेट, रिज़ॉल्यूशन, साथ ही एक्सेस प्रयोगात्मक सुविधाओं को बदलें</string>
+    <string name="pref_hd_summary">एचडी वीडियो भेजने को सक्षम करें</string>
+    <string name="pref_hwEncode_title">त्वरित एन्कोडिंग सक्षम करें</string>
+    <string name="pref_hwEncode_summary">प्रयोगात्मक विशेषता</string>
+    <string name="pref_videoBitrate_title">वीडियो बिटरेट</string>
+    <string name="pref_videoBitrate_summary">डिफ़ॉल्ट आउटगोइंग वीडियो बिटरेट (KB/s) का चयन करें</string>
+    <string name="pref_videoResolution_title">वीडियो रिज़ॉल्यूशन</string>
+    <string name="pref_videoResolution_summary">डिफ़ॉल्ट आउटगोइंग वीडियो रिज़ॉल्यूशन का चयन करें</string>
+    <string name="pref_systemContacts_title">सिस्टम संपर्क का उपयोग करें</string>
+    <string name="pref_systemContacts_summary">फोन करने वाले के विवरण दिखाने के लिए सिस्टम संपर्क का उपयोग करें।</string>
+    <string name="pref_systemDialer_title">Jami का उपयोग करके सिस्टम कॉल करें</string>
+    <string name="pref_systemDialer_summary">जब संभव हो तो सिस्टम कॉल करने के लिए जेमी का उपयोग करें।</string>
+    <string name="pref_startOnBoot_title">स्टार्टअप पर Jami शुरू करें</string>
+    <string name="pref_startOnBoot_summary">जब सिस्टम शुरू होता है तो जेमी को पृष्ठभूमि में चलाएं।</string>
+    <string name="pref_clearHistory_title">स्पष्ट इतिहास</string>
+    <string name="pref_notification_title">सूचनाओं की दृश्यता</string>
+    <string name="pref_notification_summary">लॉक स्क्रीन पर एप्लिकेशन सूचनाओं की दृश्यता सेट करें।</string>
+    <string name="pref_blackList_title">ब्लॉक सूची</string>
+    <string name="pref_blackList_summary">अपनी ब्लॉक सूची की जाँच करें।</string>
+    <string name="pref_delete_account_title">खाता मिटाये</string>
+    <string name="pref_newGroup_title">समूह चैट सक्षम करें</string>
+    <string name="pref_newGroup_summary">Jami में समूह बनाने में सक्षम करें।</string>
+    <string name="pref_logs_title">निदान लॉग</string>
+    <string name="pref_logs_summary">खुले डायग्नोस्टिक लॉग सेटिंग्स</string>
+    <string name="pref_logs_start">लॉगिंग शुरू करें</string>
+    <string name="pref_logs_stop">लकड़ी का काटना बंद करो</string>
+    <string name="pref_typing_title">टाइपिंग सूचक</string>
+    <string name="pref_block_record_title">स्क्रीनशॉट और रिकॉर्डिंग को ब्लॉक करें</string>
+    <string name="pref_block_record_summary">स्क्रीनशॉट लेने या वीडियो रिकॉर्ड करने से रोकें।</string>
+    <string name="pref_link_preview_title">वेब लिंक पूर्वावलोकन</string>
+    <string name="pref_link_preview_summary">पूर्वावलोकन तृतीय पक्ष सर्वर से सामग्री डाउनलोड करने की आवश्यकता होती है।</string>
+    <string name="connectivity_custom_title">कस्टम</string>
+</resources>

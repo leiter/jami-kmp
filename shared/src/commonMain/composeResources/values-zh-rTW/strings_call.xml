@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="call_error">启动呼叫时出错</string>
+    <string name="call_error_no_microphone">通話已取消。未偵測到麥克風。</string>
+    <string name="call_error_no_camera_no_microphone">通話已取消。未偵測到相機或麥克風。</string>
+    <string name="screen_sharing_error">启动屏幕共享时出错</string>
+    <string name="call_human_state_searching">搜尋</string>
+    <string name="call_human_state_incoming">來電</string>
+    <string name="call_human_state_connecting">連接中</string>
+    <string name="call_human_state_ringing">響鈴中</string>
+    <string name="call_human_state_current">通話中</string>
+    <string name="call_human_state_hungup">結束</string>
+    <string name="call_human_state_busy">忙碌</string>
+    <string name="call_human_state_failure">失敗</string>
+    <string name="call_human_state_hold">通話保留</string>
+    <string name="call_human_state_unhold">繼續通話</string>
+    <string name="call_human_state_over">結束</string>
+    <string name="call_moderator">主持人</string>
+    <string name="call_muted">已靜音</string>
+    <string name="call_handRaised">舉手</string>
+</resources>

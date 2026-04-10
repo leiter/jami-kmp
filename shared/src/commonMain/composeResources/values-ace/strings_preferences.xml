@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">نيترڬ</string>
+    <string name="pref_category_contacts">ڤڠاجين</string>
+    <string name="pref_category_video">ڤيديو</string>
+    <string name="pref_category_system">سيستم</string>
+    <string name="pref_category_privacy">ڤريڤيسي</string>
+    <string name="pref_category_diagnostic">ڤڠاجرن</string>
+    <string name="pref_category_appearance">ڤرلو</string>
+    <string name="pref_category_connectivity">ڤڠاجين</string>
+    <string name="pref_category_video_settings">ڤڠاجرن ڤيديو ڤرنه</string>
+    <string name="pref_mobileData_title">داتا موبايل</string>
+    <string name="pref_mobileData_summary">ممبريكن Jami دڠن 3G/LTE نيتر برساتو Wi-Fi</string>
+    <string name="pref_pushNotifications_title">ڤمبلاجر ڤڠاجرن</string>
+    <string name="pref_pushNotifications_summary">مڠڬوناكن سرڤير Google اونتوق ممبريكن ڤرليندوڠن/ميسيج دالم ڤڠڬوناكن</string>
+    <string name="pref_unifiedPush_summary">مڠڬوناكن ڤڠڬونا UnifiedPush اونتوق ممبريكن ڤرلو مڠهادڤي ڤرساتوان/ميسيج دالم ڤڠڬونا</string>
+    <string name="pref_video_advanced_title">ڤڠاجرن ڤيديو ڤرنه</string>
+    <string name="pref_video_advanced_summary">ڤرچاي ڤرودوک ڤد ڤمبلاجرن ڤد ڤمبلاجرن ڤد ڤمبلاجرن ڤد ڤمبلاجرن ڤد ڤمبلاجرن ڤد ڤمبلاجرن ڤد ڤمبلاجرن ڤد ڤمبلاجرن ڤد ڤمبلاجرن ڤد ڤمبلاجرن ڤد ڤمبلاجرن ڤد ڤمبلاجرن ڤد ڤمبلاجرن ڤد ڤمبلاجرن ڤمبلاجرن ڤد ڤمبلاجرن ڤمبلاجرن ڤد ڤمبلاجرن ڤمبلاجرن ڤد ڤمبلاجرن ڤمبلاجرن ڤد ڤمبلاجرن ڤمبلاجرن ڤد ڤمبلاجرن ڤمبلاجرن ڤد ڤمبلاجرن</string>
+    <string name="pref_hd_summary">ممبنتو ڤرسيفتن ڤيديو HD</string>
+    <string name="pref_hwEncode_title">ممبنتو ڤڠڬيلن ڤڠڬيلن</string>
+    <string name="pref_hwEncode_summary">خصوصيت تجريبيه</string>
+    <string name="pref_videoBitrate_title">ڤرودوک ڤرودوک ڤرودوک</string>
+    <string name="pref_videoBitrate_summary">مميليه ڤرچاي ڤمبلاجرن ڤد ڤمبلاجرن ڤد ڤمبلاجرن (KB/s)</string>
+    <string name="pref_videoResolution_title">ڤرودوک ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد ڤد</string>
+    <string name="pref_videoResolution_summary">ڤيليه ڤرودوک ڤمبلاجرن ڤد ڤمبلاجرن</string>
+    <string name="pref_systemContacts_title">مڠڬوناكن ڤڠڬونا سيستم</string>
+    <string name="pref_systemContacts_summary">مڠڬوناكن ڤڠاجرن سيستم اونتوق ممبنتو ديتيل ڤڠاجرن.</string>
+    <string name="pref_systemDialer_title">ممڤوپا?? ي ڤڠاجين سيستم دڠن مڠڬوناكن Jami</string>
+    <string name="pref_systemDialer_summary">مڠڬوناكن جامي اونتوق ممڤوپا?? ي ڤڠاجرن سيسيتيم كتيک ممڤوپا?? ي.</string>
+    <string name="pref_startOnBoot_title">ڤمبيلن Jami دالم ڤمبيلن</string>
+    <string name="pref_startOnBoot_summary">جادي جادي جادي دالم سبواه ڤرتنديڠن كتيک سيسيڠ.</string>
+    <string name="pref_clearHistory_title">تاريخ يڠ برڤنتيڠ</string>
+    <string name="pref_notification_title">ڤرلو دڤرلوكن</string>
+    <string name="pref_notification_summary">ڤڠڬوناكن ڤمبلاجرن ڤرساتوان ڤرلو دڤرچايا?? ي دالم سكرين لاك.</string>
+    <string name="pref_blackList_title">ڤمباچ ڤڠوربان</string>
+    <string name="pref_blackList_summary">چيكل ڤمبلاجرن.</string>
+    <string name="pref_delete_account_title">مڠمبيل ڤڠاجرن</string>
+    <string name="pref_newGroup_title">ممبنتو چيت ڤڠڬونا</string>
+    <string name="pref_newGroup_summary">ممبنتو ڤڠڬوناكن ڬروڤ د Jami.</string>
+    <string name="pref_logs_title">ڤڠاجرن ڤڠاجرن</string>
+    <string name="pref_logs_summary">ڤڠاجرن لوڬ دأڠڬڤ</string>
+    <string name="pref_logs_start">ڤرلو مڠهادڤي ڤڠاجين</string>
+    <string name="pref_logs_stop">ڤرنه مڠهادڤي</string>
+    <string name="pref_typing_title">ڤڠوروسن ڤڠوروسن</string>
+    <string name="pref_block_record_title">ڤڠهولوڠ ڤرسكوتوان دان ڤرڬي</string>
+    <string name="pref_block_record_summary">مڠهادڤكن ڤمبلاجرن سكرينوت اتاو ڤمبلاجرن ڤيديو.</string>
+    <string name="pref_link_preview_summary">ڤريڤوڠ ڤرلو مڠمبيل ڤمبلاجرن دري ڤرلاونن ڤرلاونن ترسبوت.</string>
+</resources>

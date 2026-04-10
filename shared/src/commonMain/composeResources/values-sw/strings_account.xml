@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">Futa</string>
+    <string name="ic_advanced_menu">Mipangilio ya juu</string>
+    <string name="ic_blacklist_menu">Mawasiliano yaliyopigwa</string>
+    <string name="add_ring_account_title">Ongeza akaunti</string>
+    <string name="add_sip_account_title">Ongeza akaunti ya SIP</string>
+    <string name="ring_account_default_name">Akaunti ya Jami %1$s</string>
+    <string name="prompt_alias">Alias</string>
+    <string name="prompt_hostname">Jina la mwenyeji</string>
+    <string name="prompt_username">Jina la mtumiaji</string>
+    <string name="prompt_password">Nambari</string>
+    <string name="action_create">Unda akaunti</string>
+    <string name="action_create_short">Kujenga</string>
+    <string name="action_register">Kujiandikisha</string>
+    <string name="action_settings">Mipangilio</string>
+    <string name="error_field_required">Sehemu hii inahitajika</string>
+    <string name="dialog_wait_create">Kuongeza akaunti</string>
+    <string name="dialog_wait_create_details">Tafadhali subiri wakati akaunti yako mpya ni aliongeza...</string>
+    <string name="dialog_wait_update">Uhariri wa akaunti</string>
+    <string name="dialog_wait_update_details">Tafadhali subiri wakati akaunti yako mpya ni updated...</string>
+    <string name="account_type_ip2ip">Akaunti ya IP</string>
+    <string name="help_ring">Akaunti ya Jami hukuruhusu kuwasiliana na watu kwa usalama kwa peer-to-peer kupitia mtandao ulioshirikiwa kabisa.</string>
+    <string name="help_sip_title">Ongeza akaunti ya SIP</string>
+    <string name="account_delete_dialog_message">Hatua hii haiwezi kuondolewa.</string>
+    <string name="empty_account_list">Hakuna akaunti iliyosajiliwa</string>
+    <string name="normal_accounts_titles">Malipo</string>
+    <string name="normal_devices_titles">Vifaa vilivyounganishwa</string>
+    <string name="account_device_revoke">Kifaa cha kuondoa</string>
+    <string name="account_device_revocation_success_title">Mafanikio</string>
+    <string name="account_device_revocation_success">Kifaa sasa ni kuondolewa!</string>
+    <string name="account_device_revocation_unknown_device">Kifaa kisichojulikana.</string>
+    <string name="account_device_revocation_error_unknown">Kosa lisilojulikana.</string>
+    <string name="account_password_change">Kubadilisha Password</string>
+    <string name="account_password_set">Weka nywila</string>
+    <string name="account_password_summary">Kudhibiti password yako akaunti.</string>
+    <string name="account_password_change_wait_message">Kubadilisha password ya akaunti</string>
+    <string name="account_preferences_basic_tab">Mkuu</string>
+    <string name="account_basic_category">Mipangilio ya Msingi</string>
+    <string name="account_hostname_label">Jina la mwenyeji</string>
+    <string name="account_bootstrap_label">Bootstrap</string>
+    <string name="account_name_server_label">Jina server</string>
+    <string name="account_username_label">Jina la mtumiaji</string>
+    <string name="account_password_label">Nambari</string>
+    <string name="account_optionnal_category">Mipangilio ya Hiari</string>
+    <string name="account_useragent_label">Mtumiaji Mtumiaji</string>
+    <string name="account_autoanswer_label">Jibu la Moja kwa Moja</string>
+    <string name="account_rendezvous_label">Njia ya Kuonana</string>
+    <string name="account_rendezvous_summary">Katika hali ya Rendezvous, simu zinazoingia zitaongezwa kwenye chumba cha mkutano.</string>
+    <string name="account_upnp_label">Kuwezesha UPnP</string>
+    <string name="account_proxy_field">Wakala wa kuwakilisha</string>
+    <string name="account_audio_label">Sauti</string>
+    <string name="account_preferences_media_tab">Vyombo vya habari</string>
+    <string name="account_ringtone_label">Ringtones</string>
+    <string name="account_ringtone_enabled_label">Kuwasha sauti za sauti</string>
+    <string name="account_ringtone_path_label">Njia ya sauti</string>
+    <string name="account_ringtone_custom_label">Tumia sauti ya mdundo wa desturi</string>
+    <string name="account_ringtone_title">Chagua sauti ya kupiga</string>
+    <string name="account_ringtone_summary">Chagua sauti ya simu au kuchagua yako mwenyewe</string>
+    <string name="account_video_label">Video</string>
+    <string name="account_video_enable">Weka Video</string>
+    <string name="account_preferences_advanced_tab">Maendeleo</string>
+    <string name="account_call_settings_title">Mipangilio ya simu</string>
+    <string name="account_dht_public_in_calls_label">Ruhusu simu zinazoingia kutoka kwa mawasiliano yasiyojulikana</string>
+    <string name="account_registration_exp_label">Usajili Unapita</string>
+    <string name="account_local_interface_label">Interface ya ndani</string>
+    <string name="account_local_port_label">Bandari ya Mkoa</string>
+    <string name="account_stun_enable_label">Tumia STUN</string>
+    <string name="account_accept_files">Kubali faili zinazoingia moja kwa moja</string>
+    <string name="account_conversation_settings_title">Mipangilio ya mazungumzo</string>
+    <string name="account_accept_files_max_size">Ukubwa wa faili ya juu kukubali moja kwa moja</string>
+    <string name="account_accept_files_never">Kamwe kukubali moja kwa moja</string>
+    <string name="account_accept_files_always">Daima kukubali moja kwa moja</string>
+    <string name="size_mb">%1$d MB</string>
+    <string name="account_turn_enable_label">Tumia TURN</string>
+    <string name="account_turn_server_label">Server TURN</string>
+    <string name="account_turn_username_label">Jina la mtumiaji TURN</string>
+    <string name="account_turn_password_label">Password TURN</string>
+    <string name="account_published_same_as_local_label">Kuchapishwa sawa na ndani</string>
+    <string name="account_published_port_label">Bandari ya kuchapishwa</string>
+    <string name="account_published_address_label">Anwani Iliyochapishwa</string>
+    <string name="disabled">Walemavu</string>
+    <string name="enabled">Inaweza</string>
+    <string name="default_value">Chaguo-msingi</string>
+    <string name="account_proxy_label">DHT proxy</string>
+    <string name="account_proxy_enable_label">Tumia DHT proxy</string>
+    <string name="account_proxy_server_label">Anwani ya DHT proxy</string>
+    <string name="account_proxy_server_list_label">DHT proxy orodha URL</string>
+    <string name="account_sip_proxy_label">Wakala wa kuwakilisha</string>
+    <string name="account_peer_discovery_label">Ugunduzi wa wenzao wa eneo</string>
+    <string name="account_peer_discovery_enable_label">Kuwezesha upatikanaji wa wenzao wa ndani</string>
+    <string name="account_peer_discovery_enable_summary">Kuunganisha na nyingine DHT nodes matangazo kwenye mtandao wetu wa ndani</string>
+    <string name="account_credentials_label">Vyeti vya kuaminika</string>
+    <string name="account_credentials_edit">Hariri sifa</string>
+    <string name="account_credentials_add">Ongeza vitambulisho</string>
+    <string name="account_preferences_security_tab">Usalama</string>
+    <string name="account_srtp_switch_label">Encrypt media mito (SRTP)</string>
+    <string name="account_tls_transport_switch_label">Tumia TLS Usafiri</string>
+    <string name="account_tls_password_label">Nambari ya siri</string>
+    <string name="account_rtp_max_port">Kiwango cha juu</string>
+    <string name="account_rtp_min_port">Kiwango cha chini</string>
+    <string name="account_new_device_password">Ingiza nenosiri kuu kufungua akaunti</string>
+    <string name="error_password_char_count">Kiwango cha chini cha herufi 6</string>
+    <string name="export_account_wait_title">Tafadhali subiri...</string>
+    <string name="export_account_wait_message">Habari za akaunti ya kuuza nje</string>
+    <string name="account_export_file">Akaunti ya chelezo</string>
+    <string name="account_export_file_summary">Fungua akaunti yako kwenye kifaa chako ili kuiweka upya baadaye.</string>
+    <string name="account_enter_password">Ingiza nywila</string>
+    <string name="account_contact_me">Wasiliana nami juu ya Jami!</string>
+    <string name="update_account">Rekodi ya sasisho</string>
+    <string name="account_migration">Akaunti yako ya Jami inaweza kusasishwa. Tafadhali ingiza nenosiri lako.</string>
+    <string name="ring_account">Akaunti ya Jami</string>
+    <string name="sip_account">Akaunti ya SIP</string>
+    <string name="ring_account_identity">Utambulisho</string>
+    <string name="account_migration_title_dialog">Uhamiaji wa akaunti</string>
+    <string name="account_update_needed">Uhakikisho unahitajika</string>
+    <string name="account_sip_cannot_be_registered_message">Unaweza kuendelea na mchakato wa kuunda akaunti au kuhariri taarifa yako hapa.</string>
+    <string name="account_no_network_title">Kosa la mtandao</string>
+    <string name="account_device_added_title">Kifaa cha akaunti imeongezwa</string>
+    <string name="account_device_updated_title">Kifaa cha akaunti updated</string>
+    <string name="account_sip_register_anyway">Kujiandikisha anyway</string>
+    <string name="account_tv_settings_header">Mipangilio ya akaunti</string>
+    <string name="account_tv_advance_settings_header">Mipangilio ya juu</string>
+    <string name="account_tv_add_contact">Ongeza mawasiliano</string>
+    <string name="account_tv_advanced_settings">Badilisha mipangilio ya jumla</string>
+    <string name="account_tv_about">Kuhusu Jami</string>
+    <string name="tv_about_version">Toleo</string>
+    <string name="tv_about_license">Leseni</string>
+    <string name="tv_about_author">Haki za waandishi</string>
+    <string name="tv_about_credits">Mikopo</string>
+    <string name="account_link_device">Unganisha kutoka kifaa kingine</string>
+    <string name="account_link_button">Kuunganisha kutoka mtandao</string>
+    <string name="account_link_archive_button">Kuunganisha kutoka salama</string>
+    <string name="account_new_button">Unda akaunti ya Jami</string>
+    <string name="account_link_export_button">Unganisha kifaa kipya</string>
+    <string name="account_link_show_button">Onyesha %d zaidi kifaa kilichounganishwa</string>
+    <string name="account_link_hide_button">Funga kifaa kilichounganishwa</string>
+    <string name="account_end_export_button">karibu</string>
+    <string name="account_export_title">Kuunganisha akaunti kwa vifaa vingine</string>
+    <string name="account_connect_server_button">Kuunganisha na usimamizi wa seva</string>
+    <string name="account_connect_button">Unganisha</string>
+    <string name="help_credentials_enter">Ingiza maelezo ya shirika lako</string>
+    <string name="help_connect_password_enter">Ingiza password ya shirika lako</string>
+    <string name="account_connect_prompt_username">Jina la mtumiaji</string>
+    <string name="account_connect_server">Kuunganisha na usimamizi wa seva</string>
+    <string name="error_username_empty">Ingiza jina la mtumiaji</string>
+    <string name="register_name">Jina la Usajili</string>
+    <string name="registered_username">Jina la mtumiaji lililoandikishwa</string>
+    <string name="register_username">Kuandikisha jina la mtumiaji la umma</string>
+    <string name="register_recommended">Iliyopendekezwa</string>
+    <string name="username_already_taken">Jina la mtumiaji tayari limechukuliwa</string>
+    <string name="invalid_username">Jina la mtumiaji lisilofaa</string>
+    <string name="unknown_error">Kosa haijulikani. Tafadhali angalia uhusiano wako wa mtandao!</string>
+    <string name="account_status_connecting">Kuunganisha</string>
+    <string name="account_status_connection_error">Kosa la kuunganisha</string>
+    <string name="account_status_online">Mtandaoni</string>
+    <string name="account_status_unknown">Haijulikani</string>
+    <string name="account_status_offline">Nje ya mtandao</string>
+    <string name="account_status_error">Kosa</string>
+    <string name="account_creation_home">Karibu Jami</string>
+    <string name="account_creation_profile">Unda wasifu wako</string>
+    <string name="account_creation_ring">Unda akaunti yako ya Jami</string>
+    <string name="account_revoke_device_hint">Ingiza password ili kuthibitisha</string>
+    <string name="enter_password">Ingiza nywila</string>
+    <string name="revoke_device_title">Kifaa cha kuondoa</string>
+    <string name="revoke_device_wait_title">Tafadhali subiri...</string>
+    <string name="revoke_device_wait_message">Kifaa cha kuondoa</string>
+    <string name="rename_device_title">Jina upya kifaa hiki</string>
+    <string name="rename_device_button">Kifaa cha kubadilisha jina</string>
+    <string name="account_rename_device_hint">Chagua jina jipya la kifaa</string>
+    <string name="account_device_this_indicator">Kifaa hiki</string>
+    <string name="account_disabled_indicator">Walemavu</string>
+    <string name="error_format_not_supported">Umbizo hili halitegemewi.</string>
+    <string name="account_link_device_title">Unganisha kifaa kipya</string>
+    <string name="account_link_device_button">Unganisha</string>
+</resources>

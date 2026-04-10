@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Түлжээ</string>
+    <string name="pref_category_contacts">Байлцаагч</string>
+    <string name="pref_category_video">Видео</string>
+    <string name="pref_category_system">Систем</string>
+    <string name="pref_category_privacy">Хувийн байдал</string>
+    <string name="pref_category_diagnostic">Хэвлэл</string>
+    <string name="pref_category_appearance">Харааны байдал</string>
+    <string name="pref_category_connectivity">Холбоотой байдал</string>
+    <string name="pref_category_video_settings">Видеоны дэвшилтэт тохируулалт</string>
+    <string name="pref_mobileData_title">Гар утасны мэдээлэл</string>
+    <string name="pref_mobileData_summary">Jami-г Wi-Fi-ээс гадна 3G/LTE сүлжээний хэрэгслийн ашиглалтанд оруулаарай</string>
+    <string name="pref_pushNotifications_title">Дашрамдсан мэдэгдэл</string>
+    <string name="pref_pushNotifications_summary">Google сервер ашиглаж, хойноо дуудлага / мэдээ хүлээн авах боломжийг олгох</string>
+    <string name="pref_unifiedPush_summary">UnifiedPush үйлчилгээг ашиглан дуудлага / мэдээллийг хяналд хүлээн авах боломжийг олгоно</string>
+    <string name="pref_video_advanced_title">Видеоны дэвшилтэт тохируулалт</string>
+    <string name="pref_video_advanced_summary">Видеоны битрын хурд, тогтоол, мөн эксперименталын функц-ийг өөрчлөх</string>
+    <string name="pref_hd_summary">HD видеог дамжуулах боломжийг олгох</string>
+    <string name="pref_hwEncode_title">Давгайлан кодлохыг зөвшөөрөх</string>
+    <string name="pref_hwEncode_summary">Эксперименталь шинж чанар</string>
+    <string name="pref_videoBitrate_title">Видеоны битрэйд</string>
+    <string name="pref_videoBitrate_summary">Хажууд видеоны битрын түвшинг (KB/s) сонгох</string>
+    <string name="pref_videoResolution_title">Видеоны тодорхойлолт</string>
+    <string name="pref_videoResolution_summary">Хажуу видеоны тохируулалт сонго</string>
+    <string name="pref_systemContacts_title">Системийн холбоосыг ашиглах</string>
+    <string name="pref_systemContacts_summary">Зурагчдын мэдээллийг системээр дамжуулан үзнэ үү.</string>
+    <string name="pref_systemDialer_title">Jami-ийг ашиглан системт дуудлага хийх</string>
+    <string name="pref_systemDialer_summary">Магадгүй Джамиг системээр дуудлага хийхэд ашигла.</string>
+    <string name="pref_startOnBoot_title">Jami-ийг эхлүүлэхэд эхлүүлэх</string>
+    <string name="pref_startOnBoot_summary">Системийн эхлэх үед Джамиг дэргэд нь явуул.</string>
+    <string name="pref_clearHistory_title">Тарих нь тодорхой</string>
+    <string name="pref_notification_title">Хэвлэл мэдээллийн илрүүлэл</string>
+    <string name="pref_notification_summary">Хэрэглэлийн мэдэгдэлний илрэлтийг замбарааны дэлгэц дээр тохируулна.</string>
+    <string name="pref_blackList_title">Блок жагсаалт</string>
+    <string name="pref_blackList_summary">Таны жагсаалтыг шалгаарай.</string>
+    <string name="pref_delete_account_title">Хэтгэлээ устгах</string>
+    <string name="pref_newGroup_title">Товчдын ярилцлагаг идэвхжүүлнэ</string>
+    <string name="pref_newGroup_summary">Jami-д бүлэг байгуулах боломжийг олгох.</string>
+    <string name="pref_logs_title">Хэвлэлийн тэмдэглэл</string>
+    <string name="pref_logs_summary">Диагностикийн тэмдэглэлийн нээлттэй тохируулалт</string>
+    <string name="pref_logs_start">Хүрэлтийн ажлыг эхлүүлнэ</string>
+    <string name="pref_logs_stop">Хөдөөг зогсоо</string>
+    <string name="pref_typing_title">Тайплэрын үзүүлэлт</string>
+    <string name="pref_block_record_title">Скриншот, бичлэгд сэжиглэх</string>
+    <string name="pref_block_record_summary">Скриншот авах, видео бичлэг хийхэд саад.</string>
+    <string name="pref_link_preview_summary">Анхны үзлэг нь гуравдагч этгээдийн серверээс контентыг татаж авах шаардлагатай.</string>
+    <string name="connectivity_custom_title">Хувьцааны</string>
+</resources>

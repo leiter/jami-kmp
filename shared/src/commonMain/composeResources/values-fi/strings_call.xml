@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="call_error">Virhe aloitettaessa puhelua.</string>
+    <string name="call_error_no_microphone">Puhelu peruutettu. Mikrofonia ei havaittu.</string>
+    <string name="call_error_no_camera_no_microphone">Puhelu peruutettu. Kameraa tai mikrofonia ei havaittu.</string>
+    <string name="screen_sharing_error">Virhe aloitettaessa näytön jakamista.</string>
+    <string name="call_human_state_searching">Hakee</string>
+    <string name="call_human_state_incoming">Saapuva</string>
+    <string name="call_human_state_connecting">Yhdistetään</string>
+    <string name="call_human_state_ringing">Soi</string>
+    <string name="call_human_state_current">Puhuu</string>
+    <string name="call_human_state_hungup">Katkaistu</string>
+    <string name="call_human_state_busy">Varattu</string>
+    <string name="call_human_state_failure">Epäonnistui</string>
+    <string name="call_human_state_hold">Pidossa</string>
+    <string name="call_human_state_unhold">Poista pidosta</string>
+    <string name="call_human_state_over">Katkaistu</string>
+    <string name="call_moderator">Valvoja</string>
+    <string name="call_muted">Mykistetty</string>
+    <string name="call_handRaised">Käsi nostettu</string>
+</resources>

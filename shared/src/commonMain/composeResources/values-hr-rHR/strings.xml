@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="website_chooser_title">Pogledaj web stranicu koristeći...</string>
+    <string name="license">Ovaj softver je dostavljen \"kao što je\", bez ikakve jamstva.</string>
+    <string name="pip_title">Konferencija Jamija</string>
+    <string name="call_service_description">Ova usluga je potrebna da bi se pozivi bili u prvom planu.</string>
+    <string name="data_transfer_service_description">Ova usluga je potrebna za prikaz stalnih obavijesti tijekom prijenosa datoteka.</string>
+    <string name="media">Medij</string>
+    <string name="error_account_offline">Račun je isključen.</string>
+    <string name="menu_item_contact_request">Zahtjevi za kontakt</string>
+    <string name="menu_item_account_settings">Nastavke računa</string>
+    <string name="video_setting_title">Nastavke video</string>
+    <string name="notif_channel_file_transfer">Prenos datoteka</string>
+    <string name="notif_dismiss">Odbacujem</string>
+    <string name="notif_incoming_picture">Slika iz %1$s</string>
+    <string name="notif_location_multi_title">Udele lokacije s %1$d kontaktima</string>
+    <string name="notif_location_remaining">%1$d preostalih minuta</string>
+    <string name="notif_location_action_stop">Prestani dijeliti lokaciju</string>
+    <string name="location_share_about_title">Informacije o karti</string>
+    <string name="action_call_minimize">Smanjenje</string>
+    <string name="action_call_mute">Neispravni</string>
+    <string name="action_call_unmute">Nezgledni</string>
+    <string name="ab_action_audio_call">Pokrenite audio poziv</string>
+    <string name="ab_action_video_call">Pokrenite video pozive</string>
+    <string name="qr_code">QR kod</string>
+    <string name="new_group">Stvori novu grupu</string>
+    <string name="ab_action_hidepreview">Skrij preview</string>
+    <string name="remote_recording">%s snimanje...</string>
+    <string name="time_just_now">Upravo sad</string>
+    <string name="select_media">Otvorena galerija</string>
+    <string name="conversation_send_audio">Zapisi audio klip</string>
+    <string name="conversation_send_video">Snimanje video klipa</string>
+    <string name="ongoing_group_call">Poziv koji je u tijeku</string>
+    <string name="in_reply_to">U odgovor na</string>
+    <string name="clear_history_dialog_message">Ova akcija se ne može poništiti.</string>
+    <string name="clear_history">Jasno</string>
+    <string name="conversation_details">Podrobnosti razgovora</string>
+    <string name="contact_details">Pojedinosti kontakta</string>
+    <string name="leave_conversation">Ostavi razgovor</string>
+    <string name="conversation_action_delete_this_message">Ova akcija se ne može poništiti.</string>
+    <string name="delete_contact">Izbriši kontakt</string>
+    <string name="remove_conversation">Uklonite razgovor</string>
+    <string name="conversation_action_unblock_this">Otključaj kontakt</string>
+    <string name="conversation_action_incoming_call">Dolazni poziv</string>
+    <string name="conversation_action_latest">Pomicanje na kraj razgovora</string>
+    <string name="conversation_open_file_error">Ne postoji instalirana aplikacija koja može otvoriti ovaj tip datoteke.</string>
+    <string name="block_contact_dialog_message">%1$s neće moći kontaktirati vas dok ga ne otključite.</string>
+    <string name="unblock_contact_dialog_title">Otključavanje %1$s?</string>
+    <string name="unblock_contact_dialog_message">%1$s će moći ponovno kontaktirati vas.</string>
+    <string name="unblock_contact_completed">%1$s je bio otključan.</string>
+    <string name="conversation_info_contact_you">Ti si</string>
+    <string name="conversation_syncing">Preuzimanje razgovora od vrstevnika</string>
+    <string name="conversation_blocked">Ovaj kontakt je blokiran.</string>
+    <string name="conversation_ended">Razgovor je završen.</string>
+    <string name="conversation_reply_you">Ti si</string>
+    <string name="conversation_preference_color">Boja razgovora</string>
+    <string name="conversation_preference_emoji">Emoji razgovora</string>
+    <string name="conversation_type_contact">Kontakt s Jamijem</string>
+    <string name="conversation_type_private">Privredni</string>
+    <string name="conversation_type_group">Grupa</string>
+    <string name="conversation_search_hint">Razgovor za pretragu</string>
+    <string name="today">Danas</string>
+    <string name="yesterday">Jučer</string>
+    <string name="prompt_new_password_repeat">Potvrdi novu lozinku</string>
+    <string name="account_create_title">Stvoriti račun Jami</string>
+    <string name="help_password_enter">Ubaci lozinku za glavni račun Jamija.</string>
+    <string name="help_server_enter">Ubaci URL-a za upravljački server.</string>
+    <string name="hist_contact_invited">Kontakt pozvani</string>
+    <string name="hist_contact_left">Kontakt lijevo</string>
+    <string name="profile_message_warning">Profil se dijeli samo s kontaktima</string>
+    <string name="take_a_photo">Fotografija</string>
+    <string name="registered_name">Upisno ime</string>
+    <string name="no_registered_name">Ne postoji registrirano ime</string>
+    <string name="identity">Identifikacija</string>
+    <string name="identifier">Identifikacija</string>
+    <string name="link_new_device">Povežite novi uređaj</string>
+    <string name="devices_header">Uređaji</string>
+    <string name="total_devices">Ukupna količina uređaja: </string>
+    <string name="share_message">Skenirajte ovaj kod sa Jamijem.</string>
+    <string name="share_your_account_information">Podeli moje kontaktne podatke</string>
+    <string name="decline">Odbij</string>
+    <string name="invitation_message">Imate %1$d zahtjeve za kontakt</string>
+    <string name="no_blocked_contact">Nema blokiranih kontakata</string>
+    <string name="no_contact_request">Ne šaljemo zahtjev za kontakt</string>
+    <string name="conversation_placeholder">Još niste razgovarali.</string>
+    <string name="contact_request_sent">Poslan kontaktni zahtjev</string>
+    <string name="start_conversation">Pokrenite razgovor.</string>
+    <string name="tv_contact_row_header">Kontaktni</string>
+    <string name="gallery_error_title">Ne pronađeno aplikacija Galerija</string>
+    <string name="gallery_error_message">Nije pronađena aplikacija na uređaju za otvaranje Galerije</string>
+    <string name="file_transfer_status_invalid_file">Neispravna datoteka</string>
+    <string name="file_transfer_status_canceled">Otkazano</string>
+    <string name="file_download">Snimka</string>
+    <string name="title_media_viewer">Sredni gledatelj</string>
+    <string name="menu_file_save">Spamiti datoteku</string>
+    <string name="menu_message_edit">Izmijeniti poruku</string>
+    <string name="menu_message_delete">Izbrišite poruku</string>
+    <string name="menu_message_reply">Odgovori</string>
+    <string name="pref_darkTheme_title">Tamna tema</string>
+    <string name="pref_darkTheme_summary">Uvijek uključite tamnu temu umjesto korištenja sustava ponašanja</string>
+    <string name="navigation_item_contact_request">Pozivi</string>
+    <string name="search_results_public_directory">U skladu s člankom 1.</string>
+    <string name="tv_send_audio_dialog_message">Pošaljite audio poruku?</string>
+    <string name="tv_send_image_dialog_message">Pošaljite sliku?</string>
+    <string name="tv_send_video_dialog_message">Pošalji video?</string>
+    <string name="tv_media_preview">Preview</string>
+    <string name="tv_audio_recording">-Pregledavanje...</string>
+    <string name="tv_send_text">Pošaljite poruku</string>
+    <string name="tv_send_audio">Pošaljite audio</string>
+    <string name="tv_send_video">Pošaljite medije</string>
+    <string name="tv_action_more">Više</string>
+    <string name="conversation_input_speech_hint">Reci nešto...</string>
+    <string name="wizard_status_recommended">Preporučeno</string>
+    <string name="wizard_status_optional">Opcionalno</string>
+    <string name="wizard_status_required">Potreban</string>
+    <string name="wizard_username_info">Izaberite korisničko ime za svoj račun</string>
+    <string name="wizard_username_button">Izberite korisničko ime</string>
+    <string name="wizard_username_skip">Preskočite odabir korisničkog imena</string>
+    <string name="wizard_password_info">Lozinka računa</string>
+    <string name="wizard_password_placeholder">Izaberite lozinku za šifriranje ključa računa na ovom uređaju</string>
+    <string name="wizard_password_button">Izaberite lozinku</string>
+    <string name="wizard_password_warning">Napomena: lozinku ne možete vratiti</string>
+    <string name="wizard_profile_info">Profil se dijeli samo s kontaktima</string>
+    <string name="wizard_profile_button">Sačuvanje profila</string>
+    <string name="wizard_profile_skip">Preskoči i uradi to kasnije.</string>
+    <string name="fab_path_choose">Izaberite drugu datoteku</string>
+    <string name="bottomSheet_dialpad_btn">Ugrađivanje</string>
+    <string name="bottomSheet_extensions_btn">Proširenja</string>
+    <string name="bottomSheet_add_participants_btn">Dodavanje</string>
+    <string name="bottomSheet_change_camera_btn">Promjena</string>
+    <string name="bottomSheet_hangup_btn">Završi poziv</string>
+    <string name="bottomSheet_mute_microphone_btn">Mikro</string>
+    <string name="uninstall">Neinstalacija</string>
+    <string name="reset">Nastavljanje</string>
+    <string name="rename_btn">Potvrdi</string>
+    <string name="tab_members">Članovi</string>
+    <string name="tab_files">Dosje</string>
+    <string name="tab_settings">Postavke</string>
+    <string name="dialog_hint_title">Naslov</string>
+    <string name="dialog_hint_description">Opisivanje</string>
+    <string name="picker_title">Izbor kontaktova</string>
+    <string name="picker_btn">Izbor kontaktova</string>
+    <string name="bottomsheet_contact">Kontakt s Jami\n%1$s</string>
+    <string name="bottomsheet_remove">Uklonite član</string>
+    <string name="jami_id_validate">Upis korisničkog imena</string>
+    <string name="jami_id_choose_username">Izaberite korisničko ime</string>
+    <string name="welcome_jami_title">Dobrodošli u Jami</string>
+    <string name="details">Pojedinosti</string>
+    <string name="Private">Privredni</string>
+    <string name="mute_conversation">Tiho razgovor</string>
+    <string name="donation_card_not_now">Ne sada</string>
+    <string name="donation_donate">Doniraj</string>
+    <string name="export_side_step1_code_connect">Povezivanje</string>
+    <string name="export_side_step2_cancel">Otkaži</string>
+    <string name="export_side_step2_confirm">Potvrdi</string>
+    <string name="import_side_step1_share">Podijeli</string>
+    <string name="import_side_step2_password_import">Uvezi</string>
+</resources>

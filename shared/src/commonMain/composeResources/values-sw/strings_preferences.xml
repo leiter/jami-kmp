@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Mtandao</string>
+    <string name="pref_category_contacts">Mawasiliano</string>
+    <string name="pref_category_video">Video</string>
+    <string name="pref_category_system">Mfumo</string>
+    <string name="pref_category_privacy">Faragha</string>
+    <string name="pref_category_diagnostic">Utambuzi</string>
+    <string name="pref_category_appearance">Kuonekana</string>
+    <string name="pref_category_connectivity">Uunganisho</string>
+    <string name="pref_category_video_settings">Mipangilio ya video ya juu</string>
+    <string name="pref_mobileData_title">Data za simu</string>
+    <string name="pref_mobileData_summary">Ruhusu Jami kwenye mitandao ya 3G / LTE pamoja na Wi-Fi</string>
+    <string name="pref_pushNotifications_title">Kutuma taarifa</string>
+    <string name="pref_pushNotifications_summary">Tumia seva za Google kuruhusu kupokea simu/ ujumbe katika background</string>
+    <string name="pref_unifiedPush_summary">Tumia huduma ya UnifiedPush kuruhusu kupokea simu/ ujumbe katika background</string>
+    <string name="pref_video_advanced_title">Mipangilio ya video ya juu</string>
+    <string name="pref_video_advanced_summary">Kubadilisha video bitrate, azimio, pamoja na huduma za upatikanaji wa majaribio</string>
+    <string name="pref_hd_summary">Kuwezesha kutuma HD video</string>
+    <string name="pref_hwEncode_title">Kuwezesha encoding kasi</string>
+    <string name="pref_hwEncode_summary">Kipengele cha majaribio</string>
+    <string name="pref_videoBitrate_title">Video bitrate</string>
+    <string name="pref_videoBitrate_summary">Chagua default kutoka video bitrate (KB / s)</string>
+    <string name="pref_videoResolution_title">Azimio la video</string>
+    <string name="pref_videoResolution_summary">Chagua azimio la video ya kuondoka</string>
+    <string name="pref_systemContacts_title">Tumia mawasiliano ya mfumo</string>
+    <string name="pref_systemContacts_summary">Tumia mawasiliano ya mfumo kuonyesha maelezo ya simu.</string>
+    <string name="pref_systemDialer_title">Fanya simu za mfumo kwa kutumia Jami</string>
+    <string name="pref_systemDialer_summary">Tumia Jami kufanya simu za mfumo ikiwezekana.</string>
+    <string name="pref_startOnBoot_title">Kuanza Jami katika kuanza</string>
+    <string name="pref_startOnBoot_summary">Kuendesha Jami katika background wakati mfumo kuanza.</string>
+    <string name="pref_clearHistory_title">Historia ya wazi</string>
+    <string name="pref_notification_title">Kuonekana kwa taarifa</string>
+    <string name="pref_notification_summary">Weka maonyesho ya maombi ya maonyesho kwenye screen lock.</string>
+    <string name="pref_blackList_title">Orodha ya vikwazo</string>
+    <string name="pref_blackList_summary">Angalia orodha yako ya kuzuia.</string>
+    <string name="pref_delete_account_title">Futa akaunti</string>
+    <string name="pref_newGroup_title">Kuwezesha gumzo la kikundi</string>
+    <string name="pref_newGroup_summary">Kuwezesha kuunda makundi katika Jami.</string>
+    <string name="pref_logs_title">Rekodi za utambuzi</string>
+    <string name="pref_logs_summary">Mipangilio ya wazi ya rekodi ya uchunguzi</string>
+    <string name="pref_logs_start">Kuanza Kuweka</string>
+    <string name="pref_logs_stop">Acha kuondoa</string>
+    <string name="pref_typing_title">Kiashiria cha aina</string>
+    <string name="pref_block_record_title">Kuzuia screenshot na kurekodi</string>
+    <string name="pref_block_record_summary">Acha kupiga picha za skrini au kurekodi video.</string>
+    <string name="pref_link_preview_summary">Kuangalia mbele inahitaji kupakua maudhui kutoka kwa seva za mtu wa tatu.</string>
+    <string name="connectivity_custom_title">Desturi</string>
+</resources>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Ntanetị</string>
+    <string name="pref_category_contacts">Ndị a na-akpọtụrụ</string>
+    <string name="pref_category_video">Vidio</string>
+    <string name="pref_category_system">Sịstèm</string>
+    <string name="pref_category_privacy">Ihe Ndị Na-eme Ka Mmadụ Nwee Onwe Ya</string>
+    <string name="pref_category_diagnostic">Ihe ndị e ji amata ọrịa</string>
+    <string name="pref_category_appearance">Otú Ọ Dị</string>
+    <string name="pref_category_connectivity">Njikọ</string>
+    <string name="pref_category_video_settings">Ntọala vidiyo dị elu</string>
+    <string name="pref_mobileData_title">Data mkpanaka</string>
+    <string name="pref_mobileData_summary">Hapụ Jami na netwọk 3G / LTE na mgbakwunye na Wi-Fi</string>
+    <string name="pref_pushNotifications_title">Nkwupụta ịkwanye</string>
+    <string name="pref_pushNotifications_summary">Jiri ihe nkesa Google iji kwe ka ị nata oku / ozi na ndabere</string>
+    <string name="pref_unifiedPush_summary">Jiri ọrụ UnifiedPush iji nye ohere ịnweta oku / ozi na ndabere</string>
+    <string name="pref_video_advanced_title">Ntọala vidiyo dị elu</string>
+    <string name="pref_video_advanced_summary">Gbanwee bitrate video, mkpebi, nakwa dị ka ịnweta nnwale atụmatụ</string>
+    <string name="pref_hd_summary">Mee ka izipu HD video</string>
+    <string name="pref_hwEncode_title">Gbaa ọsọ na-agba ọsọ encoding</string>
+    <string name="pref_hwEncode_summary">Ihe a na-eme na-egosi na e nwere ihe ndị a na-eme.</string>
+    <string name="pref_videoBitrate_title">Bitrate vidiyo</string>
+    <string name="pref_videoBitrate_summary">Họrọ ndabara na-apụ apụ video bitrate (KB / s)</string>
+    <string name="pref_videoResolution_title">Nkọwapụta vidiyo</string>
+    <string name="pref_videoResolution_summary">Họrọ ndabara na-apụ apụ video mkpebi</string>
+    <string name="pref_systemContacts_title">Jiri kọntaktị sistemụ</string>
+    <string name="pref_systemContacts_summary">Jiri kọntaktị sistemụ iji gosi nkọwa nke onye kpọrọ oku.</string>
+    <string name="pref_systemDialer_title">Mee oku na sistemụ site na iji Jami</string>
+    <string name="pref_systemDialer_summary">Jiri Jami mee ka ndị ọrụ na-akpọ gị mgbe ọ bụla o kwere omume.</string>
+    <string name="pref_startOnBoot_title">Malite Jami na mmalite</string>
+    <string name="pref_startOnBoot_summary">Mee ka Jami nọrọ n\'azụ mgbe usoro ahụ malitere.</string>
+    <string name="pref_clearHistory_title">Akụkọ ihe mere eme doro anya</string>
+    <string name="pref_notification_title">Nkwupụta nke ọkwa</string>
+    <string name="pref_notification_summary">Tinye ngwa ngosi ngosi na mkpọchi ihuenyo.</string>
+    <string name="pref_blackList_title">Ndepụta nke ndị na-emechi</string>
+    <string name="pref_blackList_summary">Lelee ndepụta ndị ị na-eme.</string>
+    <string name="pref_delete_account_title">Ihichapụ akaụntụ</string>
+    <string name="pref_newGroup_title">Gbaa nkata otu</string>
+    <string name="pref_newGroup_summary">Mee ka ndị otu na Jami nwee ike ịmepụta.</string>
+    <string name="pref_logs_title">Ihe ndekọ nchọpụta</string>
+    <string name="pref_logs_summary">Mbido ndekọ ndekọ nchọpụta na-emeghe</string>
+    <string name="pref_logs_start">Malite Ịkụ Ụgbọ</string>
+    <string name="pref_logs_stop">Kwụsị ịkwa osisi</string>
+    <string name="pref_typing_title">Ihe ngosi maka ịpị</string>
+    <string name="pref_block_record_title">Gbochie nseta ihuenyo na ndekọ</string>
+    <string name="pref_block_record_summary">Kwụsị iwere nseta ihuenyo ma ọ bụ idekọ vidiyo.</string>
+    <string name="pref_link_preview_summary">Nlele anya chọrọ ibudata ọdịnaya site na sava ndị ọzọ.</string>
+</resources>

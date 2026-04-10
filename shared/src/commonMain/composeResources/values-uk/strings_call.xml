@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="call_error">Сталася помилка під час початку дзвінка.</string>
+    <string name="call_error_no_microphone">Дзвінок закінчено. Мікрофон не знайдено.</string>
+    <string name="call_error_no_camera_no_microphone">Дзвінок закінчено. Камеру або мікрофон не знайдено.</string>
+    <string name="screen_sharing_error">An error occurred while starting the screen share.</string>
+    <string name="call_human_state_searching">Шукаю</string>
+    <string name="call_human_state_incoming">Викликає</string>
+    <string name="call_human_state_connecting">Зʼєднання</string>
+    <string name="call_human_state_ringing">Дзвінок</string>
+    <string name="call_human_state_current">Розмовляє</string>
+    <string name="call_human_state_hungup">Завершено</string>
+    <string name="call_human_state_busy">Зайнятий</string>
+    <string name="call_human_state_failure">Не вдалося</string>
+    <string name="call_human_state_hold">Утримання виклику</string>
+    <string name="call_human_state_unhold">Зняти з утримання</string>
+    <string name="call_human_state_over">Понад</string>
+    <string name="call_moderator">Модератор</string>
+    <string name="call_muted">Приглушено</string>
+    <string name="call_handRaised">Піднята рука</string>
+</resources>

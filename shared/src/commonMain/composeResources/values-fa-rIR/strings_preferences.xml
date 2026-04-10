@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">شبکه</string>
+    <string name="pref_category_contacts">مخاطبان</string>
+    <string name="pref_category_video">ویدیو</string>
+    <string name="pref_category_system">سیستم</string>
+    <string name="pref_category_privacy">حریم خصوصی</string>
+    <string name="pref_category_diagnostic">عیب‌یابی</string>
+    <string name="pref_category_appearance">ظاهر</string>
+    <string name="pref_category_connectivity">اتصال</string>
+    <string name="pref_category_video_settings">تنظیمات پیشرفته ویدیو</string>
+    <string name="pref_mobileData_title">داده همراه</string>
+    <string name="pref_mobileData_summary">اجازه فعالیت جمی روی شبکه‌های 3G و LTE، علاوه بر وای‌فای</string>
+    <string name="pref_pushNotifications_title">اعلان‌های پرتابی</string>
+    <string name="pref_pushNotifications_summary">استفاده از سرورهای گوگل برای دریافت تماس‌ها/پیام‌ها در پس‌زمینه</string>
+    <string name="pref_unifiedPush_summary">استفاده از یک سرویس UnifiedPush برای اجازه دریافت تماس ها/رساله ها در پس زمینه</string>
+    <string name="pref_video_advanced_title">تنظیمات پیشرفته ویدیو</string>
+    <string name="pref_video_advanced_summary">تغییر نرخ بیت ویدیو، تفکیک‌پذیری تصویر و همچنین دسترسی به ویژگی‌های آزمایشی</string>
+    <string name="pref_hd_summary">فعال‌سازی ارسال ویدیوی HD</string>
+    <string name="pref_hwEncode_title">فعال‌سازی کدگذاری شتاب‌داده</string>
+    <string name="pref_hwEncode_summary">ویژگی آزمایشی</string>
+    <string name="pref_videoBitrate_title">نرخ بیت ویدیو</string>
+    <string name="pref_videoBitrate_summary">انتخاب نرخ بیت پیش‌فرض ویدیوی خروجی (کیلوبایت بر ثانیه)</string>
+    <string name="pref_videoResolution_title">وضوح ویدیو</string>
+    <string name="pref_videoResolution_summary">انتخاب وضوح پیش‌فرض ویدیوی خروجی</string>
+    <string name="pref_systemContacts_title">استفاده از مخاطبان سیستم</string>
+    <string name="pref_systemContacts_summary">استفاده از مخاطبان سیستم برای نمایش جزییات تماس‌گیرنده.</string>
+    <string name="pref_systemDialer_title">انجام تماس‌های سیستم با استفاده از جمی</string>
+    <string name="pref_systemDialer_summary">استفاده از جمی برای انجام تماس‌های سیستم در صورت امکان.</string>
+    <string name="pref_startOnBoot_title">اجرای جمی هنگام راه‌اندازی</string>
+    <string name="pref_startOnBoot_summary">اجرای جمی در پس‌زمینه هنگام آغاز به کار سیستم.</string>
+    <string name="pref_clearHistory_title">پاک‌سازی تاریخچه</string>
+    <string name="pref_notification_title">قابلیت مشاهده اعلان</string>
+    <string name="pref_notification_summary">قابلیت مشاهده اعلان‌های برنامه را در صفحه قفل تنظیم کنید</string>
+    <string name="pref_blackList_title">لیست مسدودی</string>
+    <string name="pref_blackList_summary">لیست مسدودی خود را بررسی کنید.</string>
+    <string name="pref_delete_account_title">حذف حساب</string>
+    <string name="pref_newGroup_title">چت گروهی را فعال کن</string>
+    <string name="pref_newGroup_summary">ایجاد گروه در جمی را فعال کن</string>
+    <string name="pref_logs_title">گزارش‌های عیب‌یابی</string>
+    <string name="pref_logs_summary">نتظیمات گزارش عیب‌یابی را باز کن</string>
+    <string name="pref_logs_start">شروع گزارش‌گیری</string>
+    <string name="pref_logs_stop">توقف گزارش‌گیری</string>
+    <string name="pref_typing_title">شاخص تایپ</string>
+    <string name="pref_block_record_title">مسدود‌سازی عکس از صفحه و ضبط ویدیویی</string>
+    <string name="pref_block_record_summary">مسدود‌سازی عکس از صفحه و ضبط ویدیویی</string>
+    <string name="pref_link_preview_title">پیش نمایش های پیوند وب</string>
+    <string name="pref_link_preview_summary">پیش نمایش نیاز به دانلود محتوا از سرورهای شخص ثالث دارد.</string>
+    <string name="connectivity_custom_title">سفارشی</string>
+</resources>

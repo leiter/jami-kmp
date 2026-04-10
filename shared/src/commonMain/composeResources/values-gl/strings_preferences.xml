@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">Rede</string>
+    <string name="pref_category_contacts">Contactos</string>
+    <string name="pref_category_video">Vídeo</string>
+    <string name="pref_category_system">Sistema</string>
+    <string name="pref_category_privacy">Privacidade</string>
+    <string name="pref_category_diagnostic">Diagnósticos</string>
+    <string name="pref_category_appearance">Apariencia</string>
+    <string name="pref_category_connectivity">Conectividade</string>
+    <string name="pref_category_extensions">Complementos</string>
+    <string name="pref_category_video_settings">Axustes avanzados de video</string>
+    <string name="pref_mobileData_title">Datos móbiles</string>
+    <string name="pref_mobileData_summary">Permitir que Jami acceda a redes 3G/LTE ademáis de a Wi-Fi.</string>
+    <string name="pref_pushNotifications_title">Notificacións Push</string>
+    <string name="pref_pushNotifications_summary">Usar servidores Google para permitir recibir chamadas e mensaxes en segundo plano</string>
+    <string name="pref_unifiedPush_summary">Utilice un servizo UnifiedPush para permitir recibir chamadas/mensaxes en segundo plano</string>
+    <string name="pref_video_advanced_title">Axustes avanzados de video</string>
+    <string name="pref_video_advanced_summary">Cambiar a taxa de bits, resolución e acceso a características experimentais</string>
+    <string name="pref_hd_summary">Activar vídeo HD</string>
+    <string name="pref_hwEncode_title">Activar codificación acelerada</string>
+    <string name="pref_hwEncode_summary">Característica experimental</string>
+    <string name="pref_videoBitrate_title">Bitrate do vídeo</string>
+    <string name="pref_videoBitrate_summary">Establecer bitrate por omisión (KB/s)</string>
+    <string name="pref_videoResolution_title">Resolución de vídeo</string>
+    <string name="pref_videoResolution_summary">Establecer a resolución por omisión</string>
+    <string name="pref_systemContacts_title">Usar contactos do sistema</string>
+    <string name="pref_systemContacts_summary">Usar contactos do sistema para mostrar detalles do contacto.</string>
+    <string name="pref_systemDialer_title">Facer as chamadas dos sistema usando Jami</string>
+    <string name="pref_systemDialer_summary">Usar Jami cando sexa posible para facer chamadas.</string>
+    <string name="pref_startOnBoot_title">Inciar Jami ao inicio do sistema</string>
+    <string name="pref_startOnBoot_summary">Executar Jami en segundo plano cando se inicia o sistema.</string>
+    <string name="pref_clearHistory_title">Eliminar historial</string>
+    <string name="pref_notification_title">Visibilidade da notificación</string>
+    <string name="pref_notification_summary">Establecer a visibilidade das notificacións coa pantalla bloqueada.</string>
+    <string name="pref_blackList_title">Lista de bloqueo</string>
+    <string name="pref_blackList_summary">Comproba a lista de bloqueo.</string>
+    <string name="pref_delete_account_title">Eliminar conta</string>
+    <string name="pref_newGroup_title">Activar a parola en grupo</string>
+    <string name="pref_newGroup_summary">Permitir crear grupos en Jami.</string>
+    <string name="pref_logs_title">Rexistros do diagnóstico</string>
+    <string name="pref_logs_summary">Abrir axustes do rexistro dos diagnósticos</string>
+    <string name="pref_logs_start">Comezar a rexistrar</string>
+    <string name="pref_logs_stop">Deter o rexistro</string>
+    <string name="pref_typing_title">Indicador de tipografía</string>
+    <string name="pref_block_record_title">Bloquear captura de pantalla e gravación</string>
+    <string name="pref_block_record_summary">Bloquear a captura de pantalla ou gravación de vídeo.</string>
+    <string name="pref_link_preview_title">Previsualización de ligazóns web</string>
+    <string name="pref_link_preview_summary">A visualización previa require descargar contido de servidores de terceiros.</string>
+    <string name="connectivity_custom_title">Personalizar</string>
+    <string name="extension_invalid_signature"><b>%1$s</b> ten unha sinatura non válida</string>
+</resources>

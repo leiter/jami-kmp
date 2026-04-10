@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="ic_delete_menu">Ezabatu</string>
+    <string name="ic_advanced_menu">Ezarpen aurreratuak</string>
+    <string name="ic_blacklist_menu">Blokeatutako kontaktuak</string>
+    <string name="add_ring_account_title">Gehitu kontua</string>
+    <string name="add_sip_account_title">Gehitu SIP kontua</string>
+    <string name="ring_account_default_name">%1$s Jami kontua</string>
+    <string name="prompt_alias">Ezizena</string>
+    <string name="prompt_hostname">Ostalari-izena</string>
+    <string name="prompt_username">Erabiltzaile-izena</string>
+    <string name="prompt_password">Pasahitza</string>
+    <string name="action_create">Sortu kontua</string>
+    <string name="action_create_short">Sortu</string>
+    <string name="action_register">Erregistratu</string>
+    <string name="action_settings">Ezarpenak</string>
+    <string name="error_field_required">Eremu hau beharrezkoa da</string>
+    <string name="dialog_wait_create">Kontua gehitzen</string>
+    <string name="dialog_wait_create_details">Itxaron zure kontu berria gehitzen den bitartean...</string>
+    <string name="dialog_wait_update">Kontua eguneratzen</string>
+    <string name="dialog_wait_update_details">Itxaron zure kontu berria eguneratzen den bitartean...</string>
+    <string name="account_type_ip2ip">IP kontua</string>
+    <string name="help_ring">Jami-ren kontua da jendearekin harremanetan jartzeko aukera.</string>
+    <string name="help_sip_title">Gehitu SIP kontua</string>
+    <string name="account_delete_dialog_message">Ekintza hau ezin da desegin.</string>
+    <string name="empty_account_list">Ez dago erregistratutako konturik</string>
+    <string name="normal_accounts_titles">Kontuak</string>
+    <string name="normal_devices_titles">Estekatuta dauden gailuak</string>
+    <string name="account_device_revoke">Atzera egiteko gailua</string>
+    <string name="account_device_revocation_success_title">Ongi</string>
+    <string name="account_device_revocation_success">Gailua bertan behera utzi dute!</string>
+    <string name="account_device_revocation_unknown_device">Gailu ezezaguna.</string>
+    <string name="account_device_revocation_error_unknown">Errore ezezaguna.</string>
+    <string name="account_password_change">Aldatu pasahitza</string>
+    <string name="account_password_set">Pasahitza ezar ezazu</string>
+    <string name="account_password_summary">Kontuaren pasahitza kudeatu.</string>
+    <string name="account_password_change_wait_message">Kontuaren pasahitza aldatzen</string>
+    <string name="account_preferences_basic_tab">Orokorra</string>
+    <string name="account_basic_category">Oinarrizko ezarpenak</string>
+    <string name="account_hostname_label">Ostalari-izena</string>
+    <string name="account_bootstrap_label">Errematxu bat</string>
+    <string name="account_name_server_label">Izen zerbitzaria</string>
+    <string name="account_username_label">Erabiltzaile-izena</string>
+    <string name="account_password_label">Pasahitza</string>
+    <string name="account_optionnal_category">Aukerazko ezarpenak</string>
+    <string name="account_useragent_label">Erabiltzaile-agentea</string>
+    <string name="account_autoanswer_label">Erantzun automatikoa</string>
+    <string name="account_rendezvous_label">Bilera modua</string>
+    <string name="account_rendezvous_summary">Bilera-moduan, deiak bilera gelara gehituko dira.</string>
+    <string name="account_upnp_label">UPnP aktibatu</string>
+    <string name="account_proxy_field">Proxya</string>
+    <string name="account_audio_label">Audioa</string>
+    <string name="account_preferences_media_tab">Multimedia</string>
+    <string name="account_ringtone_label">Dei-doinuak</string>
+    <string name="account_ringtone_enabled_label">Aktibatu dei-doinuak</string>
+    <string name="account_ringtone_path_label">Dei-doinuen bide-izena</string>
+    <string name="account_ringtone_custom_label">Erabili dei-doinu pertsonalizatua</string>
+    <string name="account_ringtone_title">Aukeratu soineko-tonua.</string>
+    <string name="account_ringtone_summary">Aukeratu doinu bat edo aukeratu zurea.</string>
+    <string name="account_video_label">Bideoa</string>
+    <string name="account_video_enable">Gaitu bideoa</string>
+    <string name="account_preferences_advanced_tab">Aurreratua</string>
+    <string name="account_call_settings_title">Dei-ezarpenak</string>
+    <string name="account_dht_public_in_calls_label">Ezagunik ez diren kontaktuetatik datozen deiak baimendu</string>
+    <string name="account_registration_exp_label">Erregistroa amaitu da</string>
+    <string name="account_local_interface_label">Interfaze lokala</string>
+    <string name="account_local_port_label">Ataka lokala</string>
+    <string name="account_stun_enable_label">STUN erabili</string>
+    <string name="account_accept_files">Sarrera jasotzen ari diren fitxategiak automatikoki onartzen dira</string>
+    <string name="account_conversation_settings_title">Elkarrizketa-errendapenak</string>
+    <string name="account_accept_files_max_size">Fitxategi-tamainaren gehienezkoak automatikoki onartzeko</string>
+    <string name="account_accept_files_never">Ez onartu inoiz automatikoki.</string>
+    <string name="account_accept_files_always">Beti onartu automatikoki.</string>
+    <string name="size_mb">%1$d MB</string>
+    <string name="account_turn_enable_label">Erabili TURN</string>
+    <string name="account_turn_server_label">TURN zerbitzaria</string>
+    <string name="account_turn_username_label">TURN erabiltzaile izena</string>
+    <string name="account_turn_password_label">TURN pasahitza</string>
+    <string name="account_published_same_as_local_label">Bertakoak bezala argitaratua</string>
+    <string name="account_published_port_label">Argitaratutako ataka</string>
+    <string name="account_published_address_label">Argitaratutako helbidea</string>
+    <string name="disabled">Desgaituta</string>
+    <string name="enabled">Ahaltu</string>
+    <string name="default_value">Lehenetsia</string>
+    <string name="account_proxy_label">DHT proxya</string>
+    <string name="account_proxy_enable_label">Erabili DHT proxya</string>
+    <string name="account_proxy_server_label">DHT proxyaren helbidea</string>
+    <string name="account_proxy_server_list_label">DHTren ordezkari zerrenda</string>
+    <string name="account_sip_proxy_label">Proxya</string>
+    <string name="account_peer_discovery_label">Tokiko lagunen aurkikuntza</string>
+    <string name="account_peer_discovery_enable_label">Bertako lagunen aurkikuntza ahalbidetu</string>
+    <string name="account_peer_discovery_enable_summary">Gure sarean iragarki egiten duten beste DHT-ko korapiloekin konektatu.</string>
+    <string name="account_credentials_label">Kredentzialak</string>
+    <string name="account_credentials_edit">Editatu kredentzialak</string>
+    <string name="account_credentials_add">Gehitu kedentzialak</string>
+    <string name="account_preferences_security_tab">Segurtasuna</string>
+    <string name="account_srtp_switch_label">Kodeatu komunikabideak (SRTP)</string>
+    <string name="account_tls_transport_switch_label">TLS garraioaren erabilera</string>
+    <string name="account_tls_password_label">Gako pribatuaren pasahitza</string>
+    <string name="account_rtp_max_port">Maximoa</string>
+    <string name="account_rtp_min_port">Minimoa</string>
+    <string name="account_new_device_password">Sartu pasahitza nagusia kontuaren irekitzeko</string>
+    <string name="error_password_char_count">6 karaktere gutxienez</string>
+    <string name="export_account_wait_title">Itxaron mesedez...</string>
+    <string name="export_account_wait_message">Kontuaren informazioa esportatzen</string>
+    <string name="account_export_file">Egin kontuaren babes-kopia</string>
+    <string name="account_export_file_summary">Zure kontua zure gailuan babestu eta gero berreskuratu.</string>
+    <string name="account_enter_password">Sartu pasahitza</string>
+    <string name="account_contact_me">Jarri harremanetan Jami-rekin!</string>
+    <string name="update_account">Eguneratu kontua</string>
+    <string name="account_migration">Zure Jami kontua eguneratu daiteke. Mesedez sartu pasahitza.</string>
+    <string name="ring_account">Jami kontua</string>
+    <string name="sip_account">SIP kontuak</string>
+    <string name="ring_account_identity">Identitatea</string>
+    <string name="account_migration_title_dialog">Kontuaren migrazioa</string>
+    <string name="account_update_needed">Eguneratu behar da</string>
+    <string name="account_sip_cannot_be_registered_message">Kontuaren sorrera prozesuarekin jarraitu dezakezu edo zure informazioa editatu hemen.</string>
+    <string name="account_no_network_title">Sare errorea</string>
+    <string name="account_device_added_title">Kontuaren gailua gehituta</string>
+    <string name="account_device_updated_title">Kontuaren gailua eguneratu da</string>
+    <string name="account_sip_register_anyway">Erregistratu hala ere</string>
+    <string name="account_tv_settings_header">Kontuaren ezarpenak</string>
+    <string name="account_tv_advance_settings_header">Ezarpen aurreratuak</string>
+    <string name="account_tv_add_contact">Gehitu kontaktua</string>
+    <string name="account_tv_advanced_settings">Aldatu jarduera orokorrak</string>
+    <string name="account_tv_about">Jamiri buruz</string>
+    <string name="tv_about_version">Bertsioa</string>
+    <string name="tv_about_license">Lizentzia</string>
+    <string name="tv_about_author">Egile eskubideak</string>
+    <string name="tv_about_credits">Kredituak</string>
+    <string name="account_link_device">Beste gailu batetik konektatu</string>
+    <string name="account_link_button">Konektatu saretik</string>
+    <string name="account_link_archive_button">Konektatu babes-kopiatik</string>
+    <string name="account_new_button">Jarri kontu bat Jami-n</string>
+    <string name="account_link_export_button">Estekatu gailu berria</string>
+    <string name="account_link_show_button">%d gehiagoren konektatutako gailua erakutsi</string>
+    <string name="account_link_hide_button">Ezkutatu lotutako gailua</string>
+    <string name="account_end_export_button">itxi</string>
+    <string name="account_export_title">Beste gailu batzuekin lotutako kontuak</string>
+    <string name="account_connect_server_button">Administrazio zerbitzariarekin konektatu</string>
+    <string name="account_connect_button">Konektatu</string>
+    <string name="help_credentials_enter">Sartu zure erakundearen identifikazioa</string>
+    <string name="help_connect_password_enter">Sartu zure erakundearen pasahitza</string>
+    <string name="account_connect_prompt_username">Erabiltzaile-izena</string>
+    <string name="account_connect_server">Administrazio zerbitzariarekin konektatu</string>
+    <string name="error_username_empty">Sartu erabiltzaile-izen bat</string>
+    <string name="register_name">Izen-zerrenda</string>
+    <string name="registered_username">Erregistratutako erabiltzaile-izena</string>
+    <string name="register_username">Erregistratu izen publikoa</string>
+    <string name="register_recommended">gomendatzen da</string>
+    <string name="username_already_taken">Erabiltzaile izena</string>
+    <string name="invalid_username">Erabiltzaile-izen baliogabea</string>
+    <string name="unknown_error">Ezaguna ez den akats bat. Mesedez, egiaztatu sare konektatzea!</string>
+    <string name="account_status_connecting">Konektatzen</string>
+    <string name="account_status_connection_error">Konexio errorea</string>
+    <string name="account_status_online">Konektatuta</string>
+    <string name="account_status_unknown">Ezezaguna</string>
+    <string name="account_status_offline">Deskonektatuta</string>
+    <string name="account_status_error">Errorea</string>
+    <string name="account_creation_home">Ongi etorri Jamira</string>
+    <string name="account_creation_profile">Sortu zure profila</string>
+    <string name="account_creation_ring">Sortu zure Jami kontua</string>
+    <string name="account_revoke_device_hint">Sartu pasahitza berresteko</string>
+    <string name="enter_password">Sartu pasahitza</string>
+    <string name="revoke_device_title">Atzera egiteko gailua</string>
+    <string name="revoke_device_wait_title">Itxaron mesedez...</string>
+    <string name="revoke_device_wait_message">Deuseztatzeko gailua</string>
+    <string name="rename_device_title">Aldatu izena gailu honi</string>
+    <string name="rename_device_button">Aldatu izena gailuari</string>
+    <string name="account_rename_device_hint">Aukeratu gailuaren izen berria</string>
+    <string name="account_device_this_indicator">Gailu hau</string>
+    <string name="account_disabled_indicator">Desgaituta</string>
+    <string name="error_format_not_supported">Formatu hau ez da onartzen.</string>
+    <string name="account_link_device_title">Estekatu gailu berria</string>
+    <string name="account_link_device_button">Konektatu</string>
+</resources>

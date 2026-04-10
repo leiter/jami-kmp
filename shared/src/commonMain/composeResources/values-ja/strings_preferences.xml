@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="pref_category_network">ネットワーク</string>
+    <string name="pref_category_contacts">連絡先</string>
+    <string name="pref_category_video">動画</string>
+    <string name="pref_category_system">システム</string>
+    <string name="pref_category_privacy">プライバシー</string>
+    <string name="pref_category_diagnostic">診断</string>
+    <string name="pref_category_appearance">着せかえ</string>
+    <string name="pref_category_connectivity">接続性</string>
+    <string name="pref_category_video_settings">ビデオの高度な設定</string>
+    <string name="pref_mobileData_title">モバイル通信</string>
+    <string name="pref_mobileData_summary">Wi-Fiに加えて3G / LTEでの使用をJamiに許可する</string>
+    <string name="pref_pushNotifications_title">プッシュ通知</string>
+    <string name="pref_pushNotifications_summary">Google のサーバーを使って通話とメッセージを受信します</string>
+    <string name="pref_unifiedPush_summary">UnifiedPush サービスを使って,背景で電話/メッセージを受け取ることができます</string>
+    <string name="pref_video_advanced_title">ビデオの高度な設定</string>
+    <string name="pref_video_advanced_summary">動画のビットレートと解像度の変更、実験的な機能を試す</string>
+    <string name="pref_hd_summary">HDビデオの送信を有効にする</string>
+    <string name="pref_hwEncode_title">高速エンコードを有効にする</string>
+    <string name="pref_hwEncode_summary">実験的機能</string>
+    <string name="pref_videoBitrate_title">ビデオのビットレート</string>
+    <string name="pref_videoBitrate_summary">デフォルトの送信ビデオビットレート (KB/s) を選択</string>
+    <string name="pref_videoResolution_title">ビデオの解像度</string>
+    <string name="pref_videoResolution_summary">送信するビデオのデフォルト解像度を選択</string>
+    <string name="pref_systemContacts_title">システムの連絡先を使用する</string>
+    <string name="pref_systemContacts_summary">システムの連絡先を使用して通話先の詳細を表示します。</string>
+    <string name="pref_systemDialer_title">Jamiを使用して発信する</string>
+    <string name="pref_systemDialer_summary">可能な場合、Jamiを使用して発信する</string>
+    <string name="pref_startOnBoot_title">起動時にJamiを開始</string>
+    <string name="pref_startOnBoot_summary">端末の起動時にバックグラウンドで Jami を実行します</string>
+    <string name="pref_clearHistory_title">履歴を消去</string>
+    <string name="pref_notification_title">ロック画面上での通知</string>
+    <string name="pref_notification_summary">ロック画面上でもアプリからの通知が見えるようにします。</string>
+    <string name="pref_blackList_title">着信拒否一覧</string>
+    <string name="pref_blackList_summary">着信拒否一覧を確認</string>
+    <string name="pref_delete_account_title">アカウントの削除</string>
+    <string name="pref_newGroup_title">グループチャットを有効にする</string>
+    <string name="pref_newGroup_summary">ジュミでグループを作成する</string>
+    <string name="pref_logs_title">診断記録</string>
+    <string name="pref_logs_summary">診断記録設定を開く</string>
+    <string name="pref_logs_start">記録を開始する</string>
+    <string name="pref_logs_stop">記録を終了する</string>
+    <string name="pref_typing_title">タイプインジケーター</string>
+    <string name="pref_block_record_title">画面撮影・録画の禁止</string>
+    <string name="pref_block_record_summary">画面を撮影・録画することを禁止する。</string>
+    <string name="pref_link_preview_title">Web リンクのプレビュー</string>
+    <string name="pref_link_preview_summary">プレビューは,第三者のサーバーからコンテンツをダウンロードする必要があります.</string>
+    <string name="connectivity_custom_title">カスタム</string>
+</resources>

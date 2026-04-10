@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<resources>
+    <string name="call_error_no_microphone">Zəng ləğv edildi. Mikrofon aşkarlanmadı.</string>
+    <string name="call_error_no_camera_no_microphone">Zəng ləğv edildi. Kamera və ya mikrofon aşkarlanmadı.</string>
+    <string name="call_human_state_searching">آختارماق</string>
+    <string name="call_human_state_incoming">گئدن</string>
+    <string name="call_human_state_connecting">باغلاشما</string>
+    <string name="call_human_state_ringing">زنگ زدن</string>
+    <string name="call_human_state_current">دانيشماق</string>
+    <string name="call_human_state_hungup">قورتاردي</string>
+    <string name="call_human_state_busy">مشغول</string>
+    <string name="call_human_state_failure">شکست</string>
+    <string name="call_human_state_hold">صبر کن</string>
+    <string name="call_human_state_unhold">گئجه ییب</string>
+    <string name="call_human_state_over">قورتاردي</string>
+    <string name="call_moderator">مودراتور</string>
+    <string name="call_muted">ساکئت</string>
+    <string name="call_handRaised">ال قالديريلميش</string>
+</resources>
