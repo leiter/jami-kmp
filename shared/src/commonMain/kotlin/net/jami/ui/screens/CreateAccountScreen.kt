@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -44,6 +45,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -116,6 +121,10 @@ fun CreateAccountScreen(
             )
         },
     ) { padding ->
+        val passwordFocus = remember { FocusRequester() }
+        val confirmPasswordFocus = remember { FocusRequester() }
+        val focusManager = LocalFocusManager.current
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -135,6 +144,7 @@ fun CreateAccountScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
                 trailingIcon = {
                     if (state.username.isNotEmpty()) {
                         when {
@@ -174,11 +184,14 @@ fun CreateAccountScreen(
                 onValueChange = { viewModel.setPassword(it) },
                 label = { Text(stringResource(Res.string.prompt_password_optional)) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().focusRequester(passwordFocus),
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Next,
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { confirmPasswordFocus.requestFocus() },
                 ),
                 supportingText = if (state.password.isNotEmpty() && state.password.length < 6) {
                     { Text(stringResource(Res.string.error_password_min_chars), color = JamiTheme.colors.error) }
@@ -195,11 +208,14 @@ fun CreateAccountScreen(
                     onValueChange = { viewModel.setConfirmPassword(it) },
                     label = { Text(stringResource(Res.string.prompt_confirm_password)) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().focusRequester(confirmPasswordFocus),
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Done,
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { focusManager.clearFocus() },
                     ),
                     supportingText = if (state.confirmPassword.isNotEmpty() && state.password != state.confirmPassword) {
                         { Text(stringResource(Res.string.error_passwords_mismatch), color = JamiTheme.colors.error) }

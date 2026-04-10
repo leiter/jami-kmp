@@ -186,6 +186,37 @@ private fun MainNavigation(needsMigration: Boolean) {
                 onNewConversation = {
                     navController.navigate(Screen.NewConversation.route)
                 },
+                onAddAccount = {
+                    navController.navigate(Screen.CreateAccount.route)
+                },
+            )
+        }
+
+        // ==================== Add Account (from account picker) ====================
+
+        composable(Screen.CreateAccount.route) {
+            CreateAccountScreen(
+                onBack = { navController.popBackStack() },
+                onAccountCreated = {
+                    navController.navigate(Screen.ProfileSetup.route) {
+                        popUpTo(Screen.CreateAccount.route) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable(Screen.ProfileSetup.route) {
+            ProfileSetupScreen(
+                onComplete = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onSkip = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
             )
         }
 
