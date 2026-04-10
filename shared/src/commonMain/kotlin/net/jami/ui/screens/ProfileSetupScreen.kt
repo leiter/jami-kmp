@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -51,6 +52,7 @@ import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.ProfileSetupViewModel
+import net.jami.utils.clearFocusOnTap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,6 +94,8 @@ fun ProfileSetupScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .clearFocusOnTap()
+                .imePadding()
                 .padding(horizontal = JamiTheme.spacing.l)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,

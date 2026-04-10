@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -42,7 +43,11 @@ import net.jami.ui.theme.JamiTheme
  * @param errorMessage Error message displayed below the field when [isError] is true.
  * @param singleLine Whether the input is constrained to a single line.
  * @param maxLines Maximum number of visible lines.
- * @param keyboardOptions Software keyboard options for the field.
+ * @param keyboardOptions Software keyboard options (type, IME action, etc.).
+ * @param keyboardActions Callbacks for IME actions (Next, Done, Send, etc.).
+ *   On iOS, these are the primary way to dismiss the keyboard — there is no
+ *   Back button. Use [ImeAction.Done] on the last field of a form and wire
+ *   [KeyboardActions.onDone] to [LocalFocusManager.clearFocus].
  * @param enabled Whether the field accepts input.
  */
 @Composable
@@ -57,6 +62,7 @@ fun JamiInputText(
     singleLine: Boolean = true,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     enabled: Boolean = true,
 ) {
     Column(modifier = modifier) {
@@ -78,6 +84,7 @@ fun JamiInputText(
             singleLine = singleLine,
             maxLines = maxLines,
             keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
             isError = isError,
             placeholder = if (placeholder != null) {
                 {

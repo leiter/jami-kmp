@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -69,6 +70,7 @@ import net.jami.ui.components.content.JamiSectionTitle
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.AccountSettingsViewModel
 import net.jami.ui.viewmodel.DeviceItem
+import net.jami.utils.clearFocusOnTap
 
 /**
  * Account settings screen displaying profile info, linked devices,
@@ -142,6 +144,8 @@ fun AccountSettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .clearFocusOnTap()
+                .imePadding()
                 .verticalScroll(rememberScrollState()),
         ) {
             // Profile section
