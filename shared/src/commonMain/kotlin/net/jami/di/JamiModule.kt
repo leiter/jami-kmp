@@ -152,8 +152,8 @@ val jamiModule = module {
 
     // ==================== ViewModels ====================
 
-    viewModelFactory { ConversationsViewModel(get(), get(), get()) }
-    viewModelFactory { ChatViewModel(get(), get()) }
+    viewModelFactory { ConversationsViewModel(get(), get(), get(), get()) }
+    viewModelFactory { ChatViewModel(get(), get(), get()) }
     viewModelFactory { AccountCreationViewModel(get()) }
     viewModelFactory { ImportAccountViewModel(get()) }
     viewModelFactory { AccountSettingsViewModel(get(), get(), get()) }

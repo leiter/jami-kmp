@@ -174,7 +174,7 @@ class ContactService(
      * Subscribe to presence updates for a contact.
      */
     fun subscribeBuddy(accountId: String, uri: Uri, subscribe: Boolean) {
-        daemonBridge.subscribeBuddy(accountId, uri.uri, subscribe)
+        daemonBridge.subscribeBuddy(accountId, uri.rawRingId, subscribe)
     }
 
     /**
@@ -182,7 +182,10 @@ class ContactService(
      */
     internal fun onPresenceUpdate(accountId: String, uriString: String, status: Int) {
         val uri = Uri.fromString(uriString)
-        val contact = findContactInCache(accountId, uri) ?: return
+        // Use Account's contact cache — the same objects held by Conversation.contact —
+        // so that Contact.isOnline reflects immediately in the conversation list.
+        val account = accountService.getAccount(accountId) ?: return
+        val contact = account.getContactFromCache(uri)
         val presenceStatus = when (status) {
             0 -> Contact.PresenceStatus.OFFLINE
             1 -> Contact.PresenceStatus.AVAILABLE

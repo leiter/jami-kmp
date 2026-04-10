@@ -32,6 +32,8 @@ import net.jami.model.TextMessage
 import net.jami.model.Uri
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
+import net.jami.services.ContactEvent
+import net.jami.services.ContactService
 import net.jami.services.ConversationFacade
 import net.jami.services.ConversationEvent
 import net.jami.services.DeviceRuntimeService
@@ -42,6 +44,8 @@ import net.jami.utils.VCardUtils
  */
 data class ConversationItem(
     val id: String,
+    /** The contact's ring ID — used for presence matching. Null for group conversations. */
+    val contactId: String?,
     val displayName: String,
     val lastMessage: String,
     val timestamp: Long,
@@ -58,7 +62,9 @@ data class ConversationsState(
     val isLoading: Boolean = false,
     val searchQuery: String = "",
     val pendingRequests: Int = 0,
-    val currentAccountAvatarBytes: ByteArray? = null
+    val currentAccountAvatarBytes: ByteArray? = null,
+    /** True when the current account is registered with the daemon. */
+    val isAccountOnline: Boolean = false
 )
 
 /**
@@ -71,12 +77,16 @@ class ConversationsViewModel(
     private val accountService: AccountService,
     private val conversationFacade: ConversationFacade,
     private val deviceRuntimeService: DeviceRuntimeService,
+    private val contactService: ContactService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     private val scope = scope
 
     private val _state = MutableStateFlow(ConversationsState())
     val state: StateFlow<ConversationsState> = _state.asStateFlow()
+
+    /** Tracks (accountId, contactRawRingId) pairs that have an active presence subscription. */
+    private val subscribedBuddies = mutableSetOf<Pair<String, String>>()
 
     init {
         // Observe current account changes and reload conversations
@@ -112,6 +122,25 @@ class ConversationsViewModel(
             }
         }
 
+        // When account becomes REGISTERED: update own status dot and re-subscribe to all
+        // contact presence. subscribeBuddy called pre-registration is queued by the daemon
+        // but DHT presence replies only arrive once the account is on the DHT network.
+        scope.launch {
+            accountService.accountEvents.collect { event ->
+                if (event is AccountEvent.RegistrationStateChanged) {
+                    val account = accountService.currentAccount.value ?: return@collect
+                    if (event.accountId == account.accountId) {
+                        _state.value = _state.value.copy(isAccountOnline = account.isRegistered)
+                        if (account.isRegistered) {
+                            // Clear the subscription set so buildConversationItems() re-subscribes
+                            subscribedBuddies.clear()
+                            loadConversations()
+                        }
+                    }
+                }
+            }
+        }
+
         // Own account profile received from another device.
         // Fast path: decode base64 photo from the event payload.
         // Slow path: reload conversations (reads updated profile.vcf the daemon wrote to disk).
@@ -126,6 +155,21 @@ class ConversationsViewModel(
                     }
                     // Also reload from disk — the daemon writes profile.vcf before firing this callback.
                     loadConversations()
+                }
+            }
+        }
+
+        // React to presence changes: match on contactId (ring ID), not conversation swarm ID.
+        scope.launch {
+            contactService.contactEvents.collect { event ->
+                if (event is ContactEvent.PresenceUpdated) {
+                    val contactRawId = event.contact.uri.rawRingId
+                    val current = _state.value.conversations
+                    val updated = current.map { item ->
+                        if (item.contactId == contactRawId) item.copy(isOnline = event.contact.isOnline)
+                        else item
+                    }
+                    _state.value = _state.value.copy(conversations = updated)
                 }
             }
         }
@@ -164,7 +208,8 @@ class ConversationsViewModel(
                     conversations = conversations,
                     isLoading = false,
                     pendingRequests = pendingCount,
-                    currentAccountAvatarBytes = accountAvatarBytes ?: _state.value.currentAccountAvatarBytes
+                    currentAccountAvatarBytes = accountAvatarBytes ?: _state.value.currentAccountAvatarBytes,
+                    isAccountOnline = account.isRegistered
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)
@@ -208,6 +253,15 @@ class ConversationsViewModel(
 
         return conversations.mapNotNull { conversation ->
             val contact = conversation.contact
+
+            // Subscribe to presence for this contact if not already subscribed.
+            if (contact != null) {
+                val key = accountId to contact.uri.rawRingId
+                if (subscribedBuddies.add(key)) {
+                    contactService.subscribeBuddy(accountId, contact.uri, true)
+                }
+            }
+
             val displayName = conversation.profileFlow.value.displayName?.takeIf { it.isNotBlank() }
                 ?: contact?.displayUsername
                 ?: conversation.uri.rawRingId
@@ -228,6 +282,7 @@ class ConversationsViewModel(
 
             ConversationItem(
                 id = conversation.uri.rawRingId,
+                contactId = contact?.uri?.rawRingId,
                 displayName = displayName,
                 lastMessage = lastMessage,
                 timestamp = timestamp,
@@ -239,9 +294,16 @@ class ConversationsViewModel(
     }
 
     /**
-     * Cancel the coroutine scope when this ViewModel is no longer needed.
+     * Cancel the coroutine scope and release all presence subscriptions.
      */
     fun onCleared() {
+        val accountId = accountService.currentAccount.value?.accountId
+        if (accountId != null) {
+            for ((subAccountId, rawRingId) in subscribedBuddies) {
+                contactService.subscribeBuddy(subAccountId, Uri.fromString(rawRingId), false)
+            }
+        }
+        subscribedBuddies.clear()
         scope.cancel()
     }
 }

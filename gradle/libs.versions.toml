@@ -4,6 +4,7 @@ kotlin = "2.1.20"
 coroutines = "1.10.1"
 atomicfu = "0.27.0"
 serialization = "1.8.0"
+kotlinx-datetime = "0.6.2"
 ktor = "3.0.1"
 koin = "4.0.0"
 okio = "3.9.1"
@@ -23,6 +24,7 @@ androidx-lifecycle = "2.8.7"
 # Coroutines
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "atomicfu" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 

@@ -155,11 +155,14 @@ fun HomeScreen(
                         ),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // Current user avatar
+                    // Current user avatar with own account online indicator
                     JamiAvatar(
                         displayName = "Me",
                         avatarBytes = state.currentAccountAvatarBytes,
                         size = AvatarSize.Small,
+                        showPresence = true,
+                        presenceStatus = if (state.isAccountOnline) PresenceStatus.Online
+                        else PresenceStatus.Offline,
                     )
 
                     Spacer(Modifier.width(JamiTheme.spacing.m))

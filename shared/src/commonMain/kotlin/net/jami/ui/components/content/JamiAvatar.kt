@@ -119,11 +119,11 @@ fun JamiAvatar(
         }
 
         // Presence indicator dot
-        if (showPresence && presenceStatus != PresenceStatus.Offline) {
+        if (showPresence) {
             val dotColor = when (presenceStatus) {
                 PresenceStatus.Online -> JamiTheme.colors.positive
                 PresenceStatus.Away -> JamiTheme.colors.warning
-                PresenceStatus.Offline -> JamiTheme.colors.onDisabled
+                PresenceStatus.Offline -> JamiTheme.colors.warning
             }
             Box(
                 modifier = Modifier

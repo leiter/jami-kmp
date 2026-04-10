@@ -107,6 +107,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.atomicfu)
                 implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlinx.datetime)
                 implementation(libs.koin.core)
                 implementation(libs.koin.compose)
                 implementation(libs.koin.compose.viewmodel)

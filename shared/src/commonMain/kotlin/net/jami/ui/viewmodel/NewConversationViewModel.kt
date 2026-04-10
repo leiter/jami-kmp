@@ -91,6 +91,9 @@ class NewConversationViewModel(
     /**
      * Search for contacts, conversations, or Jami IDs with 300ms debounce.
      *
+     * When query is empty all existing conversations are loaded so the screen
+     * shows a useful list instead of a blank page.
+     *
      * @param query Search string (username, display name, or Jami ID hash).
      */
     fun search(query: String) {
@@ -99,12 +102,80 @@ class NewConversationViewModel(
             publicDirectoryResults = emptyList(),
             conversationResults = emptyList(),
         )
-        if (query.isEmpty()) return
         searchJob?.cancel()
+        if (query.isEmpty()) {
+            searchJob = scope.launch { loadAllConversations() }
+            return
+        }
         searchJob = scope.launch {
             delay(300)
             performSearch(query)
         }
+    }
+
+    /**
+     * Load all existing conversations for the current account (no filtering).
+     * Used when the search query is empty to fill the result list.
+     */
+    private suspend fun loadAllConversations() {
+        val account = accountService.currentAccount.value ?: return
+        val accountId = account.accountId
+        val filesDir = deviceRuntimeService.getDataPath()
+        val convResults = account.getConversations().mapNotNull { conversation ->
+            val contact = conversation.contact
+            val displayName = conversation.profileFlow.value.displayName?.takeIf { it.isNotBlank() }
+                ?: contact?.displayUsername
+                ?: conversation.uri.rawRingId
+            val lastEvent = conversation.lastEvent
+            val lastMessage = if (lastEvent is TextMessage) lastEvent.body ?: "" else ""
+            val timestamp = lastEvent?.timestamp ?: 0L
+            val avatarBytes = contact?.let { c ->
+                VCardUtils.loadPeerProfileFromDisk(filesDir, accountId, c.uri.rawRingId)
+            }
+            ConversationItem(
+                id = conversation.uri.rawRingId,
+                contactId = contact?.uri?.rawRingId,
+                displayName = displayName,
+                lastMessage = lastMessage,
+                timestamp = timestamp,
+                unreadCount = 0,
+                avatarBytes = avatarBytes,
+                isOnline = contact?.isOnline == true
+            )
+        }.sortedByDescending { it.timestamp }
+        _state.value = _state.value.copy(conversationResults = convResults)
+    }
+
+    /**
+     * Reset all search state and reload the full conversation list.
+     * Called when entering SearchScreen or NewConversationScreen.
+     */
+    fun resetSearch() {
+        searchJob?.cancel()
+        _state.value = _state.value.copy(
+            searchQuery = "",
+            publicDirectoryResults = emptyList(),
+            conversationResults = emptyList(),
+            selectedContacts = emptyList(),
+            isGroup = false,
+            groupName = "",
+            isLoading = false,
+        )
+        searchJob = scope.launch { loadAllConversations() }
+    }
+
+    /**
+     * Toggle group conversation mode.
+     */
+    fun setGroupMode(enabled: Boolean) {
+        _state.value = _state.value.copy(isGroup = enabled)
+    }
+
+    /**
+     * Set the group conversation name.
+     */
+    fun setGroupName(name: String) {
+        _state.value = _state.value.copy(groupName = name)
     }
 
     /**
@@ -133,6 +204,7 @@ class NewConversationViewModel(
 
             ConversationItem(
                 id = conversation.uri.rawRingId,
+                contactId = contact?.uri?.rawRingId,
                 displayName = displayName,
                 lastMessage = lastMessage,
                 timestamp = timestamp,

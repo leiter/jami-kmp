@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -77,6 +78,8 @@ fun NewConversationScreen(
     val viewModel = getViewModel<NewConversationViewModel>()
     val state by viewModel.state.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) { viewModel.resetSearch() }
 
     Scaffold(
         topBar = {
@@ -125,8 +128,24 @@ fun NewConversationScreen(
             JamiToggle(
                 label = stringResource(Res.string.toggle_create_group),
                 checked = state.isGroup,
-                onCheckedChange = { /* Toggle group mode via viewModel if needed */ },
+                onCheckedChange = { viewModel.setGroupMode(it) },
             )
+
+            // Group name field — shown only when group mode is on
+            if (state.isGroup) {
+                OutlinedTextField(
+                    value = state.groupName,
+                    onValueChange = { viewModel.setGroupName(it) },
+                    placeholder = { Text(stringResource(Res.string.placeholder_group_name)) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = JamiTheme.spacing.l,
+                            vertical = JamiTheme.spacing.s,
+                        ),
+                )
+            }
 
             // Contact list
             LazyColumn(

@@ -538,6 +538,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="navigation_item_contact_request">Invitations</string>
     <string name="navigation_item_account">Account</string>
     <string name="search_results_public_directory">Public directory</string>
+    <string name="search_no_results">No results found</string>
+    <string name="placeholder_group_name">Group name (optional)</string>
+    <string name="search_hint_type_to_search">Type to search messages…</string>
+    <string name="search_results_count">%1$d result(s)</string>
 
     <!-- TV -->
     <string name="tv_send_audio_dialog_message">Send audio message?</string>
@@ -714,6 +718,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="link_device_error_unknown">An error occurred.</string>
     <string name="link_device_error_bad_password">Please check credentials and try again.</string>
     <string name="test_push">Test Push</string>
+
+    <!--  Chat top bar overflow menu  -->
+    <string name="menu_overflow">More options</string>
+    <string name="conversation_action_details">Contact details</string>
+    <string name="conversation_action_clear_history">Clear history</string>
 
     <!--  Accessibility  -->
     <string name="step_title_create_username">Create username</string>

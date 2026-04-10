@@ -18,6 +18,7 @@ package net.jami.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,11 +44,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.coroutines.launch
 import jami_kmp.shared.generated.resources.Res
@@ -86,6 +92,12 @@ fun SearchScreen(
     val viewModel = getViewModel<NewConversationViewModel>()
     val state by viewModel.state.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        viewModel.resetSearch()
+        focusRequester.requestFocus()
+    }
 
     Scaffold(
         topBar = {
@@ -96,7 +108,7 @@ fun SearchScreen(
                         onValueChange = { viewModel.search(it) },
                         placeholder = { Text(stringResource(Res.string.placeholder_search)) },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                     )
                 },
                 navigationIcon = {
@@ -148,6 +160,42 @@ fun SearchScreen(
             // Sectioned results list
             LazyColumn(modifier = Modifier.fillMaxSize()) {
 
+                // Loading spinner (nameserver lookup in progress)
+                if (state.isLoading) {
+                    item(key = "loading") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(JamiTheme.spacing.l),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(color = JamiTheme.colors.accent)
+                        }
+                    }
+                }
+
+                // No-results state
+                if (state.searchQuery.isNotEmpty()
+                    && state.publicDirectoryResults.isEmpty()
+                    && state.conversationResults.isEmpty()
+                    && !state.isLoading
+                ) {
+                    item(key = "no_results") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(JamiTheme.spacing.xl),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.search_no_results),
+                                style = JamiTheme.typography.bodyMedium,
+                                color = JamiTheme.colors.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+
                 // Public directory section
                 if (state.publicDirectoryResults.isNotEmpty()) {
                     item(key = "header_public_directory") {
@@ -170,10 +218,12 @@ fun SearchScreen(
                     }
                 }
 
-                // Conversations section
+                // Conversations section — header only shown when public directory also has results
                 if (state.conversationResults.isNotEmpty()) {
-                    item(key = "header_conversations") {
-                        SectionHeader(stringResource(Res.string.navigation_item_conversation))
+                    if (state.publicDirectoryResults.isNotEmpty()) {
+                        item(key = "header_conversations") {
+                            SectionHeader(stringResource(Res.string.navigation_item_conversation))
+                        }
                     }
                     items(
                         items = state.conversationResults,

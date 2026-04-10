@@ -24,10 +24,22 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
+import net.jami.model.CallHistory
+import net.jami.model.ContactEvent
+import net.jami.model.Interaction
 import net.jami.model.Uri
 import net.jami.services.AccountService
 import net.jami.services.ConversationFacade
 import net.jami.services.ConversationEvent
+import net.jami.services.DeviceRuntimeService
+import net.jami.utils.VCardUtils
 
 /**
  * Type of message content.
@@ -36,11 +48,14 @@ enum class MessageType {
     Text,
     System,
     Call,
-    Transfer
+    Transfer,
+    DateSeparator
 }
 
 /**
- * Item representing a single message in the chat.
+ * Item representing a single message or list decoration in the chat.
+ *
+ * All timestamps are in milliseconds.
  */
 data class MessageItem(
     val id: String,
@@ -48,7 +63,12 @@ data class MessageItem(
     val author: String,
     val timestamp: Long,
     val isOutgoing: Boolean,
-    val type: MessageType = MessageType.Text
+    val type: MessageType = MessageType.Text,
+    // Call-specific: filled when type == Call
+    val isMissed: Boolean = false,
+    val callDuration: Long = 0L,        // milliseconds; 0 = missed/unknown
+    // Contact event: filled when type == System; resolved to localised string in composable
+    val contactEventType: ContactEvent.Event? = null,
 )
 
 /**
@@ -58,11 +78,14 @@ data class ChatState(
     val messages: List<MessageItem> = emptyList(),
     val inputText: String = "",
     val conversationTitle: String = "",
+    val contactAvatarBytes: ByteArray? = null,
     val isLoading: Boolean = false,
     val isContactTyping: Boolean = false,
     val searchQuery: String = "",
     val searchResults: List<MessageItem> = emptyList(),
-    val isSearchActive: Boolean = false
+    val isSearchActive: Boolean = false,
+    /** Message to scroll to and briefly highlight after closing search. */
+    val highlightedMessageId: String? = null,
 )
 
 /**
@@ -74,6 +97,7 @@ data class ChatState(
 class ChatViewModel(
     private val conversationFacade: ConversationFacade,
     private val accountService: AccountService,
+    private val deviceRuntimeService: DeviceRuntimeService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     private val scope = scope
@@ -138,7 +162,17 @@ class ChatViewModel(
                 val conversation = conversationFacade.getConversation(account.accountId, conversationUri)
 
                 val title = conversation?.contact?.displayUsername ?: conversationId
-                _state.value = _state.value.copy(conversationTitle = title)
+                val avatarBytes = conversation?.contact?.let { contact ->
+                    VCardUtils.loadPeerProfileFromDisk(
+                        filesDir = deviceRuntimeService.getDataPath(),
+                        accountId = account.accountId,
+                        peerUri = contact.uri.rawRingId
+                    )
+                }
+                _state.value = _state.value.copy(
+                    conversationTitle = title,
+                    contactAvatarBytes = avatarBytes,
+                )
 
                 // Load conversation history via the facade
                 if (conversation != null) {
@@ -209,6 +243,20 @@ class ChatViewModel(
     }
 
     /**
+     * Clear the local history of the current conversation.
+     */
+    fun clearHistory() {
+        scope.launch {
+            val accountId = currentAccountId ?: return@launch
+            val conversationId = currentConversationId ?: return@launch
+            val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+            val conversation = conversationFacade.getConversation(accountId, conversationUri) ?: return@launch
+            conversation.clearHistory(delete = false)
+            _state.value = _state.value.copy(messages = emptyList())
+        }
+    }
+
+    /**
      * Load more (older) messages for the current conversation.
      */
     fun loadMore() {
@@ -225,6 +273,8 @@ class ChatViewModel(
 
     /**
      * Reload messages from the conversation's in-memory history.
+     * Converts Interaction objects to MessageItems with proper type mapping,
+     * then injects date separator items at day boundaries.
      */
     private fun loadMessagesFromHistory() {
         val accountId = currentAccountId ?: return
@@ -234,43 +284,142 @@ class ChatViewModel(
 
         if (conversation != null) {
             val history = conversation.getSortedHistory()
-            val account = accountService.currentAccount.value
-            val ownUri = account?.accountId ?: ""
-
-            val items = history.map { interaction ->
-                MessageItem(
-                    id = interaction.messageId ?: interaction.id.toString(),
-                    text = interaction.body ?: "",
-                    author = interaction.author ?: "",
-                    timestamp = interaction.timestamp,
-                    isOutgoing = interaction.author == null || interaction.contact?.isUser == true,
-                    type = MessageType.Text
-                )
+            val items = history.mapNotNull { interaction ->
+                interactionToMessageItem(interaction)
             }
-            _state.value = _state.value.copy(messages = items, isLoading = false)
+            val withSeparators = injectDateSeparators(items)
+            _state.value = _state.value.copy(messages = withSeparators, isLoading = false)
         } else {
             _state.value = _state.value.copy(isLoading = false)
         }
     }
 
     /**
-     * Append a newly received message to the current list.
+     * Convert a single Interaction to a MessageItem, dispatching on interaction type.
+     * Returns null for INVALID interactions (they should not be displayed).
+     */
+    private fun interactionToMessageItem(interaction: Interaction): MessageItem? {
+        val id = interaction.messageId ?: interaction.id.toString()
+        val author = interaction.author ?: ""
+        val timestamp = interaction.timestamp  // already milliseconds
+        val isOutgoing = interaction.author == null || interaction.contact?.isUser == true
+
+        return when (interaction.type) {
+            Interaction.InteractionType.TEXT -> MessageItem(
+                id = id, text = interaction.body ?: "", author = author,
+                timestamp = timestamp, isOutgoing = isOutgoing, type = MessageType.Text
+            )
+            Interaction.InteractionType.CALL -> {
+                val call = interaction as? CallHistory
+                MessageItem(
+                    id = id, text = "", author = author,
+                    timestamp = timestamp, isOutgoing = isOutgoing, type = MessageType.Call,
+                    isMissed = call?.isMissed ?: true,
+                    callDuration = call?.duration ?: 0L
+                )
+            }
+            Interaction.InteractionType.CONTACT -> {
+                val event = interaction as? ContactEvent
+                MessageItem(
+                    id = id, text = "", author = author,
+                    timestamp = timestamp, isOutgoing = false, type = MessageType.System,
+                    contactEventType = event?.event
+                )
+            }
+            Interaction.InteractionType.DATA_TRANSFER -> MessageItem(
+                id = id, text = interaction.body ?: "", author = author,
+                timestamp = timestamp, isOutgoing = isOutgoing, type = MessageType.Transfer
+            )
+            Interaction.InteractionType.INVALID -> null
+        }
+    }
+
+    /**
+     * Insert DateSeparator items between messages that fall on different calendar days.
+     * Separators are injected before the first message of each new day.
+     */
+    private fun injectDateSeparators(items: List<MessageItem>): List<MessageItem> {
+        if (items.isEmpty()) return items
+        val result = mutableListOf<MessageItem>()
+        val tz = TimeZone.currentSystemDefault()
+        var lastDate: LocalDate? = null
+        for (item in items) {
+            if (item.type == MessageType.DateSeparator) { result.add(item); continue }
+            val itemDate = Instant.fromEpochMilliseconds(item.timestamp).toLocalDateTime(tz).date
+            if (itemDate != lastDate) {
+                result.add(
+                    MessageItem(
+                        id = "date_${item.timestamp}",
+                        text = epochMillisToDateLabel(item.timestamp),
+                        author = "", timestamp = item.timestamp,
+                        isOutgoing = false, type = MessageType.DateSeparator
+                    )
+                )
+                lastDate = itemDate
+            }
+            result.add(item)
+        }
+        return result
+    }
+
+    private fun epochMillisToDateLabel(timestamp: Long): String {
+        val tz = TimeZone.currentSystemDefault()
+        val date = Instant.fromEpochMilliseconds(timestamp).toLocalDateTime(tz).date
+        val today = Clock.System.now().toLocalDateTime(tz).date
+        val yesterday = today.minus(DatePeriod(days = 1))
+        return when (date) {
+            today     -> DATE_TODAY
+            yesterday -> DATE_YESTERDAY
+            else      -> "${date.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${date.dayOfMonth}, ${date.year}"
+        }
+    }
+
+    /**
+     * Append a newly received message directly to the state for immediate display.
+     * The model is also updated by ConversationFacade.onMessageReceived() so that
+     * a subsequent loadMessagesFromHistory() will include this message too.
+     *
+     * Note: SwarmMessage.timestamp is in seconds; we convert to milliseconds here.
      */
     private fun appendMessage(event: ConversationEvent.MessageReceived) {
         val msg = event.message
-        val account = accountService.currentAccount.value
-        val item = MessageItem(
-            id = msg.id,
-            text = msg.textContent,
-            author = msg.author,
-            timestamp = msg.timestamp,
-            isOutgoing = false,
-            type = when {
-                msg.isCall -> MessageType.Call
-                msg.isText -> MessageType.Text
-                else -> MessageType.System
+        val timestampMs = msg.timestamp * 1000L
+
+        val item = when {
+            msg.isCall -> {
+                val durationMs = (msg.body["duration"]?.toLongOrNull() ?: 0L) * 1000L
+                MessageItem(
+                    id = msg.id, text = "", author = msg.author,
+                    timestamp = timestampMs, isOutgoing = false,
+                    type = MessageType.Call,
+                    isMissed = durationMs == 0L,
+                    callDuration = durationMs
+                )
             }
-        )
+            msg.isMember -> {
+                val action = msg.body["action"] ?: ""
+                MessageItem(
+                    id = msg.id, text = "", author = msg.author,
+                    timestamp = timestampMs, isOutgoing = false,
+                    type = MessageType.System,
+                    contactEventType = ContactEvent.Event.fromConversationAction(action)
+                )
+            }
+            msg.type == "initial" -> MessageItem(
+                id = msg.id, text = "", author = msg.author,
+                timestamp = timestampMs, isOutgoing = false,
+                type = MessageType.System,
+                contactEventType = ContactEvent.Event.INVITED
+            )
+            else -> MessageItem(
+                id = msg.id,
+                text = msg.textContent,
+                author = msg.author,
+                timestamp = timestampMs,
+                isOutgoing = false,
+                type = if (msg.isText) MessageType.Text else MessageType.System
+            )
+        }
         val current = _state.value.messages
         _state.value = _state.value.copy(messages = current + item)
     }
@@ -292,11 +441,24 @@ class ChatViewModel(
     }
 
     /**
+     * Activate search mode without sending a query yet.
+     * Called when the user taps the Search menu item.
+     */
+    fun openSearch() {
+        _state.value = _state.value.copy(
+            isSearchActive = true,
+            searchQuery = "",
+            searchResults = emptyList(),
+        )
+    }
+
+    /**
      * Search for messages in the current conversation.
+     * Keeps search mode active even when [query] is empty.
      */
     fun searchConversation(query: String) {
-        _state.value = _state.value.copy(searchQuery = query, isSearchActive = query.isNotEmpty())
-        if (query.isEmpty()) {
+        _state.value = _state.value.copy(searchQuery = query, isSearchActive = true)
+        if (query.isBlank()) {
             _state.value = _state.value.copy(searchResults = emptyList())
             return
         }
@@ -304,7 +466,20 @@ class ChatViewModel(
             val accountId = currentAccountId ?: return@launch
             val conversationId = currentConversationId ?: return@launch
             val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
-            accountService.searchConversation(accountId, conversationUri, query)
+            accountService.searchConversation(accountId, conversationUri, query.trim())
+        }
+    }
+
+    /**
+     * Close search and scroll the main message list to the given message,
+     * briefly highlighting it.
+     */
+    fun scrollToMessage(messageId: String) {
+        closeSearch()
+        _state.value = _state.value.copy(highlightedMessageId = messageId)
+        scope.launch {
+            kotlinx.coroutines.delay(1500)
+            _state.value = _state.value.copy(highlightedMessageId = null)
         }
     }
 
@@ -315,21 +490,26 @@ class ChatViewModel(
         _state.value = _state.value.copy(
             searchQuery = "",
             searchResults = emptyList(),
-            isSearchActive = false
+            isSearchActive = false,
         )
     }
 
     /**
      * Handle search results from the daemon.
+     * Daemon timestamps are in seconds — convert to milliseconds.
      */
     private fun handleSearchResults(messages: List<Map<String, String>>) {
-        val items = messages.map { msg ->
+        val myId = currentAccountId ?: ""
+        val items = messages.mapNotNull { msg ->
+            val body = msg["body"] ?: return@mapNotNull null
+            if (body.isEmpty()) return@mapNotNull null
+            val author = msg["author"] ?: ""
             MessageItem(
                 id = msg["id"] ?: "",
-                text = msg["body"] ?: "",
-                author = msg["author"] ?: "",
-                timestamp = msg["timestamp"]?.toLongOrNull() ?: 0L,
-                isOutgoing = false,
+                text = body,
+                author = author,
+                timestamp = (msg["timestamp"]?.toLongOrNull() ?: 0L) * 1000L,
+                isOutgoing = author.isEmpty() || author == myId,
                 type = MessageType.Text
             )
         }
@@ -341,5 +521,10 @@ class ChatViewModel(
      */
     fun onCleared() {
         scope.cancel()
+    }
+
+    companion object {
+        private const val DATE_TODAY     = "Today"
+        private const val DATE_YESTERDAY = "Yesterday"
     }
 }
