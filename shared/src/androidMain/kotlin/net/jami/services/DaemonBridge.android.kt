@@ -219,6 +219,10 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
         JamiService.revokeDevice(accountId, deviceId, scheme, password)
     }
 
+    override fun addDevice(accountId: String, uri: String): Long {
+        return JamiService.addDevice(accountId, uri)
+    }
+
     override fun setDeviceName(accountId: String, deviceName: String) {
         val details = JamiService.getAccountDetails(accountId)
         details["Account.deviceName"] = deviceName
@@ -550,6 +554,10 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
 
         override fun deviceRevocationEnded(accountId: String, deviceId: String, state: Int) {
             callbacks.onDeviceRevocationEnded(accountId, deviceId, state)
+        }
+
+        override fun addDeviceStateChanged(accountId: String, op_id: Long, state: Int, details: StringMap) {
+            callbacks.onAddDeviceStateChanged(accountId, op_id, state, details.toNative())
         }
 
         override fun migrationEnded(accountId: String, state: String) {

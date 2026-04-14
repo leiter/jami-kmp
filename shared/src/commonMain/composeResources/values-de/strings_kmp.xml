@@ -69,18 +69,15 @@
     <string name="action_block">Blockieren</string>
     <string name="empty_members">Keine Mitglieder vorhanden</string>
 
-    <!-- Settings -->
+    <!-- Settings (pref_category_appearance/privacy/system are in strings_preferences.xml) -->
     <string name="screen_title_account_settings">Kontoeinstellungen</string>
     <string name="screen_title_app_settings">Einstellungen</string>
-    <string name="pref_category_appearance">Aussehen</string>
     <string name="pref_dark_mode">Dunkles Design</string>
     <string name="pref_dark_mode_description">Immer das dunkle Design aktivieren, anstatt das Systemverhalten zu verwenden</string>
-    <string name="pref_category_privacy">Privatsphäre</string>
     <string name="pref_typing_indicators">Tipp-Indikatoren</string>
     <string name="pref_typing_indicators_description">Anzeigen wenn Nachrichten getippt werden.</string>
     <string name="pref_link_preview">Linkvorschau</string>
     <string name="pref_link_preview_description">Vorschau erfordert dass Inhalte von Drittanbieter-Servern heruntergeladen werden.</string>
-    <string name="pref_category_system">System</string>
     <string name="pref_push_notifications">Push-Benachrichtigungen</string>
     <string name="pref_push_notifications_description">Google-Server verwenden, um Anrufe/Nachrichten im Hintergrund empfangen zu können.</string>
     <string name="pref_start_on_boot">Jami beim Hochfahren starten</string>

@@ -334,6 +334,13 @@ class AccountService(
     }
 
     /**
+     * Initiate linking a new device using its device-request URI.
+     * Progress is reported via [AccountEvent.AddDeviceStateChanged].
+     */
+    fun addDevice(accountId: String, uri: String): Long =
+        daemonBridge.addDevice(accountId, uri)
+
+    /**
      * Rename a device.
      */
     fun renameDevice(accountId: String, newName: String) {
@@ -884,6 +891,12 @@ class AccountService(
         }
     }
 
+    internal fun onAddDeviceStateChanged(accountId: String, opId: Long, state: Int, details: Map<String, String>) {
+        scope.launch {
+            _accountEvents.emit(AccountEvent.AddDeviceStateChanged(accountId, opId, state, details))
+        }
+    }
+
     internal fun onMigrationEnded(accountId: String, state: String) {
         scope.launch {
             _accountEvents.emit(AccountEvent.MigrationEnded(accountId, state))
@@ -1031,6 +1044,13 @@ sealed class AccountEvent {
         val accountId: String,
         val deviceId: String,
         val state: Int
+    ) : AccountEvent()
+
+    data class AddDeviceStateChanged(
+        val accountId: String,
+        val opId: Long,
+        val state: Int,
+        val details: Map<String, String>
     ) : AccountEvent()
 
     data class MigrationEnded(

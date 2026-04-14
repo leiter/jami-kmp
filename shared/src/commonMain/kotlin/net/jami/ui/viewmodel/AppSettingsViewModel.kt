@@ -23,30 +23,63 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import net.jami.model.settings.ConversationSort
 import net.jami.model.settings.Theme
 import net.jami.repository.SettingsRepository
+import net.jami.ui.platform.LocalPrefKeys
+import net.jami.ui.platform.LocalPrefs
 
 /**
  * State for the application settings screen.
  */
 data class AppSettingsState(
+    // --- Appearance ---
     val isDarkTheme: Boolean = false,
+    val isCompactMode: Boolean = false,
+    val conversationSort: ConversationSort = ConversationSort.LAST_ACTIVITY,
+
+    // --- Privacy ---
+    val isReadReceipts: Boolean = true,
     val isTypingIndicators: Boolean = true,
-    val isLinkPreview: Boolean = true,
+    val isBlockUnknown: Boolean = false,
     val isScreenshotBlocking: Boolean = false,
+    val isLinkPreview: Boolean = true,
+
+    // --- Notifications ---
+    val isPushNotifications: Boolean = true,
+    val isCallNotifications: Boolean = true,
+    val isMessageNotifications: Boolean = true,
+    val isNotificationSound: Boolean = true,
+    val isVibration: Boolean = true,
+    val isQuietHours: Boolean = false,
+
+    // --- Calls ---
+    val isVideoEnabled: Boolean = true,
+    val isHardwareAcceleration: Boolean = true,
+    val isNoiseSuppression: Boolean = true,
+    val isEchoCancellation: Boolean = true,
+    val isAutoAnswer: Boolean = false,
+
+    // --- File Transfers ---
+    /** Max auto-accept size in MB (stored as bytes in repository). */
+    val maxAutoAcceptMb: Int = 30,
+    val isAutoDownloadWifi: Boolean = true,
+    val isAutoDownloadMobile: Boolean = false,
+
+    // --- System ---
     val isStartOnBoot: Boolean = false,
     val isRunInBackground: Boolean = false,
-    val isPushNotifications: Boolean = true
 )
 
 /**
  * ViewModel for the application-wide settings screen.
  *
- * Manages global preferences such as theme, typing indicators, link
- * previews, and notification settings. Settings are persisted via the
- * SettingsRepository which stores them in daemon account details for
- * cross-device synchronization.
+ * Settings are loaded from three sources:
+ * 1. [SettingsRepository] flows — daemon-synced settings (theme, privacy, notifications, calls,
+ *    file transfers). These sync across devices via DHT.
+ * 2. [LocalPrefs] — device-local settings that must NOT sync (screenshot blocking, boot behavior).
  */
 class AppSettingsViewModel(
     private val settingsRepository: SettingsRepository,
@@ -58,92 +91,219 @@ class AppSettingsViewModel(
     val state: StateFlow<AppSettingsState> = _state.asStateFlow()
 
     init {
-        // Load initial settings from repository
+        // Load device-local settings once at startup (not reactive — these never change remotely)
+        _state.update { it.copy(
+            isScreenshotBlocking = LocalPrefs.getBoolean(LocalPrefKeys.SCREENSHOT_BLOCKING, false),
+            isStartOnBoot = LocalPrefs.getBoolean(LocalPrefKeys.START_ON_BOOT, false),
+            isRunInBackground = LocalPrefs.getBoolean(LocalPrefKeys.RUN_IN_BACKGROUND, false),
+        )}
+
+        // Observe daemon-synced settings reactively
         scope.launch {
-            settingsRepository.uiSettings.collect { uiSettings ->
-                _state.value = _state.value.copy(
-                    isDarkTheme = uiSettings.theme == Theme.DARK
-                )
+            settingsRepository.uiSettings.collect { ui ->
+                _state.update { it.copy(
+                    isDarkTheme = ui.theme == Theme.DARK,
+                    isCompactMode = ui.compactMode,
+                    conversationSort = ui.conversationSort,
+                )}
             }
         }
         scope.launch {
-            settingsRepository.privacySettings.collect { privacySettings ->
-                _state.value = _state.value.copy(
-                    isTypingIndicators = privacySettings.typingIndicators,
-                    isLinkPreview = privacySettings.showLinkPreviews
-                )
+            settingsRepository.privacySettings.collect { p ->
+                _state.update { it.copy(
+                    isReadReceipts = p.readReceipts,
+                    isTypingIndicators = p.typingIndicators,
+                    isBlockUnknown = p.blockUnknownContacts,
+                    isLinkPreview = p.showLinkPreviews,
+                )}
             }
         }
         scope.launch {
-            settingsRepository.notificationSettings.collect { notifSettings ->
-                _state.value = _state.value.copy(
-                    isPushNotifications = notifSettings.enabled
-                )
+            settingsRepository.notificationSettings.collect { n ->
+                _state.update { it.copy(
+                    isPushNotifications = n.enabled,
+                    isCallNotifications = n.callNotifications,
+                    isMessageNotifications = n.messageNotifications,
+                    isNotificationSound = n.soundEnabled,
+                    isVibration = n.vibrationEnabled,
+                    isQuietHours = n.quietHoursEnabled,
+                )}
+            }
+        }
+        scope.launch {
+            settingsRepository.callSettings.collect { c ->
+                _state.update { it.copy(
+                    isVideoEnabled = c.videoEnabled,
+                    isHardwareAcceleration = c.hardwareAcceleration,
+                    isNoiseSuppression = c.noiseSuppression,
+                    isEchoCancellation = c.echoCancellation,
+                    isAutoAnswer = c.autoAnswer,
+                )}
+            }
+        }
+        scope.launch {
+            settingsRepository.fileTransferSettings.collect { f ->
+                _state.update { it.copy(
+                    maxAutoAcceptMb = (f.maxAutoAcceptSize / (1024L * 1024L)).toInt().coerceIn(0, 100),
+                    isAutoDownloadWifi = f.autoDownloadWifi,
+                    isAutoDownloadMobile = f.autoDownloadMobile,
+                )}
             }
         }
     }
 
-    /**
-     * Toggle the dark theme setting.
-     */
+    // ==================== Appearance ====================
+
     fun toggleDarkTheme() {
-        val newValue = !_state.value.isDarkTheme
-        _state.value = _state.value.copy(isDarkTheme = newValue)
-        settingsRepository.updateTheme(if (newValue) Theme.DARK else Theme.LIGHT)
+        val new = !_state.value.isDarkTheme
+        _state.update { it.copy(isDarkTheme = new) }
+        settingsRepository.updateTheme(if (new) Theme.DARK else Theme.LIGHT)
     }
 
-    /**
-     * Toggle the typing indicators setting.
-     */
+    fun toggleCompactMode() {
+        val new = !_state.value.isCompactMode
+        _state.update { it.copy(isCompactMode = new) }
+        settingsRepository.updateCompactMode(new)
+    }
+
+    fun setConversationSort(sort: ConversationSort) {
+        _state.update { it.copy(conversationSort = sort) }
+        settingsRepository.updateConversationSort(sort)
+    }
+
+    // ==================== Privacy ====================
+
+    fun toggleReadReceipts() {
+        val new = !_state.value.isReadReceipts
+        _state.update { it.copy(isReadReceipts = new) }
+        settingsRepository.updateReadReceipts(new)
+    }
+
     fun toggleTypingIndicators() {
-        val newValue = !_state.value.isTypingIndicators
-        _state.value = _state.value.copy(isTypingIndicators = newValue)
-        settingsRepository.updateTypingIndicators(newValue)
+        val new = !_state.value.isTypingIndicators
+        _state.update { it.copy(isTypingIndicators = new) }
+        settingsRepository.updateTypingIndicators(new)
     }
 
-    /**
-     * Toggle the link preview setting.
-     */
-    fun toggleLinkPreview() {
-        val newValue = !_state.value.isLinkPreview
-        _state.value = _state.value.copy(isLinkPreview = newValue)
-        settingsRepository.updateShowLinkPreviews(newValue)
+    fun toggleBlockUnknown() {
+        val new = !_state.value.isBlockUnknown
+        _state.update { it.copy(isBlockUnknown = new) }
+        settingsRepository.updateBlockUnknownContacts(new)
     }
 
-    /**
-     * Toggle the screenshot blocking setting.
-     * This is a local-only setting (not synced via daemon).
-     */
     fun toggleScreenshotBlocking() {
-        val newValue = !_state.value.isScreenshotBlocking
-        _state.value = _state.value.copy(isScreenshotBlocking = newValue)
+        val new = !_state.value.isScreenshotBlocking
+        _state.update { it.copy(isScreenshotBlocking = new) }
+        LocalPrefs.setBoolean(LocalPrefKeys.SCREENSHOT_BLOCKING, new)
     }
 
-    /**
-     * Toggle the start-on-boot setting.
-     * This is a local-only setting (platform-specific behavior).
-     */
-    fun toggleStartOnBoot() {
-        val newValue = !_state.value.isStartOnBoot
-        _state.value = _state.value.copy(isStartOnBoot = newValue)
+    fun toggleLinkPreview() {
+        val new = !_state.value.isLinkPreview
+        _state.update { it.copy(isLinkPreview = new) }
+        settingsRepository.updateShowLinkPreviews(new)
     }
 
-    /**
-     * Toggle the run-in-background setting.
-     * This is a local-only setting (platform-specific behavior).
-     */
-    fun toggleRunInBackground() {
-        val newValue = !_state.value.isRunInBackground
-        _state.value = _state.value.copy(isRunInBackground = newValue)
-    }
+    // ==================== Notifications ====================
 
-    /**
-     * Toggle the push notifications setting.
-     */
     fun togglePushNotifications() {
-        val newValue = !_state.value.isPushNotifications
-        _state.value = _state.value.copy(isPushNotifications = newValue)
-        settingsRepository.updateNotificationsEnabled(newValue)
+        val new = !_state.value.isPushNotifications
+        _state.update { it.copy(isPushNotifications = new) }
+        settingsRepository.updateNotificationsEnabled(new)
+    }
+
+    fun toggleCallNotifications() {
+        val new = !_state.value.isCallNotifications
+        _state.update { it.copy(isCallNotifications = new) }
+        settingsRepository.updateCallNotifications(new)
+    }
+
+    fun toggleMessageNotifications() {
+        val new = !_state.value.isMessageNotifications
+        _state.update { it.copy(isMessageNotifications = new) }
+        settingsRepository.updateMessageNotifications(new)
+    }
+
+    fun toggleNotificationSound() {
+        val new = !_state.value.isNotificationSound
+        _state.update { it.copy(isNotificationSound = new) }
+        settingsRepository.updateNotificationSoundEnabled(new)
+    }
+
+    fun toggleVibration() {
+        val new = !_state.value.isVibration
+        _state.update { it.copy(isVibration = new) }
+        settingsRepository.updateVibration(new)
+    }
+
+    fun toggleQuietHours() {
+        val new = !_state.value.isQuietHours
+        _state.update { it.copy(isQuietHours = new) }
+        settingsRepository.updateQuietHours(new)
+    }
+
+    // ==================== Calls ====================
+
+    fun toggleVideoEnabled() {
+        val new = !_state.value.isVideoEnabled
+        _state.update { it.copy(isVideoEnabled = new) }
+        settingsRepository.updateVideoEnabled(new)
+    }
+
+    fun toggleHardwareAcceleration() {
+        val new = !_state.value.isHardwareAcceleration
+        _state.update { it.copy(isHardwareAcceleration = new) }
+        settingsRepository.updateHardwareAcceleration(new)
+    }
+
+    fun toggleNoiseSuppression() {
+        val new = !_state.value.isNoiseSuppression
+        _state.update { it.copy(isNoiseSuppression = new) }
+        settingsRepository.updateNoiseSuppression(new)
+    }
+
+    fun toggleEchoCancellation() {
+        val new = !_state.value.isEchoCancellation
+        _state.update { it.copy(isEchoCancellation = new) }
+        settingsRepository.updateEchoCancellation(new)
+    }
+
+    fun toggleAutoAnswer() {
+        val new = !_state.value.isAutoAnswer
+        _state.update { it.copy(isAutoAnswer = new) }
+        settingsRepository.updateAutoAnswer(new)
+    }
+
+    // ==================== File Transfers ====================
+
+    fun setMaxAutoAcceptMb(mb: Int) {
+        _state.update { it.copy(maxAutoAcceptMb = mb) }
+        settingsRepository.updateMaxAutoAcceptSize(mb.toLong() * 1024L * 1024L)
+    }
+
+    fun toggleAutoDownloadWifi() {
+        val new = !_state.value.isAutoDownloadWifi
+        _state.update { it.copy(isAutoDownloadWifi = new) }
+        settingsRepository.updateAutoDownload(_state.value.isAutoDownloadMobile, new)
+    }
+
+    fun toggleAutoDownloadMobile() {
+        val new = !_state.value.isAutoDownloadMobile
+        _state.update { it.copy(isAutoDownloadMobile = new) }
+        settingsRepository.updateAutoDownload(new, _state.value.isAutoDownloadWifi)
+    }
+
+    // ==================== System ====================
+
+    fun toggleStartOnBoot() {
+        val new = !_state.value.isStartOnBoot
+        _state.update { it.copy(isStartOnBoot = new) }
+        LocalPrefs.setBoolean(LocalPrefKeys.START_ON_BOOT, new)
+    }
+
+    fun toggleRunInBackground() {
+        val new = !_state.value.isRunInBackground
+        _state.update { it.copy(isRunInBackground = new) }
+        LocalPrefs.setBoolean(LocalPrefKeys.RUN_IN_BACKGROUND, new)
     }
 
     /**

@@ -19,6 +19,7 @@ package net.jami.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -40,13 +41,19 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -97,9 +104,11 @@ import net.jami.di.getViewModel
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.JamiSectionTitle
+import net.jami.ui.platform.FilePickerEffect
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.AccountSettingsViewModel
 import net.jami.ui.viewmodel.DeviceItem
+import net.jami.utils.FileUtils
 import net.jami.utils.QRCodeColors
 import net.jami.utils.QRCodeUtils
 import net.jami.utils.clearFocusOnTap
@@ -112,18 +121,29 @@ import org.jetbrains.compose.resources.stringResource
  *
  * @param onBack Called when the user navigates back.
  * @param onBlockedContacts Called when "Blocked Contacts" is tapped.
+ * @param onMedia Called when the Media settings row is tapped.
+ * @param onMessages Called when the Messages settings row is tapped.
+ * @param onAdvanced Called when the Advanced settings row is tapped.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountSettingsScreen(
     onBack: () -> Unit,
     onBlockedContacts: () -> Unit,
+    onMedia: () -> Unit = {},
+    onMessages: () -> Unit = {},
+    onAdvanced: () -> Unit = {},
 ) {
     val viewModel = getViewModel<AccountSettingsViewModel>()
     val state by viewModel.state.collectAsState()
     var showExportDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     var showQrSheet by remember { mutableStateOf(false) }
     var qrBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    var showRenameDeviceDialog by remember { mutableStateOf(false) }
+    var showLinkDeviceSheet by remember { mutableStateOf(false) }
+    var showPhotoPicker by remember { mutableStateOf(false) }
+    var showPhotoMenu by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
@@ -136,9 +156,37 @@ fun AccountSettingsScreen(
     val exportErrorMsg = stringResource(Res.string.snackbar_export_error)
     val shareSubject = stringResource(Res.string.account_contact_me)
     val shareBodyTemplate = stringResource(Res.string.account_share_body)
+    val linkSuccessMsg = stringResource(Res.string.account_link_device_success)
+    val linkErrorMsg = stringResource(Res.string.account_link_device_error)
 
     LaunchedEffect(Unit) {
         viewModel.loadAccount()
+    }
+
+    // Show snackbar when link-device state changes, then reset
+    LaunchedEffect(state.linkDeviceSuccess, state.linkDeviceError) {
+        when {
+            state.linkDeviceSuccess -> {
+                showLinkDeviceSheet = false
+                snackbarHostState.showSnackbar(linkSuccessMsg)
+                viewModel.cancelLinkDevice()
+            }
+            state.linkDeviceError -> {
+                snackbarHostState.showSnackbar(linkErrorMsg)
+                viewModel.cancelLinkDevice()
+            }
+        }
+    }
+
+    // Image picker effect — reads selected image bytes and updates the avatar
+    FilePickerEffect(show = showPhotoPicker, mimeTypes = listOf("image/*")) { path ->
+        showPhotoPicker = false
+        if (path != null) {
+            coroutineScope.launch(Dispatchers.Default) {
+                val bytes = FileUtils.readBytes(path)
+                withContext(Dispatchers.Main) { viewModel.updateAvatar(bytes) }
+            }
+        }
     }
 
     // Generate QR code bitmap when sheet opens
@@ -189,6 +237,35 @@ fun AccountSettingsScreen(
                     if (success) snackbarHostState.showSnackbar(exportSuccessMsg)
                     else snackbarHostState.showSnackbar(exportErrorMsg)
                 }
+            },
+        )
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(stringResource(Res.string.account_delete_dialog_title)) },
+            text = { Text(stringResource(Res.string.account_delete_dialog_message)) },
+            confirmButton = {
+                TextButton(onClick = { showDeleteDialog = false; viewModel.removeAccount() }) {
+                    Text(stringResource(Res.string.action_delete), color = JamiTheme.colors.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(stringResource(Res.string.action_cancel))
+                }
+            },
+        )
+    }
+
+    if (showRenameDeviceDialog) {
+        RenameDeviceDialog(
+            currentName = state.currentDeviceName,
+            onDismiss = { showRenameDeviceDialog = false },
+            onRename = { name ->
+                showRenameDeviceDialog = false
+                viewModel.renameCurrentDevice(name)
             },
         )
     }
@@ -259,13 +336,32 @@ fun AccountSettingsScreen(
                     .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.m),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Avatar — tappable (photo picker placeholder)
-                Box(modifier = Modifier.clickable { /* TODO: photo picker */ }) {
-                    JamiAvatar(
-                        displayName = state.displayName.ifEmpty { state.username },
-                        avatarBytes = state.avatarBytes,
-                        size = AvatarSize.Large,
-                    )
+                // Avatar — tappable: opens a menu to pick from gallery or remove photo
+                Box {
+                    Box(modifier = Modifier.clickable { showPhotoMenu = true }) {
+                        JamiAvatar(
+                            displayName = state.displayName.ifEmpty { state.username },
+                            avatarBytes = state.avatarBytes,
+                            size = AvatarSize.Large,
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showPhotoMenu,
+                        onDismissRequest = { showPhotoMenu = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.open_the_gallery)) },
+                            leadingIcon = { Icon(Icons.Default.Image, contentDescription = null) },
+                            onClick = { showPhotoMenu = false; showPhotoPicker = true },
+                        )
+                        if (state.avatarBytes != null) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(Res.string.remove_photo)) },
+                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                                onClick = { showPhotoMenu = false; viewModel.updateAvatar(null) },
+                            )
+                        }
+                    }
                 }
 
                 Spacer(Modifier.width(JamiTheme.spacing.m))
@@ -386,7 +482,7 @@ fun AccountSettingsScreen(
                             color = JamiTheme.colors.onSurface,
                         )
                     }
-                    IconButton(onClick = { /* TODO: rename device */ }) {
+                    IconButton(onClick = { showRenameDeviceDialog = true }) {
                         Icon(
                             Icons.Default.Edit,
                             contentDescription = null,
@@ -423,7 +519,7 @@ fun AccountSettingsScreen(
 
                 // Link new device
                 TextButton(
-                    onClick = { /* TODO: link new device */ },
+                    onClick = { showLinkDeviceSheet = true },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Icon(Icons.Default.AddLink, contentDescription = null)
@@ -442,27 +538,41 @@ fun AccountSettingsScreen(
 
             AccountCard {
                 SettingsCardRow(
-                    label = stringResource(Res.string.pref_category_account),
+                    label = stringResource(Res.string.account_export_file),
                     icon = Icons.Default.AccountCircle,
                     onClick = { showExportDialog = true },
                 )
                 HorizontalDivider(color = JamiTheme.colors.outline)
                 SettingsCardRow(
+                    label = stringResource(Res.string.screen_title_blocked_contacts),
+                    icon = Icons.Default.Block,
+                    onClick = onBlockedContacts,
+                )
+                HorizontalDivider(color = JamiTheme.colors.outline)
+                SettingsCardRow(
+                    label = stringResource(Res.string.account_delete_label),
+                    icon = Icons.Default.Delete,
+                    onClick = { showDeleteDialog = true },
+                    tint = JamiTheme.colors.error,
+                    labelColor = JamiTheme.colors.error,
+                )
+                HorizontalDivider(color = JamiTheme.colors.outline)
+                SettingsCardRow(
                     label = stringResource(Res.string.account_preferences_media_tab),
                     icon = Icons.Default.Image,
-                    onClick = { /* TODO */ },
+                    onClick = onMedia,
                 )
                 HorizontalDivider(color = JamiTheme.colors.outline)
                 SettingsCardRow(
                     label = stringResource(Res.string.pref_category_messages),
                     icon = Icons.Default.ChatBubble,
-                    onClick = { /* TODO */ },
+                    onClick = onMessages,
                 )
                 HorizontalDivider(color = JamiTheme.colors.outline)
                 SettingsCardRow(
                     label = stringResource(Res.string.account_preferences_advanced_tab),
                     icon = Icons.Default.Settings,
-                    onClick = { /* TODO */ },
+                    onClick = onAdvanced,
                 )
             }
 
@@ -533,6 +643,27 @@ fun AccountSettingsScreen(
                 }
             }
         }
+
+        // Link Device Bottom Sheet
+        if (showLinkDeviceSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showLinkDeviceSheet = false
+                    viewModel.cancelLinkDevice()
+                },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                containerColor = JamiTheme.colors.surface,
+            ) {
+                LinkDeviceSheetContent(
+                    isLinking = state.isLinkingDevice,
+                    onLink = { uri -> viewModel.startLinkDevice(uri) },
+                    onCancel = {
+                        showLinkDeviceSheet = false
+                        viewModel.cancelLinkDevice()
+                    },
+                )
+            }
+        }
     }
 }
 
@@ -595,6 +726,8 @@ private fun SettingsCardRow(
     label: String,
     icon: ImageVector,
     onClick: () -> Unit,
+    tint: androidx.compose.ui.graphics.Color = JamiTheme.colors.onSurfaceVariant,
+    labelColor: androidx.compose.ui.graphics.Color = JamiTheme.colors.onSurface,
 ) {
     Row(
         modifier = Modifier
@@ -603,13 +736,13 @@ private fun SettingsCardRow(
             .padding(horizontal = JamiTheme.spacing.m, vertical = JamiTheme.spacing.m),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, contentDescription = null, tint = JamiTheme.colors.onSurfaceVariant)
+        Icon(icon, contentDescription = null, tint = tint)
         Spacer(Modifier.width(JamiTheme.spacing.m))
         Text(
             text = label,
             style = JamiTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
-            color = JamiTheme.colors.onSurface,
+            color = labelColor,
         )
     }
 }
@@ -638,6 +771,130 @@ private fun DeviceRow(device: DeviceItem) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+        }
+    }
+}
+
+/**
+ * Dialog for renaming the current device.
+ */
+@Composable
+private fun RenameDeviceDialog(
+    currentName: String,
+    onDismiss: () -> Unit,
+    onRename: (String) -> Unit,
+) {
+    var name by remember { mutableStateOf(currentName) }
+    val focusManager = LocalFocusManager.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.account_rename_device)) },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus(); onRename(name) }),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onRename(name) }, enabled = name.isNotBlank()) {
+                Text(stringResource(Res.string.action_rename))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.action_cancel))
+            }
+        },
+    )
+}
+
+/**
+ * Content for the "Link New Device" bottom sheet.
+ *
+ * The user pastes the device-request URI generated on the new device.
+ * Once submitted the ViewModel initiates linking via [AccountService.addDevice].
+ */
+@Composable
+private fun LinkDeviceSheetContent(
+    isLinking: Boolean,
+    onLink: (uri: String) -> Unit,
+    onCancel: () -> Unit,
+) {
+    var uri by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = JamiTheme.spacing.l)
+            .padding(bottom = JamiTheme.spacing.xxl),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.AddLink,
+                contentDescription = null,
+                tint = JamiTheme.colors.onSurface,
+            )
+            Spacer(Modifier.width(JamiTheme.spacing.s))
+            Text(
+                text = stringResource(Res.string.account_link_device_title),
+                style = JamiTheme.typography.titleMedium,
+                color = JamiTheme.colors.onSurface,
+            )
+        }
+
+        Spacer(Modifier.height(JamiTheme.spacing.m))
+
+        if (isLinking) {
+            Spacer(Modifier.height(JamiTheme.spacing.xl))
+            CircularProgressIndicator()
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+            Text(
+                text = stringResource(Res.string.account_link_device_linking),
+                style = JamiTheme.typography.bodyMedium,
+                color = JamiTheme.colors.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(JamiTheme.spacing.xl))
+        } else {
+            Text(
+                text = stringResource(Res.string.account_link_device_hint),
+                style = JamiTheme.typography.bodyMedium,
+                color = JamiTheme.colors.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+            OutlinedTextField(
+                value = uri,
+                onValueChange = { uri = it },
+                label = { Text("ring:…") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    focusManager.clearFocus()
+                    if (uri.isNotBlank()) onLink(uri.trim())
+                }),
+            )
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(onClick = onCancel) {
+                    Text(stringResource(Res.string.action_cancel))
+                }
+                Spacer(Modifier.width(JamiTheme.spacing.s))
+                Button(
+                    onClick = { focusManager.clearFocus(); onLink(uri.trim()) },
+                    enabled = uri.isNotBlank(),
+                ) {
+                    Text(stringResource(Res.string.action_link_device))
+                }
+            }
         }
     }
 }

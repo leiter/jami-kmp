@@ -98,6 +98,19 @@ enum class ConfigKey(val key: String) {
     PRESENCE_STATUS("Account.presenceStatus"),
     PRESENCE_NOTE("Account.presenceNote"),
 
+    // Read receipts
+    SEND_READ_RECEIPT("Account.sendReadReceipt"),
+
+    // Rendezvous / auto-answer
+    ACCOUNT_ISRENDEZVOUS("Account.rendezVous"),
+
+    // Name server (RingNS)
+    RINGNS_HOST("RingNS.uri"),
+
+    // DHT proxy list
+    PROXY_LIST_ENABLED("Account.proxyListEnabled"),
+    PROXY_SERVER_LIST("Account.dhtProxyListUrl"),
+
     // Conversation
     ACCOUNT_CONVERSATION_ENABLED("Account.peerDiscovery"),
     ACCOUNT_CONVERSATION_PATH("Account.conversationPath"),

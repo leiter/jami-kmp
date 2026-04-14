@@ -163,6 +163,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
         // Not exposed in JamiBridge
     }
 
+    override fun addDevice(accountId: String, uri: String): Long {
+        // Not exposed in JamiBridge
+        return 0L
+    }
+
     override fun setDeviceName(accountId: String, deviceName: String) {
         // Not exposed in JamiBridge
     }
@@ -613,6 +618,9 @@ private class JamiBridgeDelegateImpl(
         val devicesMap = (devices as? Map<String, String>) ?: emptyMap()
         callbacks.onKnownDevicesChanged(accountId, devicesMap)
     }
+
+    // addDevice events not yet exposed in JamiBridgeProtocol — no-op stub
+    // When the C bridge exposes onAddDeviceStateChanged, add the override here.
 
     // Call Events
     override fun onIncomingCall(

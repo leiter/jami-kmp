@@ -324,7 +324,22 @@ private fun MainNavigation(needsMigration: Boolean) {
                 onBlockedContacts = {
                     navController.navigate(Screen.BlockedContacts.route)
                 },
+                onMedia = { navController.navigate(Screen.AccountSettingsMedia.route) },
+                onMessages = { navController.navigate(Screen.AccountSettingsMessages.route) },
+                onAdvanced = { navController.navigate(Screen.AccountSettingsAdvanced.route) },
             )
+        }
+
+        composable(Screen.AccountSettingsMedia.route) {
+            AccountMediaSettingsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.AccountSettingsMessages.route) {
+            AccountMessagesSettingsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.AccountSettingsAdvanced.route) {
+            AccountAdvancedSettingsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.AppSettings.route) {

@@ -23,6 +23,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.jami.model.ConfigKey
 import net.jami.repository.SettingsRepository
@@ -30,6 +31,8 @@ import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.services.DeviceRuntimeService
 import net.jami.utils.VCardUtils
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
  * Item representing a linked device.
@@ -52,6 +55,10 @@ data class AccountSettingsState(
     val currentDeviceName: String = "",
     val devices: List<DeviceItem> = emptyList(),
     val isLoading: Boolean = false,
+    // Link device state
+    val isLinkingDevice: Boolean = false,
+    val linkDeviceSuccess: Boolean = false,
+    val linkDeviceError: Boolean = false,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -63,7 +70,10 @@ data class AccountSettingsState(
             isOnline == other.isOnline &&
             currentDeviceName == other.currentDeviceName &&
             devices == other.devices &&
-            isLoading == other.isLoading
+            isLoading == other.isLoading &&
+            isLinkingDevice == other.isLinkingDevice &&
+            linkDeviceSuccess == other.linkDeviceSuccess &&
+            linkDeviceError == other.linkDeviceError
     }
 
     override fun hashCode(): Int {
@@ -75,6 +85,9 @@ data class AccountSettingsState(
         result = 31 * result + currentDeviceName.hashCode()
         result = 31 * result + devices.hashCode()
         result = 31 * result + isLoading.hashCode()
+        result = 31 * result + isLinkingDevice.hashCode()
+        result = 31 * result + linkDeviceSuccess.hashCode()
+        result = 31 * result + linkDeviceError.hashCode()
         return result
     }
 }
@@ -122,6 +135,15 @@ class AccountSettingsViewModel(
                             _state.value = _state.value.copy(
                                 isOnline = account.registrationState == net.jami.model.Account.RegistrationState.REGISTERED
                             )
+                        }
+                    }
+                    is AccountEvent.AddDeviceStateChanged -> {
+                        val account = accountService.currentAccount.value ?: return@collect
+                        if (event.accountId == account.accountId) {
+                            when (event.state) {
+                                0 -> _state.update { it.copy(isLinkingDevice = false, linkDeviceSuccess = true, linkDeviceError = false) }
+                                else -> _state.update { it.copy(isLinkingDevice = false, linkDeviceSuccess = false, linkDeviceError = true) }
+                            }
                         }
                     }
                     else -> { /* Other events */ }
@@ -230,6 +252,51 @@ class AccountSettingsViewModel(
     }
 
     /**
+     * Update the avatar photo for the current account.
+     * @param bytes Raw image bytes (JPEG/PNG), or null to clear the avatar.
+     */
+    @OptIn(ExperimentalEncodingApi::class)
+    fun updateAvatar(bytes: ByteArray?) {
+        scope.launch {
+            val account = accountService.currentAccount.value ?: return@launch
+            val base64 = bytes?.let { Base64.encode(it) } ?: ""
+            val flag = if (bytes != null) 1 else 2  // 1 = base64 data, 2 = clear
+            accountService.updateProfile(account.accountId, _state.value.displayName, base64, "image/jpeg", flag)
+            _state.update { it.copy(avatarBytes = bytes) }
+        }
+    }
+
+    /**
+     * Rename the current device.
+     */
+    fun renameCurrentDevice(name: String) {
+        scope.launch {
+            val account = accountService.currentAccount.value ?: return@launch
+            accountService.renameDevice(account.accountId, name)
+            _state.update { it.copy(currentDeviceName = name) }
+        }
+    }
+
+    /**
+     * Initiate linking a new device using its device-request URI.
+     * Progress arrives as [AccountEvent.AddDeviceStateChanged] in the init observer.
+     */
+    fun startLinkDevice(uri: String) {
+        scope.launch {
+            val account = accountService.currentAccount.value ?: return@launch
+            _state.update { it.copy(isLinkingDevice = true, linkDeviceSuccess = false, linkDeviceError = false) }
+            accountService.addDevice(account.accountId, uri)
+        }
+    }
+
+    /**
+     * Reset link-device state (e.g. when the sheet is dismissed).
+     */
+    fun cancelLinkDevice() {
+        _state.update { it.copy(isLinkingDevice = false, linkDeviceSuccess = false, linkDeviceError = false) }
+    }
+
+    /**
      * Update the device list from a daemon event.
      */
     private fun updateDevices(accountId: String, devices: Map<String, String>) {
@@ -245,6 +312,14 @@ class AccountSettingsViewModel(
             )
         }
         _state.value = _state.value.copy(devices = deviceItems)
+    }
+
+    /**
+     * Remove (delete) the current account from this device.
+     */
+    fun removeAccount() {
+        val account = accountService.currentAccount.value ?: return
+        accountService.removeAccount(account.accountId)
     }
 
     /**

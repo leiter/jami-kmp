@@ -223,6 +223,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
         // TODO: DELETE /accounts/{accountId}/devices/{deviceId}
     }
 
+    override fun addDevice(accountId: String, uri: String): Long {
+        // TODO: POST /accounts/{accountId}/devices
+        return 0L
+    }
+
     override fun setDeviceName(accountId: String, deviceName: String) {
         // TODO: PUT /accounts/{accountId}/devices/current
     }

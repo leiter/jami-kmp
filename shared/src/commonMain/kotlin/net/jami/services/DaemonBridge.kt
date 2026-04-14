@@ -38,6 +38,8 @@ interface DaemonBridgeApi {
     fun getKnownRingDevices(accountId: String): Map<String, String>
     fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String)
     fun setDeviceName(accountId: String, deviceName: String)
+    /** Initiate linking a new device using its device-request URI. Returns an operation ID. */
+    fun addDevice(accountId: String, uri: String): Long
 
     // ==================== Profile ====================
     fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int)
@@ -156,6 +158,7 @@ interface DaemonCallbacks {
     fun onVolatileAccountDetailsChanged(accountId: String, details: Map<String, String>)
     fun onKnownDevicesChanged(accountId: String, devices: Map<String, String>)
     fun onDeviceRevocationEnded(accountId: String, deviceId: String, state: Int)
+    fun onAddDeviceStateChanged(accountId: String, opId: Long, state: Int, details: Map<String, String>)
     fun onMigrationEnded(accountId: String, state: String)
     fun onAccountProfileReceived(accountId: String, name: String, photo: String)
 
@@ -261,6 +264,7 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun getKnownRingDevices(accountId: String): Map<String, String> = emptyMap()
     override fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String) {}
     override fun setDeviceName(accountId: String, deviceName: String) {}
+    override fun addDevice(accountId: String, uri: String): Long = 0L
 
     override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {}
 

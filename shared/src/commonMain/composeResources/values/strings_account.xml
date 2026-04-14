@@ -57,6 +57,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="create_sip_account">Configure SIP account</string>
 
     <!-- Strings related to account deletion -->
+    <string name="account_delete_label">Delete account</string>
+    <string name="account_delete_summary">Delete account from this device</string>
     <string name="account_delete_dialog_title">Delete account?</string>
     <string name="account_delete_dialog_message">This action cannot be undone.</string>
 
@@ -94,6 +96,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_rendezvous_label">Rendezvous Mode</string>
     <string name="account_rendezvous_summary">In Rendezvous mode, incoming calls will be added to a conference room.</string>
     <string name="account_upnp_label">Enable UPnP</string>
+    <string name="account_p2p_section_label">Peer-to-Peer Connectivity</string>
+    <string name="account_audio_rtp_label">Audio-RTP Port Range</string>
+    <string name="account_audio_rtp_min_label">Minimum</string>
+    <string name="account_audio_rtp_max_label">Maximum</string>
     <string name="account_proxy_field">Proxy</string>
 
     <!-- Extension Details -->

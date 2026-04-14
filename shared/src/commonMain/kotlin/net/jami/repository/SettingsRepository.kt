@@ -297,7 +297,17 @@ class SettingsRepository(
     }
 
     /**
-     * Update notification sound setting.
+     * Toggle notification sound on or off.
+     */
+    fun updateNotificationSoundEnabled(enabled: Boolean) {
+        val current = _notificationSettings.value
+        if (current.soundEnabled != enabled) {
+            updateNotificationSettings(current.copy(soundEnabled = enabled))
+        }
+    }
+
+    /**
+     * Update notification sound URI.
      */
     fun updateNotificationSound(soundUri: String) {
         val current = _notificationSettings.value
@@ -383,6 +393,16 @@ class SettingsRepository(
         val current = _callSettings.value
         if (current.noiseSuppression != enabled) {
             updateCallSettings(current.copy(noiseSuppression = enabled))
+        }
+    }
+
+    /**
+     * Update echo cancellation setting.
+     */
+    fun updateEchoCancellation(enabled: Boolean) {
+        val current = _callSettings.value
+        if (current.echoCancellation != enabled) {
+            updateCallSettings(current.copy(echoCancellation = enabled))
         }
     }
 

@@ -106,6 +106,13 @@ class DaemonCallbacksImpl(
         }
     }
 
+    override fun onAddDeviceStateChanged(accountId: String, opId: Long, state: Int, details: Map<String, String>) {
+        Log.d(TAG, "onAddDeviceStateChanged: $accountId opId=$opId state=$state")
+        scope.launch {
+            accountService.onAddDeviceStateChanged(accountId, opId, state, details)
+        }
+    }
+
     override fun onMigrationEnded(accountId: String, state: String) {
         Log.d(TAG, "onMigrationEnded: $accountId state=$state")
         scope.launch {

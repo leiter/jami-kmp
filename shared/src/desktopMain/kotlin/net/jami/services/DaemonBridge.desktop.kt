@@ -166,6 +166,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "revokeDevice called (stub): $accountId, device=$deviceId")
     }
 
+    override fun addDevice(accountId: String, uri: String): Long {
+        Log.d(TAG, "addDevice called (stub): $accountId, uri=$uri")
+        return 0L
+    }
+
     override fun setDeviceName(accountId: String, deviceName: String) {
         Log.d(TAG, "setDeviceName called (stub): $accountId, name=$deviceName")
     }

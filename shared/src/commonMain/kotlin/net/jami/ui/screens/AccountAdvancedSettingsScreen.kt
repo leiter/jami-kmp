@@ -1,0 +1,264 @@
+/*
+ *  Copyright (C) 2004-2025 Savoir-faire Linux Inc.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.jami.ui.screens
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import net.jami.di.getViewModel
+import net.jami.ui.components.content.JamiSectionTitle
+import net.jami.ui.components.content.JamiToggle
+import net.jami.ui.theme.JamiTheme
+import net.jami.ui.viewmodel.AccountSubSettingsViewModel
+import org.jetbrains.compose.resources.stringResource
+
+/**
+ * Account advanced settings screen.
+ *
+ * Sections:
+ * - Name Server: RingNS URI
+ * - OpenDHT: bootstrap node, DHT proxy, proxy list, local peer discovery
+ * - Peer-to-Peer Connectivity: UPnP, TURN
+ * - Audio-RTP Port Range: min/max
+ *
+ * @param onBack Called when the user navigates back.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AccountAdvancedSettingsScreen(
+    onBack: () -> Unit,
+) {
+    val viewModel = getViewModel<AccountSubSettingsViewModel>()
+    val state by viewModel.state.collectAsState()
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(Res.string.account_preferences_advanced_tab),
+                        color = JamiTheme.colors.onSurface,
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.action_cancel),
+                            tint = JamiTheme.colors.onSurface,
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = JamiTheme.colors.surface,
+                ),
+            )
+        },
+        containerColor = JamiTheme.colors.background,
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+
+            // ── Name Server ───────────────────────────────────────────────────
+            JamiSectionTitle(title = stringResource(Res.string.account_name_server_label))
+
+            OutlinedTextField(
+                value = state.nameServer,
+                onValueChange = { viewModel.setNameServer(it) },
+                label = { Text(stringResource(Res.string.account_name_server_label)) },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+            )
+
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+
+            // ── OpenDHT ───────────────────────────────────────────────────────
+            JamiSectionTitle(title = stringResource(Res.string.account_dht_label))
+
+            OutlinedTextField(
+                value = state.bootstrapNode,
+                onValueChange = { viewModel.setBootstrapNode(it) },
+                label = { Text(stringResource(Res.string.account_bootstrap_label)) },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+            )
+
+            HorizontalDivider(color = JamiTheme.colors.outline)
+
+            JamiToggle(
+                label = stringResource(Res.string.account_proxy_enable_label),
+                checked = state.proxyEnabled,
+                onCheckedChange = { viewModel.setProxyEnabled(it) },
+            )
+
+            if (state.proxyEnabled) {
+                OutlinedTextField(
+                    value = state.proxyServer,
+                    onValueChange = { viewModel.setProxyServer(it) },
+                    label = { Text(stringResource(Res.string.account_proxy_server_label)) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+                )
+            }
+
+            HorizontalDivider(color = JamiTheme.colors.outline)
+
+            JamiToggle(
+                label = stringResource(Res.string.account_proxy_list_enable_label),
+                checked = state.proxyListEnabled,
+                onCheckedChange = { viewModel.setProxyListEnabled(it) },
+            )
+
+            if (state.proxyListEnabled) {
+                OutlinedTextField(
+                    value = state.proxyListUrl,
+                    onValueChange = { viewModel.setProxyListUrl(it) },
+                    label = { Text(stringResource(Res.string.account_proxy_server_list_label)) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+                )
+            }
+
+            HorizontalDivider(color = JamiTheme.colors.outline)
+
+            JamiToggle(
+                label = stringResource(Res.string.account_peer_discovery_enable_label),
+                description = stringResource(Res.string.account_peer_discovery_enable_summary),
+                checked = state.peerDiscoveryEnabled,
+                onCheckedChange = { viewModel.setPeerDiscovery(it) },
+            )
+
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+
+            // ── P2P Connectivity ──────────────────────────────────────────────
+            JamiSectionTitle(title = stringResource(Res.string.account_p2p_section_label))
+
+            JamiToggle(
+                label = stringResource(Res.string.account_upnp_label),
+                checked = state.upnpEnabled,
+                onCheckedChange = { viewModel.setUpnpEnabled(it) },
+            )
+
+            HorizontalDivider(color = JamiTheme.colors.outline)
+
+            JamiToggle(
+                label = stringResource(Res.string.account_turn_enable_label),
+                checked = state.turnEnabled,
+                onCheckedChange = { viewModel.setTurnEnabled(it) },
+            )
+
+            if (state.turnEnabled) {
+                OutlinedTextField(
+                    value = state.turnServer,
+                    onValueChange = { viewModel.setTurnServer(it) },
+                    label = { Text(stringResource(Res.string.account_turn_server_label)) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+                )
+                OutlinedTextField(
+                    value = state.turnUsername,
+                    onValueChange = { viewModel.setTurnUsername(it) },
+                    label = { Text(stringResource(Res.string.account_turn_username_label)) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+                )
+                OutlinedTextField(
+                    value = state.turnPassword,
+                    onValueChange = { viewModel.setTurnPassword(it) },
+                    label = { Text(stringResource(Res.string.account_turn_password_label)) },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+                )
+            }
+
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+
+            // ── Audio-RTP Port Range ──────────────────────────────────────────
+            JamiSectionTitle(title = stringResource(Res.string.account_audio_rtp_label))
+
+            OutlinedTextField(
+                value = state.audioPortMin,
+                onValueChange = { viewModel.setAudioPortMin(it) },
+                label = { Text(stringResource(Res.string.account_audio_rtp_min_label)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+            )
+
+            OutlinedTextField(
+                value = state.audioPortMax,
+                onValueChange = { viewModel.setAudioPortMax(it) },
+                label = { Text(stringResource(Res.string.account_audio_rtp_max_label)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+            )
+
+            Spacer(Modifier.height(JamiTheme.spacing.xxl))
+        }
+    }
+}
