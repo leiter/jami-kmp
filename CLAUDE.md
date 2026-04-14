@@ -114,12 +114,34 @@ A feature is **done** when it behaves like its `jami-android-client` counterpart
 
 ---
 
+## String Resources
+
+All user-visible strings live in `shared/src/commonMain/composeResources/`. The file structure mirrors `jami-android-client` exactly:
+
+| File | Contents |
+|------|----------|
+| `strings.xml` | General UI strings not covered by the other files |
+| `strings_account.xml` | Account settings, devices, export, security |
+| `strings_call.xml` | In-call UI |
+| `strings_content_description.xml` | Accessibility / content descriptions |
+| `strings_preferences.xml` | App preferences / settings labels and summaries |
+
+**Rules:**
+- **No `strings_kmp.xml`.** That file is a legacy scratch pad and must be phased out. When adding a new string, place it in one of the five files above based on category.
+- **Reuse Android key names.** Check `jami-client-android/jami-android/app/src/main/res/values/` first. If the same string exists there, use the identical key. This keeps translations in sync and makes it trivial to import new locales from the Android project.
+- **When there is no Android equivalent** (new KMP-only screens/features), follow the same naming conventions: `screen_title_*`, `action_*`, `pref_*`, `account_*`, etc.
+- **Locale folders** (`values-de/`, `values-fr/`, …) mirror the same 5-file structure. A locale file only needs the keys it overrides; everything else falls back to `values/`.
+- `values/` is the canonical default (English). A key must exist there before it can be referenced as `Res.string.key` — adding it only in a locale folder will cause a compile error.
+
+---
+
 ## Known Gaps (as of last audit)
 
 - **CallScreen** — basic layout only; video rendering, advanced controls, and PiP are missing
 - **QrScanScreen** — minimal stub; camera scanning not wired
-- **AccountSettingsScreen** — photo picker, device renaming, and "link new device" flow still TODO
+- **AccountSettingsScreen** — sub-settings screens (Media, Messages, Advanced) implemented; Change Password and Biometric Auth deferred
 - **AppSettingsScreen** — minimal; many preference categories from the Android client are absent
+- **strings_kmp.xml** — legacy file still present; contents must be migrated into the 5 canonical files and file removed
 - **Web/JS platform** — daemon bridge is largely a stub; candidate for deprioritisation
 - **Migration dialog** — `needsMigration` flag detected in `JamiNavigation` but overlay not yet shown
 
