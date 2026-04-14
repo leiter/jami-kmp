@@ -174,7 +174,7 @@ fun NewConversationScreen(
 
             // Create button
             JamiButton(
-                text = stringResource(Res.string.action_create),
+                text = stringResource(Res.string.action_create_short),
                 onClick = {
                     coroutineScope.launch {
                         val conversationId = viewModel.createConversation()

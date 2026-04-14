@@ -47,9 +47,6 @@
     <string name="menu_item_edit">Bearbeiten</string>
     <string name="conversation_typing">tippt…</string>
 
-    <!-- Call -->
-    <string name="call_on_hold">Halten</string>
-
     <!-- New Conversation -->
     <string name="screen_title_new_conversation">Neue Unterhaltung</string>
     <string name="placeholder_search_contacts">Kontakte oder Jami-ID suchen…</string>
@@ -64,8 +61,6 @@
 
     <!-- Details -->
     <string name="screen_title_details">Details</string>
-    <string name="action_audio">Audio</string>
-    <string name="action_video">Video</string>
     <string name="action_block">Blockieren</string>
     <string name="empty_members">Keine Mitglieder vorhanden</string>
 
@@ -109,7 +104,6 @@
     <string name="about_license">Lizenziert unter der GNU General Public License v3.0</string>
 
     <!-- Content Descriptions -->
-    <string name="content_desc_back">Zurück</string>
     <string name="content_desc_profile_photo">Profilfoto</string>
     <string name="content_desc_available">Verfügbar</string>
     <string name="content_desc_taken">Vergeben</string>

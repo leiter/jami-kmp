@@ -48,14 +48,10 @@
     <string name="menu_item_edit">Edit</string>
     <string name="conversation_typing">typing…</string>
 
-    <!-- Call -->
-    <string name="call_on_hold">On Hold</string>
-
     <!-- New Conversation -->
     <string name="screen_title_new_conversation">New Conversation</string>
     <string name="placeholder_search_contacts">Search contacts or Jami ID…</string>
     <string name="toggle_create_group">Create group conversation</string>
-    <string name="action_create">Create</string>
 
     <!-- Search -->
     <string name="placeholder_search">Search or add</string>
@@ -66,8 +62,6 @@
 
     <!-- Details -->
     <string name="screen_title_details">Details</string>
-    <string name="action_audio">Audio</string>
-    <string name="action_video">Video</string>
     <string name="action_block">Block</string>
     <string name="empty_members">No members to display</string>
 
@@ -168,7 +162,6 @@
     <string name="action_rename">Rename</string>
 
     <!-- Account Settings — Link New Device -->
-    <string name="account_link_device_title">Link New Device</string>
     <string name="account_link_device_hint">Paste the link URI shown on the new device</string>
     <string name="account_link_device_linking">Linking device…</string>
     <string name="account_link_device_success">Device linked successfully</string>
@@ -176,7 +169,6 @@
     <string name="action_link_device">Link Device</string>
 
     <!-- Content Descriptions -->
-    <string name="content_desc_back">Back</string>
     <string name="content_desc_profile_photo">Profile photo</string>
     <string name="content_desc_available">Available</string>
     <string name="content_desc_taken">Taken</string>

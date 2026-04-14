@@ -480,4 +480,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="link_device_error_canceled">Der Vorgang wurde vom Benutzer abgebrochen.</string>
     <string name="link_device_error_unknown">Es ist ein Fehler aufgetreten.</string>
     <string name="link_device_error_bad_password">Bitte überprüfen Sie die Anmeldeinformationen und versuchen Sie es erneut.</string>
+    <string name="call_on_hold">Halten</string>
+    <string name="content_desc_back">Zurück</string>
 </resources>
