@@ -61,6 +61,7 @@ class ConversationFacadeIntegrationTest {
             deviceRuntimeService = StubDeviceRuntimeService(),
             preferencesService = StubPreferencesService(),
             daemonBridge = stub,
+            settingsRepository = net.jami.repository.SettingsRepository(stub, facadeScope),
             scope = facadeScope
         )
         return Triple(accountService, contactService, facade)

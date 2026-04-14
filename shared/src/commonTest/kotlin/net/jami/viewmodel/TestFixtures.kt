@@ -110,6 +110,7 @@ fun makeConversationFacade(
     deviceRuntimeService = StubDeviceRuntimeService(),
     preferencesService = StubPreferencesService(),
     daemonBridge = stub,
+    settingsRepository = SettingsRepository(stub, scope),
     scope = scope
 )
 

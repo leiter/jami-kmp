@@ -151,8 +151,8 @@ data class CallSettings(
  */
 @Serializable
 data class FileTransferSettings(
-    /** Maximum file size to auto-accept (bytes, 0 = never auto-accept) */
-    val maxAutoAcceptSize: Long = 20 * 1024 * 1024, // 20MB
+    /** Maximum file size to auto-accept (bytes, 0 = never auto-accept). Matches android default (30 MB). */
+    val maxAutoAcceptSize: Long = 30 * 1024 * 1024, // 30MB
     /** Auto-download files on mobile data */
     val autoDownloadMobile: Boolean = false,
     /** Auto-download files on WiFi */

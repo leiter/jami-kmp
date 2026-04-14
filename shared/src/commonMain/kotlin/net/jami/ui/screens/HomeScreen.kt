@@ -65,6 +65,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -302,7 +303,7 @@ fun HomeScreen(
 
                         LaunchedEffect(dismissState.currentValue) {
                             if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
-                                viewModel.removeConversation(conversation.id)
+                               // viewModel.removeConversation(conversation.id)
                             }
                         }
 
@@ -524,41 +525,49 @@ private fun ConversationListItem(
 
         Spacer(Modifier.width(JamiTheme.spacing.m))
 
-        // Name, last message, and timestamp
+        // Name on row 1; timestamp + message on row 2 — mirrors the official Android layout.
+        // Bold is driven by isRead (false = unread = bold), matching SmartListViewHolder behaviour.
+        val isUnread = !conversation.isRead
+        val subtextColor = if (isUnread) JamiTheme.colors.onSurface
+                           else JamiTheme.colors.onSurfaceVariant
+        val subtextWeight = if (isUnread) FontWeight.Bold else FontWeight.Normal
+
         Column(
             modifier = Modifier.weight(1f),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = conversation.displayName,
-                    style = JamiTheme.typography.titleSmall,
-                    color = JamiTheme.colors.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-                Text(
-                    text = formatTimestamp(conversation.timestamp),
-                    style = JamiTheme.typography.labelSmall,
-                    color = JamiTheme.colors.onSurfaceVariant,
-                )
-            }
+            // Row 1: contact name only
+            Text(
+                text = conversation.displayName,
+                style = JamiTheme.typography.titleSmall,
+                fontWeight = if (isUnread) FontWeight.Bold else JamiTheme.typography.titleSmall.fontWeight,
+                color = JamiTheme.colors.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
 
             Spacer(Modifier.height(JamiTheme.spacing.xxs))
 
+            // Row 2: [timestamp]  [message preview]  [badge]
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                val timestamp = formatTimestamp(conversation.timestamp)
+                if (timestamp.isNotEmpty()) {
+                    Text(
+                        text = timestamp,
+                        style = JamiTheme.typography.bodyMedium,
+                        fontWeight = subtextWeight,
+                        color = subtextColor,
+                        maxLines = 1,
+                    )
+                    Spacer(Modifier.width(JamiTheme.spacing.xs))
+                }
                 Text(
                     text = conversation.lastMessage,
                     style = JamiTheme.typography.bodyMedium,
-                    color = JamiTheme.colors.onSurfaceVariant,
+                    fontWeight = subtextWeight,
+                    color = subtextColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),

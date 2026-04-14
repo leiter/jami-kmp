@@ -152,6 +152,7 @@ class ConversationFacade(
     private val deviceRuntimeService: DeviceRuntimeService,
     private val preferencesService: PreferencesService,
     private val daemonBridge: DaemonBridgeApi,
+    private val settingsRepository: net.jami.repository.SettingsRepository,
     private val scope: CoroutineScope
 ) {
     private val _currentAccount = MutableStateFlow<Account?>(null)
@@ -273,6 +274,12 @@ class ConversationFacade(
         if (cancelNotification) {
             notificationService.cancelTextNotification(account.accountId, conversation.uri)
         }
+
+        // Notify the conversation list so it can update bold/read styling.
+        _conversationEvents.emit(
+            ConversationEvent.MessagesRead(account.accountId, conversation.uri.rawRingId)
+        )
+
         return lastMessage
     }
 
@@ -459,12 +466,16 @@ class ConversationFacade(
 
     /**
      * Accept/download an incoming file transfer.
+     * Uses the transfer's displayName for the destination path so the saved file
+     * has a proper filename (e.g. "photo.jpg") rather than a raw fileId hash.
      */
     fun acceptFileTransfer(conversation: Conversation, interactionId: String, fileId: String) {
+        val transfer = conversation.getMessage(interactionId) as? DataTransfer
+        val displayName = transfer?.displayName?.takeIf { it.isNotEmpty() } ?: fileId
         val destPath = deviceRuntimeService.getNewConversationPath(
             conversation.accountId,
             conversation.uri.rawRingId,
-            fileId
+            displayName
         )
         accountService.downloadFile(
             conversation.accountId,
@@ -1091,8 +1102,12 @@ class ConversationFacade(
         scope.launch {
             if (account != null && conversation != null) {
                 for (message in messages) {
-                    val interaction = swarmMessageToInteraction(account, conversation, message)
-                    conversation.addSwarmElement(interaction, false)
+                    try {
+                        val interaction = swarmMessageToInteraction(account, conversation, message)
+                        conversation.addSwarmElement(interaction, false)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to parse message ${message.id} (type=${message.type}): ${e.message}")
+                    }
                 }
             }
             _conversationEvents.emit(ConversationEvent.SwarmLoaded(accountId, conversationId, messages))
@@ -1113,26 +1128,90 @@ class ConversationFacade(
      */
     private fun swarmMessageToInteraction(account: Account, conversation: Conversation, message: SwarmMessage): Interaction {
         val author = message.author
-        val timestamp = message.timestamp * 1000L
+        // Daemon sends timestamp in seconds; multiply to get milliseconds.
+        // For real-time callbacks the daemon may omit the timestamp field (returns 0),
+        // so fall back to the current time so the conversation list always shows a time.
+        val timestamp = if (message.timestamp > 0L) message.timestamp * 1000L else currentTimeMillis()
         val authorUri = Uri.fromString(author)
         val contact = conversation.findContact(authorUri) ?: account.getContactFromCache(authorUri)
 
-        val interaction: Interaction = when (message.type) {
-            "initial" -> ContactEvent(account.accountId, contact).setEvent(ContactEvent.Event.INVITED)
-            "member" -> {
+        // The daemon sometimes puts the message type in body["type"] instead of the top-level
+        // type field, so compute an effective type that falls back to the body entry.
+        // Mirrors the detection logic used in letsJam/ConversationRepositoryImpl.kt.
+        val bodyType = message.body["type"] ?: ""
+        val effectiveType = message.type.ifEmpty { bodyType }
+        val isFileMessage = effectiveType == "application/data-transfer+json"
+            || bodyType == "application/data-transfer+json"
+            || message.body.containsKey("fileId")
+            || message.body.containsKey("tid")
+
+        val interaction: Interaction = when {
+            effectiveType == "initial" ->
+                ContactEvent(account.accountId, contact).setEvent(ContactEvent.Event.INVITED)
+            effectiveType == "member" -> {
                 val action = message.body["action"] ?: ""
                 ContactEvent(account.accountId, contact).setEvent(ContactEvent.Event.fromConversationAction(action))
             }
-            "text/plain", "application/edited-message" -> TextMessage(
-                author = author.ifEmpty { null },
-                account = account.accountId,
-                timestamp = timestamp,
-                conversation = conversation,
-                message = message.textContent,
-                isIncoming = !contact.isUser,
-                replyToId = message.replyTo.ifEmpty { null }
-            )
-            "application/call-history+json" -> CallHistory(
+            effectiveType == "text/plain" || effectiveType == "application/edited-message" ->
+                TextMessage(
+                    author = author.ifEmpty { null },
+                    account = account.accountId,
+                    timestamp = timestamp,
+                    conversation = conversation,
+                    message = message.textContent,
+                    isIncoming = !contact.isUser,
+                    replyToId = message.replyTo.ifEmpty { null }
+                )
+            isFileMessage -> {
+                try {
+                    val fileName = message.body["displayName"]?.ifEmpty { null }
+                        ?: message.body["name"]?.ifEmpty { null }
+                        ?: message.body["fileId"]
+                        ?: message.body["tid"]
+                        ?: ""
+                    // fileId may be stored under "fileId" or "tid" (different daemon versions)
+                    val fileId = message.body["fileId"]?.ifEmpty { null }
+                        ?: message.body["tid"]?.let { "${message.id}_$it" }
+                    val totalSizeFromMsg = message.body["totalSize"]?.toLongOrNull() ?: 0L
+                    // Query daemon for current transfer progress and path; guard against JNI errors
+                    val info = fileId?.let {
+                        try {
+                            daemonBridge.fileTransferInfo(account.accountId, conversation.uri.rawRingId, it)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "fileTransferInfo failed for $it: ${e.message}")
+                            null
+                        }
+                    }
+                    val totalSize = if (info != null && info.totalSize > 0L) info.totalSize else totalSizeFromMsg
+                    val bytesProgress = info?.bytesProgress ?: 0L
+                    val filePath = info?.path
+                    val isComplete = filePath != null
+                        && deviceRuntimeService.fileExists(filePath)
+                        && totalSize > 0L && bytesProgress >= totalSize
+                    DataTransfer(
+                        fileId = fileId,
+                        accountId = account.accountId,
+                        peerUri = author,
+                        displayName = fileName,
+                        isOutgoing = contact.isUser,
+                        timestamp = timestamp,
+                        totalSize = totalSize,
+                        bytesProgress = bytesProgress
+                    ).apply {
+                        destinationPath = filePath
+                        transferStatus = when {
+                            isComplete -> Interaction.TransferStatus.TRANSFER_FINISHED
+                            fileId.isNullOrEmpty() -> Interaction.TransferStatus.FILE_REMOVED
+                            else -> Interaction.TransferStatus.FILE_AVAILABLE
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing data-transfer message ${message.id}", e)
+                    // Return a base INVALID interaction so this message is silently skipped
+                    Interaction(account.accountId).also { it.timestamp = timestamp }
+                }
+            }
+            effectiveType == "application/call-history+json" -> CallHistory(
                 daemonId = null,
                 account = account.accountId,
                 contactNumber = author.ifEmpty { null },
@@ -1243,28 +1322,59 @@ class ConversationFacade(
             val account = accountService.getAccount(accountId)
             val conversation = account?.getSwarm(conversationId)
             if (conversation != null) {
-                val transfer = conversation.getMessage(interactionId) as? DataTransfer
-                if (transfer != null) {
-                    val newStatus = when (eventCode) {
-                        0 -> Interaction.TransferStatus.TRANSFER_CREATED
-                        1 -> Interaction.TransferStatus.TRANSFER_AWAITING_HOST
-                        2 -> Interaction.TransferStatus.TRANSFER_AWAITING_PEER
-                        3 -> Interaction.TransferStatus.TRANSFER_ONGOING
-                        4 -> Interaction.TransferStatus.TRANSFER_FINISHED
-                        5 -> Interaction.TransferStatus.TRANSFER_ERROR
-                        6 -> Interaction.TransferStatus.TRANSFER_UNJOINABLE_PEER
-                        7 -> Interaction.TransferStatus.TRANSFER_TIMEOUT_EXPIRED
-                        else -> null
+                // If the stored interaction is a plain Interaction (not DataTransfer), promote it.
+                val transfer: DataTransfer? = when (val msg = conversation.getMessage(interactionId)) {
+                    is DataTransfer -> msg
+                    is Interaction -> DataTransfer(msg).also { conversation.updateInteraction(it) }
+                    else -> null
+                }
+
+                val newStatus = when (eventCode) {
+                    0 -> Interaction.TransferStatus.TRANSFER_CREATED
+                    1 -> Interaction.TransferStatus.TRANSFER_AWAITING_HOST
+                    2 -> Interaction.TransferStatus.TRANSFER_AWAITING_PEER
+                    3 -> Interaction.TransferStatus.TRANSFER_ONGOING
+                    4 -> Interaction.TransferStatus.TRANSFER_FINISHED
+                    5 -> Interaction.TransferStatus.TRANSFER_ERROR
+                    6 -> Interaction.TransferStatus.TRANSFER_UNJOINABLE_PEER
+                    7 -> Interaction.TransferStatus.TRANSFER_TIMEOUT_EXPIRED
+                    else -> null
+                }
+
+                if (transfer != null && newStatus != null) {
+                    transfer.transferStatus = newStatus
+                    // Ensure fileId is always stored so the UI download button works
+                    if (transfer.fileId.isNullOrEmpty()) {
+                        transfer.fileId = fileId
                     }
-                    if (newStatus != null) {
-                        transfer.transferStatus = newStatus
-                        // Update progress from daemon
-                        val info = accountService.fileTransferInfo(accountId, conversationId, fileId)
-                        if (info != null) {
-                            transfer.totalSize = info.totalSize
-                            transfer.bytesProgress = info.bytesProgress
+                    // Update size/progress/path from daemon
+                    val info = accountService.fileTransferInfo(accountId, conversationId, fileId)
+                    if (info != null) {
+                        transfer.totalSize = info.totalSize
+                        transfer.bytesProgress = info.bytesProgress
+                        if (newStatus == Interaction.TransferStatus.TRANSFER_FINISHED) {
+                            transfer.destinationPath = info.path
                         }
-                        conversation.updateInteraction(transfer)
+                    }
+                    // Auto-accept incoming file if within the configured size limit
+                    if ((newStatus == Interaction.TransferStatus.TRANSFER_AWAITING_HOST ||
+                         newStatus == Interaction.TransferStatus.FILE_AVAILABLE) &&
+                        transfer.isIncoming) {
+                        val maxSize = settingsRepository.fileTransferSettings.value.maxAutoAcceptSize
+                        if (transfer.canAutoAccept(maxSize.toInt())) {
+                            acceptFileTransfer(conversation, interactionId, fileId)
+                        }
+                    }
+                    conversation.updateInteraction(transfer)
+                } else if (transfer == null && newStatus == Interaction.TransferStatus.TRANSFER_AWAITING_HOST) {
+                    // Race condition: message not yet in conversation model but daemon already
+                    // signalled AWAITING_HOST. Attempt auto-accept using size from fileTransferInfo.
+                    val info = accountService.fileTransferInfo(accountId, conversationId, fileId)
+                    val totalSize = info?.totalSize ?: 0L
+                    val maxSize = settingsRepository.fileTransferSettings.value.maxAutoAcceptSize
+                    // Accept when size is unknown (0) or within the limit
+                    if (totalSize == 0L || totalSize <= maxSize) {
+                        acceptFileTransfer(conversation, interactionId, fileId)
                     }
                 }
             }
@@ -1408,6 +1518,11 @@ sealed class ConversationEvent {
         val accountId: String,
         val conversationId: String,
         val activeCalls: List<Conversation.ActiveCall>
+    ) : ConversationEvent()
+
+    data class MessagesRead(
+        val accountId: String,
+        val conversationId: String,
     ) : ConversationEvent()
 
     data class MessagesFound(

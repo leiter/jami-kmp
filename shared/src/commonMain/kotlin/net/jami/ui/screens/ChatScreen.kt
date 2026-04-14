@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +38,7 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import net.jami.model.ContactEvent
+import net.jami.model.Interaction
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -46,15 +48,27 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.foundation.Image
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import net.jami.ui.utils.toImageBitmap
+import net.jami.utils.FileUtils
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -62,6 +76,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -122,6 +137,11 @@ fun ChatScreen(
     // Load conversation on first composition
     LaunchedEffect(conversationId) {
         viewModel.loadConversation(conversationId)
+    }
+
+    // Mark conversation as no longer visible when leaving the screen
+    DisposableEffect(conversationId) {
+        onDispose { viewModel.onLeave() }
     }
 
     // Scroll to bottom when new messages arrive (only when not searching)
@@ -295,6 +315,11 @@ fun ChatScreen(
                             MessageType.DateSeparator -> DateSeparatorItem(message.text)
                             MessageType.System        -> SystemMessage(message)
                             MessageType.Call          -> CallMessage(message)
+                            MessageType.Transfer      -> FileTransferMessage(
+                                message = message,
+                                onAccept = { viewModel.acceptTransfer(message.id, message.fileId ?: "") },
+                                onCancel = { viewModel.cancelTransfer(message.id, message.fileId ?: "") },
+                            )
                             else -> ChatBubble(
                                 message = message,
                                 isHighlighted = message.id == state.highlightedMessageId,
@@ -564,6 +589,184 @@ private fun CallMessage(message: MessageItem) {
                 style = JamiTheme.typography.labelSmall,
                 color = JamiTheme.colors.onSurfaceVariant.copy(alpha = 0.7f),
             )
+        }
+    }
+}
+
+/**
+ * Returns a human-readable file size string (KMP-safe, no String.format).
+ */
+private fun formatFileSize(bytes: Long): String = when {
+    bytes >= 1_000_000L -> "${bytes / 1_000_000L}.${(bytes % 1_000_000L) / 100_000L} MB"
+    bytes >= 1_000L     -> "${bytes / 1_000L} KB"
+    else                -> "$bytes B"
+}
+
+/**
+ * File transfer card. Mirrors item_conv_file_peer/me.xml from the Android client.
+ *
+ * Layout (inside a bubble aligned left/right like a text bubble):
+ *   [icon]  filename (bold, single line)
+ *           size / status text
+ *   [download button]        (only for AWAITING_HOST / FILE_AVAILABLE)
+ *   ──── progress bar ────   (only during TRANSFER_ONGOING)
+ *   timestamp (bottom-end overlay)
+ */
+@Composable
+private fun FileTransferMessage(
+    message: MessageItem,
+    onAccept: () -> Unit = {},
+    onCancel: () -> Unit = {},
+) {
+    // Asynchronously load image bytes for completed picture transfers
+    var imageBitmap by remember(message.destinationPath) { mutableStateOf<ImageBitmap?>(null) }
+    LaunchedEffect(message.destinationPath, message.transferStatus) {
+        if (message.isPicture &&
+            message.transferStatus == Interaction.TransferStatus.TRANSFER_FINISHED &&
+            message.destinationPath != null) {
+            val bytes = withContext(Dispatchers.Default) {
+                FileUtils.readBytes(message.destinationPath)
+            }
+            imageBitmap = bytes?.toImageBitmap()
+        } else {
+            imageBitmap = null
+        }
+    }
+    val isOutgoing = message.isOutgoing
+    val alignment = if (isOutgoing) Alignment.CenterEnd else Alignment.CenterStart
+    val bubbleColor = if (isOutgoing) JamiTheme.colors.messageSent
+                      else JamiTheme.colors.messageReceived
+    val contentColor = if (isOutgoing) JamiTheme.colors.onMessageSent
+                       else JamiTheme.colors.onMessageReceived
+    val timeColor = contentColor.copy(alpha = 0.7f)
+    val bubbleShape = RoundedCornerShape(
+        topStart = JamiTheme.radius.m,
+        topEnd = JamiTheme.radius.m,
+        bottomStart = if (isOutgoing) JamiTheme.radius.m else JamiTheme.radius.xs,
+        bottomEnd = if (isOutgoing) JamiTheme.radius.xs else JamiTheme.radius.m,
+    )
+
+    val status = message.transferStatus
+    val isError = status.isError
+    val isOngoing = status == Interaction.TransferStatus.TRANSFER_ONGOING
+    val showDownload = !isOutgoing &&
+        (status == Interaction.TransferStatus.TRANSFER_AWAITING_HOST ||
+         status == Interaction.TransferStatus.FILE_AVAILABLE)
+
+    val statusText = when (status) {
+        Interaction.TransferStatus.TRANSFER_CREATED        -> "Initializing…"
+        Interaction.TransferStatus.TRANSFER_AWAITING_PEER  -> "Waiting for peer…"
+        Interaction.TransferStatus.TRANSFER_AWAITING_HOST,
+        Interaction.TransferStatus.FILE_AVAILABLE          -> "Tap to download"
+        Interaction.TransferStatus.TRANSFER_ONGOING        ->
+            "${formatFileSize(message.bytesProgress)} / ${formatFileSize(message.totalSize)}"
+        Interaction.TransferStatus.TRANSFER_FINISHED       -> formatFileSize(message.totalSize)
+        Interaction.TransferStatus.TRANSFER_CANCELED       -> "Canceled"
+        Interaction.TransferStatus.TRANSFER_ERROR,
+        Interaction.TransferStatus.FAILURE                 -> "Transfer failed"
+        Interaction.TransferStatus.TRANSFER_UNJOINABLE_PEER -> "Peer unreachable"
+        Interaction.TransferStatus.TRANSFER_TIMEOUT_EXPIRED -> "Timed out"
+        Interaction.TransferStatus.FILE_REMOVED            -> "File deleted"
+        else                                               -> ""
+    }
+
+    val timeText = formatMessageTime(message.timestamp)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = JamiTheme.spacing.xxs),
+        contentAlignment = alignment,
+    ) {
+        Surface(
+            modifier = Modifier.widthIn(min = 160.dp, max = 280.dp),
+            color = bubbleColor,
+            shape = bubbleShape,
+        ) {
+            Column(modifier = Modifier.padding(JamiTheme.spacing.s)) {
+                // ── Main row: icon + info + optional download button ──
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.xs),
+                ) {
+                    Icon(
+                        imageVector = if (isError) Icons.Default.Warning else Icons.Default.AttachFile,
+                        contentDescription = null,
+                        tint = if (isError) JamiTheme.colors.error else contentColor,
+                        modifier = Modifier.size(24.dp),
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = message.text,
+                            style = JamiTheme.typography.bodyMedium,
+                            color = contentColor,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        )
+                        if (statusText.isNotEmpty()) {
+                            Text(
+                                text = statusText,
+                                style = JamiTheme.typography.bodySmall,
+                                color = contentColor.copy(alpha = 0.8f),
+                            )
+                        }
+                    }
+                    if (showDownload) {
+                        IconButton(
+                            onClick = onAccept,
+                            modifier = Modifier.size(32.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FileDownload,
+                                contentDescription = "Download",
+                                tint = contentColor,
+                            )
+                        }
+                    }
+                }
+
+                // ── Image preview (completed pictures only) ──
+                if (imageBitmap != null) {
+                    Spacer(modifier = Modifier.height(JamiTheme.spacing.xs))
+                    Image(
+                        bitmap = imageBitmap!!,
+                        contentDescription = message.text,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp)
+                            .clip(RoundedCornerShape(JamiTheme.radius.s)),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+
+                // ── Progress bar (TRANSFER_ONGOING only) ──
+                if (isOngoing) {
+                    Spacer(modifier = Modifier.height(JamiTheme.spacing.xs))
+                    if (message.totalSize > 0L) {
+                        LinearProgressIndicator(
+                            progress = { (message.bytesProgress.toFloat() / message.totalSize.toFloat()).coerceIn(0f, 1f) },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = contentColor,
+                            trackColor = contentColor.copy(alpha = 0.3f),
+                        )
+                    } else {
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = contentColor,
+                            trackColor = contentColor.copy(alpha = 0.3f),
+                        )
+                    }
+                }
+
+                // ── Timestamp (right-aligned) ──
+                Spacer(modifier = Modifier.height(JamiTheme.spacing.xxs))
+                Text(
+                    text = timeText,
+                    style = JamiTheme.typography.labelSmall,
+                    color = timeColor,
+                    modifier = Modifier.align(Alignment.End),
+                )
+            }
         }
     }
 }

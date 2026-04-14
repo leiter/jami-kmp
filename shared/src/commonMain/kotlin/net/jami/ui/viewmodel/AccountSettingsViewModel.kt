@@ -29,6 +29,7 @@ import net.jami.repository.SettingsRepository
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.services.DeviceRuntimeService
+import net.jami.utils.VCardUtils
 
 /**
  * Item representing a linked device.
@@ -46,10 +47,37 @@ data class AccountSettingsState(
     val displayName: String = "",
     val username: String = "",
     val identityHash: String = "",
-    val avatarUri: String? = null,
+    val avatarBytes: ByteArray? = null,
+    val isOnline: Boolean = false,
+    val currentDeviceName: String = "",
     val devices: List<DeviceItem> = emptyList(),
-    val isLoading: Boolean = false
-)
+    val isLoading: Boolean = false,
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AccountSettingsState) return false
+        return displayName == other.displayName &&
+            username == other.username &&
+            identityHash == other.identityHash &&
+            (avatarBytes?.contentEquals(other.avatarBytes ?: return false) ?: (other.avatarBytes == null)) &&
+            isOnline == other.isOnline &&
+            currentDeviceName == other.currentDeviceName &&
+            devices == other.devices &&
+            isLoading == other.isLoading
+    }
+
+    override fun hashCode(): Int {
+        var result = displayName.hashCode()
+        result = 31 * result + username.hashCode()
+        result = 31 * result + identityHash.hashCode()
+        result = 31 * result + (avatarBytes?.contentHashCode() ?: 0)
+        result = 31 * result + isOnline.hashCode()
+        result = 31 * result + currentDeviceName.hashCode()
+        result = 31 * result + devices.hashCode()
+        result = 31 * result + isLoading.hashCode()
+        return result
+    }
+}
 
 /**
  * ViewModel for the account settings screen.
@@ -88,6 +116,14 @@ class AccountSettingsViewModel(
                     is AccountEvent.DetailsChanged -> {
                         loadAccount()
                     }
+                    is AccountEvent.RegistrationStateChanged -> {
+                        val account = accountService.currentAccount.value ?: return@collect
+                        if (account.accountId == event.accountId) {
+                            _state.value = _state.value.copy(
+                                isOnline = account.registrationState == net.jami.model.Account.RegistrationState.REGISTERED
+                            )
+                        }
+                    }
                     else -> { /* Other events */ }
                 }
             }
@@ -107,7 +143,13 @@ class AccountSettingsViewModel(
                 val displayName = account.details[ConfigKey.ACCOUNT_DISPLAYNAME.key] ?: ""
                 val username = account.volatileDetails[ConfigKey.ACCOUNT_REGISTERED_NAME.key] ?: ""
                 val identityHash = account.details[ConfigKey.ACCOUNT_USERNAME.key] ?: ""
-                val deviceName = account.details[ConfigKey.ACCOUNT_DEVICE_NAME.key] ?: ""
+                val currentDeviceName = account.details[ConfigKey.ACCOUNT_DEVICE_NAME.key] ?: ""
+
+                // Load profile photo from disk
+                val filesDir = deviceRuntimeService?.getDataPath() ?: ""
+                val avatarBytes = if (filesDir.isNotEmpty())
+                    VCardUtils.loadLocalProfileFromDisk(filesDir, accountId)
+                else null
 
                 // Load known devices
                 val knownDevices = accountService.getKnownRingDevices(accountId)
@@ -124,7 +166,9 @@ class AccountSettingsViewModel(
                     displayName = displayName,
                     username = username,
                     identityHash = identityHash,
-                    avatarUri = null,
+                    avatarBytes = avatarBytes,
+                    isOnline = account.registrationState == net.jami.model.Account.RegistrationState.REGISTERED,
+                    currentDeviceName = currentDeviceName,
                     devices = deviceItems,
                     isLoading = false
                 )
@@ -136,8 +180,6 @@ class AccountSettingsViewModel(
 
     /**
      * Update the display name for the current account.
-     *
-     * @param name New display name.
      */
     fun updateDisplayName(name: String) {
         scope.launch {
@@ -148,10 +190,16 @@ class AccountSettingsViewModel(
     }
 
     /**
+     * Toggle the account online/offline.
+     */
+    fun setOnline(enabled: Boolean) {
+        val account = accountService.currentAccount.value ?: return
+        accountService.setAccountEnabled(account.accountId, enabled)
+        _state.value = _state.value.copy(isOnline = enabled)
+    }
+
+    /**
      * Revoke (unlink) a device from the current account.
-     *
-     * @param deviceId ID of the device to revoke.
-     * @param password Account password required for revocation.
      */
     fun revokeDevice(deviceId: String, password: String) {
         scope.launch {
@@ -166,27 +214,7 @@ class AccountSettingsViewModel(
     }
 
     /**
-     * Export the current account to a file.
-     *
-     * @param path Destination file path.
-     * @param password Account password for encryption.
-     * @return True if export succeeded.
-     */
-    fun exportAccount(path: String, password: String): Boolean {
-        val account = accountService.currentAccount.value ?: return false
-        return accountService.exportToFile(
-            accountId = account.accountId,
-            path = path,
-            scheme = AccountService.ACCOUNT_SCHEME_PASSWORD,
-            password = password
-        )
-    }
-
-    /**
      * Export the current account to a generated file path.
-     *
-     * @param password Account password for encryption.
-     * @return True if export succeeded.
      */
     fun exportAccount(password: String): Boolean {
         val account = accountService.currentAccount.value ?: return false

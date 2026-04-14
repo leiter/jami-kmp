@@ -104,6 +104,7 @@ val jamiModule = module {
             deviceRuntimeService = get(),
             preferencesService = get(),
             daemonBridge = get(),
+            settingsRepository = get(),
             scope = get()
         )
     }

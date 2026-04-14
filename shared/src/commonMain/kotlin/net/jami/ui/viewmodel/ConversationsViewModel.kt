@@ -27,7 +27,10 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import net.jami.model.CallHistory
 import net.jami.model.Contact
+import net.jami.model.DataTransfer
+import net.jami.model.Interaction
 import net.jami.model.TextMessage
 import net.jami.model.Uri
 import net.jami.services.AccountEvent
@@ -63,7 +66,9 @@ data class ConversationItem(
     val timestamp: Long,
     val unreadCount: Int,
     val avatarBytes: ByteArray?,
-    val isOnline: Boolean
+    val isOnline: Boolean,
+    /** False when the last interaction has not been read yet — drives bold styling. */
+    val isRead: Boolean,
 )
 
 /**
@@ -288,8 +293,9 @@ class ConversationsViewModel(
             }
 
             val lastEvent = conversation.lastEvent
-            val lastMessage = if (lastEvent is TextMessage) lastEvent.body ?: "" else ""
+            val lastMessage = if (lastEvent != null) getLastEventSummary(lastEvent) else ""
             val timestamp = lastEvent?.timestamp ?: 0L
+            val isRead = lastEvent?.isRead ?: true
 
             // Load contact avatar from peer VCard stored by the daemon
             val avatarBytes = contact?.let { c ->
@@ -304,7 +310,8 @@ class ConversationsViewModel(
                 timestamp = timestamp,
                 unreadCount = 0,
                 avatarBytes = avatarBytes,
-                isOnline = contact?.isOnline == true
+                isOnline = contact?.isOnline == true,
+                isRead = isRead,
             )
         }.sortedByDescending { it.timestamp }
     }
@@ -333,6 +340,39 @@ class ConversationsViewModel(
                 isOnline = acc.isRegistered,
             )
         }
+    }
+
+    /**
+     * Return a one-line summary of the last interaction for display in the conversation list.
+     * Mirrors the Android SmartListViewHolder.getLastEventSummary() behaviour:
+     *  - Text (outgoing): "You: <body>"
+     *  - Text (incoming): "<body>"
+     *  - Call (missed incoming): "Missed call"
+     *  - Call (missed outgoing / canceled): "Canceled call"
+     *  - Call (answered): "Call (<duration>)"
+     *  - File (incoming): "📎 <filename>"
+     *  - File (outgoing): "You: 📎 <filename>"
+     *  - Other / unknown: ""
+     */
+    private fun getLastEventSummary(event: Interaction): String = when (event.type) {
+        Interaction.InteractionType.TEXT -> {
+            val body = event.body ?: ""
+            if (event.isIncoming) body else "You: $body"
+        }
+        Interaction.InteractionType.CALL -> {
+            val call = event as? CallHistory
+            when {
+                call == null -> "Call"
+                call.isMissed && call.isIncoming -> "Missed call"
+                call.isMissed -> "Canceled call"
+                else -> "Call (${call.durationString})"
+            }
+        }
+        Interaction.InteractionType.DATA_TRANSFER -> {
+            val name = (event as? DataTransfer)?.body?.takeIf { it.isNotBlank() } ?: "file"
+            if (event.isIncoming) "File: $name" else "You: File: $name"
+        }
+        else -> ""
     }
 
     /**

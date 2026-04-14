@@ -140,7 +140,8 @@ class NewConversationViewModel(
                 timestamp = timestamp,
                 unreadCount = 0,
                 avatarBytes = avatarBytes,
-                isOnline = contact?.isOnline == true
+                isOnline = contact?.isOnline == true,
+                isRead = lastEvent?.isRead ?: true,
             )
         }.sortedByDescending { it.timestamp }
         _state.value = _state.value.copy(conversationResults = convResults)
@@ -210,7 +211,8 @@ class NewConversationViewModel(
                 timestamp = timestamp,
                 unreadCount = 0,
                 avatarBytes = avatarBytes,
-                isOnline = contact?.isOnline == true
+                isOnline = contact?.isOnline == true,
+                isRead = lastEvent?.isRead ?: true,
             )
         }
         _state.value = _state.value.copy(conversationResults = convResults)

@@ -33,6 +33,7 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import net.jami.model.CallHistory
 import net.jami.model.ContactEvent
+import net.jami.model.DataTransfer
 import net.jami.model.Interaction
 import net.jami.model.Uri
 import net.jami.services.AccountService
@@ -69,6 +70,16 @@ data class MessageItem(
     val callDuration: Long = 0L,        // milliseconds; 0 = missed/unknown
     // Contact event: filled when type == System; resolved to localised string in composable
     val contactEventType: ContactEvent.Event? = null,
+    // Transfer-specific: filled when type == Transfer
+    val transferStatus: Interaction.TransferStatus = Interaction.TransferStatus.INVALID,
+    val totalSize: Long = 0L,
+    val bytesProgress: Long = 0L,
+    val fileId: String? = null,
+    val isPicture: Boolean = false,
+    val isAudio: Boolean = false,
+    val isVideo: Boolean = false,
+    /** Local path of the downloaded file; non-null only when TRANSFER_FINISHED. */
+    val destinationPath: String? = null,
 )
 
 /**
@@ -139,6 +150,11 @@ class ChatViewModel(
                             handleSearchResults(event.messages)
                         }
                     }
+                    is ConversationEvent.DataTransferEvent -> {
+                        if (event.conversationId == convId) {
+                            loadMessagesFromHistory()
+                        }
+                    }
                     else -> { /* Handled elsewhere */ }
                 }
             }
@@ -174,9 +190,12 @@ class ChatViewModel(
                     contactAvatarBytes = avatarBytes,
                 )
 
-                // Load conversation history via the facade
+                // Mark conversation as visible and read all pending messages.
+                // Mirrors Android ConversationPresenter.resume().
                 if (conversation != null) {
+                    conversation.isVisible = true
                     conversationFacade.loadConversationHistory(conversation)
+                    conversationFacade.readMessages(account, conversation, cancelNotification = true)
                 }
 
                 loadMessagesFromHistory()
@@ -239,6 +258,32 @@ class ChatViewModel(
             val conversationId = currentConversationId ?: return@launch
             val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
             accountService.editConversationMessage(accountId, conversationUri, newText, messageId)
+        }
+    }
+
+    /**
+     * Accept (download) an incoming file transfer.
+     */
+    fun acceptTransfer(messageId: String, fileId: String) {
+        scope.launch {
+            val accountId = currentAccountId ?: return@launch
+            val conversationId = currentConversationId ?: return@launch
+            val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+            val conversation = conversationFacade.getConversation(accountId, conversationUri) ?: return@launch
+            conversationFacade.acceptFileTransfer(conversation, messageId, fileId)
+        }
+    }
+
+    /**
+     * Cancel an ongoing or pending file transfer.
+     */
+    fun cancelTransfer(messageId: String, fileId: String) {
+        scope.launch {
+            val accountId = currentAccountId ?: return@launch
+            val conversationId = currentConversationId ?: return@launch
+            conversationFacade.cancelFileTransfer(
+                accountId, Uri(Uri.SWARM_SCHEME, conversationId), messageId, fileId
+            )
         }
     }
 
@@ -326,10 +371,21 @@ class ChatViewModel(
                     contactEventType = event?.event
                 )
             }
-            Interaction.InteractionType.DATA_TRANSFER -> MessageItem(
-                id = id, text = interaction.body ?: "", author = author,
-                timestamp = timestamp, isOutgoing = isOutgoing, type = MessageType.Transfer
-            )
+            Interaction.InteractionType.DATA_TRANSFER -> {
+                val transfer = interaction as? DataTransfer
+                MessageItem(
+                    id = id, text = interaction.body ?: "", author = author,
+                    timestamp = timestamp, isOutgoing = isOutgoing, type = MessageType.Transfer,
+                    transferStatus = transfer?.transferStatus ?: Interaction.TransferStatus.INVALID,
+                    totalSize = transfer?.totalSize ?: 0L,
+                    bytesProgress = transfer?.bytesProgress ?: 0L,
+                    fileId = transfer?.fileId,
+                    isPicture = transfer?.isPicture ?: false,
+                    isAudio = transfer?.isAudio ?: false,
+                    isVideo = transfer?.isVideo ?: false,
+                    destinationPath = transfer?.destinationPath,
+                )
+            }
             Interaction.InteractionType.INVALID -> null
         }
     }
@@ -384,6 +440,14 @@ class ChatViewModel(
     private fun appendMessage(event: ConversationEvent.MessageReceived) {
         val msg = event.message
         val timestampMs = msg.timestamp * 1000L
+
+        // File transfers need the full DataTransfer object (status, size, fileId) which
+        // ConversationFacade.onMessageReceived() has already added to the conversation model
+        // via swarmMessageToInteraction(). Reload from history to get the complete item.
+//        if (msg.isTransfer) {
+//            loadMessagesFromHistory()
+//            return
+//        }
 
         val item = when {
             msg.isCall -> {
@@ -517,9 +581,25 @@ class ChatViewModel(
     }
 
     /**
+     * Called when the user leaves the chat screen (navigates back).
+     * Mirrors Android ConversationPresenter.pause().
+     */
+    fun onLeave() {
+        val accountId = currentAccountId ?: return
+        val conversationId = currentConversationId ?: return
+        scope.launch {
+            val account = accountService.currentAccount.value ?: return@launch
+            val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+            val conversation = conversationFacade.getConversation(accountId, conversationUri)
+            conversation?.isVisible = false
+        }
+    }
+
+    /**
      * Cancel the coroutine scope when this ViewModel is no longer needed.
      */
     fun onCleared() {
+        onLeave()
         scope.cancel()
     }
 
