@@ -516,6 +516,19 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (void)setAudioOutputDevice:(int)index;
 - (void)setAudioInputDevice:(int)index;
 
+// =========================================================================
+// File Picker (1 method)
+// =========================================================================
+
+/**
+ * Presents a UIDocumentPickerViewController from the topmost view controller.
+ * Copies the selected file to the app's tmp directory and invokes the completion
+ * block with its absolute path, or nil if the user cancels.
+ * Must be called from the main thread.
+ */
+- (void)presentDocumentPickerWithMimeTypes:(NSArray<NSString *> *)mimeTypes
+                                completion:(void (^)(NSString * _Nullable filePath))completion;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -19,6 +19,7 @@ package net.jami.services
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.content.ContextCompat
 import java.io.File
 
@@ -71,6 +72,14 @@ class AndroidDeviceRuntimeService(
 
     override fun hasMicrophonePermission(): Boolean =
         checkPermission(Manifest.permission.RECORD_AUDIO)
+
+    override fun hasContactsPermission(): Boolean =
+        checkPermission(Manifest.permission.READ_CONTACTS)
+
+    override fun hasNotificationsPermission(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            checkPermission(Manifest.permission.POST_NOTIFICATIONS)
+        else true
 
     override fun fileExists(path: String): Boolean =
         File(path).exists()

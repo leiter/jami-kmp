@@ -35,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import net.jami.ui.theme.JamiTheme
 
 /**
@@ -79,7 +78,7 @@ fun JamiButton(
         JamiButtonStyle.Primary -> {
             Button(
                 onClick = onClick,
-                modifier = modifier.height(48.dp),
+                modifier = modifier.height(JamiTheme.sizes.minTouchTarget),
                 enabled = effectiveEnabled,
                 shape = shape,
                 colors = ButtonDefaults.buttonColors(
@@ -106,11 +105,11 @@ fun JamiButton(
         JamiButtonStyle.Secondary -> {
             OutlinedButton(
                 onClick = onClick,
-                modifier = modifier.height(48.dp),
+                modifier = modifier.height(JamiTheme.sizes.minTouchTarget),
                 enabled = effectiveEnabled,
                 shape = shape,
                 border = BorderStroke(
-                    width = 1.dp,
+                    width = JamiTheme.sizes.buttonBorderWidth,
                     color = if (effectiveEnabled) JamiTheme.colors.primary
                     else JamiTheme.colors.disabled,
                 ),
@@ -136,7 +135,7 @@ fun JamiButton(
         JamiButtonStyle.Destructive -> {
             Button(
                 onClick = onClick,
-                modifier = modifier.height(48.dp),
+                modifier = modifier.height(JamiTheme.sizes.minTouchTarget),
                 enabled = effectiveEnabled,
                 shape = shape,
                 colors = ButtonDefaults.buttonColors(
@@ -172,9 +171,9 @@ private fun ButtonContent(
 ) {
     if (loading) {
         CircularProgressIndicator(
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(JamiTheme.sizes.progressIndicator),
             color = loadingColor,
-            strokeWidth = 2.dp,
+            strokeWidth = JamiTheme.sizes.progressStrokeWidth,
         )
     } else {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -182,7 +181,7 @@ private fun ButtonContent(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(JamiTheme.sizes.iconButton),
                     tint = contentColor,
                 )
                 Spacer(Modifier.width(JamiTheme.spacing.s))

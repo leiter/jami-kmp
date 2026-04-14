@@ -85,6 +85,12 @@ class WebDeviceRuntimeService : DeviceRuntimeService {
         return checkPermissionFromStorage("microphone")
     }
 
+    override fun hasContactsPermission(): Boolean =
+        true // Web doesn't have a contacts API in scope for Jami
+
+    override fun hasNotificationsPermission(): Boolean =
+        checkPermissionFromStorage("notifications")
+
     override fun fileExists(path: String): Boolean =
         virtualFiles.contains(path)
 

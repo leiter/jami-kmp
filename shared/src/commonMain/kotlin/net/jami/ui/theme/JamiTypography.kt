@@ -73,4 +73,20 @@ data class JamiTypography(
         fontWeight = FontWeight.Medium,
         lineHeight = 16.sp
     ),
+    val avatarInitialsSmall: TextStyle = TextStyle(
+        fontSize = 12.sp,
+        fontWeight = FontWeight.SemiBold,
+    ),
+    val avatarInitialsMedium: TextStyle = TextStyle(
+        fontSize = 18.sp,
+        fontWeight = FontWeight.SemiBold,
+    ),
+    val avatarInitialsLarge: TextStyle = TextStyle(
+        fontSize = 24.sp,
+        fontWeight = FontWeight.SemiBold,
+    ),
+    val avatarInitialsXLarge: TextStyle = TextStyle(
+        fontSize = 36.sp,
+        fontWeight = FontWeight.SemiBold,
+    ),
 )

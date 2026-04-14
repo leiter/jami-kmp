@@ -31,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.unit.dp
 import net.jami.ui.theme.JamiTheme
 
 /**
@@ -56,7 +55,7 @@ fun JamiSearchField(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp)
+            .height(JamiTheme.sizes.minTouchTarget)
             .clip(RoundedCornerShape(JamiTheme.radius.full))
             .background(JamiTheme.colors.surfaceVariant)
             .padding(horizontal = JamiTheme.spacing.m),

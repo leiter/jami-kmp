@@ -109,6 +109,12 @@ class IOSDeviceRuntimeService : DeviceRuntimeService {
         return true
     }
 
+    override fun hasContactsPermission(): Boolean =
+        true // CNContactStore authorization checked at UI layer via PermissionRequesterEffect
+
+    override fun hasNotificationsPermission(): Boolean =
+        true // UNUserNotificationCenter authorization checked at UI layer via PermissionRequesterEffect
+
     override fun fileExists(path: String): Boolean =
         fileManager.fileExistsAtPath(path)
 

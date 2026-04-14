@@ -36,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.unit.dp
 import net.jami.ui.components.actions.JamiIconButton
 import net.jami.ui.theme.JamiTheme
 
@@ -104,7 +103,7 @@ fun JamiMessageInput(
             onValueChange = onMessageChange,
             modifier = Modifier
                 .weight(1f)
-                .heightIn(min = 40.dp, max = 120.dp)
+                .heightIn(min = JamiTheme.sizes.messageInputMinHeight, max = JamiTheme.sizes.messageInputMaxHeight)
                 .clip(RoundedCornerShape(JamiTheme.radius.xl))
                 .background(JamiTheme.colors.surfaceVariant)
                 .padding(

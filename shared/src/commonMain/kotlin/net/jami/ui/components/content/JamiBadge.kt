@@ -27,9 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import net.jami.ui.theme.JamiTheme
 
 /**
@@ -62,17 +59,16 @@ fun JamiBadge(
             val displayText = if (count > 99) "99+" else count.toString()
             Box(
                 modifier = modifier
-                    .defaultMinSize(minWidth = 20.dp, minHeight = 20.dp)
+                    .defaultMinSize(minWidth = JamiTheme.sizes.badgeMinSize, minHeight = JamiTheme.sizes.badgeMinSize)
                     .clip(CircleShape)
                     .background(JamiTheme.colors.error)
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                    .padding(horizontal = JamiTheme.sizes.badgePaddingHorizontal, vertical = JamiTheme.spacing.xxs),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = displayText,
                     color = JamiTheme.colors.onError,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = JamiTheme.typography.labelSmall,
                     maxLines = 1,
                 )
             }
@@ -81,7 +77,7 @@ fun JamiBadge(
         JamiBadgeStyle.Dot -> {
             Box(
                 modifier = modifier
-                    .size(10.dp)
+                    .size(JamiTheme.sizes.badgeDot)
                     .clip(CircleShape)
                     .background(JamiTheme.colors.error),
             )

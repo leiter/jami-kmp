@@ -12,6 +12,8 @@
 // Platform-specific imports
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#import <objc/runtime.h>
 #else
 #import <AppKit/AppKit.h>
 #endif
@@ -1675,6 +1677,112 @@ static JBCallState toCallState(const std::string& state) {
 - (void)setAudioInputDevice:(int)index {
     NSLog(@"[JamiBridge] setAudioInputDevice: %d", index);
     libjami::setAudioInputDevice(index);
+}
+
+// =========================================================================
+// File Picker
+// =========================================================================
+
+@class JBDocumentPickerDelegate; // forward declaration
+
+- (void)presentDocumentPickerWithMimeTypes:(NSArray<NSString *> *)mimeTypes
+                                completion:(void (^)(NSString * _Nullable filePath))completion {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        // Find the topmost presented view controller
+        UIWindow *keyWindow = nil;
+        for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
+            if ([scene isKindOfClass:[UIWindowScene class]]) {
+                UIWindowScene *windowScene = (UIWindowScene *)scene;
+                for (UIWindow *window in windowScene.windows) {
+                    if (window.isKeyWindow) {
+                        keyWindow = window;
+                        break;
+                    }
+                }
+            }
+        }
+        UIViewController *rootVC = keyWindow.rootViewController;
+        while (rootVC.presentedViewController) {
+            rootVC = rootVC.presentedViewController;
+        }
+
+        if (!rootVC) {
+            FILE_LOG_E("FilePicker", @"No root view controller found");
+            completion(nil);
+            return;
+        }
+
+        // Build UTType list from MIME types
+        NSMutableArray<UTType *> *contentTypes = [NSMutableArray array];
+        for (NSString *mime in mimeTypes) {
+            UTType *type = [UTType typeWithMIMEType:mime];
+            if (type) [contentTypes addObject:type];
+        }
+        if (contentTypes.count == 0) {
+            [contentTypes addObject:UTTypeData];
+        }
+
+        UIDocumentPickerViewController *picker =
+            [[UIDocumentPickerViewController alloc] initForOpeningContentTypes:contentTypes];
+        picker.allowsMultipleSelection = NO;
+
+        // Use a retained helper object to serve as delegate
+        JBDocumentPickerDelegate *delegate =
+            [[JBDocumentPickerDelegate alloc] initWithCompletion:completion];
+        picker.delegate = delegate;
+        // Retain delegate for the lifetime of the picker
+        objc_setAssociatedObject(picker, "delegate", delegate, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
+        [rootVC presentViewController:picker animated:YES completion:nil];
+    });
+}
+
+@end
+
+// =========================================================================
+// Document picker delegate helper
+// =========================================================================
+
+@interface JBDocumentPickerDelegate : NSObject <UIDocumentPickerDelegate>
+- (instancetype)initWithCompletion:(void (^)(NSString * _Nullable))completion;
+@end
+
+@implementation JBDocumentPickerDelegate {
+    void (^_completion)(NSString * _Nullable);
+}
+
+- (instancetype)initWithCompletion:(void (^)(NSString * _Nullable))completion {
+    self = [super init];
+    if (self) { _completion = [completion copy]; }
+    return self;
+}
+
+- (void)documentPicker:(UIDocumentPickerViewController *)controller
+didPickDocumentsAtURLs:(NSArray<NSURL *> *)urls {
+    NSURL *url = urls.firstObject;
+    if (!url) { _completion(nil); return; }
+
+    // Copy to tmp dir so the caller gets a regular file path
+    [url startAccessingSecurityScopedResource];
+    NSString *fileName = url.lastPathComponent ?: @"import_file";
+    NSString *tmpPath = [NSTemporaryDirectory()
+        stringByAppendingPathComponent:
+            [NSString stringWithFormat:@"jami_import_%lld_%@",
+             (long long)[[NSDate date] timeIntervalSince1970], fileName]];
+    NSError *error = nil;
+    [[NSFileManager defaultManager] copyItemAtPath:url.path toPath:tmpPath error:&error];
+    [url stopAccessingSecurityScopedResource];
+
+    if (error) {
+        FILE_LOG_E("FilePicker", @"Copy failed: %@", error.localizedDescription);
+        _completion(nil);
+    } else {
+        _completion(tmpPath);
+    }
+}
+
+- (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller {
+    _completion(nil);
 }
 
 @end

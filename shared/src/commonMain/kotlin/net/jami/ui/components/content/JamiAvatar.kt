@@ -32,10 +32,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.utils.toImageBitmap
 import kotlin.math.abs
@@ -84,17 +82,17 @@ fun JamiAvatar(
     }
 
     val initialsStyle = when (size) {
-        AvatarSize.Small -> TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-        AvatarSize.Medium -> TextStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-        AvatarSize.Large -> TextStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
-        AvatarSize.XLarge -> TextStyle(fontSize = 36.sp, fontWeight = FontWeight.SemiBold)
+        AvatarSize.Small -> JamiTheme.typography.avatarInitialsSmall
+        AvatarSize.Medium -> JamiTheme.typography.avatarInitialsMedium
+        AvatarSize.Large -> JamiTheme.typography.avatarInitialsLarge
+        AvatarSize.XLarge -> JamiTheme.typography.avatarInitialsXLarge
     }
 
     val presenceDotSize = when (size) {
-        AvatarSize.Small -> 8.dp
-        AvatarSize.Medium -> 12.dp
-        AvatarSize.Large -> 14.dp
-        AvatarSize.XLarge -> 18.dp
+        AvatarSize.Small -> JamiTheme.sizes.presenceDotSmall
+        AvatarSize.Medium -> JamiTheme.sizes.presenceDotMedium
+        AvatarSize.Large -> JamiTheme.sizes.presenceDotLarge
+        AvatarSize.XLarge -> JamiTheme.sizes.presenceDotXLarge
     }
 
     val bitmap = remember(avatarBytes) { avatarBytes?.toImageBitmap() }
@@ -132,12 +130,12 @@ fun JamiAvatar(
                     .size(presenceDotSize)
                     .clip(CircleShape)
                     .background(JamiTheme.colors.surface)
-                    .border(width = 2.dp, color = JamiTheme.colors.surface, shape = CircleShape),
+                    .border(width = JamiTheme.spacing.xxs, color = JamiTheme.colors.surface, shape = CircleShape),
             ) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .size(presenceDotSize - 4.dp)
+                        .size(presenceDotSize - JamiTheme.spacing.xs)
                         .clip(CircleShape)
                         .background(dotColor),
                 )

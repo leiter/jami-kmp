@@ -106,6 +106,8 @@ class DesktopDeviceRuntimeService : DeviceRuntimeService {
     override fun hasStoragePermission(): Boolean = true
     override fun hasCameraPermission(): Boolean = true
     override fun hasMicrophonePermission(): Boolean = true
+    override fun hasContactsPermission(): Boolean = true
+    override fun hasNotificationsPermission(): Boolean = true
 
     override fun fileExists(path: String): Boolean =
         File(path).exists()
