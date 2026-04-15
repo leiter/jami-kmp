@@ -96,7 +96,7 @@ fun AccountMediaSettingsScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(Res.string.action_cancel),
+                            contentDescription = stringResource(Res.string.export_side_step2_cancel),
                             tint = JamiTheme.colors.onSurface,
                         )
                     }

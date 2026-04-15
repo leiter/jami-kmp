@@ -55,6 +55,9 @@ data class AccountSettingsState(
     val currentDeviceName: String = "",
     val devices: List<DeviceItem> = emptyList(),
     val isLoading: Boolean = false,
+    val hasPassword: Boolean = false,
+    val hasManager: Boolean = false,
+    val hasBiometric: Boolean = false,
     // Link device state
     val isLinkingDevice: Boolean = false,
     val linkDeviceSuccess: Boolean = false,
@@ -71,6 +74,9 @@ data class AccountSettingsState(
             currentDeviceName == other.currentDeviceName &&
             devices == other.devices &&
             isLoading == other.isLoading &&
+            hasPassword == other.hasPassword &&
+            hasManager == other.hasManager &&
+            hasBiometric == other.hasBiometric &&
             isLinkingDevice == other.isLinkingDevice &&
             linkDeviceSuccess == other.linkDeviceSuccess &&
             linkDeviceError == other.linkDeviceError
@@ -85,6 +91,9 @@ data class AccountSettingsState(
         result = 31 * result + currentDeviceName.hashCode()
         result = 31 * result + devices.hashCode()
         result = 31 * result + isLoading.hashCode()
+        result = 31 * result + hasPassword.hashCode()
+        result = 31 * result + hasManager.hashCode()
+        result = 31 * result + hasBiometric.hashCode()
         result = 31 * result + isLinkingDevice.hashCode()
         result = 31 * result + linkDeviceSuccess.hashCode()
         result = 31 * result + linkDeviceError.hashCode()
@@ -184,6 +193,9 @@ class AccountSettingsViewModel(
                     )
                 }
 
+                val hasPassword = account.details[ConfigKey.ACCOUNT_ARCHIVE_HAS_PASSWORD.key]?.toBoolean() ?: false
+                val hasManager = account.details[ConfigKey.ACCOUNT_MANAGER_URI.key]?.isNotEmpty() ?: false
+
                 _state.value = AccountSettingsState(
                     displayName = displayName,
                     username = username,
@@ -192,7 +204,9 @@ class AccountSettingsViewModel(
                     isOnline = account.registrationState == net.jami.model.Account.RegistrationState.REGISTERED,
                     currentDeviceName = currentDeviceName,
                     devices = deviceItems,
-                    isLoading = false
+                    isLoading = false,
+                    hasPassword = hasPassword,
+                    hasManager = hasManager,
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)
@@ -249,6 +263,22 @@ class AccountSettingsViewModel(
             scheme = AccountService.ACCOUNT_SCHEME_PASSWORD,
             password = password
         )
+    }
+
+    /**
+     * Change (or set/clear) the account archive password.
+     *
+     * @param oldPassword Current password, or empty string if the account has no password.
+     * @param newPassword New password, or empty string to remove the password.
+     * @return true if the password was changed successfully.
+     */
+    fun changePassword(oldPassword: String, newPassword: String): Boolean {
+        val account = accountService.currentAccount.value ?: return false
+        val success = accountService.changeAccountPassword(account.accountId, oldPassword, newPassword)
+        if (success) {
+            _state.update { it.copy(hasPassword = newPassword.isNotEmpty()) }
+        }
+        return success
     }
 
     /**

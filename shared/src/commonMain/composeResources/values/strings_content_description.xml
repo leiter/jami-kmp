@@ -13,4 +13,21 @@
     <string name="searchbar_navigation_account">Select account</string>
     <string name="add_conversation_member">Add conversation member</string>
     <string name="qrcode_to_scan">QR code to scan</string>
+    <string name="content_desc_back">Back</string>
+    <string name="content_desc_profile_photo">Profile photo</string>
+    <string name="content_desc_available">Available</string>
+    <string name="content_desc_taken">Taken</string>
+    <string name="content_desc_send">Send</string>
+    <string name="content_desc_audio_call">Audio call</string>
+    <string name="content_desc_video_call">Video call</string>
+    <string name="content_desc_menu">Menu</string>
+    <string name="content_desc_mute">Mute</string>
+    <string name="content_desc_unmute">Unmute</string>
+    <string name="content_desc_speaker_on">Speaker on</string>
+    <string name="content_desc_speaker_off">Speaker off</string>
+    <string name="content_desc_enable_video">Enable video</string>
+    <string name="content_desc_disable_video">Disable video</string>
+    <string name="content_desc_end_call">End call</string>
+    <string name="content_desc_hold">Hold</string>
+    <string name="content_desc_resume">Resume</string>
 </resources>

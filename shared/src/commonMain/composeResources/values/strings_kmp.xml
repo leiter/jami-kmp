@@ -62,38 +62,20 @@
 
     <!-- Details -->
     <string name="screen_title_details">Details</string>
-    <string name="action_block">Block</string>
     <string name="empty_members">No members to display</string>
 
     <!-- Settings -->
     <string name="screen_title_account_settings">Account Settings</string>
     <string name="screen_title_app_settings">Settings</string>
-    <!-- Appearance (pref_category_appearance is in strings_preferences.xml) -->
-    <string name="pref_dark_mode">Dark mode</string>
-    <string name="pref_dark_mode_description">Use dark color theme throughout the app</string>
-    <string name="pref_compact_mode">Compact mode</string>
-    <string name="pref_compact_mode_description">Use a denser conversation list layout</string>
-    <string name="pref_conversation_sort">Conversation order</string>
-    <string name="pref_sort_last_activity">Recent</string>
-    <string name="pref_sort_alphabetical">A–Z</string>
-    <string name="pref_sort_unread_first">Unread first</string>
 
     <!-- Privacy (pref_category_privacy is in strings_preferences.xml) -->
     <string name="pref_read_receipts">Read receipts</string>
     <string name="pref_read_receipts_description">Let others know when you have read their messages</string>
-    <string name="pref_typing_indicators">Typing indicators</string>
-    <string name="pref_typing_indicators_description">Let others see when you are typing</string>
     <string name="pref_block_unknown">Block unknown contacts</string>
     <string name="pref_block_unknown_description">Only accept messages from your contacts</string>
-    <string name="pref_screenshot_blocking">Block screenshots</string>
-    <string name="pref_screenshot_blocking_description">Prevent screenshots and screen recordings of the app</string>
-    <string name="pref_link_preview">Link preview</string>
-    <string name="pref_link_preview_description">Show previews for links in messages</string>
 
     <!-- Notifications -->
     <string name="pref_category_notifications">Notifications</string>
-    <string name="pref_push_notifications">Push notifications</string>
-    <string name="pref_push_notifications_description">Receive notifications for new messages and calls</string>
     <string name="pref_call_notifications">Call notifications</string>
     <string name="pref_call_notifications_description">Show notifications for incoming calls</string>
     <string name="pref_message_notifications">Message notifications</string>
@@ -128,18 +110,11 @@
     <string name="pref_auto_download_mobile_description">Automatically download files when on mobile data</string>
 
     <!-- System (pref_category_system is in strings_preferences.xml) -->
-    <string name="pref_start_on_boot">Start on boot</string>
-    <string name="pref_start_on_boot_description">Launch Jami when the device starts</string>
-    <string name="pref_run_in_background">Run in background</string>
-    <string name="pref_run_in_background_description">Keep Jami running to receive calls and messages</string>
     <string name="section_linked_devices">Linked Devices</string>
     <string name="empty_linked_devices">No linked devices</string>
-    <string name="account_this_device">This device</string>
     <string name="dialog_export_title">Export Account</string>
     <string name="dialog_export_message">Enter your account password to create an encrypted backup.</string>
     <string name="action_export">Export</string>
-    <string name="action_cancel">Cancel</string>
-    <string name="action_delete">Delete</string>
     <string name="snackbar_export_success">Account exported successfully</string>
     <string name="snackbar_export_error">Export failed. Check password and try again.</string>
     <string name="pref_category_account">Account</string>
@@ -149,8 +124,6 @@
 
     <!-- Blocked Contacts -->
     <string name="screen_title_blocked_contacts">Blocked Contacts</string>
-    <string name="empty_blocked_contacts">No blocked contacts</string>
-    <string name="action_unblock">Unblock</string>
 
     <!-- About -->
     <string name="screen_title_about">About</string>
@@ -167,22 +140,4 @@
     <string name="account_link_device_success">Device linked successfully</string>
     <string name="account_link_device_error">Failed to link device. Check the URI and try again.</string>
     <string name="action_link_device">Link Device</string>
-
-    <!-- Content Descriptions -->
-    <string name="content_desc_profile_photo">Profile photo</string>
-    <string name="content_desc_available">Available</string>
-    <string name="content_desc_taken">Taken</string>
-    <string name="content_desc_send">Send</string>
-    <string name="content_desc_audio_call">Audio call</string>
-    <string name="content_desc_video_call">Video call</string>
-    <string name="content_desc_menu">Menu</string>
-    <string name="content_desc_mute">Mute</string>
-    <string name="content_desc_unmute">Unmute</string>
-    <string name="content_desc_speaker_on">Speaker on</string>
-    <string name="content_desc_speaker_off">Speaker off</string>
-    <string name="content_desc_enable_video">Enable video</string>
-    <string name="content_desc_disable_video">Disable video</string>
-    <string name="content_desc_end_call">End call</string>
-    <string name="content_desc_hold">Hold</string>
-    <string name="content_desc_resume">Resume</string>
 </resources>

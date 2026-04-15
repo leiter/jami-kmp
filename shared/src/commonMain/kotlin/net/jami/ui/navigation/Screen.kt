@@ -61,6 +61,7 @@ sealed class Screen(val route: String) {
     data object AccountSettingsMedia : Screen("account_settings_media")
     data object AccountSettingsMessages : Screen("account_settings_messages")
     data object AccountSettingsAdvanced : Screen("account_settings_advanced")
+    data object AccountSettingsAccount : Screen("account_settings_account")
     data object AppSettings : Screen("app_settings")
     data object About : Screen("about")
     data object BlockedContacts : Screen("blocked_contacts")

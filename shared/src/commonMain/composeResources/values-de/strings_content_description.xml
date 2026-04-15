@@ -21,4 +21,21 @@ the Free Software Foundation, either version 3 of the License, or
     <string name="searchbar_navigation_account">Konto auswählen</string>
     <string name="add_conversation_member">Konversationsmitglied hinzufügen</string>
     <string name="qrcode_to_scan">QR-Code zum Scannen</string>
+    <string name="content_desc_back">Zurück</string>
+    <string name="content_desc_profile_photo">Profilfoto</string>
+    <string name="content_desc_available">Verfügbar</string>
+    <string name="content_desc_taken">Vergeben</string>
+    <string name="content_desc_send">Senden</string>
+    <string name="content_desc_audio_call">Audioanruf</string>
+    <string name="content_desc_video_call">Videoanruf</string>
+    <string name="content_desc_menu">Menü</string>
+    <string name="content_desc_mute">Stummschalten</string>
+    <string name="content_desc_unmute">Stummschaltung aufheben</string>
+    <string name="content_desc_speaker_on">Lautsprecher an</string>
+    <string name="content_desc_speaker_off">Lautsprecher aus</string>
+    <string name="content_desc_enable_video">Video aktivieren</string>
+    <string name="content_desc_disable_video">Video deaktivieren</string>
+    <string name="content_desc_end_call">Anruf beenden</string>
+    <string name="content_desc_hold">Halten</string>
+    <string name="content_desc_resume">Fortsetzen</string>
 </resources>

@@ -23,6 +23,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_category_privacy">Privatsphäre</string>
     <string name="pref_category_diagnostic">Diagnose</string>
     <string name="pref_category_appearance">Aussehen</string>
+    <string name="pref_compactMode_title">Kompaktmodus</string>
+    <string name="pref_compactMode_summary">Dichtere Konversationsliste verwenden</string>
+    <string name="pref_conversationSort_title">Gesprächsreihenfolge</string>
+    <string name="pref_sortLastActivity">Zuletzt aktiv</string>
+    <string name="pref_sortAlphabetical">A–Z</string>
+    <string name="pref_sortUnreadFirst">Ungelesene zuerst</string>
     <string name="pref_category_connectivity">Verbindung</string>
     <string name="pref_category_extensions">Erweiterungen</string>
     <string name="pref_category_video_settings">Erweiterte Videoeinstellungen</string>

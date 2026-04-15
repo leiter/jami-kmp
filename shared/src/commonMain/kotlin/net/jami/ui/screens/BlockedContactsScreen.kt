@@ -114,7 +114,7 @@ fun BlockedContactsScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = stringResource(Res.string.empty_blocked_contacts),
+                    text = stringResource(Res.string.no_blocked_contact),
                     style = JamiTheme.typography.bodyLarge,
                     color = JamiTheme.colors.onSurfaceVariant,
                 )
@@ -183,7 +183,7 @@ private fun BlockedContactItem(
         }
 
         JamiButton(
-            text = stringResource(Res.string.action_unblock),
+            text = stringResource(Res.string.conversation_action_unblock_this),
             onClick = onUnblock,
             style = JamiButtonStyle.Secondary,
         )

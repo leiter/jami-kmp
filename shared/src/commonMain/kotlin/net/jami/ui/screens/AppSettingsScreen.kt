@@ -109,19 +109,19 @@ fun AppSettingsScreen(
             JamiSectionTitle(title = stringResource(Res.string.pref_category_appearance))
 
             JamiToggle(
-                label = stringResource(Res.string.pref_dark_mode),
-                description = stringResource(Res.string.pref_dark_mode_description),
+                label = stringResource(Res.string.pref_darkTheme_title),
+                description = stringResource(Res.string.pref_darkTheme_summary),
                 checked = state.isDarkTheme,
                 onCheckedChange = { viewModel.toggleDarkTheme() },
             )
             JamiToggle(
-                label = stringResource(Res.string.pref_compact_mode),
-                description = stringResource(Res.string.pref_compact_mode_description),
+                label = stringResource(Res.string.pref_compactMode_title),
+                description = stringResource(Res.string.pref_compactMode_summary),
                 checked = state.isCompactMode,
                 onCheckedChange = { viewModel.toggleCompactMode() },
             )
 
-            SettingLabelRow(label = stringResource(Res.string.pref_conversation_sort))
+            SettingLabelRow(label = stringResource(Res.string.pref_conversationSort_title))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -132,17 +132,17 @@ fun AppSettingsScreen(
                 horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
             ) {
                 JamiFilterChip(
-                    text = stringResource(Res.string.pref_sort_last_activity),
+                    text = stringResource(Res.string.pref_sortLastActivity),
                     selected = state.conversationSort == ConversationSort.LAST_ACTIVITY,
                     onClick = { viewModel.setConversationSort(ConversationSort.LAST_ACTIVITY) },
                 )
                 JamiFilterChip(
-                    text = stringResource(Res.string.pref_sort_alphabetical),
+                    text = stringResource(Res.string.pref_sortAlphabetical),
                     selected = state.conversationSort == ConversationSort.ALPHABETICAL,
                     onClick = { viewModel.setConversationSort(ConversationSort.ALPHABETICAL) },
                 )
                 JamiFilterChip(
-                    text = stringResource(Res.string.pref_sort_unread_first),
+                    text = stringResource(Res.string.pref_sortUnreadFirst),
                     selected = state.conversationSort == ConversationSort.UNREAD_FIRST,
                     onClick = { viewModel.setConversationSort(ConversationSort.UNREAD_FIRST) },
                 )
@@ -160,8 +160,8 @@ fun AppSettingsScreen(
                 onCheckedChange = { viewModel.toggleReadReceipts() },
             )
             JamiToggle(
-                label = stringResource(Res.string.pref_typing_indicators),
-                description = stringResource(Res.string.pref_typing_indicators_description),
+                label = stringResource(Res.string.pref_typing_title),
+                description = stringResource(Res.string.pref_typing_summary),
                 checked = state.isTypingIndicators,
                 onCheckedChange = { viewModel.toggleTypingIndicators() },
             )
@@ -172,14 +172,14 @@ fun AppSettingsScreen(
                 onCheckedChange = { viewModel.toggleBlockUnknown() },
             )
             JamiToggle(
-                label = stringResource(Res.string.pref_screenshot_blocking),
-                description = stringResource(Res.string.pref_screenshot_blocking_description),
+                label = stringResource(Res.string.pref_block_record_title),
+                description = stringResource(Res.string.pref_block_record_summary),
                 checked = state.isScreenshotBlocking,
                 onCheckedChange = { viewModel.toggleScreenshotBlocking() },
             )
             JamiToggle(
-                label = stringResource(Res.string.pref_link_preview),
-                description = stringResource(Res.string.pref_link_preview_description),
+                label = stringResource(Res.string.pref_link_preview_title),
+                description = stringResource(Res.string.pref_link_preview_summary),
                 checked = state.isLinkPreview,
                 onCheckedChange = { viewModel.toggleLinkPreview() },
             )
@@ -190,8 +190,8 @@ fun AppSettingsScreen(
             JamiSectionTitle(title = stringResource(Res.string.pref_category_notifications))
 
             JamiToggle(
-                label = stringResource(Res.string.pref_push_notifications),
-                description = stringResource(Res.string.pref_push_notifications_description),
+                label = stringResource(Res.string.pref_pushNotifications_title),
+                description = stringResource(Res.string.pref_pushNotifications_summary),
                 checked = state.isPushNotifications,
                 onCheckedChange = { viewModel.togglePushNotifications() },
             )
@@ -316,14 +316,14 @@ fun AppSettingsScreen(
             JamiSectionTitle(title = stringResource(Res.string.pref_category_system))
 
             JamiToggle(
-                label = stringResource(Res.string.pref_start_on_boot),
-                description = stringResource(Res.string.pref_start_on_boot_description),
+                label = stringResource(Res.string.pref_startOnBoot_title),
+                description = stringResource(Res.string.pref_startOnBoot_summary),
                 checked = state.isStartOnBoot,
                 onCheckedChange = { viewModel.toggleStartOnBoot() },
             )
             JamiToggle(
-                label = stringResource(Res.string.pref_run_in_background),
-                description = stringResource(Res.string.pref_run_in_background_description),
+                label = stringResource(Res.string.pref_persistNotification_title),
+                description = stringResource(Res.string.pref_persistNotification_summary),
                 checked = state.isRunInBackground,
                 onCheckedChange = { viewModel.toggleRunInBackground() },
             )

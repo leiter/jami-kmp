@@ -130,13 +130,13 @@ import org.jetbrains.compose.resources.stringResource
 fun AccountSettingsScreen(
     onBack: () -> Unit,
     onBlockedContacts: () -> Unit,
+    onAccount: () -> Unit = {},
     onMedia: () -> Unit = {},
     onMessages: () -> Unit = {},
     onAdvanced: () -> Unit = {},
 ) {
     val viewModel = getViewModel<AccountSettingsViewModel>()
     val state by viewModel.state.collectAsState()
-    var showExportDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showQrSheet by remember { mutableStateOf(false) }
     var qrBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
@@ -152,8 +152,6 @@ fun AccountSettingsScreen(
     var displayNameEdit by remember { mutableStateOf(state.displayName) }
     LaunchedEffect(state.displayName) { displayNameEdit = state.displayName }
 
-    val exportSuccessMsg = stringResource(Res.string.snackbar_export_success)
-    val exportErrorMsg = stringResource(Res.string.snackbar_export_error)
     val shareSubject = stringResource(Res.string.account_contact_me)
     val shareBodyTemplate = stringResource(Res.string.account_share_body)
     val linkSuccessMsg = stringResource(Res.string.account_link_device_success)
@@ -227,20 +225,6 @@ fun AccountSettingsScreen(
         }
     }
 
-    if (showExportDialog) {
-        ExportAccountDialog(
-            onDismiss = { showExportDialog = false },
-            onExport = { password ->
-                showExportDialog = false
-                val success = viewModel.exportAccount(password)
-                coroutineScope.launch {
-                    if (success) snackbarHostState.showSnackbar(exportSuccessMsg)
-                    else snackbarHostState.showSnackbar(exportErrorMsg)
-                }
-            },
-        )
-    }
-
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -248,12 +232,12 @@ fun AccountSettingsScreen(
             text = { Text(stringResource(Res.string.account_delete_dialog_message)) },
             confirmButton = {
                 TextButton(onClick = { showDeleteDialog = false; viewModel.removeAccount() }) {
-                    Text(stringResource(Res.string.action_delete), color = JamiTheme.colors.error)
+                    Text(stringResource(Res.string.menu_delete), color = JamiTheme.colors.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(stringResource(Res.string.action_cancel))
+                    Text(stringResource(Res.string.export_side_step2_cancel))
                 }
             },
         )
@@ -538,9 +522,9 @@ fun AccountSettingsScreen(
 
             AccountCard {
                 SettingsCardRow(
-                    label = stringResource(Res.string.account_export_file),
+                    label = stringResource(Res.string.navigation_item_account),
                     icon = Icons.Default.AccountCircle,
-                    onClick = { showExportDialog = true },
+                    onClick = onAccount,
                 )
                 HorizontalDivider(color = JamiTheme.colors.outline)
                 SettingsCardRow(
@@ -806,7 +790,7 @@ private fun RenameDeviceDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(Res.string.action_cancel))
+                Text(stringResource(Res.string.export_side_step2_cancel))
             }
         },
     )
@@ -885,7 +869,7 @@ private fun LinkDeviceSheetContent(
                 horizontalArrangement = Arrangement.End,
             ) {
                 TextButton(onClick = onCancel) {
-                    Text(stringResource(Res.string.action_cancel))
+                    Text(stringResource(Res.string.export_side_step2_cancel))
                 }
                 Spacer(Modifier.width(JamiTheme.spacing.s))
                 Button(
@@ -899,53 +883,3 @@ private fun LinkDeviceSheetContent(
     }
 }
 
-/**
- * Dialog for exporting the account with a password.
- */
-@Composable
-private fun ExportAccountDialog(
-    onDismiss: () -> Unit,
-    onExport: (password: String) -> Unit,
-) {
-    var password by remember { mutableStateOf("") }
-    val focusManager = LocalFocusManager.current
-
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.dialog_export_title)) },
-        text = {
-            Column {
-                Text(
-                    text = stringResource(Res.string.dialog_export_message),
-                    style = JamiTheme.typography.bodyMedium,
-                )
-                Spacer(Modifier.height(JamiTheme.spacing.m))
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text(stringResource(Res.string.prompt_password)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done,
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = { focusManager.clearFocus(); onExport(password) },
-                    ),
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onExport(password) }) {
-                Text(stringResource(Res.string.action_export))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(Res.string.action_cancel))
-            }
-        },
-    )
-}
