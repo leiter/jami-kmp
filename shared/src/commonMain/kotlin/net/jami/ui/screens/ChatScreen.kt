@@ -53,8 +53,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.graphics.ImageBitmap
@@ -63,6 +68,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.jami.ui.utils.toImageBitmap
 import net.jami.utils.FileUtils
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -73,6 +80,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -103,6 +112,9 @@ import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
+import net.jami.ui.platform.AppPermission
+import net.jami.ui.platform.ImageCaptureEffect
+import net.jami.ui.platform.PermissionRequesterEffect
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.ChatViewModel
 import net.jami.ui.viewmodel.MessageItem
@@ -134,6 +146,10 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     val searchFocusRequester = remember { FocusRequester() }
 
+    // Camera permission and capture state
+    var requestCameraPermission by remember { mutableStateOf(false) }
+    var showImageCapture by remember { mutableStateOf(false) }
+
     // Load conversation on first composition
     LaunchedEffect(conversationId) {
         viewModel.loadConversation(conversationId)
@@ -164,6 +180,29 @@ fun ChatScreen(
         val idx = state.messages.reversed().indexOfFirst { it.id == targetId }
         if (idx >= 0) listState.animateScrollToItem(idx)
     }
+
+    // Handle camera permission request
+    PermissionRequesterEffect(
+        permission = AppPermission.Camera,
+        request = requestCameraPermission,
+        onResult = { granted ->
+            requestCameraPermission = false
+            if (granted) {
+                showImageCapture = true
+            }
+        }
+    )
+
+    // Handle image capture
+    ImageCaptureEffect(
+        show = showImageCapture,
+        onImageCaptured = { path ->
+            showImageCapture = false
+            if (path != null) {
+                viewModel.sendImage(path)
+            }
+        }
+    )
 
     var overflowMenuExpanded by remember { mutableStateOf(false) }
 
@@ -350,6 +389,17 @@ fun ChatScreen(
                     value = state.inputText,
                     onValueChange = { viewModel.updateInput(it) },
                     onSend = { viewModel.sendMessage() },
+                    onSendEmoji = { viewModel.sendEmoji() },
+                    onTakePicture = {
+                        // Check if we have camera permission
+                        if (viewModel.hasCameraPermission()) {
+                            // Permission granted, show camera
+                            showImageCapture = true
+                        } else {
+                            // Request permission
+                            requestCameraPermission = true
+                        }
+                    },
                 )
             }
         }
@@ -773,50 +823,217 @@ private fun FileTransferMessage(
 
 /**
  * Message input bar with text field and send button.
+ * Matches jami-android-client appearance with card container and action buttons.
  */
 @Composable
 private fun MessageInputBar(
     value: String,
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
+    onSendEmoji: () -> Unit = {},
+    onTakePicture: () -> Unit = {},
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    // Outer container with background
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = JamiTheme.colors.surface,
-        tonalElevation = 2.dp,
     ) {
-        Row(
+        // Card container matching Android's cvMessageInput
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    horizontal = JamiTheme.spacing.m,
-                    vertical = JamiTheme.spacing.s,
+                    horizontal = 16.dp,
+                    vertical = 8.dp,
                 ),
-            verticalAlignment = Alignment.CenterVertically,
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = JamiTheme.colors.surface,
+            ),
         ) {
-            OutlinedTextField(
-                value = value,
-                onValueChange = onValueChange,
-                placeholder = { Text(stringResource(Res.string.conversation_type_message)) },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(JamiTheme.radius.xl),
-                maxLines = 4,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { onSend() }),
-            )
-
-            Spacer(Modifier.width(JamiTheme.spacing.s))
-
-            IconButton(
-                onClick = onSend,
-                enabled = value.isNotBlank(),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = stringResource(Res.string.content_desc_send),
-                    tint = if (value.isNotBlank()) JamiTheme.colors.primary
-                    else JamiTheme.colors.onDisabled,
+                // Menu button (3 dots) with dropdown
+                Box {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(40.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Message options",
+                            tint = JamiTheme.colors.onSurface,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                    ) {
+                        // Share location
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.conversation_share_location)) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                // TODO: Handle share location
+                            },
+                        )
+
+                        // Record audio
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.conversation_send_audio)) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Mic,
+                                    contentDescription = null,
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                // TODO: Handle record audio
+                            },
+                        )
+
+                        // Record video
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.conversation_send_video)) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Videocam,
+                                    contentDescription = null,
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                // TODO: Handle record video
+                            },
+                        )
+
+                        // Select media (gallery)
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.select_media)) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Photo,
+                                    contentDescription = null,
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                // TODO: Handle select media
+                            },
+                        )
+
+                        // Send file
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.send_file)) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.AttachFile,
+                                    contentDescription = null,
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                // TODO: Handle send file
+                            },
+                        )
+
+                        // Chat extensions
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.chat_extensions)) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Extension,
+                                    contentDescription = null,
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                // TODO: Handle chat extensions
+                            },
+                        )
+                    }
+                }
+
+                // Camera button
+                IconButton(
+                    onClick = onTakePicture,
+                    modifier = Modifier.size(40.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoCamera,
+                        contentDescription = "Take photo",
+                        tint = JamiTheme.colors.onSurface,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+
+                // Text input field (transparent background)
+                TextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    placeholder = {
+                        Text(
+                            stringResource(Res.string.conversation_type_message),
+                            color = JamiTheme.colors.onSurfaceVariant,
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                    ),
+                    maxLines = 5,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(onSend = { onSend() }),
                 )
+
+                // Send button or thumbs up emoji button
+                if (value.isNotBlank()) {
+                    // Send button (visible when text is present)
+                    IconButton(
+                        onClick = onSend,
+                        modifier = Modifier.size(40.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = stringResource(Res.string.content_desc_send),
+                            tint = JamiTheme.colors.primary,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                } else {
+                    // Thumbs up emoji button (visible when text is empty)
+                    IconButton(
+                        onClick = onSendEmoji,
+                        modifier = Modifier.size(40.dp),
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.conversation_default_emoji),
+                            style = JamiTheme.typography.titleLarge,
+                            color = JamiTheme.colors.onSurface,
+                        )
+                    }
+                }
             }
         }
     }

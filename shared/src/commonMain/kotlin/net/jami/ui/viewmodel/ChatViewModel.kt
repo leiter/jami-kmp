@@ -36,10 +36,12 @@ import net.jami.model.ContactEvent
 import net.jami.model.DataTransfer
 import net.jami.model.Interaction
 import net.jami.model.Uri
+import net.jami.repository.DraftRepository
 import net.jami.services.AccountService
 import net.jami.services.ConversationFacade
 import net.jami.services.ConversationEvent
 import net.jami.services.DeviceRuntimeService
+import net.jami.utils.Log
 import net.jami.utils.VCardUtils
 
 /**
@@ -109,6 +111,7 @@ class ChatViewModel(
     private val conversationFacade: ConversationFacade,
     private val accountService: AccountService,
     private val deviceRuntimeService: DeviceRuntimeService,
+    private val draftRepository: DraftRepository,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     private val scope = scope
@@ -174,6 +177,9 @@ class ChatViewModel(
                 currentAccountId = account.accountId
                 currentConversationId = conversationId
 
+                // Observe drafts for this account
+                draftRepository.observeAccount(account.accountId)
+
                 val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
                 val conversation = conversationFacade.getConversation(account.accountId, conversationUri)
 
@@ -198,6 +204,12 @@ class ChatViewModel(
                     conversationFacade.readMessages(account, conversation, cancelNotification = true)
                 }
 
+                // Load saved draft for this conversation
+                val draft = draftRepository.getDraft(conversationId)
+                if (draft != null && draft.text.isNotEmpty()) {
+                    _state.value = _state.value.copy(inputText = draft.text)
+                }
+
                 loadMessagesFromHistory()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)
@@ -220,9 +232,81 @@ class ChatViewModel(
             // Send via daemon
             accountService.sendConversationMessage(accountId, conversationUri, text)
 
-            // Clear input
+            // Clear input and draft
             _state.value = _state.value.copy(inputText = "")
+            draftRepository.clearDraft(conversationId)
         }
+    }
+
+    /**
+     * Send the default emoji (thumbs up) as a message.
+     */
+    fun sendEmoji() {
+        scope.launch {
+            val accountId = currentAccountId ?: return@launch
+            val conversationId = currentConversationId ?: return@launch
+            val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+
+            // Send thumbs up emoji
+            accountService.sendConversationMessage(accountId, conversationUri, "👍")
+        }
+    }
+
+    /**
+     * Check if camera permission is granted.
+     */
+    fun hasCameraPermission(): Boolean {
+        return deviceRuntimeService.hasCameraPermission()
+    }
+
+    /**
+     * Send an image file as a message.
+     *
+     * @param imagePath Absolute path to the image file.
+     */
+    fun sendImage(imagePath: String) {
+        scope.launch {
+            val accountId = currentAccountId ?: return@launch
+            val conversationId = currentConversationId ?: return@launch
+            val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+
+            Log.i("ChatViewModel", "Sending image: $imagePath")
+
+            // Get the conversation object
+            val conversation = conversationFacade.getConversation(accountId, conversationUri)
+            if (conversation != null) {
+                conversationFacade.sendFile(conversation, conversationUri, imagePath)
+            } else {
+                Log.e("ChatViewModel", "Failed to send image: conversation not found")
+            }
+        }
+    }
+
+    /**
+     * Handle taking a picture with the camera.
+     * This requires platform-specific implementation.
+     */
+    fun takePicture() {
+        // Check camera permission
+        if (!deviceRuntimeService.hasCameraPermission()) {
+            // TODO: Request camera permission through platform-specific mechanism
+            Log.w("ChatViewModel", "Camera permission not granted")
+            return
+        }
+
+        // TODO: Platform-specific camera implementation
+        // Android: Launch ACTION_IMAGE_CAPTURE intent
+        // iOS: Use UIImagePickerController or Camera API
+        // For now, this is a placeholder that demonstrates the flow
+        Log.i("ChatViewModel", "takePicture called - platform-specific implementation needed")
+
+        // Once image is captured, it should be sent via:
+        // scope.launch {
+        //     val accountId = currentAccountId ?: return@launch
+        //     val conversationId = currentConversationId ?: return@launch
+        //     val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+        //     conversationFacade.sendFile(accountId, conversationUri, filePath)
+        // }
     }
 
     /**
@@ -235,6 +319,9 @@ class ChatViewModel(
         val accountId = currentAccountId ?: return
         val conversationId = currentConversationId ?: return
         conversationFacade.setIsComposing(accountId, Uri(Uri.SWARM_SCHEME, conversationId), text.isNotEmpty())
+
+        // Save draft (with debouncing handled by DraftRepository)
+        draftRepository.updateDraft(conversationId, text)
     }
 
     /**
