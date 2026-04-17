@@ -111,4 +111,12 @@ actual val platformModule: Module = module {
     single {
         Settings(androidContext())
     }
+
+    /**
+     * Biometric authentication service.
+     * Uses AndroidKeyStore and BiometricPrompt for secure biometric authentication.
+     */
+    single<BiometricService> {
+        BiometricService(androidContext())
+    }
 }

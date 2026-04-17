@@ -100,6 +100,10 @@ fun AccountDetailsSettingsScreen(
     var showChangePasswordDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showBiometricSetupDialog by remember { mutableStateOf(false) }
+    var showDisableBiometricDialog by remember { mutableStateOf(false) }
+    var biometricPassword by remember { mutableStateOf("") }
+    var biometricError by remember { mutableStateOf<String?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
@@ -157,6 +161,95 @@ fun AccountDetailsSettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(stringResource(Res.string.export_side_step2_cancel))
+                }
+            },
+        )
+    }
+
+    // Biometric Setup Dialog (password confirmation)
+    if (showBiometricSetupDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showBiometricSetupDialog = false
+                biometricPassword = ""
+                biometricError = null
+            },
+            title = { Text(stringResource(Res.string.account_biometric_setup_title)) },
+            text = {
+                Column {
+                    Text(stringResource(Res.string.account_biometric_setup_message))
+                    Spacer(Modifier.height(JamiTheme.spacing.m))
+
+                    OutlinedTextField(
+                        value = biometricPassword,
+                        onValueChange = {
+                            biometricPassword = it
+                            biometricError = null
+                        },
+                        label = { Text(stringResource(Res.string.account_enter_password)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = biometricError != null,
+                        supportingText = biometricError?.let { err -> { Text(err) } },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done,
+                        ),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            val result = viewModel.enableBiometric(biometricPassword)
+                            result.onSuccess {
+                                showBiometricSetupDialog = false
+                                biometricPassword = ""
+                                biometricError = null
+                            }.onFailure { e ->
+                                biometricError = e.message
+                            }
+                        }
+                    }
+                ) {
+                    Text(stringResource(Res.string.action_enable))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showBiometricSetupDialog = false
+                    biometricPassword = ""
+                    biometricError = null
+                }) {
+                    Text(stringResource(Res.string.export_side_step2_cancel))
+                }
+            },
+        )
+    }
+
+    // Disable Biometric Dialog
+    if (showDisableBiometricDialog) {
+        AlertDialog(
+            onDismissRequest = { showDisableBiometricDialog = false },
+            title = { Text(stringResource(Res.string.account_biometric_disable_title)) },
+            text = { Text(stringResource(Res.string.account_biometric_disable_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            viewModel.disableBiometric()
+                            showDisableBiometricDialog = false
+                        }
+                    }
+                ) {
+                    Text(stringResource(Res.string.action_disable))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDisableBiometricDialog = false }) {
                     Text(stringResource(Res.string.export_side_step2_cancel))
                 }
             },
@@ -228,7 +321,15 @@ fun AccountDetailsSettingsScreen(
                         else
                             stringResource(Res.string.account_biometric_set),
                         summary = stringResource(Res.string.account_biometric_summary),
-                        onClick = { /* TODO: platform-specific biometric key management */ },
+                        onClick = {
+                            if (state.hasBiometric) {
+                                // Show disable confirmation dialog
+                                showDisableBiometricDialog = true
+                            } else {
+                                // Show password confirmation for enrollment
+                                showBiometricSetupDialog = true
+                            }
+                        },
                     )
                 }
             }

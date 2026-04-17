@@ -29,6 +29,9 @@ import net.jami.model.ConfigKey
 import net.jami.repository.SettingsRepository
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
+import net.jami.services.BiometricAvailability
+import net.jami.services.BiometricResult
+import net.jami.services.BiometricService
 import net.jami.services.DeviceRuntimeService
 import net.jami.utils.VCardUtils
 import kotlin.io.encoding.Base64
@@ -111,6 +114,7 @@ data class AccountSettingsState(
 class AccountSettingsViewModel(
     private val accountService: AccountService,
     private val settingsRepository: SettingsRepository,
+    private val biometricService: BiometricService,
     private val deviceRuntimeService: DeviceRuntimeService? = null,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
@@ -196,6 +200,9 @@ class AccountSettingsViewModel(
                 val hasPassword = account.details[ConfigKey.ACCOUNT_ARCHIVE_HAS_PASSWORD.key]?.toBoolean() ?: false
                 val hasManager = account.details[ConfigKey.ACCOUNT_MANAGER_URI.key]?.isNotEmpty() ?: false
 
+                // Load biometric state
+                val hasBiometric = biometricService.isEnabled(accountId)
+
                 _state.value = AccountSettingsState(
                     displayName = displayName,
                     username = username,
@@ -207,6 +214,7 @@ class AccountSettingsViewModel(
                     isLoading = false,
                     hasPassword = hasPassword,
                     hasManager = hasManager,
+                    hasBiometric = hasBiometric,
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)
@@ -279,6 +287,76 @@ class AccountSettingsViewModel(
             _state.update { it.copy(hasPassword = newPassword.isNotEmpty()) }
         }
         return success
+    }
+
+    /**
+     * Enable biometric authentication for the current account.
+     * Shows enrollment dialog, confirms password, then enables biometric.
+     *
+     * @param password The account password to encrypt
+     * @return Result indicating success or failure with error message
+     */
+    suspend fun enableBiometric(password: String): Result<Unit> {
+        val account = accountService.currentAccount.value ?: return Result.failure(Exception("No account"))
+
+        // Check device capability first
+        return when (biometricService.checkAvailability()) {
+            BiometricAvailability.AVAILABLE -> {
+                val success = biometricService.enroll(
+                    accountId = account.accountId,
+                    password = password,
+                    promptTitle = "Enable biometric authentication",
+                    promptDescription = "Authenticate to secure your account password"
+                )
+                if (success) {
+                    _state.value = _state.value.copy(hasBiometric = true)
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception("Enrollment failed"))
+                }
+            }
+            BiometricAvailability.NOT_ENROLLED -> {
+                Result.failure(Exception("No biometrics enrolled on device"))
+            }
+            BiometricAvailability.NO_HARDWARE -> {
+                Result.failure(Exception("Biometric hardware not available"))
+            }
+            else -> {
+                Result.failure(Exception("Biometric unavailable"))
+            }
+        }
+    }
+
+    /**
+     * Disable biometric authentication for the current account.
+     *
+     * @return Result indicating success or failure
+     */
+    suspend fun disableBiometric(): Result<Unit> {
+        val account = accountService.currentAccount.value ?: return Result.failure(Exception("No account"))
+
+        val success = biometricService.disable(account.accountId)
+        if (success) {
+            _state.value = _state.value.copy(hasBiometric = false)
+            return Result.success(Unit)
+        }
+        return Result.failure(Exception("Failed to disable biometric"))
+    }
+
+    /**
+     * Authenticate using biometric and return decrypted password.
+     * Used for account export, password change, etc.
+     *
+     * @param title Title for the biometric prompt
+     * @param description Description for the biometric prompt
+     * @return BiometricResult with decrypted password or error
+     */
+    suspend fun authenticateWithBiometric(
+        title: String,
+        description: String
+    ): BiometricResult {
+        val account = accountService.currentAccount.value ?: return BiometricResult.Error("No account", false)
+        return biometricService.authenticate(account.accountId, title, description)
     }
 
     /**

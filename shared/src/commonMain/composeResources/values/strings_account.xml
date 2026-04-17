@@ -339,4 +339,32 @@ Biometric or device authentication adds a convenient way to locally unlock acces
     <string name="account_auth_success">Authentication succeeded</string>
     <string name="account_auth_key_error">An error occurred while decrypting the account key.</string>
     <string name="account_auth_password">Use account password</string>
+
+    <!-- Biometric setup/enrollment -->
+    <string name="account_biometric_setup_title">Enable biometric authentication</string>
+    <string name="account_biometric_setup_message">Enter your account password to enable biometric authentication.</string>
+    <string name="account_biometric_disable_title">Disable biometric authentication</string>
+    <string name="account_biometric_disable_message">Are you sure you want to disable biometric authentication? You will need to enter your password each time.</string>
+
+    <!-- Biometric authentication prompts -->
+    <string name="account_biometric_auth_description">Use biometric to unlock your account</string>
+    <string name="account_biometric_export_title">Export account</string>
+    <string name="account_biometric_export_description">Authenticate to export your account backup</string>
+
+    <!-- Biometric onboarding (account creation) -->
+    <string name="account_biometric_onboarding_title">Secure your account with biometrics</string>
+    <string name="account_biometric_onboarding_message">Would you like to enable biometric authentication? This allows you to unlock your account using fingerprint or Face ID instead of typing your password.</string>
+
+    <!-- Biometric errors -->
+    <string name="account_biometric_error_not_enrolled">No biometrics enrolled on this device. Please add a fingerprint or face in your device settings.</string>
+    <string name="account_biometric_error_no_hardware">Biometric authentication is not available on this device.</string>
+    <string name="account_biometric_error_unavailable">Biometric authentication is currently unavailable.</string>
+    <string name="account_biometric_error_failed">Biometric authentication failed. Please try again.</string>
+    <string name="account_biometric_error_cancelled">Biometric authentication cancelled.</string>
+
+    <!-- Misc -->
+    <string name="account_use_biometric">Use biometric authentication</string>
+    <string name="action_enable">Enable</string>
+    <string name="action_disable">Disable</string>
+    <string name="action_skip">Skip</string>
 </resources>

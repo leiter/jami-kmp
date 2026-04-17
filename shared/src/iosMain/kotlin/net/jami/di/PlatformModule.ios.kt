@@ -107,4 +107,12 @@ actual val platformModule: Module = module {
     single {
         Settings()
     }
+
+    /**
+     * Biometric authentication service.
+     * Uses LocalAuthentication framework and Keychain for secure biometric authentication.
+     */
+    single<BiometricService> {
+        BiometricService()
+    }
 }
