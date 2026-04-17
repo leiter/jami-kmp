@@ -108,6 +108,7 @@ class DesktopDeviceRuntimeService : DeviceRuntimeService {
     override fun hasMicrophonePermission(): Boolean = true
     override fun hasContactsPermission(): Boolean = true
     override fun hasNotificationsPermission(): Boolean = true
+    override fun hasLocationPermission(): Boolean = true
 
     override fun fileExists(path: String): Boolean =
         File(path).exists()

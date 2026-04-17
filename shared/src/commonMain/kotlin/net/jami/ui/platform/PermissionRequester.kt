@@ -26,6 +26,7 @@ enum class AppPermission {
     Microphone,
     Contacts,
     Notifications,
+    Location,
 }
 
 /**

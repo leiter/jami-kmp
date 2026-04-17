@@ -66,4 +66,12 @@ sealed class Screen(val route: String) {
     data object About : Screen("about")
     data object BlockedContacts : Screen("blocked_contacts")
     data object QrScan : Screen("qr_scan")
+
+    data class LocationSharing(val conversationId: String) :
+        Screen("location_sharing/$conversationId") {
+        companion object {
+            const val ROUTE = "location_sharing/{conversationId}"
+            fun createRoute(conversationId: String) = "location_sharing/$conversationId"
+        }
+    }
 }

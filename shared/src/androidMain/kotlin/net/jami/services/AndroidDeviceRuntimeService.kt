@@ -81,6 +81,10 @@ class AndroidDeviceRuntimeService(
             checkPermission(Manifest.permission.POST_NOTIFICATIONS)
         else true
 
+    override fun hasLocationPermission(): Boolean =
+        checkPermission(Manifest.permission.ACCESS_FINE_LOCATION) ||
+            checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+
     override fun fileExists(path: String): Boolean =
         File(path).exists()
 

@@ -325,3 +325,24 @@ object AccountConfig {
     const val ACCOUNT_TYPE_JAMI = "RING"
     const val ACCOUNT_TYPE_SIP = "SIP"
 }
+
+/**
+ * Represents a contact's shared location.
+ */
+data class ContactLocation(
+    val latitude: Double,
+    val longitude: Double,
+    val timestamp: Long,
+    val receivedTimestamp: Long = currentTimeMillis(),
+)
+
+/**
+ * Entry for a contact's location sharing session.
+ */
+data class ContactLocationEntry(
+    val contact: Contact,
+    val conversationId: String,
+)
+
+// Expect function for current time (implemented per platform)
+internal expect fun currentTimeMillis(): Long

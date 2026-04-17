@@ -139,6 +139,7 @@ kotlin {
                 implementation(libs.sqldelight.android)
                 implementation(libs.zxing.core)
                 implementation(libs.androidx.core)
+                implementation(libs.osmdroid)
             }
         }
 

@@ -438,6 +438,17 @@ actual class DaemonBridge() : DaemonBridgeApi {
         return false
     }
 
+    override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {
+        // TODO: Add to JamiBridgeWrapper.h:
+        // - (void)sendAccountTextMessage:(NSString *)accountId
+        //                 conversationId:(NSString *)conversationId
+        //                       messages:(NSDictionary<NSString *, NSString *> *)messages
+        //                           flag:(int)flag;
+        // This enables sending location updates, reactions, and other MIME-typed messages.
+        // For now, location sharing on macOS will not send updates until this binding is added.
+        Log.w(TAG, "sendAccountTextMessage not implemented on macOS - location sharing disabled")
+    }
+
     // ==================== File Transfer ====================
 
     override fun sendFile(

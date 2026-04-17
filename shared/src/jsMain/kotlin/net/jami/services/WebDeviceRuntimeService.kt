@@ -91,6 +91,9 @@ class WebDeviceRuntimeService : DeviceRuntimeService {
     override fun hasNotificationsPermission(): Boolean =
         checkPermissionFromStorage("notifications")
 
+    override fun hasLocationPermission(): Boolean =
+        checkPermissionFromStorage("geolocation")
+
     override fun fileExists(path: String): Boolean =
         virtualFiles.contains(path)
 

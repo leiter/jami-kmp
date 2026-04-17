@@ -23,6 +23,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
@@ -33,6 +34,7 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import net.jami.model.CallHistory
 import net.jami.model.ContactEvent
+import net.jami.model.ContactLocation
 import net.jami.model.DataTransfer
 import net.jami.model.Interaction
 import net.jami.model.Uri
@@ -41,6 +43,7 @@ import net.jami.services.AccountService
 import net.jami.services.ConversationFacade
 import net.jami.services.ConversationEvent
 import net.jami.services.DeviceRuntimeService
+import net.jami.services.LocationUpdate
 import net.jami.utils.Log
 import net.jami.utils.VCardUtils
 
@@ -85,6 +88,14 @@ data class MessageItem(
 )
 
 /**
+ * Information about a contact's shared location.
+ */
+data class ContactSharingInfo(
+    val displayName: String,
+    val location: ContactLocation,
+)
+
+/**
  * State for the chat / conversation detail screen.
  */
 data class ChatState(
@@ -99,6 +110,8 @@ data class ChatState(
     val isSearchActive: Boolean = false,
     /** Message to scroll to and briefly highlight after closing search. */
     val highlightedMessageId: String? = null,
+    /** Whether a contact in this conversation is sharing their location. */
+    val contactSharingLocation: ContactSharingInfo? = null,
 )
 
 /**
@@ -211,9 +224,52 @@ class ChatViewModel(
                 }
 
                 loadMessagesFromHistory()
+
+                // Subscribe to location updates for this conversation
+                subscribeToLocationUpdates(account.accountId, conversationId)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)
             }
+        }
+    }
+
+    /**
+     * Subscribe to location updates for the current conversation.
+     */
+    private fun subscribeToLocationUpdates(accountId: String, conversationId: String) {
+        scope.launch {
+            // Load any existing contact locations
+            val existingLocations = accountService.getContactLocations(accountId, conversationId)
+            if (existingLocations.isNotEmpty()) {
+                // Get the first contact's location (for 1-to-1 conversations)
+                val (contactUri, location) = existingLocations.entries.first()
+                val account = accountService.getAccount(accountId) ?: return@launch
+                val contact = account.getContactFromCache(Uri.fromId(contactUri))
+                _state.value = _state.value.copy(
+                    contactSharingLocation = ContactSharingInfo(contact.displayUsername, location)
+                )
+            }
+
+            // Subscribe to location updates
+            accountService.locationUpdates
+                .filter { it.accountId == accountId && it.conversationId == conversationId }
+                .collect { update ->
+                    when (update) {
+                        is LocationUpdate.Position -> {
+                            val account = accountService.getAccount(accountId) ?: return@collect
+                            val contact = account.getContactFromCache(Uri.fromId(update.contactUri))
+                            _state.value = _state.value.copy(
+                                contactSharingLocation = ContactSharingInfo(
+                                    displayName = contact.displayUsername,
+                                    location = update.location,
+                                )
+                            )
+                        }
+                        is LocationUpdate.Stop -> {
+                            _state.value = _state.value.copy(contactSharingLocation = null)
+                        }
+                    }
+                }
         }
     }
 
@@ -260,6 +316,13 @@ class ChatViewModel(
     }
 
     /**
+     * Check if location permission is granted.
+     */
+    fun hasLocationPermission(): Boolean {
+        return deviceRuntimeService.hasLocationPermission()
+    }
+
+    /**
      * Send an image file as a message.
      *
      * @param imagePath Absolute path to the image file.
@@ -278,6 +341,29 @@ class ChatViewModel(
                 conversationFacade.sendFile(conversation, conversationUri, imagePath)
             } else {
                 Log.e("ChatViewModel", "Failed to send image: conversation not found")
+            }
+        }
+    }
+
+    /**
+     * Send any file as a message.
+     *
+     * @param filePath Absolute path to the file.
+     */
+    fun sendFile(filePath: String) {
+        scope.launch {
+            val accountId = currentAccountId ?: return@launch
+            val conversationId = currentConversationId ?: return@launch
+            val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+
+            Log.i("ChatViewModel", "Sending file: $filePath")
+
+            // Get the conversation object
+            val conversation = conversationFacade.getConversation(accountId, conversationUri)
+            if (conversation != null) {
+                conversationFacade.sendFile(conversation, conversationUri, filePath)
+            } else {
+                Log.e("ChatViewModel", "Failed to send file: conversation not found")
             }
         }
     }

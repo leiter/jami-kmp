@@ -438,6 +438,11 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
         return JamiService.cancelMessage(accountId, messageId)
     }
 
+    override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {
+        val payload = StringMap.toSwig(messages)
+        JamiService.sendAccountTextMessage(accountId, conversationId, payload, flag)
+    }
+
     // ==================== File Transfer ====================
 
     override fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {

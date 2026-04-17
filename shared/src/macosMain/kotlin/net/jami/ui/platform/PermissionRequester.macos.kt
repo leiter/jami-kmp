@@ -25,6 +25,12 @@ import platform.AVFoundation.AVMediaTypeAudio
 import platform.AVFoundation.AVMediaTypeVideo
 import platform.Contacts.CNContactStore
 import platform.Contacts.CNEntityType
+import platform.CoreLocation.CLLocationManager
+import platform.CoreLocation.CLAuthorizationStatus
+import platform.CoreLocation.kCLAuthorizationStatusAuthorizedAlways
+import platform.CoreLocation.kCLAuthorizationStatusNotDetermined
+import platform.CoreLocation.CLLocationManagerDelegateProtocol
+import platform.darwin.NSObject
 import kotlin.coroutines.resume
 
 @OptIn(ExperimentalForeignApi::class)
@@ -41,6 +47,7 @@ actual fun PermissionRequesterEffect(
             AppPermission.Microphone -> requestAVPermission(AVMediaTypeAudio)
             AppPermission.Contacts -> requestContactsPermission()
             AppPermission.Notifications -> true // macOS notification permission handled at app level
+            AppPermission.Location -> requestLocationPermission()
         }
         onResult(granted)
     }
@@ -59,5 +66,34 @@ private suspend fun requestContactsPermission(): Boolean =
     suspendCancellableCoroutine { cont ->
         CNContactStore().requestAccessForEntityType(CNEntityType.CNEntityTypeContacts) { granted, _ ->
             cont.resume(granted)
+        }
+    }
+
+@OptIn(ExperimentalForeignApi::class)
+private suspend fun requestLocationPermission(): Boolean =
+    suspendCancellableCoroutine { cont ->
+        val locationManager = CLLocationManager()
+        val currentStatus = CLLocationManager.authorizationStatus()
+
+        when (currentStatus) {
+            kCLAuthorizationStatusAuthorizedAlways -> {
+                cont.resume(true)
+            }
+            kCLAuthorizationStatusNotDetermined -> {
+                // Create a delegate to handle the authorization response
+                val delegate = object : NSObject(), CLLocationManagerDelegateProtocol {
+                    override fun locationManagerDidChangeAuthorization(manager: CLLocationManager) {
+                        val status = CLLocationManager.authorizationStatus()
+                        val granted = status == kCLAuthorizationStatusAuthorizedAlways
+                        cont.resume(granted)
+                    }
+                }
+                locationManager.delegate = delegate
+                locationManager.requestAlwaysAuthorization()
+            }
+            else -> {
+                // Denied or restricted
+                cont.resume(false)
+            }
         }
     }

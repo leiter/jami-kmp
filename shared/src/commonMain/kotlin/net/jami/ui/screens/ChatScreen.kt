@@ -50,6 +50,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.foundation.Image
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
@@ -113,6 +114,7 @@ import net.jami.di.getViewModel
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.platform.AppPermission
+import net.jami.ui.platform.FilePickerEffect
 import net.jami.ui.platform.ImageCaptureEffect
 import net.jami.ui.platform.PermissionRequesterEffect
 import net.jami.ui.theme.JamiTheme
@@ -140,6 +142,7 @@ fun ChatScreen(
     onBack: () -> Unit,
     onCallClick: (String, Boolean) -> Unit,
     onDetailsClick: () -> Unit,
+    onShareLocation: () -> Unit = {},
 ) {
     val viewModel = getViewModel<ChatViewModel>()
     val state by viewModel.state.collectAsState()
@@ -149,6 +152,14 @@ fun ChatScreen(
     // Camera permission and capture state
     var requestCameraPermission by remember { mutableStateOf(false) }
     var showImageCapture by remember { mutableStateOf(false) }
+
+    // File picker state
+    var showFilePicker by remember { mutableStateOf(false) }
+    var filePickerMimeTypes by remember { mutableStateOf(listOf("*/*")) }
+
+    // Location permission state
+    var requestLocationPermission by remember { mutableStateOf(false) }
+    var locationPermissionGranted by remember { mutableStateOf(false) }
 
     // Load conversation on first composition
     LaunchedEffect(conversationId) {
@@ -200,6 +211,32 @@ fun ChatScreen(
             showImageCapture = false
             if (path != null) {
                 viewModel.sendImage(path)
+            }
+        }
+    )
+
+    // Handle file picker
+    FilePickerEffect(
+        show = showFilePicker,
+        mimeTypes = filePickerMimeTypes,
+        onFilePicked = { path ->
+            showFilePicker = false
+            if (path != null) {
+                viewModel.sendFile(path)
+            }
+        }
+    )
+
+    // Handle location permission request
+    PermissionRequesterEffect(
+        permission = AppPermission.Location,
+        request = requestLocationPermission,
+        onResult = { granted ->
+            requestLocationPermission = false
+            locationPermissionGranted = granted
+            if (granted) {
+                // Navigate to location sharing screen
+                onShareLocation()
             }
         }
     )
@@ -336,6 +373,15 @@ fun ChatScreen(
                     onResultClick = { viewModel.scrollToMessage(it) },
                 )
             } else {
+                // ── Location sharing indicator ──
+                state.contactSharingLocation?.let { locationInfo ->
+                    LocationSharingBanner(
+                        contactName = locationInfo.displayName,
+                        onClick = onShareLocation,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
                 // ── Normal mode: scrollable message list ──
                 LazyColumn(
                     modifier = Modifier
@@ -398,6 +444,26 @@ fun ChatScreen(
                         } else {
                             // Request permission
                             requestCameraPermission = true
+                        }
+                    },
+                    onSelectMedia = {
+                        // Open file picker for images and videos
+                        filePickerMimeTypes = listOf("image/*", "video/*")
+                        showFilePicker = true
+                    },
+                    onSendFile = {
+                        // Open file picker for any file type
+                        filePickerMimeTypes = listOf("*/*")
+                        showFilePicker = true
+                    },
+                    onShareLocation = {
+                        // Check if we have location permission
+                        if (viewModel.hasLocationPermission()) {
+                            // Permission granted - navigate to location sharing
+                            onShareLocation()
+                        } else {
+                            // Request permission
+                            requestLocationPermission = true
                         }
                     },
                 )
@@ -832,6 +898,9 @@ private fun MessageInputBar(
     onSend: () -> Unit,
     onSendEmoji: () -> Unit = {},
     onTakePicture: () -> Unit = {},
+    onSelectMedia: () -> Unit = {},
+    onSendFile: () -> Unit = {},
+    onShareLocation: () -> Unit = {},
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -889,7 +958,7 @@ private fun MessageInputBar(
                             },
                             onClick = {
                                 showMenu = false
-                                // TODO: Handle share location
+                                onShareLocation()
                             },
                         )
 
@@ -934,7 +1003,7 @@ private fun MessageInputBar(
                             },
                             onClick = {
                                 showMenu = false
-                                // TODO: Handle select media
+                                onSelectMedia()
                             },
                         )
 
@@ -949,7 +1018,7 @@ private fun MessageInputBar(
                             },
                             onClick = {
                                 showMenu = false
-                                // TODO: Handle send file
+                                onSendFile()
                             },
                         )
 
@@ -1197,4 +1266,50 @@ private fun formatMessageTime(timestamp: Long): String {
     val dt = Instant.fromEpochMilliseconds(timestamp)
         .toLocalDateTime(TimeZone.currentSystemDefault())
     return "${dt.hour.toString().padStart(2, '0')}:${dt.minute.toString().padStart(2, '0')}"
+}
+
+/**
+ * Banner showing that a contact is sharing their location.
+ * Tapping the banner opens the location sharing screen to view the contact's location.
+ */
+@Composable
+private fun LocationSharingBanner(
+    contactName: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        color = JamiTheme.colors.surfaceVariant,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = JamiTheme.spacing.m, vertical = JamiTheme.spacing.s),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = null,
+                tint = JamiTheme.colors.primary,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(modifier = Modifier.width(JamiTheme.spacing.s))
+            Text(
+                text = stringResource(Res.string.location_share_contact, contactName),
+                style = JamiTheme.typography.bodyMedium,
+                color = JamiTheme.colors.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = null,
+                tint = JamiTheme.colors.onSurfaceVariant,
+                modifier = Modifier
+                    .size(16.dp)
+                    .graphicsLayer { rotationZ = 180f },
+            )
+        }
+    }
 }

@@ -463,6 +463,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
         return false
     }
 
+    override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {
+        // TODO: POST /accounts/{accountId}/conversations/{conversationId}/message with mime type map
+    }
+
     // ==================== File Transfer ====================
 
     override fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {

@@ -71,6 +71,9 @@ androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmode
 # ZXing (QR code generation)
 zxing-core = { module = "com.google.zxing:core", version = "3.5.3" }
 
+# OSMDroid (OpenStreetMap for Android)
+osmdroid = { module = "org.osmdroid:osmdroid-android", version = "6.1.20" }
+
 # Testing
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 

@@ -167,6 +167,7 @@ val jamiModule = module {
     viewModelFactory { AboutViewModel() }
     viewModelFactory { AppViewModel(get()) }
     viewModelFactory { ProfileSetupViewModel(get()) }
+    viewModelFactory { LocationSharingViewModel(get(), get()) }
 }
 
 /**

@@ -267,6 +267,11 @@ private fun MainNavigation(needsMigration: Boolean) {
                         Screen.ConversationDetails.createRoute(conversationId)
                     )
                 },
+                onShareLocation = {
+                    navController.navigate(
+                        Screen.LocationSharing.createRoute(conversationId)
+                    )
+                },
             )
         }
 
@@ -279,6 +284,20 @@ private fun MainNavigation(needsMigration: Boolean) {
             val conversationId = backStackEntry.extractArg("conversationId")
             if (conversationId.isEmpty()) return@composable
             ConversationDetailsScreen(
+                conversationId = conversationId,
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(
+            route = Screen.LocationSharing.ROUTE,
+            arguments = listOf(
+                navArgument("conversationId") { type = NavType.StringType },
+            ),
+        ) { backStackEntry ->
+            val conversationId = backStackEntry.extractArg("conversationId")
+            if (conversationId.isEmpty()) return@composable
+            LocationSharingScreen(
                 conversationId = conversationId,
                 onBack = { navController.popBackStack() },
             )

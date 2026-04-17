@@ -115,6 +115,9 @@ class IOSDeviceRuntimeService : DeviceRuntimeService {
     override fun hasNotificationsPermission(): Boolean =
         true // UNUserNotificationCenter authorization checked at UI layer via PermissionRequesterEffect
 
+    override fun hasLocationPermission(): Boolean =
+        true // CLLocationManager authorization checked at UI layer via PermissionRequesterEffect
+
     override fun fileExists(path: String): Boolean =
         fileManager.fileExistsAtPath(path)
 

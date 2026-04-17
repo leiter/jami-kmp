@@ -87,6 +87,11 @@ interface DeviceRuntimeService {
     fun hasNotificationsPermission(): Boolean
 
     /**
+     * Check if location permission is granted.
+     */
+    fun hasLocationPermission(): Boolean
+
+    /**
      * Check if a file exists.
      */
     fun fileExists(path: String): Boolean
@@ -117,6 +122,7 @@ class StubDeviceRuntimeService : DeviceRuntimeService {
     override fun hasMicrophonePermission(): Boolean = true
     override fun hasContactsPermission(): Boolean = true
     override fun hasNotificationsPermission(): Boolean = true
+    override fun hasLocationPermission(): Boolean = true
     override fun fileExists(path: String): Boolean = false
     override fun deleteFile(path: String): Boolean = true
 }

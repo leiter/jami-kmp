@@ -105,6 +105,17 @@ interface DaemonBridgeApi {
     fun setIsComposing(accountId: String, uri: String, isComposing: Boolean)
     fun cancelMessage(accountId: String, messageId: Long): Boolean
 
+    /**
+     * Send a message with multiple mime types to a conversation.
+     * Used for geolocation sharing and other special message types.
+     *
+     * @param accountId The account ID
+     * @param conversationId The conversation ID
+     * @param messages Map of mime type to content (e.g., "application/geo" -> JSON)
+     * @param flag Message flag (0 = normal, 1 = edit/delete, etc.)
+     */
+    fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int)
+
     // ==================== File Transfer ====================
     fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String)
     fun downloadFile(accountId: String, conversationId: String, interactionId: String, fileId: String, path: String)
@@ -320,6 +331,7 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {}
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {}
     override fun cancelMessage(accountId: String, messageId: Long): Boolean = true
+    override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {}
 
     override fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {}
     override fun downloadFile(accountId: String, conversationId: String, interactionId: String, fileId: String, path: String) {}

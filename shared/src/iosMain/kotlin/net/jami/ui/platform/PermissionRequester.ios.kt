@@ -30,6 +30,13 @@ import platform.UserNotifications.UNAuthorizationOptionAlert
 import platform.UserNotifications.UNAuthorizationOptionBadge
 import platform.UserNotifications.UNAuthorizationOptionSound
 import platform.UserNotifications.UNUserNotificationCenter
+import platform.CoreLocation.CLLocationManager
+import platform.CoreLocation.CLAuthorizationStatus
+import platform.CoreLocation.kCLAuthorizationStatusAuthorizedWhenInUse
+import platform.CoreLocation.kCLAuthorizationStatusAuthorizedAlways
+import platform.CoreLocation.kCLAuthorizationStatusNotDetermined
+import platform.CoreLocation.CLLocationManagerDelegateProtocol
+import platform.darwin.NSObject
 import kotlin.coroutines.resume
 
 @OptIn(ExperimentalForeignApi::class)
@@ -46,6 +53,7 @@ actual fun PermissionRequesterEffect(
             AppPermission.Microphone -> requestAVPermission(AVMediaTypeAudio)
             AppPermission.Contacts -> requestContactsPermission()
             AppPermission.Notifications -> requestNotificationsPermission()
+            AppPermission.Location -> requestLocationPermission()
         }
         onResult(granted)
     }
@@ -75,4 +83,35 @@ private suspend fun requestNotificationsPermission(): Boolean =
             .requestAuthorizationWithOptions(options) { granted, _ ->
                 cont.resume(granted)
             }
+    }
+
+@OptIn(ExperimentalForeignApi::class)
+private suspend fun requestLocationPermission(): Boolean =
+    suspendCancellableCoroutine { cont ->
+        val locationManager = CLLocationManager()
+        val currentStatus = CLLocationManager.authorizationStatus()
+
+        when (currentStatus) {
+            kCLAuthorizationStatusAuthorizedWhenInUse,
+            kCLAuthorizationStatusAuthorizedAlways -> {
+                cont.resume(true)
+            }
+            kCLAuthorizationStatusNotDetermined -> {
+                // Create a delegate to handle the authorization response
+                val delegate = object : NSObject(), CLLocationManagerDelegateProtocol {
+                    override fun locationManagerDidChangeAuthorization(manager: CLLocationManager) {
+                        val status = CLLocationManager.authorizationStatus()
+                        val granted = status == kCLAuthorizationStatusAuthorizedWhenInUse ||
+                                status == kCLAuthorizationStatusAuthorizedAlways
+                        cont.resume(granted)
+                    }
+                }
+                locationManager.delegate = delegate
+                locationManager.requestWhenInUseAuthorization()
+            }
+            else -> {
+                // Denied or restricted
+                cont.resume(false)
+            }
+        }
     }

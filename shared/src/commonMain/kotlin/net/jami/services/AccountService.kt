@@ -29,10 +29,19 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import net.jami.model.Account
 import net.jami.model.AccountConfig
 import net.jami.model.AccountCredentials
 import net.jami.model.ConfigKey
+import net.jami.model.Contact
+import net.jami.model.ContactLocation
+import net.jami.model.ContactLocationEntry
 import net.jami.model.Conversation
 import net.jami.model.SwarmMessage
 import net.jami.model.TrustRequest
@@ -66,6 +75,12 @@ class AccountService(
 
     private val _incomingMessages = MutableSharedFlow<IncomingMessage>()
     val incomingMessages: SharedFlow<IncomingMessage> = _incomingMessages.asSharedFlow()
+
+    private val _locationUpdates = MutableSharedFlow<LocationUpdate>()
+    val locationUpdates: SharedFlow<LocationUpdate> = _locationUpdates.asSharedFlow()
+
+    // Contact location tracking per account
+    private val contactLocations = mutableMapOf<String, MutableMap<String, ContactLocationState>>()
 
     // Structured RegisteredName results for findRegistrationByName / findRegistrationByAddress
     private val _registeredNames = MutableSharedFlow<RegisteredName>(extraBufferCapacity = 64)
@@ -684,6 +699,71 @@ class AccountService(
         sendConversationMessage(accountId, conversationUri, emoji, replyTo, 2)
     }
 
+    // ==================== Geolocation ====================
+
+    /**
+     * Geolocation message type.
+     */
+    enum class GeolocationType {
+        Position, Stop
+    }
+
+    /**
+     * Send a geolocation position update to a conversation.
+     *
+     * @param accountId The account ID
+     * @param conversationId The conversation ID
+     * @param latitude Latitude in degrees
+     * @param longitude Longitude in degrees
+     * @param altitude Altitude in meters (optional)
+     * @param timestamp Timestamp in milliseconds
+     */
+    fun sendGeolocationPosition(
+        accountId: String,
+        conversationId: String,
+        latitude: Double,
+        longitude: Double,
+        altitude: Double? = null,
+        timestamp: Long = kotlinx.datetime.Clock.System.now().toEpochMilliseconds(),
+    ) {
+        val json = buildString {
+            append("{")
+            append("\"type\":\"${GeolocationType.Position}\"")
+            append(",\"lat\":$latitude")
+            append(",\"long\":$longitude")
+            if (altitude != null) append(",\"alt\":$altitude")
+            append(",\"time\":$timestamp")
+            append("}")
+        }
+        daemonBridge.sendAccountTextMessage(
+            accountId,
+            conversationId,
+            mapOf(MIME_GEOLOCATION to json),
+            1 // flag = 1 for transient messages
+        )
+    }
+
+    /**
+     * Send a stop sharing geolocation message to a conversation.
+     *
+     * @param accountId The account ID
+     * @param conversationId The conversation ID
+     */
+    fun sendGeolocationStop(accountId: String, conversationId: String) {
+        val json = buildString {
+            append("{")
+            append("\"type\":\"${GeolocationType.Stop}\"")
+            append(",\"time\":${Long.MAX_VALUE}")
+            append("}")
+        }
+        daemonBridge.sendAccountTextMessage(
+            accountId,
+            conversationId,
+            mapOf(MIME_GEOLOCATION to json),
+            1 // flag = 1 for transient messages
+        )
+    }
+
     /**
      * Send a file in a conversation.
      */
@@ -984,7 +1064,75 @@ class AccountService(
     internal fun onIncomingAccountMessage(accountId: String, messageId: String?, callId: String?, from: String, messages: Map<String, String>) {
         scope.launch {
             _incomingMessages.emit(IncomingMessage(accountId, messageId, callId, from, messages))
+
+            // Check for geolocation message
+            val geoJson = messages[MIME_GEOLOCATION]
+            if (geoJson != null) {
+                parseAndEmitLocation(accountId, from, geoJson)
+            }
         }
+    }
+
+    /**
+     * Parse a geolocation JSON payload and emit the appropriate location update.
+     * JSON format: {"type": "Position"|"Stop", "lat": double, "long": double, "time": long}
+     */
+    private suspend fun parseAndEmitLocation(accountId: String, from: String, geoJson: String) {
+        try {
+            val json = Json.parseToJsonElement(geoJson).jsonObject
+            val timestamp = json["time"]?.jsonPrimitive?.long ?: return
+            val type = json["type"]?.jsonPrimitive?.content?.lowercase() ?: "position"
+
+            // Find conversation for this contact
+            val account = getAccount(accountId) ?: return
+            val contactUri = Uri.fromId(from)
+            val conversation = account.getByContact(contactUri) ?: return
+            val conversationId = conversation.uri.rawRingId
+
+            when (type) {
+                "position" -> {
+                    val lat = json["lat"]?.jsonPrimitive?.double ?: return
+                    val lon = json["long"]?.jsonPrimitive?.double ?: return
+
+                    val location = ContactLocation(
+                        latitude = lat,
+                        longitude = lon,
+                        timestamp = timestamp,
+                    )
+
+                    // Update contact location state
+                    val accountLocations = contactLocations.getOrPut(accountId) { mutableMapOf() }
+                    val contact = account.getContactFromCache(contactUri)
+                    accountLocations[from] = ContactLocationState(contact, conversationId, location)
+
+                    _locationUpdates.emit(
+                        LocationUpdate.Position(accountId, conversationId, from, location)
+                    )
+                    Log.d(TAG, "Received location from $from: $lat, $lon")
+                }
+                "stop" -> {
+                    // Remove contact location state
+                    contactLocations[accountId]?.remove(from)
+
+                    _locationUpdates.emit(
+                        LocationUpdate.Stop(accountId, conversationId, from)
+                    )
+                    Log.d(TAG, "Contact $from stopped sharing location")
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to parse geolocation message: $e")
+        }
+    }
+
+    /**
+     * Get all active contact locations for a conversation.
+     */
+    fun getContactLocations(accountId: String, conversationId: String): Map<String, ContactLocation> {
+        val accountLocations = contactLocations[accountId] ?: return emptyMap()
+        return accountLocations
+            .filter { it.value.conversationId == conversationId }
+            .mapValues { it.value.location }
     }
 
     internal fun onAccountProfileReceived(accountId: String, name: String, photo: String) {
@@ -998,6 +1146,7 @@ class AccountService(
         const val ACCOUNT_SCHEME_NONE = ""
         const val ACCOUNT_SCHEME_PASSWORD = "password"
         const val ACCOUNT_SCHEME_KEY = "key"
+        const val MIME_GEOLOCATION = "application/geo"
     }
 }
 
@@ -1139,3 +1288,34 @@ enum class LookupState(val value: Int) {
         fun fromInt(state: Int): LookupState = entries.getOrElse(state) { NetworkError }
     }
 }
+
+/**
+ * Location update received from a contact.
+ */
+sealed class LocationUpdate {
+    abstract val accountId: String
+    abstract val conversationId: String
+    abstract val contactUri: String
+
+    data class Position(
+        override val accountId: String,
+        override val conversationId: String,
+        override val contactUri: String,
+        val location: ContactLocation,
+    ) : LocationUpdate()
+
+    data class Stop(
+        override val accountId: String,
+        override val conversationId: String,
+        override val contactUri: String,
+    ) : LocationUpdate()
+}
+
+/**
+ * Internal state for tracking a contact's location sharing session.
+ */
+internal data class ContactLocationState(
+    val contact: Contact,
+    val conversationId: String,
+    var location: ContactLocation,
+)

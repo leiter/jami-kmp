@@ -396,6 +396,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
         return false
     }
 
+    override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {
+        Log.d(TAG, "sendAccountTextMessage called (stub): $conversationId, messages=$messages")
+    }
+
     // ==================== File Transfer (Stubs) ====================
 
     override fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {

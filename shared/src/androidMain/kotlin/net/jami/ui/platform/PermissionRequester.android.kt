@@ -37,6 +37,7 @@ actual fun PermissionRequesterEffect(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                 Manifest.permission.POST_NOTIFICATIONS
             else null // Pre-Android 13: notifications are always allowed
+        AppPermission.Location -> Manifest.permission.ACCESS_FINE_LOCATION
     }
 
     val launcher = rememberLauncherForActivityResult(
