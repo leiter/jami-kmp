@@ -519,7 +519,7 @@ class ChatViewModel(
     private fun interactionToMessageItem(interaction: Interaction): MessageItem? {
         val id = interaction.messageId ?: interaction.id.toString()
         // Use contact's display name/username instead of raw Jami ID
-        val author = interaction.contact?.displayUri ?: interaction.author ?: ""
+        val author = interaction.contact?.displayUsername ?: interaction.author ?: ""
         val timestamp = interaction.timestamp  // already milliseconds
         val isOutgoing = interaction.author == null || interaction.contact?.isUser == true
 
@@ -615,7 +615,7 @@ class ChatViewModel(
         val conversation = conversationFacade.getConversation(accountId, conversationUri) ?: return authorId
 
         val contact = conversation.findContact(Uri.fromString(authorId))
-        return contact?.displayUri ?: authorId
+        return contact?.displayUsername ?: authorId
     }
 
     /**
