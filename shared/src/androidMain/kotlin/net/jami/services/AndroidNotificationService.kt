@@ -24,7 +24,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.runBlocking
 import net.jami.model.*
+import net.jami.repository.SettingsRepository
 import net.jami.utils.Log
 
 // Extension functions for model properties
@@ -48,6 +50,7 @@ private fun Conversation.getLastMessage(): String? =
  *
  * Uses Android NotificationManager and NotificationCompat for system notifications.
  * Supports notification channels (Android 8.0+), actions, and progress updates.
+ * Enforces NotificationSettings via NotificationGuard.
  *
  * ## Notification Channels
  * - `jami_calls` - Call notifications (high importance)
@@ -59,7 +62,9 @@ private fun Conversation.getLastMessage(): String? =
  * This service is typically injected via Koin and used by ConversationFacade and CallService.
  */
 class AndroidNotificationService(
-    private val context: Context
+    private val context: Context,
+    private val settingsRepository: SettingsRepository,
+    private val notificationGuard: NotificationGuard
 ) : NotificationService {
 
     private val notificationManager: NotificationManager by lazy {
@@ -138,12 +143,18 @@ class AndroidNotificationService(
     // ==================== Call Notifications ====================
 
     override fun showCallNotification(notifId: Int): Any? {
+        // Check settings before showing
+        if (!notificationGuard.shouldShowCallNotification()) {
+            Log.d(TAG, "Call notifications disabled in settings")
+            return null
+        }
+
         currentCallNotificationId = notifId
         activeCallNotifications.add(notifId)
 
         // Create a simple ongoing call notification
         // In a full implementation, this would include call actions and caller info
-        val notification = NotificationCompat.Builder(context, CHANNEL_CALLS)
+        val builder = NotificationCompat.Builder(context, CHANNEL_CALLS)
             .setSmallIcon(android.R.drawable.ic_menu_call)
             .setContentTitle("Jami Call")
             .setContentText("Ongoing call")
@@ -151,8 +162,11 @@ class AndroidNotificationService(
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setOngoing(true)
             .setAutoCancel(false)
-            .build()
 
+        // Apply sound/vibration settings
+        applySoundAndVibration(builder)
+
+        val notification = builder.build()
         notificationManager.notify(notifId, notification)
         Log.d(TAG, "Showing call notification: $notifId")
         return notification
@@ -178,6 +192,12 @@ class AndroidNotificationService(
     ) {
         if (remove) {
             cancelCallNotification()
+            return
+        }
+
+        // Check settings before showing
+        if (!notificationGuard.shouldShowCallNotification()) {
+            Log.d(TAG, "Call notifications disabled in settings")
             return
         }
 
@@ -227,6 +247,9 @@ class AndroidNotificationService(
                 createCallActionPendingIntent(conference.id, ACTION_HANGUP)
             )
         }
+
+        // Apply sound/vibration settings
+        applySoundAndVibration(builder)
 
         notificationManager.notify(notifId, builder.build())
         Log.d(TAG, "Showing call notification for conference: ${conference.id}")
@@ -288,6 +311,12 @@ class AndroidNotificationService(
     // ==================== Text Notifications ====================
 
     override fun showTextNotification(conversation: Conversation) {
+        // Check settings before showing
+        if (!notificationGuard.shouldShowMessageNotification()) {
+            Log.d(TAG, "Message notifications disabled in settings")
+            return
+        }
+
         val conversationKey = "${conversation.accountId}:${conversation.uri.uri}"
         val notifId = activeTextNotifications.getOrPut(conversationKey) {
             NOTIF_MESSAGE_BASE + conversationKey.hashCode()
@@ -296,7 +325,7 @@ class AndroidNotificationService(
         val lastMessage = conversation.getLastMessage() ?: return
         val senderName = conversation.getDisplayName()
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
+        val builder = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
             .setSmallIcon(android.R.drawable.ic_dialog_email)
             .setContentTitle(senderName)
             .setContentText(lastMessage)
@@ -309,9 +338,11 @@ class AndroidNotificationService(
                     .bigText(lastMessage)
                     .setBigContentTitle(senderName)
             )
-            .build()
 
-        notificationManager.notify(notifId, notification)
+        // Apply sound/vibration settings
+        applySoundAndVibration(builder)
+
+        notificationManager.notify(notifId, builder.build())
         Log.d(TAG, "Showing text notification for conversation: $conversationKey")
     }
 
@@ -335,18 +366,26 @@ class AndroidNotificationService(
     // ==================== Trust Request Notifications ====================
 
     override fun showIncomingTrustRequestNotification(account: Account) {
+        // Check settings before showing
+        if (!notificationGuard.shouldShowRequestNotification()) {
+            Log.d(TAG, "Contact request notifications disabled in settings")
+            return
+        }
+
         val notifId = NOTIF_TRUST_REQUEST_BASE + account.accountId.hashCode()
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_REQUESTS)
+        val builder = NotificationCompat.Builder(context, CHANNEL_REQUESTS)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("New Contact Request")
             .setContentText("You have a new contact request")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_SOCIAL)
             .setAutoCancel(true)
-            .build()
 
-        notificationManager.notify(notifId, notification)
+        // Apply sound/vibration settings
+        applySoundAndVibration(builder)
+
+        notificationManager.notify(notifId, builder.build())
         Log.d(TAG, "Showing trust request notification for account: ${account.accountId}")
     }
 
@@ -505,6 +544,26 @@ class AndroidNotificationService(
     }
 
     // ==================== Private Helpers ====================
+
+    /**
+     * Apply sound and vibration settings to notification builder.
+     * Respects user preferences from NotificationSettings.
+     */
+    private fun applySoundAndVibration(builder: NotificationCompat.Builder) {
+        // Apply custom sound URI if set
+        val soundUri = notificationGuard.getSoundUri()
+        if (soundUri != null) {
+            builder.setSound(android.net.Uri.parse(soundUri))
+        }
+
+        // Apply vibration if enabled
+        if (notificationGuard.shouldVibrate()) {
+            builder.setVibrate(longArrayOf(0, 250, 250, 250))
+        }
+
+        // LED color is handled differently - it's set on notification directly, not builder
+        // Android handles LED through notification channels for API 26+
+    }
 
     private fun createCallActionPendingIntent(callId: String, action: String): PendingIntent {
         val intent = Intent(action).apply {

@@ -85,9 +85,14 @@ actual val platformModule: Module = module {
     /**
      * Android notification service.
      * Uses NotificationManager and NotificationCompat for system notifications.
+     * Enforces NotificationSettings via NotificationGuard.
      */
     single<NotificationService> {
-        AndroidNotificationService(androidContext())
+        AndroidNotificationService(
+            context = androidContext(),
+            settingsRepository = get(),
+            notificationGuard = get()
+        )
     }
 
     /**

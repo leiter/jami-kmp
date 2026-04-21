@@ -82,9 +82,13 @@ actual val platformModule: Module = module {
     /**
      * iOS notification service.
      * Uses UNUserNotificationCenter for local notifications.
+     * Enforces NotificationSettings via NotificationGuard.
      */
     single<NotificationService> {
-        IOSNotificationService()
+        IOSNotificationService(
+            settingsRepository = get(),
+            notificationGuard = get()
+        )
     }
 
     /**

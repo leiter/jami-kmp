@@ -82,9 +82,13 @@ actual val platformModule: Module = module {
     /**
      * macOS notification service.
      * Uses UNUserNotificationCenter for desktop notifications.
+     * Enforces NotificationSettings via NotificationGuard.
      */
     single<NotificationService> {
-        MacOSNotificationService()
+        MacOSNotificationService(
+            settingsRepository = get(),
+            notificationGuard = get()
+        )
     }
 
     /**

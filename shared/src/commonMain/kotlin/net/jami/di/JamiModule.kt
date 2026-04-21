@@ -152,6 +152,22 @@ val jamiModule = module {
         )
     }
 
+    // ==================== Notification Guard ====================
+
+    /**
+     * Notification settings enforcement guard.
+     * Checks NotificationSettings before showing notifications to enforce:
+     * - Global enabled flag
+     * - Per-notification-type flags (call, message, request)
+     * - Quiet hours
+     * - Sound/vibration preferences
+     */
+    single {
+        NotificationGuard(
+            settingsRepository = get()
+        )
+    }
+
     // ==================== ViewModels ====================
 
     viewModelFactory { ConversationsViewModel(get(), get(), get(), get()) }

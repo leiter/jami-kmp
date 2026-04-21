@@ -17,6 +17,7 @@
 package net.jami.services
 
 import net.jami.model.*
+import net.jami.repository.SettingsRepository
 import net.jami.utils.Log
 import platform.Foundation.NSUUID
 import platform.UserNotifications.*
@@ -42,6 +43,7 @@ private fun Conversation.getLastMessage(): String? =
  *
  * Uses UserNotifications framework (UNUserNotificationCenter) for local notifications.
  * Call notifications should ideally integrate with CallKit for the best user experience.
+ * Enforces NotificationSettings via NotificationGuard.
  *
  * ## Note
  * This implementation requires notification permission to be requested at app launch:
@@ -54,7 +56,10 @@ private fun Conversation.getLastMessage(): String? =
  * - `JAMI_MESSAGE` - Message notifications with reply action
  * - `JAMI_REQUEST` - Contact request notifications with accept/decline actions
  */
-class IOSNotificationService : NotificationService {
+class IOSNotificationService(
+    private val settingsRepository: SettingsRepository,
+    private val notificationGuard: NotificationGuard
+) : NotificationService {
 
     private val notificationCenter = UNUserNotificationCenter.currentNotificationCenter()
 
@@ -128,6 +133,12 @@ class IOSNotificationService : NotificationService {
     // ==================== Call Notifications ====================
 
     override fun showCallNotification(notifId: Int): Any? {
+        // Check settings before showing
+        if (!notificationGuard.shouldShowCallNotification()) {
+            Log.d(TAG, "Call notifications disabled in settings")
+            return null
+        }
+
         val identifier = "call_$notifId"
         currentCallNotificationId = identifier
 
@@ -135,7 +146,10 @@ class IOSNotificationService : NotificationService {
             setTitle("Jami Call")
             setBody("Ongoing call")
             setCategoryIdentifier(CATEGORY_CALL)
-            setSound(UNNotificationSound.defaultSound())
+            // Apply sound based on settings
+            if (notificationGuard.shouldVibrate()) {
+                setSound(UNNotificationSound.defaultSound())
+            }
         }
 
         val request = UNNotificationRequest.requestWithIdentifier(
@@ -178,6 +192,12 @@ class IOSNotificationService : NotificationService {
             return
         }
 
+        // Check settings before showing
+        if (!notificationGuard.shouldShowCallNotification()) {
+            Log.d(TAG, "Call notifications disabled in settings")
+            return
+        }
+
         if (startScreenshare) {
             startPendingScreenshare(conference.id)
             return
@@ -197,7 +217,10 @@ class IOSNotificationService : NotificationService {
             setTitle(title)
             setBody(conference.getDisplayName())
             setCategoryIdentifier(CATEGORY_CALL)
-            setSound(UNNotificationSound.defaultSound())
+            // Apply sound based on settings
+            if (notificationGuard.shouldVibrate()) {
+                setSound(UNNotificationSound.defaultSound())
+            }
             setUserInfo(mapOf("confId" to conference.id))
         }
 
@@ -289,6 +312,12 @@ class IOSNotificationService : NotificationService {
     // ==================== Text Notifications ====================
 
     override fun showTextNotification(conversation: Conversation) {
+        // Check settings before showing
+        if (!notificationGuard.shouldShowMessageNotification()) {
+            Log.d(TAG, "Message notifications disabled in settings")
+            return
+        }
+
         val conversationKey = "${conversation.accountId}_${conversation.uri.uri}"
         val identifier = "message_$conversationKey"
         activeNotifications[conversationKey] = identifier
@@ -300,7 +329,10 @@ class IOSNotificationService : NotificationService {
             setTitle(senderName)
             setBody(lastMessage)
             setCategoryIdentifier(CATEGORY_MESSAGE)
-            setSound(UNNotificationSound.defaultSound())
+            // Apply sound based on settings
+            if (notificationGuard.shouldVibrate()) {
+                setSound(UNNotificationSound.defaultSound())
+            }
             setBadge(platform.Foundation.NSNumber(int = 1))
             setUserInfo(mapOf(
                 "accountId" to conversation.accountId,
@@ -342,13 +374,22 @@ class IOSNotificationService : NotificationService {
     // ==================== Trust Request Notifications ====================
 
     override fun showIncomingTrustRequestNotification(account: Account) {
+        // Check settings before showing
+        if (!notificationGuard.shouldShowRequestNotification()) {
+            Log.d(TAG, "Contact request notifications disabled in settings")
+            return
+        }
+
         val identifier = "request_${account.accountId}"
 
         val content = UNMutableNotificationContent().apply {
             setTitle("New Contact Request")
             setBody("You have a new contact request")
             setCategoryIdentifier(CATEGORY_REQUEST)
-            setSound(UNNotificationSound.defaultSound())
+            // Apply sound based on settings
+            if (notificationGuard.shouldVibrate()) {
+                setSound(UNNotificationSound.defaultSound())
+            }
             setUserInfo(mapOf("accountId" to account.accountId))
         }
 
