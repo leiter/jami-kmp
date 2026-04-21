@@ -313,7 +313,10 @@ class ConversationsViewModel(
                 isOnline = contact?.isOnline == true,
                 isRead = isRead,
             )
-        }.sortedByDescending { it.timestamp }
+        }
+            // Sort by timestamp descending (most recent first)
+            // Note: ConversationFacade also sorts, but we keep this as defensive measure
+            .sortedByDescending { it.timestamp }
     }
 
     /**

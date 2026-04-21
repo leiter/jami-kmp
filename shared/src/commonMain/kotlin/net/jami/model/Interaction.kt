@@ -279,6 +279,12 @@ open class Interaction {
         const val COLUMN_IS_READ = "is_read"
         const val COLUMN_EXTRA_FLAG = "extra_data"
 
+        /**
+         * Compare two interactions by timestamp (ascending order).
+         * Used for sorting conversations: compare(b.lastEvent, a.lastEvent) sorts descending.
+         *
+         * Mirrors: jami-client-android Interaction.compare()
+         */
         fun compare(a: Interaction?, b: Interaction?): Int {
             if (a == null) return if (b == null) 0 else -1
             return if (b == null) 1 else a.timestamp.compareTo(b.timestamp)

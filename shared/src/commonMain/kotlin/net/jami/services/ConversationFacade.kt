@@ -164,6 +164,12 @@ class ConversationFacade(
     private val _conversationList = MutableStateFlow(ConversationList())
     val conversationList: StateFlow<ConversationList> = _conversationList.asStateFlow()
 
+    private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
+    val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
+
+    // Track last sync timestamp per account
+    private val lastSyncTimestamps = mutableMapOf<String, Long>()
+
     init {
         // Subscribe to account changes
         scope.launch {
@@ -186,6 +192,19 @@ class ConversationFacade(
         scope.launch {
             callService.conferenceUpdates.collect { conference ->
                 onConfStateChange(conference)
+            }
+        }
+
+        // Subscribe to connectivity changes - trigger sync when network becomes available
+        scope.launch {
+            var previouslyConnected = true
+            hardwareService.connectivityState.collect { isConnected ->
+                // Only refresh when transitioning from disconnected to connected
+                if (isConnected && !previouslyConnected) {
+                    Log.d(TAG, "Network connectivity restored, refreshing conversations")
+                    refreshAllConversations()
+                }
+                previouslyConnected = isConnected
             }
         }
     }
@@ -636,9 +655,13 @@ class ConversationFacade(
      * Load the smartlist (recent conversations) for an account.
      */
     private suspend fun loadSmartlist(account: Account) {
-        if (account.isJami) {
-            // Load swarm conversations from daemon
-            val conversationIds = daemonBridge.getConversations(account.accountId)
+        val startTime = currentTimeMillis()
+        _syncState.value = SyncState.Syncing(account.accountId, startTime)
+
+        try {
+            if (account.isJami) {
+                // Load swarm conversations from daemon
+                val conversationIds = daemonBridge.getConversations(account.accountId)
             for (convId in conversationIds) {
                 try {
                     val info = daemonBridge.getConversationInfo(account.accountId, convId)
@@ -686,15 +709,77 @@ class ConversationFacade(
                     Log.e(TAG, "loadSmartlist: failed to load conversation $convId", e)
                 }
             }
-        } else {
-            // Load history for non-swarm (SIP) conversations
-            val interactions = historyService.getSmartlist(account.accountId)
-            // Process interactions and update conversations
-        }
+            } else {
+                // Load history for non-swarm (SIP) conversations
+                val interactions = historyService.getSmartlist(account.accountId)
+                // Process interactions and update conversations
+            }
 
-        // Publish updated conversation list
-        val conversations = account.getConversations().toList()
-        _conversationList.value = ConversationList(conversations = conversations)
+            // Publish updated conversation list
+            // Sort by last event timestamp descending (most recent first)
+            val conversations = account.getConversations()
+                .sortedByDescending { it.lastEvent?.timestamp ?: 0L }
+            _conversationList.value = ConversationList(conversations = conversations)
+
+            // Update sync state to complete
+            val endTime = currentTimeMillis()
+            lastSyncTimestamps[account.accountId] = endTime
+            _syncState.value = SyncState.Complete(
+                accountId = account.accountId,
+                completedAt = endTime,
+                conversationCount = conversations.size
+            )
+
+            Log.d(TAG, "Sync completed for ${account.accountId}: ${conversations.size} conversations in ${endTime - startTime}ms")
+        } catch (e: Exception) {
+            val endTime = currentTimeMillis()
+            _syncState.value = SyncState.Error(
+                accountId = account.accountId,
+                error = e.message ?: "Unknown error",
+                failedAt = endTime
+            )
+            Log.e(TAG, "Sync failed for ${account.accountId}", e)
+            throw e
+        }
+    }
+
+    /**
+     * Refresh conversations for a specific account.
+     * Reloads conversation list from daemon.
+     */
+    fun refreshConversations(accountId: String) {
+        scope.launch {
+            val account = accountService.getAccount(accountId)
+            if (account != null) {
+                Log.d(TAG, "Refreshing conversations for account: $accountId")
+                loadSmartlist(account)
+            } else {
+                Log.w(TAG, "Cannot refresh conversations: account $accountId not found")
+            }
+        }
+    }
+
+    /**
+     * Refresh conversations for all accounts.
+     * Useful when network connectivity is restored.
+     */
+    fun refreshAllConversations() {
+        scope.launch {
+            val accounts = accountService.accounts.value
+            Log.d(TAG, "Refreshing conversations for ${accounts.size} accounts")
+            for (account in accounts) {
+                loadSmartlist(account)
+            }
+        }
+    }
+
+    /**
+     * Get the last sync timestamp for an account.
+     * @param accountId Account ID
+     * @return Timestamp in milliseconds, or null if never synced
+     */
+    fun getLastSyncTimestamp(accountId: String): Long? {
+        return lastSyncTimestamps[accountId]
     }
 
     // ==================== Profile/Contact Operations ====================
@@ -889,7 +974,7 @@ class ConversationFacade(
 
     private fun getConversationsForAccount(account: Account, withBlocked: Boolean = false): List<Conversation> {
         val allConversations = account.getConversations()
-        return if (withBlocked) {
+        val filtered = if (withBlocked) {
             allConversations.toList()
         } else {
             // Filter out blocked contacts (except in group conversations)
@@ -897,6 +982,8 @@ class ConversationFacade(
                 conversation.isGroup || conversation.contact?.isBlocked != true
             }
         }
+        // Sort by last event timestamp descending (most recent first)
+        return filtered.sortedByDescending { it.lastEvent?.timestamp ?: 0L }
     }
 
     // ==================== Daemon Callback Handlers ====================
@@ -1530,4 +1617,49 @@ sealed class ConversationEvent {
         val conversationId: String,
         val messages: List<Map<String, String>>
     ) : ConversationEvent()
+}
+
+/**
+ * Sync state for conversation synchronization.
+ * Used to provide UI feedback about sync operations.
+ */
+sealed class SyncState {
+    /**
+     * No sync operation in progress.
+     */
+    data object Idle : SyncState()
+
+    /**
+     * Sync operation in progress.
+     * @param accountId Account being synced
+     * @param startedAt Timestamp when sync started (milliseconds)
+     */
+    data class Syncing(
+        val accountId: String,
+        val startedAt: Long
+    ) : SyncState()
+
+    /**
+     * Sync completed successfully.
+     * @param accountId Account that was synced
+     * @param completedAt Timestamp when sync completed (milliseconds)
+     * @param conversationCount Number of conversations synced
+     */
+    data class Complete(
+        val accountId: String,
+        val completedAt: Long,
+        val conversationCount: Int
+    ) : SyncState()
+
+    /**
+     * Sync failed with an error.
+     * @param accountId Account that failed to sync
+     * @param error Error message
+     * @param failedAt Timestamp when sync failed (milliseconds)
+     */
+    data class Error(
+        val accountId: String,
+        val error: String,
+        val failedAt: Long
+    ) : SyncState()
 }

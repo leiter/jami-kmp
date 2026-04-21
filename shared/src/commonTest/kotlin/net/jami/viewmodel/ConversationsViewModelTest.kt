@@ -116,4 +116,49 @@ class ConversationsViewModelTest {
         val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), disposableScope())
         vm.onCleared()
     }
+
+    @Test
+    fun conversationsAreSortedByTimestampDescending() = runTest {
+        val stub = StubDaemonBridge()
+        val services = makeTestServiceStack(stub, this)
+        val account = prepareAccountInService(stub, services.accountService)
+
+        // Create conversations with different timestamps
+        val conv1 = account.newSwarm("conv1", net.jami.model.Conversation.Mode.OneToOne)
+        val conv2 = account.newSwarm("conv2", net.jami.model.Conversation.Mode.OneToOne)
+        val conv3 = account.newSwarm("conv3", net.jami.model.Conversation.Mode.OneToOne)
+
+        // Add text messages with different timestamps
+        val msg1 = net.jami.model.TextMessage(null, account.accountId, null, conv1, "oldest")
+        msg1.timestamp = 1000L
+        conv1.addElement(msg1)
+
+        val msg2 = net.jami.model.TextMessage(null, account.accountId, null, conv2, "newest")
+        msg2.timestamp = 3000L
+        conv2.addElement(msg2)
+
+        val msg3 = net.jami.model.TextMessage(null, account.accountId, null, conv3, "middle")
+        msg3.timestamp = 2000L
+        conv3.addElement(msg3)
+
+        account.conversationStarted(conv1)
+        account.conversationStarted(conv2)
+        account.conversationStarted(conv3)
+
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), viewModelScope())
+        advanceUntilIdle()
+
+        // Verify conversations are sorted by timestamp descending (most recent first)
+        val conversations = vm.state.value.conversations
+        assertTrue(conversations.size >= 3, "Expected at least 3 conversations")
+
+        // Find our test conversations
+        val items = conversations.filter { it.id in listOf("conv1", "conv2", "conv3") }
+        assertEquals(3, items.size, "Expected 3 test conversations")
+
+        // Verify order: conv2 (3000) > conv3 (2000) > conv1 (1000)
+        assertEquals("conv2", items[0].id, "Expected conv2 (newest) first")
+        assertEquals("conv3", items[1].id, "Expected conv3 (middle) second")
+        assertEquals("conv1", items[2].id, "Expected conv1 (oldest) third")
+    }
 }
