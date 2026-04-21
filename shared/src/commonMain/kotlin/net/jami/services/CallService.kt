@@ -39,12 +39,15 @@ import net.jami.model.Uri
  * Provides call operations (place, accept, refuse, hangup, hold) and
  * emits call state updates via Kotlin Flow.
  *
+ * Enforces call settings (video enabled, auto-answer) from SettingsRepository.
+ *
  * Ported from: jami-client-android libjamiclient
  * Changes: RxJava → Kotlin Flow, JamiService → DaemonBridge
  */
 class CallService(
     private val daemonBridge: DaemonBridgeApi,
     private val accountService: AccountService,
+    private val settingsRepository: net.jami.repository.SettingsRepository,
     private val scope: CoroutineScope
 ) {
     private val calls = mutableMapOf<String, Call>()
@@ -286,6 +289,7 @@ class CallService(
 
     /**
      * Called when an incoming call is received.
+     * Automatically accepts if auto-answer is enabled in call settings.
      */
     internal fun onIncomingCall(
         accountId: String,
@@ -299,6 +303,17 @@ class CallService(
             val call = addCall(accountId, callId, peerUri, Direction.INCOMING, medias)
             _callUpdates.emit(call)
             updateCurrentCalls()
+
+            // Auto-answer if enabled in settings
+            val callSettings = settingsRepository.callSettings.value
+            if (callSettings.autoAnswer) {
+                // Delay auto-answer by configured seconds
+                if (callSettings.autoAnswerDelay > 0) {
+                    kotlinx.coroutines.delay(callSettings.autoAnswerDelay * 1000L)
+                }
+                // Accept with video based on video enabled setting
+                accept(accountId, callId, callSettings.videoEnabled)
+            }
         }
     }
 

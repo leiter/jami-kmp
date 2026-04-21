@@ -279,6 +279,7 @@ class ConversationFacade(
 
     /**
      * Mark messages as read for a conversation.
+     * Sends read receipts only if enabled in privacy settings.
      */
     suspend fun readMessages(
         account: Account,
@@ -287,8 +288,10 @@ class ConversationFacade(
     ): String? {
         val lastMessage = readMessagesInternal(conversation) ?: return null
 
-        // Mark the message as read (daemon will handle read receipts)
-        accountService.setMessageDisplayed(account.accountId, conversation.uri, lastMessage)
+        // Send read receipt only if enabled in privacy settings
+        if (settingsRepository.privacySettings.value.readReceipts) {
+            accountService.setMessageDisplayed(account.accountId, conversation.uri, lastMessage)
+        }
 
         if (cancelNotification) {
             notificationService.cancelTextNotification(account.accountId, conversation.uri)
@@ -367,8 +370,13 @@ class ConversationFacade(
 
     /**
      * Set composing status for a conversation.
+     * Only sends if typing indicators are enabled in privacy settings.
      */
     fun setIsComposing(accountId: String, conversationUri: Uri, isComposing: Boolean) {
+        // Check privacy setting before sending typing indicator
+        if (!settingsRepository.privacySettings.value.typingIndicators) {
+            return
+        }
         callService.setIsComposing(accountId, conversationUri.uri, isComposing)
     }
 

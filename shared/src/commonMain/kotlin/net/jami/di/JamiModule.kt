@@ -71,11 +71,13 @@ val jamiModule = module {
 
     /**
      * Call handling service.
+     * Enforces call settings (video enabled, auto-answer).
      */
     single {
         CallService(
             daemonBridge = get(),
             accountService = get(),
+            settingsRepository = get(),
             scope = get()
         )
     }
