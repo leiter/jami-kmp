@@ -512,12 +512,35 @@ private fun ChatBubble(
     val timeText = formatMessageTime(message.timestamp)
     val timeFontSize = JamiTheme.typography.labelSmall.fontSize
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = JamiTheme.spacing.xxs),
-        contentAlignment = alignment,
+            .padding(vertical = JamiTheme.spacing.xxs)
+            .then(
+                // Add horizontal padding to create more visual separation
+                if (isOutgoing) {
+                    // Outgoing: pad left side more to push message to the right
+                    Modifier.padding(start = 56.dp, end = 8.dp)
+                } else {
+                    // Incoming: pad right side more to keep message on the left
+                    Modifier.padding(start = 8.dp, end = 56.dp)
+                }
+            ),
+        horizontalAlignment = if (isOutgoing) Alignment.End else Alignment.Start,
     ) {
+        // Show sender name for incoming messages
+        if (!isOutgoing && message.author.isNotEmpty()) {
+            Text(
+                text = message.author,
+                style = JamiTheme.typography.labelSmall,
+                color = JamiTheme.colors.onSurfaceVariant,
+                modifier = Modifier.padding(
+                    start = JamiTheme.spacing.m,
+                    bottom = JamiTheme.spacing.xxs,
+                ),
+            )
+        }
+
         Box {
             Surface(
                 modifier = Modifier
