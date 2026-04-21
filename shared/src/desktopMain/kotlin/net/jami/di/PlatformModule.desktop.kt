@@ -102,4 +102,11 @@ actual val platformModule: Module = module {
     single {
         Settings()
     }
+
+    /**
+     * Background sync manager (no-op on Desktop).
+     */
+    single {
+        SyncManager()
+    }
 }

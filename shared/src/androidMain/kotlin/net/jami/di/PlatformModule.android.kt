@@ -119,4 +119,12 @@ actual val platformModule: Module = module {
     single<BiometricService> {
         BiometricService(androidContext())
     }
+
+    /**
+     * Background sync manager.
+     * Manages JamiSyncService foreground service for background conversation sync.
+     */
+    single {
+        SyncManager(androidContext())
+    }
 }

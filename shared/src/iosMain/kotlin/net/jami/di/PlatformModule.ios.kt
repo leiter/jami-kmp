@@ -115,4 +115,12 @@ actual val platformModule: Module = module {
     single<BiometricService> {
         BiometricService()
     }
+
+    /**
+     * Background sync manager.
+     * Uses background tasks (limited to ~30 seconds by iOS).
+     */
+    single {
+        SyncManager()
+    }
 }

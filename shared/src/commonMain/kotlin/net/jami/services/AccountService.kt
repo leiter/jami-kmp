@@ -60,6 +60,7 @@ import net.jami.utils.Log
  */
 class AccountService(
     private val daemonBridge: DaemonBridgeApi,
+    private val hardwareService: HardwareService,
     private val scope: CoroutineScope
 ) {
     // ==================== State Flows ====================
@@ -92,6 +93,16 @@ class AccountService(
     private val conversationSearches = mutableMapOf<Long, MutableSharedFlow<ConversationSearchResult>>()
 
     private val accountsMap = mutableMapOf<String, Account>()
+
+    init {
+        // Subscribe to connectivity changes - activate/deactivate accounts for DHT sync
+        scope.launch {
+            hardwareService.connectivityState.collect { isConnected ->
+                Log.d(TAG, "Network connectivity changed: $isConnected")
+                setAccountsActive(isConnected)
+            }
+        }
+    }
 
     // ==================== Account Queries ====================
 
@@ -155,6 +166,15 @@ class AccountService(
         loadedAccounts.forEach { accountsMap[it.accountId] = it }
         _accounts.value = loadedAccounts
 
+        // Verify DHT proxy is enabled for Jami accounts (critical for NAT traversal and sync)
+        for (account in loadedAccounts) {
+            if (account.isJami && !account.isDhtProxyEnabled) {
+                Log.w(TAG, "DHT proxy disabled for account ${account.accountId} - enabling it (required for sync)")
+                account.isDhtProxyEnabled = true
+                daemonBridge.setAccountDetails(account.accountId, account.details)
+            }
+        }
+
         if (_currentAccount.value == null && loadedAccounts.isNotEmpty()) {
             _currentAccount.value = loadedAccounts.first()
         }
@@ -204,6 +224,8 @@ class AccountService(
         details[ConfigKey.ACCOUNT_DTMF_TYPE.key] = "sipinfo"
         details[ConfigKey.ACCOUNT_ALIAS.key] = displayName.ifEmpty { getNewAccountName("Jami") }
         details[ConfigKey.ACCOUNT_UPNP_ENABLE.key] = "true"
+        // Enable DHT proxy for NAT traversal and cross-device sync
+        details[ConfigKey.ACCOUNT_PROXY_ENABLED.key] = "true"
         if (username.isNotEmpty()) details[ConfigKey.ACCOUNT_REGISTERED_NAME.key] = username
         if (password.isNotEmpty()) details[ConfigKey.ACCOUNT_ARCHIVE_PASSWORD.key] = password
         pin?.let { details[ConfigKey.ACCOUNT_ARCHIVE_PIN.key] = it }

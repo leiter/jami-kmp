@@ -107,4 +107,11 @@ actual val platformModule: Module = module {
     single {
         Settings()
     }
+
+    /**
+     * Background sync manager (no-op on macOS).
+     */
+    single {
+        SyncManager()
+    }
 }

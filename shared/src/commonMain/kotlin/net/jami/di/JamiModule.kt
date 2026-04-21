@@ -64,6 +64,7 @@ val jamiModule = module {
     single {
         AccountService(
             daemonBridge = get(),
+            hardwareService = get(),
             scope = get()
         )
     }

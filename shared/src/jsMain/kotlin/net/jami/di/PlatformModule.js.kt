@@ -90,4 +90,11 @@ actual val platformModule: Module = module {
     single {
         Settings()
     }
+
+    /**
+     * Background sync manager (not supported on Web).
+     */
+    single {
+        SyncManager()
+    }
 }

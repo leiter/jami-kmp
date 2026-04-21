@@ -17,6 +17,8 @@
 package net.jami.services
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import net.jami.model.SwarmMessage
 import net.jami.utils.Log
@@ -60,7 +62,100 @@ class DaemonCallbacksImpl(
 
     companion object {
         private const val TAG = "DaemonCallbacks"
+        private const val CALLBACK_BUFFER_SIZE = 512
     }
+
+    // Buffered flows for high-volume callbacks to prevent event loss during rapid sync
+    private sealed class CallbackEvent {
+        data class MessageReceived(
+            val accountId: String,
+            val conversationId: String,
+            val message: SwarmMessage
+        ) : CallbackEvent()
+
+        data class SwarmLoaded(
+            val id: Long,
+            val accountId: String,
+            val conversationId: String,
+            val messages: List<SwarmMessage>
+        ) : CallbackEvent()
+
+        data class DataTransfer(
+            val accountId: String,
+            val conversationId: String,
+            val interactionId: String,
+            val fileId: String,
+            val eventCode: Int
+        ) : CallbackEvent()
+    }
+
+    private val messageReceivedFlow = MutableSharedFlow<CallbackEvent.MessageReceived>(
+        extraBufferCapacity = CALLBACK_BUFFER_SIZE,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+
+    private val swarmLoadedFlow = MutableSharedFlow<CallbackEvent.SwarmLoaded>(
+        extraBufferCapacity = CALLBACK_BUFFER_SIZE,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+
+    private val dataTransferFlow = MutableSharedFlow<CallbackEvent.DataTransfer>(
+        extraBufferCapacity = CALLBACK_BUFFER_SIZE,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+
+    // Counters for dropped events (for monitoring/diagnostics)
+    @Volatile private var droppedMessageReceivedCount = 0L
+    @Volatile private var droppedSwarmLoadedCount = 0L
+    @Volatile private var droppedDataTransferCount = 0L
+
+    init {
+        // Process buffered message received events
+        scope.launch {
+            messageReceivedFlow.collect { event ->
+                conversationFacade.onMessageReceived(
+                    event.accountId,
+                    event.conversationId,
+                    event.message
+                )
+            }
+        }
+
+        // Process buffered swarm loaded events
+        scope.launch {
+            swarmLoadedFlow.collect { event ->
+                conversationFacade.onSwarmLoaded(
+                    event.id,
+                    event.accountId,
+                    event.conversationId,
+                    event.messages
+                )
+            }
+        }
+
+        // Process buffered data transfer events
+        scope.launch {
+            dataTransferFlow.collect { event ->
+                conversationFacade.onDataTransferEvent(
+                    event.accountId,
+                    event.conversationId,
+                    event.interactionId,
+                    event.fileId,
+                    event.eventCode
+                )
+            }
+        }
+    }
+
+    /**
+     * Get diagnostic information about dropped events.
+     * Useful for monitoring buffer overflow during heavy sync.
+     */
+    fun getDroppedEventCounts(): Map<String, Long> = mapOf(
+        "messageReceived" to droppedMessageReceivedCount,
+        "swarmLoaded" to droppedSwarmLoadedCount,
+        "dataTransfer" to droppedDataTransferCount
+    )
 
     // ==================== Account Callbacks ====================
 
@@ -238,8 +333,12 @@ class DaemonCallbacksImpl(
 
     override fun onMessageReceived(accountId: String, conversationId: String, message: SwarmMessage) {
         Log.d(TAG, "onMessageReceived: $conversationId msgId=${message.id}")
-        scope.launch {
-            conversationFacade.onMessageReceived(accountId, conversationId, message)
+        val emitted = messageReceivedFlow.tryEmit(
+            CallbackEvent.MessageReceived(accountId, conversationId, message)
+        )
+        if (!emitted) {
+            droppedMessageReceivedCount++
+            Log.w(TAG, "Dropped onMessageReceived event (buffer full), total dropped: $droppedMessageReceivedCount")
         }
     }
 
@@ -259,8 +358,12 @@ class DaemonCallbacksImpl(
 
     override fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<SwarmMessage>) {
         Log.d(TAG, "onSwarmLoaded: $conversationId messages=${messages.size}")
-        scope.launch {
-            conversationFacade.onSwarmLoaded(id, accountId, conversationId, messages)
+        val emitted = swarmLoadedFlow.tryEmit(
+            CallbackEvent.SwarmLoaded(id, accountId, conversationId, messages)
+        )
+        if (!emitted) {
+            droppedSwarmLoadedCount++
+            Log.w(TAG, "Dropped onSwarmLoaded event (buffer full), total dropped: $droppedSwarmLoadedCount")
         }
     }
 
@@ -388,8 +491,12 @@ class DaemonCallbacksImpl(
 
     override fun onDataTransferEvent(accountId: String, conversationId: String, interactionId: String, fileId: String, eventCode: Int) {
         Log.d(TAG, "onDataTransferEvent: $fileId event=$eventCode")
-        scope.launch {
-            conversationFacade.onDataTransferEvent(accountId, conversationId, interactionId, fileId, eventCode)
+        val emitted = dataTransferFlow.tryEmit(
+            CallbackEvent.DataTransfer(accountId, conversationId, interactionId, fileId, eventCode)
+        )
+        if (!emitted) {
+            droppedDataTransferCount++
+            Log.w(TAG, "Dropped onDataTransferEvent (buffer full), total dropped: $droppedDataTransferCount")
         }
     }
 }

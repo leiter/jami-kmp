@@ -10,6 +10,10 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!-- Background sync service permissions -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
     <application
         android:name=".JamiApplication"
         android:allowBackup="true"
@@ -38,6 +42,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Background sync service -->
+        <service
+            android:name="net.jami.services.JamiSyncService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
     </application>
 
