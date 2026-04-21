@@ -518,7 +518,8 @@ class ChatViewModel(
      */
     private fun interactionToMessageItem(interaction: Interaction): MessageItem? {
         val id = interaction.messageId ?: interaction.id.toString()
-        val author = interaction.author ?: ""
+        // Use contact's display name/username instead of raw Jami ID
+        val author = interaction.contact?.displayUri ?: interaction.author ?: ""
         val timestamp = interaction.timestamp  // already milliseconds
         val isOutgoing = interaction.author == null || interaction.contact?.isUser == true
 
@@ -604,6 +605,20 @@ class ChatViewModel(
     }
 
     /**
+     * Resolve author ID (Jami URI) to display name using conversation contacts.
+     */
+    private fun resolveAuthorDisplayName(authorId: String): String {
+        val accountId = currentAccountId ?: return authorId
+        val conversationId = currentConversationId ?: return authorId
+
+        val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+        val conversation = conversationFacade.getConversation(accountId, conversationUri) ?: return authorId
+
+        val contact = conversation.findContact(Uri.fromString(authorId))
+        return contact?.displayUri ?: authorId
+    }
+
+    /**
      * Append a newly received message directly to the state for immediate display.
      * The model is also updated by ConversationFacade.onMessageReceived() so that
      * a subsequent loadMessagesFromHistory() will include this message too.
@@ -613,6 +628,7 @@ class ChatViewModel(
     private fun appendMessage(event: ConversationEvent.MessageReceived) {
         val msg = event.message
         val timestampMs = msg.timestamp * 1000L
+        val displayName = resolveAuthorDisplayName(msg.author)
 
         // File transfers need the full DataTransfer object (status, size, fileId) which
         // ConversationFacade.onMessageReceived() has already added to the conversation model
@@ -626,7 +642,7 @@ class ChatViewModel(
             msg.isCall -> {
                 val durationMs = (msg.body["duration"]?.toLongOrNull() ?: 0L) * 1000L
                 MessageItem(
-                    id = msg.id, text = "", author = msg.author,
+                    id = msg.id, text = "", author = displayName,
                     timestamp = timestampMs, isOutgoing = false,
                     type = MessageType.Call,
                     isMissed = durationMs == 0L,
@@ -636,14 +652,14 @@ class ChatViewModel(
             msg.isMember -> {
                 val action = msg.body["action"] ?: ""
                 MessageItem(
-                    id = msg.id, text = "", author = msg.author,
+                    id = msg.id, text = "", author = displayName,
                     timestamp = timestampMs, isOutgoing = false,
                     type = MessageType.System,
                     contactEventType = ContactEvent.Event.fromConversationAction(action)
                 )
             }
             msg.type == "initial" -> MessageItem(
-                id = msg.id, text = "", author = msg.author,
+                id = msg.id, text = "", author = displayName,
                 timestamp = timestampMs, isOutgoing = false,
                 type = MessageType.System,
                 contactEventType = ContactEvent.Event.INVITED
@@ -651,7 +667,7 @@ class ChatViewModel(
             else -> MessageItem(
                 id = msg.id,
                 text = msg.textContent,
-                author = msg.author,
+                author = displayName,
                 timestamp = timestampMs,
                 isOutgoing = false,
                 type = if (msg.isText) MessageType.Text else MessageType.System
