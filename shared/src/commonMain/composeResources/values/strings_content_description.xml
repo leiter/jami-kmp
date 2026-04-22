@@ -30,4 +30,8 @@
     <string name="content_desc_end_call">End call</string>
     <string name="content_desc_hold">Hold</string>
     <string name="content_desc_resume">Resume</string>
+    <string name="content_desc_answer_call">Answer call</string>
+    <string name="content_desc_decline_call">Decline call</string>
+    <string name="content_desc_dialpad">Open dialpad</string>
+    <string name="content_desc_peer_avatar">Caller avatar</string>
 </resources>

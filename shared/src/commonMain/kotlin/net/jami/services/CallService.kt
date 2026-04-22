@@ -216,6 +216,48 @@ class CallService(
         }
     }
 
+    fun playDtmf(key: String) {
+        daemonBridge.playDtmf(key)
+    }
+
+    fun muteRingtone(mute: Boolean) {
+        daemonBridge.muteRingtone(mute)
+    }
+
+    fun transfer(accountId: String, callId: String, to: String) {
+        scope.launch { daemonBridge.transfer(accountId, callId, to) }
+    }
+
+    fun attendedTransfer(accountId: String, transferId: String, targetId: String) {
+        scope.launch { daemonBridge.attendedTransfer(accountId, transferId, targetId) }
+    }
+
+    fun hangUpParticipant(accountId: String, callId: String) {
+        scope.launch { daemonBridge.detachParticipant(accountId, callId) }
+    }
+
+    fun hangUpConference(accountId: String, confId: String) {
+        scope.launch { daemonBridge.hangUpConference(accountId, confId) }
+    }
+
+    fun joinParticipant(accountId: String, selCallId: String, account2Id: String, dragCallId: String) {
+        scope.launch { daemonBridge.joinParticipant(accountId, selCallId, account2Id, dragCallId) }
+    }
+
+    fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String) {
+        scope.launch { daemonBridge.addParticipant(accountId, callId, account2Id, confId) }
+    }
+
+    /**
+     * Returns a flow of Conference updates filtered to a specific call/conference id.
+     * Mirrors Android's getConfUpdates(call) reactive chain.
+     */
+    fun getConfUpdates(callOrConfId: String): kotlinx.coroutines.flow.Flow<Conference> =
+        conferenceUpdates.filter { conf ->
+            conf.id == callOrConfId ||
+            conf.participants.any { it.daemonId == callOrConfId }
+        }
+
     // ==================== Call State ====================
 
     /**

@@ -181,19 +181,27 @@ class ContactService(
      * Handle presence update from daemon callback.
      */
     internal fun onPresenceUpdate(accountId: String, uriString: String, status: Int) {
+        Log.d(TAG, "onPresenceUpdate: uriString=$uriString status=$status accountId=$accountId")
         val uri = Uri.fromString(uriString)
+        Log.d(TAG, "onPresenceUpdate: parsed uri.uri=${uri.uri} rawRingId=${uri.rawRingId}")
         // Use Account's contact cache — the same objects held by Conversation.contact —
         // so that Contact.isOnline reflects immediately in the conversation list.
-        val account = accountService.getAccount(accountId) ?: return
+        val account = accountService.getAccount(accountId)
+        if (account == null) {
+            Log.w(TAG, "onPresenceUpdate: account not found for $accountId")
+            return
+        }
         val contact = account.getContactFromCache(uri)
         val presenceStatus = when (status) {
             0 -> Contact.PresenceStatus.OFFLINE
             1 -> Contact.PresenceStatus.AVAILABLE
             else -> Contact.PresenceStatus.CONNECTED
         }
+        Log.d(TAG, "onPresenceUpdate: setting presence $presenceStatus for contact ${contact.uri.rawRingId}, isOnline will be ${presenceStatus != Contact.PresenceStatus.OFFLINE}")
         contact.setPresence(presenceStatus)
         scope.launch {
             _contactEvents.emit(ContactEvent.PresenceUpdated(accountId, contact))
+            Log.d(TAG, "onPresenceUpdate: emitted PresenceUpdated event for ${contact.uri.rawRingId}")
         }
     }
 

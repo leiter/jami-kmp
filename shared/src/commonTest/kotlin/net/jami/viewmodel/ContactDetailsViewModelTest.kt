@@ -19,6 +19,7 @@ package net.jami.viewmodel
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.services.StubDaemonBridge
+import net.jami.services.StubDeviceRuntimeService
 import net.jami.ui.viewmodel.ContactDetailsViewModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -32,9 +33,9 @@ class ContactDetailsViewModelTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
         val contactService = makeContactService(stub, accountService, this)
-        val callService = makeCallService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ContactDetailsViewModel(contactService, facade, viewModelScope())
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), viewModelScope())
         assertEquals("", vm.state.value.displayName)
         assertEquals("", vm.state.value.username)
         assertFalse(vm.state.value.isBlocked)
@@ -46,9 +47,9 @@ class ContactDetailsViewModelTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
         val contactService = makeContactService(stub, accountService, this)
-        val callService = makeCallService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ContactDetailsViewModel(contactService, facade, viewModelScope())
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), viewModelScope())
         assertNotNull(vm.state)
         assertNotNull(vm.state.value)
     }
@@ -58,9 +59,9 @@ class ContactDetailsViewModelTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
         val contactService = makeContactService(stub, accountService, this)
-        val callService = makeCallService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ContactDetailsViewModel(contactService, facade, viewModelScope())
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), viewModelScope())
         vm.loadContact("jami:abc123def456abc123def456abc123def456abc123def")
         advanceUntilIdle()
         // No crash — state may be partially populated
@@ -72,9 +73,9 @@ class ContactDetailsViewModelTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
         val contactService = makeContactService(stub, accountService, this)
-        val callService = makeCallService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ContactDetailsViewModel(contactService, facade, viewModelScope())
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), viewModelScope())
         val before = vm.state.value.isBlocked
         vm.blockContact()
         advanceUntilIdle()
@@ -87,9 +88,9 @@ class ContactDetailsViewModelTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
         val contactService = makeContactService(stub, accountService, this)
-        val callService = makeCallService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ContactDetailsViewModel(contactService, facade, viewModelScope())
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), viewModelScope())
         vm.removeContact()
         advanceUntilIdle()
         // No crash — no account set
@@ -100,9 +101,9 @@ class ContactDetailsViewModelTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
         val contactService = makeContactService(stub, accountService, this)
-        val callService = makeCallService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ContactDetailsViewModel(contactService, facade, disposableScope())
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), disposableScope())
         vm.onCleared()
     }
 }

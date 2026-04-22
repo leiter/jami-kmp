@@ -62,7 +62,12 @@ const val TEST_ACCOUNT_ID = "acc_test_001"
 fun makeAccountService(
     stub: StubDaemonBridge = StubDaemonBridge(),
     scope: CoroutineScope
-): AccountService = AccountService(stub, scope)
+): AccountService {
+    // Use a child SupervisorJob so the service's infinite flow collectors don't
+    // leave uncompleted coroutines in the enclosing TestScope.
+    val serviceScope = CoroutineScope(SupervisorJob())
+    return AccountService(stub, StubHardwareService(), serviceScope)
+}
 
 /**
  * Creates a CallService wired to the given stub, account service, and scope.
@@ -70,8 +75,9 @@ fun makeAccountService(
 fun makeCallService(
     stub: StubDaemonBridge = StubDaemonBridge(),
     accountService: AccountService,
+    settingsRepository: SettingsRepository = SettingsRepository(stub, CoroutineScope(SupervisorJob())),
     scope: CoroutineScope
-): CallService = CallService(stub, accountService, scope)
+): CallService = CallService(stub, accountService, settingsRepository, scope)
 
 /**
  * Creates a ContactService wired to the given stub, account service, and scope.
@@ -134,7 +140,7 @@ fun makeTestServiceStack(
     scope: CoroutineScope
 ): TestServiceStack {
     val accountService = makeAccountService(stub, scope)
-    val callService = makeCallService(stub, accountService, scope)
+    val callService = makeCallService(stub, accountService, scope = scope)
     val contactService = makeContactService(stub, accountService, scope)
     val conversationFacade = makeConversationFacade(stub, accountService, callService, contactService, scope)
     val settingsRepository = makeSettingsRepository(stub, scope)
@@ -152,11 +158,13 @@ fun prepareAccountInService(
     accountService: AccountService,
     accountId: String = TEST_ACCOUNT_ID,
     displayName: String = "Test User"
-) {
+): net.jami.model.Account {
     stub.accountIds = listOf(accountId)
     stub.accountDetails[accountId] = mapOf(
         ConfigKey.ACCOUNT_TYPE.key to "RING",
         ConfigKey.ACCOUNT_DISPLAYNAME.key to displayName
     )
     accountService.loadAccounts()
+    return accountService.getAccount(accountId)
+        ?: net.jami.model.Account(accountId, mutableMapOf(ConfigKey.ACCOUNT_TYPE.key to "RING", ConfigKey.ACCOUNT_DISPLAYNAME.key to displayName))
 }

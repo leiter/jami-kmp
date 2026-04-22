@@ -19,6 +19,7 @@ package net.jami.viewmodel
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.services.StubDaemonBridge
+import net.jami.services.StubDeviceRuntimeService
 import net.jami.ui.viewmodel.ChatViewModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,9 +34,9 @@ class ChatViewModelTest {
     ): ChatViewModel {
         val accountService = makeAccountService(stub, scope)
         val contactService = makeContactService(stub, accountService, scope)
-        val callService = makeCallService(stub, accountService, scope)
+        val callService = makeCallService(stub, accountService, scope = scope)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, scope)
-        return ChatViewModel(facade, accountService, scope)
+        return ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, scope), scope)
     }
 
     @Test
@@ -82,9 +83,9 @@ class ChatViewModelTest {
         val accountService = makeAccountService(stub, this)
         prepareAccountInService(stub, accountService)
         val contactService = makeContactService(stub, accountService, this)
-        val callService = makeCallService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ChatViewModel(facade, accountService, viewModelScope())
+        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, viewModelScope()), viewModelScope())
         vm.updateInput("Hello")
         // Load a conversation first so currentAccountId/conversationId are set
         vm.loadConversation("conv_001")
@@ -169,9 +170,9 @@ class ChatViewModelTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
         val contactService = makeContactService(stub, accountService, this)
-        val callService = makeCallService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ChatViewModel(facade, accountService, disposableScope())
+        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, disposableScope()), disposableScope())
         vm.onCleared()
     }
 }

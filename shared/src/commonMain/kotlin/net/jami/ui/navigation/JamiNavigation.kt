@@ -322,6 +322,19 @@ private fun MainNavigation(needsMigration: Boolean) {
             )
         }
 
+        // View an existing in-progress call by daemon call ID (from notification)
+        composable(
+            route = Screen.ViewCall.ROUTE,
+            arguments = listOf(navArgument("callId") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val callId = backStackEntry.extractArg("callId")
+            if (callId.isEmpty()) return@composable
+            IncomingCallScreen(
+                callId = callId,
+                onEnd = { navController.popBackStack() },
+            )
+        }
+
         // ==================== New Conversation ====================
 
         composable(Screen.NewConversation.route) {

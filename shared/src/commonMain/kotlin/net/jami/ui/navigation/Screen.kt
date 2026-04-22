@@ -55,6 +55,14 @@ sealed class Screen(val route: String) {
         }
     }
 
+    /** View an existing in-progress call by daemon call ID (from notification tap). */
+    data class ViewCall(val callId: String) : Screen("call/view/$callId") {
+        companion object {
+            const val ROUTE = "call/view/{callId}"
+            fun createRoute(callId: String) = "call/view/$callId"
+        }
+    }
+
     data object ContactPicker : Screen("contact_picker")
     data object NewConversation : Screen("new_conversation")
     data object AccountSettings : Screen("account_settings")

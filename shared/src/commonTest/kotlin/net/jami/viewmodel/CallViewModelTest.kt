@@ -19,20 +19,29 @@ package net.jami.viewmodel
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.services.StubDaemonBridge
+import net.jami.services.StubHardwareService
+import net.jami.ui.viewmodel.CallMode
 import net.jami.ui.viewmodel.CallViewModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class CallViewModelTest {
 
+    private fun makeVm(stub: StubDaemonBridge, scope: kotlinx.coroutines.CoroutineScope): Triple<CallViewModel, net.jami.services.CallService, net.jami.services.AccountService> {
+        val accountService = makeAccountService(stub, scope)
+        val contactService = makeContactService(stub, accountService, scope)
+        val callService = makeCallService(stub, accountService, scope = scope)
+        val vm = CallViewModel(callService, accountService, contactService, StubHardwareService(), scope)
+        return Triple(vm, callService, accountService)
+    }
+
     @Test
     fun initialStateIsEmpty() = runTest {
         val stub = StubDaemonBridge()
-        val accountService = makeAccountService(stub, this)
-        val callService = makeCallService(stub, accountService, this)
-        val vm = CallViewModel(callService, accountService, viewModelScope())
+        val (vm) = makeVm(stub, viewModelScope())
         assertEquals("", vm.state.value.callStatus)
         assertEquals("", vm.state.value.peerUri)
         assertFalse(vm.state.value.isAudioMuted)
@@ -43,64 +52,50 @@ class CallViewModelTest {
     }
 
     @Test
-    fun initCallWithAccountSetsPeerUri() = runTest {
+    fun initOutgoingWithAccountSetsPeerUri() = runTest {
         val stub = StubDaemonBridge()
         stub.placeCallResult = "call_001"
-        val accountService = makeAccountService(stub, this)
+        val (vm, _, accountService) = makeVm(stub, viewModelScope())
         prepareAccountInService(stub, accountService)
-        val callService = makeCallService(stub, accountService, this)
-        val vm = CallViewModel(callService, accountService, viewModelScope())
-        vm.initCall("jami:abc123", isVideo = false)
+        vm.initOutgoing(contactUri = "jami:abc123", hasVideo = false)
         advanceUntilIdle()
         assertEquals("jami:abc123", vm.state.value.peerUri)
     }
 
     @Test
-    fun initCallWithNoAccountDoesNotSetPeerUri() = runTest {
+    fun initOutgoingWithNoAccountDoesNotSetPeerUri() = runTest {
         val stub = StubDaemonBridge()
-        val accountService = makeAccountService(stub, this)
-        val callService = makeCallService(stub, accountService, this)
-        val vm = CallViewModel(callService, accountService, viewModelScope())
-        vm.initCall("jami:abc123", isVideo = false)
+        val (vm) = makeVm(stub, viewModelScope())
+        vm.initOutgoing(contactUri = "jami:abc123", hasVideo = false)
         advanceUntilIdle()
         // No account → early return — peerUri stays empty
         assertEquals("", vm.state.value.peerUri)
     }
 
     @Test
-    fun toggleMuteFlipsAudioMuted() = runTest {
+    fun toggleMuteWithNoCallIdDoesNotChangeState() = runTest {
         val stub = StubDaemonBridge()
-        val accountService = makeAccountService(stub, this)
-        val callService = makeCallService(stub, accountService, this)
-        val vm = CallViewModel(callService, accountService, viewModelScope())
+        val (vm) = makeVm(stub, viewModelScope())
         assertFalse(vm.state.value.isAudioMuted)
         vm.toggleMute()
-        // No callId set → early return, state unchanged
         assertFalse(vm.state.value.isAudioMuted)
     }
 
     @Test
-    fun toggleVideoFlipsVideoMuted() = runTest {
+    fun toggleVideoWithNoCallIdDoesNotChangeState() = runTest {
         val stub = StubDaemonBridge()
-        val accountService = makeAccountService(stub, this)
-        val callService = makeCallService(stub, accountService, this)
-        val vm = CallViewModel(callService, accountService, viewModelScope())
+        val (vm) = makeVm(stub, viewModelScope())
         assertFalse(vm.state.value.isVideoMuted)
         vm.toggleVideo()
-        // No callId set → early return, state unchanged
         assertFalse(vm.state.value.isVideoMuted)
     }
 
     @Test
-    fun toggleSpeakerFlipsIsSpeakerOn() = runTest {
+    fun toggleSpeakerRequiresActiveConference() = runTest {
         val stub = StubDaemonBridge()
-        val accountService = makeAccountService(stub, this)
-        val callService = makeCallService(stub, accountService, this)
-        val vm = CallViewModel(callService, accountService, viewModelScope())
+        val (vm) = makeVm(stub, viewModelScope())
+        // No active conference → toggleSpeaker is a no-op
         assertFalse(vm.state.value.isSpeakerOn)
-        vm.toggleSpeaker()
-        // toggleSpeaker has no callId guard — it always flips
-        assertTrue(vm.state.value.isSpeakerOn)
         vm.toggleSpeaker()
         assertFalse(vm.state.value.isSpeakerOn)
     }
@@ -108,56 +103,84 @@ class CallViewModelTest {
     @Test
     fun callStateChangedFromDaemonUpdatesStatus() = runTest {
         val stub = StubDaemonBridge()
-        val accountService = makeAccountService(stub, this)
+        val scope = viewModelScope()
+        val (vm, callService, accountService) = makeVm(stub, scope)
         prepareAccountInService(stub, accountService)
-        val callService = makeCallService(stub, accountService, this)
-        val vm = CallViewModel(callService, accountService, viewModelScope())
-        // Simulate daemon callback: call transitioned to CURRENT
+        // Simulate daemon callback: incoming call → CURRENT
+        callService.onIncomingCall(TEST_ACCOUNT_ID, "call_001", "jami:peer", emptyList())
         callService.onCallStateChanged(TEST_ACCOUNT_ID, "call_001", "CURRENT", 0)
         advanceUntilIdle()
+        vm.initIncoming("call_001")
+        advanceUntilIdle()
         assertEquals("CURRENT", vm.state.value.callStatus)
+        assertIs<CallMode.OnGoing>(vm.state.value.callMode)
     }
 
     @Test
-    fun callEndedFromDaemonUpdatesStatus() = runTest {
+    fun callEndedFromDaemonSetsEndedMode() = runTest {
         val stub = StubDaemonBridge()
-        val accountService = makeAccountService(stub, this)
+        val scope = viewModelScope()
+        val (vm, callService, accountService) = makeVm(stub, scope)
         prepareAccountInService(stub, accountService)
-        val callService = makeCallService(stub, accountService, this)
-        val vm = CallViewModel(callService, accountService, viewModelScope())
+        callService.onIncomingCall(TEST_ACCOUNT_ID, "call_001", "jami:peer", emptyList())
         callService.onCallStateChanged(TEST_ACCOUNT_ID, "call_001", "CURRENT", 0)
+        advanceUntilIdle()
+        vm.initIncoming("call_001")
         advanceUntilIdle()
         callService.onCallStateChanged(TEST_ACCOUNT_ID, "call_001", "OVER", 0)
         advanceUntilIdle()
         assertEquals("OVER", vm.state.value.callStatus)
+        assertIs<CallMode.Ended>(vm.state.value.callMode)
     }
 
     @Test
-    fun acceptCallWithNoCallIdDoesNotCrash() = runTest {
+    fun busyCallSetsHangupReasonBusy() = runTest {
         val stub = StubDaemonBridge()
-        val accountService = makeAccountService(stub, this)
-        val callService = makeCallService(stub, accountService, this)
-        val vm = CallViewModel(callService, accountService, viewModelScope())
-        vm.acceptCall()
-        // No callId → early return, no crash
+        val scope = viewModelScope()
+        val (vm, callService, accountService) = makeVm(stub, scope)
+        prepareAccountInService(stub, accountService)
+        stub.placeCallResult = "call_busy"
+        vm.initOutgoing(contactUri = "jami:busy", hasVideo = false)
+        advanceUntilIdle()
+        callService.onCallStateChanged(TEST_ACCOUNT_ID, "call_busy", "BUSY", 0)
+        advanceUntilIdle()
+        val endedMode = vm.state.value.callMode
+        assertIs<CallMode.Ended>(endedMode)
+    }
+
+    @Test
+    fun acceptCurrentWithNoCallIdDoesNotCrash() = runTest {
+        val stub = StubDaemonBridge()
+        val (vm) = makeVm(stub, viewModelScope())
+        vm.acceptCurrent(withVideo = false)
+    }
+
+    @Test
+    fun refuseCurrentWithNoCallIdDoesNotCrash() = runTest {
+        val stub = StubDaemonBridge()
+        val (vm) = makeVm(stub, viewModelScope())
+        vm.refuseCurrent()
     }
 
     @Test
     fun endCallWithNoCallIdDoesNotCrash() = runTest {
         val stub = StubDaemonBridge()
-        val accountService = makeAccountService(stub, this)
-        val callService = makeCallService(stub, accountService, this)
-        val vm = CallViewModel(callService, accountService, viewModelScope())
+        val (vm) = makeVm(stub, viewModelScope())
         vm.endCall()
-        // No callId → early return, no crash
+    }
+
+    @Test
+    fun sendDtmfCallsPlayDtmfOnDaemon() = runTest {
+        val stub = StubDaemonBridge()
+        val (vm) = makeVm(stub, viewModelScope())
+        // sendDtmf delegates immediately (no guard) — just verify it doesn't throw
+        vm.sendDtmf('5')
     }
 
     @Test
     fun onClearedDoesNotThrow() = runTest {
         val stub = StubDaemonBridge()
-        val accountService = makeAccountService(stub, this)
-        val callService = makeCallService(stub, accountService, this)
-        val vm = CallViewModel(callService, accountService, disposableScope())
+        val (vm) = makeVm(stub, disposableScope())
         vm.onCleared()
     }
 }

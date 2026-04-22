@@ -114,7 +114,7 @@ data class AccountSettingsState(
 class AccountSettingsViewModel(
     private val accountService: AccountService,
     private val settingsRepository: SettingsRepository,
-    private val biometricService: BiometricService,
+    private val biometricService: BiometricService? = null,
     private val deviceRuntimeService: DeviceRuntimeService? = null,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
@@ -201,7 +201,7 @@ class AccountSettingsViewModel(
                 val hasManager = account.details[ConfigKey.ACCOUNT_MANAGER_URI.key]?.isNotEmpty() ?: false
 
                 // Load biometric state
-                val hasBiometric = biometricService.isEnabled(accountId)
+                val hasBiometric = biometricService?.isEnabled(accountId) ?: false
 
                 _state.value = AccountSettingsState(
                     displayName = displayName,
@@ -300,14 +300,14 @@ class AccountSettingsViewModel(
         val account = accountService.currentAccount.value ?: return Result.failure(Exception("No account"))
 
         // Check device capability first
-        return when (biometricService.checkAvailability()) {
+        return when (biometricService?.checkAvailability()) {
             BiometricAvailability.AVAILABLE -> {
-                val success = biometricService.enroll(
+                val success = biometricService?.enroll(
                     accountId = account.accountId,
                     password = password,
                     promptTitle = "Enable biometric authentication",
                     promptDescription = "Authenticate to secure your account password"
-                )
+                ) ?: false
                 if (success) {
                     _state.value = _state.value.copy(hasBiometric = true)
                     Result.success(Unit)
@@ -335,7 +335,7 @@ class AccountSettingsViewModel(
     suspend fun disableBiometric(): Result<Unit> {
         val account = accountService.currentAccount.value ?: return Result.failure(Exception("No account"))
 
-        val success = biometricService.disable(account.accountId)
+        val success = biometricService?.disable(account.accountId) ?: false
         if (success) {
             _state.value = _state.value.copy(hasBiometric = false)
             return Result.success(Unit)
@@ -356,7 +356,8 @@ class AccountSettingsViewModel(
         description: String
     ): BiometricResult {
         val account = accountService.currentAccount.value ?: return BiometricResult.Error("No account", false)
-        return biometricService.authenticate(account.accountId, title, description)
+        return biometricService?.authenticate(account.accountId, title, description)
+            ?: BiometricResult.Error("Biometric not available", false)
     }
 
     /**

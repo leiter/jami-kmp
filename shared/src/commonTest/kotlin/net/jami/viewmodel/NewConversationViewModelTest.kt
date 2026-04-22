@@ -37,7 +37,7 @@ class NewConversationViewModelTest {
     ): NewConversationViewModel {
         val accountService = makeAccountService(stub, scope)
         val contactService = makeContactService(stub, accountService, scope)
-        val callService = makeCallService(stub, accountService, scope)
+        val callService = makeCallService(stub, accountService, scope = scope)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, scope)
         return NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), scope)
     }
@@ -152,7 +152,7 @@ class NewConversationViewModelTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
         val contactService = makeContactService(stub, accountService, this)
-        val callService = makeCallService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
         val vm = NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), viewModelScope())
         vm.search("alice")
@@ -168,7 +168,7 @@ class NewConversationViewModelTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
         val contactService = makeContactService(stub, accountService, this)
-        val callService = makeCallService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
         val vm = NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), disposableScope())
         vm.onCleared()

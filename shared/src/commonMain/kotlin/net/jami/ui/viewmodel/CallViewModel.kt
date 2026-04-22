@@ -27,15 +27,44 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import net.jami.model.Call
 import net.jami.model.Call.CallStatus
+import net.jami.model.Call.HangupReason
+import net.jami.model.Conference
 import net.jami.model.Uri
 import net.jami.services.AccountService
 import net.jami.services.CallService
+import net.jami.services.ContactService
+import net.jami.services.HardwareService
 
 /**
- * State for the active call screen.
+ * Mode of the current call — drives which CallScreen composable is shown.
+ */
+sealed class CallMode {
+    object Incoming : CallMode()
+    object Outgoing : CallMode()
+    object OnGoing : CallMode()
+    object OnHold : CallMode()
+    data class Ended(val reason: HangupReason) : CallMode()
+}
+
+/**
+ * Minimal participant info surfaced to the UI.
+ */
+data class ParticipantUi(
+    val callId: String,
+    val displayName: String,
+    val isModerator: Boolean = false,
+    val isAudioMuted: Boolean = false,
+    val isHandRaised: Boolean = false,
+    val isActive: Boolean = false
+)
+
+/**
+ * Full UI state for the call screen.
  */
 data class CallState(
+    val callMode: CallMode = CallMode.Outgoing,
     val callStatus: String = "",
     val peerName: String = "",
     val peerUri: String = "",
@@ -46,20 +75,26 @@ data class CallState(
     val isIncoming: Boolean = false,
     val isOnHold: Boolean = false,
     val isConference: Boolean = false,
+    val isModerator: Boolean = false,
     val participantCount: Int = 1,
-    val conferenceLayout: Int = 0
+    val participants: List<ParticipantUi> = emptyList(),
+    val conferenceLayout: Int = 0,
+    val hangupReason: HangupReason = HangupReason.NONE
 )
 
 /**
- * ViewModel for the active call screen.
+ * ViewModel for the active call screen. Mirrors the logic of CallPresenter from
+ * jami-android-client libjamiclient (787 LOC), adapted for KMP Kotlin Flows.
  *
- * Manages call lifecycle operations (place, accept, end) and media
- * controls (mute audio/video, speaker). Observes call state changes
- * from the daemon via CallService.
+ * Entry points:
+ *  - [initOutgoing] — user places an outgoing call from a conversation screen.
+ *  - [initIncoming] — attaches to an existing incoming call (from notification tap).
  */
 class CallViewModel(
     private val callService: CallService,
     private val accountService: AccountService,
+    private val contactService: ContactService,
+    private val hardwareService: HardwareService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     private val scope = scope
@@ -69,51 +104,286 @@ class CallViewModel(
 
     private var currentCallId: String? = null
     private var currentAccountId: String? = null
+    private var currentConference: Conference? = null
     private var durationJob: Job? = null
     private var callStartTime: Long = 0L
+    private var confUpdatesJob: Job? = null
 
-    init {
-        // Observe call state updates
+    // ==================== Entry points ====================
+
+    /**
+     * Initiate a new outgoing call from a conversation.
+     * Mirrors CallPresenter.initOutGoing().
+     */
+    fun initOutgoing(accountId: String = "", contactUri: String, hasVideo: Boolean, conversationUri: String? = null) {
+        scope.launch {
+            val resolvedAccountId = accountId.ifEmpty {
+                accountService.currentAccount.value?.accountId ?: return@launch
+            }
+            currentAccountId = resolvedAccountId
+            val peerUri = Uri.fromString(contactUri)
+
+            _state.value = _state.value.copy(
+                callMode = CallMode.Outgoing,
+                callStatus = CallStatus.SEARCHING.name,
+                peerUri = contactUri,
+                peerName = contactUri,
+                isIncoming = false
+            )
+
+            try {
+                val convUri = conversationUri?.let { Uri.fromString(it) }
+                val call = callService.placeCall(
+                    accountId = resolvedAccountId,
+                    contactUri = peerUri,
+                    hasVideo = hasVideo,
+                    conversationUri = convUri
+                )
+                currentCallId = call.daemonId
+                resolveContactName(resolvedAccountId, peerUri, call)
+                subscribeToConferenceUpdates(call.daemonId ?: return@launch)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    callMode = CallMode.Ended(HangupReason.ERROR),
+                    callStatus = CallStatus.FAILURE.name,
+                    hangupReason = HangupReason.ERROR
+                )
+                hardwareService.closeAudioState()
+            }
+        }
+    }
+
+    /**
+     * Attach to an existing incoming daemon call (arrived via notification).
+     * Mirrors CallPresenter.initIncomingCall().
+     *
+     * @param callId The daemon call ID from the notification.
+     * @param actionViewOnly When true, just display the call state (call already answered elsewhere).
+     */
+    fun initIncoming(callId: String, actionViewOnly: Boolean = false) {
+        val call = callService.getCall(callId)
+        currentCallId = callId
+        currentAccountId = call?.account
+
+        if (call != null) {
+            currentAccountId = call.account
+            _state.value = _state.value.copy(
+                callMode = CallMode.Incoming,
+                callStatus = call.callStatus.name,
+                peerUri = call.peerUri.uri,
+                peerName = call.peerUri.uri,
+                isIncoming = true
+            )
+            resolveContactName(call.account, call.peerUri, call)
+        } else {
+            _state.value = _state.value.copy(
+                callMode = CallMode.Incoming,
+                isIncoming = true,
+                peerUri = callId
+            )
+        }
+
+        subscribeToConferenceUpdates(callId)
+    }
+
+    // ==================== Call actions ====================
+
+    fun acceptCurrent(withVideo: Boolean = false) {
+        val callId = currentCallId ?: return
+        val accountId = currentAccountId ?: return
+        callService.accept(accountId, callId, hasVideo = withVideo)
+    }
+
+    fun refuseCurrent() {
+        val callId = currentCallId ?: return
+        val accountId = currentAccountId ?: return
+        callService.refuse(accountId, callId)
+    }
+
+    fun endCall() {
+        val conf = currentConference
+        val accountId = currentAccountId ?: return
+        if (conf != null && !conf.isSimpleCall) {
+            callService.hangUpConference(accountId, conf.id)
+        } else {
+            val callId = currentCallId ?: return
+            callService.hangUp(accountId, callId)
+        }
+    }
+
+    fun toggleMute() {
+        val callId = currentCallId ?: return
+        val accountId = currentAccountId ?: return
+        val newMuteState = !_state.value.isAudioMuted
+        callService.muteLocalMedia(accountId, callId, CallService.MEDIA_TYPE_AUDIO, newMuteState)
+        _state.value = _state.value.copy(isAudioMuted = newMuteState)
+    }
+
+    fun toggleVideo() {
+        val callId = currentCallId ?: return
+        val accountId = currentAccountId ?: return
+        val newMuteState = !_state.value.isVideoMuted
+        callService.muteLocalMedia(accountId, callId, CallService.MEDIA_TYPE_VIDEO, newMuteState)
+        _state.value = _state.value.copy(isVideoMuted = newMuteState)
+    }
+
+    fun toggleSpeaker() {
+        val conf = currentConference ?: return
+        val newState = !_state.value.isSpeakerOn
+        hardwareService.toggleSpeakerphone(conf, newState)
+        _state.value = _state.value.copy(isSpeakerOn = newState)
+    }
+
+    fun toggleHold() {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference
+        if (conf != null) {
+            if (_state.value.isOnHold) callService.unholdCallOrConference(conf)
+            else callService.holdCallOrConference(conf)
+        } else {
+            val callId = currentCallId ?: return
+            if (_state.value.isOnHold) callService.unhold(accountId, callId)
+            else callService.hold(accountId, callId)
+        }
+    }
+
+    fun sendDtmf(key: Char) {
+        callService.playDtmf(key.toString())
+    }
+
+    fun setConferenceLayout(layout: Int) {
+        val accountId = currentAccountId ?: return
+        val confId = currentConference?.id ?: currentCallId ?: return
+        callService.setConferenceLayout(accountId, confId, layout)
+        _state.value = _state.value.copy(conferenceLayout = layout)
+    }
+
+    fun sendCallMessage(text: String) {
+        val accountId = currentAccountId ?: return
+        val callId = currentCallId ?: return
+        callService.sendTextMessage(accountId, callId, text)
+    }
+
+    // ==================== Internal ====================
+
+    private fun subscribeToConferenceUpdates(callOrConfId: String) {
+        confUpdatesJob?.cancel()
+        confUpdatesJob = scope.launch {
+            callService.getConfUpdates(callOrConfId).collect { conf ->
+                handleConferenceUpdate(conf)
+            }
+        }
+        // Also observe raw call updates for simple calls that aren't in a conference yet
         scope.launch {
             callService.callUpdates.collect { call ->
-                if (call.daemonId == currentCallId || currentCallId == null) {
-                    currentCallId = call.daemonId
-                    currentAccountId = call.account
-
-                    val isHold = call.callStatus == CallStatus.HOLD
-                    _state.value = _state.value.copy(
-                        callStatus = call.callStatus.name,
-                        peerUri = call.peerUri.uri,
-                        isAudioMuted = call.isAudioMuted,
-                        isVideoMuted = call.isVideoMuted,
-                        isIncoming = call.isIncoming,
-                        isOnHold = isHold
-                    )
-
-                    // Start duration timer when call becomes active
-                    if (call.callStatus == CallStatus.CURRENT && durationJob == null) {
-                        callStartTime = if (call.timestamp > 0) call.timestamp
-                            else net.jami.utils.currentTimeMillis()
-                        startDurationTimer()
-                    }
-
-                    // Stop timer if call ended or on hold
-                    if (call.callStatus == CallStatus.OVER || call.callStatus == CallStatus.FAILURE) {
-                        durationJob?.cancel()
-                        durationJob = null
-                    }
+                if (call.daemonId == currentCallId) {
+                    handleCallUpdate(call)
                 }
             }
         }
+    }
 
-        // Observe conference updates
+    private fun handleCallUpdate(call: Call) {
+        val status = call.callStatus
+        val isHold = status == CallStatus.HOLD
+        val isOnGoing = status.isOnGoing
+        val isOver = status.isOver
+
+        val mode = when {
+            isOver || status == CallStatus.HUNGUP || status == CallStatus.FAILURE || status == CallStatus.BUSY ->
+                CallMode.Ended(call.hangupReason.takeIf { it != HangupReason.NONE } ?: HangupReason.REMOTE)
+            isHold -> CallMode.OnHold
+            isOnGoing -> CallMode.OnGoing
+            call.isIncoming -> CallMode.Incoming
+            else -> CallMode.Outgoing
+        }
+
+        _state.value = _state.value.copy(
+            callMode = mode,
+            callStatus = status.name,
+            peerUri = call.peerUri.uri,
+            isAudioMuted = call.isAudioMuted,
+            isVideoMuted = call.isVideoMuted,
+            isIncoming = call.isIncoming,
+            isOnHold = isHold,
+            hangupReason = call.hangupReason
+        )
+
+        if (status == CallStatus.CURRENT && durationJob == null) {
+            callStartTime = if (call.timestamp > 0) call.timestamp
+                else net.jami.utils.currentTimeMillis()
+            startDurationTimer()
+            val currentCall = call
+            val conf = currentConference
+            currentAccountId?.let { accountId ->
+                hardwareService.updateAudioState(conf, currentCall, call.isIncoming, false)
+            }
+        }
+
+        if (isOver) {
+            durationJob?.cancel()
+            durationJob = null
+            hardwareService.closeAudioState()
+        }
+    }
+
+    private fun handleConferenceUpdate(conf: Conference) {
+        currentConference = conf
+        if (conf.isSimpleCall) {
+            // Single-call conference: delegate to the underlying call state
+            conf.participants.firstOrNull()?.let { handleCallUpdate(it) }
+            return
+        }
+
+        val status = conf.state ?: CallStatus.NONE
+        val isHold = status == CallStatus.HOLD
+        val isOver = status.isOver
+
+        val mode = when {
+            isOver -> CallMode.Ended(HangupReason.REMOTE)
+            isHold -> CallMode.OnHold
+            conf.isOnGoing -> CallMode.OnGoing
+            else -> CallMode.Outgoing
+        }
+
+        val participantUis = conf.participants.map { call ->
+            ParticipantUi(
+                callId = call.daemonId ?: "",
+                displayName = call.contact?.displayName ?: call.peerUri.uri,
+                isAudioMuted = call.isAudioMuted
+            )
+        }
+
+        _state.value = _state.value.copy(
+            callMode = mode,
+            callStatus = status.name,
+            isOnHold = isHold,
+            isConference = true,
+            isModerator = conf.isModerator,
+            participantCount = conf.participants.size,
+            participants = participantUis,
+            conferenceLayout = _state.value.conferenceLayout
+        )
+
+        if (isOver) {
+            durationJob?.cancel()
+            durationJob = null
+            hardwareService.closeAudioState()
+        }
+    }
+
+    private fun resolveContactName(accountId: String, peerUri: Uri, call: Call) {
         scope.launch {
-            callService.conferenceUpdates.collect { conference ->
-                _state.value = _state.value.copy(
-                    isConference = true,
-                    participantCount = conference.participants.size,
-                    isOnHold = conference.state == CallStatus.HOLD
-                )
+            try {
+                val contact = contactService.findContact(accountId, peerUri)
+                val profile = contactService.loadContactData(contact, accountId)
+                val displayName = profile.displayName?.takeIf { it.isNotBlank() }
+                    ?: contact.displayName?.takeIf { it.isNotBlank() }
+                    ?: peerUri.uri
+                _state.value = _state.value.copy(peerName = displayName)
+                call.contact = contact
+            } catch (_: Exception) {
+                // Keep URI as display name on failure
             }
         }
     }
@@ -128,126 +398,9 @@ class CallViewModel(
         }
     }
 
-    /**
-     * Initiate a new outgoing call.
-     *
-     * @param contactUri URI of the contact to call.
-     * @param isVideo True for a video call, false for audio only.
-     */
-    fun initCall(contactUri: String, isVideo: Boolean) {
-        scope.launch {
-            val account = accountService.currentAccount.value ?: return@launch
-            currentAccountId = account.accountId
-
-            val peerUri = Uri.fromString(contactUri)
-            _state.value = _state.value.copy(
-                peerUri = contactUri,
-                peerName = contactUri,
-                callStatus = CallStatus.SEARCHING.name,
-                isIncoming = false
-            )
-
-            try {
-                val call = callService.placeCall(
-                    accountId = account.accountId,
-                    contactUri = peerUri,
-                    hasVideo = isVideo
-                )
-                currentCallId = call.daemonId
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    callStatus = CallStatus.FAILURE.name
-                )
-            }
-        }
-    }
-
-    /**
-     * Accept an incoming call.
-     */
-    fun acceptCall() {
-        val callId = currentCallId ?: return
-        val accountId = currentAccountId ?: return
-        callService.accept(accountId, callId, hasVideo = !_state.value.isVideoMuted)
-    }
-
-    /**
-     * End (hang up) the current call.
-     */
-    fun endCall() {
-        val callId = currentCallId ?: return
-        val accountId = currentAccountId ?: return
-        callService.hangUp(accountId, callId)
-    }
-
-    /**
-     * Toggle the audio mute state.
-     */
-    fun toggleMute() {
-        val callId = currentCallId ?: return
-        val accountId = currentAccountId ?: return
-        val newMuteState = !_state.value.isAudioMuted
-        callService.muteLocalMedia(accountId, callId, CallService.MEDIA_TYPE_AUDIO, newMuteState)
-        _state.value = _state.value.copy(isAudioMuted = newMuteState)
-    }
-
-    /**
-     * Toggle the video mute state.
-     */
-    fun toggleVideo() {
-        val callId = currentCallId ?: return
-        val accountId = currentAccountId ?: return
-        val newMuteState = !_state.value.isVideoMuted
-        callService.muteLocalMedia(accountId, callId, CallService.MEDIA_TYPE_VIDEO, newMuteState)
-        _state.value = _state.value.copy(isVideoMuted = newMuteState)
-    }
-
-    /**
-     * Toggle the speaker output.
-     * Note: Actual speaker routing is platform-specific and handled by HardwareService.
-     */
-    fun toggleSpeaker() {
-        val newState = !_state.value.isSpeakerOn
-        _state.value = _state.value.copy(isSpeakerOn = newState)
-    }
-
-    /**
-     * Toggle hold/unhold for the current call.
-     */
-    fun toggleHold() {
-        val callId = currentCallId ?: return
-        val accountId = currentAccountId ?: return
-        if (_state.value.isOnHold) {
-            callService.unhold(accountId, callId)
-        } else {
-            callService.hold(accountId, callId)
-        }
-    }
-
-    /**
-     * Set the conference layout (0 = grid, 1 = one-big).
-     */
-    fun setConferenceLayout(layout: Int) {
-        val callId = currentCallId ?: return
-        val accountId = currentAccountId ?: return
-        callService.setConferenceLayout(accountId, callId, layout)
-        _state.value = _state.value.copy(conferenceLayout = layout)
-    }
-
-    /**
-     * Send an in-call text message.
-     */
-    fun sendCallMessage(text: String) {
-        val accountId = currentAccountId ?: return
-        val callId = currentCallId ?: return
-        callService.sendTextMessage(accountId, callId, text)
-    }
-
-    /**
-     * Cancel the coroutine scope when this ViewModel is no longer needed.
-     */
     fun onCleared() {
         durationJob?.cancel()
+        confUpdatesJob?.cancel()
         scope.cancel()
     }
 }

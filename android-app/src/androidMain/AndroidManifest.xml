@@ -9,10 +9,18 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
     <!-- Background sync service permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <!-- Call foreground service permissions (API 29+) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
 
     <application
         android:name=".JamiApplication"
@@ -25,10 +33,18 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
             android:theme="@style/Theme.JamiKmp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="net.jami.action.VIEW_CALL" />
+                <action android:name="net.jami.action.ACCEPT_CALL" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 
@@ -48,6 +64,23 @@
             android:name="net.jami.services.JamiSyncService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <!-- Call foreground service: keeps audio alive while app is backgrounded -->
+        <service
+            android:name=".service.CallNotificationService"
+            android:exported="false"
+            android:foregroundServiceType="phoneCall|microphone" />
+
+        <!-- Broadcast receiver for notification Answer / Decline / Hang Up actions -->
+        <receiver
+            android:name=".service.CallActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="net.jami.action.ANSWER_CALL" />
+                <action android:name="net.jami.action.DECLINE_CALL" />
+                <action android:name="net.jami.action.HANGUP_CALL" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

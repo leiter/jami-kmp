@@ -223,12 +223,22 @@ class AndroidNotificationService(
             .setContentText(conference.getDisplayName())
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_CALL)
-            .setOngoing(state == Call.CallStatus.CURRENT || state == Call.CallStatus.HOLD)
+            .setOngoing(state == Call.CallStatus.CURRENT || state == Call.CallStatus.HOLD || state == Call.CallStatus.RINGING)
             .setAutoCancel(false)
 
         // Add actions based on state
         if (state == Call.CallStatus.RINGING) {
-            // Incoming call - add answer and decline actions
+            // Incoming call: full-screen intent to wake the display above lock screen
+            val fullScreenIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
+                action = ACTION_VIEW_CALL
+                putExtra(KEY_CALL_ID, conference.id)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            }
+            val piFlags = PendingIntent.FLAG_UPDATE_CURRENT or
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+            val fullScreenPi = PendingIntent.getActivity(context, conference.id.hashCode() + 1, fullScreenIntent, piFlags)
+            builder.setFullScreenIntent(fullScreenPi, true)
+
             builder.addAction(
                 android.R.drawable.ic_menu_call,
                 "Answer",
@@ -239,8 +249,11 @@ class AndroidNotificationService(
                 "Decline",
                 createCallActionPendingIntent(conference.id, ACTION_DECLINE)
             )
+
+            // Start foreground service so the notification survives backgrounding
+            val serviceIntent = Intent(context, Class.forName("net.jami.android.service.CallNotificationService"))
+            androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent)
         } else if (state == Call.CallStatus.CURRENT) {
-            // Ongoing call - add hangup and hold actions
             builder.addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
                 "Hang Up",
@@ -604,5 +617,9 @@ class AndroidNotificationService(
         const val ACTION_ANSWER = "net.jami.action.ANSWER_CALL"
         const val ACTION_DECLINE = "net.jami.action.DECLINE_CALL"
         const val ACTION_HANGUP = "net.jami.action.HANGUP_CALL"
+        const val ACTION_VIEW_CALL = "net.jami.action.VIEW_CALL"
+
+        // Intent extras
+        const val KEY_CALL_ID = NotificationService.KEY_CALL_ID
     }
 }

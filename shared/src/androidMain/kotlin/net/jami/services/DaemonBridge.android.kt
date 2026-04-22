@@ -266,6 +266,34 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
         JamiService.muteLocalMedia(accountId, callId, mediaType, mute)
     }
 
+    override fun playDtmf(key: String) {
+        JamiService.playDTMF(key)
+    }
+
+    override fun muteRingtone(mute: Boolean) {
+        JamiService.muteRingtone(mute)
+    }
+
+    override fun muteCapture(mute: Boolean) {
+        JamiService.muteCapture(mute)
+    }
+
+    override fun isCaptureMuted(): Boolean {
+        return JamiService.isCaptureMuted()
+    }
+
+    override fun transfer(accountId: String, callId: String, to: String): Boolean {
+        return JamiService.transfer(accountId, callId, to)
+    }
+
+    override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean {
+        return JamiService.attendedTransfer(accountId, transferId, targetId)
+    }
+
+    override fun getCallDetails(accountId: String, callId: String): Map<String, String> {
+        return JamiService.getCallDetails(accountId, callId).toNative()
+    }
+
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {
         return JamiService.holdConference(accountId, confId)
@@ -284,8 +312,35 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
     }
 
     override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {
-        // JamiService doesn't have setConferenceLayout yet - stub
-        Log.d(TAG, "setConferenceLayout called (stub): $confId layout=$layout")
+        JamiService.setConferenceLayout(accountId, confId, layout)
+    }
+
+    override fun hangUpConference(accountId: String, confId: String): Boolean {
+        return JamiService.hangUpConference(accountId, confId)
+    }
+
+    override fun joinParticipant(accountId: String, selCallId: String, account2Id: String, dragCallId: String): Boolean {
+        return JamiService.joinParticipant(accountId, selCallId, account2Id, dragCallId)
+    }
+
+    override fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean {
+        return JamiService.addParticipant(accountId, callId, account2Id, confId)
+    }
+
+    override fun addMainParticipant(accountId: String, confId: String): Boolean {
+        return JamiService.addMainParticipant(accountId, confId)
+    }
+
+    override fun detachParticipant(accountId: String, callId: String): Boolean {
+        return JamiService.detachParticipant(accountId, callId)
+    }
+
+    override fun getParticipantList(accountId: String, confId: String): List<String> {
+        return JamiService.getParticipantList(accountId, confId).toList()
+    }
+
+    override fun getConferenceDetails(accountId: String, confId: String): Map<String, String> {
+        return JamiService.getConferenceDetails(accountId, confId).toNative()
     }
 
     // ==================== Conversation Operations ====================

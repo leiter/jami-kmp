@@ -271,6 +271,14 @@ actual class DaemonBridge() : DaemonBridgeApi {
         // TODO: POST /calls/{callId}/mute
     }
 
+    override fun playDtmf(key: String) {}
+    override fun muteRingtone(mute: Boolean) {}
+    override fun muteCapture(mute: Boolean) {}
+    override fun isCaptureMuted(): Boolean = false
+    override fun transfer(accountId: String, callId: String, to: String): Boolean = false
+    override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean = false
+    override fun getCallDetails(accountId: String, callId: String): Map<String, String> = emptyMap()
+
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {
         Log.d(TAG, "holdConference called (stub): $confId")
@@ -299,6 +307,14 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "setConferenceLayout called (stub): $confId layout=$layout")
         // TODO: REST call
     }
+
+    override fun hangUpConference(accountId: String, confId: String): Boolean = false
+    override fun joinParticipant(accountId: String, selCallId: String, account2Id: String, dragCallId: String): Boolean = false
+    override fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean = false
+    override fun addMainParticipant(accountId: String, confId: String): Boolean = false
+    override fun detachParticipant(accountId: String, callId: String): Boolean = false
+    override fun getParticipantList(accountId: String, confId: String): List<String> = emptyList()
+    override fun getConferenceDetails(accountId: String, confId: String): Map<String, String> = emptyMap()
 
     // ==================== Conversation Operations ====================
 

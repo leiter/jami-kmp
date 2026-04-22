@@ -40,6 +40,7 @@ import net.jami.services.ContactService
 import net.jami.services.ConversationFacade
 import net.jami.services.ConversationEvent
 import net.jami.services.DeviceRuntimeService
+import net.jami.utils.Log
 import net.jami.utils.VCardUtils
 
 /**
@@ -98,6 +99,10 @@ class ConversationsViewModel(
     private val contactService: ContactService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
+    companion object {
+        private const val TAG = "ConversationsVM"
+    }
+
     private val scope = scope
 
     private val _state = MutableStateFlow(ConversationsState())
@@ -179,15 +184,24 @@ class ConversationsViewModel(
 
         // React to presence changes: match on contactId (ring ID), not conversation swarm ID.
         scope.launch {
+            Log.d(TAG, "Starting presence event collector")
             contactService.contactEvents.collect { event ->
                 if (event is ContactEvent.PresenceUpdated) {
                     val contactRawId = event.contact.uri.rawRingId
+                    val isOnline = event.contact.isOnline
+                    Log.d(TAG, "PresenceUpdated received: contactRawId=$contactRawId isOnline=$isOnline")
                     val current = _state.value.conversations
+                    val matchingItems = current.filter { it.contactId == contactRawId }
+                    Log.d(TAG, "Found ${matchingItems.size} matching conversation items for $contactRawId")
+                    if (matchingItems.isEmpty()) {
+                        Log.w(TAG, "No matching conversation for presence update. Available contactIds: ${current.map { it.contactId }}")
+                    }
                     val updated = current.map { item ->
-                        if (item.contactId == contactRawId) item.copy(isOnline = event.contact.isOnline)
+                        if (item.contactId == contactRawId) item.copy(isOnline = isOnline)
                         else item
                     }
                     _state.value = _state.value.copy(conversations = updated)
+                    Log.d(TAG, "State updated with presence change")
                 }
             }
         }
@@ -222,10 +236,26 @@ class ConversationsViewModel(
                 // Build conversation items from the facade
                 val conversations = buildConversationItems(accountId, query, filesDir)
 
+                // Re-sync presence from Contact objects. During buildConversationItems(),
+                // presence subscriptions trigger daemon callbacks that update Contact.isOnline.
+                // But buildConversationItems() may have read the value before the update.
+                // Re-read now to get the latest presence state.
+                val syncedConversations = conversations.map { item ->
+                    if (item.contactId != null) {
+                        val contact = account.getConversations()
+                            .mapNotNull { it.contact }
+                            .find { it.uri.rawRingId == item.contactId }
+                        if (contact != null && contact.isOnline != item.isOnline) {
+                            Log.d(TAG, "Re-syncing presence for ${item.contactId}: ${item.isOnline} -> ${contact.isOnline}")
+                            item.copy(isOnline = contact.isOnline)
+                        } else item
+                    } else item
+                }
+
                 val accountItems = buildAccountItems(filesDir)
 
                 _state.value = _state.value.copy(
-                    conversations = conversations,
+                    conversations = syncedConversations,
                     isLoading = false,
                     pendingRequests = pendingCount,
                     currentAccountAvatarBytes = accountAvatarBytes ?: _state.value.currentAccountAvatarBytes,
@@ -279,6 +309,7 @@ class ConversationsViewModel(
             if (contact != null) {
                 val key = accountId to contact.uri.rawRingId
                 if (subscribedBuddies.add(key)) {
+                    Log.d(TAG, "Subscribing to presence for contact ${contact.uri.rawRingId}")
                     contactService.subscribeBuddy(accountId, contact.uri, true)
                 }
             }

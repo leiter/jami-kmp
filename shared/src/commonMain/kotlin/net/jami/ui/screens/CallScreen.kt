@@ -27,50 +27,61 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CallEnd
+import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.PhoneDisabled
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
-import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.theme.JamiColors
 import net.jami.ui.theme.JamiTheme
+import net.jami.ui.viewmodel.CallMode
+import net.jami.ui.viewmodel.CallState
 import net.jami.ui.viewmodel.CallViewModel
+import net.jami.ui.viewmodel.ParticipantUi
+import org.jetbrains.compose.resources.stringResource
+
+// ==================== Public entry points ====================
 
 /**
- * Full-screen call screen with peer info and call controls.
- *
- * Layout:
- * - Dark background
- * - Centered: peer name, call status, duration timer
- * - Bottom: control row (mute, speaker, video, end call)
- *
- * @param contactId The contact being called.
- * @param isVideo Whether this is a video call.
- * @param onEnd Called when the call ends (to navigate back).
+ * Outgoing call screen: places a new call to [contactId].
  */
 @Composable
 fun CallScreen(
@@ -81,142 +92,469 @@ fun CallScreen(
     val viewModel = getViewModel<CallViewModel>()
     val state by viewModel.state.collectAsState()
 
-    // Initiate the call on first composition
     LaunchedEffect(contactId, isVideo) {
-        viewModel.initCall(contactId, isVideo)
+        viewModel.initOutgoing(contactUri = contactId, hasVideo = isVideo)
     }
 
-    // Navigate back when call is ended
-    LaunchedEffect(state.callStatus) {
-        if (state.callStatus == "OVER" || state.callStatus == "FAILURE") {
+    CallScreenContent(
+        state = state,
+        onAccept = { viewModel.acceptCurrent(withVideo = isVideo) },
+        onDecline = { viewModel.refuseCurrent() },
+        onEnd = {
+            viewModel.endCall()
             onEnd()
+        },
+        onToggleMute = { viewModel.toggleMute() },
+        onToggleSpeaker = { viewModel.toggleSpeaker() },
+        onToggleVideo = { viewModel.toggleVideo() },
+        onToggleHold = { viewModel.toggleHold() },
+        onSendDtmf = { key -> viewModel.sendDtmf(key) },
+        onEnded = onEnd,
+    )
+}
+
+/**
+ * Attach to an existing in-progress call by daemon [callId] (from notification tap).
+ */
+@Composable
+fun IncomingCallScreen(
+    callId: String,
+    onEnd: () -> Unit,
+) {
+    val viewModel = getViewModel<CallViewModel>()
+    val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(callId) {
+        viewModel.initIncoming(callId, actionViewOnly = false)
+    }
+
+    CallScreenContent(
+        state = state,
+        onAccept = { viewModel.acceptCurrent(withVideo = false) },
+        onDecline = { viewModel.refuseCurrent() },
+        onEnd = {
+            viewModel.endCall()
+            onEnd()
+        },
+        onToggleMute = { viewModel.toggleMute() },
+        onToggleSpeaker = { viewModel.toggleSpeaker() },
+        onToggleVideo = { viewModel.toggleVideo() },
+        onToggleHold = { viewModel.toggleHold() },
+        onSendDtmf = { key -> viewModel.sendDtmf(key) },
+        onEnded = onEnd,
+    )
+}
+
+// ==================== Core state-driven composable ====================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CallScreenContent(
+    state: CallState,
+    onAccept: () -> Unit,
+    onDecline: () -> Unit,
+    onEnd: () -> Unit,
+    onToggleMute: () -> Unit,
+    onToggleSpeaker: () -> Unit,
+    onToggleVideo: () -> Unit,
+    onToggleHold: () -> Unit,
+    onSendDtmf: (Char) -> Unit,
+    onEnded: () -> Unit,
+) {
+    // Navigate back on terminal state
+    LaunchedEffect(state.callMode) {
+        if (state.callMode is CallMode.Ended) {
+            onEnded()
         }
     }
+
+    var showDtmfSheet by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(JamiColors.DarkBackground),
     ) {
-        // Center content: peer name, status, duration
+        // Hold overlay (semi-transparent dimmer above everything else)
+        if (state.callMode is CallMode.OnHold) {
+            HoldOverlay()
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.Center),
+                .align(Alignment.Center)
+                .padding(horizontal = JamiTheme.spacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            // Avatar placeholder
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.15f))
+                    .semantics { contentDescription = "Caller avatar" },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(56.dp),
+                    tint = Color.White.copy(alpha = 0.8f),
+                )
+            }
+
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+
             // Peer name
             Text(
-                text = state.peerName.ifEmpty { contactId },
+                text = state.peerName.ifEmpty { state.peerUri },
                 style = JamiTheme.typography.headlineMedium,
                 color = Color.White,
             )
 
             Spacer(Modifier.height(JamiTheme.spacing.s))
 
-            // Conference indicator
-            if (state.isConference) {
-                Text(
-                    text = "Conference (${state.participantCount} participants)",
-                    style = JamiTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.8f),
-                )
-                Spacer(Modifier.height(JamiTheme.spacing.xs))
+            // Status line
+            val statusText = when (state.callMode) {
+                is CallMode.Incoming -> stringResource(Res.string.call_incoming_audio)
+                is CallMode.Outgoing -> stringResource(Res.string.call_outgoing)
+                is CallMode.OnHold -> stringResource(Res.string.call_on_hold)
+                is CallMode.OnGoing -> if (state.isConference)
+                    "${state.participantCount} participants"
+                else stringResource(Res.string.call_human_state_current)
+                is CallMode.Ended -> stringResource(Res.string.call_human_state_over)
             }
-
-            // Call status
             Text(
-                text = if (state.isOnHold) stringResource(Res.string.call_on_hold) else state.callStatus,
+                text = statusText,
                 style = JamiTheme.typography.bodyLarge,
-                color = if (state.isOnHold) Color.Yellow.copy(alpha = 0.9f)
-                    else Color.White.copy(alpha = 0.7f),
+                color = if (state.callMode is CallMode.OnHold) Color.Yellow.copy(alpha = 0.9f)
+                    else Color.White.copy(alpha = 0.75f),
             )
 
-            Spacer(Modifier.height(JamiTheme.spacing.m))
-
-            // Duration timer
-            if (state.duration > 0) {
+            // Duration (only when ongoing)
+            if (state.duration > 0 && state.callMode is CallMode.OnGoing) {
+                Spacer(Modifier.height(JamiTheme.spacing.xs))
                 Text(
                     text = formatDuration(state.duration),
                     style = JamiTheme.typography.titleLarge,
                     color = Color.White,
                 )
             }
+
+            // Participant list (conference)
+            if (state.isConference && state.participants.isNotEmpty()) {
+                Spacer(Modifier.height(JamiTheme.spacing.l))
+                ParticipantList(state.participants)
+            }
         }
 
-        // Bottom controls row
-        Row(
+        // Bottom controls — different layouts per mode
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .padding(
-                    horizontal = JamiTheme.spacing.xl,
-                    vertical = JamiTheme.spacing.xxxl,
-                ),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(bottom = JamiTheme.spacing.xxxl),
         ) {
-            // Mute button
-            CallControlButton(
-                icon = if (state.isAudioMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                contentDescription = if (state.isAudioMuted) stringResource(Res.string.content_desc_unmute) else stringResource(Res.string.content_desc_mute),
-                isActive = state.isAudioMuted,
-                onClick = { viewModel.toggleMute() },
-            )
-
-            // Speaker button
-            CallControlButton(
-                icon = if (state.isSpeakerOn) Icons.Default.VolumeUp
-                else Icons.Default.VolumeOff,
-                contentDescription = if (state.isSpeakerOn) stringResource(Res.string.content_desc_speaker_off) else stringResource(Res.string.content_desc_speaker_on),
-                isActive = state.isSpeakerOn,
-                onClick = { viewModel.toggleSpeaker() },
-            )
-
-            // Video button
-            CallControlButton(
-                icon = if (state.isVideoMuted) Icons.Default.VideocamOff
-                else Icons.Default.Videocam,
-                contentDescription = if (state.isVideoMuted) stringResource(Res.string.content_desc_enable_video) else stringResource(Res.string.content_desc_disable_video),
-                isActive = !state.isVideoMuted,
-                onClick = { viewModel.toggleVideo() },
-            )
-
-            // Hold button
-            CallControlButton(
-                icon = if (state.isOnHold) Icons.Default.PlayArrow else Icons.Default.Pause,
-                contentDescription = if (state.isOnHold) stringResource(Res.string.content_desc_resume) else stringResource(Res.string.content_desc_hold),
-                isActive = state.isOnHold,
-                onClick = { viewModel.toggleHold() },
-            )
-
-            // End call button (red)
-            IconButton(
-                onClick = {
-                    viewModel.endCall()
-                    onEnd()
-                },
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape)
-                    .background(JamiColors.Red500),
-                colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = Color.White,
-                ),
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CallEnd,
-                    contentDescription = stringResource(Res.string.content_desc_end_call),
-                    modifier = Modifier.size(32.dp),
+            when (state.callMode) {
+                is CallMode.Incoming -> IncomingControls(onAccept = onAccept, onDecline = onDecline)
+                is CallMode.Outgoing -> OutgoingControls(onHangup = onEnd)
+                is CallMode.OnGoing, is CallMode.OnHold -> OnGoingControls(
+                    state = state,
+                    onEnd = onEnd,
+                    onToggleMute = onToggleMute,
+                    onToggleSpeaker = onToggleSpeaker,
+                    onToggleVideo = onToggleVideo,
+                    onToggleHold = onToggleHold,
+                    onOpenDtmf = { showDtmfSheet = true },
                 )
+                is CallMode.Ended -> Unit
             }
+        }
+    }
+
+    // DTMF dialpad bottom sheet
+    if (showDtmfSheet) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = { showDtmfSheet = false },
+            sheetState = sheetState,
+        ) {
+            DtmfDialpad(
+                onKey = { key ->
+                    onSendDtmf(key)
+                },
+            )
+            Spacer(Modifier.height(JamiTheme.spacing.xl))
         }
     }
 }
 
-/**
- * Circular call control button with active/inactive state.
- */
+// ==================== Control sub-composables ====================
+
+@Composable
+private fun IncomingControls(onAccept: () -> Unit, onDecline: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Decline (red)
+        val declineDesc = stringResource(Res.string.content_desc_decline_call)
+        IconButton(
+            onClick = onDecline,
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(JamiColors.Red500)
+                .semantics { contentDescription = declineDesc },
+            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
+        ) {
+            Icon(Icons.Default.PhoneDisabled, contentDescription = null, modifier = Modifier.size(36.dp))
+        }
+
+        // Answer (green)
+        val answerDesc = stringResource(Res.string.content_desc_answer_call)
+        IconButton(
+            onClick = onAccept,
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(JamiColors.Green500)
+                .semantics { contentDescription = answerDesc },
+            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
+        ) {
+            Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(36.dp))
+        }
+    }
+}
+
+@Composable
+private fun OutgoingControls(onHangup: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        val desc = stringResource(Res.string.content_desc_end_call)
+        IconButton(
+            onClick = onHangup,
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(JamiColors.Red500)
+                .semantics { contentDescription = desc },
+            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
+        ) {
+            Icon(Icons.Default.CallEnd, contentDescription = null, modifier = Modifier.size(36.dp))
+        }
+    }
+}
+
+@Composable
+private fun OnGoingControls(
+    state: CallState,
+    onEnd: () -> Unit,
+    onToggleMute: () -> Unit,
+    onToggleSpeaker: () -> Unit,
+    onToggleVideo: () -> Unit,
+    onToggleHold: () -> Unit,
+    onOpenDtmf: () -> Unit,
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        // First row: mute, speaker, video, hold
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CallControlButton(
+                icon = if (state.isAudioMuted) Icons.Default.MicOff else Icons.Default.Mic,
+                contentDescription = stringResource(
+                    if (state.isAudioMuted) Res.string.content_desc_unmute else Res.string.content_desc_mute
+                ),
+                isActive = state.isAudioMuted,
+                onClick = onToggleMute,
+            )
+
+            CallControlButton(
+                icon = if (state.isSpeakerOn) Icons.Default.VolumeUp else Icons.Default.VolumeOff,
+                contentDescription = stringResource(
+                    if (state.isSpeakerOn) Res.string.content_desc_speaker_off else Res.string.content_desc_speaker_on
+                ),
+                isActive = state.isSpeakerOn,
+                onClick = onToggleSpeaker,
+            )
+
+            CallControlButton(
+                icon = if (state.isVideoMuted) Icons.Default.VideocamOff else Icons.Default.Videocam,
+                contentDescription = stringResource(
+                    if (state.isVideoMuted) Res.string.content_desc_enable_video else Res.string.content_desc_disable_video
+                ),
+                isActive = !state.isVideoMuted,
+                onClick = onToggleVideo,
+            )
+
+            CallControlButton(
+                icon = if (state.isOnHold) Icons.Default.PlayArrow else Icons.Default.Pause,
+                contentDescription = stringResource(
+                    if (state.isOnHold) Res.string.content_desc_resume else Res.string.content_desc_hold
+                ),
+                isActive = state.isOnHold,
+                onClick = onToggleHold,
+            )
+
+            // DTMF dialpad button
+            CallControlButton(
+                icon = Icons.Default.Dialpad,
+                contentDescription = stringResource(Res.string.content_desc_dialpad),
+                isActive = false,
+                onClick = onOpenDtmf,
+            )
+        }
+
+        Spacer(Modifier.height(JamiTheme.spacing.l))
+
+        // End call button
+        val endDesc = stringResource(Res.string.content_desc_end_call)
+        IconButton(
+            onClick = onEnd,
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(JamiColors.Red500)
+                .semantics { contentDescription = endDesc },
+            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
+        ) {
+            Icon(Icons.Default.CallEnd, contentDescription = null, modifier = Modifier.size(32.dp))
+        }
+    }
+}
+
+@Composable
+private fun HoldOverlay() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.55f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(Res.string.call_on_hold),
+            style = JamiTheme.typography.headlineMedium,
+            color = Color.Yellow.copy(alpha = 0.9f),
+        )
+    }
+}
+
+@Composable
+private fun ParticipantList(participants: List<ParticipantUi>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = JamiTheme.spacing.m),
+    ) {
+        participants.forEach { participant ->
+            ParticipantRow(participant)
+            HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+        }
+    }
+}
+
+@Composable
+private fun ParticipantRow(participant: ParticipantUi) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = JamiTheme.spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Person,
+            contentDescription = null,
+            tint = if (participant.isActive) Color.Yellow else Color.White.copy(alpha = 0.7f),
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(Modifier.size(JamiTheme.spacing.s))
+        Text(
+            text = participant.displayName,
+            style = JamiTheme.typography.bodyMedium,
+            color = Color.White,
+            modifier = Modifier.weight(1f),
+        )
+        if (participant.isModerator) {
+            Text(
+                text = stringResource(Res.string.call_moderator),
+                style = JamiTheme.typography.labelSmall,
+                color = Color.Yellow.copy(alpha = 0.8f),
+            )
+            Spacer(Modifier.size(JamiTheme.spacing.xs))
+        }
+        if (participant.isAudioMuted) {
+            Icon(
+                imageVector = Icons.Default.MicOff,
+                contentDescription = stringResource(Res.string.call_muted),
+                tint = JamiColors.Red500,
+                modifier = Modifier.size(16.dp),
+            )
+        }
+        if (participant.isHandRaised) {
+            Text(
+                text = stringResource(Res.string.call_handRaised),
+                style = JamiTheme.typography.labelSmall,
+                color = Color.Yellow,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DtmfDialpad(onKey: (Char) -> Unit) {
+    val keys = listOf(
+        listOf('1', '2', '3'),
+        listOf('4', '5', '6'),
+        listOf('7', '8', '9'),
+        listOf('*', '0', '#'),
+    )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = JamiTheme.spacing.xxl, vertical = JamiTheme.spacing.m),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = stringResource(Res.string.call_dtmf_dialpad),
+            style = JamiTheme.typography.titleMedium,
+            color = JamiTheme.colors.onSurface,
+        )
+        Spacer(Modifier.height(JamiTheme.spacing.m))
+        keys.forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                row.forEach { key ->
+                    IconButton(
+                        onClick = { onKey(key) },
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(JamiTheme.colors.surfaceVariant),
+                    ) {
+                        Text(
+                            text = key.toString(),
+                            style = JamiTheme.typography.headlineSmall,
+                            color = JamiTheme.colors.onSurface,
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(JamiTheme.spacing.s))
+        }
+    }
+}
+
+// ==================== Reusable components ====================
+
 @Composable
 private fun CallControlButton(
     icon: ImageVector,
@@ -224,30 +562,20 @@ private fun CallControlButton(
     isActive: Boolean,
     onClick: () -> Unit,
 ) {
-    val backgroundColor = if (isActive) Color.White.copy(alpha = 0.3f)
-    else Color.White.copy(alpha = 0.1f)
-
+    val bg = if (isActive) Color.White.copy(alpha = 0.30f) else Color.White.copy(alpha = 0.12f)
     IconButton(
         onClick = onClick,
         modifier = Modifier
             .size(56.dp)
             .clip(CircleShape)
-            .background(backgroundColor),
-        colors = IconButtonDefaults.iconButtonColors(
-            contentColor = Color.White,
-        ),
+            .background(bg)
+            .semantics { this.contentDescription = contentDescription },
+        colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            modifier = Modifier.size(28.dp),
-        )
+        Icon(icon, contentDescription = null, modifier = Modifier.size(28.dp))
     }
 }
 
-/**
- * Format call duration in seconds to MM:SS or HH:MM:SS format.
- */
 private fun formatDuration(seconds: Long): String {
     val hours = seconds / 3600
     val minutes = (seconds % 3600) / 60
@@ -257,7 +585,6 @@ private fun formatDuration(seconds: Long): String {
             "${minutes.toString().padStart(2, '0')}:" +
             secs.toString().padStart(2, '0')
     } else {
-        "${minutes.toString().padStart(2, '0')}:" +
-            secs.toString().padStart(2, '0')
+        "${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}"
     }
 }

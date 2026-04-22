@@ -53,12 +53,27 @@ interface DaemonBridgeApi {
     fun resume(accountId: String, callId: String): Boolean
     fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean)
 
+    fun playDtmf(key: String)
+    fun muteRingtone(mute: Boolean)
+    fun muteCapture(mute: Boolean)
+    fun isCaptureMuted(): Boolean
+    fun transfer(accountId: String, callId: String, to: String): Boolean
+    fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean
+    fun getCallDetails(accountId: String, callId: String): Map<String, String>
+
     // ==================== Conference Operations ====================
     fun holdConference(accountId: String, confId: String): Boolean
     fun unholdConference(accountId: String, confId: String): Boolean
     fun resumeConference(accountId: String, confId: String): Boolean
     fun setActiveParticipant(accountId: String, confId: String, callId: String)
     fun setConferenceLayout(accountId: String, confId: String, layout: Int)
+    fun hangUpConference(accountId: String, confId: String): Boolean
+    fun joinParticipant(accountId: String, selCallId: String, account2Id: String, dragCallId: String): Boolean
+    fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean
+    fun addMainParticipant(accountId: String, confId: String): Boolean
+    fun detachParticipant(accountId: String, callId: String): Boolean
+    fun getParticipantList(accountId: String, confId: String): List<String>
+    fun getConferenceDetails(accountId: String, confId: String): Map<String, String>
 
     // ==================== Conversation Operations ====================
     fun getConversations(accountId: String): List<String>
@@ -286,12 +301,26 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun unhold(accountId: String, callId: String) {}
     override fun resume(accountId: String, callId: String): Boolean = true
     override fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean) {}
+    override fun playDtmf(key: String) {}
+    override fun muteRingtone(mute: Boolean) {}
+    override fun muteCapture(mute: Boolean) {}
+    override fun isCaptureMuted(): Boolean = false
+    override fun transfer(accountId: String, callId: String, to: String): Boolean = true
+    override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean = true
+    override fun getCallDetails(accountId: String, callId: String): Map<String, String> = emptyMap()
 
     override fun holdConference(accountId: String, confId: String): Boolean = true
     override fun unholdConference(accountId: String, confId: String): Boolean = true
     override fun resumeConference(accountId: String, confId: String): Boolean = true
     override fun setActiveParticipant(accountId: String, confId: String, callId: String) {}
     override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {}
+    override fun hangUpConference(accountId: String, confId: String): Boolean = true
+    override fun joinParticipant(accountId: String, selCallId: String, account2Id: String, dragCallId: String): Boolean = true
+    override fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean = true
+    override fun addMainParticipant(accountId: String, confId: String): Boolean = true
+    override fun detachParticipant(accountId: String, callId: String): Boolean = true
+    override fun getParticipantList(accountId: String, confId: String): List<String> = emptyList()
+    override fun getConferenceDetails(accountId: String, confId: String): Map<String, String> = emptyMap()
 
     override fun getConversations(accountId: String): List<String> = conversations[accountId] ?: emptyList()
     override fun startConversation(accountId: String): String = startConversationResult

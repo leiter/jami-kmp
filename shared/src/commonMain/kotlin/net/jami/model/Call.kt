@@ -69,6 +69,9 @@ class Call(
     // Conference
     var confId: String? = null
 
+    // Hangup reason — set on terminal state
+    var hangupReason: HangupReason = HangupReason.NONE
+
     // Media list with Flow
     private val _mediaList = MutableStateFlow<List<Media>>(emptyList())
     val mediaListFlow: StateFlow<List<Media>> = _mediaList.asStateFlow()
@@ -128,10 +131,15 @@ class Call(
     val isGroupCall: Boolean
         get() = isConferenceParticipant
 
-    fun setCallState(status: CallStatus) {
+    fun setCallState(status: CallStatus, reason: HangupReason = HangupReason.NONE) {
         callStatus = status
         if (status == CallStatus.CURRENT) {
             isMissed = false
+        }
+        if (status.isOver && reason != HangupReason.NONE) {
+            hangupReason = reason
+        } else if (status == CallStatus.BUSY) {
+            hangupReason = HangupReason.BUSY
         }
     }
 
@@ -208,6 +216,13 @@ class Call(
                 else -> NONE
             }
         }
+    }
+
+    /**
+     * Reason a call ended, surfaced to the UI.
+     */
+    enum class HangupReason {
+        NONE, LOCAL, REMOTE, BUSY, ERROR, TIMEOUT
     }
 
     /**
