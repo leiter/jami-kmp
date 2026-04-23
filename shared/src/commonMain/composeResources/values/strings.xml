@@ -726,8 +726,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
     <!--  Chat top bar overflow menu  -->
     <string name="menu_overflow">More options</string>
-    <string name="conversation_action_details">Contact details</string>
-    <string name="conversation_action_clear_history">Clear history</string>
 
     <!--  Accessibility  -->
     <string name="step_title_create_username">Create username</string>

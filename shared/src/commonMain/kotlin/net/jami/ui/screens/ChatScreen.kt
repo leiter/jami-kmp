@@ -328,7 +328,7 @@ fun ChatScreen(
                                 onDismissRequest = { overflowMenuExpanded = false },
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(Res.string.conversation_action_details)) },
+                                    text = { Text(stringResource(Res.string.conversation_details)) },
                                     onClick = {
                                         overflowMenuExpanded = false
                                         onDetailsClick()
@@ -342,7 +342,7 @@ fun ChatScreen(
                                     },
                                 )
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(Res.string.conversation_action_clear_history)) },
+                                    text = { Text(stringResource(Res.string.conversation_action_history_clear)) },
                                     onClick = {
                                         overflowMenuExpanded = false
                                         viewModel.clearHistory()

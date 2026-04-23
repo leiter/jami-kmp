@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
@@ -450,15 +451,10 @@ class AccountService(
      */
     suspend fun findRegistrationByName(accountId: String, nameserver: String, name: String): RegisteredName {
         if (name.isEmpty()) return RegisteredName(accountId, name, name)
-        val deferred = CompletableDeferred<RegisteredName>()
-        val job = scope.launch {
-            _registeredNames
-                .filter { it.accountId == accountId && it.query == name }
-                .first()
-                .let { deferred.complete(it) }
-        }
-        daemonBridge.lookupName(accountId, nameserver, name)
-        return deferred.await().also { job.cancel() }
+        return _registeredNames
+            .onSubscription { daemonBridge.lookupName(accountId, nameserver, name) }
+            .filter { (accountId.isEmpty() || it.accountId == accountId) && it.query == name }
+            .first()
     }
 
     /**
@@ -467,15 +463,10 @@ class AccountService(
      */
     suspend fun findRegistrationByAddress(accountId: String, nameserver: String, address: String): RegisteredName {
         require(address.isNotEmpty()) { "Address cannot be empty" }
-        val deferred = CompletableDeferred<RegisteredName>()
-        val job = scope.launch {
-            _registeredNames
-                .filter { it.accountId == accountId && it.query == address }
-                .first()
-                .let { deferred.complete(it) }
-        }
-        daemonBridge.lookupAddress(accountId, nameserver, address)
-        return deferred.await().also { job.cancel() }
+        return _registeredNames
+            .onSubscription { daemonBridge.lookupAddress(accountId, nameserver, address) }
+            .filter { (accountId.isEmpty() || it.accountId == accountId) && it.query == address }
+            .first()
     }
 
     /**

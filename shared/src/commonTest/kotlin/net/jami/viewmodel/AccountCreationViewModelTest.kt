@@ -16,6 +16,7 @@
  */
 package net.jami.viewmodel
 
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.services.StubDaemonBridge
@@ -101,14 +102,14 @@ class AccountCreationViewModelTest {
     }
 
     @Test
-    fun registrationStateRegisteredSetsCreated() = runTest {
+    fun createAccountSetsCreated() = runTest {
         val stub = StubDaemonBridge()
-        stub.accountIds = listOf(TEST_ACCOUNT_ID)
-        stub.accountDetails[TEST_ACCOUNT_ID] = mapOf("Account.type" to "RING")
+        stub.addAccountResult = TEST_ACCOUNT_ID
         val accountService = makeAccountService(stub, this)
-        accountService.loadAccounts()
         val vm = AccountCreationViewModel(accountService, viewModelScope())
-        accountService.onRegistrationStateChanged(TEST_ACCOUNT_ID, "REGISTERED", 200, "")
+        vm.setUsername("testuser")
+        // Skip waiting for username check - createAccount checks usernameAvailable != false
+        vm.createAccount()
         advanceUntilIdle()
         assertTrue(vm.state.value.isCreated)
         assertFalse(vm.state.value.isLoading)
@@ -131,6 +132,8 @@ class AccountCreationViewModelTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
         val vm = AccountCreationViewModel(accountService, viewModelScope())
+        // Let the ViewModel's init block subscribe to accountEvents
+        advanceUntilIdle()
         // Simulate name registration failed (state != 0)
         accountService.onNameRegistrationEnded(TEST_ACCOUNT_ID, 1, "alice")
         advanceUntilIdle()
@@ -141,11 +144,15 @@ class AccountCreationViewModelTest {
     @Test
     fun registeredNameFoundNotAvailableSetsFlag() = runTest {
         val stub = StubDaemonBridge()
+        // Configure stub: state=0 means Success (name IS registered — NOT available)
+        stub.lookupNameResults["alice"] = 0
         val accountService = makeAccountService(stub, this)
+        // Wire up the callback so lookupName triggers onRegisteredNameFound
+        stub.onLookupNameCallback = { accountId, state, address, name, query ->
+            accountService.onRegisteredNameFound(accountId, state, address, name, query)
+        }
         val vm = AccountCreationViewModel(accountService, viewModelScope())
         vm.setUsername("alice")
-        // state=0 means Success (name IS registered — NOT available)
-        accountService.onRegisteredNameFound(TEST_ACCOUNT_ID, 0, "abc123", "alice")
         advanceUntilIdle()
         // LookupState.Success means name taken → usernameAvailable = false
         assertEquals(false, vm.state.value.usernameAvailable)
@@ -154,11 +161,15 @@ class AccountCreationViewModelTest {
     @Test
     fun registeredNameFoundAvailableSetsFlag() = runTest {
         val stub = StubDaemonBridge()
+        // Configure stub: state=2 means NotFound (name is NOT registered — IS available)
+        stub.lookupNameResults["alice"] = 2
         val accountService = makeAccountService(stub, this)
+        // Wire up the callback so lookupName triggers onRegisteredNameFound
+        stub.onLookupNameCallback = { accountId, state, address, name, query ->
+            accountService.onRegisteredNameFound(accountId, state, address, name, query)
+        }
         val vm = AccountCreationViewModel(accountService, viewModelScope())
         vm.setUsername("alice")
-        // state=2 means NotFound (name is NOT registered — IS available)
-        accountService.onRegisteredNameFound(TEST_ACCOUNT_ID, 2, "", "alice")
         advanceUntilIdle()
         assertEquals(true, vm.state.value.usernameAvailable)
     }

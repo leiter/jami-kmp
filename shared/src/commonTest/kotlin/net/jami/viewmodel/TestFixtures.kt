@@ -58,6 +58,7 @@ const val TEST_ACCOUNT_ID = "acc_test_001"
 
 /**
  * Creates an AccountService wired to the given stub and scope.
+ * Uses a child SupervisorJob but inherits the test's dispatcher so advanceUntilIdle works.
  */
 fun makeAccountService(
     stub: StubDaemonBridge = StubDaemonBridge(),
@@ -65,7 +66,8 @@ fun makeAccountService(
 ): AccountService {
     // Use a child SupervisorJob so the service's infinite flow collectors don't
     // leave uncompleted coroutines in the enclosing TestScope.
-    val serviceScope = CoroutineScope(SupervisorJob())
+    // But inherit the test's coroutine context so advanceUntilIdle() works.
+    val serviceScope = CoroutineScope(scope.coroutineContext + SupervisorJob())
     return AccountService(stub, StubHardwareService(), serviceScope)
 }
 
