@@ -54,10 +54,13 @@ sealed class CallMode {
 data class ParticipantUi(
     val callId: String,
     val displayName: String,
+    val sinkId: String = "",
     val isModerator: Boolean = false,
     val isAudioMuted: Boolean = false,
+    val isVideoMuted: Boolean = false,
     val isHandRaised: Boolean = false,
-    val isActive: Boolean = false
+    val isActive: Boolean = false,
+    val isLocal: Boolean = false
 )
 
 /**
@@ -79,7 +82,18 @@ data class CallState(
     val participantCount: Int = 1,
     val participants: List<ParticipantUi> = emptyList(),
     val conferenceLayout: Int = 0,
-    val hangupReason: HangupReason = HangupReason.NONE
+    val hangupReason: HangupReason = HangupReason.NONE,
+    // Video state
+    val hasVideo: Boolean = false,
+    val hasLocalVideo: Boolean = false,
+    val hasRemoteVideo: Boolean = false,
+    val remoteVideoSinkId: String = "",
+    val localVideoSinkId: String = "",
+    val isFrontCamera: Boolean = true,
+    val isLocalPreviewVisible: Boolean = true,
+    val remoteVideoWidth: Int = 0,
+    val remoteVideoHeight: Int = 0,
+    val isScreenSharing: Boolean = false
 )
 
 /**
@@ -128,7 +142,10 @@ class CallViewModel(
                 callStatus = CallStatus.SEARCHING.name,
                 peerUri = contactUri,
                 peerName = contactUri,
-                isIncoming = false
+                isIncoming = false,
+                hasVideo = hasVideo,
+                hasLocalVideo = hasVideo,
+                isFrontCamera = hardwareService.isPreviewFromFrontCamera
             )
 
             try {
@@ -264,6 +281,61 @@ class CallViewModel(
         callService.sendTextMessage(accountId, callId, text)
     }
 
+    // ==================== Video controls ====================
+
+    /**
+     * Switch between front and back camera.
+     */
+    fun switchCamera() {
+        val newCamId = hardwareService.changeCamera(false)
+        if (newCamId != null) {
+            val isFront = hardwareService.isPreviewFromFrontCamera
+            _state.value = _state.value.copy(isFrontCamera = isFront)
+        }
+    }
+
+    /**
+     * Toggle local video preview visibility (not the actual video stream).
+     */
+    fun toggleLocalPreviewVisibility() {
+        _state.value = _state.value.copy(
+            isLocalPreviewVisible = !_state.value.isLocalPreviewVisible
+        )
+    }
+
+    /**
+     * Start screen sharing (platform-specific implementation required).
+     */
+    fun startScreenShare() {
+        // Platform-specific: Android requires MediaProjection permission
+        val accountId = currentAccountId ?: return
+        val callId = currentCallId ?: return
+        hardwareService.switchInput(accountId, callId, "camera://desktop")
+        _state.value = _state.value.copy(isScreenSharing = true)
+    }
+
+    /**
+     * Stop screen sharing and return to camera.
+     */
+    fun stopScreenShare() {
+        val accountId = currentAccountId ?: return
+        val callId = currentCallId ?: return
+        val cameraUri = if (_state.value.isFrontCamera) "camera://0" else "camera://1"
+        hardwareService.switchInput(accountId, callId, cameraUri)
+        _state.value = _state.value.copy(isScreenSharing = false)
+    }
+
+    /**
+     * Toggle screen sharing on/off.
+     */
+    fun toggleScreenShare() {
+        if (_state.value.isScreenSharing) {
+            stopScreenShare()
+        } else {
+            startScreenShare()
+        }
+    }
+
     // ==================== Internal ====================
 
     private fun subscribeToConferenceUpdates(callOrConfId: String) {
@@ -280,6 +352,41 @@ class CallViewModel(
                     handleCallUpdate(call)
                 }
             }
+        }
+        // Subscribe to video events
+        subscribeToVideoEvents()
+    }
+
+    private var videoEventsJob: Job? = null
+
+    private fun subscribeToVideoEvents() {
+        videoEventsJob?.cancel()
+        videoEventsJob = scope.launch {
+            hardwareService.videoEvents.collect { event ->
+                handleVideoEvent(event)
+            }
+        }
+    }
+
+    private fun handleVideoEvent(event: net.jami.services.VideoEvent) {
+        val callId = currentCallId ?: return
+
+        if (event.started && event.width > 0 && event.height > 0) {
+            // Remote video started
+            _state.value = _state.value.copy(
+                hasRemoteVideo = true,
+                remoteVideoSinkId = event.sinkId,
+                remoteVideoWidth = event.width,
+                remoteVideoHeight = event.height
+            )
+        } else if (!event.started && event.sinkId == _state.value.remoteVideoSinkId) {
+            // Remote video stopped
+            _state.value = _state.value.copy(
+                hasRemoteVideo = false,
+                remoteVideoSinkId = "",
+                remoteVideoWidth = 0,
+                remoteVideoHeight = 0
+            )
         }
     }
 
@@ -298,6 +405,9 @@ class CallViewModel(
             else -> CallMode.Outgoing
         }
 
+        val hasVideo = call.hasVideo()
+        val hasActiveVideo = call.hasActiveVideo()
+
         _state.value = _state.value.copy(
             callMode = mode,
             callStatus = status.name,
@@ -306,7 +416,9 @@ class CallViewModel(
             isVideoMuted = call.isVideoMuted,
             isIncoming = call.isIncoming,
             isOnHold = isHold,
-            hangupReason = call.hangupReason
+            hangupReason = call.hangupReason,
+            hasVideo = hasVideo,
+            hasLocalVideo = hasActiveVideo && !call.isVideoMuted
         )
 
         if (status == CallStatus.CURRENT && durationJob == null) {
@@ -350,7 +462,10 @@ class CallViewModel(
             ParticipantUi(
                 callId = call.daemonId ?: "",
                 displayName = call.contact?.displayName ?: call.peerUri.uri,
-                isAudioMuted = call.isAudioMuted
+                sinkId = call.daemonId ?: "",
+                isAudioMuted = call.isAudioMuted,
+                isVideoMuted = call.isVideoMuted,
+                isActive = false // TODO: track active speaker
             )
         }
 
@@ -401,6 +516,8 @@ class CallViewModel(
     fun onCleared() {
         durationJob?.cancel()
         confUpdatesJob?.cancel()
+        videoEventsJob?.cancel()
+        hardwareService.cameraCleanup()
         scope.cancel()
     }
 }

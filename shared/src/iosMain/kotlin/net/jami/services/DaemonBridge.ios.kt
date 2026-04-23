@@ -545,6 +545,78 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun pushNotificationReceived(from: String, data: Map<String, String>) {
         // Not exposed
     }
+
+    // ==================== Video Device Management ====================
+
+    override fun addVideoDevice(deviceId: String) {
+        // TODO: Implement via JamiBridge cinterop
+    }
+
+    override fun removeVideoDevice(deviceId: String) {
+        // TODO: Implement via JamiBridge cinterop
+    }
+
+    override fun setDefaultDevice(deviceId: String) {
+        // TODO: Implement via JamiBridge cinterop
+    }
+
+    override fun setDeviceOrientation(deviceId: String, rotation: Int) {
+        // TODO: Implement via JamiBridge cinterop
+    }
+
+    override fun applySettings(deviceId: String, settings: Map<String, String>) {
+        // TODO: Implement via JamiBridge cinterop
+    }
+
+    // ==================== Video Frame Capture ====================
+
+    override fun captureVideoFrame(uri: String, data: ByteArray, rotation: Int) {
+        // TODO: Implement via JamiBridge cinterop
+    }
+
+    override fun captureVideoPacket(
+        uri: String,
+        data: Any,
+        size: Int,
+        offset: Int,
+        isKeyFrame: Boolean,
+        timestamp: Long,
+        rotation: Int
+    ) {
+        // TODO: Implement via JamiBridge cinterop
+    }
+
+    // ==================== Native Window Management ====================
+
+    override fun acquireNativeWindow(surface: Any): Long {
+        // TODO: Implement via JamiBridge cinterop
+        return 0L
+    }
+
+    override fun releaseNativeWindow(windowId: Long) {
+        // TODO: Implement via JamiBridge cinterop
+    }
+
+    override fun setNativeWindowGeometry(windowId: Long, width: Int, height: Int) {
+        // TODO: Implement via JamiBridge cinterop
+    }
+
+    // ==================== Video Callback Registration ====================
+
+    override fun registerVideoCallback(id: String, windowId: Long): Boolean {
+        // TODO: Implement via JamiBridge cinterop
+        return false
+    }
+
+    override fun unregisterVideoCallback(id: String, windowId: Long) {
+        // TODO: Implement via JamiBridge cinterop
+    }
+
+    // ==================== Video Input Switching ====================
+
+    override fun switchVideoInput(accountId: String, callId: String, uri: String) {
+        // TODO: Implement via JamiBridge cinterop
+    }
 }
 
 // ==================== Extension Functions ====================

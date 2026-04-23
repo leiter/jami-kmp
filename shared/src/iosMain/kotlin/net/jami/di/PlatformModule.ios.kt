@@ -72,11 +72,22 @@ actual val platformModule: Module = module {
     }
 
     /**
+     * iOS camera service.
+     * Provides camera capture using AVCaptureSession.
+     */
+    single {
+        IOSCameraService(
+            scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main),
+            daemonBridge = get()
+        )
+    }
+
+    /**
      * iOS hardware service.
-     * Provides audio session management via AVFoundation.
+     * Provides audio session management via AVFoundation and camera integration.
      */
     single<HardwareService> {
-        IOSHardwareService()
+        IOSHardwareService(daemonBridge = get())
     }
 
     /**

@@ -16,7 +16,12 @@
  */
 package net.jami.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,11 +32,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CallEnd
+import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
@@ -40,6 +44,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.PhoneDisabled
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.ScreenShare
+import androidx.compose.material.icons.filled.StopScreenShare
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material.icons.filled.VolumeOff
@@ -70,6 +76,12 @@ import androidx.compose.ui.unit.dp
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import net.jami.di.getViewModel
+import net.jami.ui.components.video.CameraPreview
+import net.jami.ui.components.video.DraggablePreview
+import net.jami.ui.components.video.GridLayoutMode
+import net.jami.ui.components.video.ParticipantGrid
+import net.jami.ui.components.video.VideoParticipant
+import net.jami.ui.components.video.VideoSurface
 import net.jami.ui.theme.JamiColors
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.CallMode
@@ -108,6 +120,9 @@ fun CallScreen(
         onToggleSpeaker = { viewModel.toggleSpeaker() },
         onToggleVideo = { viewModel.toggleVideo() },
         onToggleHold = { viewModel.toggleHold() },
+        onSwitchCamera = { viewModel.switchCamera() },
+        onToggleLocalPreview = { viewModel.toggleLocalPreviewVisibility() },
+        onToggleScreenShare = { viewModel.toggleScreenShare() },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onEnded = onEnd,
     )
@@ -140,6 +155,9 @@ fun IncomingCallScreen(
         onToggleSpeaker = { viewModel.toggleSpeaker() },
         onToggleVideo = { viewModel.toggleVideo() },
         onToggleHold = { viewModel.toggleHold() },
+        onSwitchCamera = { viewModel.switchCamera() },
+        onToggleLocalPreview = { viewModel.toggleLocalPreviewVisibility() },
+        onToggleScreenShare = { viewModel.toggleScreenShare() },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onEnded = onEnd,
     )
@@ -158,6 +176,9 @@ private fun CallScreenContent(
     onToggleSpeaker: () -> Unit,
     onToggleVideo: () -> Unit,
     onToggleHold: () -> Unit,
+    onSwitchCamera: () -> Unit,
+    onToggleLocalPreview: () -> Unit,
+    onToggleScreenShare: () -> Unit,
     onSendDtmf: (Char) -> Unit,
     onEnded: () -> Unit,
 ) {
@@ -169,28 +190,181 @@ private fun CallScreenContent(
     }
 
     var showDtmfSheet by remember { mutableStateOf(false) }
+    var showControls by remember { mutableStateOf(true) }
+
+    // Auto-hide controls after 3 seconds during ongoing video call
+    LaunchedEffect(showControls, state.hasRemoteVideo) {
+        if (showControls && state.hasRemoteVideo && state.callMode is CallMode.OnGoing) {
+            kotlinx.coroutines.delay(5000)
+            showControls = false
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(JamiColors.DarkBackground),
+            .background(Color.Black)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                if (state.hasRemoteVideo) {
+                    showControls = !showControls
+                }
+            },
     ) {
-        // Hold overlay (semi-transparent dimmer above everything else)
+        // Video or audio call background
+        when {
+            // Conference with video
+            state.isConference && state.participants.size > 1 -> {
+                ConferenceVideoLayout(
+                    participants = state.participants,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            // Single call with remote video
+            state.hasRemoteVideo && state.remoteVideoSinkId.isNotEmpty() -> {
+                VideoSurface(
+                    sinkId = state.remoteVideoSinkId,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            // Audio-only call background
+            else -> {
+                AudioCallBackground(
+                    state = state,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+
+        // Hold overlay (semi-transparent dimmer)
         if (state.callMode is CallMode.OnHold) {
             HoldOverlay()
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.Center)
-                .padding(horizontal = JamiTheme.spacing.xl),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        // Local camera preview (draggable)
+        if (state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing) {
+            DraggablePreview(
+                modifier = Modifier.fillMaxSize(),
+                isVisible = state.isLocalPreviewVisible,
+                onVisibilityToggle = onToggleLocalPreview
+            ) {
+                CameraPreview(
+                    modifier = Modifier.fillMaxSize(),
+                    isFrontCamera = state.isFrontCamera
+                )
+            }
+        }
+
+        // Controls overlay with animation
+        AnimatedVisibility(
+            visible = showControls || state.callMode !is CallMode.OnGoing,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.fillMaxSize()
         ) {
-            // Avatar placeholder
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Top info bar (only for audio calls or when controls visible)
+                if (!state.hasRemoteVideo || showControls) {
+                    CallInfoOverlay(
+                        state = state,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.TopCenter)
+                            .padding(top = JamiTheme.spacing.xl)
+                    )
+                }
+
+                // Bottom controls
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = JamiTheme.spacing.xxxl),
+                ) {
+                    when (state.callMode) {
+                        is CallMode.Incoming -> IncomingControls(
+                            onAccept = onAccept,
+                            onDecline = onDecline
+                        )
+                        is CallMode.Outgoing -> OutgoingControls(onHangup = onEnd)
+                        is CallMode.OnGoing, is CallMode.OnHold -> OnGoingControls(
+                            state = state,
+                            onEnd = onEnd,
+                            onToggleMute = onToggleMute,
+                            onToggleSpeaker = onToggleSpeaker,
+                            onToggleVideo = onToggleVideo,
+                            onToggleHold = onToggleHold,
+                            onSwitchCamera = onSwitchCamera,
+                            onToggleScreenShare = onToggleScreenShare,
+                            onOpenDtmf = { showDtmfSheet = true },
+                        )
+                        is CallMode.Ended -> Unit
+                    }
+                }
+            }
+        }
+    }
+
+    // DTMF dialpad bottom sheet
+    if (showDtmfSheet) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = { showDtmfSheet = false },
+            sheetState = sheetState,
+        ) {
+            DtmfDialpad(onKey = onSendDtmf)
+            Spacer(Modifier.height(JamiTheme.spacing.xl))
+        }
+    }
+}
+
+// ==================== Video layouts ====================
+
+@Composable
+private fun ConferenceVideoLayout(
+    participants: List<ParticipantUi>,
+    modifier: Modifier = Modifier
+) {
+    val videoParticipants = participants.map { p ->
+        VideoParticipant(
+            id = p.callId,
+            sinkId = p.sinkId,
+            displayName = p.displayName,
+            isMuted = p.isAudioMuted,
+            isVideoEnabled = !p.isVideoMuted,
+            isActiveSpeaker = p.isActive,
+            isLocal = p.isLocal
+        )
+    }
+
+    ParticipantGrid(
+        participants = videoParticipants,
+        modifier = modifier,
+        layoutMode = GridLayoutMode.AUTO,
+        showNames = true,
+        showStatusIcons = true
+    )
+}
+
+@Composable
+private fun AudioCallBackground(
+    state: CallState,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.background(JamiColors.DarkBackground),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Avatar
             Box(
                 modifier = Modifier
-                    .size(96.dp)
+                    .size(120.dp)
                     .clip(CircleShape)
                     .background(Color.White.copy(alpha = 0.15f))
                     .semantics { contentDescription = "Caller avatar" },
@@ -199,12 +373,12 @@ private fun CallScreenContent(
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
-                    modifier = Modifier.size(56.dp),
+                    modifier = Modifier.size(64.dp),
                     tint = Color.White.copy(alpha = 0.8f),
                 )
             }
 
-            Spacer(Modifier.height(JamiTheme.spacing.m))
+            Spacer(Modifier.height(JamiTheme.spacing.l))
 
             // Peer name
             Text(
@@ -215,7 +389,7 @@ private fun CallScreenContent(
 
             Spacer(Modifier.height(JamiTheme.spacing.s))
 
-            // Status line
+            // Status
             val statusText = when (state.callMode) {
                 is CallMode.Incoming -> stringResource(Res.string.call_incoming_audio)
                 is CallMode.Outgoing -> stringResource(Res.string.call_outgoing)
@@ -229,10 +403,10 @@ private fun CallScreenContent(
                 text = statusText,
                 style = JamiTheme.typography.bodyLarge,
                 color = if (state.callMode is CallMode.OnHold) Color.Yellow.copy(alpha = 0.9f)
-                    else Color.White.copy(alpha = 0.75f),
+                else Color.White.copy(alpha = 0.75f),
             )
 
-            // Duration (only when ongoing)
+            // Duration
             if (state.duration > 0 && state.callMode is CallMode.OnGoing) {
                 Spacer(Modifier.height(JamiTheme.spacing.xs))
                 Text(
@@ -241,51 +415,34 @@ private fun CallScreenContent(
                     color = Color.White,
                 )
             }
-
-            // Participant list (conference)
-            if (state.isConference && state.participants.isNotEmpty()) {
-                Spacer(Modifier.height(JamiTheme.spacing.l))
-                ParticipantList(state.participants)
-            }
-        }
-
-        // Bottom controls — different layouts per mode
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(bottom = JamiTheme.spacing.xxxl),
-        ) {
-            when (state.callMode) {
-                is CallMode.Incoming -> IncomingControls(onAccept = onAccept, onDecline = onDecline)
-                is CallMode.Outgoing -> OutgoingControls(onHangup = onEnd)
-                is CallMode.OnGoing, is CallMode.OnHold -> OnGoingControls(
-                    state = state,
-                    onEnd = onEnd,
-                    onToggleMute = onToggleMute,
-                    onToggleSpeaker = onToggleSpeaker,
-                    onToggleVideo = onToggleVideo,
-                    onToggleHold = onToggleHold,
-                    onOpenDtmf = { showDtmfSheet = true },
-                )
-                is CallMode.Ended -> Unit
-            }
         }
     }
+}
 
-    // DTMF dialpad bottom sheet
-    if (showDtmfSheet) {
-        val sheetState = rememberModalBottomSheetState()
-        ModalBottomSheet(
-            onDismissRequest = { showDtmfSheet = false },
-            sheetState = sheetState,
-        ) {
-            DtmfDialpad(
-                onKey = { key ->
-                    onSendDtmf(key)
-                },
+@Composable
+private fun CallInfoOverlay(
+    state: CallState,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .background(Color.Black.copy(alpha = 0.5f))
+            .padding(JamiTheme.spacing.m),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = state.peerName.ifEmpty { state.peerUri },
+            style = JamiTheme.typography.titleMedium,
+            color = Color.White,
+        )
+
+        if (state.duration > 0 && state.callMode is CallMode.OnGoing) {
+            Spacer(Modifier.height(JamiTheme.spacing.xs))
+            Text(
+                text = formatDuration(state.duration),
+                style = JamiTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.8f),
             )
-            Spacer(Modifier.height(JamiTheme.spacing.xl))
         }
     }
 }
@@ -358,10 +515,12 @@ private fun OnGoingControls(
     onToggleSpeaker: () -> Unit,
     onToggleVideo: () -> Unit,
     onToggleHold: () -> Unit,
+    onSwitchCamera: () -> Unit,
+    onToggleScreenShare: () -> Unit,
     onOpenDtmf: () -> Unit,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        // First row: mute, speaker, video, hold
+        // First row: mute, speaker, video, screen share / camera switch
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -394,13 +553,12 @@ private fun OnGoingControls(
                 onClick = onToggleVideo,
             )
 
+            // Screen share button
             CallControlButton(
-                icon = if (state.isOnHold) Icons.Default.PlayArrow else Icons.Default.Pause,
-                contentDescription = stringResource(
-                    if (state.isOnHold) Res.string.content_desc_resume else Res.string.content_desc_hold
-                ),
-                isActive = state.isOnHold,
-                onClick = onToggleHold,
+                icon = if (state.isScreenSharing) Icons.Default.StopScreenShare else Icons.Default.ScreenShare,
+                contentDescription = if (state.isScreenSharing) "Stop screen share" else "Start screen share",
+                isActive = state.isScreenSharing,
+                onClick = onToggleScreenShare,
             )
 
             // DTMF dialpad button
@@ -410,6 +568,47 @@ private fun OnGoingControls(
                 isActive = false,
                 onClick = onOpenDtmf,
             )
+        }
+
+        // Second row: camera switch (if video active), hold
+        if (state.hasLocalVideo && !state.isVideoMuted && !state.isScreenSharing) {
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                CallControlButton(
+                    icon = Icons.Default.Cameraswitch,
+                    contentDescription = "Switch camera",
+                    isActive = false,
+                    onClick = onSwitchCamera,
+                )
+
+                CallControlButton(
+                    icon = if (state.isOnHold) Icons.Default.PlayArrow else Icons.Default.Pause,
+                    contentDescription = stringResource(
+                        if (state.isOnHold) Res.string.content_desc_resume else Res.string.content_desc_hold
+                    ),
+                    isActive = state.isOnHold,
+                    onClick = onToggleHold,
+                )
+            }
+        } else {
+            // Show hold button in a separate row when no video
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                CallControlButton(
+                    icon = if (state.isOnHold) Icons.Default.PlayArrow else Icons.Default.Pause,
+                    contentDescription = stringResource(
+                        if (state.isOnHold) Res.string.content_desc_resume else Res.string.content_desc_hold
+                    ),
+                    isActive = state.isOnHold,
+                    onClick = onToggleHold,
+                )
+            }
         }
 
         Spacer(Modifier.height(JamiTheme.spacing.l))
@@ -443,67 +642,6 @@ private fun HoldOverlay() {
             style = JamiTheme.typography.headlineMedium,
             color = Color.Yellow.copy(alpha = 0.9f),
         )
-    }
-}
-
-@Composable
-private fun ParticipantList(participants: List<ParticipantUi>) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = JamiTheme.spacing.m),
-    ) {
-        participants.forEach { participant ->
-            ParticipantRow(participant)
-            HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
-        }
-    }
-}
-
-@Composable
-private fun ParticipantRow(participant: ParticipantUi) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = JamiTheme.spacing.xs),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = Icons.Default.Person,
-            contentDescription = null,
-            tint = if (participant.isActive) Color.Yellow else Color.White.copy(alpha = 0.7f),
-            modifier = Modifier.size(20.dp),
-        )
-        Spacer(Modifier.size(JamiTheme.spacing.s))
-        Text(
-            text = participant.displayName,
-            style = JamiTheme.typography.bodyMedium,
-            color = Color.White,
-            modifier = Modifier.weight(1f),
-        )
-        if (participant.isModerator) {
-            Text(
-                text = stringResource(Res.string.call_moderator),
-                style = JamiTheme.typography.labelSmall,
-                color = Color.Yellow.copy(alpha = 0.8f),
-            )
-            Spacer(Modifier.size(JamiTheme.spacing.xs))
-        }
-        if (participant.isAudioMuted) {
-            Icon(
-                imageVector = Icons.Default.MicOff,
-                contentDescription = stringResource(Res.string.call_muted),
-                tint = JamiColors.Red500,
-                modifier = Modifier.size(16.dp),
-            )
-        }
-        if (participant.isHandRaised) {
-            Text(
-                text = stringResource(Res.string.call_handRaised),
-                style = JamiTheme.typography.labelSmall,
-                color = Color.Yellow,
-            )
-        }
     }
 }
 

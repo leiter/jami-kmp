@@ -565,6 +565,80 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
         JamiService.pushNotificationReceived(from, StringMap.toSwig(data))
     }
 
+    // ==================== Video Device Management ====================
+
+    override fun addVideoDevice(deviceId: String) {
+        JamiService.addVideoDevice(deviceId)
+    }
+
+    override fun removeVideoDevice(deviceId: String) {
+        JamiService.removeVideoDevice(deviceId)
+    }
+
+    override fun setDefaultDevice(deviceId: String) {
+        JamiService.setDefaultDevice(deviceId)
+    }
+
+    override fun setDeviceOrientation(deviceId: String, rotation: Int) {
+        JamiService.setDeviceOrientation(deviceId, rotation)
+    }
+
+    override fun applySettings(deviceId: String, settings: Map<String, String>) {
+        JamiService.applySettings(deviceId, StringMap.toSwig(settings))
+    }
+
+    // ==================== Video Frame Capture ====================
+
+    override fun captureVideoFrame(uri: String, data: ByteArray, rotation: Int) {
+        JamiService.captureVideoFrame(uri, data, rotation)
+    }
+
+    override fun captureVideoPacket(
+        uri: String,
+        data: Any,
+        size: Int,
+        offset: Int,
+        isKeyFrame: Boolean,
+        timestamp: Long,
+        rotation: Int
+    ) {
+        if (data is java.nio.ByteBuffer) {
+            JamiService.captureVideoPacket(uri, data, size, offset, isKeyFrame, timestamp, rotation)
+        } else {
+            Log.w(TAG, "captureVideoPacket: unsupported data type ${data::class.simpleName}")
+        }
+    }
+
+    // ==================== Native Window Management ====================
+
+    override fun acquireNativeWindow(surface: Any): Long {
+        return JamiService.acquireNativeWindow(surface)
+    }
+
+    override fun releaseNativeWindow(windowId: Long) {
+        JamiService.releaseNativeWindow(windowId)
+    }
+
+    override fun setNativeWindowGeometry(windowId: Long, width: Int, height: Int) {
+        JamiService.setNativeWindowGeometry(windowId, width, height)
+    }
+
+    // ==================== Video Callback Registration ====================
+
+    override fun registerVideoCallback(id: String, windowId: Long): Boolean {
+        return JamiService.registerVideoCallback(id, windowId)
+    }
+
+    override fun unregisterVideoCallback(id: String, windowId: Long) {
+        JamiService.unregisterVideoCallback(id, windowId)
+    }
+
+    // ==================== Video Input Switching ====================
+
+    override fun switchVideoInput(accountId: String, callId: String, uri: String) {
+        JamiService.switchInput(accountId, callId, uri)
+    }
+
     // ==================== Callback Factory Methods ====================
 
     private fun createConfigurationCallback(callbacks: DaemonCallbacks) = object : ConfigurationCallback() {

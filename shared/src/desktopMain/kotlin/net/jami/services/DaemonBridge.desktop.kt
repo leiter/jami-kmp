@@ -481,4 +481,68 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun pushNotificationReceived(from: String, data: Map<String, String>) {
         Log.d(TAG, "pushNotificationReceived called (stub): $from")
     }
+
+    // ==================== Video Device Management ====================
+
+    override fun addVideoDevice(deviceId: String) {
+        Log.d(TAG, "addVideoDevice called (stub): $deviceId")
+    }
+
+    override fun removeVideoDevice(deviceId: String) {
+        Log.d(TAG, "removeVideoDevice called (stub): $deviceId")
+    }
+
+    override fun setDefaultDevice(deviceId: String) {
+        Log.d(TAG, "setDefaultDevice called (stub): $deviceId")
+    }
+
+    override fun setDeviceOrientation(deviceId: String, rotation: Int) {
+        Log.d(TAG, "setDeviceOrientation called (stub): $deviceId, $rotation")
+    }
+
+    override fun applySettings(deviceId: String, settings: Map<String, String>) {
+        Log.d(TAG, "applySettings called (stub): $deviceId")
+    }
+
+    override fun captureVideoFrame(uri: String, data: ByteArray, rotation: Int) {
+        Log.d(TAG, "captureVideoFrame called (stub): $uri")
+    }
+
+    override fun captureVideoPacket(
+        uri: String,
+        data: Any,
+        size: Int,
+        offset: Int,
+        isKeyFrame: Boolean,
+        timestamp: Long,
+        rotation: Int
+    ) {
+        Log.d(TAG, "captureVideoPacket called (stub): $uri")
+    }
+
+    override fun acquireNativeWindow(surface: Any): Long {
+        Log.d(TAG, "acquireNativeWindow called (stub)")
+        return 0L
+    }
+
+    override fun releaseNativeWindow(windowId: Long) {
+        Log.d(TAG, "releaseNativeWindow called (stub): $windowId")
+    }
+
+    override fun setNativeWindowGeometry(windowId: Long, width: Int, height: Int) {
+        Log.d(TAG, "setNativeWindowGeometry called (stub): $windowId ${width}x${height}")
+    }
+
+    override fun registerVideoCallback(id: String, windowId: Long): Boolean {
+        Log.d(TAG, "registerVideoCallback called (stub): $id, $windowId")
+        return false
+    }
+
+    override fun unregisterVideoCallback(id: String, windowId: Long) {
+        Log.d(TAG, "unregisterVideoCallback called (stub): $id, $windowId")
+    }
+
+    override fun switchVideoInput(accountId: String, callId: String, uri: String) {
+        Log.d(TAG, "switchVideoInput called (stub): $callId, $uri")
+    }
 }

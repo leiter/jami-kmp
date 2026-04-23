@@ -151,6 +151,126 @@ interface DaemonBridgeApi {
     fun setPushNotificationToken(token: String)
     fun setPushNotificationConfig(config: Map<String, String>)
     fun pushNotificationReceived(from: String, data: Map<String, String>)
+
+    // ==================== Video Device Management ====================
+    /**
+     * Register a video capture device with the daemon.
+     * Called when a camera becomes available.
+     */
+    fun addVideoDevice(deviceId: String)
+
+    /**
+     * Unregister a video capture device from the daemon.
+     * Called when a camera is disconnected or unavailable.
+     */
+    fun removeVideoDevice(deviceId: String)
+
+    /**
+     * Set the default video capture device.
+     */
+    fun setDefaultDevice(deviceId: String)
+
+    /**
+     * Set the device orientation for video rotation correction.
+     *
+     * @param deviceId Camera device ID
+     * @param rotation Rotation in degrees (0, 90, 180, 270)
+     */
+    fun setDeviceOrientation(deviceId: String, rotation: Int)
+
+    /**
+     * Apply camera settings to a device.
+     *
+     * @param deviceId Camera device ID
+     * @param settings Map of setting key-value pairs
+     */
+    fun applySettings(deviceId: String, settings: Map<String, String>)
+
+    // ==================== Video Frame Capture ====================
+    /**
+     * Send a raw video frame to the daemon for encoding.
+     * Used when software encoding is needed.
+     *
+     * @param uri Video input URI (e.g., "camera://0")
+     * @param data Raw frame data (typically NV21 or YUV format)
+     * @param rotation Frame rotation in degrees
+     */
+    fun captureVideoFrame(uri: String, data: ByteArray, rotation: Int)
+
+    /**
+     * Send an encoded video packet to the daemon.
+     * Used with hardware encoding (MediaCodec on Android).
+     *
+     * @param uri Video input URI
+     * @param data Encoded packet data
+     * @param size Packet size in bytes
+     * @param offset Offset into the data buffer
+     * @param isKeyFrame Whether this is a keyframe
+     * @param timestamp Presentation timestamp in microseconds
+     * @param rotation Frame rotation in degrees
+     */
+    fun captureVideoPacket(
+        uri: String,
+        data: Any,
+        size: Int,
+        offset: Int,
+        isKeyFrame: Boolean,
+        timestamp: Long,
+        rotation: Int
+    )
+
+    // ==================== Native Window Management ====================
+    /**
+     * Acquire a native window for video rendering.
+     *
+     * @param surface Platform-specific surface (SurfaceHolder on Android)
+     * @return Native window handle, or 0 on failure
+     */
+    fun acquireNativeWindow(surface: Any): Long
+
+    /**
+     * Release a native window.
+     *
+     * @param windowId Native window handle from acquireNativeWindow
+     */
+    fun releaseNativeWindow(windowId: Long)
+
+    /**
+     * Set the geometry of a native window.
+     *
+     * @param windowId Native window handle
+     * @param width Window width in pixels
+     * @param height Window height in pixels
+     */
+    fun setNativeWindowGeometry(windowId: Long, width: Int, height: Int)
+
+    // ==================== Video Callback Registration ====================
+    /**
+     * Register for video callbacks from a specific sink.
+     *
+     * @param id Video sink identifier
+     * @param windowId Native window handle to render to
+     * @return true if registration succeeded
+     */
+    fun registerVideoCallback(id: String, windowId: Long): Boolean
+
+    /**
+     * Unregister video callbacks for a sink.
+     *
+     * @param id Video sink identifier
+     * @param windowId Native window handle
+     */
+    fun unregisterVideoCallback(id: String, windowId: Long)
+
+    // ==================== Video Input Switching ====================
+    /**
+     * Switch the video input source for an active call.
+     *
+     * @param accountId Account ID
+     * @param callId Call ID
+     * @param uri New video input URI (e.g., "camera://1" or "camera://desktop")
+     */
+    fun switchVideoInput(accountId: String, callId: String, uri: String)
 }
 
 /**
@@ -266,6 +386,11 @@ class StubDaemonBridge : DaemonBridgeApi {
     var startConversationResult: String = ""
     var running: Boolean = false
 
+    // Configurable lookup results: name -> LookupState (0=Success/taken, 1=Invalid, 2=NotFound/available, 3=NetworkError)
+    var lookupNameResults: MutableMap<String, Int> = mutableMapOf()
+    // Callback for when lookupName is called - set this to accountService.onRegisteredNameFound in tests
+    var onLookupNameCallback: ((accountId: String, state: Int, address: String, name: String, query: String) -> Unit)? = null
+
     override fun init(callbacks: DaemonCallbacks): Boolean = true
     override fun start(): Boolean { running = true; return true }
     override fun stop() { running = false }
@@ -352,7 +477,12 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun getContactDetails(accountId: String, uri: String): Map<String, String> = emptyMap()
     override fun subscribeBuddy(accountId: String, uri: String, subscribe: Boolean) {}
 
-    override fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean = true
+    override fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
+        val state = lookupNameResults[name] ?: 2  // Default to NotFound (available)
+        val address = if (state == 0) "0x${name.hashCode().toString(16)}" else ""
+        onLookupNameCallback?.invoke(accountId, state, address, name, name)
+        return true
+    }
     override fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean = true
     override fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean = true
     override fun searchUser(accountId: String, query: String): Boolean = true
@@ -379,4 +509,19 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun setPushNotificationToken(token: String) {}
     override fun setPushNotificationConfig(config: Map<String, String>) {}
     override fun pushNotificationReceived(from: String, data: Map<String, String>) {}
+
+    // Video stubs
+    override fun addVideoDevice(deviceId: String) {}
+    override fun removeVideoDevice(deviceId: String) {}
+    override fun setDefaultDevice(deviceId: String) {}
+    override fun setDeviceOrientation(deviceId: String, rotation: Int) {}
+    override fun applySettings(deviceId: String, settings: Map<String, String>) {}
+    override fun captureVideoFrame(uri: String, data: ByteArray, rotation: Int) {}
+    override fun captureVideoPacket(uri: String, data: Any, size: Int, offset: Int, isKeyFrame: Boolean, timestamp: Long, rotation: Int) {}
+    override fun acquireNativeWindow(surface: Any): Long = 0L
+    override fun releaseNativeWindow(windowId: Long) {}
+    override fun setNativeWindowGeometry(windowId: Long, width: Int, height: Int) {}
+    override fun registerVideoCallback(id: String, windowId: Long): Boolean = false
+    override fun unregisterVideoCallback(id: String, windowId: Long) {}
+    override fun switchVideoInput(accountId: String, callId: String, uri: String) {}
 }

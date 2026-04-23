@@ -552,6 +552,31 @@ actual class DaemonBridge() : DaemonBridgeApi {
         // TODO: POST /push/received
     }
 
+    // ==================== Video Device Management ====================
+    // Note: Video is not supported in the Web/JS bridge (requires WebRTC)
+
+    override fun addVideoDevice(deviceId: String) {}
+    override fun removeVideoDevice(deviceId: String) {}
+    override fun setDefaultDevice(deviceId: String) {}
+    override fun setDeviceOrientation(deviceId: String, rotation: Int) {}
+    override fun applySettings(deviceId: String, settings: Map<String, String>) {}
+    override fun captureVideoFrame(uri: String, data: ByteArray, rotation: Int) {}
+    override fun captureVideoPacket(
+        uri: String,
+        data: Any,
+        size: Int,
+        offset: Int,
+        isKeyFrame: Boolean,
+        timestamp: Long,
+        rotation: Int
+    ) {}
+    override fun acquireNativeWindow(surface: Any): Long = 0L
+    override fun releaseNativeWindow(windowId: Long) {}
+    override fun setNativeWindowGeometry(windowId: Long, width: Int, height: Int) {}
+    override fun registerVideoCallback(id: String, windowId: Long): Boolean = false
+    override fun unregisterVideoCallback(id: String, windowId: Long) {}
+    override fun switchVideoInput(accountId: String, callId: String, uri: String) {}
+
     // ==================== WebSocket Event Handling ====================
 
     /**

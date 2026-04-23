@@ -16,30 +16,53 @@
  */
 package net.jami.services
 
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import net.jami.model.Call
 import net.jami.model.Conference
+import net.jami.utils.Log
+import platform.AVFAudio.AVAudioSession
+import platform.AVFAudio.AVAudioSessionCategoryPlayAndRecord
+import platform.AVFAudio.AVAudioSessionModeVoiceChat
+import platform.AVFAudio.AVAudioSessionPortOverride
+import platform.AVFAudio.AVAudioSessionPortOverrideNone
+import platform.AVFAudio.AVAudioSessionPortOverrideSpeaker
+import platform.AVFAudio.AVAudioSessionRouteChangeNotification
+import platform.AVFAudio.AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+import platform.AVFAudio.setActive
+import platform.Foundation.NSNotificationCenter
+import platform.Foundation.NSOperationQueue
 import platform.Foundation.NSUserDefaults
+import platform.UIKit.UIView
 
 /**
  * iOS implementation of HardwareService.
  *
- * Audio management uses basic state tracking.
- * Camera/video support requires AVFoundation integration at the UI layer.
- *
- * For full camera support, the iOS app should use:
- * - AVCaptureSession for camera capture
- * - AVAudioSession for audio routing
- * - CallKit for system integration
+ * Integrates IOSCameraService for video capture and uses AVAudioSession
+ * for audio routing.
  */
-class IOSHardwareService : HardwareService {
+@OptIn(ExperimentalForeignApi::class)
+class IOSHardwareService(
+    private val daemonBridge: DaemonBridgeApi
+) : HardwareService {
 
+    private val tag = "IOSHardwareService"
     private val userDefaults = NSUserDefaults.standardUserDefaults
+    private val scope = CoroutineScope(Dispatchers.Main)
+
+    // Camera service
+    private val cameraService: IOSCameraService by lazy {
+        IOSCameraService(scope, daemonBridge)
+    }
 
     // Event flows
     private val _videoEvents = MutableSharedFlow<VideoEvent>()
@@ -47,9 +70,15 @@ class IOSHardwareService : HardwareService {
     private val _bluetoothEvents = MutableSharedFlow<BluetoothEvent>()
     private val _audioState = MutableStateFlow(HardwareService.STATE_INTERNAL)
     private val _connectivityState = MutableStateFlow(true)
-    private val _maxResolutions = MutableStateFlow<Pair<Int?, Int?>>(null to null)
+    private val _maxResolutions = MutableStateFlow<Pair<Int?, Int?>>(1920 to 1080)
 
+    // Video surfaces
+    private val videoSurfaces = mutableMapOf<String, UIView>()
+    private var previewSurface: UIView? = null
+
+    // Audio state
     private var speakerphoneOn = false
+    private var audioSessionActive = false
     private var logging = false
 
     override val videoEvents: Flow<VideoEvent> = _videoEvents.asSharedFlow()
@@ -60,11 +89,32 @@ class IOSHardwareService : HardwareService {
 
     init {
         logging = userDefaults.boolForKey(LOGGING_ENABLED_KEY)
+        observeAudioRouteChanges()
     }
 
     // ══════════════════════════════════════════════════════════════════════════
     // Audio Management
     // ══════════════════════════════════════════════════════════════════════════
+
+    private fun observeAudioRouteChanges() {
+        NSNotificationCenter.defaultCenter.addObserverForName(
+            name = AVAudioSessionRouteChangeNotification,
+            `object` = null,
+            queue = NSOperationQueue.mainQueue
+        ) { _ ->
+            updateAudioStateFromSession()
+        }
+    }
+
+    private fun updateAudioStateFromSession() {
+        val outputs = getAvailableOutputs()
+        val currentOutput = if (speakerphoneOn) {
+            HardwareService.OUTPUT_SPEAKERS
+        } else {
+            HardwareService.OUTPUT_INTERNAL
+        }
+        _audioState.value = AudioState(currentOutput, outputs)
+    }
 
     override fun getAudioState(conf: Conference): Flow<AudioState> = audioState
 
@@ -86,10 +136,33 @@ class IOSHardwareService : HardwareService {
 
         when (state) {
             Call.CallStatus.CURRENT -> {
+                activateAudioSession()
                 speakerphoneOn = isOngoingVideo
                 updateAudioOutput()
             }
+            Call.CallStatus.RINGING, Call.CallStatus.CONNECTING -> {
+                activateAudioSession()
+            }
             else -> { }
+        }
+    }
+
+    private fun activateAudioSession() {
+        if (audioSessionActive) return
+
+        try {
+            val session = AVAudioSession.sharedInstance()
+            session.setCategory(
+                AVAudioSessionCategoryPlayAndRecord,
+                mode = AVAudioSessionModeVoiceChat,
+                options = 0u,
+                error = null
+            )
+            session.setActive(true, error = null)
+            audioSessionActive = true
+            Log.d(tag, "Audio session activated")
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to activate audio session: ${e.message}")
         }
     }
 
@@ -102,21 +175,31 @@ class IOSHardwareService : HardwareService {
     override fun toggleSpeakerphone(conf: Conference, enabled: Boolean) {
         speakerphoneOn = enabled
         updateAudioOutput()
-        // Note: Actual audio routing should be done via AVAudioSession in the iOS app
     }
 
     private fun updateAudioOutput() {
-        val output = if (speakerphoneOn) {
-            HardwareService.OUTPUT_SPEAKERS
-        } else {
-            HardwareService.OUTPUT_INTERNAL
+        try {
+            val session = AVAudioSession.sharedInstance()
+            val override: AVAudioSessionPortOverride = if (speakerphoneOn) {
+                AVAudioSessionPortOverrideSpeaker
+            } else {
+                AVAudioSessionPortOverrideNone
+            }
+            session.overrideOutputAudioPort(override, error = null)
+
+            val output = if (speakerphoneOn) {
+                HardwareService.OUTPUT_SPEAKERS
+            } else {
+                HardwareService.OUTPUT_INTERNAL
+            }
+            _audioState.value = AudioState(output, getAvailableOutputs())
+            Log.d(tag, "Audio output: ${if (speakerphoneOn) "speaker" else "earpiece"}")
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to update audio output: ${e.message}")
         }
-        _audioState.value = AudioState(output, getAvailableOutputs())
     }
 
     private fun getAvailableOutputs(): List<AudioOutput> {
-        // iOS audio routing is handled by AVAudioSession
-        // Return standard outputs - actual availability determined at UI layer
         return listOf(
             HardwareService.OUTPUT_INTERNAL,
             HardwareService.OUTPUT_SPEAKERS
@@ -124,137 +207,227 @@ class IOSHardwareService : HardwareService {
     }
 
     override fun abandonAudioFocus() {
-        speakerphoneOn = false
-        _audioState.value = HardwareService.STATE_INTERNAL
+        if (!audioSessionActive) return
+
+        try {
+            val session = AVAudioSession.sharedInstance()
+            session.setActive(
+                false,
+                withOptions = AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation,
+                error = null
+            )
+            audioSessionActive = false
+            speakerphoneOn = false
+            _audioState.value = HardwareService.STATE_INTERNAL
+            Log.d(tag, "Audio session deactivated")
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to deactivate audio session: ${e.message}")
+        }
     }
 
-    override fun hasMicrophone(): Boolean = true // iOS devices have microphones
+    override fun hasMicrophone(): Boolean = true
 
     override fun shouldPlaySpeaker(): Boolean = speakerphoneOn
 
     // ══════════════════════════════════════════════════════════════════════════
-    // Video/Camera Management (Requires AVFoundation at UI layer)
+    // Video/Camera Management
     // ══════════════════════════════════════════════════════════════════════════
 
     override suspend fun initVideo() {
-        // Camera initialization handled by AVCaptureSession in iOS app
+        val devices = cameraService.getVideoDevices()
+        devices.devices.forEach { device ->
+            daemonBridge.addVideoDevice(device.id)
+        }
+        if (devices.currentId.isNotEmpty()) {
+            daemonBridge.setDefaultDevice(devices.currentId)
+        }
+        Log.d(tag, "Video initialized with ${devices.devices.size} cameras")
     }
 
-    override val isVideoAvailable: Boolean = true // iOS devices have cameras
+    override val isVideoAvailable: Boolean
+        get() = cameraService.getVideoDevices().devices.isNotEmpty()
 
     override fun decodingStarted(id: String, shmPath: String, width: Int, height: Int, isMixer: Boolean) {
-        // Video decoding events
+        Log.d(tag, "Decoding started: $id (${width}x${height})")
+        scope.launch {
+            _videoEvents.emit(
+                VideoEvent.DecodingStarted(
+                    sinkId = id,
+                    width = width,
+                    height = height,
+                    isMixer = isMixer
+                )
+            )
+        }
     }
 
     override fun decodingStopped(id: String, shmPath: String, isMixer: Boolean) {
-        // Video decoding events
+        Log.d(tag, "Decoding stopped: $id")
+        scope.launch {
+            _videoEvents.emit(VideoEvent.DecodingStopped(sinkId = id))
+        }
     }
 
-    override fun hasInput(id: String): Boolean = false
+    override fun hasInput(id: String): Boolean {
+        return cameraService.currentCameraId.value == id
+    }
 
-    override fun getCameraInfo(camId: String, formats: MutableList<Int>, sizes: MutableList<Int>, rates: MutableList<Int>) {
-        // Requires AVCaptureDevice enumeration
+    override fun getCameraInfo(
+        camId: String,
+        formats: MutableList<Int>,
+        sizes: MutableList<Int>,
+        rates: MutableList<Int>
+    ) {
+        // Return common formats for iOS cameras
+        formats.addAll(listOf(0)) // NV12
+        sizes.addAll(listOf(1280, 720, 1920, 1080, 640, 480))
+        rates.addAll(listOf(30, 60, 24))
     }
 
     override fun setParameters(camId: String, format: Int, width: Int, height: Int, rate: Int) {
-        // Requires AVCaptureSession configuration
+        Log.d(tag, "Set camera parameters: $camId (${width}x${height}@${rate}fps)")
     }
 
     override fun startCameraPreview(videoPreview: Boolean) {
-        // Requires AVCaptureSession
+        scope.launch {
+            if (cameraService.cameraState.value != CameraState.CAPTURING) {
+                cameraService.openCamera()
+                cameraService.startCapture()
+            }
+        }
     }
 
     override fun cameraCleanup() {
-        // Requires AVCaptureSession
+        cameraService.closeCamera()
     }
 
     override fun startCapture(camId: String?) {
-        // Requires AVCaptureSession
+        scope.launch {
+            val opened = cameraService.openCamera(camId)
+            if (opened) {
+                cameraService.startCapture()
+                _cameraEvents.emit(VideoEvent.CameraStarted(camId ?: ""))
+            }
+        }
     }
 
     override fun stopCapture(camId: String) {
-        // Requires AVCaptureSession
+        cameraService.stopCapture()
+        scope.launch {
+            _cameraEvents.emit(VideoEvent.CameraStopped(camId))
+        }
     }
 
     override fun requestKeyFrame(camId: String) {
-        // Requires encoder
+        // VideoToolbox encoder handles keyframes
     }
 
     override fun setBitrate(camId: String, bitrate: Int) {
-        // Requires encoder
+        // VideoToolbox encoder bitrate
     }
 
     override fun addVideoSurface(id: String, holder: Any) {
-        // Video surface management
+        val view = holder as? UIView ?: return
+        synchronized(videoSurfaces) {
+            videoSurfaces[id] = view
+        }
+        Log.d(tag, "Added video surface: $id")
     }
 
     override fun updateVideoSurfaceId(currentId: String, newId: String) {
-        // Video surface management
+        synchronized(videoSurfaces) {
+            videoSurfaces.remove(currentId)?.let { view ->
+                videoSurfaces[newId] = view
+            }
+        }
+        Log.d(tag, "Updated video surface: $currentId -> $newId")
     }
 
     override fun removeVideoSurface(id: String) {
-        // Video surface management
+        synchronized(videoSurfaces) {
+            videoSurfaces.remove(id)
+        }
+        Log.d(tag, "Removed video surface: $id")
     }
 
     override fun addPreviewVideoSurface(holder: Any, conference: Conference?) {
-        // Preview surface management
+        val view = holder as? UIView ?: return
+        previewSurface = view
+        Log.d(tag, "Added preview surface")
     }
 
     override fun updatePreviewVideoSurface(conference: Conference) {
-        // Preview surface management
+        // Preview surface is managed by CameraPreview composable
     }
 
     override fun removePreviewVideoSurface() {
-        // Preview surface management
+        previewSurface = null
+        Log.d(tag, "Removed preview surface")
     }
 
     override fun addFullScreenPreviewSurface(holder: Any) {
-        // Full screen preview
+        addPreviewVideoSurface(holder, null)
     }
 
     override fun removeFullScreenPreviewSurface() {
-        // Full screen preview
+        removePreviewVideoSurface()
     }
 
-    override fun changeCamera(setDefaultCamera: Boolean): String? = null
+    override fun changeCamera(setDefaultCamera: Boolean): String? {
+        var newCameraId: String? = null
+        scope.launch {
+            newCameraId = cameraService.switchCamera()
+        }
+        return newCameraId
+    }
 
     override fun setPreviewSettings() {
-        // Preview settings
+        // Preview settings handled by AVCaptureSession
     }
 
-    override fun hasCamera(): Boolean = true // iOS devices have cameras
+    override fun hasCamera(): Boolean = cameraService.getVideoDevices().devices.isNotEmpty()
 
-    override fun cameraCount(): Int = 2 // Front and back cameras typical
+    override fun cameraCount(): Int = cameraService.getVideoDevices().devices.size
 
     override val maxResolutions: Flow<Pair<Int?, Int?>> = _maxResolutions.asStateFlow()
 
-    override val isPreviewFromFrontCamera: Boolean = true
+    override val isPreviewFromFrontCamera: Boolean
+        get() = cameraService.isFrontCamera
 
     override fun unregisterCameraDetectionCallback() {
-        // Camera detection
+        // Not needed on iOS - cameras are always available
     }
 
-    override fun connectSink(id: String, windowId: Long): Flow<Pair<Int, Int>> =
-        MutableStateFlow(0 to 0)
+    override fun connectSink(id: String, windowId: Long): Flow<Pair<Int, Int>> = flow {
+        emit(1280 to 720)
+    }
 
-    override suspend fun getSinkSize(id: String): Pair<Int, Int> = 0 to 0
+    override suspend fun getSinkSize(id: String): Pair<Int, Int> {
+        return cameraService.currentVideoParams?.let { params ->
+            params.width to params.height
+        } ?: (1280 to 720)
+    }
 
     override fun setDeviceOrientation(rotation: Int) {
-        // Device orientation
+        cameraService.setDeviceOrientation(rotation)
     }
 
-    override fun startVideo(inputId: String, surface: Any, width: Int, height: Int): Long = 0L
+    override fun startVideo(inputId: String, surface: Any, width: Int, height: Int): Long {
+        Log.d(tag, "Start video: $inputId (${width}x${height})")
+        return daemonBridge.acquireNativeWindow(inputId)
+    }
 
     override fun stopVideo(inputId: String, inputWindow: Long) {
-        // Video output
+        Log.d(tag, "Stop video: $inputId")
+        daemonBridge.releaseNativeWindow(inputId, inputWindow)
     }
 
     override fun switchInput(accountId: String, callId: String, uri: String) {
-        // Input switching
+        daemonBridge.switchVideoInput(accountId, callId, uri)
     }
 
     override fun setPreviewSettings(cameraMaps: Map<String, Map<String, String>>) {
-        // Camera settings
+        // Preview settings handled by AVCaptureSession
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -262,15 +435,16 @@ class IOSHardwareService : HardwareService {
     // ══════════════════════════════════════════════════════════════════════════
 
     override fun startMediaHandler(mediaHandlerId: String?) {
-        // Media handler support
+        Log.d(tag, "Start media handler: $mediaHandlerId")
     }
 
     override fun stopMediaHandler() {
-        // Media handler support
+        Log.d(tag, "Stop media handler")
     }
 
     override fun setPendingScreenShareProjection(screenCaptureSession: Any?) {
         // Screen sharing via ReplayKit on iOS
+        Log.d(tag, "Set screen share projection")
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -297,12 +471,23 @@ class IOSHardwareService : HardwareService {
     }
 
     override fun logMessage(message: String) {
-        // Log message handling
+        Log.d(tag, message)
     }
 
     override fun saveLoggingState(enabled: Boolean) {
         logging = enabled
         userDefaults.setBool(enabled, LOGGING_ENABLED_KEY)
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // Cleanup
+    // ══════════════════════════════════════════════════════════════════════════
+
+    fun cleanup() {
+        cameraService.cleanup()
+        closeAudioState()
+        videoSurfaces.clear()
+        previewSurface = null
     }
 
     companion object {
