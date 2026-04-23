@@ -104,6 +104,8 @@ data class ChatState(
     val conversationTitle: String = "",
     val contactAvatarBytes: ByteArray? = null,
     val isLoading: Boolean = false,
+    val isLoadingMore: Boolean = false,
+    val hasMoreHistory: Boolean = true,
     val isContactTyping: Boolean = false,
     val searchQuery: String = "",
     val searchResults: List<MessageItem> = emptyList(),
@@ -134,6 +136,7 @@ class ChatViewModel(
 
     private var currentConversationId: String? = null
     private var currentAccountId: String? = null
+    private var searchJob: kotlinx.coroutines.Job? = null
 
     init {
         // Observe incoming message events for the active conversation
@@ -476,15 +479,34 @@ class ChatViewModel(
 
     /**
      * Load more (older) messages for the current conversation.
+     * Called when user scrolls to the top of the message list.
      */
     fun loadMore() {
+        val currentState = _state.value
+        if (currentState.isLoadingMore || !currentState.hasMoreHistory) return
+
         scope.launch {
             val accountId = currentAccountId ?: return@launch
             val conversationId = currentConversationId ?: return@launch
             val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
             val conversation = conversationFacade.getConversation(accountId, conversationUri)
             if (conversation != null) {
-                conversationFacade.loadConversationHistory(conversation)
+                val previousCount = conversation.getSortedHistory().size
+                _state.value = _state.value.copy(isLoadingMore = true)
+                try {
+                    conversationFacade.loadConversationHistory(conversation)
+                    val newCount = conversation.getSortedHistory().size
+                    val hasMore = newCount > previousCount
+                    _state.value = _state.value.copy(
+                        isLoadingMore = false,
+                        hasMoreHistory = hasMore
+                    )
+                } catch (e: Exception) {
+                    _state.value = _state.value.copy(isLoadingMore = false)
+                    Log.w(TAG, "Failed to load more history: ${e.message}")
+                }
+            } else {
+                _state.value = _state.value.copy(isLoadingMore = false, hasMoreHistory = false)
             }
         }
     }
@@ -707,15 +729,23 @@ class ChatViewModel(
 
     /**
      * Search for messages in the current conversation.
-     * Keeps search mode active even when [query] is empty.
+     * Debounces input to avoid excessive daemon calls.
      */
     fun searchConversation(query: String) {
         _state.value = _state.value.copy(searchQuery = query, isSearchActive = true)
+
+        // Cancel previous search
+        searchJob?.cancel()
+
         if (query.isBlank()) {
             _state.value = _state.value.copy(searchResults = emptyList())
             return
         }
-        scope.launch {
+
+        searchJob = scope.launch {
+            // Debounce: wait before triggering search
+            kotlinx.coroutines.delay(SEARCH_DEBOUNCE_MS)
+
             val accountId = currentAccountId ?: return@launch
             val conversationId = currentConversationId ?: return@launch
             val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
@@ -793,7 +823,9 @@ class ChatViewModel(
     }
 
     companion object {
+        private const val TAG = "ChatViewModel"
         private const val DATE_TODAY     = "Today"
         private const val DATE_YESTERDAY = "Yesterday"
+        private const val SEARCH_DEBOUNCE_MS = 300L
     }
 }

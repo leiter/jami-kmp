@@ -93,6 +93,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -190,6 +191,21 @@ fun ChatScreen(
         val targetId = state.highlightedMessageId ?: return@LaunchedEffect
         val idx = state.messages.reversed().indexOfFirst { it.id == targetId }
         if (idx >= 0) listState.animateScrollToItem(idx)
+    }
+
+    // Pagination: load more when scrolling near the top (end of reversed list)
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            val layoutInfo = listState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            // Trigger when within 5 items of the end (top of chat)
+            totalItems > 0 && lastVisibleItem >= totalItems - 5
+        }.collect { shouldLoadMore: Boolean ->
+            if (shouldLoadMore && !state.isLoadingMore && state.hasMoreHistory) {
+                viewModel.loadMore()
+            }
+        }
     }
 
     // Handle camera permission request
@@ -411,6 +427,23 @@ fun ChatScreen(
                                 onDelete = { viewModel.deleteMessage(message.id) },
                                 onEdit = { newText -> viewModel.editMessage(message.id, newText) },
                             )
+                        }
+                    }
+
+                    // Loading indicator at top (end of reversed list)
+                    if (state.isLoadingMore) {
+                        item(key = "loading_more") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(JamiTheme.spacing.m),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                androidx.compose.material3.CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
                         }
                     }
                 }
