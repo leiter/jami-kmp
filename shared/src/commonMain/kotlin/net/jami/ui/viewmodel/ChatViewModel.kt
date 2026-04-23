@@ -33,6 +33,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import net.jami.model.CallHistory
+import net.jami.model.Contact
 import net.jami.model.ContactEvent
 import net.jami.model.ContactLocation
 import net.jami.model.DataTransfer
@@ -107,6 +108,7 @@ data class ChatState(
     val isLoadingMore: Boolean = false,
     val hasMoreHistory: Boolean = true,
     val isContactTyping: Boolean = false,
+    val isContactOnline: Boolean = false,
     val searchQuery: String = "",
     val searchResults: List<MessageItem> = emptyList(),
     val isSearchActive: Boolean = false,
@@ -137,6 +139,7 @@ class ChatViewModel(
     private var currentConversationId: String? = null
     private var currentAccountId: String? = null
     private var searchJob: kotlinx.coroutines.Job? = null
+    private var presenceJob: kotlinx.coroutines.Job? = null
 
     init {
         // Observe incoming message events for the active conversation
@@ -228,6 +231,11 @@ class ChatViewModel(
 
                 loadMessagesFromHistory()
 
+                // Subscribe to presence updates for the contact
+                conversation?.contact?.let { contact ->
+                    subscribeToPresenceUpdates(contact)
+                }
+
                 // Subscribe to location updates for this conversation
                 subscribeToLocationUpdates(account.accountId, conversationId)
             } catch (e: Exception) {
@@ -273,6 +281,19 @@ class ChatViewModel(
                         }
                     }
                 }
+        }
+    }
+
+    /**
+     * Subscribe to presence updates for the conversation contact.
+     */
+    private fun subscribeToPresenceUpdates(contact: Contact) {
+        presenceJob?.cancel()
+        presenceJob = scope.launch {
+            contact.presenceStatus.collect { status ->
+                val isOnline = status != Contact.PresenceStatus.OFFLINE
+                _state.value = _state.value.copy(isContactOnline = isOnline)
+            }
         }
     }
 

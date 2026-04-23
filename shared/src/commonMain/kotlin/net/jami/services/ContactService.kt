@@ -27,6 +27,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import net.jami.model.Contact
 import net.jami.model.ContactViewModel
@@ -58,6 +61,9 @@ class ContactService(
 
     // Profile cache: accountId:contactUri -> Profile
     private val profileCache = mutableMapOf<String, Profile>()
+
+    // Active presence subscriptions: accountId:contactUri -> refCount
+    private val activeSubscriptions = mutableMapOf<String, Int>()
 
     // Events
     private val _contactEvents = MutableSharedFlow<ContactEvent>()
@@ -268,39 +274,71 @@ class ContactService(
 
     /**
      * Observe a single contact with optional presence.
+     *
+     * When [withPresence] is true, subscribes to buddy presence on flow start
+     * and unsubscribes when the flow completes. Uses ref-counting so multiple
+     * observers share the same subscription.
      */
     fun observeContact(
         accountId: String,
         contact: Contact,
         withPresence: Boolean
     ): Flow<ContactViewModel> {
-        if (withPresence) {
-            subscribeBuddy(accountId, contact.uri, true)
-        }
+        val subscriptionKey = "$accountId:${contact.uri.uri}"
 
-        return contactEvents
-            .map { event ->
-                when (event) {
-                    is ContactEvent.PresenceUpdated ->
-                        if (event.contact.uri == contact.uri) contact else null
-                    is ContactEvent.ProfileUpdated ->
-                        if (event.uri == contact.uri) contact else null
-                    else -> null
-                }
-            }
-            .map {
-                val profile = profileCache["$accountId:${contact.uri.uri}"] ?: Profile.EMPTY_PROFILE
+        return contact.presenceStatus
+            .combine(contactEvents) { presence, event ->
+                // Re-emit on presence change or relevant contact event
+                val profile = profileCache[subscriptionKey] ?: Profile.EMPTY_PROFILE
                 ContactViewModel(
                     contact = contact,
                     profile = profile,
                     registeredName = contact.username,
-                    presence = if (withPresence) contact.presenceStatus.value else Contact.PresenceStatus.OFFLINE
+                    presence = if (withPresence) presence else Contact.PresenceStatus.OFFLINE
                 )
+            }
+            .onStart {
+                if (withPresence) {
+                    incrementSubscription(accountId, contact.uri, subscriptionKey)
+                }
+            }
+            .onCompletion {
+                if (withPresence) {
+                    decrementSubscription(accountId, contact.uri, subscriptionKey)
+                }
             }
     }
 
+    private fun incrementSubscription(accountId: String, uri: Uri, key: String) {
+        synchronized(activeSubscriptions) {
+            val count = activeSubscriptions[key] ?: 0
+            if (count == 0) {
+                subscribeBuddy(accountId, uri, true)
+                Log.d(TAG, "Subscribed to presence: $key")
+            }
+            activeSubscriptions[key] = count + 1
+        }
+    }
+
+    private fun decrementSubscription(accountId: String, uri: Uri, key: String) {
+        synchronized(activeSubscriptions) {
+            val count = activeSubscriptions[key] ?: return
+            val newCount = count - 1
+            if (newCount <= 0) {
+                activeSubscriptions.remove(key)
+                subscribeBuddy(accountId, uri, false)
+                Log.d(TAG, "Unsubscribed from presence: $key")
+            } else {
+                activeSubscriptions[key] = newCount
+            }
+        }
+    }
+
     /**
-     * Observe multiple contacts.
+     * Observe multiple contacts with presence updates.
+     *
+     * Combines presence flows from all contacts and emits updated list
+     * whenever any contact's presence changes.
      */
     fun observeContacts(
         accountId: String,
@@ -311,18 +349,15 @@ class ContactService(
             return flowOf(emptyList())
         }
 
-        return flowOf(contacts.map { contact ->
-            if (withPresence) {
-                subscribeBuddy(accountId, contact.uri, true)
-            }
-            val profile = profileCache["$accountId:${contact.uri.uri}"] ?: Profile.EMPTY_PROFILE
-            ContactViewModel(
-                contact = contact,
-                profile = profile,
-                registeredName = contact.username,
-                presence = if (withPresence) contact.presenceStatus.value else Contact.PresenceStatus.OFFLINE
-            )
-        })
+        // Create individual flows for each contact
+        val contactFlows = contacts.map { contact ->
+            observeContact(accountId, contact, withPresence)
+        }
+
+        // Combine all flows - emits whenever any contact updates
+        return combine(contactFlows) { viewModels ->
+            viewModels.toList()
+        }
     }
 
     /**

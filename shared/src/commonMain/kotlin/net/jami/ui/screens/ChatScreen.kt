@@ -114,6 +114,7 @@ import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
+import net.jami.ui.components.content.PresenceStatus
 import net.jami.ui.platform.AppPermission
 import net.jami.ui.platform.FilePickerEffect
 import net.jami.ui.platform.ImageCaptureEffect
@@ -285,6 +286,8 @@ fun ChatScreen(
                                 displayName = state.conversationTitle,
                                 avatarBytes = state.contactAvatarBytes,
                                 size = AvatarSize.Small,
+                                showPresence = true,
+                                presenceStatus = if (state.isContactOnline) PresenceStatus.Online else PresenceStatus.Offline,
                             )
                             Spacer(Modifier.width(JamiTheme.spacing.m))
                             Text(
