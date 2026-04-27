@@ -71,6 +71,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.jami.ui.utils.toImageBitmap
 import net.jami.utils.FileUtils
+import net.jami.utils.Log
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -204,19 +205,18 @@ fun ChatScreen(
     }
 
     // Pagination: load more when near the top (end of reversed list) and not currently loading.
-    // Use derivedStateOf to track the condition instead of snapshotFlow guards — this ensures
-    // the condition is re-evaluated when ANY input changes, and LaunchedEffect fires reliably.
-    val shouldLoadMore = derivedStateOf {
-        val layoutInfo = listState.layoutInfo
-        val totalItems = layoutInfo.totalItemsCount
-        val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-        val nearTop = totalItems > 0 && lastVisibleItem >= totalItems - 5
-        nearTop && !state.isLoadingMore && state.hasMoreHistory
-    }
-
-    LaunchedEffect(shouldLoadMore.value) {
-        if (shouldLoadMore.value) {
-            viewModel.loadMore()
+    // Use snapshotFlow to reliably observe scroll position and trigger history loading.
+    LaunchedEffect(listState, state.hasMoreHistory, state.isLoadingMore) {
+        snapshotFlow {
+            val layoutInfo = listState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            (totalItems > 0 && lastVisibleItem >= totalItems - 5)
+        }.collect { nearTop ->
+            if (nearTop && !state.isLoadingMore && state.hasMoreHistory) {
+                Log.d("ChatScreen", "Pagination triggered: loading more history")
+                viewModel.loadMore()
+            }
         }
     }
 

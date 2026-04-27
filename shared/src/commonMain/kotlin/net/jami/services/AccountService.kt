@@ -44,6 +44,7 @@ import net.jami.model.Contact
 import net.jami.model.ContactLocation
 import net.jami.model.ContactLocationEntry
 import net.jami.model.Conversation
+import net.jami.model.Interaction
 import net.jami.model.SwarmMessage
 import net.jami.model.TrustRequest
 import net.jami.model.Uri
@@ -492,10 +493,13 @@ class AccountService(
 
         val deferred = conversation.loadingMutex.withLock { conversation.startLoading() }
         if (!deferred.isCompleted) {
+            // Explicitly pass the ID of the oldest message we've loaded to get the next batch.
+            val oldestId = conversation.getOldestMessageId() ?: ""
+            Log.d(TAG, "loadMore: requesting $count older than '$oldestId'")
             daemonBridge.loadConversation(
                 conversation.accountId,
                 conversation.uri.rawRingId,
-                "",
+                oldestId,
                 count
             )
         }
@@ -550,14 +554,19 @@ class AccountService(
     }
 
     /**
-     * Called when swarm history is loaded (pagination result from daemon).
-     * Resolves the Conversation's loading deferred and any loadUntil tasks.
+     * Resolve swarm history loading tasks and update pagination cursor.
+     * Should be called AFTER messages have been added to the model.
      */
-    internal fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<SwarmMessage>) {
+    /**
+     * Resolve swarm history loading tasks.
+     * Should be called AFTER messages have been added to the model.
+     */
+    internal fun resolveSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<SwarmMessage>) {
         val task = loadingTasks.remove(id)
         val conversation = getAccount(accountId)?.getSwarm(conversationId)
         if (conversation != null) {
-            if (messages.isNotEmpty()) conversation.lastElementLoaded = messages.last().id
+            // Update the session cursor for pagination to the oldest message currently in history.
+            conversation.lastElementLoaded = conversation.getOldestMessageId()
             conversation.stopLoading()?.complete(conversation)
         }
         task?.complete(messages)

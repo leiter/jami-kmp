@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.sync.Mutex
+import net.jami.utils.Log
 
 /**
  * Represents a conversation in Jami.
@@ -376,6 +377,16 @@ class Conversation(
         return aggregateHistory.toList()
     }
 
+    /**
+     * Get the ID of the oldest valid message in history.
+     * Used for backward pagination.
+     */
+    fun getOldestMessageId(): String? {
+        return aggregateHistory.firstOrNull { 
+            it.messageId != null && it.type != Interaction.InteractionType.INVALID 
+        }?.messageId
+    }
+
     private fun sortHistory() {
         if (dirty) {
             if (!isSwarm) {
@@ -409,6 +420,7 @@ class Conversation(
 
     suspend fun addSwarmElement(interaction: Interaction, newMessage: Boolean) {
         val id = interaction.messageId ?: return
+        if (messages.containsKey(id)) return
         messages[id] = interaction
 
         // Update lastDisplayedMessages and lastSent
@@ -468,6 +480,11 @@ class Conversation(
             if (interaction.type != Interaction.InteractionType.INVALID) {
                 lastEvent = interaction
             }
+        }
+
+        if (!added) {
+            Log.e("Conversation", "Unable to attach interaction $id with parent ${interaction.parentId} - prepending to history")
+            aggregateHistory.add(0, interaction)
         }
     }
 

@@ -555,12 +555,14 @@ class ChatViewModel(
             val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
             val conversation = conversationFacade.getConversation(accountId, conversationUri)
             if (conversation != null) {
-                val previousCount = conversation.getSortedHistory().size
+                val previousCount = _state.value.messages.size
                 _state.value = _state.value.copy(isLoadingMore = true)
                 try {
                     conversationFacade.loadConversationHistory(conversation)
-                    val newCount = conversation.getSortedHistory().size
+                    loadMessagesFromHistory()
+                    val newCount = _state.value.messages.size
                     val hasMore = newCount > previousCount
+                    Log.d(TAG, "loadMore: previous=$previousCount new=$newCount hasMore=$hasMore")
                     _state.value = _state.value.copy(
                         isLoadingMore = false,
                         hasMoreHistory = hasMore

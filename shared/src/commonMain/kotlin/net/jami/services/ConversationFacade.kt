@@ -1106,34 +1106,26 @@ class ConversationFacade(
 
     /**
      * Called when swarm messages are loaded.
-     * Delegates task resolution to AccountService (completes loadMore/loadUntil deferreds),
-     * populates the conversation model with Interaction objects, then emits the event.
      * Populating the model first ensures loadMessagesFromHistory() in the ViewModel sees
      * a non-empty getSortedHistory() when it runs in response to this event.
      */
-    internal fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<net.jami.model.SwarmMessage>) {
+    internal suspend fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<net.jami.model.SwarmMessage>) {
         Log.d(TAG, "onSwarmLoaded: $conversationId messages=${messages.size}")
 
         val account = accountService.getAccount(accountId)
         val conversation = account?.getSwarm(conversationId)
 
-        scope.launch {
-            if (account != null && conversation != null) {
-                for (message in messages) {
-                    try {
-                        val interaction = swarmMessageToInteraction(account, conversation, message)
-                        conversation.addSwarmElement(interaction, false)
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Failed to parse message ${message.id} (type=${message.type}): ${e.message}")
-                    }
+        if (account != null && conversation != null) {
+            for (message in messages) {
+                try {
+                    val interaction = swarmMessageToInteraction(account, conversation, message)
+                    conversation.addSwarmElement(interaction, false)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to parse message ${message.id}: ${e.message}")
                 }
-                // Update cursor for next pagination and complete the loading deferred
-                // AFTER messages are added to ensure the awaiter (loadMore) sees the updated history.
-                if (messages.isNotEmpty()) conversation.lastElementLoaded = messages.last().id
-                conversation.stopLoading()?.complete(conversation)
             }
-            _conversationEvents.emit(ConversationEvent.SwarmLoaded(accountId, conversationId, messages))
         }
+        _conversationEvents.emit(ConversationEvent.SwarmLoaded(accountId, conversationId, messages))
     }
 
     /**
