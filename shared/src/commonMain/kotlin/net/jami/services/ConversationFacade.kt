@@ -1069,17 +1069,15 @@ class ConversationFacade(
      * Adds the message to the conversation model before emitting the event so that
      * any handler calling loadMessagesFromHistory() sees the updated history.
      */
-    internal fun onMessageReceived(accountId: String, conversationId: String, message: net.jami.model.SwarmMessage) {
+    internal suspend fun onMessageReceived(accountId: String, conversationId: String, message: net.jami.model.SwarmMessage) {
         Log.d(TAG, "onMessageReceived: $conversationId msgId=${message.id}")
         val account = accountService.getAccount(accountId)
         val conversation = account?.getSwarm(conversationId)
-        scope.launch {
-            if (account != null && conversation != null) {
-                val interaction = swarmMessageToInteraction(account, conversation, message)
-                conversation.addSwarmElement(interaction, true)
-            }
-            _conversationEvents.emit(ConversationEvent.MessageReceived(accountId, conversationId, message))
+        if (account != null && conversation != null) {
+            val interaction = swarmMessageToInteraction(account, conversation, message)
+            conversation.addSwarmElement(interaction, true)
         }
+        _conversationEvents.emit(ConversationEvent.MessageReceived(accountId, conversationId, message))
     }
 
     /**

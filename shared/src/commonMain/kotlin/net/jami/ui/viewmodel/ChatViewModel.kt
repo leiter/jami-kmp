@@ -24,8 +24,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import net.jami.services.AccountEvent
@@ -307,56 +307,38 @@ class ChatViewModel(
      * Send the current input text as a message.
      */
     fun sendMessage() {
-        val text = _state.value.inputText.trim()
-        if (text.isEmpty()) return
-
         val accountId = currentAccountId ?: return
         val conversationId = currentConversationId ?: return
+        val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
 
-        // Optimistic update: clear input and show the message immediately so the
-        // UI is responsive regardless of daemon callback latency.
-        val optimisticId = "pending-${Clock.System.now().toEpochMilliseconds()}"
-        val optimisticItem = MessageItem(
-            id = optimisticId,
-            text = text,
-            author = "",
-            timestamp = Clock.System.now().toEpochMilliseconds(),
-            isOutgoing = true,
-            type = MessageType.Text,
-        )
-        _state.value = _state.value.copy(
-            inputText = "",
-            messages = _state.value.messages + optimisticItem,
-        )
+        var textToSend: String = ""
+        _state.update { current ->
+            textToSend = current.inputText.trim()
+            if (textToSend.isEmpty()) return@update current
+
+            val optimisticId = "pending-${Clock.System.now().toEpochMilliseconds()}"
+            val optimisticItem = MessageItem(
+                id = optimisticId,
+                text = textToSend,
+                author = "",
+                timestamp = Clock.System.now().toEpochMilliseconds(),
+                isOutgoing = true,
+                type = MessageType.Text,
+            )
+            current.copy(
+                inputText = "",
+                messages = current.messages + optimisticItem,
+            )
+        }
+
+        if (textToSend.isEmpty()) return
 
         // Stop the typing indicator on the recipient side immediately.
-        val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
         conversationFacade.setIsComposing(accountId, conversationUri, false)
 
         scope.launch {
             draftRepository.clearDraft(conversationId)
-            accountService.sendConversationMessage(accountId, conversationUri, text)
-
-            // On a fresh device import the daemon invalidates the conversation's device
-            // certificate immediately after a send, causing UNREGISTERED → REGISTERED.
-            // The second attempt goes through because the certificate has been renewed by then.
-            var sawUnregistered = false
-            withTimeoutOrNull(10_000L) {
-                accountService.accountEvents
-                    .filterIsInstance<AccountEvent.RegistrationStateChanged>()
-                    .filter { it.accountId == accountId }
-                    .first { event ->
-                        when (event.state) {
-                            "UNREGISTERED" -> { sawUnregistered = true; false }
-                            "REGISTERED"   -> sawUnregistered  // stop when back online
-                            else           -> false
-                        }
-                    }
-            }
-            if (sawUnregistered) {
-                Log.d(TAG, "sendMessage: retrying after certificate renewal for $conversationId")
-                accountService.sendConversationMessage(accountId, conversationUri, text)
-            }
+            accountService.sendConversationMessage(accountId, conversationUri, textToSend)
         }
     }
 
