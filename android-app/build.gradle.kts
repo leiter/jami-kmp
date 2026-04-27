@@ -41,7 +41,19 @@ android {
         versionName = "1.0.0"
     }
 
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "jami-kmp-debug"
+            keyAlias = "jami-kmp-debug"
+            keyPassword = "jami-kmp-debug"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = true
             proguardFiles(

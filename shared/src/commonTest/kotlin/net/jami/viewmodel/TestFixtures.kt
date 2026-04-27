@@ -68,7 +68,7 @@ fun makeAccountService(
     // leave uncompleted coroutines in the enclosing TestScope.
     // But inherit the test's coroutine context so advanceUntilIdle() works.
     val serviceScope = CoroutineScope(scope.coroutineContext + SupervisorJob())
-    return AccountService(stub, StubHardwareService(), serviceScope)
+    return AccountService(stub, StubHardwareService(), StubDeviceRuntimeService(), serviceScope)
 }
 
 /**

@@ -13,10 +13,13 @@ import kotlin.test.assertTrue
 class CallServiceTest {
 
     private fun createTestCallService(): CallService {
-        val daemonBridge = DaemonBridge()
-        val accountService = AccountService(daemonBridge, CoroutineScope(Dispatchers.Default))
+        val daemonBridge = StubDaemonBridge()
+        val hardwareService = StubHardwareService()
+        val deviceRuntimeService = StubDeviceRuntimeService()
         val scope = CoroutineScope(Dispatchers.Default)
-        return CallService(daemonBridge, accountService, scope)
+        val accountService = AccountService(daemonBridge, hardwareService, deviceRuntimeService, scope)
+        val settingsRepository = net.jami.repository.SettingsRepository(daemonBridge, scope)
+        return CallService(daemonBridge, accountService, settingsRepository, scope)
     }
 
     @Test

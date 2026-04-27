@@ -62,6 +62,7 @@ import net.jami.utils.Log
 class AccountService(
     private val daemonBridge: DaemonBridgeApi,
     private val hardwareService: HardwareService,
+    private val deviceRuntimeService: DeviceRuntimeService,
     private val scope: CoroutineScope
 ) {
     // ==================== State Flows ====================
@@ -494,7 +495,7 @@ class AccountService(
             daemonBridge.loadConversation(
                 conversation.accountId,
                 conversation.uri.rawRingId,
-                conversation.lastElementLoaded ?: "",
+                "",
                 count
             )
         }
@@ -1148,8 +1149,34 @@ class AccountService(
             .mapValues { it.value.location }
     }
 
+    @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
     internal fun onAccountProfileReceived(accountId: String, name: String, photo: String) {
         scope.launch {
+            // Save to disk so it's persistent and live-updateable via loadAccount()
+            try {
+                val dataPath = deviceRuntimeService.getDataPath()
+                if (dataPath.isNotEmpty()) {
+                    val photoBytes = if (photo.isNotEmpty()) {
+                        try {
+                            kotlin.io.encoding.Base64.decode(photo)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to decode photo base64: ${e.message}")
+                            null
+                        }
+                    } else null
+
+                    val vcard = net.jami.utils.VCardUtils.writeData(accountId, name, photoBytes)
+                    net.jami.utils.VCardUtils.vcardToString(vcard)?.let { vcardString ->
+                        val dir = "$dataPath/$accountId"
+                        val path = "$dir/profile.vcf"
+                        net.jami.utils.FileUtils.mkdirs(dir)
+                        net.jami.utils.FileUtils.writeText(path, vcardString)
+                        Log.d(TAG, "Saved profile for $accountId to $path")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to save received profile: ${e.message}")
+            }
             _accountEvents.emit(AccountEvent.ProfileReceived(accountId, name, photo))
         }
     }

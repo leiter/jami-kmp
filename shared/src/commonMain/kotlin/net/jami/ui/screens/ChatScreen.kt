@@ -30,6 +30,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -85,10 +87,15 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -173,9 +180,11 @@ fun ChatScreen(
         onDispose { viewModel.onLeave() }
     }
 
-    // Scroll to bottom when new messages arrive (only when not searching)
-    LaunchedEffect(state.messages.size) {
-        if (state.messages.isNotEmpty() && !state.isSearchActive) {
+    // Scroll to bottom only when a new message is appended (newest ID changes),
+    // not when older history is prepended by loadMore().
+    val newestMessageId = state.messages.lastOrNull { it.type != MessageType.DateSeparator }?.id
+    LaunchedEffect(newestMessageId) {
+        if (newestMessageId != null && !state.isSearchActive) {
             listState.animateScrollToItem(0)
         }
     }
@@ -194,18 +203,20 @@ fun ChatScreen(
         if (idx >= 0) listState.animateScrollToItem(idx)
     }
 
-    // Pagination: load more when scrolling near the top (end of reversed list)
-    LaunchedEffect(listState) {
-        snapshotFlow {
-            val layoutInfo = listState.layoutInfo
-            val totalItems = layoutInfo.totalItemsCount
-            val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            // Trigger when within 5 items of the end (top of chat)
-            totalItems > 0 && lastVisibleItem >= totalItems - 5
-        }.collect { shouldLoadMore: Boolean ->
-            if (shouldLoadMore && !state.isLoadingMore && state.hasMoreHistory) {
-                viewModel.loadMore()
-            }
+    // Pagination: load more when near the top (end of reversed list) and not currently loading.
+    // Use derivedStateOf to track the condition instead of snapshotFlow guards — this ensures
+    // the condition is re-evaluated when ANY input changes, and LaunchedEffect fires reliably.
+    val shouldLoadMore = derivedStateOf {
+        val layoutInfo = listState.layoutInfo
+        val totalItems = layoutInfo.totalItemsCount
+        val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+        val nearTop = totalItems > 0 && lastVisibleItem >= totalItems - 5
+        nearTop && !state.isLoadingMore && state.hasMoreHistory
+    }
+
+    LaunchedEffect(shouldLoadMore.value) {
+        if (shouldLoadMore.value) {
+            viewModel.loadMore()
         }
     }
 
@@ -261,6 +272,9 @@ fun ChatScreen(
     var overflowMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+        ),
         topBar = {
             TopAppBar(
                 title = {
@@ -381,7 +395,9 @@ fun ChatScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(padding)
+                .navigationBarsPadding()
+                .imePadding(),
         ) {
             if (state.isSearchActive) {
                 // ── Search mode: show results instead of message list ──

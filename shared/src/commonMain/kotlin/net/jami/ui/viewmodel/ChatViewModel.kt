@@ -24,7 +24,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import net.jami.services.AccountEvent
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
@@ -213,6 +217,8 @@ class ChatViewModel(
                 _state.value = _state.value.copy(
                     conversationTitle = title,
                     contactAvatarBytes = avatarBytes,
+                    hasMoreHistory = true,
+                    isLoadingMore = false,
                 )
 
                 // Mark conversation as visible and read all pending messages.
@@ -304,17 +310,53 @@ class ChatViewModel(
         val text = _state.value.inputText.trim()
         if (text.isEmpty()) return
 
-        scope.launch {
-            val accountId = currentAccountId ?: return@launch
-            val conversationId = currentConversationId ?: return@launch
-            val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+        val accountId = currentAccountId ?: return
+        val conversationId = currentConversationId ?: return
 
-            // Send via daemon
+        // Optimistic update: clear input and show the message immediately so the
+        // UI is responsive regardless of daemon callback latency.
+        val optimisticId = "pending-${Clock.System.now().toEpochMilliseconds()}"
+        val optimisticItem = MessageItem(
+            id = optimisticId,
+            text = text,
+            author = "",
+            timestamp = Clock.System.now().toEpochMilliseconds(),
+            isOutgoing = true,
+            type = MessageType.Text,
+        )
+        _state.value = _state.value.copy(
+            inputText = "",
+            messages = _state.value.messages + optimisticItem,
+        )
+
+        // Stop the typing indicator on the recipient side immediately.
+        val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+        conversationFacade.setIsComposing(accountId, conversationUri, false)
+
+        scope.launch {
+            draftRepository.clearDraft(conversationId)
             accountService.sendConversationMessage(accountId, conversationUri, text)
 
-            // Clear input and draft
-            _state.value = _state.value.copy(inputText = "")
-            draftRepository.clearDraft(conversationId)
+            // On a fresh device import the daemon invalidates the conversation's device
+            // certificate immediately after a send, causing UNREGISTERED → REGISTERED.
+            // The second attempt goes through because the certificate has been renewed by then.
+            var sawUnregistered = false
+            withTimeoutOrNull(10_000L) {
+                accountService.accountEvents
+                    .filterIsInstance<AccountEvent.RegistrationStateChanged>()
+                    .filter { it.accountId == accountId }
+                    .first { event ->
+                        when (event.state) {
+                            "UNREGISTERED" -> { sawUnregistered = true; false }
+                            "REGISTERED"   -> sawUnregistered  // stop when back online
+                            else           -> false
+                        }
+                    }
+            }
+            if (sawUnregistered) {
+                Log.d(TAG, "sendMessage: retrying after certificate renewal for $conversationId")
+                accountService.sendConversationMessage(accountId, conversationUri, text)
+            }
         }
     }
 
@@ -504,6 +546,7 @@ class ChatViewModel(
      */
     fun loadMore() {
         val currentState = _state.value
+        Log.d(TAG, "loadMore: isLoadingMore=${currentState.isLoadingMore} hasMoreHistory=${currentState.hasMoreHistory}")
         if (currentState.isLoadingMore || !currentState.hasMoreHistory) return
 
         scope.launch {
@@ -670,23 +713,37 @@ class ChatViewModel(
      */
     private fun appendMessage(event: ConversationEvent.MessageReceived) {
         val msg = event.message
+        val current = _state.value.messages
+
+        // Drop duplicate: the message was already shown optimistically or via a prior callback.
+        if (current.any { it.id == msg.id }) return
+
         val timestampMs = msg.timestamp * 1000L
         val displayName = resolveAuthorDisplayName(msg.author)
 
-        // File transfers need the full DataTransfer object (status, size, fileId) which
-        // ConversationFacade.onMessageReceived() has already added to the conversation model
-        // via swarmMessageToInteraction(). Reload from history to get the complete item.
-//        if (msg.isTransfer) {
-//            loadMessagesFromHistory()
-//            return
-//        }
+        // Determine outgoing by comparing the message author's ring ID against the
+        // current account's Jami ID (account.username == the public-key hash).
+        val accountUsername = currentAccountId
+            ?.let { accountService.getAccount(it)?.username }
+            ?: ""
+        val isOutgoing = accountUsername.isNotEmpty() &&
+            Uri.fromString(msg.author).rawRingId == accountUsername
+
+        // For outgoing messages: remove the optimistic placeholder (pending-*) that has the
+        // same text and was added right before the daemon call, replacing it with the real
+        // daemon-assigned ID now that the echo has arrived.
+        val withoutOptimistic = if (isOutgoing) {
+            current.filterNot { it.id.startsWith("pending-") && it.text == msg.textContent }
+        } else {
+            current
+        }
 
         val item = when {
             msg.isCall -> {
                 val durationMs = (msg.body["duration"]?.toLongOrNull() ?: 0L) * 1000L
                 MessageItem(
                     id = msg.id, text = "", author = displayName,
-                    timestamp = timestampMs, isOutgoing = false,
+                    timestamp = timestampMs, isOutgoing = isOutgoing,
                     type = MessageType.Call,
                     isMissed = durationMs == 0L,
                     callDuration = durationMs
@@ -696,7 +753,7 @@ class ChatViewModel(
                 val action = msg.body["action"] ?: ""
                 MessageItem(
                     id = msg.id, text = "", author = displayName,
-                    timestamp = timestampMs, isOutgoing = false,
+                    timestamp = timestampMs, isOutgoing = isOutgoing,
                     type = MessageType.System,
                     contactEventType = ContactEvent.Event.fromConversationAction(action)
                 )
@@ -712,12 +769,11 @@ class ChatViewModel(
                 text = msg.textContent,
                 author = displayName,
                 timestamp = timestampMs,
-                isOutgoing = false,
+                isOutgoing = isOutgoing,
                 type = if (msg.isText) MessageType.Text else MessageType.System
             )
         }
-        val current = _state.value.messages
-        _state.value = _state.value.copy(messages = current + item)
+        _state.value = _state.value.copy(messages = withoutOptimistic + item)
     }
 
     /**

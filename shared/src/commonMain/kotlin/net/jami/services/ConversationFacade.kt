@@ -1189,7 +1189,6 @@ class ConversationFacade(
      */
     internal fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<net.jami.model.SwarmMessage>) {
         Log.d(TAG, "onSwarmLoaded: $conversationId messages=${messages.size}")
-        accountService.onSwarmLoaded(id, accountId, conversationId, messages)
 
         val account = accountService.getAccount(accountId)
         val conversation = account?.getSwarm(conversationId)
@@ -1204,6 +1203,10 @@ class ConversationFacade(
                         Log.w(TAG, "Failed to parse message ${message.id} (type=${message.type}): ${e.message}")
                     }
                 }
+                // Update cursor for next pagination and complete the loading deferred
+                // AFTER messages are added to ensure the awaiter (loadMore) sees the updated history.
+                if (messages.isNotEmpty()) conversation.lastElementLoaded = messages.last().id
+                conversation.stopLoading()?.complete(conversation)
             }
             _conversationEvents.emit(ConversationEvent.SwarmLoaded(accountId, conversationId, messages))
         }

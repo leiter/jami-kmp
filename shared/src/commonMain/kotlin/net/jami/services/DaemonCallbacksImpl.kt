@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import net.jami.model.SwarmMessage
 import net.jami.utils.Log
+import kotlin.concurrent.Volatile
 
 /**
  * Implementation of DaemonCallbacks that routes daemon events to the appropriate services.
@@ -216,7 +217,7 @@ class DaemonCallbacksImpl(
     }
 
     override fun onAccountProfileReceived(accountId: String, name: String, photo: String) {
-        Log.d(TAG, "onAccountProfileReceived: $accountId name=$name")
+        Log.d(TAG, "onAccountProfileReceived: $accountId name=$name photoLen=${photo.length}")
         scope.launch {
             accountService.onAccountProfileReceived(accountId, name, photo)
         }
