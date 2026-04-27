@@ -454,6 +454,41 @@ class CallService(
         }
     }
 
+    /**
+     * Called when conference info is updated (participants, layout, etc.).
+     */
+    internal fun onConferenceInfoUpdated(confId: String, info: List<Map<String, String>>) {
+        scope.launch {
+            val conference = conferences[confId] ?: return@launch
+            val account = accountService.getAccount(conference.accountId) ?: return@launch
+            var isModerator = false
+
+            val newInfo = info.mapNotNull { i ->
+                val uriStr = i["uri"] ?: ""
+                val contactUri = if (uriStr.isEmpty()) {
+                    Uri.fromId(account.username)
+                } else {
+                    Uri.fromString(uriStr)
+                }
+
+                val call = conference.findCallByContact(contactUri)
+                val contact = account.getContactFromCache(contactUri)
+                
+                val confInfo = Conference.ParticipantInfo(call, contact, i)
+                if (confInfo.isEmpty) return@mapNotNull null
+
+                if (contact.uri.rawRingId == account.username && confInfo.isModerator) {
+                    isModerator = true
+                }
+                confInfo
+            }
+
+            conference.isModerator = isModerator
+            conference.setInfo(newInfo)
+            _conferenceUpdates.emit(conference)
+        }
+    }
+
     // ==================== Internal Helpers ====================
 
     private fun addCall(

@@ -763,6 +763,10 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
         override fun conferenceRemoved(accountId: String, confId: String) {
             callbacks.onConferenceRemoved(accountId, confId)
         }
+
+        override fun onConferenceInfosUpdated(confId: String, infos: VectMap) {
+            callbacks.onConferenceInfoUpdated(confId, infos.toNative())
+        }
     }
 
     private fun createPresenceCallback(callbacks: DaemonCallbacks) = object : PresenceCallback() {

@@ -319,6 +319,7 @@ interface DaemonCallbacks {
     fun onConferenceCreated(accountId: String, conversationId: String, confId: String)
     fun onConferenceChanged(accountId: String, confId: String, state: String)
     fun onConferenceRemoved(accountId: String, confId: String)
+    fun onConferenceInfoUpdated(confId: String, info: List<Map<String, String>>)
 
     // ==================== Conversation Callbacks ====================
     fun onConversationReady(accountId: String, conversationId: String)

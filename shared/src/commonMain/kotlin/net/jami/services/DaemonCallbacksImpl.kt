@@ -295,6 +295,13 @@ class DaemonCallbacksImpl(
         }
     }
 
+    override fun onConferenceInfoUpdated(confId: String, info: List<Map<String, String>>) {
+        Log.d(TAG, "onConferenceInfoUpdated: $confId participants=${info.size}")
+        scope.launch {
+            callService.onConferenceInfoUpdated(confId, info)
+        }
+    }
+
     // ==================== Conversation Callbacks ====================
 
     override fun onConversationReady(accountId: String, conversationId: String) {
