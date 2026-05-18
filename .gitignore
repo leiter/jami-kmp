@@ -1,1 +1,11 @@
 /tmp/
+.gradle/
+.idea/
+.kotlin/
+android-app/build/
+android-app/debug.keystore
+android-app/src/androidMain/jniLibs/
+build-logic/.gradle/
+kotlin-js-store/
+local.properties
+shared/build/
