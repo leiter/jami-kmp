@@ -76,12 +76,13 @@ import androidx.compose.ui.unit.dp
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import net.jami.di.getViewModel
-import net.jami.ui.components.video.CameraPreview
-import net.jami.ui.components.video.DraggablePreview
+
+
 import net.jami.ui.components.video.GridLayoutMode
 import net.jami.ui.components.video.ParticipantGrid
 import net.jami.ui.components.video.VideoParticipant
-import net.jami.ui.components.video.VideoSurface
+
+import net.jami.ui.composables.VideoRenderer
 import net.jami.ui.theme.JamiColors
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.CallMode
@@ -213,48 +214,44 @@ private fun CallScreenContent(
                 }
             },
     ) {
-        // Video or audio call background
-        when {
-            // Conference with video
-            state.isConference && state.participants.size > 1 -> {
-                ConferenceVideoLayout(
-                    participants = state.participants,
-                    modifier = Modifier.fillMaxSize()
+        // Video rendering
+        // Remote video
+        if (state.hasRemoteVideo && state.remoteVideoSinkId.isNotEmpty()) {
+            VideoRenderer(
+                modifier = Modifier.fillMaxSize(),
+                callId = state.callId,
+                isLocalVideo = false
+            )
+        }
+
+        // Local video preview (draggable)
+        if (state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing) {
+            // This needs to be a draggable preview. For now, simple box.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .align(Alignment.BottomEnd) // Example placement
+                    .padding(16.dp)
+            ) {
+                VideoRenderer(
+                    modifier = Modifier.size(120.dp, 160.dp), // Example size
+                    callId = state.callId,
+                    isLocalVideo = true
                 )
             }
-            // Single call with remote video
-            state.hasRemoteVideo && state.remoteVideoSinkId.isNotEmpty() -> {
-                VideoSurface(
-                    sinkId = state.remoteVideoSinkId,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            // Audio-only call background
-            else -> {
-                AudioCallBackground(
-                    state = state,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+        }
+
+        // Audio-only call background if no video is active
+        if (!state.hasRemoteVideo && !(state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing)) {
+            AudioCallBackground(
+                state = state,
+                modifier = Modifier.fillMaxSize()
+            )
         }
 
         // Hold overlay (semi-transparent dimmer)
         if (state.callMode is CallMode.OnHold) {
             HoldOverlay()
-        }
-
-        // Local camera preview (draggable)
-        if (state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing) {
-            DraggablePreview(
-                modifier = Modifier.fillMaxSize(),
-                isVisible = state.isLocalPreviewVisible,
-                onVisibilityToggle = onToggleLocalPreview
-            ) {
-                CameraPreview(
-                    modifier = Modifier.fillMaxSize(),
-                    isFrontCamera = state.isFrontCamera
-                )
-            }
         }
 
         // Controls overlay with animation

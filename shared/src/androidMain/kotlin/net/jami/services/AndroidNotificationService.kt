@@ -24,6 +24,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.app.Person
 import kotlinx.coroutines.runBlocking
 import net.jami.model.*
 import net.jami.repository.SettingsRepository
@@ -73,6 +74,7 @@ class AndroidNotificationService(
 
     // Track active notifications
     private val activeCallNotifications = mutableSetOf<Int>()
+    private val selfUser: Person = Person.Builder().setName("You").build()
     private val activeTextNotifications = mutableMapOf<String, Int>() // conversationId -> notifId
     private val activeTransferNotifications = mutableMapOf<String, Int>() // fileId -> notifId
     private var currentCallNotificationId: Int? = null
@@ -337,10 +339,10 @@ class AndroidNotificationService(
 
         val lastMessage = conversation.getLastMessage() ?: return
         val senderName = conversation.getDisplayName()
-        val groupKey = "messages_${conversation.accountId}:${conversation.uri.uri}"
+        val groupKey = "jami_messages_$conversationKey" // Unique group key for the conversation
 
         // Create pending intents for actions
-        val replyIntent = Intent("net.jami.android.service.MessageActionReceiver").apply {
+        val replyIntent = Intent(context, NotificationActionReceiver::class.java).apply {
             action = ACTION_REPLY_MESSAGE
             putExtra(KEY_ACCOUNT_ID, conversation.accountId)
             putExtra(KEY_CONVERSATION_ID, conversation.uri.uri)
@@ -351,14 +353,14 @@ class AndroidNotificationService(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         )
 
-        val markReadIntent = Intent("net.jami.android.service.MessageActionReceiver").apply {
+        val markReadIntent = Intent(context, NotificationActionReceiver::class.java).apply {
             action = ACTION_MARK_READ
             putExtra(KEY_ACCOUNT_ID, conversation.accountId)
             putExtra(KEY_CONVERSATION_ID, conversation.uri.uri)
             setPackage(context.packageName)
         }
         val markReadPendingIntent = PendingIntent.getBroadcast(
-            context, notifId + 1, markReadIntent,
+            context, notifId + 1, markReadIntent, // Unique request code
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -379,21 +381,19 @@ class AndroidNotificationService(
             markReadPendingIntent
         ).build()
 
+        // Build the individual message notification
+        val messagingStyle = NotificationCompat.MessagingStyle(selfUser)
+            .setConversationTitle(senderName) // Or conversation.displayName for groups
+            .addMessage(lastMessage, System.currentTimeMillis(), Person.Builder().setName(senderName).build())
+
         val builder = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
             .setSmallIcon(android.R.drawable.ic_dialog_email)
-            .setContentTitle(senderName)
-            .setContentText(lastMessage)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setAutoCancel(true)
-            .setGroup(groupKey)
-            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
-            // Add message style for conversation
-            .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText(lastMessage)
-                    .setBigContentTitle(senderName)
-            )
+            .setGroup(groupKey) // Assign to conversation group
+            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN) // Children notifications can alert
+            .setStyle(messagingStyle)
             .addAction(replyAction)
             .addAction(markReadAction)
 
@@ -401,7 +401,24 @@ class AndroidNotificationService(
         applySoundAndVibration(builder)
 
         notificationManager.notify(notifId, builder.build())
-        Log.d(TAG, "Showing text notification for conversation: $conversationKey")
+        Log.d(TAG, "Showing individual text notification for conversation: $conversationKey")
+
+        // Create and update the group summary notification
+        val summaryNotificationId = NOTIF_MESSAGE_GROUP_SUMMARY_BASE + conversationKey.hashCode()
+        val summaryBuilder = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
+            .setSmallIcon(android.R.drawable.ic_dialog_email)
+            .setContentTitle("Jami")
+            .setContentText("New messages from $senderName") // More specific summary
+            .setGroup(groupKey)
+            .setGroupSummary(true) // This is the group summary
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setOnlyAlertOnce(true) // Only alert for the first message in the group
+            .build()
+
+        notificationManager.notify(summaryNotificationId, summaryBuilder.build())
+        Log.d(TAG, "Showing group summary notification for conversation: $conversationKey")
     }
 
     override fun cancelTextNotification(accountId: String, contact: Uri) {
@@ -624,14 +641,16 @@ class AndroidNotificationService(
     }
 
     private fun createCallActionPendingIntent(callId: String, action: String): PendingIntent {
-        val intent = Intent(action).apply {
+        val intent = Intent(context, NotificationActionReceiver::class.java).apply {
+            this.action = action
             putExtra(NotificationService.KEY_CALL_ID, callId)
+            setPackage(context.packageName)
         }
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         return PendingIntent.getBroadcast(
             context,
-            callId.hashCode(),
+            callId.hashCode() + action.hashCode(), // Use action.hashCode() for unique request code per action
             intent,
             flags
         )
@@ -653,6 +672,7 @@ class AndroidNotificationService(
         const val NOTIF_MISSED_CALL_BASE = 2000
         const val NOTIF_GROUP_CALL_BASE = 3000
         const val NOTIF_MESSAGE_BASE = 4000
+        const val NOTIF_MESSAGE_GROUP_SUMMARY_BASE = 4001
         const val NOTIF_TRUST_REQUEST_BASE = 5000
         const val NOTIF_FILE_TRANSFER_BASE = 6000
         const val NOTIF_LOCATION_BASE = 7000

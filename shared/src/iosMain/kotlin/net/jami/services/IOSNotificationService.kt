@@ -21,6 +21,7 @@ import net.jami.repository.SettingsRepository
 import net.jami.utils.Log
 import platform.Foundation.NSUUID
 import platform.UserNotifications.*
+import net.jami.services.IOSNotificationDelegate
 
 // Extension functions for model properties
 private fun Call.getDisplayName(): String =
@@ -76,12 +77,12 @@ class IOSNotificationService(
     private fun setupNotificationCategories() {
         // Call category with answer/decline actions
         val answerAction = UNNotificationAction.actionWithIdentifier(
-            identifier = ACTION_ANSWER,
+            identifier = IOSNotificationDelegate.ACTION_ANSWER_CALL,
             title = "Answer",
             options = UNNotificationActionOptionForeground
         )
         val declineAction = UNNotificationAction.actionWithIdentifier(
-            identifier = ACTION_DECLINE,
+            identifier = IOSNotificationDelegate.ACTION_DECLINE_CALL,
             title = "Decline",
             options = UNNotificationActionOptionDestructive
         )
@@ -92,17 +93,22 @@ class IOSNotificationService(
             options = UNNotificationCategoryOptionCustomDismissAction
         )
 
-        // Message category with reply action
+        // Message category with reply and mark as read actions
         val replyAction = UNTextInputNotificationAction.actionWithIdentifier(
-            identifier = ACTION_REPLY,
+            identifier = IOSNotificationDelegate.ACTION_REPLY_MESSAGE,
             title = "Reply",
             options = UNNotificationActionOptionNone,
             textInputButtonTitle = "Send",
             textInputPlaceholder = "Type a message..."
         )
+        val markReadAction = UNNotificationAction.actionWithIdentifier(
+            identifier = IOSNotificationDelegate.ACTION_MARK_READ,
+            title = "Mark as Read",
+            options = UNNotificationActionOptionNone
+        )
         val messageCategory = UNNotificationCategory.categoryWithIdentifier(
             identifier = CATEGORY_MESSAGE,
-            actions = listOf(replyAction),
+            actions = listOf(replyAction, markReadAction),
             intentIdentifiers = emptyList<String>(),
             options = UNNotificationCategoryOptionNone
         )
@@ -335,9 +341,10 @@ class IOSNotificationService(
             }
             setBadge(platform.Foundation.NSNumber(int = 1))
             setUserInfo(mapOf(
-                "accountId" to conversation.accountId,
-                "conversationUri" to conversation.uri.uri
+                IOSNotificationDelegate.KEY_ACCOUNT_ID to conversation.accountId,
+                IOSNotificationDelegate.KEY_CONVERSATION_ID to conversation.uri.uri
             ))
+            setThreadIdentifier(conversation.uri.uri) // For grouping notifications
         }
 
         val request = UNNotificationRequest.requestWithIdentifier(
@@ -566,10 +573,11 @@ class IOSNotificationService(
         const val CATEGORY_MESSAGE = "JAMI_MESSAGE"
         const val CATEGORY_REQUEST = "JAMI_REQUEST"
 
-        // Actions
-        const val ACTION_ANSWER = "ANSWER_ACTION"
-        const val ACTION_DECLINE = "DECLINE_ACTION"
-        const val ACTION_REPLY = "REPLY_ACTION"
+        // Actions (pointing to delegate's actions)
+        const val ACTION_ANSWER = IOSNotificationDelegate.ACTION_ANSWER_CALL
+        const val ACTION_DECLINE = IOSNotificationDelegate.ACTION_DECLINE_CALL
+        const val ACTION_REPLY = IOSNotificationDelegate.ACTION_REPLY_MESSAGE
+        const val ACTION_MARK_READ = IOSNotificationDelegate.ACTION_MARK_READ
         const val ACTION_ACCEPT = "ACCEPT_ACTION"
         const val ACTION_REQUEST_DECLINE = "REQUEST_DECLINE_ACTION"
     }

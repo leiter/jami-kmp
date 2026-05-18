@@ -85,11 +85,13 @@
 
         <!-- Broadcast receiver for message notification Reply / Mark Read actions -->
         <receiver
-            android:name=".service.MessageActionReceiver"
+            android:name=".service.NotificationActionReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="net.jami.action.REPLY_MESSAGE" />
                 <action android:name="net.jami.action.MARK_READ" />
+                <action android:name="net.jami.action.ANSWER_CALL" />
+                <action android:name="net.jami.action.DECLINE_CALL" />
             </intent-filter>
         </receiver>
 
