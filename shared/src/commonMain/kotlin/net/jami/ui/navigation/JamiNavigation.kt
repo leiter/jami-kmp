@@ -66,9 +66,8 @@ fun JamiNavigation() {
 
     when (val state = appState) {
         is AppState.Loading -> LoadingScreen()
-        is AppState.NoAccounts -> OnboardingNavigation(appViewModel)
-        is AppState.Onboarding -> OnboardingNavigation(appViewModel)
         is AppState.HasAccounts -> MainNavigation(needsMigration = state.needsMigration)
+        else -> OnboardingNavigation(appViewModel)
     }
 }
 

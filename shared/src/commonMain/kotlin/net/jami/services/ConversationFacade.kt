@@ -1078,6 +1078,14 @@ class ConversationFacade(
             conversation.addSwarmElement(interaction, true)
         }
         _conversationEvents.emit(ConversationEvent.MessageReceived(accountId, conversationId, message))
+
+        // Show notification if message is from another user
+        if (account != null && conversation != null) {
+            val isOwnMessage = message.author == account.accountId
+            if (!isOwnMessage) {
+                notificationService.showTextNotification(conversation)
+            }
+        }
     }
 
     /**

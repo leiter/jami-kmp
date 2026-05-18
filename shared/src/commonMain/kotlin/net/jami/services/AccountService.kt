@@ -1081,6 +1081,12 @@ class AccountService(
                 mode = if (conversationId.isNotEmpty()) Conversation.Mode.OneToOne else Conversation.Mode.Request
             )
             _accountEvents.emit(AccountEvent.IncomingTrustRequest(accountId, request))
+
+            // Show notification for incoming trust request
+            val account = getAccount(accountId)
+            if (account != null) {
+                notificationService.showIncomingTrustRequestNotification(account)
+            }
         }
     }
 

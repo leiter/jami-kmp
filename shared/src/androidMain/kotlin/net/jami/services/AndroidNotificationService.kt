@@ -337,6 +337,47 @@ class AndroidNotificationService(
 
         val lastMessage = conversation.getLastMessage() ?: return
         val senderName = conversation.getDisplayName()
+        val groupKey = "messages_${conversation.accountId}:${conversation.uri.uri}"
+
+        // Create pending intents for actions
+        val replyIntent = Intent("net.jami.android.service.MessageActionReceiver").apply {
+            action = ACTION_REPLY_MESSAGE
+            putExtra(KEY_ACCOUNT_ID, conversation.accountId)
+            putExtra(KEY_CONVERSATION_ID, conversation.uri.uri)
+            setPackage(context.packageName)
+        }
+        val replyPendingIntent = PendingIntent.getBroadcast(
+            context, notifId, replyIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+        )
+
+        val markReadIntent = Intent("net.jami.android.service.MessageActionReceiver").apply {
+            action = ACTION_MARK_READ
+            putExtra(KEY_ACCOUNT_ID, conversation.accountId)
+            putExtra(KEY_CONVERSATION_ID, conversation.uri.uri)
+            setPackage(context.packageName)
+        }
+        val markReadPendingIntent = PendingIntent.getBroadcast(
+            context, notifId + 1, markReadIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Add RemoteInput for quick reply
+        val remoteInput = androidx.core.app.RemoteInput.Builder(KEY_REPLY_TEXT)
+            .setLabel("Reply to $senderName")
+            .build()
+
+        val replyAction = NotificationCompat.Action.Builder(
+            android.R.drawable.ic_menu_send,
+            "Reply",
+            replyPendingIntent
+        ).addRemoteInput(remoteInput).build()
+
+        val markReadAction = NotificationCompat.Action.Builder(
+            android.R.drawable.ic_menu_close_clear_cancel,
+            "Mark as read",
+            markReadPendingIntent
+        ).build()
 
         val builder = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
             .setSmallIcon(android.R.drawable.ic_dialog_email)
@@ -345,12 +386,16 @@ class AndroidNotificationService(
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setAutoCancel(true)
+            .setGroup(groupKey)
+            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
             // Add message style for conversation
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .bigText(lastMessage)
                     .setBigContentTitle(senderName)
             )
+            .addAction(replyAction)
+            .addAction(markReadAction)
 
         // Apply sound/vibration settings
         applySoundAndVibration(builder)
@@ -618,8 +663,13 @@ class AndroidNotificationService(
         const val ACTION_DECLINE = "net.jami.action.DECLINE_CALL"
         const val ACTION_HANGUP = "net.jami.action.HANGUP_CALL"
         const val ACTION_VIEW_CALL = "net.jami.action.VIEW_CALL"
+        const val ACTION_REPLY_MESSAGE = "net.jami.action.REPLY_MESSAGE"
+        const val ACTION_MARK_READ = "net.jami.action.MARK_READ"
 
         // Intent extras
         const val KEY_CALL_ID = NotificationService.KEY_CALL_ID
+        const val KEY_ACCOUNT_ID = "accountId"
+        const val KEY_CONVERSATION_ID = "conversationId"
+        const val KEY_REPLY_TEXT = "reply_text"
     }
 }

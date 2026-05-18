@@ -34,6 +34,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
+            android:enableOnBackInvokedCallback="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
             android:theme="@style/Theme.JamiKmp">
@@ -79,6 +80,16 @@
                 <action android:name="net.jami.action.ANSWER_CALL" />
                 <action android:name="net.jami.action.DECLINE_CALL" />
                 <action android:name="net.jami.action.HANGUP_CALL" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Broadcast receiver for message notification Reply / Mark Read actions -->
+        <receiver
+            android:name=".service.MessageActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="net.jami.action.REPLY_MESSAGE" />
+                <action android:name="net.jami.action.MARK_READ" />
             </intent-filter>
         </receiver>
 

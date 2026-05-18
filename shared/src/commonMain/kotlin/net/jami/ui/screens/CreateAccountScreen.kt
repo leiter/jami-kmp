@@ -37,10 +37,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -98,6 +100,8 @@ fun CreateAccountScreen(
     }
 
     Scaffold(
+        containerColor = JamiTheme.colors.background,
+        contentColor = JamiTheme.colors.onBackground,
         topBar = {
             TopAppBar(
                 title = {
@@ -111,12 +115,14 @@ fun CreateAccountScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(Res.string.content_desc_back),
+                            tint = JamiTheme.colors.onSurface,
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = JamiTheme.colors.surface,
                     titleContentColor = JamiTheme.colors.onSurface,
+                    navigationIconContentColor = JamiTheme.colors.onSurface,
                 ),
             )
         },
@@ -124,6 +130,21 @@ fun CreateAccountScreen(
         val passwordFocus = remember { FocusRequester() }
         val confirmPasswordFocus = remember { FocusRequester() }
         val focusManager = LocalFocusManager.current
+        val textFieldColors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = JamiTheme.colors.onSurface,
+            unfocusedTextColor = JamiTheme.colors.onSurface,
+            focusedLabelColor = JamiTheme.colors.primary,
+            unfocusedLabelColor = JamiTheme.colors.onSurfaceVariant,
+            focusedBorderColor = JamiTheme.colors.primary,
+            unfocusedBorderColor = JamiTheme.colors.outline,
+            cursorColor = JamiTheme.colors.primary,
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            errorTextColor = JamiTheme.colors.onSurface,
+            errorBorderColor = JamiTheme.colors.error,
+            errorLabelColor = JamiTheme.colors.error,
+            errorCursorColor = JamiTheme.colors.error,
+        )
 
         Column(
             modifier = Modifier
@@ -143,6 +164,7 @@ fun CreateAccountScreen(
                 label = { Text(stringResource(Res.string.prompt_choose_username)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
+                colors = textFieldColors,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
                 trailingIcon = {
@@ -185,6 +207,7 @@ fun CreateAccountScreen(
                 label = { Text(stringResource(Res.string.prompt_password_optional)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().focusRequester(passwordFocus),
+                colors = textFieldColors,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
@@ -209,6 +232,7 @@ fun CreateAccountScreen(
                     label = { Text(stringResource(Res.string.prompt_confirm_password)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().focusRequester(confirmPasswordFocus),
+                    colors = textFieldColors,
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,

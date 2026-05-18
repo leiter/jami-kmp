@@ -16,7 +16,11 @@
  */
 package net.jami.ui
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import net.jami.ui.navigation.JamiNavigation
 import net.jami.ui.theme.JamiTheme
 
@@ -30,6 +34,11 @@ import net.jami.ui.theme.JamiTheme
 @Composable
 fun JamiApp() {
     JamiTheme {
-        JamiNavigation()
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            JamiNavigation()
+        }
     }
 }
