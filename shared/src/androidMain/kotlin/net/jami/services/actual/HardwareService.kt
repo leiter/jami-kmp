@@ -8,7 +8,16 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import net.jami.model.Call
 import net.jami.model.Conference
-import net.jami.services.expect.*
+import android.view.SurfaceHolder
+import net.jami.services.DaemonBridge
+import net.jami.utils.Log
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import net.jami.services.expect.AudioState
+import net.jami.services.expect.AudioOutputType
+import net.jami.services.expect.BluetoothEvent
+import net.jami.services.expect.HardwareService
+import net.jami.services.expect.VideoEvent
 
 actual class HardwareService {
     private val _videoEvents = MutableSharedFlow<VideoEvent>()
@@ -49,12 +58,42 @@ actual class HardwareService {
     actual fun stopCapture(camId: String) {}
     actual fun requestKeyFrame(camId: String) {}
     actual fun setBitrate(camId: String, bitrate: Int) {}
-    actual fun addVideoSurface(id: String, holder: Any) {}
-    actual fun updateVideoSurfaceId(currentId: String, newId: String) {}
-    actual fun removeVideoSurface(id: String) {}
-    actual fun addPreviewVideoSurface(holder: Any, conference: Conference?) {}
-    actual fun updatePreviewVideoSurface(conference: Conference) {}
-    actual fun removePreviewVideoSurface() {}
+    private val daemonBridge: DaemonBridge by inject()
+    private val videoWindows = mutableMapOf<String, Long>()
+
+    // ... (rest of the properties)
+
+    // ... (rest of the methods)
+
+    actual fun addVideoSurface(id: String, holder: Any) {
+        if (holder !is SurfaceHolder) return
+        val window = daemonBridge.acquireNativeWindow(holder.surface)
+        if (window != 0L) {
+            videoWindows[id] = window
+            daemonBridge.registerVideoCallback(id, window)
+        }
+    }
+
+    actual fun removeVideoSurface(id: String) {
+        videoWindows.remove(id)?.let { window ->
+            if (window != 0L) {
+                daemonBridge.unregisterVideoCallback(id, window)
+                daemonBridge.releaseNativeWindow(window)
+            }
+        }
+    }
+
+    actual fun addPreviewVideoSurface(holder: Any, conference: Conference?) {
+        // This is more complex and involves camera service, for now, we'll just log
+        Log.d("HardwareService", "addPreviewVideoSurface called (not fully implemented)")
+    }
+
+    actual fun removePreviewVideoSurface() {
+        Log.d("HardwareService", "removePreviewVideoSurface called (not fully implemented)")
+    }
+
+    // ... (rest of the methods)
+
     actual fun addFullScreenPreviewSurface(holder: Any) {}
     actual fun removeFullScreenPreviewSurface() {}
     actual fun changeCamera(setDefaultCamera: Boolean): String? = null
