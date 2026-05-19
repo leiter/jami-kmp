@@ -80,6 +80,7 @@ import net.jami.di.getViewModel
 
 import net.jami.ui.components.video.GridLayoutMode
 import net.jami.ui.components.video.ParticipantGrid
+import net.jami.ui.components.video.DraggablePreview
 import net.jami.ui.components.video.VideoParticipant
 
 import net.jami.ui.composables.VideoRenderer
@@ -226,15 +227,13 @@ private fun CallScreenContent(
 
         // Local video preview (draggable)
         if (state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing) {
-            // This needs to be a draggable preview. For now, simple box.
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .align(Alignment.BottomEnd) // Example placement
-                    .padding(16.dp)
+            DraggablePreview(
+                modifier = Modifier.fillMaxSize(),
+                isVisible = state.isLocalPreviewVisible,
+                onVisibilityToggle = onToggleLocalPreview
             ) {
                 VideoRenderer(
-                    modifier = Modifier.size(120.dp, 160.dp), // Example size
+                    modifier = Modifier.fillMaxSize(),
                     callId = state.callId,
                     isLocalVideo = true
                 )
