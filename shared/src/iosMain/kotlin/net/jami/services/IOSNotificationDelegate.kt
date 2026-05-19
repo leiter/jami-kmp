@@ -3129,7 +3129,8 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
     ) {
         Log.d(TAG, "Notification response received with actionIdentifier: ${didReceiveNotificationResponse.actionIdentifier}")
 
-        val userInfo = didReceiveNotificationResponse.notification.request.content.userInfo
+        val request = didReceiveNotificationResponse.notification.request
+        val userInfo = request.content.userInfo
         val accountId = userInfo[KEY_ACCOUNT_ID] as? String
         val conversationId = userInfo[KEY_CONVERSATION_ID] as? String
         val callId = userInfo[KEY_CALL_ID] as? String
@@ -3146,7 +3147,7 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
                     if (callId != null) {
                         Log.d(TAG, "Answering call: $callId")
                         callService.acceptCall(callId)
-                        // TODO: Dismiss notification programmatically if possible
+                        // The app is brought to the foreground, so the system dismisses the notification.
                     } else {
                         Log.w(TAG, "Answer call action received but callId is null")
                     }
@@ -3155,7 +3156,7 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
                     if (callId != null) {
                         Log.d(TAG, "Declining call: $callId")
                         callService.hangupCall(callId)
-                        // TODO: Dismiss notification programmatically if possible
+                        center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
                     } else {
                         Log.w(TAG, "Decline call action received but callId is null")
                     }
@@ -3166,7 +3167,8 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
                         if (replyText.isNotBlank()) {
                             Log.d(TAG, "Replying to conversation $conversationId with: $replyText")
                             conversationFacade.sendMessage(accountId, conversationId, replyText)
-                            // TODO: Dismiss notification programmatically if possible
+                            // After replying, we can remove the notification as it's handled.
+                            center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
                         } else {
                             Log.w(TAG, "Reply action received but userText is blank")
                         }
@@ -3178,7 +3180,7 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
                     if (conversationId != null) {
                         Log.d(TAG, "Marking conversation $conversationId as read")
                         conversationFacade.markConversationAsRead(accountId, Uri(conversationId))
-                        // TODO: Dismiss notification programmatically if possible
+                        center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
                     } else {
                         Log.w(TAG, "Mark as read action received but conversationId is null")
                     }
@@ -3188,10 +3190,11 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
                     // Navigate to appropriate screen (e.g., call screen or chat screen)
                     Log.d(TAG, "Notification tapped. CallId: $callId, ConversationId: $conversationId")
                     // This typically involves routing in the UI layer, which is outside this service.
+                    // The system automatically dismisses the notification when the app is opened.
                 }
                 // Handle notification dismiss
                 UNNotificationDismissActionIdentifier -> {
-                    Log.d(TAG, "Notification dismissed.")
+                    Log.d(TAG, "Notification dismissed by user.")
                 }
                 else -> {
                     Log.w(TAG, "Unhandled notification action: ${didReceiveNotificationResponse.actionIdentifier}")
