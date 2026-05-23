@@ -81,6 +81,10 @@ class IOSHardwareService(
     private var audioSessionActive = false
     private var logging = false
 
+    // Screen sharing
+    private var screenShareSession: Any? = null
+    private var isScreenSharing = false
+
     override val videoEvents: Flow<VideoEvent> = _videoEvents.asSharedFlow()
     override val cameraEvents: Flow<VideoEvent> = _cameraEvents.asSharedFlow()
     override val bluetoothEvents: Flow<BluetoothEvent> = _bluetoothEvents.asSharedFlow()
@@ -423,7 +427,29 @@ class IOSHardwareService(
     }
 
     override fun switchInput(accountId: String, callId: String, uri: String) {
-        daemonBridge.switchVideoInput(accountId, callId, uri)
+        Log.d(tag, "Switch input: $uri")
+        when {
+            uri == "camera://desktop" -> {
+                // Start screen sharing
+                if (!isScreenSharing && screenShareSession != null) {
+                    isScreenSharing = true
+                    daemonBridge.switchVideoInput(accountId, callId, uri)
+                    Log.d(tag, "Screen sharing started")
+                }
+            }
+            uri.startsWith("camera://") && uri != "camera://desktop" -> {
+                // Switch back to camera
+                if (isScreenSharing) {
+                    isScreenSharing = false
+                    screenShareSession = null
+                }
+                daemonBridge.switchVideoInput(accountId, callId, uri)
+                Log.d(tag, "Switched to camera: $uri")
+            }
+            else -> {
+                daemonBridge.switchVideoInput(accountId, callId, uri)
+            }
+        }
     }
 
     override fun setPreviewSettings(cameraMaps: Map<String, Map<String, String>>) {
@@ -443,8 +469,13 @@ class IOSHardwareService(
     }
 
     override fun setPendingScreenShareProjection(screenCaptureSession: Any?) {
-        // Screen sharing via ReplayKit on iOS
-        Log.d(tag, "Set screen share projection")
+        screenShareSession = screenCaptureSession
+        if (screenCaptureSession != null) {
+            Log.d(tag, "Screen share session captured: ${screenCaptureSession::class.simpleName}")
+        } else {
+            Log.d(tag, "Screen share session cleared")
+            isScreenSharing = false
+        }
     }
 
     // ══════════════════════════════════════════════════════════════════════════

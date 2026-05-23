@@ -458,14 +458,19 @@ class CallViewModel(
             else -> CallMode.Outgoing
         }
 
+        // Map participant info by call ID or peer URI for active speaker tracking
+        val participantInfoMap = conf.participantInfo.associateBy { it.tag }
+
         val participantUis = conf.participants.map { call ->
+            val participantInfo = participantInfoMap[call.daemonId ?: ""]
+                ?: participantInfoMap[call.peerUri.uri]
             ParticipantUi(
                 callId = call.daemonId ?: "",
                 displayName = call.contact?.displayName ?: call.peerUri.uri,
                 sinkId = call.daemonId ?: "",
                 isAudioMuted = call.isAudioMuted,
                 isVideoMuted = call.isVideoMuted,
-                isActive = false // TODO: track active speaker
+                isActive = participantInfo?.active ?: false  // Active speaker from daemon
             )
         }
 

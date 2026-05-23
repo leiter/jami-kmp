@@ -40,6 +40,9 @@ class Conference(
     private val _participantInfo = MutableStateFlow<List<ParticipantInfo>>(emptyList())
     val participantInfoFlow: StateFlow<List<ParticipantInfo>> = _participantInfo.asStateFlow()
 
+    val participantInfo: List<ParticipantInfo>
+        get() = _participantInfo.value
+
     private val _state = MutableStateFlow<Call.CallStatus?>(null)
     val stateFlow: StateFlow<Call.CallStatus?> = _state.asStateFlow()
 
