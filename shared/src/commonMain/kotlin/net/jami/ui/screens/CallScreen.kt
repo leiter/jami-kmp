@@ -37,6 +37,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CallEnd
 import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.Dialpad
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.Pause
@@ -125,6 +127,8 @@ fun CallScreen(
         onSwitchCamera = { viewModel.switchCamera() },
         onToggleLocalPreview = { viewModel.toggleLocalPreviewVisibility() },
         onToggleScreenShare = { viewModel.toggleScreenShare() },
+        onMuteAll = { viewModel.muteAllParticipants() },
+        onToggleConferenceLock = { locked -> viewModel.toggleConferenceLock(locked) },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onEnded = onEnd,
     )
@@ -181,6 +185,8 @@ private fun CallScreenContent(
     onSwitchCamera: () -> Unit,
     onToggleLocalPreview: () -> Unit,
     onToggleScreenShare: () -> Unit,
+    onMuteAll: () -> Unit = {},
+    onToggleConferenceLock: (Boolean) -> Unit = {},
     onSendDtmf: (Char) -> Unit,
     onEnded: () -> Unit,
 ) {
@@ -210,14 +216,14 @@ private fun CallScreenContent(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) {
-                if (state.hasRemoteVideo) {
+                if (state.hasRemoteVideo && !state.videoLoss.isVideoLost) {
                     showControls = !showControls
                 }
             },
     ) {
         // Video rendering
         // Remote video
-        if (state.hasRemoteVideo && state.remoteVideoSinkId.isNotEmpty()) {
+        if (state.hasRemoteVideo && state.remoteVideoSinkId.isNotEmpty() && !state.videoLoss.isFallbackToAudioOnly) {
             VideoRenderer(
                 modifier = Modifier.fillMaxSize(),
                 callId = state.callId,
@@ -226,7 +232,7 @@ private fun CallScreenContent(
         }
 
         // Local video preview (draggable)
-        if (state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing) {
+        if (state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing && !state.videoLoss.isFallbackToAudioOnly) {
             DraggablePreview(
                 modifier = Modifier.fillMaxSize(),
                 isVisible = state.isLocalPreviewVisible,
@@ -240,8 +246,9 @@ private fun CallScreenContent(
             }
         }
 
-        // Audio-only call background if no video is active
-        if (!state.hasRemoteVideo && !(state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing)) {
+        // Audio-only call background if no video is active or in fallback mode
+        if ((!state.hasRemoteVideo || state.videoLoss.isFallbackToAudioOnly) &&
+            !(state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing)) {
             AudioCallBackground(
                 state = state,
                 modifier = Modifier.fillMaxSize()
@@ -252,6 +259,14 @@ private fun CallScreenContent(
         if (state.callMode is CallMode.OnHold) {
             HoldOverlay()
         }
+
+        // Video loss overlay (network resilience)
+        VideoLossOverlay(
+            videoLoss = state.videoLoss,
+            onRetry = { viewModel.retryRemoteVideo() },
+            onAudioOnly = { viewModel.fallbackToAudioOnly() },
+            modifier = Modifier.fillMaxSize()
+        )
 
         // Controls overlay with animation
         AnimatedVisibility(
@@ -294,6 +309,8 @@ private fun CallScreenContent(
                             onToggleHold = onToggleHold,
                             onSwitchCamera = onSwitchCamera,
                             onToggleScreenShare = onToggleScreenShare,
+                            onMuteAll = onMuteAll,
+                            onToggleConferenceLock = onToggleConferenceLock,
                             onOpenDtmf = { showDtmfSheet = true },
                         )
                         is CallMode.Ended -> Unit
@@ -513,6 +530,8 @@ private fun OnGoingControls(
     onToggleHold: () -> Unit,
     onSwitchCamera: () -> Unit,
     onToggleScreenShare: () -> Unit,
+    onMuteAll: () -> Unit = {},
+    onToggleConferenceLock: (Boolean) -> Unit = {},
     onOpenDtmf: () -> Unit,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -603,6 +622,35 @@ private fun OnGoingControls(
                     ),
                     isActive = state.isOnHold,
                     onClick = onToggleHold,
+                )
+            }
+        }
+
+        // Moderator controls (visible only in conferences when user is moderator)
+        if (state.isConference && state.isModerator && state.participants.size > 1) {
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                // Mute all button
+                CallControlButton(
+                    icon = Icons.Default.MicOff,
+                    contentDescription = "Mute all participants",
+                    isActive = false,
+                    onClick = onMuteAll,
+                )
+
+                // Lock conference button
+                var isConferenceLocked by remember { mutableStateOf(false) }
+                CallControlButton(
+                    icon = if (isConferenceLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                    contentDescription = if (isConferenceLocked) "Unlock conference" else "Lock conference",
+                    isActive = isConferenceLocked,
+                    onClick = {
+                        isConferenceLocked = !isConferenceLocked
+                        onToggleConferenceLock(isConferenceLocked)
+                    },
                 )
             }
         }

@@ -36,6 +36,7 @@ import net.jami.services.AccountService
 import net.jami.services.CallService
 import net.jami.services.ContactService
 import net.jami.services.HardwareService
+import net.jami.model.VideoLossState
 
 /**
  * Mode of the current call — drives which CallScreen composable is shown.
@@ -93,7 +94,9 @@ data class CallState(
     val isLocalPreviewVisible: Boolean = true,
     val remoteVideoWidth: Int = 0,
     val remoteVideoHeight: Int = 0,
-    val isScreenSharing: Boolean = false
+    val isScreenSharing: Boolean = false,
+    // Network resilience
+    val videoLoss: VideoLossState = VideoLossState()
 )
 
 /**
@@ -122,6 +125,16 @@ class CallViewModel(
     private var durationJob: Job? = null
     private var callStartTime: Long = 0L
     private var confUpdatesJob: Job? = null
+
+    // Video loss tracking
+    private var videoLossJob: Job? = null
+    private var lastRemoteVideoEventTime: Long = 0L
+    private var lastLocalVideoEventTime: Long = 0L
+    private var remoteVideoRetries: Int = 0
+    private val VIDEO_LOSS_TIMEOUT_MS = 2000L
+    private val MAX_VIDEO_LOSS_RETRIES = 5
+    private val RETRY_INTERVAL_MS = 2000L
+    private val FALLBACK_TIMEOUT_MS = 15000L
 
     // ==================== Entry points ====================
 
@@ -336,6 +349,137 @@ class CallViewModel(
         }
     }
 
+    // ==================== Conference Moderation ====================
+
+    /**
+     * Mute all participants in the conference (moderator only).
+     */
+    fun muteAllParticipants() {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        callService.muteAllParticipants(accountId, conf.id)
+    }
+
+    /**
+     * Remove a participant from the conference (moderator only).
+     */
+    fun removeParticipant(participantId: String) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        callService.removeParticipant(accountId, conf.id, participantId)
+    }
+
+    /**
+     * Lock/unlock the conference (moderator only).
+     */
+    fun toggleConferenceLock(locked: Boolean) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        callService.setConferenceLocked(accountId, conf.id, locked)
+    }
+
+    /**
+     * Mute or unmute a specific participant's audio (moderator only).
+     */
+    fun setParticipantAudioMuted(participantId: String, muted: Boolean) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        if (muted) {
+            callService.muteParticipantAudio(accountId, conf.id, participantId)
+        } else {
+            callService.unmuteParticipantAudio(accountId, conf.id, participantId)
+        }
+    }
+
+    /**
+     * Enable or disable a specific participant's video (moderator only).
+     */
+    fun setParticipantVideoEnabled(participantId: String, enabled: Boolean) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        if (!enabled) {
+            callService.disableParticipantVideo(accountId, conf.id, participantId)
+        } else {
+            callService.enableParticipantVideo(accountId, conf.id, participantId)
+        }
+    }
+
+    // ==================== Video Loss Recovery ====================
+
+    fun retryRemoteVideo() {
+        val callId = currentCallId ?: return
+        val accountId = currentAccountId ?: return
+        remoteVideoRetries++
+
+        if (remoteVideoRetries <= MAX_VIDEO_LOSS_RETRIES) {
+            hardwareService.requestKeyFrame("remote")
+            _state.value = _state.value.copy(
+                videoLoss = _state.value.videoLoss.copy(
+                    isRetrying = true,
+                    retryAttempt = remoteVideoRetries
+                )
+            )
+        }
+    }
+
+    fun fallbackToAudioOnly() {
+        _state.value = _state.value.copy(
+            videoLoss = _state.value.videoLoss.copy(
+                isFallbackToAudioOnly = true,
+                isVideoLost = false,
+                isRetrying = false
+            ),
+            hasRemoteVideo = false,
+            remoteVideoSinkId = ""
+        )
+    }
+
+    fun resumeVideoAttempt() {
+        remoteVideoRetries = 0
+        lastRemoteVideoEventTime = net.jami.utils.currentTimeMillis()
+        _state.value = _state.value.copy(
+            videoLoss = VideoLossState()
+        )
+    }
+
+    private fun startVideoLossDetection() {
+        videoLossJob?.cancel()
+        videoLossJob = scope.launch {
+            while (isActive) {
+                val now = net.jami.utils.currentTimeMillis()
+                val remoteVideoLoss = _state.value.hasRemoteVideo &&
+                        (now - lastRemoteVideoEventTime) > VIDEO_LOSS_TIMEOUT_MS
+
+                if (remoteVideoLoss && !_state.value.videoLoss.isVideoLost) {
+                    _state.value = _state.value.copy(
+                        videoLoss = _state.value.videoLoss.copy(
+                            isVideoLost = true,
+                            lostSinkId = _state.value.remoteVideoSinkId,
+                            lossDurationSeconds = (now - lastRemoteVideoEventTime) / 1000,
+                            isRetrying = true,
+                            retryAttempt = 0
+                        )
+                    )
+                    retryRemoteVideo()
+                } else if (_state.value.videoLoss.isVideoLost) {
+                    val lossDuration = (now - lastRemoteVideoEventTime) / 1000
+                    _state.value = _state.value.copy(
+                        videoLoss = _state.value.videoLoss.copy(
+                            lossDurationSeconds = lossDuration
+                        )
+                    )
+
+                    if (lossDuration > FALLBACK_TIMEOUT_MS / 1000 &&
+                        !_state.value.videoLoss.isFallbackToAudioOnly) {
+                        fallbackToAudioOnly()
+                    }
+                }
+
+                delay(500)
+            }
+        }
+    }
+
     // ==================== Internal ====================
 
     private fun subscribeToConferenceUpdates(callOrConfId: String) {
@@ -372,12 +516,15 @@ class CallViewModel(
         val callId = currentCallId ?: return
 
         if (event.started && event.width > 0 && event.height > 0) {
-            // Remote video started
+            // Remote video started — update last event time for loss detection
+            lastRemoteVideoEventTime = net.jami.utils.currentTimeMillis()
+            remoteVideoRetries = 0
             _state.value = _state.value.copy(
                 hasRemoteVideo = true,
                 remoteVideoSinkId = event.sinkId,
                 remoteVideoWidth = event.width,
-                remoteVideoHeight = event.height
+                remoteVideoHeight = event.height,
+                videoLoss = VideoLossState()  // Clear loss state on recovery
             )
         } else if (!event.started && event.sinkId == _state.value.remoteVideoSinkId) {
             // Remote video stopped
@@ -424,7 +571,9 @@ class CallViewModel(
         if (status == CallStatus.CURRENT && durationJob == null) {
             callStartTime = if (call.timestamp > 0) call.timestamp
                 else net.jami.utils.currentTimeMillis()
+            lastRemoteVideoEventTime = callStartTime
             startDurationTimer()
+            startVideoLossDetection()  // Start detecting video loss during call
             val currentCall = call
             val conf = currentConference
             currentAccountId?.let { accountId ->
@@ -458,7 +607,7 @@ class CallViewModel(
             else -> CallMode.Outgoing
         }
 
-        // Map participant info by call ID or peer URI for active speaker tracking
+        // Map participant info by call ID or peer URI for active speaker tracking + moderator status
         val participantInfoMap = conf.participantInfo.associateBy { it.tag }
 
         val participantUis = conf.participants.map { call ->
@@ -470,6 +619,7 @@ class CallViewModel(
                 sinkId = call.daemonId ?: "",
                 isAudioMuted = call.isAudioMuted,
                 isVideoMuted = call.isVideoMuted,
+                isModerator = participantInfo?.isModerator ?: false,  // Moderator flag from daemon
                 isActive = participantInfo?.active ?: false  // Active speaker from daemon
             )
         }
@@ -522,6 +672,7 @@ class CallViewModel(
         durationJob?.cancel()
         confUpdatesJob?.cancel()
         videoEventsJob?.cancel()
+        videoLossJob?.cancel()
         hardwareService.cameraCleanup()
         scope.cancel()
     }

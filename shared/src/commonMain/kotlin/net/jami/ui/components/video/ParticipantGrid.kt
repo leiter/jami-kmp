@@ -63,7 +63,8 @@ data class VideoParticipant(
     val isMuted: Boolean = false,
     val isVideoEnabled: Boolean = true,
     val isActiveSpeaker: Boolean = false,
-    val isLocal: Boolean = false
+    val isLocal: Boolean = false,
+    val isModerator: Boolean = false
 )
 
 /**
