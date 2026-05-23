@@ -37,6 +37,8 @@ import net.jami.services.CallService
 import net.jami.services.ContactService
 import net.jami.services.HardwareService
 import net.jami.model.VideoLossState
+import net.jami.model.VideoQuality
+import net.jami.model.VideoQualityState
 
 /**
  * Mode of the current call — drives which CallScreen composable is shown.
@@ -96,7 +98,9 @@ data class CallState(
     val remoteVideoHeight: Int = 0,
     val isScreenSharing: Boolean = false,
     // Network resilience
-    val videoLoss: VideoLossState = VideoLossState()
+    val videoLoss: VideoLossState = VideoLossState(),
+    // Video quality
+    val videoQuality: VideoQualityState = VideoQualityState()
 )
 
 /**
@@ -402,6 +406,64 @@ class CallViewModel(
         } else {
             callService.enableParticipantVideo(accountId, conf.id, participantId)
         }
+    }
+
+    // ==================== Video Quality Control ====================
+
+    /**
+     * Set video quality preset (Low/Medium/High/Ultra).
+     * Adjusts resolution, frame rate, and bitrate constraints.
+     */
+    fun setVideoQuality(quality: VideoQuality) {
+        val callId = currentCallId ?: return
+        val accountId = currentAccountId ?: return
+        callService.setVideoQuality(accountId, callId, quality)
+        _state.value = _state.value.copy(
+            videoQuality = _state.value.videoQuality.copy(quality = quality)
+        )
+    }
+
+    /**
+     * Set custom bitrate limit in kbps (0 = no limit).
+     */
+    fun setVideoBitrate(bitrate: Int) {
+        val callId = currentCallId ?: return
+        val accountId = currentAccountId ?: return
+        callService.setVideoBitrate(accountId, callId, bitrate)
+    }
+
+    /**
+     * Toggle video stats overlay visibility.
+     */
+    fun toggleVideoStats() {
+        _state.value = _state.value.copy(
+            videoQuality = _state.value.videoQuality.copy(
+                isShowingStats = !_state.value.videoQuality.isShowingStats
+            )
+        )
+    }
+
+    /**
+     * Update video quality based on network conditions (packet loss).
+     * Called periodically to adapt video quality to network state.
+     */
+    fun updateVideoQualityBasedOnNetwork(packetLoss: Float) {
+        if (!_state.value.videoQuality.isAutoQuality) return
+
+        val currentQuality = _state.value.videoQuality.quality
+        val recommendedBitrate = currentQuality.getRecommendedBitrate(packetLoss)
+
+        // Auto-downgrade if packet loss is high
+        if (packetLoss > 0.10f && currentQuality != VideoQuality.LOW) {
+            setVideoQuality(VideoQuality.LOW)
+        } else if (packetLoss > 0.05f && currentQuality == VideoQuality.ULTRA) {
+            setVideoQuality(VideoQuality.HIGH)
+        }
+
+        setVideoBitrate(recommendedBitrate)
+        _state.value = _state.value.copy(
+            videoQuality = _state.value.videoQuality.copy(packetLoss = packetLoss)
+        )
     }
 
     // ==================== Video Loss Recovery ====================

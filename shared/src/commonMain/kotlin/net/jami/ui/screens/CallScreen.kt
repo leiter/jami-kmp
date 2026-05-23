@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Person
@@ -129,6 +130,7 @@ fun CallScreen(
         onToggleScreenShare = { viewModel.toggleScreenShare() },
         onMuteAll = { viewModel.muteAllParticipants() },
         onToggleConferenceLock = { locked -> viewModel.toggleConferenceLock(locked) },
+        onToggleStats = { viewModel.toggleVideoStats() },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onEnded = onEnd,
     )
@@ -187,6 +189,7 @@ private fun CallScreenContent(
     onToggleScreenShare: () -> Unit,
     onMuteAll: () -> Unit = {},
     onToggleConferenceLock: (Boolean) -> Unit = {},
+    onToggleStats: () -> Unit = {},
     onSendDtmf: (Char) -> Unit,
     onEnded: () -> Unit,
 ) {
@@ -268,6 +271,12 @@ private fun CallScreenContent(
             modifier = Modifier.fillMaxSize()
         )
 
+        // Video stats overlay
+        VideoStatsOverlay(
+            videoQuality = state.videoQuality,
+            modifier = Modifier.fillMaxSize()
+        )
+
         // Controls overlay with animation
         AnimatedVisibility(
             visible = showControls || state.callMode !is CallMode.OnGoing,
@@ -311,6 +320,7 @@ private fun CallScreenContent(
                             onToggleScreenShare = onToggleScreenShare,
                             onMuteAll = onMuteAll,
                             onToggleConferenceLock = onToggleConferenceLock,
+                            onToggleStats = onToggleStats,
                             onOpenDtmf = { showDtmfSheet = true },
                         )
                         is CallMode.Ended -> Unit
@@ -532,6 +542,7 @@ private fun OnGoingControls(
     onToggleScreenShare: () -> Unit,
     onMuteAll: () -> Unit = {},
     onToggleConferenceLock: (Boolean) -> Unit = {},
+    onToggleStats: () -> Unit = {},
     onOpenDtmf: () -> Unit,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -582,6 +593,14 @@ private fun OnGoingControls(
                 contentDescription = stringResource(Res.string.content_desc_dialpad),
                 isActive = false,
                 onClick = onOpenDtmf,
+            )
+
+            // Video stats button
+            CallControlButton(
+                icon = Icons.Default.Info,
+                contentDescription = "Video stats",
+                isActive = state.videoQuality.isShowingStats,
+                onClick = onToggleStats,
             )
         }
 
