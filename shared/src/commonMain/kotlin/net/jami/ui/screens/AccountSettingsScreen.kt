@@ -94,6 +94,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import jami_kmp.shared.generated.resources.*
@@ -104,6 +105,7 @@ import net.jami.di.getViewModel
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.JamiSectionTitle
+import net.jami.ui.components.inputs.JamiFormattedTextField
 import net.jami.ui.platform.FilePickerEffect
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.AccountSettingsViewModel
@@ -153,7 +155,11 @@ fun AccountSettingsScreen(
     LaunchedEffect(state.displayName) { displayNameEdit = state.displayName }
 
     val shareSubject = stringResource(Res.string.account_contact_me)
-    val shareBodyTemplate = stringResource(Res.string.account_share_body)
+    val shareBody = stringResource(
+        Res.string.account_share_body,
+        state.username.ifEmpty { state.identityHash },
+        "https://jami.net",
+    )
     val linkSuccessMsg = stringResource(Res.string.account_link_device_success)
     val linkErrorMsg = stringResource(Res.string.account_link_device_error)
 
@@ -253,7 +259,7 @@ fun AccountSettingsScreen(
             },
         )
     }
-
+    var textValue by remember { mutableStateOf(TextFieldValue()) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -311,6 +317,10 @@ fun AccountSettingsScreen(
                 .clearFocusOnTap()
                 .verticalScroll(rememberScrollState()),
         ) {
+            JamiFormattedTextField(
+                value = textValue,
+                onValueChange = { textValue = it}
+            )
             // ── PROFIL ────────────────────────────────────────────────────
             JamiSectionTitle(title = stringResource(Res.string.profile))
 
@@ -403,11 +413,7 @@ fun AccountSettingsScreen(
                 Row(modifier = Modifier.fillMaxWidth()) {
                     TextButton(
                         onClick = {
-                            val body = shareBodyTemplate.format(
-                                state.username.ifEmpty { state.identityHash },
-                                "https://jami.net",
-                            )
-                            shareText(shareSubject, body)
+                            shareText(shareSubject, shareBody)
                         },
                         modifier = Modifier.weight(1f),
                     ) {
@@ -486,8 +492,7 @@ fun AccountSettingsScreen(
                             text = if (devicesExpanded)
                                 stringResource(Res.string.section_linked_devices)
                             else
-                                stringResource(Res.string.account_link_show_button)
-                                    .format(otherDevices.size),
+                                stringResource(Res.string.account_link_show_button, otherDevices.size),
                             color = JamiTheme.colors.onSurface,
                         )
                     }

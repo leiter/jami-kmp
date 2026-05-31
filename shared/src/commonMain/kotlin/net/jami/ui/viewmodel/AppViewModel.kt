@@ -23,8 +23,11 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.jami.services.AccountService
+import net.jami.utils.Log
 
 sealed class AppState {
     data object Loading : AppState()
@@ -46,21 +49,28 @@ class AppViewModel(
     private var onboardingInProgress = false
 
     init {
+        Log.d(TAG, "AppViewModel created, waiting for daemon accounts ready signal")
         scope.launch {
-            accountService.loadAccounts()
+            // Wait for the daemon to fire accountsChanged at least once before
+            // evaluating state. This prevents the race where loadAccounts() is called
+            // before the daemon has finished loading accounts from disk, which would
+            // incorrectly flash the Welcome screen before transitioning to HasAccounts.
+            accountService.daemonAccountsReady.filter { it }.first()
+            Log.d(TAG, "Daemon accounts ready — starting account state collection")
+
             accountService.accounts.collect { accountList ->
                 val current = _appState.value
-                _appState.value = when {
+                val next = when {
                     onboardingInProgress -> AppState.Onboarding
-                    // Once HasAccounts, don't regress to NoAccounts from a transient
-                    // empty list (the daemon may briefly report 0 accounts during
-                    // import/migration). Only explicit removal should go back.
                     accountList.isEmpty() && current is AppState.HasAccounts -> current
                     accountList.isEmpty() -> AppState.NoAccounts
                     accountList.any { it.needsMigration } ->
                         AppState.HasAccounts(needsMigration = true)
                     else -> AppState.HasAccounts()
                 }
+                Log.d(TAG, "accounts=${accountList.size} onboarding=$onboardingInProgress " +
+                        "$current -> $next")
+                _appState.value = next
             }
         }
     }
@@ -70,6 +80,7 @@ class AppViewModel(
      * Onboarding state even after the account is created by the daemon.
      */
     fun startOnboarding() {
+        Log.d(TAG, "startOnboarding")
         onboardingInProgress = true
         _appState.value = AppState.Onboarding
     }
@@ -79,8 +90,8 @@ class AppViewModel(
      * Allows the reactive account flow to switch to HasAccounts.
      */
     fun finishOnboarding() {
+        Log.d(TAG, "finishOnboarding")
         onboardingInProgress = false
-        // Re-evaluate state based on current accounts
         val accountList = accountService.accounts.value
         _appState.value = when {
             accountList.isEmpty() -> AppState.NoAccounts
@@ -91,6 +102,11 @@ class AppViewModel(
     }
 
     fun onCleared() {
+        Log.d(TAG, "onCleared")
         scope.cancel()
+    }
+
+    companion object {
+        private const val TAG = "AppViewModel"
     }
 }

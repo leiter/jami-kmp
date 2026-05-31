@@ -643,6 +643,7 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
 
     private fun createConfigurationCallback(callbacks: DaemonCallbacks) = object : ConfigurationCallback() {
         override fun accountsChanged() {
+            Log.d(TAG, "JNI accountsChanged fired")
             callbacks.onAccountsChanged()
         }
 

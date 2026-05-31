@@ -109,7 +109,10 @@ class DaemonCallbacksImpl(
             for (task in accountTasks) {
                 when (task) {
                     is AccountTask.ProfileReceived -> accountService.onAccountProfileReceived(task.accountId, task.name, task.photo)
-                    is AccountTask.AccountsChanged -> accountService.onAccountsChanged()
+                    is AccountTask.AccountsChanged -> {
+                        Log.d(TAG, "processing AccountsChanged task")
+                        accountService.onAccountsChanged()
+                    }
                     is AccountTask.RegistrationChanged -> accountService.onRegistrationStateChanged(task.accountId, task.state, task.code, task.detail)
                 }
             }
@@ -119,6 +122,7 @@ class DaemonCallbacksImpl(
     // ==================== Account Callbacks ====================
 
     override fun onAccountsChanged() {
+        Log.d(TAG, "onAccountsChanged: queuing task")
         accountTasks.trySend(AccountTask.AccountsChanged)
     }
 

@@ -98,6 +98,11 @@ class AccountService(
 
     private val accountsMap = mutableMapOf<String, Account>()
 
+    // Set to true after the daemon fires accountsChanged at least once.
+    // AppViewModel waits for this before deciding whether to show onboarding or main.
+    private val _daemonAccountsReady = MutableStateFlow(false)
+    val daemonAccountsReady: StateFlow<Boolean> = _daemonAccountsReady.asStateFlow()
+
     init {
         // Subscribe to connectivity changes - activate/deactivate accounts for DHT sync
         scope.launch {
@@ -150,6 +155,7 @@ class AccountService(
      */
     fun loadAccounts() {
         val accountIds = daemonBridge.getAccountList()
+        Log.d(TAG, "loadAccounts: daemon returned ${accountIds.size} account(s): $accountIds")
         val loadedAccounts = accountIds.map { accountId ->
             val details = daemonBridge.getAccountDetails(accountId)
             val volatileDetails = daemonBridge.getVolatileAccountDetails(accountId)
@@ -179,8 +185,17 @@ class AccountService(
             }
         }
 
-        if (_currentAccount.value == null && loadedAccounts.isNotEmpty()) {
-            _currentAccount.value = loadedAccounts.first()
+        val current = _currentAccount.value
+        when {
+            // No current account yet — pick the first loaded one.
+            current == null && loadedAccounts.isNotEmpty() ->
+                _currentAccount.value = loadedAccounts.first()
+            // Current account was removed (e.g. failed import rollback) — update to
+            // the first remaining account, or null if the list is now empty.
+            current != null && loadedAccounts.none { it.accountId == current.accountId } -> {
+                Log.d(TAG, "loadAccounts: currentAccount ${current.accountId} no longer present, updating")
+                _currentAccount.value = loadedAccounts.firstOrNull()
+            }
         }
     }
 
@@ -189,6 +204,8 @@ class AccountService(
      */
     fun loadAccountsFromDaemon(isConnected: Boolean) {
         loadAccounts()
+        Log.d(TAG, "loadAccountsFromDaemon: accounts=${_accounts.value.size}, signalling daemonAccountsReady")
+        _daemonAccountsReady.value = true
         setAccountsActive(isConnected)
     }
 
@@ -936,8 +953,11 @@ class AccountService(
     // ==================== Callback Handlers ====================
 
     internal fun onAccountsChanged() {
+        Log.d(TAG, "onAccountsChanged: dispatching loadAccounts")
         scope.launch {
             loadAccounts()
+            Log.d(TAG, "onAccountsChanged: loadAccounts complete, accounts=${_accounts.value.size}, signalling daemonAccountsReady")
+            _daemonAccountsReady.value = true
             _accountEvents.emit(AccountEvent.AccountsChanged)
         }
     }

@@ -22,7 +22,9 @@ import org.koin.android.ext.koin.androidContext
 import net.jami.database.DatabaseDriverFactory
 import net.jami.database.JamiDatabase
 import net.jami.services.*
+import net.jami.services.AndroidPictureInPictureManager
 import net.jami.services.DaemonBridgeApi
+import net.jami.services.PictureInPictureManager
 import net.jami.services.expect.HardwareService
 
 /**
@@ -80,6 +82,13 @@ actual val platformModule: Module = module {
      * Provides audio management via AudioManager.
      */
     single { HardwareService() }
+
+    /**
+     * Exposes the same PictureInPictureManager instance under its concrete Android type
+     * so that MainActivity can inject AndroidPictureInPictureManager directly for
+     * Activity-lifecycle methods (attachActivity, detachActivity, onPipModeChanged).
+     */
+    single { get<PictureInPictureManager>() as AndroidPictureInPictureManager }
 
     /**
      * Android notification service.

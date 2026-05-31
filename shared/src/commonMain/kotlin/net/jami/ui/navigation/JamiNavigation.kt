@@ -96,6 +96,7 @@ private fun OnboardingNavigation(appViewModel: AppViewModel) {
                     navController.navigate(Screen.CreateAccount.route)
                 },
                 onImportAccount = {
+                    appViewModel.startOnboarding()
                     navController.navigate(Screen.ImportAccount.route)
                 },
             )
@@ -140,9 +141,11 @@ private fun OnboardingNavigation(appViewModel: AppViewModel) {
 
         composable(Screen.ImportAccount.route) {
             ImportAccountScreen(
-                onBack = { navController.popBackStack() },
+                onBack = {
+                    appViewModel.finishOnboarding()
+                    navController.popBackStack()
+                },
                 onImported = {
-                    // Trigger AppViewModel to re-evaluate state with current accounts
                     appViewModel.finishOnboarding()
                 },
             )

@@ -3,6 +3,7 @@ package net.jami.android
 import android.app.Application
 import android.util.Log
 import net.jami.di.initKoin
+import net.jami.services.AccountService
 import net.jami.services.DaemonBridge
 import net.jami.services.DaemonCallbacks
 import org.koin.android.ext.koin.androidContext
@@ -13,6 +14,7 @@ class JamiApplication : Application(), KoinComponent {
 
     private val daemonBridge: DaemonBridge by inject()
     private val daemonCallbacks: DaemonCallbacks by inject()
+    private val accountService: AccountService by inject()
 
     override fun onCreate() {
         super.onCreate()
@@ -31,6 +33,11 @@ class JamiApplication : Application(), KoinComponent {
                 val startResult = daemonBridge.start()
                 if (startResult) {
                     Log.i(TAG, "Jami daemon started successfully")
+                    // Explicitly load accounts now — accountsChanged may not fire on a fresh
+                    // install (no accounts) or may fire asynchronously after JamiService.init()
+                    // returns. This guarantees daemonAccountsReady is set so AppViewModel can
+                    // exit Loading state regardless.
+                    accountService.loadAccountsFromDaemon(isConnected = true)
                 } else {
                     Log.e(TAG, "Failed to start Jami daemon")
                 }
