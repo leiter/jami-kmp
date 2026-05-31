@@ -138,6 +138,9 @@ kotlin {
                 implementation(libs.compose.ui.test.manifest)
                 implementation(libs.androidx.test.ext.junit)
                 implementation(libs.androidx.test.runner)
+                // Force espresso-core 3.6.1+ — 3.5.x crashes on Android 16 (API 36)
+                // because InputManager.getInstance() was removed from the public API.
+                implementation(libs.espresso.core)
             }
         }
 

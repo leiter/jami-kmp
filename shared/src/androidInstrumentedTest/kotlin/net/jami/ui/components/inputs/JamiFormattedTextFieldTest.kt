@@ -1,12 +1,15 @@
 package net.jami.ui.components.inputs
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTextInput
@@ -26,6 +29,13 @@ class JamiFormattedTextFieldTest {
     private val TAG = "jami_formatted_field"
 
     @Test
+    fun infrastructure_basicTextRenders() {
+        rule.setContent { Text("hello") }
+        rule.waitForIdle()
+        rule.onNode(hasText("hello")).assertIsDisplayed()
+    }
+
+    @Test
     fun emptyField_composesWithoutCrash() {
         rule.setContent {
             var value by remember { mutableStateOf(TextFieldValue("")) }
@@ -35,7 +45,8 @@ class JamiFormattedTextFieldTest {
                 modifier = Modifier.testTag(TAG),
             )
         }
-        rule.onNodeWithTag(TAG).assertExists()
+        rule.waitForIdle()
+        rule.onNodeWithTag(TAG).assertIsDisplayed()
     }
 
     @Test
@@ -81,7 +92,8 @@ class JamiFormattedTextFieldTest {
                 modifier = Modifier.testTag(TAG),
             )
         }
-        rule.onNodeWithTag(TAG).assertExists()
+        rule.waitForIdle()
+        rule.onNodeWithTag(TAG).assertIsDisplayed()
     }
 
     @Test
@@ -98,11 +110,9 @@ class JamiFormattedTextFieldTest {
                 modifier = Modifier.testTag(TAG),
             )
         }
-
         rule.onNodeWithTag(TAG).performTextInput("https://example.com")
         rule.runOnIdle { assertEquals("https://example.com", current.text) }
 
-        // Simulate breaking the URL prefix by appending more chars (state still consistent)
         rule.onNodeWithTag(TAG).performTextInput(" extra")
         rule.runOnIdle { assertEquals("https://example.com extra", current.text) }
     }
