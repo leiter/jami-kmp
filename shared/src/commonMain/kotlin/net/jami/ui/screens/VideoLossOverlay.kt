@@ -36,6 +36,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -82,7 +83,7 @@ fun VideoLossOverlay(
                     .padding(JamiTheme.spacing.xxl)
                     .background(
                         color = Color.Black.copy(alpha = 0.85f),
-                        shape = JamiTheme.shapes.medium
+                        shape = MaterialTheme.shapes.medium
                     )
                     .padding(JamiTheme.spacing.xl),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -125,7 +126,7 @@ fun VideoLossOverlay(
                     CircularProgressIndicator(
                         progress = { videoLoss.retryPercentage / 100f },
                         modifier = Modifier.size(48.dp),
-                        color = JamiColors.Accent,
+                        color = JamiColors.Cyan500,
                         trackColor = Color.White.copy(alpha = 0.2f)
                     )
 
@@ -155,7 +156,7 @@ fun VideoLossOverlay(
                     Button(
                         onClick = onRetry,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = JamiColors.Accent,
+                            containerColor = JamiColors.Cyan500,
                             contentColor = Color.White
                         ),
                         modifier = Modifier.size(width = 160.dp, height = 44.dp)

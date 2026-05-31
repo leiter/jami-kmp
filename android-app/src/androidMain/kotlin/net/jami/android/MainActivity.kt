@@ -13,7 +13,7 @@ import net.jami.services.AndroidPictureInPictureManager
 import net.jami.services.CallService
 import net.jami.services.NotificationService
 import net.jami.services.SyncManager
-import net.jami.services.actual.HardwareService
+import net.jami.services.expect.HardwareService
 import net.jami.ui.JamiApp
 import net.jami.utils.Log
 import org.koin.android.ext.android.inject

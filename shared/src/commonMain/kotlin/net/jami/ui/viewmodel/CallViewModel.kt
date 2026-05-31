@@ -35,7 +35,9 @@ import net.jami.model.Uri
 import net.jami.services.AccountService
 import net.jami.services.CallService
 import net.jami.services.ContactService
-import net.jami.services.HardwareService
+import net.jami.services.expect.HardwareService
+import net.jami.services.expect.VideoEvent
+import net.jami.utils.Log
 import net.jami.model.VideoLossState
 import net.jami.model.VideoQuality
 import net.jami.model.VideoQualityState
@@ -204,7 +206,7 @@ class CallViewModel(
 
         // Detect if video is offered in the incoming call by checking media list
         val hasVideoOffered = call?.mediaList?.any { media ->
-            media.mediaType.contains("video", ignoreCase = true)
+            media.mediaType == net.jami.model.Media.MediaType.MEDIA_TYPE_VIDEO
         } ?: false
 
         if (call != null) {
@@ -275,13 +277,12 @@ class CallViewModel(
     }
 
     fun toggleSpeaker() {
-        if (currentConference == null) {
-            hardwareService.toggleSpeaker()
-        } else {
-            val newState = !_state.value.isSpeakerOn
-            hardwareService.toggleSpeakerphone(currentConference!!, newState)
-            _state.value = _state.value.copy(isSpeakerOn = newState)
+        val newState = !hardwareService.isSpeakerphoneOn()
+        val conf = currentConference
+        if (conf != null) {
+            hardwareService.toggleSpeakerphone(conf, newState)
         }
+        _state.value = _state.value.copy(isSpeakerOn = newState)
     }
 
     fun toggleHold() {
@@ -343,19 +344,6 @@ class CallViewModel(
     fun startScreenShare() {
         val accountId = currentAccountId ?: return
         val callId = currentCallId ?: return
-
-        // Platform-specific: request screen share permission on Android
-        // This will trigger onActivityResult in MainActivity if permission is granted
-        try {
-            val activity = Class.forName("net.jami.android.MainActivity")
-            val requestMethod = activity.getMethod("requestScreenSharePermission")
-            requestMethod.isAccessible = true
-            // Note: In a real implementation, this would need activity instance context
-            // For now, assume the permission is handled at the activity level
-        } catch (e: Exception) {
-            // Fallback: proceed with screen sharing directly (permission may already be granted)
-            Log.d("CallViewModel", "Screen share permission request not available, proceeding with direct switch")
-        }
 
         hardwareService.switchInput(accountId, callId, "camera://desktop")
         _state.value = _state.value.copy(isScreenSharing = true)
@@ -605,7 +593,7 @@ class CallViewModel(
         }
     }
 
-    private fun handleVideoEvent(event: net.jami.services.VideoEvent) {
+    private fun handleVideoEvent(event: VideoEvent) {
         val callId = currentCallId ?: return
 
         if (event.started && event.width > 0 && event.height > 0) {

@@ -47,7 +47,7 @@ class ConversationFacadeIntegrationTest {
         stub: StubDaemonBridge,
         scope: kotlinx.coroutines.test.TestScope
     ): Triple<AccountService, ContactService, ConversationFacade> {
-        val accountService = AccountService(stub, net.jami.services.StubHardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
+        val accountService = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
         val callService = CallService(stub, accountService, net.jami.repository.SettingsRepository(stub, scope), scope)
         val contactService = ContactService(scope, accountService, stub)
         val facadeScope = scope.facadeScope()
@@ -57,7 +57,7 @@ class ConversationFacadeIntegrationTest {
             accountService = accountService,
             contactService = contactService,
             notificationService = StubNotificationService(),
-            hardwareService = StubHardwareService(),
+            hardwareService = net.jami.services.expect.HardwareService(),
             deviceRuntimeService = StubDeviceRuntimeService(),
             preferencesService = StubPreferencesService(),
             daemonBridge = stub,

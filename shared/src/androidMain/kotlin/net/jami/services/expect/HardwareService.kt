@@ -1,5 +1,6 @@
-package net.jami.services.actual
+package net.jami.services.expect
 
+import android.view.SurfaceHolder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -8,22 +9,16 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import net.jami.model.Call
 import net.jami.model.Conference
-import android.view.SurfaceHolder
 import net.jami.services.DaemonBridge
 import net.jami.utils.Log
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import net.jami.services.expect.AudioState
-import net.jami.services.expect.AudioOutputType
-import net.jami.services.expect.BluetoothEvent
-import net.jami.services.expect.HardwareService
-import net.jami.services.expect.VideoEvent
 
-actual class HardwareService {
+actual class HardwareService : KoinComponent {
     private val _videoEvents = MutableSharedFlow<VideoEvent>()
     private val _cameraEvents = MutableSharedFlow<VideoEvent>()
     private val _bluetoothEvents = MutableSharedFlow<BluetoothEvent>()
-    private val _audioState = MutableStateFlow(AudioState(AudioOutputType.INTERNAL))
+    private val _audioState = MutableStateFlow(AudioState(AudioOutput(AudioOutputType.INTERNAL)))
     private val _connectivityState = MutableStateFlow(true)
     private val _maxResolutions = MutableStateFlow<Pair<Int?, Int?>>(null to null)
 
@@ -58,12 +53,9 @@ actual class HardwareService {
     actual fun stopCapture(camId: String) {}
     actual fun requestKeyFrame(camId: String) {}
     actual fun setBitrate(camId: String, bitrate: Int) {}
+
     private val daemonBridge: DaemonBridge by inject()
     private val videoWindows = mutableMapOf<String, Long>()
-
-    // ... (rest of the properties)
-
-    // ... (rest of the methods)
 
     actual fun addVideoSurface(id: String, holder: Any) {
         if (holder !is SurfaceHolder) return
@@ -72,6 +64,10 @@ actual class HardwareService {
             videoWindows[id] = window
             daemonBridge.registerVideoCallback(id, window)
         }
+    }
+
+    actual fun updateVideoSurfaceId(currentId: String, newId: String) {
+        videoWindows.remove(currentId)?.let { window -> videoWindows[newId] = window }
     }
 
     actual fun removeVideoSurface(id: String) {
@@ -84,15 +80,10 @@ actual class HardwareService {
     }
 
     actual fun addPreviewVideoSurface(holder: Any, conference: Conference?) {
-        // This is more complex and involves camera service, for now, we'll just log
-        Log.d("HardwareService", "addPreviewVideoSurface called (not fully implemented)")
+        Log.d("HardwareService", "addPreviewVideoSurface: not fully implemented")
     }
 
-    actual fun removePreviewVideoSurface() {
-        Log.d("HardwareService", "removePreviewVideoSurface called (not fully implemented)")
-    }
-
-    // ... (rest of the methods)
+    actual fun removePreviewVideoSurface() {}
 
     actual fun addFullScreenPreviewSurface(holder: Any) {}
     actual fun removeFullScreenPreviewSurface() {}
@@ -114,6 +105,7 @@ actual class HardwareService {
     actual fun stopMediaHandler() {}
     actual fun setPendingScreenShareProjection(screenCaptureSession: Any?) {}
     actual fun connectivityChanged(isConnected: Boolean) { _connectivityState.value = isConnected }
+    actual fun updatePreviewVideoSurface(conference: Conference) {}
     actual val isLogging: Boolean get() = logging
     actual fun startLogs(): Flow<List<String>> {
         logging = true

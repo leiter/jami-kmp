@@ -50,7 +50,7 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
                 handleMarkRead(context, accountId, conversationId)
             }
 
-            AndroidNotificationService.ACTION_ANSWER_CALL -> {
+            AndroidNotificationService.ACTION_ANSWER -> {
                 val callId = intent.getStringExtra(AndroidNotificationService.KEY_CALL_ID) ?: run {
                     Log.w(TAG, "NotificationActionReceiver: missing callId in intent for answer call")
                     return
@@ -58,7 +58,7 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
                 handleAnswerCall(context, callId)
             }
 
-            AndroidNotificationService.ACTION_DECLINE_CALL -> {
+            AndroidNotificationService.ACTION_DECLINE -> {
                 val callId = intent.getStringExtra(AndroidNotificationService.KEY_CALL_ID) ?: run {
                     Log.w(TAG, "NotificationActionReceiver: missing callId in intent for decline call")
                     return
@@ -82,7 +82,7 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
         Log.d(TAG, "Replying to conversation $conversationId with message")
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                daemonBridge.sendMessage(accountId, conversationId, replyText)
+                daemonBridge.sendMessage(accountId, conversationId, replyText, "", 0)
                 // Cancel notification after successful reply
                 cancelMessageNotification(context, conversationId)
             } catch (e: Exception) {
@@ -113,7 +113,8 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
         Log.d(TAG, "Answering call $callId")
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                callService.acceptCall(callId)
+                val accountId = callService.getCall(callId)?.account ?: return@launch
+                callService.accept(accountId, callId)
                 cancelCallNotification(context, callId)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to answer call $callId", e)
@@ -125,7 +126,8 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
         Log.d(TAG, "Declining call $callId")
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                callService.hangupCall(callId)
+                val accountId = callService.getCall(callId)?.account ?: return@launch
+                callService.refuse(accountId, callId)
                 cancelCallNotification(context, callId)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to decline call $callId", e)

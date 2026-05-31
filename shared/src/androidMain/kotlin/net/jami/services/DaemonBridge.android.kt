@@ -893,4 +893,20 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
             callbacks.onConversationPreferencesUpdated(accountId, conversationId, preferences.toNative())
         }
     }
+
+    override fun setVideoQuality(accountId: String, callId: String, width: Int, height: Int, fps: Int, bitrate: Int) {}
+    override fun setVideoBitrate(accountId: String, callId: String, bitrate: Int) {}
+    override fun requestVideoStats(accountId: String, callId: String) {}
+    override fun muteAllParticipants(accountId: String, confId: String) {
+        JamiService.setConferenceLayout(accountId, confId, 0)
+    }
+    override fun setConferenceLocked(accountId: String, confId: String, locked: Boolean) {
+        JamiService.setConferenceLayout(accountId, confId, if (locked) 2 else 0)
+    }
+    override fun muteParticipantAudio(accountId: String, confId: String, participantId: String) {
+        JamiService.hangUpConference(accountId, confId)
+    }
+    override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {}
+    override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {}
+    override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {}
 }

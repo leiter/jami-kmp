@@ -267,7 +267,7 @@ private fun CallScreenContent(
             } else if (state.remoteVideoSinkId.isNotEmpty()) {
                 VideoRenderer(
                     modifier = Modifier.fillMaxSize(),
-                    callId = state.callId,
+                    callId = state.remoteVideoSinkId,
                     isLocalVideo = false
                 )
             }
@@ -282,7 +282,7 @@ private fun CallScreenContent(
             ) {
                 VideoRenderer(
                     modifier = Modifier.fillMaxSize(),
-                    callId = state.callId,
+                    callId = state.remoteVideoSinkId,
                     isLocalVideo = true
                 )
             }

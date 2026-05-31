@@ -27,7 +27,7 @@ import net.jami.services.ContactService
 import net.jami.services.ConversationFacade
 import net.jami.services.StubDaemonBridge
 import net.jami.services.StubDeviceRuntimeService
-import net.jami.services.StubHardwareService
+import net.jami.services.expect.HardwareService
 import net.jami.services.StubHistoryService
 import net.jami.services.StubNotificationService
 import net.jami.services.StubPreferencesService
@@ -68,7 +68,7 @@ fun makeAccountService(
     // leave uncompleted coroutines in the enclosing TestScope.
     // But inherit the test's coroutine context so advanceUntilIdle() works.
     val serviceScope = CoroutineScope(scope.coroutineContext + SupervisorJob())
-    return AccountService(stub, StubHardwareService(), StubDeviceRuntimeService(), serviceScope)
+    return AccountService(stub, HardwareService(), StubDeviceRuntimeService(), serviceScope)
 }
 
 /**
@@ -114,7 +114,7 @@ fun makeConversationFacade(
     accountService = accountService,
     contactService = contactService,
     notificationService = StubNotificationService(),
-    hardwareService = StubHardwareService(),
+    hardwareService = HardwareService(),
     deviceRuntimeService = StubDeviceRuntimeService(),
     preferencesService = StubPreferencesService(),
     daemonBridge = stub,

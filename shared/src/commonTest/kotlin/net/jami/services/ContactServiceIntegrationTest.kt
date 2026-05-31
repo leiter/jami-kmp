@@ -37,7 +37,7 @@ class ContactServiceIntegrationTest {
         stub: StubDaemonBridge,
         scope: kotlinx.coroutines.test.TestScope
     ): Pair<AccountService, ContactService> {
-        val accountService = AccountService(stub, net.jami.services.StubHardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
+        val accountService = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
         val contactService = ContactService(scope, accountService, stub)
         return accountService to contactService
     }

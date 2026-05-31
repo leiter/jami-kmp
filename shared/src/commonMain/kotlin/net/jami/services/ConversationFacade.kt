@@ -45,6 +45,7 @@ import net.jami.model.Profile
 import net.jami.model.SwarmMessage
 import net.jami.model.TextMessage
 import net.jami.model.Uri
+import net.jami.services.expect.HardwareService
 import net.jami.utils.Log
 import net.jami.utils.currentTimeMillis
 

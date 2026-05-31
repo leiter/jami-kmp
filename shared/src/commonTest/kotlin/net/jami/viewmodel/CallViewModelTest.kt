@@ -19,7 +19,7 @@ package net.jami.viewmodel
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.services.StubDaemonBridge
-import net.jami.services.StubHardwareService
+import net.jami.services.expect.HardwareService
 import net.jami.ui.viewmodel.CallMode
 import net.jami.ui.viewmodel.CallViewModel
 import kotlin.test.Test
@@ -34,7 +34,7 @@ class CallViewModelTest {
         val accountService = makeAccountService(stub, scope)
         val contactService = makeContactService(stub, accountService, scope)
         val callService = makeCallService(stub, accountService, scope = scope)
-        val vm = CallViewModel(callService, accountService, contactService, StubHardwareService(), scope)
+        val vm = CallViewModel(callService, accountService, contactService, HardwareService(), scope)
         return Triple(vm, callService, accountService)
     }
 

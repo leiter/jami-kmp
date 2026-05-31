@@ -16,6 +16,12 @@
  */
 package net.jami.services
 
+import net.jami.services.expect.AudioOutput
+import net.jami.services.expect.AudioOutputType
+import net.jami.services.expect.AudioState
+import net.jami.services.expect.BluetoothEvent
+import net.jami.services.expect.HardwareService
+import net.jami.services.expect.VideoEvent
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import net.jami.model.Call
@@ -102,33 +108,29 @@ class HardwareServiceTest {
 
     @Test
     fun testAudioStateDefaults() {
-        val state = AudioState(HardwareService.OUTPUT_INTERNAL)
-        assertEquals(HardwareService.OUTPUT_INTERNAL, state.output)
+        val internal = AudioOutput(AudioOutputType.INTERNAL)
+        val state = AudioState(internal)
+        assertEquals(AudioOutputType.INTERNAL, state.output.type)
         assertTrue(state.availableOutputs.isEmpty())
     }
 
     @Test
     fun testAudioStateWithMultipleOutputs() {
-        val outputs = listOf(
-            HardwareService.OUTPUT_INTERNAL,
-            HardwareService.OUTPUT_SPEAKERS,
-            HardwareService.OUTPUT_BLUETOOTH
-        )
-        val state = AudioState(
-            output = HardwareService.OUTPUT_SPEAKERS,
-            availableOutputs = outputs
-        )
-        assertEquals(HardwareService.OUTPUT_SPEAKERS, state.output)
+        val internal = AudioOutput(AudioOutputType.INTERNAL)
+        val speakers = AudioOutput(AudioOutputType.SPEAKERS)
+        val bluetooth = AudioOutput(AudioOutputType.BLUETOOTH)
+        val outputs = listOf(internal, speakers, bluetooth)
+        val state = AudioState(output = speakers, availableOutputs = outputs)
+        assertEquals(AudioOutputType.SPEAKERS, state.output.type)
         assertEquals(3, state.availableOutputs.size)
     }
 
     @Test
-    fun testCompanionObjectConstants() {
-        assertEquals(AudioOutputType.SPEAKERS, HardwareService.OUTPUT_SPEAKERS.type)
-        assertEquals(AudioOutputType.INTERNAL, HardwareService.OUTPUT_INTERNAL.type)
-        assertEquals(AudioOutputType.WIRED, HardwareService.OUTPUT_WIRED.type)
-        assertEquals(AudioOutputType.BLUETOOTH, HardwareService.OUTPUT_BLUETOOTH.type)
-        assertEquals(HardwareService.OUTPUT_INTERNAL, HardwareService.STATE_INTERNAL.output)
+    fun testDefaultAudioOutputTypes() {
+        assertEquals(AudioOutputType.INTERNAL, AudioOutput(AudioOutputType.INTERNAL).type)
+        assertEquals(AudioOutputType.SPEAKERS, AudioOutput(AudioOutputType.SPEAKERS).type)
+        assertEquals(AudioOutputType.WIRED, AudioOutput(AudioOutputType.WIRED).type)
+        assertEquals(AudioOutputType.BLUETOOTH, AudioOutput(AudioOutputType.BLUETOOTH).type)
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -137,11 +139,11 @@ class HardwareServiceTest {
 
     @Test
     fun testStubInitialState() = runTest {
-        val stub = StubHardwareService()
+        val stub = HardwareService()
 
-        // Check initial audio state
+        // Check initial audio state — default is INTERNAL output
         val audioState = stub.audioState.first()
-        assertEquals(HardwareService.STATE_INTERNAL, audioState)
+        assertEquals(AudioOutputType.INTERNAL, audioState.output.type)
 
         // Check default values
         assertFalse(stub.isSpeakerphoneOn())
@@ -156,7 +158,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubSpeakerToggle() {
-        val stub = StubHardwareService()
+        val stub = HardwareService()
 
         assertFalse(stub.isSpeakerphoneOn())
 
@@ -170,7 +172,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubConnectivityChanged() = runTest {
-        val stub = StubHardwareService()
+        val stub = HardwareService()
 
         // Initial state should be connected (true)
         val initialState = stub.connectivityState.first()
@@ -189,7 +191,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubLogging() {
-        val stub = StubHardwareService()
+        val stub = HardwareService()
 
         assertFalse(stub.isLogging)
 
@@ -208,7 +210,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubVideoOperations() {
-        val stub = StubHardwareService()
+        val stub = HardwareService()
 
         // These should not throw
         assertFalse(stub.hasInput("test"))
@@ -221,7 +223,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubCameraOperations() {
-        val stub = StubHardwareService()
+        val stub = HardwareService()
 
         // These should not throw
         stub.startCameraPreview(true)
@@ -242,7 +244,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubSurfaceOperations() {
-        val stub = StubHardwareService()
+        val stub = HardwareService()
 
         // These should not throw
         stub.addVideoSurface("sink1", Any())
@@ -257,7 +259,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubMediaHandler() {
-        val stub = StubHardwareService()
+        val stub = HardwareService()
 
         // These should not throw
         stub.startMediaHandler("handler1")
@@ -268,7 +270,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubAudioOperations() {
-        val stub = StubHardwareService()
+        val stub = HardwareService()
 
         stub.updateAudioState(null, createDummyCall(), true, false)
         stub.closeAudioState()
@@ -279,7 +281,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubSinkOperations() = runTest {
-        val stub = StubHardwareService()
+        val stub = HardwareService()
 
         val sinkSize = stub.getSinkSize("sink1")
         assertEquals(0 to 0, sinkSize)
@@ -291,7 +293,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubPreviewSettings() {
-        val stub = StubHardwareService()
+        val stub = HardwareService()
 
         stub.setPreviewSettings()
         stub.setPreviewSettings(mapOf("camera:0" to mapOf("width" to "1920")))

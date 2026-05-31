@@ -23,6 +23,7 @@ import net.jami.database.DatabaseDriverFactory
 import net.jami.database.JamiDatabase
 import net.jami.services.*
 import net.jami.services.DaemonBridgeApi
+import net.jami.services.expect.HardwareService
 
 /**
  * Android platform module providing Android-specific service implementations.
@@ -78,9 +79,7 @@ actual val platformModule: Module = module {
      * Android hardware service.
      * Provides audio management via AudioManager.
      */
-    single<HardwareService> {
-        AndroidHardwareService(androidContext())
-    }
+    single { HardwareService() }
 
     /**
      * Android notification service.

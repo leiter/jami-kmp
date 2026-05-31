@@ -341,8 +341,16 @@ class AndroidNotificationService(
         val senderName = conversation.getDisplayName()
         val groupKey = "jami_messages_$conversationKey" // Unique group key for the conversation
 
+        val notificationActionReceiverClass = try {
+            Class.forName("net.jami.android.service.NotificationActionReceiver")
+        } catch (e: ClassNotFoundException) { null }
+
         // Create pending intents for actions
-        val replyIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+        val replyIntent = if (notificationActionReceiverClass != null) {
+            Intent(context, notificationActionReceiverClass)
+        } else {
+            Intent(ACTION_REPLY_MESSAGE).also { it.setPackage(context.packageName) }
+        }.apply {
             action = ACTION_REPLY_MESSAGE
             putExtra(KEY_ACCOUNT_ID, conversation.accountId)
             putExtra(KEY_CONVERSATION_ID, conversation.uri.uri)
@@ -353,14 +361,18 @@ class AndroidNotificationService(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         )
 
-        val markReadIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+        val markReadIntent = if (notificationActionReceiverClass != null) {
+            Intent(context, notificationActionReceiverClass)
+        } else {
+            Intent(ACTION_MARK_READ).also { it.setPackage(context.packageName) }
+        }.apply {
             action = ACTION_MARK_READ
             putExtra(KEY_ACCOUNT_ID, conversation.accountId)
             putExtra(KEY_CONVERSATION_ID, conversation.uri.uri)
             setPackage(context.packageName)
         }
         val markReadPendingIntent = PendingIntent.getBroadcast(
-            context, notifId + 1, markReadIntent, // Unique request code
+            context, notifId + 1, markReadIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -415,7 +427,6 @@ class AndroidNotificationService(
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setOnlyAlertOnce(true) // Only alert for the first message in the group
-            .build()
 
         notificationManager.notify(summaryNotificationId, summaryBuilder.build())
         Log.d(TAG, "Showing group summary notification for conversation: $conversationKey")
@@ -640,13 +651,13 @@ class AndroidNotificationService(
         // Android handles LED through notification channels for API 26+
     }
 
-    private fun createCallActionPendingIntent(callId: String, action: String): PendingIntent {
+    private fun createCallActionPendingIntent(callId: String, action: String): PendingIntent? {
         val callActionReceiverClass = try {
             Class.forName("net.jami.android.service.CallActionReceiver")
         } catch (e: Exception) {
-            // Fallback if CallActionReceiver is not found
-            NotificationActionReceiver::class.java
-        }
+            try { Class.forName("net.jami.android.service.NotificationActionReceiver") }
+            catch (e2: Exception) { null }
+        } ?: return null
 
         val intent = Intent(context, callActionReceiverClass).apply {
             this.action = action

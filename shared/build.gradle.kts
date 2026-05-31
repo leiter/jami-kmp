@@ -132,6 +132,14 @@ kotlin {
             }
         }
 
+        val androidInstrumentedTest by getting {
+            dependencies {
+                implementation(libs.compose.ui.test.junit4)
+                implementation(libs.compose.ui.test.manifest)
+                implementation(libs.androidx.test.ext.junit)
+            }
+        }
+
         val androidMain by getting {
             dependencies {
                 implementation(libs.kotlinx.coroutines.android)

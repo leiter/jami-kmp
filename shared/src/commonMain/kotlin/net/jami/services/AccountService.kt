@@ -48,6 +48,7 @@ import net.jami.model.Interaction
 import net.jami.model.SwarmMessage
 import net.jami.model.TrustRequest
 import net.jami.model.Uri
+import net.jami.services.expect.HardwareService
 import net.jami.utils.Log
 
 /**
@@ -1082,11 +1083,7 @@ class AccountService(
             )
             _accountEvents.emit(AccountEvent.IncomingTrustRequest(accountId, request))
 
-            // Show notification for incoming trust request
-            val account = getAccount(accountId)
-            if (account != null) {
-                notificationService.showIncomingTrustRequestNotification(account)
-            }
+            // Notification for incoming trust request handled at app layer via AccountEvent observer
         }
     }
 

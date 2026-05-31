@@ -38,7 +38,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.flow.collectLatest
-import net.jami.services.HardwareService
+import net.jami.services.expect.HardwareService
+import net.jami.services.expect.VideoEvent
 import net.jami.utils.Log
 import org.koin.compose.koinInject
 
