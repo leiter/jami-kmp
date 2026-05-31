@@ -317,13 +317,14 @@ fun AccountSettingsScreen(
                 .clearFocusOnTap()
                 .verticalScroll(rememberScrollState()),
         ) {
-            JamiFormattedTextField(
-                value = textValue,
-                onValueChange = { textValue = it}
-            )
+
             // ── PROFIL ────────────────────────────────────────────────────
             JamiSectionTitle(title = stringResource(Res.string.profile))
-
+            JamiFormattedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = textValue,
+                onValueChange = { textValue = it },
+            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
