@@ -5,7 +5,11 @@
 android-app/build/
 android-app/debug.keystore
 android-app/src/androidMain/jniLibs/
+build/
 build-logic/.gradle/
+desktop-app/build/
+ios-app/build/
 kotlin-js-store/
 local.properties
 shared/build/
+web-app/build/
