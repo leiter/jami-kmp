@@ -21,6 +21,7 @@ import org.koin.dsl.module
 import net.jami.database.DatabaseDriverFactory
 import net.jami.database.JamiDatabase
 import net.jami.services.*
+import net.jami.services.expect.HardwareService
 
 /**
  * Desktop (JVM) platform module providing desktop-specific service implementations.
@@ -70,9 +71,7 @@ actual val platformModule: Module = module {
      * Desktop hardware service.
      * Provides audio management via Java Sound API.
      */
-    single<HardwareService> {
-        DesktopHardwareService()
-    }
+    single { HardwareService() }
 
     /**
      * Desktop notification service.

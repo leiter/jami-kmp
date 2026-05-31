@@ -32,7 +32,7 @@ import androidx.compose.ui.interop.UIKitView
 import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
-import net.jami.services.HardwareService
+import net.jami.services.expect.HardwareService
 import net.jami.services.IOSCameraService
 import net.jami.utils.Log
 import org.koin.compose.koinInject

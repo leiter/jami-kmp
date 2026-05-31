@@ -5,7 +5,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.interop.UIKitView
 import kotlinx.cinterop.ExperimentalForeignApi
-import net.jami.services.actual.HardwareService
+import net.jami.services.expect.HardwareService
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import platform.UIKit.UIView

@@ -21,6 +21,7 @@ import org.koin.dsl.module
 import net.jami.database.DatabaseDriverFactory
 import net.jami.database.JamiDatabase
 import net.jami.services.*
+import net.jami.services.expect.HardwareService
 
 /**
  * iOS platform module providing iOS-specific service implementations.
@@ -86,9 +87,7 @@ actual val platformModule: Module = module {
      * iOS hardware service.
      * Provides audio session management via AVFoundation and camera integration.
      */
-    single<HardwareService> {
-        IOSHardwareService(daemonBridge = get())
-    }
+    single { HardwareService() }
 
     /**
      * iOS notification service.
