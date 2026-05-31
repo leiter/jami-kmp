@@ -51,6 +51,7 @@ class Conference(
     var isModerator: Boolean = false
     var isAudioMuted: Boolean = false
     var isVideoMuted: Boolean = false
+    var isLocked: Boolean = false
     var maximizedParticipant: Contact? = null
 
     val participants: List<Call>

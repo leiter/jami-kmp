@@ -1,6 +1,7 @@
 package net.jami.android
 
 import android.content.Intent
+import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,9 +9,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import net.jami.android.service.CallActionReceiver
 import net.jami.services.AccountService
+import net.jami.services.AndroidPictureInPictureManager
 import net.jami.services.CallService
 import net.jami.services.NotificationService
 import net.jami.services.SyncManager
+import net.jami.services.actual.HardwareService
 import net.jami.ui.JamiApp
 import net.jami.utils.Log
 import org.koin.android.ext.android.inject
@@ -20,10 +23,13 @@ class MainActivity : ComponentActivity() {
     private val syncManager: SyncManager by inject()
     private val accountService: AccountService by inject()
     private val callService: CallService by inject()
+    private val hardwareService: HardwareService by inject()
+    private val pipManager: AndroidPictureInPictureManager by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        pipManager.attachActivity(this)
         setContent {
             JamiApp()
         }
@@ -33,6 +39,22 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleCallIntent(intent)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        pipManager.detachActivity()
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        // Enter PiP mode when user navigates away during an active call
+        pipManager.enterPipMode()
+    }
+
+    override fun onPictureInPictureModeChanged(isInPipMode: Boolean) {
+        super.onPictureInPictureModeChanged(isInPipMode)
+        pipManager.onPipModeChanged(isInPipMode)
     }
 
     override fun onStop() {
@@ -49,6 +71,25 @@ class MainActivity : ComponentActivity() {
         if (syncManager.isBackgroundSyncActive) {
             Log.d(TAG, "App foregrounded, stopping background sync")
             syncManager.stopBackgroundSync()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        when (requestCode) {
+            REQUEST_SCREEN_SHARE -> {
+                if (resultCode == RESULT_OK && data != null) {
+                    val mediaProjection = (getSystemService(MEDIA_PROJECTION_SERVICE) as? MediaProjectionManager)
+                        ?.getMediaProjection(resultCode, data)
+                    if (mediaProjection != null) {
+                        hardwareService.setPendingScreenShareProjection(mediaProjection)
+                        Log.d(TAG, "Screen share permission granted, projection stored")
+                    }
+                } else {
+                    Log.w(TAG, "Screen share permission denied")
+                }
+            }
         }
     }
 
@@ -91,8 +132,20 @@ class MainActivity : ComponentActivity() {
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
+    fun requestScreenSharePermission() {
+        val mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as? MediaProjectionManager
+        if (mediaProjectionManager != null) {
+            startActivityForResult(
+                mediaProjectionManager.createScreenCaptureIntent(),
+                REQUEST_SCREEN_SHARE
+            )
+            Log.d(TAG, "Screen share permission request started")
+        }
+    }
+
     companion object {
         private const val TAG = "MainActivity"
         const val ACTION_ACCEPT_CALL = "net.jami.action.ACCEPT_CALL"
+        const val REQUEST_SCREEN_SHARE = 1001
     }
 }

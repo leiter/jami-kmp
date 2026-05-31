@@ -95,14 +95,10 @@ actual fun VideoSurface(
 
                         override fun surfaceDestroyed(holder: SurfaceHolder) {
                             Log.d(TAG, "surfaceDestroyed for sink: $sinkId")
-                            hardwareService.removeVideoSurface(sinkId)
                             surfaceReady = false
                         }
                     })
                 }
-            },
-            onRelease = {
-                hardwareService.removeVideoSurface(sinkId)
             }
         )
     }

@@ -212,6 +212,18 @@ class AndroidPictureInPictureManager : PictureInPictureManager {
         sourceRect = Rect(left, top, right, bottom)
     }
 
+    private var currentCallState: net.jami.ui.viewmodel.CallState? = null
+
+    override fun attachCallState(callState: net.jami.ui.viewmodel.CallState) {
+        currentCallState = callState
+        Log.d(tag, "Call state attached: ${callState.callMode}")
+    }
+
+    override fun detachCallState() {
+        currentCallState = null
+        Log.d(tag, "Call state detached")
+    }
+
     override fun configurePipActions(actions: List<PipAction>) {
         currentActions = actions.take(3) // Max 3 actions on Android
 

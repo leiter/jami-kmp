@@ -156,6 +156,14 @@ class IOSPictureInPictureManager : PictureInPictureManager {
         // The system provides standard playback controls
     }
 
+    override fun attachCallState(callState: net.jami.ui.viewmodel.CallState) {
+        Log.d(tag, "Call state attached: ${callState.callMode}")
+    }
+
+    override fun detachCallState() {
+        Log.d(tag, "Call state detached")
+    }
+
     fun cleanup() {
         pipController?.delegate = null
         pipController = null

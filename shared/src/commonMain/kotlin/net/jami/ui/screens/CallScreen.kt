@@ -62,6 +62,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -113,6 +114,10 @@ fun CallScreen(
         viewModel.initOutgoing(contactUri = contactId, hasVideo = isVideo)
     }
 
+    DisposableEffect(Unit) {
+        onDispose { viewModel.onCleared() }
+    }
+
     CallScreenContent(
         state = state,
         onAccept = { viewModel.acceptCurrent(withVideo = isVideo) },
@@ -133,6 +138,8 @@ fun CallScreen(
         onToggleStats = { viewModel.toggleVideoStats() },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onEnded = onEnd,
+        onRetryVideo = { viewModel.retryRemoteVideo() },
+        onFallbackAudio = { viewModel.fallbackToAudioOnly() },
     )
 }
 
@@ -151,9 +158,13 @@ fun IncomingCallScreen(
         viewModel.initIncoming(callId, actionViewOnly = false)
     }
 
+    DisposableEffect(Unit) {
+        onDispose { viewModel.onCleared() }
+    }
+
     CallScreenContent(
         state = state,
-        onAccept = { viewModel.acceptCurrent(withVideo = false) },
+        onAccept = { viewModel.acceptCurrent(withVideo = state.isVideo) },
         onDecline = { viewModel.refuseCurrent() },
         onEnd = {
             viewModel.endCall()
@@ -166,8 +177,13 @@ fun IncomingCallScreen(
         onSwitchCamera = { viewModel.switchCamera() },
         onToggleLocalPreview = { viewModel.toggleLocalPreviewVisibility() },
         onToggleScreenShare = { viewModel.toggleScreenShare() },
+        onMuteAll = { viewModel.muteAllParticipants() },
+        onToggleConferenceLock = { locked -> viewModel.toggleConferenceLock(locked) },
+        onToggleStats = { viewModel.toggleVideoStats() },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onEnded = onEnd,
+        onRetryVideo = { viewModel.retryRemoteVideo() },
+        onFallbackAudio = { viewModel.fallbackToAudioOnly() },
     )
 }
 
@@ -192,11 +208,27 @@ private fun CallScreenContent(
     onToggleStats: () -> Unit = {},
     onSendDtmf: (Char) -> Unit,
     onEnded: () -> Unit,
+    onRetryVideo: () -> Unit,
+    onFallbackAudio: () -> Unit,
 ) {
     // Navigate back on terminal state
     LaunchedEffect(state.callMode) {
         if (state.callMode is CallMode.Ended) {
             onEnded()
+        }
+    }
+
+    // Wire call state into PiP manager
+    DisposableEffect(Unit) {
+        try {
+            val pipManager = org.koin.core.context.GlobalContext.get().get<net.jami.services.PictureInPictureManager>()
+            pipManager.attachCallState(state)
+            onDispose {
+                pipManager.detachCallState()
+            }
+        } catch (e: Exception) {
+            // PiP manager not available on this platform
+            onDispose { }
         }
     }
 
@@ -225,13 +257,20 @@ private fun CallScreenContent(
             },
     ) {
         // Video rendering
-        // Remote video
-        if (state.hasRemoteVideo && state.remoteVideoSinkId.isNotEmpty() && !state.videoLoss.isFallbackToAudioOnly) {
-            VideoRenderer(
-                modifier = Modifier.fillMaxSize(),
-                callId = state.callId,
-                isLocalVideo = false
-            )
+        // Remote video or conference grid
+        if (state.hasRemoteVideo && !state.videoLoss.isFallbackToAudioOnly) {
+            if (state.isConference && state.participants.isNotEmpty()) {
+                ConferenceVideoLayout(
+                    participants = state.participants,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else if (state.remoteVideoSinkId.isNotEmpty()) {
+                VideoRenderer(
+                    modifier = Modifier.fillMaxSize(),
+                    callId = state.callId,
+                    isLocalVideo = false
+                )
+            }
         }
 
         // Local video preview (draggable)
@@ -266,8 +305,8 @@ private fun CallScreenContent(
         // Video loss overlay (network resilience)
         VideoLossOverlay(
             videoLoss = state.videoLoss,
-            onRetry = { viewModel.retryRemoteVideo() },
-            onAudioOnly = { viewModel.fallbackToAudioOnly() },
+            onRetry = onRetryVideo,
+            onAudioOnly = onFallbackAudio,
             modifier = Modifier.fillMaxSize()
         )
 
@@ -661,14 +700,12 @@ private fun OnGoingControls(
                 )
 
                 // Lock conference button
-                var isConferenceLocked by remember { mutableStateOf(false) }
                 CallControlButton(
-                    icon = if (isConferenceLocked) Icons.Default.Lock else Icons.Default.LockOpen,
-                    contentDescription = if (isConferenceLocked) "Unlock conference" else "Lock conference",
-                    isActive = isConferenceLocked,
+                    icon = if (state.isConferenceLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                    contentDescription = if (state.isConferenceLocked) "Unlock conference" else "Lock conference",
+                    isActive = state.isConferenceLocked,
                     onClick = {
-                        isConferenceLocked = !isConferenceLocked
-                        onToggleConferenceLock(isConferenceLocked)
+                        onToggleConferenceLock(!state.isConferenceLocked)
                     },
                 )
             }

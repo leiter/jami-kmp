@@ -516,13 +516,42 @@ class IOSCameraService(
                 currentParams = params.copy(width = width, height = height)
             }
 
-            // Emit frame event
+            // Extract frame data and pass to daemon
+            try {
+                val pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) ?: return
+
+                // Lock base address to access raw pixel data
+                platform.CoreVideo.CVPixelBufferLockBaseAddress(pixelBuffer, 0)
+
+                val baseAddress = platform.CoreVideo.CVPixelBufferGetBaseAddress(pixelBuffer)
+                if (baseAddress != null) {
+                    val bytesPerRow = platform.CoreVideo.CVPixelBufferGetBytesPerRow(pixelBuffer).toInt()
+                    val frameSize = bytesPerRow * height * 3 / 2  // NV12: 1.5 bytes per pixel
+
+                    // Extract frame data from native memory
+                    val frameData = ByteArray(frameSize)
+                    for (i in 0 until frameSize) {
+                        frameData[i] = (baseAddress + i).readValue<Byte>()
+                    }
+
+                    // Forward NV12 frame to daemon
+                    daemonBridge.captureVideoFrame(
+                        uri = "camera://${params.cameraId}",
+                        data = frameData,
+                        rotation = deviceOrientation
+                    )
+                }
+
+                // Unlock base address
+                platform.CoreVideo.CVPixelBufferUnlockBaseAddress(pixelBuffer, 0)
+            } catch (e: Exception) {
+                Log.w(tag, "Failed to forward frame to daemon: ${e.message}")
+            }
+
+            // Emit frame event for UI
             scope.launch {
                 _frameEvents.emit(FrameEvent(params.cameraId, width, height))
             }
-
-            // TODO: Pass frame data to daemon via captureVideoFrame
-            // This requires encoding the frame data which needs VideoToolbox integration
         }
     }
 

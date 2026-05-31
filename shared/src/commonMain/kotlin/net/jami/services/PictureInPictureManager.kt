@@ -103,6 +103,18 @@ interface PictureInPictureManager {
      * @param actions List of actions to show (max 3 on most platforms)
      */
     fun configurePipActions(actions: List<PipAction>)
+
+    /**
+     * Attach call state to PiP manager so it can make informed decisions about PiP entry.
+     *
+     * @param callState The current call state
+     */
+    fun attachCallState(callState: net.jami.ui.viewmodel.CallState)
+
+    /**
+     * Detach call state when the call screen is disposed.
+     */
+    fun detachCallState()
 }
 
 /**

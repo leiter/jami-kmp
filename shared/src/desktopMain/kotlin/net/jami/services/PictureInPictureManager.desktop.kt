@@ -52,6 +52,10 @@ class DesktopPictureInPictureManager : PictureInPictureManager {
     override fun setSourceRectHint(left: Int, top: Int, right: Int, bottom: Int) { }
 
     override fun configurePipActions(actions: List<PipAction>) { }
+
+    override fun attachCallState(callState: net.jami.ui.viewmodel.CallState) { }
+
+    override fun detachCallState() { }
 }
 
 actual fun createPictureInPictureManager(): PictureInPictureManager {

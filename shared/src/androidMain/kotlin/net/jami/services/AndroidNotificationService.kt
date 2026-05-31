@@ -641,7 +641,14 @@ class AndroidNotificationService(
     }
 
     private fun createCallActionPendingIntent(callId: String, action: String): PendingIntent {
-        val intent = Intent(context, NotificationActionReceiver::class.java).apply {
+        val callActionReceiverClass = try {
+            Class.forName("net.jami.android.service.CallActionReceiver")
+        } catch (e: Exception) {
+            // Fallback if CallActionReceiver is not found
+            NotificationActionReceiver::class.java
+        }
+
+        val intent = Intent(context, callActionReceiverClass).apply {
             this.action = action
             putExtra(NotificationService.KEY_CALL_ID, callId)
             setPackage(context.packageName)

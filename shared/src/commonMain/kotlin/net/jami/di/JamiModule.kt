@@ -171,6 +171,13 @@ val jamiModule = module {
         )
     }
 
+    /**
+     * Picture-in-Picture manager for video call PiP support.
+     */
+    single {
+        createPictureInPictureManager()
+    }
+
     // ==================== ViewModels ====================
 
     viewModelFactory { ConversationsViewModel(get(), get(), get(), get()) }

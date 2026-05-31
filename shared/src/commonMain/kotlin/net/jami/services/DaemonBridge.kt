@@ -271,6 +271,90 @@ interface DaemonBridgeApi {
      * @param uri New video input URI (e.g., "camera://1" or "camera://desktop")
      */
     fun switchVideoInput(accountId: String, callId: String, uri: String)
+
+    // ==================== Video Quality & Bitrate ====================
+    /**
+     * Set video quality parameters for a call.
+     *
+     * @param accountId Account ID
+     * @param callId Call ID
+     * @param width Video width in pixels
+     * @param height Video height in pixels
+     * @param fps Frames per second
+     * @param bitrate Bitrate in kbps
+     */
+    fun setVideoQuality(accountId: String, callId: String, width: Int, height: Int, fps: Int, bitrate: Int)
+
+    /**
+     * Set the video bitrate for a call.
+     *
+     * @param accountId Account ID
+     * @param callId Call ID
+     * @param bitrate Bitrate in kbps
+     */
+    fun setVideoBitrate(accountId: String, callId: String, bitrate: Int)
+
+    /**
+     * Request video statistics for a call.
+     *
+     * @param accountId Account ID
+     * @param callId Call ID
+     */
+    fun requestVideoStats(accountId: String, callId: String)
+
+    // ==================== Conference Participant Controls ====================
+    /**
+     * Mute audio for all participants in a conference.
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     */
+    fun muteAllParticipants(accountId: String, confId: String)
+
+    /**
+     * Lock or unlock a conference.
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param locked true to lock, false to unlock
+     */
+    fun setConferenceLocked(accountId: String, confId: String, locked: Boolean)
+
+    /**
+     * Mute audio for a specific participant in a conference.
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param participantId Participant ID
+     */
+    fun muteParticipantAudio(accountId: String, confId: String, participantId: String)
+
+    /**
+     * Unmute audio for a specific participant in a conference.
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param participantId Participant ID
+     */
+    fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String)
+
+    /**
+     * Disable video for a specific participant in a conference.
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param participantId Participant ID
+     */
+    fun disableParticipantVideo(accountId: String, confId: String, participantId: String)
+
+    /**
+     * Enable video for a specific participant in a conference.
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param participantId Participant ID
+     */
+    fun enableParticipantVideo(accountId: String, confId: String, participantId: String)
 }
 
 /**
@@ -525,4 +609,14 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun registerVideoCallback(id: String, windowId: Long): Boolean = false
     override fun unregisterVideoCallback(id: String, windowId: Long) {}
     override fun switchVideoInput(accountId: String, callId: String, uri: String) {}
+
+    override fun setVideoQuality(accountId: String, callId: String, width: Int, height: Int, fps: Int, bitrate: Int) {}
+    override fun setVideoBitrate(accountId: String, callId: String, bitrate: Int) {}
+    override fun requestVideoStats(accountId: String, callId: String) {}
+    override fun muteAllParticipants(accountId: String, confId: String) {}
+    override fun setConferenceLocked(accountId: String, confId: String, locked: Boolean) {}
+    override fun muteParticipantAudio(accountId: String, confId: String, participantId: String) {}
+    override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {}
+    override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {}
+    override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {}
 }
