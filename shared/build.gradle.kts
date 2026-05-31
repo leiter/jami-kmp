@@ -137,6 +137,7 @@ kotlin {
                 implementation(libs.compose.ui.test.junit4)
                 implementation(libs.compose.ui.test.manifest)
                 implementation(libs.androidx.test.ext.junit)
+                implementation(libs.androidx.test.runner)
             }
         }
 
@@ -189,6 +190,7 @@ android {
 
     defaultConfig {
         minSdk = libs.versions.androidMinSdk.get().toInt()
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
