@@ -175,11 +175,17 @@ class AndroidNotificationService(
     }
 
     override fun cancelCallNotification() {
-        currentCallNotificationId?.let { notifId ->
+        // Cancel every notification ID that was ever shown for a call.
+        // Two paths write to activeCallNotifications:
+        //   1. handleCallNotification → conference.id.hashCode()
+        //   2. showCallNotification (CallNotificationService) → NOTIF_CALL_BASE (1000)
+        // currentCallNotificationId only holds the *last* one written, so cancelling
+        // only that ID leaves the other notification visible.
+        activeCallNotifications.forEach { notifId ->
             notificationManager.cancel(notifId)
-            activeCallNotifications.remove(notifId)
             Log.d(TAG, "Cancelled call notification: $notifId")
         }
+        activeCallNotifications.clear()
         currentCallNotificationId = null
     }
 
