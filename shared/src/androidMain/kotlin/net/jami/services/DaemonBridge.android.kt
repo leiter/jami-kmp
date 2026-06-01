@@ -249,6 +249,10 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
         JamiService.acceptWithMedia(accountId, callId, mediaList.toSwigVectMap())
     }
 
+    override fun refuse(accountId: String, callId: String) {
+        JamiService.refuse(accountId, callId)
+    }
+
     override fun hangUp(accountId: String, callId: String) {
         JamiService.hangUp(accountId, callId)
     }

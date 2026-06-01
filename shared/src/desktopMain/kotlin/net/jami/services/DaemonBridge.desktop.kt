@@ -192,6 +192,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "accept called (stub): $callId")
     }
 
+    override fun refuse(accountId: String, callId: String) {
+        Log.d(TAG, "refuse called (stub): $callId")
+    }
+
     override fun hangUp(accountId: String, callId: String) {
         Log.d(TAG, "hangUp called (stub): $callId")
     }

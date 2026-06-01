@@ -190,6 +190,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.acceptCall(accountId, callId = callId, withVideo = hasVideo)
     }
 
+    override fun refuse(accountId: String, callId: String) {
+        bridge.refuse(accountId, callId = callId)
+    }
+
     override fun hangUp(accountId: String, callId: String) {
         bridge.hangUp(accountId, callId = callId)
     }

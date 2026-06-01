@@ -152,6 +152,10 @@ class CallService(
      */
     fun refuse(accountId: String, callId: String) {
         scope.launch {
+            // Mirror jami-android-client: refuse() for ringing calls, hangUp() as fallback.
+            // refuse() sends a SIP 486 Busy / Decline to the caller for calls not yet accepted.
+            // hangUp() terminates calls that are already active or in negotiation.
+            daemonBridge.refuse(accountId, callId)
             daemonBridge.hangUp(accountId, callId)
         }
     }

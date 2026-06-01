@@ -250,6 +250,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
         // TODO: POST /calls/{callId}/accept
     }
 
+    override fun refuse(accountId: String, callId: String) {
+        // TODO: POST /calls/{callId}/refuse
+    }
+
     override fun hangUp(accountId: String, callId: String) {
         // TODO: POST /calls/{callId}/hangup
     }

@@ -47,6 +47,7 @@ interface DaemonBridgeApi {
     // ==================== Call Operations ====================
     fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String
     fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>)
+    fun refuse(accountId: String, callId: String)
     fun hangUp(accountId: String, callId: String)
     fun hold(accountId: String, callId: String)
     fun unhold(accountId: String, callId: String)
@@ -506,6 +507,7 @@ class StubDaemonBridge : DaemonBridgeApi {
 
     override fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String = placeCallResult
     override fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {}
+    override fun refuse(accountId: String, callId: String) {}
     override fun hangUp(accountId: String, callId: String) {}
     override fun hold(accountId: String, callId: String) {}
     override fun unhold(accountId: String, callId: String) {}
