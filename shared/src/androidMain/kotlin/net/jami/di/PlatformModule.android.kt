@@ -81,7 +81,7 @@ actual val platformModule: Module = module {
      * Android hardware service.
      * Provides audio management via AudioManager.
      */
-    single { HardwareService() }
+    single { HardwareService(androidContext()) }
 
     /**
      * Exposes the same PictureInPictureManager instance under its concrete Android type
