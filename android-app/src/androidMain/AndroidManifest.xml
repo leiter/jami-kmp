@@ -18,6 +18,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
+    <!-- Auto-start after device reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <!-- Call foreground service permissions (API 29+) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
 
@@ -64,6 +67,24 @@
             android:name="net.jami.services.JamiSyncService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <!-- Persistent daemon service: keeps the process alive for incoming calls -->
+        <service
+            android:name=".service.JamiDaemonService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+            android:stopWithTask="false" />
+
+        <!-- Boot receiver: starts JamiDaemonService after device reboot -->
+        <receiver
+            android:name=".service.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
 
         <!-- Call foreground service: keeps audio alive while app is backgrounded -->
         <service

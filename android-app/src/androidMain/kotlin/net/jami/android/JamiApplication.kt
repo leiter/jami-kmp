@@ -1,7 +1,10 @@
 package net.jami.android
 
 import android.app.Application
+import android.content.Intent
 import android.util.Log
+import androidx.core.content.ContextCompat
+import net.jami.android.service.JamiDaemonService
 import net.jami.di.initKoin
 import net.jami.services.AccountService
 import net.jami.services.DaemonBridge
@@ -23,6 +26,9 @@ class JamiApplication : Application(), KoinComponent {
         initKoin {
             androidContext(this@JamiApplication)
         }
+
+        // Keep the daemon process alive even when the UI is closed
+        ContextCompat.startForegroundService(this, Intent(this, JamiDaemonService::class.java))
 
         // Initialize Jami daemon
         try {
