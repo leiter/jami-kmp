@@ -183,7 +183,7 @@ class CallService(
      */
     fun unhold(accountId: String, callId: String) {
         scope.launch {
-            daemonBridge.unhold(accountId, callId)
+            daemonBridge.resume(accountId, callId)
         }
     }
 
@@ -214,7 +214,7 @@ class CallService(
             unhold(conf.accountId, conf.id)
         } else {
             scope.launch {
-                daemonBridge.unholdConference(conf.accountId, conf.id)
+                daemonBridge.resumeConference(conf.accountId, conf.id)
             }
         }
     }
