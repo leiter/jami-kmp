@@ -238,8 +238,11 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
     // ==================== Call Operations ====================
 
     override fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String {
+        Log.d(TAG, "placeCall → JNI: accountId=$accountId uri=$uri mediaCount=${mediaList.size}")
         val swigMedia = mediaList.toSwigVectMap()
-        return JamiService.placeCallWithMedia(accountId, uri, swigMedia)
+        val callId = JamiService.placeCallWithMedia(accountId, uri, swigMedia)
+        Log.d(TAG, "placeCall ← JNI: callId='$callId'")
+        return callId
     }
 
     override fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {

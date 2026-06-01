@@ -334,14 +334,14 @@ fun ChatScreen(
                         }
                     } else {
                         // Normal mode: call buttons + overflow
-                        IconButton(onClick = { onCallClick(conversationId, false) }) {
+                        IconButton(onClick = { onCallClick(state.peerUri.ifEmpty { conversationId }, false) }) {
                             Icon(
                                 imageVector = Icons.Default.Call,
                                 contentDescription = stringResource(Res.string.content_desc_audio_call),
                                 tint = JamiTheme.colors.onSurface,
                             )
                         }
-                        IconButton(onClick = { onCallClick(conversationId, true) }) {
+                        IconButton(onClick = { onCallClick(state.peerUri.ifEmpty { conversationId }, true) }) {
                             Icon(
                                 imageVector = Icons.Default.Videocam,
                                 contentDescription = stringResource(Res.string.content_desc_video_call),

@@ -152,12 +152,14 @@ class CallViewModel(
      * Mirrors CallPresenter.initOutGoing().
      */
     fun initOutgoing(accountId: String = "", contactUri: String, hasVideo: Boolean, conversationUri: String? = null) {
+        Log.d(TAG, "initOutgoing: contactUri=$contactUri hasVideo=$hasVideo conversationUri=$conversationUri")
         scope.launch {
             val resolvedAccountId = accountId.ifEmpty {
                 accountService.currentAccount.value?.accountId ?: return@launch
             }
             currentAccountId = resolvedAccountId
             val peerUri = Uri.fromString(contactUri)
+            Log.d(TAG, "initOutgoing: resolvedAccount=$resolvedAccountId peerUri=${peerUri.uri} scheme=${peerUri.scheme}")
 
             _state.value = _state.value.copy(
                 callMode = CallMode.Outgoing,
@@ -172,12 +174,14 @@ class CallViewModel(
 
             try {
                 val convUri = conversationUri?.let { Uri.fromString(it) }
+                Log.d(TAG, "initOutgoing: calling placeCall accountId=$resolvedAccountId uri=${peerUri.uri} convUri=${convUri?.uri}")
                 val call = callService.placeCall(
                     accountId = resolvedAccountId,
                     contactUri = peerUri,
                     hasVideo = hasVideo,
                     conversationUri = convUri
                 )
+                Log.d(TAG, "initOutgoing: placeCall returned daemonId=${call.daemonId}")
                 currentCallId = call.daemonId
                 resolveContactName(resolvedAccountId, peerUri, call)
                 subscribeToConferenceUpdates(call.daemonId ?: return@launch)
@@ -758,5 +762,9 @@ class CallViewModel(
         videoLossJob?.cancel()
         hardwareService.cameraCleanup()
         scope.cancel()
+    }
+
+    companion object {
+        private const val TAG = "CallViewModel"
     }
 }

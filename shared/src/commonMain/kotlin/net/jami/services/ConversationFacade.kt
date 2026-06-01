@@ -1021,6 +1021,17 @@ class ConversationFacade(
             conversation.setProfile(Profile(title, null))
         }
 
+        // Associate the sender as the conversation contact so the pending list can show their name.
+        // Without this, conversation.contact is null and PendingRequestsViewModel filters out the item.
+        val fromId = metadata["from"]
+        if (!fromId.isNullOrEmpty()) {
+            val senderUri = Uri.fromId(fromId)
+            val contact = account.getContactFromCache(senderUri)
+            if (conversation.findContact(senderUri) == null) {
+                conversation.addContact(contact)
+            }
+        }
+
         account.addPendingConversation(conversation)
         scope.launch {
             _conversationEvents.emit(ConversationEvent.ConversationRequestReceived(accountId, conversationId, metadata))

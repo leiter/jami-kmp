@@ -31,6 +31,7 @@ import net.jami.model.Call.CallStatus
 import net.jami.model.Call.Direction
 import net.jami.model.Conference
 import net.jami.model.Media
+import net.jami.utils.Log
 import net.jami.model.Uri
 
 /**
@@ -76,6 +77,7 @@ class CallService(
         hasVideo: Boolean,
         conversationUri: Uri? = null
     ): Call {
+        Log.d(TAG, "placeCall: accountId=$accountId contactUri=${contactUri.uri} scheme=${contactUri.scheme} hasVideo=$hasVideo conversationUri=${conversationUri?.uri}")
         val mediaList = if (hasVideo) {
             listOf(Media.DEFAULT_AUDIO, Media.DEFAULT_VIDEO)
         } else {
@@ -96,6 +98,7 @@ class CallService(
         }
 
         val callId = daemonBridge.placeCall(accountId, contactUri.uri, mediaAttributes)
+        Log.d(TAG, "placeCall: daemon returned callId='$callId'")
 
         return if (callId.isEmpty()) {
             // For swarm calls, may return empty ID initially
@@ -397,6 +400,7 @@ class CallService(
         stateStr: String,
         detailCode: Int
     ) {
+        Log.d(TAG, "onCallStateChanged: callId=$callId state=$stateStr code=$detailCode")
         scope.launch {
             val callState = CallStatus.fromString(stateStr)
 
@@ -645,6 +649,7 @@ class CallService(
     }
 
     companion object {
+        private const val TAG = "CallService"
         const val MIME_TEXT_PLAIN = "text/plain"
         const val MIME_GEOLOCATION = "application/geo"
         const val MEDIA_TYPE_AUDIO = "MEDIA_TYPE_AUDIO"

@@ -173,6 +173,9 @@ private fun MainNavigation(needsMigration: Boolean) {
                 onConversationClick = { id ->
                     navController.navigate(Screen.Chat.createRoute(id))
                 },
+                onRequestsClick = {
+                    navController.navigate(Screen.PendingRequests.route)
+                },
                 onSearchClick = {
                     navController.navigate(Screen.Search.route)
                 },
@@ -393,6 +396,17 @@ private fun MainNavigation(needsMigration: Boolean) {
         composable(Screen.BlockedContacts.route) {
             BlockedContactsScreen(
                 onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(Screen.PendingRequests.route) {
+            PendingRequestsScreen(
+                onBack = { navController.popBackStack() },
+                onConversationOpened = { conversationId ->
+                    navController.navigate(Screen.Chat.createRoute(conversationId)) {
+                        popUpTo(Screen.PendingRequests.route) { inclusive = true }
+                    }
+                },
             )
         }
 

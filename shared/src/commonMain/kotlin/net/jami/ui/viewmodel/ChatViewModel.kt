@@ -120,6 +120,13 @@ data class ChatState(
     val highlightedMessageId: String? = null,
     /** Whether a contact in this conversation is sharing their location. */
     val contactSharingLocation: ContactSharingInfo? = null,
+    /**
+     * The peer's ring ID URI (e.g. "ring:abc123…") for 1-to-1 conversations.
+     * Empty for group conversations. Used as the call target instead of the
+     * conversation ID — passing a conversation ID to placeCallWithMedia causes
+     * "Found 0 device(s)" because the daemon treats it as an unknown ring ID.
+     */
+    val peerUri: String = "",
 )
 
 /**
@@ -214,11 +221,14 @@ class ChatViewModel(
                         peerUri = contact.uri.rawRingId
                     )
                 }
+                val peerUri = conversation?.contact?.uri?.uri ?: ""
+                Log.d(TAG, "loadConversation: id=$conversationId contact=${conversation?.contact?.uri} peerUri=$peerUri isGroup=${conversation?.isGroup}")
                 _state.value = _state.value.copy(
                     conversationTitle = title,
                     contactAvatarBytes = avatarBytes,
                     hasMoreHistory = true,
                     isLoadingMore = false,
+                    peerUri = peerUri,
                 )
 
                 // Mark conversation as visible and read all pending messages.
