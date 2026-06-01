@@ -260,6 +260,9 @@ interface NotificationService {
         /** Intent extra key for call ID */
         const val KEY_CALL_ID = "callId"
 
+        /** Intent extra key for account ID (used in call action broadcasts) */
+        const val KEY_ACCOUNT_ID = "accountId"
+
         /** Intent extra key for hold action */
         const val KEY_HOLD_ID = "holdId"
 

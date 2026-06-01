@@ -26,32 +26,36 @@ class CallActionReceiver : BroadcastReceiver(), KoinComponent {
             Log.w(TAG, "CallActionReceiver: missing callId in intent")
             return
         }
-        val call = callService.getCall(callId) ?: run {
-            Log.w(TAG, "CallActionReceiver: call not found for id=$callId")
-            return
-        }
-        val accountId = call.account
+        // accountId is now embedded directly in the intent so we can act even if the
+        // in-memory call map no longer holds the call (e.g. ended between notification
+        // display and button press, or confId/daemonId mismatch).
+        val accountId = intent.getStringExtra(NotificationService.KEY_ACCOUNT_ID)
+            ?: callService.getCall(callId)?.account
+            ?: run {
+                Log.w(TAG, "CallActionReceiver: no accountId for callId=$callId")
+                return
+            }
 
         when (intent.action) {
             AndroidNotificationService.ACTION_ANSWER -> {
-                Log.d(TAG, "Answer call: $callId")
+                Log.d(TAG, "Answer call: callId=$callId accountId=$accountId")
                 callService.accept(accountId, callId, hasVideo = false)
-                // Bring the app to the foreground so the CallScreen is visible
                 val viewIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
                     action = ACTION_VIEW_CALL
                     putExtra(NotificationService.KEY_CALL_ID, callId)
+                    putExtra(NotificationService.KEY_ACCOUNT_ID, accountId)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 }
                 context.startActivity(viewIntent)
             }
 
             AndroidNotificationService.ACTION_DECLINE -> {
-                Log.d(TAG, "Decline call: $callId")
+                Log.d(TAG, "Decline call: callId=$callId accountId=$accountId")
                 callService.refuse(accountId, callId)
             }
 
             AndroidNotificationService.ACTION_HANGUP -> {
-                Log.d(TAG, "Hangup call: $callId")
+                Log.d(TAG, "Hangup call: callId=$callId accountId=$accountId")
                 callService.hangUp(accountId, callId)
             }
 

@@ -90,8 +90,6 @@
             <intent-filter>
                 <action android:name="net.jami.action.REPLY_MESSAGE" />
                 <action android:name="net.jami.action.MARK_READ" />
-                <action android:name="net.jami.action.ANSWER_CALL" />
-                <action android:name="net.jami.action.DECLINE_CALL" />
             </intent-filter>
         </receiver>
 

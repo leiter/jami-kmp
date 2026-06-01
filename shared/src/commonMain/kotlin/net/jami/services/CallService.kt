@@ -127,8 +127,8 @@ class CallService(
      */
     fun accept(accountId: String, callId: String, hasVideo: Boolean = false) {
         scope.launch {
-            val call = calls[callId] ?: return@launch
-            val mediaList = call.mediaList.map { media ->
+            val call = calls[callId] ?: calls.values.firstOrNull { it.confId == callId }
+            val mediaList = call?.mediaList?.map { media ->
                 net.jami.model.MediaAttribute(
                     mediaType = if (media.mediaType == Media.MediaType.MEDIA_TYPE_AUDIO)
                         net.jami.model.MediaAttribute.MediaType.AUDIO
@@ -142,7 +142,7 @@ class CallService(
                         media.isMuted,
                     source = media.source ?: ""
                 )
-            }
+            } ?: emptyList()  // daemon will use its own defaults if media list is empty
             daemonBridge.accept(accountId, callId, mediaList)
         }
     }

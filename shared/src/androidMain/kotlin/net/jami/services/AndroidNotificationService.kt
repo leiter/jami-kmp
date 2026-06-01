@@ -228,28 +228,35 @@ class AndroidNotificationService(
             .setOngoing(state == Call.CallStatus.CURRENT || state == Call.CallStatus.HOLD || state == Call.CallStatus.RINGING)
             .setAutoCancel(false)
 
+        // Resolve the actual daemon call ID from the first participant.
+        // conference.id may be a conference ID different from the call's daemonId, so we prefer
+        // firstCall.daemonId so CallActionReceiver can look up the call reliably.
+        val callId = conference.firstCall?.daemonId ?: conference.id
+        val accountId = conference.accountId
+
         // Add actions based on state
         if (state == Call.CallStatus.RINGING) {
             // Incoming call: full-screen intent to wake the display above lock screen
             val fullScreenIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
                 action = ACTION_VIEW_CALL
-                putExtra(KEY_CALL_ID, conference.id)
+                putExtra(KEY_CALL_ID, callId)
+                putExtra(KEY_ACCOUNT_ID, accountId)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             }
             val piFlags = PendingIntent.FLAG_UPDATE_CURRENT or
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-            val fullScreenPi = PendingIntent.getActivity(context, conference.id.hashCode() + 1, fullScreenIntent, piFlags)
+            val fullScreenPi = PendingIntent.getActivity(context, 100, fullScreenIntent, piFlags)
             builder.setFullScreenIntent(fullScreenPi, true)
 
             builder.addAction(
                 android.R.drawable.ic_menu_call,
                 "Answer",
-                createCallActionPendingIntent(conference.id, ACTION_ANSWER)
+                createCallActionPendingIntent(callId, accountId, ACTION_ANSWER, 101)
             )
             builder.addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
                 "Decline",
-                createCallActionPendingIntent(conference.id, ACTION_DECLINE)
+                createCallActionPendingIntent(callId, accountId, ACTION_DECLINE, 102)
             )
 
             // Start foreground service so the notification survives backgrounding
@@ -259,7 +266,7 @@ class AndroidNotificationService(
             builder.addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
                 "Hang Up",
-                createCallActionPendingIntent(conference.id, ACTION_HANGUP)
+                createCallActionPendingIntent(callId, accountId, ACTION_HANGUP, 103)
             )
         }
 
@@ -651,27 +658,27 @@ class AndroidNotificationService(
         // Android handles LED through notification channels for API 26+
     }
 
-    private fun createCallActionPendingIntent(callId: String, action: String): PendingIntent? {
-        val callActionReceiverClass = try {
+    private fun createCallActionPendingIntent(
+        callId: String,
+        accountId: String,
+        action: String,
+        requestCode: Int
+    ): PendingIntent? {
+        val receiverClass = try {
             Class.forName("net.jami.android.service.CallActionReceiver")
         } catch (e: Exception) {
-            try { Class.forName("net.jami.android.service.NotificationActionReceiver") }
-            catch (e2: Exception) { null }
+            null
         } ?: return null
 
-        val intent = Intent(context, callActionReceiverClass).apply {
+        val intent = Intent(context, receiverClass).apply {
             this.action = action
             putExtra(NotificationService.KEY_CALL_ID, callId)
+            putExtra(NotificationService.KEY_ACCOUNT_ID, accountId)
             setPackage(context.packageName)
         }
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-        return PendingIntent.getBroadcast(
-            context,
-            callId.hashCode() + action.hashCode(), // Use action.hashCode() for unique request code per action
-            intent,
-            flags
-        )
+        return PendingIntent.getBroadcast(context, requestCode, intent, flags)
     }
 
     companion object {

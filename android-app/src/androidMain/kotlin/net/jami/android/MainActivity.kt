@@ -104,17 +104,20 @@ class MainActivity : ComponentActivity() {
         val callId = intent?.getStringExtra(NotificationService.KEY_CALL_ID) ?: return
         enableLockScreenDisplay()
 
+        val accountId = intent.getStringExtra(NotificationService.KEY_ACCOUNT_ID)
+
         when (intent.action) {
             CallActionReceiver.ACTION_VIEW_CALL -> {
                 Log.d(TAG, "VIEW_CALL: callId=$callId")
-                // Signal the Compose navigation layer to navigate to the call screen
                 callService.setPendingCallNavId(callId)
             }
 
             ACTION_ACCEPT_CALL -> {
                 Log.d(TAG, "ACCEPT_CALL: callId=$callId")
-                val call = callService.getCall(callId) ?: return
-                callService.accept(call.account, callId, hasVideo = false)
+                val resolvedAccount = accountId
+                    ?: callService.getCall(callId)?.account
+                    ?: return
+                callService.accept(resolvedAccount, callId, hasVideo = false)
                 callService.setPendingCallNavId(callId)
             }
         }
