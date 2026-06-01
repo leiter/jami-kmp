@@ -814,11 +814,11 @@ class ConversationFacade(
 
         when {
             incomingCall -> {
-                notificationService.handleCallNotification(conference!!, false)
+                conference?.let { notificationService.handleCallNotification(it, false) }
                 hardwareService.setPreviewSettings()
             }
             newState == CallStatus.CURRENT || newState == CallStatus.RINGING -> {
-                notificationService.handleCallNotification(conference!!, false)
+                conference?.let { notificationService.handleCallNotification(it, false) }
             }
             newState.isOver -> {
                 handleCallEnded(call, conference, conversation, account)
@@ -892,9 +892,13 @@ class ConversationFacade(
         call: Call,
         newState: CallStatus
     ): Conference? {
-        if (conversation == null) return null
+        if (newState == CallStatus.OVER) return null
+        if (conversation == null) {
+            // No conversation found (e.g. call contact not resolved yet).
+            // Still create a transient Conference so the notification can be shown.
+            return Conference(call)
+        }
         return conversation.getConference(call.confId ?: call.daemonId) ?: run {
-            if (newState == CallStatus.OVER) return null
             Conference(call).also { conference ->
                 conversation.addConference(conference)
             }
