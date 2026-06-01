@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,9 +35,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import net.jami.di.getViewModel
+import net.jami.model.Call
+import net.jami.services.CallService
 import net.jami.ui.screens.*
 import net.jami.ui.viewmodel.AppState
 import net.jami.ui.viewmodel.AppViewModel
+import org.koin.compose.koinInject
 
 /**
  * Extract a navigation argument in a KMP-compatible way.
@@ -156,11 +160,37 @@ private fun OnboardingNavigation(appViewModel: AppViewModel) {
 @Composable
 private fun MainNavigation(needsMigration: Boolean) {
     val navController = rememberNavController()
+    val callService: CallService = koinInject()
 
     // Track whether the migration dialog has been dismissed this session
     var migrationDismissed by remember { mutableStateOf(false) }
 
     // TODO: Show migration dialog as overlay when needsMigration && !migrationDismissed
+
+    // Auto-navigate to call screen when a new incoming (ringing) call arrives.
+    val currentCalls by callService.currentCalls.collectAsState()
+    LaunchedEffect(currentCalls) {
+        val ringing = currentCalls.firstOrNull {
+            it.callStatus == Call.CallStatus.RINGING && it.isIncoming
+        } ?: return@LaunchedEffect
+        val callId = ringing.daemonId ?: return@LaunchedEffect
+        val currentRoute = navController.currentDestination?.route
+        if (currentRoute?.startsWith("call/view/") != true) {
+            navController.navigate(Screen.ViewCall.createRoute(callId)) {
+                launchSingleTop = true
+            }
+        }
+    }
+
+    // Navigate when a notification tap (VIEW_CALL / ACCEPT from notification) requests it.
+    val pendingCallNavId by callService.pendingCallNavId.collectAsState()
+    LaunchedEffect(pendingCallNavId) {
+        val callId = pendingCallNavId ?: return@LaunchedEffect
+        callService.consumePendingCallNavId()
+        navController.navigate(Screen.ViewCall.createRoute(callId)) {
+            launchSingleTop = true
+        }
+    }
 
     NavHost(
         navController = navController,

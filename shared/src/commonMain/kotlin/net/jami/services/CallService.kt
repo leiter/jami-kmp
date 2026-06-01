@@ -63,6 +63,14 @@ class CallService(
     private val _currentCalls = MutableStateFlow<List<Call>>(emptyList())
     val currentCalls: StateFlow<List<Call>> = _currentCalls.asStateFlow()
 
+    // Used by the platform layer (e.g. MainActivity) to request navigation to a specific call
+    // after a notification tap. JamiNavigation observes this and navigates, then clears it.
+    private val _pendingCallNavId = MutableStateFlow<String?>(null)
+    val pendingCallNavId: StateFlow<String?> = _pendingCallNavId.asStateFlow()
+
+    fun setPendingCallNavId(callId: String) { _pendingCallNavId.value = callId }
+    fun consumePendingCallNavId() { _pendingCallNavId.value = null }
+
     private val _currentConferences = MutableStateFlow<List<Conference>>(emptyList())
     val currentConferences: StateFlow<List<Conference>> = _currentConferences.asStateFlow()
 
