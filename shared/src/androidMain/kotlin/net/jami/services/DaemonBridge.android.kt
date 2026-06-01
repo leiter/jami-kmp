@@ -262,7 +262,13 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
     }
 
     override fun unhold(accountId: String, callId: String) {
-        JamiService.unhold(accountId, callId)
+        try {
+            JamiService.unhold(accountId, callId)
+        } catch (e: UnsatisfiedLinkError) {
+            // Older daemon builds don't export unhold; hold() toggles the held state.
+            Log.w(TAG, "unhold() not in native lib, falling back to hold() toggle: ${e.message}")
+            JamiService.hold(accountId, callId)
+        }
     }
 
     override fun resume(accountId: String, callId: String): Boolean {
@@ -307,7 +313,12 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
     }
 
     override fun unholdConference(accountId: String, confId: String): Boolean {
-        return JamiService.unholdConference(accountId, confId)
+        return try {
+            JamiService.unholdConference(accountId, confId)
+        } catch (e: UnsatisfiedLinkError) {
+            Log.w(TAG, "unholdConference() not in native lib, falling back to holdConference() toggle: ${e.message}")
+            JamiService.holdConference(accountId, confId)
+        }
     }
 
     override fun resumeConference(accountId: String, confId: String): Boolean {
