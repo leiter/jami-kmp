@@ -213,9 +213,18 @@ class AndroidNotificationService(
         activeCallNotifications.add(notifId)
 
         val state = conference.state
-        val title = when (state) {
-            Call.CallStatus.RINGING -> "Incoming Call"
-            Call.CallStatus.CURRENT, Call.CallStatus.HOLD -> "Ongoing Call"
+        // Resolve the actual daemon call ID from the first participant.
+        val callId = conference.firstCall?.daemonId ?: conference.id
+        val accountId = conference.accountId
+        val isIncoming = conference.firstCall?.isIncoming ?: false
+
+        // RINGING state has two meanings depending on direction:
+        //   incoming  → receiver's phone is ringing (show Answer/Decline, wake screen)
+        //   outgoing  → remote phone is ringing     (show "Calling…" + Hang Up only)
+        val title = when {
+            state == Call.CallStatus.RINGING && isIncoming -> "Incoming Call"
+            state == Call.CallStatus.RINGING -> "Calling…"
+            state == Call.CallStatus.CURRENT || state == Call.CallStatus.HOLD -> "Ongoing Call"
             else -> "Call"
         }
 
@@ -225,49 +234,66 @@ class AndroidNotificationService(
             .setContentText(conference.getDisplayName())
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_CALL)
-            .setOngoing(state == Call.CallStatus.CURRENT || state == Call.CallStatus.HOLD || state == Call.CallStatus.RINGING)
+            .setOngoing(true)
             .setAutoCancel(false)
 
-        // Resolve the actual daemon call ID from the first participant.
-        // conference.id may be a conference ID different from the call's daemonId, so we prefer
-        // firstCall.daemonId so CallActionReceiver can look up the call reliably.
-        val callId = conference.firstCall?.daemonId ?: conference.id
-        val accountId = conference.accountId
+        val piFlags = PendingIntent.FLAG_UPDATE_CURRENT or
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
 
-        // Add actions based on state
-        if (state == Call.CallStatus.RINGING) {
-            // Incoming call: full-screen intent to wake the display above lock screen
-            val fullScreenIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
-                action = ACTION_VIEW_CALL
-                putExtra(KEY_CALL_ID, callId)
-                putExtra(KEY_ACCOUNT_ID, accountId)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        when {
+            state == Call.CallStatus.RINGING && isIncoming -> {
+                // Receiver: wake screen and offer Answer / Decline
+                val fullScreenIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
+                    action = ACTION_VIEW_CALL
+                    putExtra(KEY_CALL_ID, callId)
+                    putExtra(KEY_ACCOUNT_ID, accountId)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                }
+                builder.setFullScreenIntent(
+                    PendingIntent.getActivity(context, 100, fullScreenIntent, piFlags), true
+                )
+                builder.addAction(
+                    android.R.drawable.ic_menu_call, "Answer",
+                    createCallActionPendingIntent(callId, accountId, ACTION_ANSWER, 101)
+                )
+                builder.addAction(
+                    android.R.drawable.ic_menu_close_clear_cancel, "Decline",
+                    createCallActionPendingIntent(callId, accountId, ACTION_DECLINE, 102)
+                )
+                // Keep foreground service alive so notification survives backgrounding
+                val serviceIntent = Intent(context, Class.forName("net.jami.android.service.CallNotificationService"))
+                androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent)
             }
-            val piFlags = PendingIntent.FLAG_UPDATE_CURRENT or
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-            val fullScreenPi = PendingIntent.getActivity(context, 100, fullScreenIntent, piFlags)
-            builder.setFullScreenIntent(fullScreenPi, true)
 
-            builder.addAction(
-                android.R.drawable.ic_menu_call,
-                "Answer",
-                createCallActionPendingIntent(callId, accountId, ACTION_ANSWER, 101)
-            )
-            builder.addAction(
-                android.R.drawable.ic_menu_close_clear_cancel,
-                "Decline",
-                createCallActionPendingIntent(callId, accountId, ACTION_DECLINE, 102)
-            )
+            state == Call.CallStatus.RINGING -> {
+                // Caller: remote phone is ringing — tap to return, hang up to cancel
+                val tapIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
+                    action = ACTION_VIEW_CALL
+                    putExtra(KEY_CALL_ID, callId)
+                    putExtra(KEY_ACCOUNT_ID, accountId)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                }
+                builder.setContentIntent(PendingIntent.getActivity(context, 104, tapIntent, piFlags))
+                builder.addAction(
+                    android.R.drawable.ic_menu_close_clear_cancel, "Hang Up",
+                    createCallActionPendingIntent(callId, accountId, ACTION_HANGUP, 103)
+                )
+            }
 
-            // Start foreground service so the notification survives backgrounding
-            val serviceIntent = Intent(context, Class.forName("net.jami.android.service.CallNotificationService"))
-            androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent)
-        } else if (state == Call.CallStatus.CURRENT) {
-            builder.addAction(
-                android.R.drawable.ic_menu_close_clear_cancel,
-                "Hang Up",
-                createCallActionPendingIntent(callId, accountId, ACTION_HANGUP, 103)
-            )
+            state == Call.CallStatus.CURRENT || state == Call.CallStatus.HOLD -> {
+                // Active call: tap to return, hang up action
+                val tapIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
+                    action = ACTION_VIEW_CALL
+                    putExtra(KEY_CALL_ID, callId)
+                    putExtra(KEY_ACCOUNT_ID, accountId)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                }
+                builder.setContentIntent(PendingIntent.getActivity(context, 104, tapIntent, piFlags))
+                builder.addAction(
+                    android.R.drawable.ic_menu_close_clear_cancel, "Hang Up",
+                    createCallActionPendingIntent(callId, accountId, ACTION_HANGUP, 103)
+                )
+            }
         }
 
         // Apply sound/vibration settings
