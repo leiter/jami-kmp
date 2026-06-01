@@ -372,7 +372,8 @@ class CallService(
     /**
      * Get a call by its ID.
      */
-    fun getCall(callId: String): Call? = calls[callId]
+    fun getCall(callId: String): Call? =
+        calls[callId] ?: calls.values.firstOrNull { it.confId == callId }
 
     /**
      * Get a conference by its ID.
@@ -417,10 +418,15 @@ class CallService(
             if (call != null) {
                 call.setCallState(callState)
             } else if (callState != CallStatus.OVER && callState != CallStatus.FAILURE) {
-                // New call - create it
+                // New call - create it.
+                // RINGING without an existing call is always an incoming call: outgoing calls are
+                // added to `calls` by placeCall() before any callStateChanged fires, so they already
+                // exist here. Mark RINGING-created calls as INCOMING so the UI shows the right side.
+                val callType = if (callState == CallStatus.RINGING) Call.Direction.INCOMING.value else Call.Direction.OUTGOING.value
                 call = Call(callId, mapOf(
                     Call.KEY_ACCOUNT_ID to accountId,
-                    Call.KEY_CALL_STATE to stateStr
+                    Call.KEY_CALL_STATE to stateStr,
+                    Call.KEY_CALL_TYPE to callType.toString()
                 ))
                 call.setCallState(callState)
                 calls[callId] = call
@@ -609,13 +615,18 @@ class CallService(
         mediaList: List<Media>,
         conversationUri: Uri? = null
     ): Call {
-        val call = calls.getOrPut(callId) {
+        val existing = calls[callId]
+        // If callStateChanged created the call first (race) it has an empty peerUri and may have
+        // wrong direction. Replace it so onIncomingCall's richer info wins.
+        val call = if (existing != null && !existing.peerUri.isEmpty) {
+            existing
+        } else {
             Call(
                 daemonId = callId,
                 account = accountId,
                 contactNumber = peerUri.uri,
                 direction = direction
-            )
+            ).also { calls[callId] = it }
         }
         call.setMediaList(mediaList)
         return call

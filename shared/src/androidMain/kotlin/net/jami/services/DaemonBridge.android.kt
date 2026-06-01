@@ -746,10 +746,8 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
             callbacks.onCallStateChanged(accountId, callId, state, code)
         }
 
-        // Note: SWIG signature includes mediaList as 4th parameter
         override fun incomingCall(accountId: String, callId: String, from: String, mediaList: VectMap) {
-            callbacks.onIncomingCall(accountId, callId, from)
-            callbacks.onMediaChangeRequested(accountId, callId, mediaList.toNative())
+            callbacks.onIncomingCallWithMedia(accountId, callId, from, mediaList.toNative())
         }
 
         override fun mediaChangeRequested(accountId: String, callId: String, mediaList: VectMap) {
