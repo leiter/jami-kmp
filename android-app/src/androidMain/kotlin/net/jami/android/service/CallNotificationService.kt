@@ -1,14 +1,11 @@
 package net.jami.android.service
 
-import android.Manifest
 import android.app.Service
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.ServiceCompat
-import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -70,25 +67,10 @@ class CallNotificationService : Service() {
 
     private fun computeServiceType(): Int {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return 0
-
-        var type = ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            if (hasPermission(Manifest.permission.FOREGROUND_SERVICE_MICROPHONE) &&
-                hasPermission(Manifest.permission.RECORD_AUDIO)) {
-                type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-            }
-        } else {
-            if (hasPermission(Manifest.permission.RECORD_AUDIO)) {
-                type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-            }
-        }
-
-        return type
+        // FOREGROUND_SERVICE_TYPE_PHONE_CALL requires the DIALER role on Android 14+, which
+        // a third-party app cannot hold. Use MICROPHONE only — sufficient to keep audio alive.
+        return ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
     }
-
-    private fun hasPermission(permission: String): Boolean =
-        ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 
     companion object {
         private const val TAG = "CallNotificationService"
