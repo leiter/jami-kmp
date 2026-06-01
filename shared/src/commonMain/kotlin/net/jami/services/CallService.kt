@@ -630,7 +630,14 @@ class CallService(
                 account = accountId,
                 contactNumber = peerUri.uri,
                 direction = direction
-            ).also { calls[callId] = it }
+            ).also { newCall ->
+                // Carry over the call status already accumulated by onCallStateChanged callbacks
+                // that fired before onIncomingCall (e.g. CONNECTING → RINGING on incoming).
+                // Without this the new INCOMING call starts as NONE and updateAudioState never
+                // sees RINGING+isIncoming=true, so the ringtone is never played.
+                existing?.callStatus?.let { newCall.setCallState(it) }
+                calls[callId] = newCall
+            }
         }
         call.setMediaList(mediaList)
         return call
