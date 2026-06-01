@@ -176,13 +176,28 @@ class AccountService(
         loadedAccounts.forEach { accountsMap[it.accountId] = it }
         _accounts.value = loadedAccounts
 
-        // Verify DHT proxy is enabled for Jami accounts (critical for NAT traversal and sync)
+        // Verify DHT proxy and TURN are enabled for Jami accounts (critical for NAT traversal)
         for (account in loadedAccounts) {
-            if (account.isJami && !account.isDhtProxyEnabled) {
+            if (!account.isJami) continue
+            var changed = false
+            if (!account.isDhtProxyEnabled) {
                 Log.w(TAG, "DHT proxy disabled for account ${account.accountId} - enabling it (required for sync)")
                 account.isDhtProxyEnabled = true
-                daemonBridge.setAccountDetails(account.accountId, account.details)
+                changed = true
             }
+            val turnEnabled = account.details[ConfigKey.TURN_ENABLE.key]?.toBoolean() ?: false
+            if (!turnEnabled) {
+                Log.w(TAG, "TURN disabled for account ${account.accountId} - enabling it (required for cross-network calls)")
+                account.details[ConfigKey.TURN_ENABLE.key] = "true"
+                // Use Jami's public TURN server if none is configured
+                if (account.details[ConfigKey.TURN_SERVER.key].isNullOrEmpty()) {
+                    account.details[ConfigKey.TURN_SERVER.key] = "turn.jami.net"
+                    account.details[ConfigKey.TURN_USERNAME.key] = "ring"
+                    account.details[ConfigKey.TURN_PASSWORD.key] = "ring"
+                }
+                changed = true
+            }
+            if (changed) daemonBridge.setAccountDetails(account.accountId, account.details)
         }
 
         val current = _currentAccount.value
@@ -247,6 +262,13 @@ class AccountService(
         details[ConfigKey.ACCOUNT_UPNP_ENABLE.key] = "true"
         // Enable DHT proxy for NAT traversal and cross-device sync
         details[ConfigKey.ACCOUNT_PROXY_ENABLED.key] = "true"
+        // Enable TURN relay for cross-network calls (NAT traversal when UPnP fails)
+        details[ConfigKey.TURN_ENABLE.key] = "true"
+        if (details[ConfigKey.TURN_SERVER.key].isNullOrEmpty()) {
+            details[ConfigKey.TURN_SERVER.key] = "turn.jami.net"
+            details[ConfigKey.TURN_USERNAME.key] = "ring"
+            details[ConfigKey.TURN_PASSWORD.key] = "ring"
+        }
         if (username.isNotEmpty()) details[ConfigKey.ACCOUNT_REGISTERED_NAME.key] = username
         if (password.isNotEmpty()) details[ConfigKey.ACCOUNT_ARCHIVE_PASSWORD.key] = password
         pin?.let { details[ConfigKey.ACCOUNT_ARCHIVE_PIN.key] = it }
