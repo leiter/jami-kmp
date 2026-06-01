@@ -6,7 +6,6 @@ import android.media.AudioDeviceInfo
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.AudioManager.OnAudioFocusChangeListener
-import android.media.RingtoneManager
 import android.os.Build
 import android.view.SurfaceHolder
 import kotlinx.coroutines.flow.Flow
@@ -35,10 +34,10 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
 
     private val audioManager: AudioManager =
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private val daemonBridge: DaemonBridge by inject()
     private var currentFocusRequest: AudioFocusRequest? = null
     private var mShouldSpeakerphone = false
     private val mHasSpeakerPhone: Boolean by lazy { hasSpeakerphone() }
-    private var ringtone: android.media.Ringtone? = null
     private var logging = false
 
     private fun buildFocusRequest(usage: Int, contentType: Int, gain: Int): AudioFocusRequest =
@@ -100,26 +99,11 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
         }
     }
 
-    private fun startRingtone() {
-        if (ringtone?.isPlaying == true) return
-        val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-        ringtone = RingtoneManager.getRingtone(context, uri)?.also { rt ->
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                rt.isLooping = true
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                rt.audioAttributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-            }
-            rt.play()
-        }
-    }
-
-    private fun stopRingtone() {
-        ringtone?.stop()
-        ringtone = null
+    private fun muteRingtoneForRingerMode() {
+        // Mute the daemon's built-in ringtone if device is silent/vibrate; unmute otherwise.
+        val shouldMute = audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL
+        Log.d(TAG, "muteRingtoneForRingerMode: ringerMode=${audioManager.ringerMode} mute=$shouldMute")
+        daemonBridge.muteRingtone(shouldMute)
     }
 
     actual val videoEvents: Flow<VideoEvent> = _videoEvents.asSharedFlow()
@@ -142,14 +126,14 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
                     getFocus(RINGTONE_REQUEST)
                     if (incomingCall) {
                         audioManager.mode = AudioManager.MODE_RINGTONE
-                        startRingtone()
+                        muteRingtoneForRingerMode()
                         setAudioRouting(true)
                     } else {
                         setAudioRouting(isOngoingVideo)
                     }
                 }
                 state == CallStatus.CURRENT -> {
-                    stopRingtone()
+                    daemonBridge.muteRingtone(true)
                     getFocus(CALL_REQUEST)
                     audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
                     mShouldSpeakerphone = isOngoingVideo || isSpeakerphoneOn()
@@ -164,7 +148,7 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     }
 
     actual fun closeAudioState() {
-        stopRingtone()
+        daemonBridge.muteRingtone(true)
         abandonAudioFocus()
     }
 
@@ -213,7 +197,6 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     actual fun requestKeyFrame(camId: String) {}
     actual fun setBitrate(camId: String, bitrate: Int) {}
 
-    private val daemonBridge: DaemonBridge by inject()
     private val videoWindows = mutableMapOf<String, Long>()
 
     actual fun addVideoSurface(id: String, holder: Any) {
