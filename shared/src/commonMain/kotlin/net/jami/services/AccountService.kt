@@ -156,7 +156,6 @@ class AccountService(
     fun loadAccounts() {
         val accountIds = daemonBridge.getAccountList()
         Log.d(TAG, "loadAccounts: daemon returned ${accountIds.size} account(s): $accountIds")
-        Log.d(TAG, "loadAccounts: template TURN.enable=${daemonBridge.getAccountTemplate(AccountConfig.ACCOUNT_TYPE_JAMI)[ConfigKey.TURN_ENABLE.key]}, TURN.server=${daemonBridge.getAccountTemplate(AccountConfig.ACCOUNT_TYPE_JAMI)[ConfigKey.TURN_SERVER.key]}")
         val loadedAccounts = accountIds.map { accountId ->
             val details = daemonBridge.getAccountDetails(accountId)
             val volatileDetails = daemonBridge.getVolatileAccountDetails(accountId)
@@ -180,7 +179,6 @@ class AccountService(
         // Verify DHT proxy and TURN are enabled for Jami accounts (critical for NAT traversal)
         for (account in loadedAccounts) {
             if (!account.isJami) continue
-            Log.d(TAG, "loadAccounts: account ${account.accountId} TURN.enable=${account.details[ConfigKey.TURN_ENABLE.key]}, TURN.server=${account.details[ConfigKey.TURN_SERVER.key]}")
             var changed = false
             if (!account.isDhtProxyEnabled) {
                 Log.w(TAG, "DHT proxy disabled for account ${account.accountId} - enabling it (required for sync)")
