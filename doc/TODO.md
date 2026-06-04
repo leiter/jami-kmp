@@ -42,6 +42,35 @@
 
 - [x] **BiometricService — macOS** — Full implementation ported from iOS: same `LAContext`, `canEvaluatePolicy`, `evaluatePolicy`, Security framework Keychain APIs (available macOS 10.15+). On Macs without biometric hardware `checkAvailability()` correctly returns `NO_HARDWARE`.
 
+## Contacts
+
+- [ ] **BlockedContactsScreen always empty** — `BlockedContactsScreen.kt` hardcodes `filter { false }`, producing an empty list. `ContactsViewModel.refreshContactList()` also explicitly excludes `Contact.Status.BLOCKED` contacts. Fix: add a `blockedContacts: StateFlow<List<ContactItem>>` to `ContactsViewModel` that filters for `contact.status == Contact.Status.BLOCKED`; bind it in `BlockedContactsScreen` instead of the hardcoded filter. Unblock action is already wired via `ContactDetailsViewModel.blockContact(ban=false)`.
+
+## Sharing
+
+- [ ] **ShareUtils — iOS** — `ShareUtils.ios.kt` is a `// TODO` stub. Implement using `UIActivityViewController(activityItems: [body], applicationActivities: nil)` presented from `UIApplication.sharedApplication.keyWindow?.rootViewController`.
+- [ ] **ShareUtils — macOS** — `ShareUtils.macos.kt` is a `// TODO` stub. Implement using `NSSharingService.sharingServicesForItems([body]).first()?.performWithItems([body])`.
+
+## Group Conversations
+
+- [ ] **Leave conversation** — No "Leave" button for swarm group conversations in `ConversationDetailsScreen`. `ConversationFacade.removeConversation()` and `DaemonBridge.removeConversation()` exist and are wired on Android and iOS. Need UI in `ConversationDetailsScreen` (shown only when `conversation.isSwarm`) and a `leaveConversation()` method in `ContactDetailsViewModel`.
+- [ ] **Add/remove group members** — `DaemonBridge.addConversationMember()` and `removeConversationMember()` are fully wired on Android and iOS, but there is no UI in `ConversationDetailsScreen`. Need: admin-only "Add member" (text-field dialog for Jami ID) and per-member "Remove" button (with confirmation). Admin status derived from `conversation.roles[currentUserUri] == MemberRole.ADMIN`.
+
+## Localization (Hardcoded Strings)
+
+- [ ] **Hardcoded user-visible strings** — Several strings bypass the resource system and will not be translated. Key instances:
+  - `PendingRequestsScreen.kt:61` — `"Invitations"` (tab title)
+  - `ContactDetailsViewModel.kt:134,137,138` — `"Private"`, `"Public group"`, `"Legacy"` (conversation type labels)
+  - `ChatViewModel.kt:925-926` — `"Today"`, `"Yesterday"` (date separators)
+  - `AccountSettingsViewModel.kt:308-309` — biometric prompt title/description
+  - `AccountCreationViewModel.kt:133,138,148,188,194,205` — username check and account creation error messages
+  - `JamiMessageInput.kt:64,83,93,137,144` — placeholder text and content descriptions
+  Fix: add string keys to the appropriate XML files; expose error states as sealed class codes from ViewModels and translate to strings in the Composable layer (where `stringResource` is available).
+
+## Accounts
+
+- [ ] **SIP account creation** — `CreateAccountScreen.kt` only creates Jami (Ring) accounts. `Account.isSip` and `AccountConfig.ACCOUNT_TYPE_SIP = "SIP"` exist in the model, but there is no SIP creation UI or ViewModel method. Need: Jami/SIP tab toggle on `CreateAccountScreen`; SIP form (hostname, username, password, port, display name); `AccountCreationViewModel.createSipAccount()` building the details map with `ACCOUNT_TYPE = "SIP"` and calling `accountService.addAccount(details)`.
+
 ## Known Gaps (Lower Priority)
 
 - [ ] **Desktop DaemonBridge** — All 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.
