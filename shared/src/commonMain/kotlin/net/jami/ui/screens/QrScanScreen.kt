@@ -17,6 +17,7 @@
 package net.jami.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,26 +45,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
-import org.jetbrains.compose.resources.stringResource
+import net.jami.ui.components.QrCodeScannerView
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.theme.JamiTheme
 import net.jami.utils.StringUtils
+import org.jetbrains.compose.resources.stringResource
 
-/**
- * QR scan screen stub.
- *
- * Camera-based scanning is a future platform-specific effort (CameraX, AVFoundation, etc.).
- * For now, provides a manual text field to paste a Jami ID or jami: URI.
- *
- * @param onBack Called when the user navigates back.
- * @param onConversationClick Called with the conversation/contact ID when a valid Jami ID is submitted.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QrScanScreen(
     onBack: () -> Unit,
     onConversationClick: (String) -> Unit,
 ) {
+    var manualMode by remember { mutableStateOf(false) }
     var input by remember { mutableStateOf("") }
 
     Scaffold(
@@ -77,6 +72,14 @@ fun QrScanScreen(
                         )
                     }
                 },
+                actions = {
+                    IconButton(onClick = { manualMode = !manualMode }) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Enter manually",
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = JamiTheme.colors.surface,
                     titleContentColor = JamiTheme.colors.onSurface,
@@ -84,39 +87,51 @@ fun QrScanScreen(
             )
         },
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(JamiTheme.spacing.l),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+                .padding(padding),
         ) {
-            Text(
-                text = stringResource(Res.string.qr_scan_manual_hint),
-                style = JamiTheme.typography.bodyLarge,
-                color = JamiTheme.colors.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-
-            Spacer(Modifier.height(JamiTheme.spacing.l))
-
-            OutlinedTextField(
-                value = input,
-                onValueChange = { input = it },
-                placeholder = { Text("jami:…") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(JamiTheme.spacing.m))
-
-            val jamiId = resolveJamiId(input)
-            JamiButton(
-                text = stringResource(Res.string.action_new_conversation),
-                onClick = { if (jamiId != null) onConversationClick(jamiId) },
-                enabled = jamiId != null,
-            )
+            if (manualMode) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(JamiTheme.spacing.l),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = stringResource(Res.string.qr_scan_manual_hint),
+                        style = JamiTheme.typography.bodyLarge,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(JamiTheme.spacing.l))
+                    OutlinedTextField(
+                        value = input,
+                        onValueChange = { input = it },
+                        placeholder = { Text("jami:…") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(Modifier.height(JamiTheme.spacing.m))
+                    val jamiId = resolveJamiId(input)
+                    JamiButton(
+                        text = stringResource(Res.string.action_new_conversation),
+                        onClick = { if (jamiId != null) onConversationClick(jamiId) },
+                        enabled = jamiId != null,
+                    )
+                }
+            } else {
+                QrCodeScannerView(
+                    modifier = Modifier.fillMaxSize(),
+                    onQrDetected = { code ->
+                        val jamiId = resolveJamiId(code)
+                        if (jamiId != null) onConversationClick(jamiId)
+                        else { input = code; manualMode = true }
+                    },
+                )
+            }
         }
     }
 }

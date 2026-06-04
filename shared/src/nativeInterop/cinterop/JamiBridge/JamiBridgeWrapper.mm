@@ -1566,6 +1566,26 @@ static JBCallState toCallState(const std::string& state) {
                               toCppString(participantUri), toCppString(deviceId));
 }
 
+- (BOOL)holdConference:(NSString *)accountId conferenceId:(NSString *)conferenceId {
+    NSLog(@"[JamiBridge] holdConference: %@", conferenceId);
+    return libjami::holdConference(toCppString(accountId), toCppString(conferenceId));
+}
+
+- (BOOL)unholdConference:(NSString *)accountId conferenceId:(NSString *)conferenceId {
+    NSLog(@"[JamiBridge] unholdConference: %@", conferenceId);
+    return libjami::resumeConference(toCppString(accountId), toCppString(conferenceId));
+}
+
+- (BOOL)resumeConference:(NSString *)accountId conferenceId:(NSString *)conferenceId {
+    NSLog(@"[JamiBridge] resumeConference: %@", conferenceId);
+    return libjami::resumeConference(toCppString(accountId), toCppString(conferenceId));
+}
+
+- (void)setActiveParticipant:(NSString *)accountId conferenceId:(NSString *)conferenceId callId:(NSString *)callId {
+    NSLog(@"[JamiBridge] setActiveParticipant: conf=%@ call=%@", conferenceId, callId);
+    libjami::setActiveParticipant(toCppString(accountId), toCppString(conferenceId), toCppString(callId));
+}
+
 // =============================================================================
 // File Transfer
 // =============================================================================

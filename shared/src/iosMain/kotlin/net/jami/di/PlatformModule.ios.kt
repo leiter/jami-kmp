@@ -21,6 +21,7 @@ import org.koin.dsl.module
 import net.jami.database.DatabaseDriverFactory
 import net.jami.database.JamiDatabase
 import net.jami.services.*
+import net.jami.services.expect.AudioRecorderService
 import net.jami.services.expect.HardwareService
 
 /**
@@ -88,6 +89,7 @@ actual val platformModule: Module = module {
      * Provides audio session management via AVFoundation and camera integration.
      */
     single { HardwareService() }
+    single { AudioRecorderService() }
 
     /**
      * iOS notification service.

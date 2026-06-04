@@ -221,23 +221,19 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {
-        Log.d(TAG, "holdConference: $confId")
-        return true // TODO: bridge.holdConference(accountId, confId)
+        return bridge.holdConference(accountId, conferenceId = confId)
     }
 
     override fun unholdConference(accountId: String, confId: String): Boolean {
-        Log.d(TAG, "unholdConference: $confId")
-        return true // TODO: bridge.unholdConference(accountId, confId)
+        return bridge.unholdConference(accountId, conferenceId = confId)
     }
 
     override fun resumeConference(accountId: String, confId: String): Boolean {
-        Log.d(TAG, "resumeConference: $confId")
-        return true // TODO: bridge.resumeConference(accountId, confId)
+        return bridge.resumeConference(accountId, conferenceId = confId)
     }
 
     override fun setActiveParticipant(accountId: String, confId: String, callId: String) {
-        Log.d(TAG, "setActiveParticipant: $confId callId=$callId")
-        // TODO: bridge.setActiveParticipant(accountId, confId, callId)
+        bridge.setActiveParticipant(accountId, conferenceId = confId, callId = callId)
     }
 
     override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {

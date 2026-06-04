@@ -26,6 +26,7 @@ import net.jami.services.AndroidPictureInPictureManager
 import net.jami.services.CameraService
 import net.jami.services.DaemonBridgeApi
 import net.jami.services.PictureInPictureManager
+import net.jami.services.expect.AudioRecorderService
 import net.jami.services.expect.HardwareService
 
 /**
@@ -89,6 +90,7 @@ actual val platformModule: Module = module {
      * Provides audio management via AudioManager and delegates video capture to CameraService.
      */
     single { HardwareService(androidContext()) }
+    single { AudioRecorderService(androidContext()) }
 
     /**
      * Exposes the same PictureInPictureManager instance under its concrete Android type

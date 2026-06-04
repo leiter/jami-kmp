@@ -1043,6 +1043,14 @@ class AccountService(
         }
     }
 
+    fun migrateAccount(accountId: String, password: String) {
+        scope.launch {
+            val details = daemonBridge.getAccountDetails(accountId).toMutableMap()
+            details[ConfigKey.ACCOUNT_ARCHIVE_PASSWORD.key] = password
+            daemonBridge.setAccountDetails(accountId, details)
+        }
+    }
+
     internal fun onMigrationEnded(accountId: String, state: String) {
         scope.launch {
             _accountEvents.emit(AccountEvent.MigrationEnded(accountId, state))

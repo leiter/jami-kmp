@@ -367,4 +367,8 @@ Biometric or device authentication adds a convenient way to locally unlock acces
     <string name="action_enable">Enable</string>
     <string name="action_disable">Disable</string>
     <string name="action_skip">Skip</string>
+    <string name="account_migration_title">Account Migration Required</string>
+    <string name="account_migration_message">This account needs to be migrated to the latest format. Enter your archive password to proceed.</string>
+    <string name="account_migration_message_error">Migration failed. Please check your password and try again.</string>
+    <string name="account_migrate_button">Migrate</string>
 </resources>

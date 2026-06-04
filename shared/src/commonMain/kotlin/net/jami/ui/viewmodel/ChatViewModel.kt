@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import net.jami.services.AccountEvent
+import net.jami.services.expect.AudioRecorderService
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
@@ -140,6 +141,7 @@ class ChatViewModel(
     private val accountService: AccountService,
     private val deviceRuntimeService: DeviceRuntimeService,
     private val draftRepository: DraftRepository,
+    private val audioRecorderService: AudioRecorderService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     private val scope = scope
@@ -424,6 +426,31 @@ class ChatViewModel(
                 Log.e("ChatViewModel", "Failed to send file: conversation not found")
             }
         }
+    }
+
+    // ==================== Audio Recording ====================
+
+    private val _isRecordingAudio = MutableStateFlow(false)
+    val isRecordingAudio: StateFlow<Boolean> = _isRecordingAudio.asStateFlow()
+
+    fun startAudioRecording() {
+        val path = "${deviceRuntimeService.getCachePath()}/recording_${Clock.System.now().epochSeconds}.m4a"
+        audioRecorderService.startRecording(path)
+        _isRecordingAudio.value = true
+    }
+
+    fun stopAudioRecording() {
+        val path = audioRecorderService.stopRecording() ?: run {
+            _isRecordingAudio.value = false
+            return
+        }
+        _isRecordingAudio.value = false
+        sendFile(path)
+    }
+
+    fun cancelAudioRecording() {
+        audioRecorderService.cancelRecording()
+        _isRecordingAudio.value = false
     }
 
     /**

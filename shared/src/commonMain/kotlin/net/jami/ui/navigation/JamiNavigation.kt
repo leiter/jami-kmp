@@ -36,6 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import net.jami.di.getViewModel
 import net.jami.model.Call
+import net.jami.services.AccountService
 import net.jami.services.CallService
 import net.jami.ui.screens.*
 import net.jami.ui.viewmodel.AppState
@@ -161,11 +162,23 @@ private fun OnboardingNavigation(appViewModel: AppViewModel) {
 private fun MainNavigation(needsMigration: Boolean) {
     val navController = rememberNavController()
     val callService: CallService = koinInject()
+    val accountService: AccountService = koinInject()
 
     // Track whether the migration dialog has been dismissed this session
     var migrationDismissed by remember { mutableStateOf(false) }
 
-    // TODO: Show migration dialog as overlay when needsMigration && !migrationDismissed
+    if (needsMigration && !migrationDismissed) {
+        val migrationAccountId = remember {
+            accountService.accounts.value.firstOrNull { it.needsMigration }?.accountId
+        }
+        if (migrationAccountId != null) {
+            MigrationDialog(
+                accountId = migrationAccountId,
+                onMigrated = { migrationDismissed = true },
+                onDismiss = { migrationDismissed = true },
+            )
+        }
+    }
 
     // Auto-navigate to call screen when a new incoming (ringing) call arrives.
     val currentCalls by callService.currentCalls.collectAsState()

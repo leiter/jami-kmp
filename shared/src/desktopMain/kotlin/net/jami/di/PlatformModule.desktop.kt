@@ -21,6 +21,7 @@ import org.koin.dsl.module
 import net.jami.database.DatabaseDriverFactory
 import net.jami.database.JamiDatabase
 import net.jami.services.*
+import net.jami.services.expect.AudioRecorderService
 import net.jami.services.expect.HardwareService
 
 /**
@@ -72,6 +73,7 @@ actual val platformModule: Module = module {
      * Provides audio management via Java Sound API.
      */
     single { HardwareService() }
+    single { AudioRecorderService() }
 
     /**
      * Desktop notification service.

@@ -16,19 +16,26 @@
  */
 package net.jami.ui.platform
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.interop.UIKitView
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.useContents
+import platform.CLLocation.CLLocation
+import platform.CLLocationManager.CLLocationManager
+import platform.CLLocationManager.CLLocationManagerDelegateProtocol
+import platform.CoreLocation.CLLocationCoordinate2DMake
+import platform.Foundation.NSError
+import platform.MapKit.MKCoordinateRegionMakeWithDistance
+import platform.MapKit.MKMapView
+import platform.MapKit.MKMapViewDelegateProtocol
+import platform.MapKit.MKPointAnnotation
+import platform.UIKit.UIView
+import platform.darwin.NSObject
 
-/**
- * iOS implementation of OsmMapView.
- * TODO: Implement using MapKit MKMapView via UIKitView interop
- */
+@OptIn(ExperimentalForeignApi::class)
 @Composable
 actual fun OsmMapView(
     modifier: Modifier,
@@ -37,26 +44,61 @@ actual fun OsmMapView(
     centerOnMyLocation: Boolean,
     onLocationUpdate: (GeoLocation) -> Unit,
 ) {
-    // Placeholder - MapKit implementation would go here
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color(0xFFE8E8E8)),
-        contentAlignment = Alignment.Center,
-    ) {
-        val locationText = if (myLocation != null) {
-            "My Location: ${myLocation.latitude}, ${myLocation.longitude}"
-        } else {
-            "Waiting for location..."
+    val locationManager = remember { CLLocationManager() }
+    val locationDelegate = remember {
+        object : NSObject(), CLLocationManagerDelegateProtocol {
+            override fun locationManager(manager: CLLocationManager, didUpdateLocations: List<*>) {
+                val loc = didUpdateLocations.lastOrNull() as? CLLocation ?: return
+                loc.coordinate.useContents {
+                    onLocationUpdate(GeoLocation(latitude, longitude))
+                }
+            }
+            override fun locationManager(manager: CLLocationManager, didFailWithError: NSError) {}
         }
-        val contactsText = if (contactMarkers.isNotEmpty()) {
-            "\nContacts sharing: ${contactMarkers.size}"
-        } else {
-            ""
-        }
-        Text(
-            text = "$locationText$contactsText\n(MapKit integration pending)",
-            color = Color.Gray,
-        )
     }
+
+    DisposableEffect(Unit) {
+        locationManager.delegate = locationDelegate
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
+        onDispose { locationManager.stopUpdatingLocation() }
+    }
+
+    UIKitView(
+        modifier = modifier,
+        factory = {
+            MKMapView().apply {
+                showsUserLocation = true
+                myLocation?.let { loc ->
+                    setRegion(
+                        MKCoordinateRegionMakeWithDistance(
+                            CLLocationCoordinate2DMake(loc.latitude, loc.longitude),
+                            500.0, 500.0,
+                        ),
+                        animated = false,
+                    )
+                }
+            }
+        },
+        update = { mapView ->
+            mapView.removeAnnotations(mapView.annotations)
+            contactMarkers.forEach { cm ->
+                val annotation = MKPointAnnotation()
+                annotation.coordinate = CLLocationCoordinate2DMake(cm.latitude, cm.longitude)
+                annotation.title = cm.displayName
+                mapView.addAnnotation(annotation)
+            }
+            if (centerOnMyLocation) {
+                myLocation?.let { loc ->
+                    mapView.setRegion(
+                        MKCoordinateRegionMakeWithDistance(
+                            CLLocationCoordinate2DMake(loc.latitude, loc.longitude),
+                            500.0, 500.0,
+                        ),
+                        animated = true,
+                    )
+                }
+            }
+        },
+    )
 }

@@ -21,6 +21,7 @@ import org.koin.dsl.module
 import net.jami.database.DatabaseDriverFactory
 import net.jami.database.JamiDatabase
 import net.jami.services.*
+import net.jami.services.expect.AudioRecorderService
 
 /**
  * macOS platform module providing macOS-specific service implementations.
@@ -78,6 +79,7 @@ actual val platformModule: Module = module {
     single<HardwareService> {
         MacOSHardwareService()
     }
+    single { AudioRecorderService() }
 
     /**
      * macOS notification service.

@@ -474,6 +474,11 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                      participantUri:(NSString *)participantUri
                            deviceId:(NSString *)deviceId;
 
+- (BOOL)holdConference:(NSString *)accountId conferenceId:(NSString *)conferenceId;
+- (BOOL)unholdConference:(NSString *)accountId conferenceId:(NSString *)conferenceId;
+- (BOOL)resumeConference:(NSString *)accountId conferenceId:(NSString *)conferenceId;
+- (void)setActiveParticipant:(NSString *)accountId conferenceId:(NSString *)conferenceId callId:(NSString *)callId;
+
 // =========================================================================
 // File Transfer (4 methods)
 // =========================================================================

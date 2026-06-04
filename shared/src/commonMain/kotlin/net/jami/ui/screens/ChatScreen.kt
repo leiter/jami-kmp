@@ -72,10 +72,17 @@ import kotlinx.coroutines.withContext
 import net.jami.ui.utils.toImageBitmap
 import net.jami.utils.FileUtils
 import net.jami.utils.Log
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -156,8 +163,11 @@ fun ChatScreen(
 ) {
     val viewModel = getViewModel<ChatViewModel>()
     val state by viewModel.state.collectAsState()
+    val isRecordingAudio by viewModel.isRecordingAudio.collectAsState()
     val listState = rememberLazyListState()
     val searchFocusRequester = remember { FocusRequester() }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     // Camera permission and capture state
     var requestCameraPermission by remember { mutableStateOf(false) }
@@ -272,6 +282,7 @@ fun ChatScreen(
     var overflowMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         contentWindowInsets = WindowInsets.safeDrawing.only(
             WindowInsetsSides.Top + WindowInsetsSides.Horizontal
         ),
@@ -481,6 +492,35 @@ fun ChatScreen(
                 }
             }
 
+            // Audio recording indicator — shown while recording
+            if (isRecordingAudio) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.m, vertical = JamiTheme.spacing.s),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Mic,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                    Text(
+                        text = "Recording audio…",
+                        style = JamiTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.weight(1f).padding(horizontal = JamiTheme.spacing.s),
+                    )
+                    TextButton(onClick = { viewModel.cancelAudioRecording() }) {
+                        Text("Cancel")
+                    }
+                    Button(onClick = { viewModel.stopAudioRecording() }) {
+                        Text("Send")
+                    }
+                }
+            }
+
             // Message input bar (hidden during search)
             if (!state.isSearchActive) {
                 MessageInputBar(
@@ -516,6 +556,17 @@ fun ChatScreen(
                         } else {
                             // Request permission
                             requestLocationPermission = true
+                        }
+                    },
+                    onStartAudioRecording = { viewModel.startAudioRecording() },
+                    onVideoRecordingUnsupported = {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Video recording coming soon")
+                        }
+                    },
+                    onChatExtensionsUnsupported = {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Plugins not yet supported")
                         }
                     },
                 )
@@ -976,6 +1027,9 @@ private fun MessageInputBar(
     onSelectMedia: () -> Unit = {},
     onSendFile: () -> Unit = {},
     onShareLocation: () -> Unit = {},
+    onStartAudioRecording: () -> Unit = {},
+    onVideoRecordingUnsupported: () -> Unit = {},
+    onChatExtensionsUnsupported: () -> Unit = {},
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -1048,7 +1102,7 @@ private fun MessageInputBar(
                             },
                             onClick = {
                                 showMenu = false
-                                // TODO: Handle record audio
+                                onStartAudioRecording()
                             },
                         )
 
@@ -1063,7 +1117,7 @@ private fun MessageInputBar(
                             },
                             onClick = {
                                 showMenu = false
-                                // TODO: Handle record video
+                                onVideoRecordingUnsupported()
                             },
                         )
 
@@ -1108,7 +1162,7 @@ private fun MessageInputBar(
                             },
                             onClick = {
                                 showMenu = false
-                                // TODO: Handle chat extensions
+                                onChatExtensionsUnsupported()
                             },
                         )
                     }
