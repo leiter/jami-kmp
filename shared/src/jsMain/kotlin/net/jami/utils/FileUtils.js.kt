@@ -81,3 +81,6 @@ internal actual fun platformWriteBytes(path: String, data: ByteArray): Boolean {
 }
 
 internal actual fun platformPathSeparator(): String = "/"
+
+// Android-first stub: returns 0L; no file system mtime in JS.
+internal actual fun platformGetLastModified(path: String): Long = 0L

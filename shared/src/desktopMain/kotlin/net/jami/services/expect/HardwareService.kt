@@ -3,6 +3,7 @@ package net.jami.services.expect
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -144,6 +145,10 @@ actual class HardwareService {
         prefs.putBoolean(LOGGING_ENABLED_KEY, enabled)
         prefs.flush()
     }
+
+    actual val screenShareRequest: SharedFlow<Unit> = MutableSharedFlow()
+    actual val screenShareReady: SharedFlow<Unit> = MutableSharedFlow()
+    actual fun requestScreenSharePermission() {}
 
     companion object {
         private const val LOGGING_ENABLED_KEY = "logging_enabled"

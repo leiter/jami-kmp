@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import net.jami.ui.viewmodel.CallMode
 import net.jami.utils.Log
 import java.lang.ref.WeakReference
 
@@ -142,6 +143,12 @@ class AndroidPictureInPictureManager : PictureInPictureManager {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun enterPipMode(aspectRatioWidth: Int, aspectRatioHeight: Int): Boolean {
         if (!isSupported()) return false
+
+        val callState = currentCallState
+        if (callState == null || (callState.callMode != CallMode.OnGoing && callState.callMode != CallMode.OnHold)) {
+            Log.d(tag, "enterPipMode: no active call, skipping")
+            return false
+        }
 
         val activity = activityRef?.get() ?: run {
             Log.w(tag, "No activity attached for PiP")

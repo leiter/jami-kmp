@@ -40,8 +40,8 @@ import net.jami.services.ContactService
 import net.jami.services.ConversationFacade
 import net.jami.services.ConversationEvent
 import net.jami.services.DeviceRuntimeService
+import net.jami.services.VCardService
 import net.jami.utils.Log
-import net.jami.utils.VCardUtils
 
 /**
  * Item representing an account in the account switcher.
@@ -97,6 +97,7 @@ class ConversationsViewModel(
     private val conversationFacade: ConversationFacade,
     private val deviceRuntimeService: DeviceRuntimeService,
     private val contactService: ContactService,
+    private val vCardService: VCardService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     companion object {
@@ -229,12 +230,11 @@ class ConversationsViewModel(
                 val requests = accountService.getConversationRequests(accountId)
                 val pendingCount = requests.size
 
-                // Load current account avatar from local VCard
-                val filesDir = deviceRuntimeService.getDataPath()
-                val accountAvatarBytes = VCardUtils.loadLocalProfileFromDisk(filesDir, accountId)
+                // Load current account avatar from local VCard (scaled + cached)
+                val accountAvatarBytes = vCardService.loadLocalAvatar(accountId)
 
                 // Build conversation items from the facade
-                val conversations = buildConversationItems(accountId, query, filesDir)
+                val conversations = buildConversationItems(accountId, query)
 
                 // Re-sync presence from Contact objects. During buildConversationItems(),
                 // presence subscriptions trigger daemon callbacks that update Contact.isOnline.
@@ -252,7 +252,7 @@ class ConversationsViewModel(
                     } else item
                 }
 
-                val accountItems = buildAccountItems(filesDir)
+                val accountItems = buildAccountItems()
 
                 _state.value = _state.value.copy(
                     conversations = syncedConversations,
@@ -298,7 +298,7 @@ class ConversationsViewModel(
     /**
      * Build conversation item list from the current account.
      */
-    private fun buildConversationItems(accountId: String, query: String, filesDir: String): List<ConversationItem> {
+    private fun buildConversationItems(accountId: String, query: String): List<ConversationItem> {
         val account = accountService.getAccount(accountId) ?: return emptyList()
         val conversations = account.getConversations()
 
@@ -328,9 +328,9 @@ class ConversationsViewModel(
             val timestamp = lastEvent?.timestamp ?: 0L
             val isRead = lastEvent?.isRead ?: true
 
-            // Load contact avatar from peer VCard stored by the daemon
+            // Load contact avatar (scaled + disk-cached via VCardService)
             val avatarBytes = contact?.let { c ->
-                VCardUtils.loadPeerProfileFromDisk(filesDir, accountId, c.uri.rawRingId)
+                vCardService.loadPeerAvatar(accountId, c.uri.rawRingId)
             }
 
             ConversationItem(
@@ -359,10 +359,10 @@ class ConversationsViewModel(
         accountService.setCurrentAccount(account)
     }
 
-    private fun buildAccountItems(filesDir: String): List<AccountItem> {
+    private fun buildAccountItems(): List<AccountItem> {
         val currentId = accountService.currentAccount.value?.accountId
         return accountService.accounts.value.map { acc ->
-            val avatarBytes = VCardUtils.loadLocalProfileFromDisk(filesDir, acc.accountId)
+            val avatarBytes = vCardService.loadLocalAvatar(acc.accountId)
             val name = acc.displayName.ifEmpty { acc.registeredName.ifEmpty { acc.alias.ifEmpty { acc.username } } }
             val subtitle = if (acc.registeredName.isNotEmpty()) acc.username else ""
             AccountItem(

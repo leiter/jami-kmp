@@ -164,6 +164,9 @@ internal actual fun platformWriteBytes(path: String, data: ByteArray): Boolean {
 
 internal actual fun platformPathSeparator(): String = "/"
 
+// Android-first stub: returns 0L; cache freshness not checked on macOS.
+internal actual fun platformGetLastModified(path: String): Long = 0L
+
 // Extension functions for NSData <-> ByteArray conversion
 @OptIn(ExperimentalForeignApi::class)
 private fun NSData.toByteArray(): ByteArray {

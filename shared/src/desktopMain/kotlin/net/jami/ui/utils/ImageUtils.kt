@@ -17,3 +17,6 @@ actual fun ByteArray.toImageBitmap(): ImageBitmap? = try {
 } catch (e: Exception) {
     null
 }
+
+// Android-first stub: scaling not yet implemented on Desktop.
+actual fun scaleImageBytes(data: ByteArray, maxSize: Int): ByteArray = data

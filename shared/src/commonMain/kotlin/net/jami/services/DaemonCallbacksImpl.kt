@@ -173,7 +173,7 @@ class DaemonCallbacksImpl(
     }
 
     override fun onMediaChangeRequested(accountId: String, callId: String, mediaList: List<Map<String, String>>) {
-        scope.launch { callService.onMediaNegotiationStatus(callId, "media_change_requested", mediaList) }
+        scope.launch { callService.mediaChangeRequested(accountId, callId, mediaList) }
     }
 
     override fun onAudioMuted(callId: String, muted: Boolean) {

@@ -36,6 +36,7 @@ import net.jami.model.ContactViewModel
 import net.jami.model.Conversation
 import net.jami.model.Profile
 import net.jami.model.Uri
+import net.jami.ui.utils.scaleImageBytes
 import net.jami.utils.Log
 
 /**
@@ -54,7 +55,8 @@ import net.jami.utils.Log
 class ContactService(
     private val scope: CoroutineScope,
     private val accountService: AccountService,
-    private val daemonBridge: DaemonBridgeApi
+    private val daemonBridge: DaemonBridgeApi,
+    private val vCardService: VCardService
 ) {
     // Contact cache: accountId -> (contactUri -> Contact)
     private val contactCache = mutableMapOf<String, MutableMap<String, Contact>>()
@@ -221,9 +223,12 @@ class ContactService(
             if (vcardContent != null) {
                 val vcard = net.jami.utils.VCardUtils.parseVCard(vcardContent)
                 if (vcard != null && !vcard.isEmpty) {
+                    // Scale the photo to ≤512 px before storing in the in-session profile cache
+                    // (same as VCardService disk cache, keeps memory footprint small).
+                    val scaledPhoto = vcard.photo?.let { scaleImageBytes(it, 512) }
                     val profile = Profile(
                         displayName = vcard.formattedName,
-                        avatar = vcard.photo
+                        avatar = scaledPhoto
                     )
                     val cacheKey = "$accountId:${uri.uri}"
                     profileCache[cacheKey] = profile
@@ -231,6 +236,9 @@ class ContactService(
                     if (contact != null) {
                         contact.loadedProfile = profile
                     }
+                    // Invalidate the VCardService disk + memory cache so the next
+                    // buildConversationItems() call picks up the new vcf from disk.
+                    vCardService.invalidatePeer(accountId, uri.rawRingId)
                     _contactEvents.emit(ContactEvent.ProfileUpdated(accountId, uri, profile))
                 }
             }

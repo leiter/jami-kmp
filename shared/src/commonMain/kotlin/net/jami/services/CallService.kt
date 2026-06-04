@@ -197,6 +197,27 @@ class CallService(
     }
 
     /**
+     * Change the video source for an active call via media renegotiation.
+     * Used for screen sharing: sets source to "camera://desktop" or back to a camera URI.
+     */
+    fun replaceVideoMedia(accountId: String, callId: String, uri: String) {
+        val call = getCall(callId) ?: return
+        var videoExists = false
+        val newMediaList = call.mediaList.map { media ->
+            if (media.mediaType == Media.MediaType.MEDIA_TYPE_VIDEO) {
+                videoExists = true
+                media.copy(source = uri, isMuted = false)
+            } else {
+                media
+            }
+        }.toMutableList()
+        if (!videoExists) {
+            newMediaList.add(Media.DEFAULT_VIDEO.copy(source = uri))
+        }
+        daemonBridge.requestMediaChange(accountId, callId, newMediaList.map { it.toMap() })
+    }
+
+    /**
      * Hold or unhold a call or conference.
      */
     fun holdCallOrConference(conf: Conference) {
@@ -529,7 +550,47 @@ class CallService(
     }
 
     /**
+     * Called when the peer (or the daemon) requests a media change.
+     *
+     * Ports jami-client-android CallService.mediaChangeRequested (:609-623):
+     * - If the call has no active video stream, mark all video entries as muted
+     *   (we have no video to offer, so we refuse new video).
+     * - Mirror the current audio-mute state into every audio entry.
+     * - Then answer the request so the daemon can complete the renegotiation.
+     */
+    internal fun mediaChangeRequested(accountId: String, callId: String, mediaList: List<Map<String, String>>) {
+        scope.launch {
+            val call = calls[callId] ?: return@launch
+            // Determine whether the call currently carries active (unmuted) video.
+            val hasActiveVideo = call.mediaList.any {
+                it.mediaType == Media.MediaType.MEDIA_TYPE_VIDEO && !it.isMuted
+            }
+
+            val updatedList = mediaList.map { entry ->
+                val type = Media.MediaType.parseMediaType(entry[Media.MEDIA_TYPE_KEY] ?: "")
+                val mutable = entry.toMutableMap()
+                when (type) {
+                    Media.MediaType.MEDIA_TYPE_VIDEO ->
+                        // No active video on our side → refuse inbound video.
+                        mutable[Media.MUTED_KEY] = (!hasActiveVideo).toString()
+                    Media.MediaType.MEDIA_TYPE_AUDIO ->
+                        // Mirror the caller's current audio-mute state.
+                        mutable[Media.MUTED_KEY] = call.isAudioMuted.toString()
+                    null -> { /* unknown type — leave the entry unchanged */ }
+                }
+                mutable.toMap()
+            }
+
+            daemonBridge.answerMediaChangeRequest(accountId, callId, updatedList)
+        }
+    }
+
+    /**
      * Called when a conference is created.
+     *
+     * Ports jami-client-android CallService.conferenceCreated (:731-755):
+     * fetch participant list and details from the daemon, update conference state,
+     * and move each participant call from the top-level calls map into the conference.
      */
     internal fun onConferenceCreated(accountId: String, conversationId: String, confId: String) {
         scope.launch {
@@ -540,6 +601,25 @@ class CallService(
                     }
                 }
             }
+
+            // Fetch state and participants from the daemon.
+            val details = daemonBridge.getConferenceDetails(accountId, confId)
+            details["STATE"]?.let { conf.setState(it) }
+
+            val participants = daemonBridge.getParticipantList(accountId, confId)
+            for (callId in participants) {
+                val call = calls[callId] ?: continue
+                call.confId = confId
+                if (!conf.contains(callId)) {
+                    conf.addParticipant(call)
+                }
+                // Remove the individual call entry from the conferences map if it was
+                // mistakenly inserted there as a single-call conference.
+                if (callId != confId) {
+                    conferences.remove(callId)
+                }
+            }
+
             _conferenceUpdates.emit(conf)
             updateCurrentConferences()
         }
@@ -547,11 +627,51 @@ class CallService(
 
     /**
      * Called when a conference state changes.
+     *
+     * Ports jami-client-android CallService.conferenceChanged (:778-825):
+     * re-reconcile participants — add newcomers, remove those no longer present,
+     * and demote the conference back to a plain call when only one participant remains.
      */
     internal fun onConferenceChanged(accountId: String, confId: String, state: String) {
         scope.launch {
             val conf = conferences.getOrPut(confId) { Conference(accountId, confId) }
             conf.setState(state)
+
+            // Fetch the current participant set from the daemon.
+            val participants = daemonBridge.getParticipantList(accountId, confId).toSet()
+
+            // Add participants that aren't yet in the conference model.
+            for (callId in participants) {
+                val call = calls[callId] ?: continue
+                call.confId = confId
+                if (!conf.contains(callId)) {
+                    conf.addParticipant(call)
+                }
+                if (callId != confId) {
+                    conferences.remove(callId)
+                }
+            }
+
+            // Remove participants that are no longer in the conference.
+            val toRemove = conf.participants.filter { it.daemonId !in participants }
+            for (call in toRemove) {
+                call.confId = null
+                conf.removeParticipant(call)
+            }
+
+            // Demote to a plain call when only one participant remains.
+            val remaining = conf.participants
+            if (remaining.size == 1) {
+                val lastCall = remaining.first()
+                lastCall.confId = null
+                conferences.remove(confId)
+                // Emit the lone call so the UI knows the conference dissolved.
+                _callUpdates.emit(lastCall)
+                updateCurrentCalls()
+                updateCurrentConferences()
+                return@launch
+            }
+
             _conferenceUpdates.emit(conf)
             updateCurrentConferences()
         }

@@ -68,8 +68,10 @@ class CallNotificationService : Service() {
     private fun computeServiceType(): Int {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return 0
         // FOREGROUND_SERVICE_TYPE_PHONE_CALL requires the DIALER role on Android 14+, which
-        // a third-party app cannot hold. Use MICROPHONE only — sufficient to keep audio alive.
-        return ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+        // a third-party app cannot hold. Include MEDIA_PROJECTION so getMediaProjection() can
+        // be called during screen share without a SecurityException (Android 14+ requirement).
+        return ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE or
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
     }
 
     companion object {

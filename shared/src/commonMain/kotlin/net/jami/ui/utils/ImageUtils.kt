@@ -15,3 +15,13 @@ import androidx.compose.ui.graphics.ImageBitmap
  * Returns null if decoding fails or is not supported on this platform.
  */
 expect fun ByteArray.toImageBitmap(): ImageBitmap?
+
+/**
+ * Scale image bytes so the longest side is ≤ [maxSize] pixels, then re-encode
+ * as JPEG at quality 88. Returns the original bytes unchanged if already within
+ * bounds or if decoding fails.
+ *
+ * Android: full scaling via BitmapFactory + inSampleSize + createScaledBitmap.
+ * Other platforms: stub — returns [data] unchanged until platform support is added.
+ */
+expect fun scaleImageBytes(data: ByteArray, maxSize: Int = 512): ByteArray

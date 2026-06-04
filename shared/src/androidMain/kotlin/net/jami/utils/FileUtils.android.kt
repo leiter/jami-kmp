@@ -123,3 +123,11 @@ internal actual fun platformWriteBytes(path: String, data: ByteArray): Boolean {
 }
 
 internal actual fun platformPathSeparator(): String = File.separator
+
+internal actual fun platformGetLastModified(path: String): Long {
+    return try {
+        File(path).lastModified()
+    } catch (e: Exception) {
+        0L
+    }
+}

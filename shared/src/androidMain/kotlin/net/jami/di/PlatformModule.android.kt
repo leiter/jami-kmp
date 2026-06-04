@@ -23,6 +23,7 @@ import net.jami.database.DatabaseDriverFactory
 import net.jami.database.JamiDatabase
 import net.jami.services.*
 import net.jami.services.AndroidPictureInPictureManager
+import net.jami.services.CameraService
 import net.jami.services.DaemonBridgeApi
 import net.jami.services.PictureInPictureManager
 import net.jami.services.expect.HardwareService
@@ -78,8 +79,14 @@ actual val platformModule: Module = module {
     }
 
     /**
+     * Android camera service.
+     * Provides Camera2 capture, hardware encoding, and screen sharing via MediaProjection.
+     */
+    single { CameraService(androidContext()) }
+
+    /**
      * Android hardware service.
-     * Provides audio management via AudioManager.
+     * Provides audio management via AudioManager and delegates video capture to CameraService.
      */
     single { HardwareService(androidContext()) }
 

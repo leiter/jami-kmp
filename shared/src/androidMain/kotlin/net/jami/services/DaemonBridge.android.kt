@@ -33,7 +33,10 @@ import net.jami.daemon.VideoCallback
 import net.jami.daemon.SwarmMessage as SwigSwarmMessage
 import net.jami.model.MediaAttribute
 import net.jami.model.SwarmMessage
+import net.jami.services.expect.HardwareService
 import net.jami.utils.Log
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
@@ -49,7 +52,8 @@ import java.security.KeyStore
  *
  * C++ Daemon → SWIG Director Classes → DaemonBridge → DaemonCallbacks interface
  */
-actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
+actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinComponent {
+    private val hardwareService: HardwareService by inject()
     private var isInitialized = false
     private var callbacks: DaemonCallbacks? = null
 
@@ -646,6 +650,26 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
         JamiService.switchInput(accountId, callId, uri)
     }
 
+    override fun requestMediaChange(accountId: String, callId: String, mediaList: List<Map<String, String>>) {
+        val vectMap = VectMap().apply { reserve(mediaList.size) }
+        for (mediaMap in mediaList) {
+            val sm = StringMap()
+            mediaMap.forEach { (k, v) -> sm[k] = v }
+            vectMap.add(sm)
+        }
+        JamiService.requestMediaChange(accountId, callId, vectMap)
+    }
+
+    override fun answerMediaChangeRequest(accountId: String, callId: String, mediaList: List<Map<String, String>>) {
+        val vectMap = VectMap().apply { reserve(mediaList.size) }
+        for (mediaMap in mediaList) {
+            val sm = StringMap()
+            mediaMap.forEach { (k, v) -> sm[k] = v }
+            vectMap.add(sm)
+        }
+        JamiService.answerMediaChangeRequest(accountId, callId, vectMap)
+    }
+
     // ==================== Callback Factory Methods ====================
 
     private fun createConfigurationCallback(callbacks: DaemonCallbacks) = object : ConfigurationCallback() {
@@ -783,15 +807,41 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi {
 
     private fun createVideoCallback() = object : VideoCallback() {
         override fun getCameraInfo(camId: String, formats: net.jami.daemon.IntVect, sizes: net.jami.daemon.UintVect, rates: net.jami.daemon.UintVect) {
-            // Camera info - platform specific implementation needed
+            val fmts = mutableListOf<Int>()
+            val szs = mutableListOf<Int>()
+            val rts = mutableListOf<Int>()
+            hardwareService.getCameraInfo(camId, fmts, szs, rts)
+            fmts.forEach { formats.add(it) }
+            szs.forEach { sizes.add(it.toLong()) }
+            rts.forEach { rates.add(it.toLong()) }
+        }
+
+        override fun setParameters(camId: String, format: Int, width: Int, height: Int, rate: Int) {
+            hardwareService.setParameters(camId, format, width, height, rate)
         }
 
         override fun startCapture(camId: String) {
-            // Start camera capture - platform specific
+            hardwareService.startCapture(camId)
         }
 
         override fun stopCapture(camId: String) {
-            // Stop camera capture - platform specific
+            hardwareService.stopCapture(camId)
+        }
+
+        override fun decodingStarted(id: String, shm_path: String, w: Int, h: Int, is_mixer: Boolean) {
+            hardwareService.decodingStarted(id, shm_path, w, h, is_mixer)
+        }
+
+        override fun decodingStopped(id: String, shm_path: String, is_mixer: Boolean) {
+            hardwareService.decodingStopped(id, shm_path, is_mixer)
+        }
+
+        override fun setBitrate(arg0: String, bitrate: Int) {
+            hardwareService.setBitrate(arg0, bitrate)
+        }
+
+        override fun requestKeyFrame(camid: String) {
+            hardwareService.requestKeyFrame(camid)
         }
     }
 

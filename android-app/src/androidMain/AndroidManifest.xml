@@ -23,6 +23,7 @@
 
     <!-- Call foreground service permissions (API 29+) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
     <application
         android:name=".JamiApplication"
@@ -39,6 +40,8 @@
             android:enableOnBackInvokedCallback="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
+            android:supportsPictureInPicture="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
             android:theme="@style/Theme.JamiKmp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -86,11 +89,12 @@
             </intent-filter>
         </receiver>
 
-        <!-- Call foreground service: keeps audio alive while app is backgrounded -->
+        <!-- Call foreground service: keeps audio alive while app is backgrounded.
+             mediaProjection type is required by Android 14+ to call getMediaProjection(). -->
         <service
             android:name=".service.CallNotificationService"
             android:exported="false"
-            android:foregroundServiceType="microphone" />
+            android:foregroundServiceType="microphone|mediaProjection" />
 
         <!-- Broadcast receiver for notification Answer / Decline / Hang Up actions -->
         <receiver

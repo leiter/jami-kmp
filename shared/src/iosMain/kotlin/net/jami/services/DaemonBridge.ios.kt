@@ -621,6 +621,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun switchVideoInput(accountId: String, callId: String, uri: String) {
         // TODO: Implement via JamiBridge cinterop
     }
+
+    override fun requestMediaChange(accountId: String, callId: String, mediaList: List<Map<String, String>>) {
+        // TODO: Implement via JamiBridge cinterop
+    }
 }
 
 // ==================== Extension Functions ====================

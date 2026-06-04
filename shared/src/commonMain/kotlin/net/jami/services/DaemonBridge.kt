@@ -273,6 +273,27 @@ interface DaemonBridgeApi {
      */
     fun switchVideoInput(accountId: String, callId: String, uri: String)
 
+    /**
+     * Request a media change for an active call (renegotiates the media set with the peer).
+     * Used for screen sharing — changes the video source without adding a new call leg.
+     *
+     * @param accountId Account ID
+     * @param callId Call/conference ID
+     * @param mediaList New media attributes list (each entry is a String→String map)
+     */
+    fun requestMediaChange(accountId: String, callId: String, mediaList: List<Map<String, String>>)
+
+    /**
+     * Answer an incoming media-change request from the peer (or the daemon).
+     * Called in response to the onMediaChangeRequested callback to confirm or
+     * adjust the proposed media set and let the daemon complete the renegotiation.
+     *
+     * @param accountId Account ID
+     * @param callId    Call ID the request applies to
+     * @param mediaList Accepted/adjusted media list (each entry is a String→String map)
+     */
+    fun answerMediaChangeRequest(accountId: String, callId: String, mediaList: List<Map<String, String>>)
+
     // ==================== Video Quality & Bitrate ====================
     /**
      * Set video quality parameters for a call.
@@ -611,6 +632,8 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun registerVideoCallback(id: String, windowId: Long): Boolean = false
     override fun unregisterVideoCallback(id: String, windowId: Long) {}
     override fun switchVideoInput(accountId: String, callId: String, uri: String) {}
+    override fun requestMediaChange(accountId: String, callId: String, mediaList: List<Map<String, String>>) {}
+    override fun answerMediaChangeRequest(accountId: String, callId: String, mediaList: List<Map<String, String>>) {}
 
     override fun setVideoQuality(accountId: String, callId: String, width: Int, height: Int, fps: Int, bitrate: Int) {}
     override fun setVideoBitrate(accountId: String, callId: String, bitrate: Int) {}

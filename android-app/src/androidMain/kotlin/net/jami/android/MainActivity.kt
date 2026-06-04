@@ -7,6 +7,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import net.jami.android.service.CallActionReceiver
 import net.jami.services.AccountService
 import net.jami.services.AndroidPictureInPictureManager
@@ -34,6 +36,11 @@ class MainActivity : ComponentActivity() {
             JamiApp()
         }
         handleCallIntent(intent)
+        lifecycleScope.launch {
+            hardwareService.screenShareRequest.collect {
+                requestScreenSharePermission()
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

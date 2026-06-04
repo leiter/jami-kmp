@@ -17,6 +17,7 @@
 package net.jami.services.expect
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import net.jami.model.Call
 import net.jami.model.Conference
@@ -82,6 +83,10 @@ expect class HardwareService {
     fun startMediaHandler(mediaHandlerId: String?)
     fun stopMediaHandler()
     fun setPendingScreenShareProjection(screenCaptureSession: Any?)
+
+    val screenShareRequest: SharedFlow<Unit>
+    val screenShareReady: SharedFlow<Unit>
+    fun requestScreenSharePermission()
 
     fun connectivityChanged(isConnected: Boolean)
 

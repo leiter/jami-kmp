@@ -84,13 +84,25 @@ val jamiModule = module {
     }
 
     /**
+     * vCard avatar scaling and disk-cache service.
+     * Scales peer/local profile photos to ≤512 px JPEG and caches them under
+     * cacheDir so the conversation list never decodes full-resolution images.
+     */
+    single {
+        VCardService(
+            deviceRuntimeService = get()
+        )
+    }
+
+    /**
      * Contact management service.
      */
     single {
         ContactService(
             scope = get(),
             accountService = get(),
-            daemonBridge = get()
+            daemonBridge = get(),
+            vCardService = get()
         )
     }
 
@@ -180,7 +192,7 @@ val jamiModule = module {
 
     // ==================== ViewModels ====================
 
-    viewModelFactory { ConversationsViewModel(get(), get(), get(), get()) }
+    viewModelFactory { ConversationsViewModel(get(), get(), get(), get(), get()) }
     viewModelFactory { ChatViewModel(get(), get(), get(), get()) }
     viewModelFactory { AccountCreationViewModel(get()) }
     viewModelFactory { ImportAccountViewModel(get()) }

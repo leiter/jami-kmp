@@ -341,16 +341,34 @@ class CallViewModel(
         )
     }
 
+    private var pendingScreenShareAccountId: String? = null
+    private var pendingScreenShareCallId: String? = null
+    private var screenShareReadyJob: Job? = null
+
     /**
-     * Start screen sharing (platform-specific implementation required).
-     * On Android, first requests MediaProjection permission via the activity.
+     * Start screen sharing. On Android this requests MediaProjection permission first;
+     * the actual switchInput is deferred until the permission is granted and
+     * hardwareService.screenShareReady fires.
      */
     fun startScreenShare() {
         val accountId = currentAccountId ?: return
         val callId = currentCallId ?: return
+        pendingScreenShareAccountId = accountId
+        pendingScreenShareCallId = callId
 
-        hardwareService.switchInput(accountId, callId, "camera://desktop")
-        _state.value = _state.value.copy(isScreenSharing = true)
+        screenShareReadyJob?.cancel()
+        screenShareReadyJob = scope.launch {
+            hardwareService.screenShareReady.collect {
+                val a = pendingScreenShareAccountId ?: return@collect
+                val c = pendingScreenShareCallId ?: return@collect
+                pendingScreenShareAccountId = null
+                pendingScreenShareCallId = null
+                callService.replaceVideoMedia(a, c, "camera://desktop")
+                _state.value = _state.value.copy(isScreenSharing = true)
+                screenShareReadyJob?.cancel()
+            }
+        }
+        hardwareService.requestScreenSharePermission()
     }
 
     /**
@@ -360,7 +378,7 @@ class CallViewModel(
         val accountId = currentAccountId ?: return
         val callId = currentCallId ?: return
         val cameraUri = if (_state.value.isFrontCamera) "camera://0" else "camera://1"
-        hardwareService.switchInput(accountId, callId, cameraUri)
+        callService.replaceVideoMedia(accountId, callId, cameraUri)
         _state.value = _state.value.copy(isScreenSharing = false)
     }
 

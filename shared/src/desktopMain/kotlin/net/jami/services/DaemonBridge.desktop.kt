@@ -549,4 +549,22 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun switchVideoInput(accountId: String, callId: String, uri: String) {
         Log.d(TAG, "switchVideoInput called (stub): $callId, $uri")
     }
+
+    override fun requestMediaChange(accountId: String, callId: String, mediaList: List<Map<String, String>>) {
+        Log.d(TAG, "requestMediaChange called (stub): $callId")
+    }
+
+    override fun answerMediaChangeRequest(accountId: String, callId: String, mediaList: List<Map<String, String>>) {
+        Log.d(TAG, "answerMediaChangeRequest called (stub): $callId")
+    }
+
+    override fun setVideoQuality(accountId: String, callId: String, width: Int, height: Int, fps: Int, bitrate: Int) {}
+    override fun setVideoBitrate(accountId: String, callId: String, bitrate: Int) {}
+    override fun requestVideoStats(accountId: String, callId: String) {}
+    override fun muteAllParticipants(accountId: String, confId: String) {}
+    override fun setConferenceLocked(accountId: String, confId: String, locked: Boolean) {}
+    override fun muteParticipantAudio(accountId: String, confId: String, participantId: String) {}
+    override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {}
+    override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {}
+    override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {}
 }

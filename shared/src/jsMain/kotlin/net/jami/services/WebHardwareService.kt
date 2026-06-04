@@ -21,6 +21,7 @@ import kotlinx.browser.window
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -313,6 +314,10 @@ class WebHardwareService : HardwareService {
         logging = enabled
         localStorage.setItem(LOGGING_ENABLED_KEY, enabled.toString())
     }
+
+    override val screenShareRequest: SharedFlow<Unit> = MutableSharedFlow()
+    override val screenShareReady: SharedFlow<Unit> = MutableSharedFlow()
+    override fun requestScreenSharePermission() {}
 
     companion object {
         private const val LOGGING_ENABLED_KEY = "jami_hardware_logging_enabled"

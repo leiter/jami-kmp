@@ -144,6 +144,13 @@ object FileUtils {
     }
 
     /**
+     * Returns the last-modified time of a file as milliseconds since epoch,
+     * or 0L if the file does not exist or the platform does not support it.
+     * Used for cache freshness checks.
+     */
+    fun getLastModified(path: String): Long = platformGetLastModified(path)
+
+    /**
      * Platform-specific path separator.
      */
     val separator: String = platformPathSeparator()
@@ -161,3 +168,4 @@ internal expect fun platformGetFileSize(path: String): Long
 internal expect fun platformReadBytes(path: String): ByteArray?
 internal expect fun platformWriteBytes(path: String, data: ByteArray): Boolean
 internal expect fun platformPathSeparator(): String
+internal expect fun platformGetLastModified(path: String): Long
