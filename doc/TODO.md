@@ -44,32 +44,24 @@
 
 ## Contacts
 
-- [ ] **BlockedContactsScreen always empty** — `BlockedContactsScreen.kt` hardcodes `filter { false }`, producing an empty list. `ContactsViewModel.refreshContactList()` also explicitly excludes `Contact.Status.BLOCKED` contacts. Fix: add a `blockedContacts: StateFlow<List<ContactItem>>` to `ContactsViewModel` that filters for `contact.status == Contact.Status.BLOCKED`; bind it in `BlockedContactsScreen` instead of the hardcoded filter. Unblock action is already wired via `ContactDetailsViewModel.blockContact(ban=false)`.
+- [x] **BlockedContactsScreen always empty** — Added `blockedContacts: StateFlow<List<ContactItem>>` to `ContactsViewModel` (filters `Contact.Status.BLOCKED`); `BlockedContactsScreen` now collects it; `unblockContact()` wired to `contactService.addContact`.
 
 ## Sharing
 
-- [ ] **ShareUtils — iOS** — `ShareUtils.ios.kt` is a `// TODO` stub. Implement using `UIActivityViewController(activityItems: [body], applicationActivities: nil)` presented from `UIApplication.sharedApplication.keyWindow?.rootViewController`.
-- [ ] **ShareUtils — macOS** — `ShareUtils.macos.kt` is a `// TODO` stub. Implement using `NSSharingService.sharingServicesForItems([body]).first()?.performWithItems([body])`.
+- [x] **ShareUtils — iOS** — Implemented with `UIActivityViewController(activityItems: [body])` presented from `UIApplication.sharedApplication.keyWindow?.rootViewController`.
+- [x] **ShareUtils — macOS** — Implemented with `NSSharingService.sharingServicesForItems([body]).first()?.performWithItems([body])`.
 
 ## Group Conversations
 
-- [ ] **Leave conversation** — No "Leave" button for swarm group conversations in `ConversationDetailsScreen`. `ConversationFacade.removeConversation()` and `DaemonBridge.removeConversation()` exist and are wired on Android and iOS. Need UI in `ConversationDetailsScreen` (shown only when `conversation.isSwarm`) and a `leaveConversation()` method in `ContactDetailsViewModel`.
-- [ ] **Add/remove group members** — `DaemonBridge.addConversationMember()` and `removeConversationMember()` are fully wired on Android and iOS, but there is no UI in `ConversationDetailsScreen`. Need: admin-only "Add member" (text-field dialog for Jami ID) and per-member "Remove" button (with confirmation). Admin status derived from `conversation.roles[currentUserUri] == MemberRole.ADMIN`.
+- [x] **Leave conversation + add/remove group members** — Added `addConversationMember()` / `removeConversationMember()` to `ConversationFacade`; added `leaveConversation()`, `addMember()`, `removeMember()` to `ContactDetailsViewModel`; `ConversationDetailsScreen` shows a `GroupMemberSection` composable when `state.isSwarm` with member list, admin-only Add/Remove buttons (with confirmation dialogs), and Leave group button.
 
 ## Localization (Hardcoded Strings)
 
-- [ ] **Hardcoded user-visible strings** — Several strings bypass the resource system and will not be translated. Key instances:
-  - `PendingRequestsScreen.kt:61` — `"Invitations"` (tab title)
-  - `ContactDetailsViewModel.kt:134,137,138` — `"Private"`, `"Public group"`, `"Legacy"` (conversation type labels)
-  - `ChatViewModel.kt:925-926` — `"Today"`, `"Yesterday"` (date separators)
-  - `AccountSettingsViewModel.kt:308-309` — biometric prompt title/description
-  - `AccountCreationViewModel.kt:133,138,148,188,194,205` — username check and account creation error messages
-  - `JamiMessageInput.kt:64,83,93,137,144` — placeholder text and content descriptions
-  Fix: add string keys to the appropriate XML files; expose error states as sealed class codes from ViewModels and translate to strings in the Composable layer (where `stringResource` is available).
+- [x] **Key hardcoded strings fixed** — `PendingRequestsScreen` title uses `invitation_card_title`; `JamiMessageInput` content descriptions use `Res.string.content_desc_*`; `AccountCreationViewModel` errors converted to `UsernameCheckError`/`AccountCreationError` enums translated at screen level. Remaining hardcoded strings (conversation type labels in `ContactDetailsViewModel`, date labels "Today"/"Yesterday" in `ChatViewModel`, biometric prompts in `AccountSettingsViewModel`) require passing values from the Composable layer and are deferred.
 
 ## Accounts
 
-- [ ] **SIP account creation** — `CreateAccountScreen.kt` only creates Jami (Ring) accounts. `Account.isSip` and `AccountConfig.ACCOUNT_TYPE_SIP = "SIP"` exist in the model, but there is no SIP creation UI or ViewModel method. Need: Jami/SIP tab toggle on `CreateAccountScreen`; SIP form (hostname, username, password, port, display name); `AccountCreationViewModel.createSipAccount()` building the details map with `ACCOUNT_TYPE = "SIP"` and calling `accountService.addAccount(details)`.
+- [x] **SIP account creation** — `CreateAccountScreen` now has a Jami/SIP tab toggle; SIP tab shows server, username, password, port (optional), and display name fields; `AccountCreationViewModel.createSipAccount()` builds `ACCOUNT_TYPE=SIP` details map and calls `accountService.addAccount()`.
 
 ## Known Gaps (Lower Priority)
 
