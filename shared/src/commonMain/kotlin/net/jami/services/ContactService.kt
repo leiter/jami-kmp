@@ -31,6 +31,8 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.jami.model.Contact
 import net.jami.model.ContactViewModel
 import net.jami.model.Conversation
@@ -66,6 +68,7 @@ class ContactService(
 
     // Active presence subscriptions: accountId:contactUri -> refCount
     private val activeSubscriptions = mutableMapOf<String, Int>()
+    private val subscriptionMutex = Mutex()
 
     // Events
     private val _contactEvents = MutableSharedFlow<ContactEvent>()
@@ -317,8 +320,8 @@ class ContactService(
             }
     }
 
-    private fun incrementSubscription(accountId: String, uri: Uri, key: String) {
-        synchronized(activeSubscriptions) {
+    private suspend fun incrementSubscription(accountId: String, uri: Uri, key: String) {
+        subscriptionMutex.withLock {
             val count = activeSubscriptions[key] ?: 0
             if (count == 0) {
                 subscribeBuddy(accountId, uri, true)
@@ -328,8 +331,8 @@ class ContactService(
         }
     }
 
-    private fun decrementSubscription(accountId: String, uri: Uri, key: String) {
-        synchronized(activeSubscriptions) {
+    private suspend fun decrementSubscription(accountId: String, uri: Uri, key: String) {
+        subscriptionMutex.withLock {
             val count = activeSubscriptions[key] ?: return
             val newCount = count - 1
             if (newCount <= 0) {
