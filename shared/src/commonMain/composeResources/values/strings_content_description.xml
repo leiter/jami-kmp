@@ -34,4 +34,8 @@
     <string name="content_desc_decline_call">Decline call</string>
     <string name="content_desc_dialpad">Open dialpad</string>
     <string name="content_desc_peer_avatar">Caller avatar</string>
+    <string name="content_desc_attach_file">Attach file</string>
+    <string name="content_desc_take_photo">Take photo</string>
+    <string name="content_desc_send_message">Send message</string>
+    <string name="content_desc_send_thumbs_up">Send thumbs up</string>
 </resources>

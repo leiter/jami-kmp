@@ -47,6 +47,9 @@ data class ContactDetailsState(
     val conversationType: String = "",
     val swarmId: String = "",
     val contactUri: String = "",
+    val isSwarm: Boolean = false,
+    val isAdmin: Boolean = false,
+    val memberUris: List<String> = emptyList(),
 )
 
 /**
@@ -138,7 +141,12 @@ class ContactDetailsViewModel(
                     Conversation.Mode.Legacy -> "Legacy"
                     else -> ""
                 }
-                val swarmId = if (conversation?.isSwarm == true) conversation.uri.uri else ""
+                val isSwarm = conversation?.isSwarm == true
+                val swarmId = if (isSwarm) conversation!!.uri.uri else ""
+                val isAdmin = conversation?.isUserGroupAdmin() == true
+                val memberUris = if (isSwarm) {
+                    conversation!!.roles.keys.toList()
+                } else emptyList()
 
                 _state.value = ContactDetailsState(
                     displayName = profile.displayName ?: contact.displayUsername,
@@ -150,6 +158,9 @@ class ContactDetailsViewModel(
                     conversationType = convType,
                     swarmId = swarmId,
                     contactUri = contact.uri.uri,
+                    isSwarm = isSwarm,
+                    isAdmin = isAdmin,
+                    memberUris = memberUris,
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)
@@ -200,6 +211,27 @@ class ContactDetailsViewModel(
         } catch (e: Exception) {
             null
         }
+    }
+
+    fun leaveConversation() {
+        val accountId = currentAccountId ?: return
+        val swarmId = _state.value.swarmId.takeIf { it.isNotEmpty() } ?: return
+        scope.launch {
+            conversationFacade.removeConversation(accountId, Uri(Uri.SWARM_SCHEME, swarmId))
+        }
+    }
+
+    fun addMember(memberUri: String) {
+        val accountId = currentAccountId ?: return
+        val swarmId = _state.value.swarmId.takeIf { it.isNotEmpty() } ?: return
+        conversationFacade.addConversationMember(accountId, swarmId, memberUri)
+    }
+
+    fun removeMember(memberUri: String) {
+        val accountId = currentAccountId ?: return
+        val swarmId = _state.value.swarmId.takeIf { it.isNotEmpty() } ?: return
+        conversationFacade.removeConversationMember(accountId, swarmId, memberUri)
+        _state.value = _state.value.copy(memberUris = _state.value.memberUris.filter { it != memberUri })
     }
 
     /**

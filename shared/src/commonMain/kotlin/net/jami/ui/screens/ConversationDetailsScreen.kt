@@ -88,6 +88,10 @@ import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiIconButton
 import net.jami.ui.components.content.AvatarSize
@@ -288,6 +292,9 @@ fun ConversationDetailsScreen(
                     onShareClick = { shareText(shareSubject, shareBody) },
                     onBlockClick = { viewModel.blockContact() },
                     onDeleteClick = { viewModel.removeContact() },
+                    onLeaveConversation = { viewModel.leaveConversation() },
+                    onAddMember = { uri -> viewModel.addMember(uri) },
+                    onRemoveMember = { uri -> viewModel.removeMember(uri) },
                     onCopyIdentifier = { copyToClipboard(state.identityHash) },
                     onCopySwarmId = { copyToClipboard(state.swarmId) },
                 )
@@ -382,6 +389,9 @@ private fun DetailsTabContent(
     onDeleteClick: () -> Unit,
     onCopyIdentifier: () -> Unit,
     onCopySwarmId: () -> Unit,
+    onLeaveConversation: () -> Unit = {},
+    onAddMember: (String) -> Unit = {},
+    onRemoveMember: (String) -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -489,6 +499,18 @@ private fun DetailsTabContent(
             }
         }
 
+        // Group member management (swarm conversations only)
+        if (state.isSwarm) {
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+            GroupMemberSection(
+                memberUris = state.memberUris,
+                isAdmin = state.isAdmin,
+                onLeave = onLeaveConversation,
+                onAdd = onAddMember,
+                onRemove = onRemoveMember,
+            )
+        }
+
         Spacer(Modifier.height(JamiTheme.spacing.xl))
 
         // Block / Delete actions
@@ -534,6 +556,131 @@ private fun DetailsTabContent(
         }
 
         Spacer(Modifier.height(JamiTheme.spacing.xxl))
+    }
+}
+
+@Composable
+private fun GroupMemberSection(
+    memberUris: List<String>,
+    isAdmin: Boolean,
+    onLeave: () -> Unit,
+    onAdd: (String) -> Unit,
+    onRemove: (String) -> Unit,
+) {
+    var showAddDialog by remember { mutableStateOf(false) }
+    var showRemoveUri by remember { mutableStateOf<String?>(null) }
+    var newMemberInput by remember { mutableStateOf("") }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = JamiTheme.colors.surfaceVariant),
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.m, vertical = JamiTheme.spacing.s),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(Res.string.group_members),
+                    style = JamiTheme.typography.titleSmall,
+                    color = JamiTheme.colors.onSurface,
+                )
+                if (isAdmin) {
+                    TextButton(onClick = { showAddDialog = true }) {
+                        Text(stringResource(Res.string.group_add_member))
+                    }
+                }
+            }
+            HorizontalDivider(color = JamiTheme.colors.outline.copy(alpha = 0.3f))
+            memberUris.forEach { uri ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.m, vertical = JamiTheme.spacing.s),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = uri,
+                        style = JamiTheme.typography.bodySmall,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    )
+                    if (isAdmin) {
+                        TextButton(onClick = { showRemoveUri = uri }) {
+                            Text(
+                                text = stringResource(Res.string.group_remove_member),
+                                color = JamiTheme.colors.error,
+                            )
+                        }
+                    }
+                }
+            }
+            HorizontalDivider(color = JamiTheme.colors.outline.copy(alpha = 0.3f))
+            TextButton(
+                onClick = onLeave,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.s),
+            ) {
+                Text(
+                    text = stringResource(Res.string.swarm_group_action_leave),
+                    color = JamiTheme.colors.error,
+                )
+            }
+        }
+    }
+
+    if (showAddDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddDialog = false; newMemberInput = "" },
+            title = { Text(stringResource(Res.string.group_add_member)) },
+            text = {
+                OutlinedTextField(
+                    value = newMemberInput,
+                    onValueChange = { newMemberInput = it },
+                    label = { Text(stringResource(Res.string.group_enter_jami_id)) },
+                    singleLine = true,
+                )
+            },
+            confirmButton = {
+                Button(
+                    enabled = newMemberInput.isNotBlank(),
+                    onClick = {
+                        onAdd(newMemberInput.trim())
+                        newMemberInput = ""
+                        showAddDialog = false
+                    },
+                ) { Text(stringResource(Res.string.bottomSheet_add_participants_btn)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialog = false; newMemberInput = "" }) {
+                    Text(stringResource(Res.string.action_cancel))
+                }
+            },
+        )
+    }
+
+    showRemoveUri?.let { uri ->
+        AlertDialog(
+            onDismissRequest = { showRemoveUri = null },
+            title = { Text(stringResource(Res.string.group_remove_member_title)) },
+            text = { Text(stringResource(Res.string.group_remove_member_message)) },
+            confirmButton = {
+                Button(onClick = { onRemove(uri); showRemoveUri = null }) {
+                    Text(stringResource(Res.string.group_remove_member))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRemoveUri = null }) {
+                    Text(stringResource(Res.string.action_cancel))
+                }
+            },
+        )
     }
 }
 

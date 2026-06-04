@@ -32,6 +32,9 @@ import net.jami.services.AccountService
 import net.jami.services.LookupState
 import net.jami.utils.Log
 
+enum class UsernameCheckError { INVALID, NETWORK_ERROR, LOOKUP_FAILED }
+enum class AccountCreationError { USERNAME_REQUIRED, USERNAME_TAKEN, PASSWORDS_DONT_MATCH, CREATION_FAILED }
+
 /**
  * State for the account creation screen.
  */
@@ -40,12 +43,13 @@ data class AccountCreationState(
     val password: String = "",
     val confirmPassword: String = "",
     val isLoading: Boolean = false,
-    val error: String? = null,
+    val error: AccountCreationError? = null,
+    val errorDetail: String? = null,
     val isCreated: Boolean = false,
     val usernameAvailable: Boolean? = null,
     val usernameCheckInProgress: Boolean = false,
     val isRegistering: Boolean = false,
-    val usernameCheckError: String? = null  // non-null when lookup failed (e.g. network error)
+    val usernameCheckError: UsernameCheckError? = null,
 )
 
 /**
@@ -130,12 +134,12 @@ class AccountCreationViewModel(
                     LookupState.Invalid -> _state.value.copy(
                         usernameAvailable = false,
                         usernameCheckInProgress = false,
-                        usernameCheckError = "Invalid username"
+                        usernameCheckError = UsernameCheckError.INVALID,
                     )
                     LookupState.NetworkError -> _state.value.copy(
                         usernameAvailable = null,
                         usernameCheckInProgress = false,
-                        usernameCheckError = "Name server unreachable"
+                        usernameCheckError = UsernameCheckError.NETWORK_ERROR,
                     )
                 }
             } catch (e: CancellationException) {
@@ -145,7 +149,7 @@ class AccountCreationViewModel(
                 if (trimmed == _state.value.username) {
                     _state.value = _state.value.copy(
                         usernameCheckInProgress = false,
-                        usernameCheckError = "Lookup failed"
+                        usernameCheckError = UsernameCheckError.LOOKUP_FAILED,
                     )
                 }
             }
@@ -185,24 +189,24 @@ class AccountCreationViewModel(
 
         // Username is mandatory
         if (current.username.isEmpty()) {
-            _state.value = current.copy(error = "Username is required")
+            _state.value = current.copy(error = AccountCreationError.USERNAME_REQUIRED)
             return
         }
 
         // Username must be available (or at least not known-taken)
         if (current.usernameAvailable == false) {
-            _state.value = current.copy(error = "Username is already taken")
+            _state.value = current.copy(error = AccountCreationError.USERNAME_TAKEN)
             return
         }
 
         // Password validation: optional, but if set must be >= 6 chars
         if (current.password.isNotEmpty() && current.password.length < 6) {
-            _state.value = current.copy(error = "Password must be at least 6 characters")
+            _state.value = current.copy(error = AccountCreationError.PASSWORDS_DONT_MATCH)
             return
         }
 
         if (current.password.isNotEmpty() && current.password != current.confirmPassword) {
-            _state.value = current.copy(error = "Passwords do not match")
+            _state.value = current.copy(error = AccountCreationError.PASSWORDS_DONT_MATCH)
             return
         }
 
@@ -221,7 +225,8 @@ class AccountCreationViewModel(
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Account creation failed"
+                    error = AccountCreationError.CREATION_FAILED,
+                    errorDetail = e.message,
                 )
             }
         }
@@ -240,7 +245,8 @@ class AccountCreationViewModel(
             "ERROR_NEED_MIGRATION" -> {
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = "Account creation failed: ${event.state}"
+                    error = AccountCreationError.CREATION_FAILED,
+                    errorDetail = event.state,
                 )
             }
             else -> {}
@@ -256,8 +262,38 @@ class AccountCreationViewModel(
         } else {
             _state.value.copy(
                 isRegistering = false,
-                error = "Username registration failed"
+                error = AccountCreationError.CREATION_FAILED,
             )
+        }
+    }
+
+    fun createSipAccount(
+        hostname: String,
+        username: String,
+        password: String,
+        port: String,
+        displayName: String,
+    ) {
+        scope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
+            try {
+                val details = mutableMapOf(
+                    net.jami.model.ConfigKey.ACCOUNT_TYPE.key to net.jami.model.AccountConfig.ACCOUNT_TYPE_SIP,
+                    net.jami.model.ConfigKey.ACCOUNT_ALIAS.key to displayName.ifEmpty { username },
+                    net.jami.model.ConfigKey.ACCOUNT_HOSTNAME.key to hostname,
+                    net.jami.model.ConfigKey.ACCOUNT_USERNAME.key to username,
+                    net.jami.model.ConfigKey.ACCOUNT_PASSWORD.key to password,
+                )
+                if (port.isNotBlank()) details["Account.localPort"] = port
+                accountService.addAccount(details)
+                _state.value = _state.value.copy(isLoading = false, isCreated = true)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = AccountCreationError.CREATION_FAILED,
+                    errorDetail = e.message,
+                )
+            }
         }
     }
 

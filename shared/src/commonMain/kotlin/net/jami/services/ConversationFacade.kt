@@ -503,6 +503,14 @@ class ConversationFacade(
         }
     }
 
+    fun addConversationMember(accountId: String, conversationId: String, memberUri: String) {
+        daemonBridge.addConversationMember(accountId, conversationId, memberUri)
+    }
+
+    fun removeConversationMember(accountId: String, conversationId: String, memberUri: String) {
+        daemonBridge.removeConversationMember(accountId, conversationId, memberUri)
+    }
+
     /**
      * Block a conversation.
      */

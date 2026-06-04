@@ -36,8 +36,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.content_desc_attach_file
+import jami_kmp.shared.generated.resources.content_desc_send_message
+import jami_kmp.shared.generated.resources.content_desc_send_thumbs_up
+import jami_kmp.shared.generated.resources.content_desc_take_photo
 import net.jami.ui.components.actions.JamiIconButton
 import net.jami.ui.theme.JamiTheme
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Chat message input bar displayed at the bottom of the chat screen.
@@ -80,7 +86,7 @@ fun JamiMessageInput(
             JamiIconButton(
                 icon = Icons.Default.AttachFile,
                 onClick = onAttachment,
-                contentDescription = "Attach file",
+                contentDescription = stringResource(Res.string.content_desc_attach_file),
                 tint = JamiTheme.colors.onSurfaceVariant,
             )
         }
@@ -90,7 +96,7 @@ fun JamiMessageInput(
             JamiIconButton(
                 icon = Icons.Default.CameraAlt,
                 onClick = onCamera,
-                contentDescription = "Take photo",
+                contentDescription = stringResource(Res.string.content_desc_take_photo),
                 tint = JamiTheme.colors.onSurfaceVariant,
             )
         }
@@ -134,7 +140,7 @@ fun JamiMessageInput(
             JamiIconButton(
                 icon = Icons.AutoMirrored.Filled.Send,
                 onClick = onSend,
-                contentDescription = "Send message",
+                contentDescription = stringResource(Res.string.content_desc_send_message),
                 tint = JamiTheme.colors.primary,
             )
         } else {

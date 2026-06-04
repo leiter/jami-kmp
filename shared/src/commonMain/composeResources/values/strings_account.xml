@@ -371,4 +371,15 @@ Biometric or device authentication adds a convenient way to locally unlock acces
     <string name="account_migration_message">This account needs to be migrated to the latest format. Enter your archive password to proceed.</string>
     <string name="account_migration_message_error">Migration failed. Please check your password and try again.</string>
     <string name="account_migrate_button">Migrate</string>
+    <string name="error_username_required">Username is required</string>
+    <string name="error_username_invalid">Invalid username</string>
+    <string name="error_name_server_unreachable">Name server unreachable</string>
+    <string name="error_lookup_failed">Lookup failed</string>
+    <string name="error_account_creation_failed">Account creation failed</string>
+    <string name="account_sip_server">Server</string>
+    <string name="account_sip_username">Username</string>
+    <string name="account_sip_port">Port (optional)</string>
+    <string name="account_sip_display_name">Display name (optional)</string>
+    <string name="account_type_jami">Jami</string>
+    <string name="account_type_sip">SIP</string>
 </resources>

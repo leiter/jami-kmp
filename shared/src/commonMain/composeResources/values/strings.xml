@@ -732,5 +732,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="step_title_set_password">Set password</string>
     <string name="step_title_create_profile">Create profile</string>
     <string name="step_format">Step %1$d of %2$d: %3$s</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="group_add_member">Add member</string>
+    <string name="group_remove_member">Remove</string>
+    <string name="group_remove_member_title">Remove member?</string>
+    <string name="group_remove_member_message">This member will be removed from the group.</string>
+    <string name="group_members">Members</string>
+    <string name="group_enter_jami_id">Enter Jami ID</string>
+    <string name="date_today">Today</string>
+    <string name="date_yesterday">Yesterday</string>
+    <string name="account_type_jami">Jami</string>
+    <string name="account_type_sip">SIP</string>
 
 </resources>

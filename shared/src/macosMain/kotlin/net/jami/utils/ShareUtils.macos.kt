@@ -16,6 +16,12 @@
  */
 package net.jami.utils
 
+import platform.AppKit.NSSharingService
+
 actual fun shareText(subject: String, body: String) {
-    // TODO: implement via NSSharingService
+    val items = listOf(body)
+    val services = NSSharingService.sharingServicesForItems(items)
+    // Pick the first available share service (mail, messages, airdrop, etc.)
+    val service = services.firstOrNull() as? NSSharingService ?: return
+    service.performWithItems(items)
 }

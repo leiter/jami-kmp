@@ -36,6 +36,7 @@ import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.accept
 import jami_kmp.shared.generated.resources.block
 import jami_kmp.shared.generated.resources.decline
+import jami_kmp.shared.generated.resources.invitation_card_title
 import net.jami.di.getViewModel
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
@@ -58,7 +59,7 @@ fun PendingRequestsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Invitations",
+                        text = stringResource(Res.string.invitation_card_title),
                         style = JamiTheme.typography.titleMedium,
                         color = JamiTheme.colors.onSurface,
                     )

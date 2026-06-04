@@ -47,7 +47,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
@@ -61,12 +64,28 @@ import jami_kmp.shared.generated.resources.action_create_account
 import jami_kmp.shared.generated.resources.content_desc_available
 import jami_kmp.shared.generated.resources.content_desc_back
 import jami_kmp.shared.generated.resources.content_desc_taken
+import jami_kmp.shared.generated.resources.error_account_creation_failed
+import jami_kmp.shared.generated.resources.error_lookup_failed
+import jami_kmp.shared.generated.resources.error_name_server_unreachable
 import jami_kmp.shared.generated.resources.error_password_min_chars
 import jami_kmp.shared.generated.resources.error_passwords_mismatch
+import jami_kmp.shared.generated.resources.error_username_invalid
+import jami_kmp.shared.generated.resources.error_username_required
 import jami_kmp.shared.generated.resources.error_username_taken
+import net.jami.ui.viewmodel.AccountCreationError
+import net.jami.ui.viewmodel.UsernameCheckError
 import jami_kmp.shared.generated.resources.prompt_choose_username
 import jami_kmp.shared.generated.resources.prompt_confirm_password
 import jami_kmp.shared.generated.resources.prompt_password_optional
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import jami_kmp.shared.generated.resources.account_enter_password
+import jami_kmp.shared.generated.resources.account_sip_display_name
+import jami_kmp.shared.generated.resources.account_sip_port
+import jami_kmp.shared.generated.resources.account_sip_server
+import jami_kmp.shared.generated.resources.account_sip_username
+import jami_kmp.shared.generated.resources.account_type_jami
+import jami_kmp.shared.generated.resources.account_type_sip
 import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.theme.JamiTheme
@@ -127,6 +146,7 @@ fun CreateAccountScreen(
             )
         },
     ) { padding ->
+        var selectedAccountType by remember { mutableIntStateOf(0) } // 0 = Jami, 1 = SIP
         val passwordFocus = remember { FocusRequester() }
         val confirmPasswordFocus = remember { FocusRequester() }
         val focusManager = LocalFocusManager.current
@@ -155,7 +175,31 @@ fun CreateAccountScreen(
                 .padding(horizontal = JamiTheme.spacing.l)
                 .verticalScroll(rememberScrollState()),
         ) {
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+
+            // Account type tabs: Jami | SIP
+            TabRow(selectedTabIndex = selectedAccountType) {
+                Tab(
+                    selected = selectedAccountType == 0,
+                    onClick = { selectedAccountType = 0 },
+                    text = { Text(stringResource(Res.string.account_type_jami)) },
+                )
+                Tab(
+                    selected = selectedAccountType == 1,
+                    onClick = { selectedAccountType = 1 },
+                    text = { Text(stringResource(Res.string.account_type_sip)) },
+                )
+            }
+
             Spacer(Modifier.height(JamiTheme.spacing.l))
+
+            if (selectedAccountType == 1) {
+                SipAccountForm(
+                    viewModel = viewModel,
+                    textFieldColors = textFieldColors,
+                    focusManager = focusManager,
+                )
+            } else {
 
             // Username field with availability check (mandatory)
             OutlinedTextField(
@@ -191,8 +235,15 @@ fun CreateAccountScreen(
                 supportingText = when {
                     state.usernameAvailable == false ->
                         ({ Text(stringResource(Res.string.error_username_taken), color = JamiTheme.colors.error) })
-                    state.usernameCheckError != null ->
-                        ({ Text(state.usernameCheckError ?: "", color = JamiTheme.colors.error) })
+                    state.usernameCheckError != null -> {
+                        val msg = when (state.usernameCheckError) {
+                            UsernameCheckError.INVALID -> stringResource(Res.string.error_username_invalid)
+                            UsernameCheckError.NETWORK_ERROR -> stringResource(Res.string.error_name_server_unreachable)
+                            UsernameCheckError.LOOKUP_FAILED -> stringResource(Res.string.error_lookup_failed)
+                            null -> ""
+                        }
+                        ({ Text(msg, color = JamiTheme.colors.error) })
+                    }
                     else -> null
                 },
                 isError = state.usernameAvailable == false,
@@ -250,9 +301,16 @@ fun CreateAccountScreen(
 
             // Error message
             if (state.error != null) {
+                val errorMsg = when (state.error) {
+                    AccountCreationError.USERNAME_REQUIRED -> stringResource(Res.string.error_username_required)
+                    AccountCreationError.USERNAME_TAKEN -> stringResource(Res.string.error_username_taken)
+                    AccountCreationError.PASSWORDS_DONT_MATCH -> stringResource(Res.string.error_passwords_mismatch)
+                    AccountCreationError.CREATION_FAILED -> stringResource(Res.string.error_account_creation_failed)
+                    null -> ""
+                }
                 Spacer(Modifier.height(JamiTheme.spacing.s))
                 Text(
-                    text = state.error ?: "",
+                    text = errorMsg,
                     style = JamiTheme.typography.bodySmall,
                     color = JamiTheme.colors.error,
                 )
@@ -276,6 +334,92 @@ fun CreateAccountScreen(
             )
 
             Spacer(Modifier.height(JamiTheme.spacing.xl))
+            } // end else (Jami tab)
         }
     }
+}
+
+@Composable
+private fun SipAccountForm(
+    viewModel: AccountCreationViewModel,
+    textFieldColors: androidx.compose.material3.TextFieldColors,
+    focusManager: androidx.compose.ui.focus.FocusManager,
+) {
+    var hostname by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var port by remember { mutableStateOf("") }
+    var displayName by remember { mutableStateOf("") }
+    val state by viewModel.state.collectAsState()
+
+    OutlinedTextField(
+        value = hostname,
+        onValueChange = { hostname = it },
+        label = { Text(stringResource(Res.string.account_sip_server)) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+        colors = textFieldColors,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+    )
+    Spacer(Modifier.height(JamiTheme.spacing.m))
+    OutlinedTextField(
+        value = username,
+        onValueChange = { username = it },
+        label = { Text(stringResource(Res.string.account_sip_username)) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+        colors = textFieldColors,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+    )
+    Spacer(Modifier.height(JamiTheme.spacing.m))
+    OutlinedTextField(
+        value = password,
+        onValueChange = { password = it },
+        label = { Text(stringResource(Res.string.account_enter_password)) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+        colors = textFieldColors,
+        visualTransformation = PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
+    )
+    Spacer(Modifier.height(JamiTheme.spacing.m))
+    OutlinedTextField(
+        value = port,
+        onValueChange = { port = it },
+        label = { Text(stringResource(Res.string.account_sip_port)) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+        colors = textFieldColors,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+    )
+    Spacer(Modifier.height(JamiTheme.spacing.m))
+    OutlinedTextField(
+        value = displayName,
+        onValueChange = { displayName = it },
+        label = { Text(stringResource(Res.string.account_sip_display_name)) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+        colors = textFieldColors,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+    )
+
+    if (state.error != null) {
+        val errorMsg = when (state.error) {
+            AccountCreationError.CREATION_FAILED -> stringResource(Res.string.error_account_creation_failed)
+            else -> stringResource(Res.string.error_account_creation_failed)
+        }
+        Spacer(Modifier.height(JamiTheme.spacing.s))
+        Text(errorMsg, style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = JamiTheme.colors.error)
+    }
+
+    Spacer(Modifier.height(JamiTheme.spacing.l))
+    JamiButton(
+        text = stringResource(Res.string.action_create_account),
+        onClick = { viewModel.createSipAccount(hostname, username, password, port, displayName) },
+        modifier = Modifier.fillMaxWidth(),
+        loading = state.isLoading,
+        enabled = !state.isLoading && hostname.isNotBlank() && username.isNotBlank(),
+    )
+    Spacer(Modifier.height(JamiTheme.spacing.xl))
 }

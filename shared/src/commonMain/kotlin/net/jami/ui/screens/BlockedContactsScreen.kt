@@ -66,19 +66,10 @@ fun BlockedContactsScreen(
     onBack: () -> Unit,
 ) {
     val viewModel = getViewModel<ContactsViewModel>()
-    val state by viewModel.state.collectAsState()
+    val blockedContacts by viewModel.blockedContacts.collectAsState()
 
-    // Load contacts on first composition
     LaunchedEffect(Unit) {
         viewModel.loadContacts()
-    }
-
-    // For blocked contacts, we filter the list.
-    // In the full implementation, ContactsViewModel would have a separate
-    // blocked contacts flow. Here we show the screen structure.
-    val blockedContacts = state.contacts.filter {
-        // In a real implementation, we would check contact.isBlocked
-        false
     }
 
     Scaffold(
@@ -131,7 +122,7 @@ fun BlockedContactsScreen(
                 ) { contact ->
                     BlockedContactItem(
                         contact = contact,
-                        onUnblock = { /* viewModel.unblockContact(contact.uri) */ },
+                        onUnblock = { viewModel.unblockContact(contact.uri) },
                     )
                 }
             }

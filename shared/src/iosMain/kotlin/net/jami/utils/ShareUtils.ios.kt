@@ -16,6 +16,13 @@
  */
 package net.jami.utils
 
+import platform.UIKit.UIActivityViewController
+import platform.UIKit.UIApplication
+
 actual fun shareText(subject: String, body: String) {
-    // TODO: implement via UIActivityViewController
+    val rootVc = UIApplication.sharedApplication.keyWindow?.rootViewController ?: return
+    val vc = UIActivityViewController(activityItems = listOf(body), applicationActivities = null)
+    vc.setValue(subject, forKey = "subject")
+    val presenter = rootVc.presentedViewController ?: rootVc
+    presenter.presentViewController(vc, animated = true, completion = null)
 }

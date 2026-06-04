@@ -67,6 +67,9 @@ class ContactsViewModel(
     private val _state = MutableStateFlow(ContactsState())
     val state: StateFlow<ContactsState> = _state.asStateFlow()
 
+    private val _blockedContacts = MutableStateFlow<List<ContactItem>>(emptyList())
+    val blockedContacts: StateFlow<List<ContactItem>> = _blockedContacts.asStateFlow()
+
     init {
         // Reload contacts when the active account changes
         scope.launch {
@@ -152,6 +155,27 @@ class ContactsViewModel(
             contacts = items,
             isLoading = false
         )
+
+        val blocked = cachedContacts
+            .filter { contact -> contact.status == Contact.Status.BLOCKED }
+            .map { contact ->
+                ContactItem(
+                    uri = contact.uri.uri,
+                    displayName = contact.displayUsername,
+                    username = contact.username ?: "",
+                    presenceStatus = contact.presenceStatus.value,
+                    avatarUri = null,
+                )
+            }
+            .sortedBy { it.displayName.lowercase() }
+        _blockedContacts.value = blocked
+    }
+
+    fun unblockContact(uri: String) {
+        scope.launch {
+            val accountId = accountService.currentAccount.value?.accountId ?: return@launch
+            contactService.addContact(accountId, net.jami.model.Uri.fromString(uri))
+        }
     }
 
     /**
