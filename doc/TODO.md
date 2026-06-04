@@ -16,31 +16,31 @@
 
 ## Conference & Calling (Cross-Platform)
 
-- [ ] **iOS/macOS conference hold/unhold/resume/setActiveParticipant** — `DaemonBridge.ios.kt:231-249` and `DaemonBridge.macos.kt:223-241` stub all four methods. Root cause: `JamiBridgeWrapper.h` does not expose these methods. Fix: add `holdConference`, `unholdConference`, `resumeConference`, `setActiveParticipant` to `JamiBridgeWrapper.h` + `JamiBridgeWrapper.mm`, then wire the Kotlin stubs.
+- [x] **iOS/macOS conference hold/unhold/resume/setActiveParticipant** — Added `holdConference`, `unholdConference`, `resumeConference`, `setActiveParticipant` to `JamiBridgeWrapper.h` and `JamiBridgeWrapper.mm` (delegating to `libjami::holdConference`, `libjami::resumeConference`, `libjami::setActiveParticipant`); wired in `DaemonBridge.ios.kt` and `DaemonBridge.macos.kt`.
 
 ## Migration
 
-- [ ] **Account migration dialog** — `Account.needsMigration` flag and `AppState.HasAccounts(needsMigration)` are detected and passed through to `MainNavigation`, but the dialog overlay is a TODO at `JamiNavigation.kt:168`. Missing: `AccountService.migrateAccount()` method (triggers daemon via `setAccountDetails` with `ARCHIVE_PASSWORD`), a `MigrationDialog` composable (password input + migrate/delete actions), and wiring the TODO. Reference: `AccountMigrationFragment.kt` in jami-android-client.
+- [x] **Account migration dialog** — Added `AccountService.migrateAccount()` (sets `ARCHIVE_PASSWORD` via `setAccountDetails`; result arrives via `AccountEvent.MigrationEnded`). New `MigrationDialog.kt` composable: password input with 6-char guard, Migrate/Skip actions, observes migration result for success/error feedback. Wired in `JamiNavigation.kt`: overlay shown when `needsMigration && !migrationDismissed`, dismissed per session.
 
 ## QR Code
 
-- [ ] **QR camera scanning** — `QrScanScreen.kt` is an explicit stub with manual text-paste only (`Camera-based scanning is a future platform-specific effort`). Need a `QrCodeScannerView` expect/actual composable: Android (CameraX `ImageAnalysis` + ZXing `MultiFormatReader`), iOS (`UIKitView` wrapping `AVCaptureSession` + `AVMetadataObjectTypeQRCode`), Desktop/macOS/JS stubs. Replace the text input in `QrScanScreen` with the camera view; keep manual fallback toggle.
+- [x] **QR camera scanning** — New `QrCodeScannerView` expect/actual: Android (CameraX `ImageAnalysis` + ZXing `MultiFormatReader`, requests `CAMERA` permission), iOS (`UIKitView` wrapping `AVCaptureSession` + `AVMetadataObjectTypeQRCode`), Desktop/macOS/JS stubs. `QrScanScreen` shows camera view by default; Edit button in top bar toggles manual text-paste fallback; unrecognised scan falls back to manual mode.
 
 ## Chat
 
-- [ ] **Audio recording in chat** — `ChatScreen.kt:1051` has a TODO for "Record audio" menu item. Need: `AudioRecorderService` expect/actual class (Android: `MediaRecorder`; iOS: `AVAudioRecorder`; others: no-op); recording state in `ChatViewModel` (`isRecordingAudio`, `startAudioRecording`, `stopAudioRecording`, `cancelAudioRecording`); recording indicator UI in `ChatScreen`; pipe completed file to existing `sendFile` flow.
-- [ ] **Video recording in chat** — `ChatScreen.kt:1066` has a TODO for "Record video". Deferred: requires Camera2/AVFoundation capture session. Currently shows placeholder snackbar "Video recording coming soon".
-- [ ] **Chat extensions / plugins** — `ChatScreen.kt:1111` has a TODO for "Chat extensions". Jami plugin system not yet ported to KMP. Currently shows placeholder snackbar "Plugins not yet supported".
+- [x] **Audio recording in chat** — New `AudioRecorderService` expect/actual (Android: `MediaRecorder` MPEG4/AAC; iOS: `AVAudioRecorder`; others: no-op stubs). `ChatViewModel`: `isRecordingAudio` `StateFlow` + `startAudioRecording` / `stopAudioRecording` / `cancelAudioRecording`; completed recording piped to `sendFile`. `ChatScreen`: recording indicator row with mic icon, Cancel and Send buttons shown while recording.
+- [ ] **Video recording in chat** — Deferred: requires Camera2/AVFoundation capture session. Menu item currently shows snackbar "Video recording coming soon".
+- [ ] **Chat extensions / plugins** — Jami plugin system not yet ported to KMP. Menu item currently shows snackbar "Plugins not yet supported".
 
 ## Location Sharing
 
-- [ ] **OsmMapView — iOS** — `OsmMapView.ios.kt` shows placeholder text. Implement using `MapKit` (`MKMapView`) via `UIKitView` + `CLLocationManager` for device location updates. `NSLocationWhenInUseUsageDescription` should already be in `Info.plist`.
-- [ ] **OsmMapView — macOS** — `OsmMapView.macos.kt` shows placeholder text. Same MapKit approach as iOS but using `NSViewFactory` instead of `UIKitView`.
-- [ ] **OsmMapView — Desktop** — `OsmMapView.desktop.kt` shows placeholder text. Acceptable stub; no viable JVM map library in scope.
+- [x] **OsmMapView — iOS** — Full `MapKit` implementation: `UIKitView` wrapping `MKMapView`, `CLLocationManager` for live location updates, `MKPointAnnotation` per contact marker, `setRegion` when `centerOnMyLocation`.
+- [ ] **OsmMapView — macOS** — Stub retained: no stable `NSView` embedding API in Compose Multiplatform for macOS targets. Shows location coordinates as text.
+- [ ] **OsmMapView — Desktop** — Stub retained; no viable JVM map library in scope.
 
 ## Biometric Auth
 
-- [ ] **BiometricService — macOS** — `BiometricService.macos.kt` returns `UNAVAILABLE`/`false` for all methods. `LocalAuthentication` and `Security` frameworks are available on macOS 10.15+ with identical API to the working iOS implementation (`BiometricService.ios.kt`). Implementation is a near-copy: same `LAContext`, `canEvaluatePolicy`, `evaluatePolicy`, Keychain APIs.
+- [x] **BiometricService — macOS** — Full implementation ported from iOS: same `LAContext`, `canEvaluatePolicy`, `evaluatePolicy`, Security framework Keychain APIs (available macOS 10.15+). On Macs without biometric hardware `checkAvailability()` correctly returns `NO_HARDWARE`.
 
 ## Known Gaps (Lower Priority)
 
