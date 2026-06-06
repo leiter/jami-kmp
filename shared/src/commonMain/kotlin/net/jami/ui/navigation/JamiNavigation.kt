@@ -180,17 +180,43 @@ private fun MainNavigation(needsMigration: Boolean) {
         }
     }
 
-    // Auto-navigate to call screen when a new incoming (ringing) call arrives.
+    // Auto-navigate to call screen when a call needs the UI.
+    //
+    // RINGING incoming: always navigate (new call arrived while app is open or restarted).
+    // CURRENT / HOLD:   navigate only once — when the app first opens with an ongoing call
+    //                   already in progress (e.g. after process kill + reopen, or swipe +
+    //                   relaunch). After that first check we do not force the user back if
+    //                   they intentionally left the call screen.
     val currentCalls by callService.currentCalls.collectAsState()
+    var initialActiveCallChecked by remember { mutableStateOf(false) }
     LaunchedEffect(currentCalls) {
         val ringing = currentCalls.firstOrNull {
             it.callStatus == Call.CallStatus.RINGING && it.isIncoming
-        } ?: return@LaunchedEffect
-        val callId = ringing.daemonId ?: return@LaunchedEffect
-        val currentRoute = navController.currentDestination?.route
-        if (currentRoute?.startsWith("call/view/") != true) {
-            navController.navigate(Screen.ViewCall.createRoute(callId)) {
-                launchSingleTop = true
+        }
+        if (ringing != null) {
+            val callId = ringing.daemonId ?: return@LaunchedEffect
+            if (navController.currentDestination?.route?.startsWith("call/view/") != true) {
+                navController.navigate(Screen.ViewCall.createRoute(callId)) {
+                    launchSingleTop = true
+                }
+            }
+            return@LaunchedEffect
+        }
+
+        // Only mark the check done once we have actual calls (non-empty). If the daemon
+        // is still loading, currentCalls is [] and we defer until the first real emission.
+        if (!initialActiveCallChecked && currentCalls.isNotEmpty()) {
+            initialActiveCallChecked = true
+            val active = currentCalls.firstOrNull {
+                it.callStatus == Call.CallStatus.CURRENT || it.callStatus == Call.CallStatus.HOLD
+            }
+            if (active != null) {
+                val callId = active.daemonId ?: return@LaunchedEffect
+                if (navController.currentDestination?.route?.startsWith("call/view/") != true) {
+                    navController.navigate(Screen.ViewCall.createRoute(callId)) {
+                        launchSingleTop = true
+                    }
+                }
             }
         }
     }

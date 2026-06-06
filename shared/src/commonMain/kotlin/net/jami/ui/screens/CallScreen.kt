@@ -173,11 +173,14 @@ fun IncomingCallScreen(
     onEnd: () -> Unit,
 ) {
     val viewModel = getViewModel<CallViewModel>()
-    val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(callId) {
-        viewModel.initIncoming(callId, actionViewOnly = false)
-    }
+    // Initialise synchronously before the first state read so the UI never flashes the
+    // default Outgoing mode. remember(callId) ensures this runs once per callId, not on
+    // every recomposition. initIncoming() only sets state + starts ViewModel coroutines
+    // so calling it from composition is safe.
+    remember(callId) { viewModel.initIncoming(callId, actionViewOnly = false) }
+
+    val state by viewModel.state.collectAsState()
 
     DisposableEffect(Unit) {
         onDispose { viewModel.onCleared() }

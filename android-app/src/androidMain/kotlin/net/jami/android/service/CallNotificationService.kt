@@ -67,14 +67,14 @@ class CallNotificationService : Service() {
 
     private fun computeServiceType(): Int {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return 0
-        // FOREGROUND_SERVICE_TYPE_PHONE_CALL requires the DIALER role on Android 14+.
-        // FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION requires an active MediaProjection session
-        // (granted by MediaProjectionManager) at the moment startForeground() is called —
-        // declaring the type alone is not enough and causes a SecurityException on API 34+.
-        // Screen sharing acquires its own projection token on demand via
-        // MainActivity.requestScreenSharePermission(); it does not need this service to hold it.
-        // microphone is sufficient to keep call audio alive in the background.
-        return ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+        // FOREGROUND_SERVICE_TYPE_MICROPHONE cannot be started from a background context on
+        // Android 14+ (API 34+): when the process is killed and restarted by a notification
+        // action, the daemon service hasn't established foreground yet, so the "eligible state"
+        // exemption is absent and startForeground() throws SecurityException.
+        // DATA_SYNC has no runtime-state requirement (same type used by JamiDaemonService) and
+        // can be started from any context. Audio is handled by the native daemon via JNI, so
+        // the microphone type provides no functional benefit here.
+        return ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
     }
 
     companion object {

@@ -325,24 +325,41 @@ class CallViewModel(
     fun toggleVideo() {
         val callId = currentCallId ?: return
         val accountId = currentAccountId ?: return
-        val newMuteState = !_state.value.isVideoMuted
-        // Enabling video requires camera permission; request it if absent
-        if (!newMuteState && !deviceRuntimeService.hasCameraPermission()) {
-            _cameraPermissionRequest.tryEmit(Unit)
-            return
+        val isCurrentlyActive = !_state.value.isVideoMuted && _state.value.hasLocalVideo
+        if (isCurrentlyActive) {
+            // Turn off: mute the existing video stream
+            callService.muteLocalMedia(accountId, callId, CallService.MEDIA_TYPE_VIDEO, true)
+            _state.value = _state.value.copy(isVideoMuted = true, hasLocalVideo = false)
+        } else {
+            // Turn on: needs camera permission + hardware init + media renegotiation
+            if (!deviceRuntimeService.hasCameraPermission()) {
+                _cameraPermissionRequest.tryEmit(Unit)
+                return
+            }
+            enableVideoStream(accountId, callId)
         }
-        callService.muteLocalMedia(accountId, callId, CallService.MEDIA_TYPE_VIDEO, newMuteState)
-        _state.value = _state.value.copy(isVideoMuted = newMuteState)
     }
 
     fun onCameraPermissionResult(granted: Boolean) {
         if (!granted) return
         val callId = currentCallId ?: return
         val accountId = currentAccountId ?: return
-        // Unmute video now that permission is confirmed
-        if (_state.value.isVideoMuted) {
-            callService.muteLocalMedia(accountId, callId, CallService.MEDIA_TYPE_VIDEO, false)
-            _state.value = _state.value.copy(isVideoMuted = false)
+        enableVideoStream(accountId, callId)
+    }
+
+    // Mirrors jami-android-client CallPresenter.switchOnOffCamera():
+    // initialise hardware, get camera id, then do a media renegotiation via requestMediaChange
+    // so the daemon adds/replaces the video stream in the active call.
+    private fun enableVideoStream(accountId: String, callId: String) {
+        scope.launch {
+            hardwareService.initVideo()
+            val camId = hardwareService.changeCamera(true) ?: "0"
+            callService.replaceVideoMedia(accountId, callId, "camera://$camId")
+            _state.value = _state.value.copy(
+                isVideoMuted = false,
+                hasLocalVideo = true,
+                isFrontCamera = hardwareService.isPreviewFromFrontCamera
+            )
         }
     }
 
