@@ -32,9 +32,13 @@ import net.jami.model.Call.CallStatus
 import net.jami.model.Call.HangupReason
 import net.jami.model.Conference
 import net.jami.model.Uri
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import net.jami.services.AccountService
 import net.jami.services.CallService
 import net.jami.services.ContactService
+import net.jami.services.DeviceRuntimeService
 import net.jami.services.expect.HardwareService
 import net.jami.services.expect.VideoEvent
 import net.jami.utils.Log
@@ -120,9 +124,13 @@ class CallViewModel(
     private val accountService: AccountService,
     private val contactService: ContactService,
     private val hardwareService: HardwareService,
+    private val deviceRuntimeService: DeviceRuntimeService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     private val scope = scope
+
+    private val _cameraPermissionRequest = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val cameraPermissionRequest: SharedFlow<Unit> = _cameraPermissionRequest.asSharedFlow()
 
     private val _state = MutableStateFlow(CallState())
     val state: StateFlow<CallState> = _state.asStateFlow()
@@ -272,12 +280,30 @@ class CallViewModel(
         _state.value = _state.value.copy(isAudioMuted = newMuteState)
     }
 
+    fun hasCameraPermission(): Boolean = deviceRuntimeService.hasCameraPermission()
+
     fun toggleVideo() {
         val callId = currentCallId ?: return
         val accountId = currentAccountId ?: return
         val newMuteState = !_state.value.isVideoMuted
+        // Enabling video requires camera permission; request it if absent
+        if (!newMuteState && !deviceRuntimeService.hasCameraPermission()) {
+            _cameraPermissionRequest.tryEmit(Unit)
+            return
+        }
         callService.muteLocalMedia(accountId, callId, CallService.MEDIA_TYPE_VIDEO, newMuteState)
         _state.value = _state.value.copy(isVideoMuted = newMuteState)
+    }
+
+    fun onCameraPermissionResult(granted: Boolean) {
+        if (!granted) return
+        val callId = currentCallId ?: return
+        val accountId = currentAccountId ?: return
+        // Unmute video now that permission is confirmed
+        if (_state.value.isVideoMuted) {
+            callService.muteLocalMedia(accountId, callId, CallService.MEDIA_TYPE_VIDEO, false)
+            _state.value = _state.value.copy(isVideoMuted = false)
+        }
     }
 
     fun toggleSpeaker() {
@@ -364,6 +390,8 @@ class CallViewModel(
                 pendingScreenShareAccountId = null
                 pendingScreenShareCallId = null
                 callService.replaceVideoMedia(a, c, "camera://desktop")
+                // Force startCapture in case the daemon does not call it back after renegotiation
+                hardwareService.startCapture("camera://desktop")
                 _state.value = _state.value.copy(isScreenSharing = true)
                 screenShareReadyJob?.cancel()
             }

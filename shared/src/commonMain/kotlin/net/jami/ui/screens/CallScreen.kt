@@ -80,7 +80,8 @@ import androidx.compose.ui.unit.dp
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import net.jami.di.getViewModel
-
+import net.jami.ui.platform.AppPermission
+import net.jami.ui.platform.PermissionRequesterEffect
 
 import net.jami.ui.components.video.GridLayoutMode
 import net.jami.ui.components.video.ParticipantGrid
@@ -117,6 +118,25 @@ fun CallScreen(
     DisposableEffect(Unit) {
         onDispose { viewModel.onCleared() }
     }
+
+    var requestCameraPermission by remember { mutableStateOf(false) }
+
+    // Request camera permission if this is a video call and permission is not yet granted
+    LaunchedEffect(isVideo) {
+        if (isVideo && !viewModel.hasCameraPermission()) requestCameraPermission = true
+    }
+    // Also handle ViewModel-driven requests (e.g., toggling video mid-call without permission)
+    LaunchedEffect(Unit) {
+        viewModel.cameraPermissionRequest.collect { requestCameraPermission = true }
+    }
+    PermissionRequesterEffect(
+        permission = AppPermission.Camera,
+        request = requestCameraPermission,
+        onResult = { granted ->
+            requestCameraPermission = false
+            viewModel.onCameraPermissionResult(granted)
+        }
+    )
 
     CallScreenContent(
         state = state,
@@ -161,6 +181,20 @@ fun IncomingCallScreen(
     DisposableEffect(Unit) {
         onDispose { viewModel.onCleared() }
     }
+
+    var requestCameraPermission by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.cameraPermissionRequest.collect { requestCameraPermission = true }
+    }
+    PermissionRequesterEffect(
+        permission = AppPermission.Camera,
+        request = requestCameraPermission,
+        onResult = { granted ->
+            requestCameraPermission = false
+            viewModel.onCameraPermissionResult(granted)
+        }
+    )
 
     CallScreenContent(
         state = state,
@@ -218,8 +252,9 @@ private fun CallScreenContent(
         }
     }
 
-    // Wire call state into PiP manager
-    DisposableEffect(Unit) {
+    // Wire call state into PiP manager — re-attach on every callMode change so
+    // enterPipMode() sees OnGoing rather than the initial Connecting state.
+    DisposableEffect(state.callMode) {
         try {
             val pipManager = org.koin.core.context.GlobalContext.get().get<net.jami.services.PictureInPictureManager>()
             pipManager.attachCallState(state)

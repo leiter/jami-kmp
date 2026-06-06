@@ -330,7 +330,11 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
                 Log.w(TAG, "startCapture(SCREEN_SHARING): no params for $cam")
                 return
             }
-            val surface = TextureView(context)
+            val surface = mCameraPreviewSurface.get() ?: run {
+                Log.w(TAG, "startCapture(SCREEN_SHARING): no preview surface registered")
+                projection.stop()
+                return
+            }
             if (!cameraService.startScreenSharing(params, projection, surface, context.resources.displayMetrics)) {
                 projection.stop()
             }

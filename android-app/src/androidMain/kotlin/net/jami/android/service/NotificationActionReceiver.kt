@@ -3,6 +3,7 @@ package net.jami.android.service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.BroadcastReceiver.PendingResult
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
 import kotlinx.coroutines.CoroutineScope
@@ -32,84 +33,110 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
             Log.w(TAG, "NotificationActionReceiver: missing accountId in intent")
             return
         }
+        // goAsync() keeps the process alive while our coroutine runs; mandatory for
+        // async work in BroadcastReceiver (otherwise Android may kill the process on return).
+        val pendingResult = goAsync()
 
         when (intent.action) {
             AndroidNotificationService.ACTION_REPLY_MESSAGE -> {
                 val conversationId = intent.getStringExtra(AndroidNotificationService.KEY_CONVERSATION_ID) ?: run {
                     Log.w(TAG, "NotificationActionReceiver: missing conversationId in intent for reply")
+                    pendingResult.finish()
                     return
                 }
-                handleReply(context, accountId, conversationId, intent)
+                handleReply(context, accountId, conversationId, intent, pendingResult)
             }
 
             AndroidNotificationService.ACTION_MARK_READ -> {
                 val conversationId = intent.getStringExtra(AndroidNotificationService.KEY_CONVERSATION_ID) ?: run {
                     Log.w(TAG, "NotificationActionReceiver: missing conversationId in intent for mark read")
+                    pendingResult.finish()
                     return
                 }
-                handleMarkRead(context, accountId, conversationId)
+                handleMarkRead(context, accountId, conversationId, intent, pendingResult)
             }
 
             AndroidNotificationService.ACTION_ANSWER -> {
                 val callId = intent.getStringExtra(AndroidNotificationService.KEY_CALL_ID) ?: run {
                     Log.w(TAG, "NotificationActionReceiver: missing callId in intent for answer call")
+                    pendingResult.finish()
                     return
                 }
-                handleAnswerCall(context, callId)
+                handleAnswerCall(context, callId, pendingResult)
             }
 
             AndroidNotificationService.ACTION_DECLINE -> {
                 val callId = intent.getStringExtra(AndroidNotificationService.KEY_CALL_ID) ?: run {
                     Log.w(TAG, "NotificationActionReceiver: missing callId in intent for decline call")
+                    pendingResult.finish()
                     return
                 }
-                handleDeclineCall(context, callId)
+                handleDeclineCall(context, callId, pendingResult)
             }
 
-            else -> Log.w(TAG, "Unknown action: ${intent.action}")
+            else -> {
+                Log.w(TAG, "Unknown action: ${intent.action}")
+                pendingResult.finish()
+            }
         }
     }
 
-    private fun handleReply(context: Context, accountId: String, conversationId: String, intent: Intent) {
+    private fun handleReply(
+        context: Context,
+        accountId: String,
+        conversationId: String,
+        intent: Intent,
+        pendingResult: PendingResult
+    ) {
         val remoteInput = RemoteInput.getResultsFromIntent(intent)
         val replyText = remoteInput?.getCharSequence(AndroidNotificationService.KEY_REPLY_TEXT)?.toString()
 
         if (replyText.isNullOrBlank()) {
             Log.w(TAG, "handleReply: empty reply text")
+            pendingResult.finish()
             return
         }
 
-        Log.d(TAG, "Replying to conversation $conversationId with message")
+        val notifId = intent.getIntExtra(AndroidNotificationService.KEY_NOTIFICATION_ID, -1)
+        Log.d(TAG, "Replying to conversation $conversationId")
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 daemonBridge.sendMessage(accountId, conversationId, replyText, "", 0)
-                // Cancel notification after successful reply
-                cancelMessageNotification(context, conversationId)
+                if (notifId != -1) cancelNotification(context, notifId)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to send reply message", e)
+            } finally {
+                pendingResult.finish()
             }
         }
     }
 
-    private fun handleMarkRead(context: Context, accountId: String, conversationId: String) {
+    private fun handleMarkRead(
+        context: Context,
+        accountId: String,
+        conversationId: String,
+        intent: Intent,
+        pendingResult: PendingResult
+    ) {
+        val notifId = intent.getIntExtra(AndroidNotificationService.KEY_NOTIFICATION_ID, -1)
         Log.d(TAG, "Marking conversation $conversationId as read")
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Mark conversation as read in daemon
                 daemonBridge.setConversationPreferences(
                     accountId,
                     conversationId,
                     mapOf("read" to "true")
                 )
-                // Cancel notification after marking as read
-                cancelMessageNotification(context, conversationId)
+                if (notifId != -1) cancelNotification(context, notifId)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to mark conversation as read", e)
+            } finally {
+                pendingResult.finish()
             }
         }
     }
 
-    private fun handleAnswerCall(context: Context, callId: String) {
+    private fun handleAnswerCall(context: Context, callId: String, pendingResult: PendingResult) {
         Log.d(TAG, "Answering call $callId")
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -118,11 +145,13 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
                 cancelCallNotification(context, callId)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to answer call $callId", e)
+            } finally {
+                pendingResult.finish()
             }
         }
     }
 
-    private fun handleDeclineCall(context: Context, callId: String) {
+    private fun handleDeclineCall(context: Context, callId: String, pendingResult: PendingResult) {
         Log.d(TAG, "Declining call $callId")
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -131,15 +160,15 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
                 cancelCallNotification(context, callId)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to decline call $callId", e)
+            } finally {
+                pendingResult.finish()
             }
         }
     }
 
-    private fun cancelMessageNotification(context: Context, conversationId: String) {
-        val notificationManager = NotificationManagerCompat.from(context)
-        val notifId = AndroidNotificationService.NOTIF_MESSAGE_BASE + conversationId.hashCode()
-        notificationManager.cancel(notifId)
-        Log.d(TAG, "Cancelled message notification: $notifId for conversation $conversationId")
+    private fun cancelNotification(context: Context, notifId: Int) {
+        NotificationManagerCompat.from(context).cancel(notifId)
+        Log.d(TAG, "Cancelled notification: $notifId")
     }
 
     private fun cancelCallNotification(context: Context, callId: String) {

@@ -392,7 +392,8 @@ class AndroidNotificationService(
         }.apply {
             action = ACTION_REPLY_MESSAGE
             putExtra(KEY_ACCOUNT_ID, conversation.accountId)
-            putExtra(KEY_CONVERSATION_ID, conversation.uri.uri)
+            putExtra(KEY_CONVERSATION_ID, conversation.uri.rawRingId)
+            putExtra(KEY_NOTIFICATION_ID, notifId)
             setPackage(context.packageName)
         }
         val replyPendingIntent = PendingIntent.getBroadcast(
@@ -407,7 +408,8 @@ class AndroidNotificationService(
         }.apply {
             action = ACTION_MARK_READ
             putExtra(KEY_ACCOUNT_ID, conversation.accountId)
-            putExtra(KEY_CONVERSATION_ID, conversation.uri.uri)
+            putExtra(KEY_CONVERSATION_ID, conversation.uri.rawRingId)
+            putExtra(KEY_NOTIFICATION_ID, notifId)
             setPackage(context.packageName)
         }
         val markReadPendingIntent = PendingIntent.getBroadcast(
@@ -748,5 +750,6 @@ class AndroidNotificationService(
         const val KEY_ACCOUNT_ID = "accountId"
         const val KEY_CONVERSATION_ID = "conversationId"
         const val KEY_REPLY_TEXT = "reply_text"
+        const val KEY_NOTIFICATION_ID = "notifId"
     }
 }
