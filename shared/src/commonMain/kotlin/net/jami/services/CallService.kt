@@ -26,6 +26,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.jami.model.Call
 import net.jami.model.Call.CallStatus
 import net.jami.model.Call.Direction
@@ -53,6 +55,8 @@ class CallService(
 ) {
     private val calls = mutableMapOf<String, Call>()
     private val conferences = mutableMapOf<String, Conference>()
+    // Serializes all daemon callback coroutines — prevents concurrent LinkedHashMap mutation
+    private val mutex = Mutex()
 
     private val _callUpdates = MutableSharedFlow<Call>(replay = 1)
     val callUpdates: SharedFlow<Call> = _callUpdates.asSharedFlow()
@@ -436,35 +440,37 @@ class CallService(
     ) {
         Log.d(TAG, "onCallStateChanged: callId=$callId state=$stateStr code=$detailCode")
         scope.launch {
-            val callState = CallStatus.fromString(stateStr)
+            mutex.withLock {
+                val callState = CallStatus.fromString(stateStr)
 
-            // Get or create call
-            var call = calls[callId]
-            if (call != null) {
-                call.setCallState(callState)
-            } else if (callState != CallStatus.OVER && callState != CallStatus.FAILURE) {
-                // New call - create it.
-                // RINGING without an existing call is always an incoming call: outgoing calls are
-                // added to `calls` by placeCall() before any callStateChanged fires, so they already
-                // exist here. Mark RINGING-created calls as INCOMING so the UI shows the right side.
-                val callType = if (callState == CallStatus.RINGING) Call.Direction.INCOMING.value else Call.Direction.OUTGOING.value
-                call = Call(callId, mapOf(
-                    Call.KEY_ACCOUNT_ID to accountId,
-                    Call.KEY_CALL_STATE to stateStr,
-                    Call.KEY_CALL_TYPE to callType.toString()
-                ))
-                call.setCallState(callState)
-                calls[callId] = call
-            }
+                // Get or create call
+                var call = calls[callId]
+                if (call != null) {
+                    call.setCallState(callState)
+                } else if (callState != CallStatus.OVER && callState != CallStatus.FAILURE) {
+                    // New call - create it.
+                    // RINGING without an existing call is always an incoming call: outgoing calls are
+                    // added to `calls` by placeCall() before any callStateChanged fires, so they already
+                    // exist here. Mark RINGING-created calls as INCOMING so the UI shows the right side.
+                    val callType = if (callState == CallStatus.RINGING) Call.Direction.INCOMING.value else Call.Direction.OUTGOING.value
+                    call = Call(callId, mapOf(
+                        Call.KEY_ACCOUNT_ID to accountId,
+                        Call.KEY_CALL_STATE to stateStr,
+                        Call.KEY_CALL_TYPE to callType.toString()
+                    ))
+                    call.setCallState(callState)
+                    calls[callId] = call
+                }
 
-            if (call != null) {
-                _callUpdates.emit(call)
-                updateCurrentCalls()
-
-                if (call.callStatus == CallStatus.OVER) {
-                    calls.remove(call.daemonId)
-                    conferences.remove(call.daemonId)
+                if (call != null) {
+                    _callUpdates.emit(call)
                     updateCurrentCalls()
+
+                    if (call.callStatus == CallStatus.OVER) {
+                        calls.remove(call.daemonId)
+                        conferences.remove(call.daemonId)
+                        updateCurrentCalls()
+                    }
                 }
             }
         }
@@ -481,20 +487,19 @@ class CallService(
         mediaList: List<Map<String, String>>
     ) {
         scope.launch {
-            val medias = mediaList.map { Media(it) }
-            val (peerUri, _) = Uri.fromStringWithName(from)
-            val call = addCall(accountId, callId, peerUri, Direction.INCOMING, medias)
-            _callUpdates.emit(call)
-            updateCurrentCalls()
-
-            // Auto-answer if enabled in settings
+            mutex.withLock {
+                val medias = mediaList.map { Media(it) }
+                val (peerUri, _) = Uri.fromStringWithName(from)
+                val call = addCall(accountId, callId, peerUri, Direction.INCOMING, medias)
+                _callUpdates.emit(call)
+                updateCurrentCalls()
+            }
+            // Auto-answer outside the lock to allow the accept() call to also acquire it
             val callSettings = settingsRepository.callSettings.value
             if (callSettings.autoAnswer) {
-                // Delay auto-answer by configured seconds
                 if (callSettings.autoAnswerDelay > 0) {
                     kotlinx.coroutines.delay(callSettings.autoAnswerDelay * 1000L)
                 }
-                // Accept with video based on video enabled setting
                 accept(accountId, callId, callSettings.videoEnabled)
             }
         }
@@ -541,10 +546,12 @@ class CallService(
      */
     internal fun onMediaNegotiationStatus(callId: String, event: String, mediaList: List<Map<String, String>>) {
         scope.launch {
-            val medias = mediaList.map { Media(it) }
-            calls[callId]?.let { call ->
-                call.setMediaList(medias)
-                _callUpdates.emit(call)
+            mutex.withLock {
+                val medias = mediaList.map { Media(it) }
+                calls[callId]?.let { call ->
+                    call.setMediaList(medias)
+                    _callUpdates.emit(call)
+                }
             }
         }
     }
@@ -560,28 +567,25 @@ class CallService(
      */
     internal fun mediaChangeRequested(accountId: String, callId: String, mediaList: List<Map<String, String>>) {
         scope.launch {
-            val call = calls[callId] ?: return@launch
-            // Determine whether the call currently carries active (unmuted) video.
-            val hasActiveVideo = call.mediaList.any {
-                it.mediaType == Media.MediaType.MEDIA_TYPE_VIDEO && !it.isMuted
-            }
-
-            val updatedList = mediaList.map { entry ->
-                val type = Media.MediaType.parseMediaType(entry[Media.MEDIA_TYPE_KEY] ?: "")
-                val mutable = entry.toMutableMap()
-                when (type) {
-                    Media.MediaType.MEDIA_TYPE_VIDEO ->
-                        // No active video on our side → refuse inbound video.
-                        mutable[Media.MUTED_KEY] = (!hasActiveVideo).toString()
-                    Media.MediaType.MEDIA_TYPE_AUDIO ->
-                        // Mirror the caller's current audio-mute state.
-                        mutable[Media.MUTED_KEY] = call.isAudioMuted.toString()
-                    null -> { /* unknown type — leave the entry unchanged */ }
+            mutex.withLock {
+                val call = calls[callId] ?: return@withLock
+                val hasActiveVideo = call.mediaList.any {
+                    it.mediaType == Media.MediaType.MEDIA_TYPE_VIDEO && !it.isMuted
                 }
-                mutable.toMap()
+                val updatedList = mediaList.map { entry ->
+                    val type = Media.MediaType.parseMediaType(entry[Media.MEDIA_TYPE_KEY] ?: "")
+                    val mutable = entry.toMutableMap()
+                    when (type) {
+                        Media.MediaType.MEDIA_TYPE_VIDEO ->
+                            mutable[Media.MUTED_KEY] = (!hasActiveVideo).toString()
+                        Media.MediaType.MEDIA_TYPE_AUDIO ->
+                            mutable[Media.MUTED_KEY] = call.isAudioMuted.toString()
+                        null -> { }
+                    }
+                    mutable.toMap()
+                }
+                daemonBridge.answerMediaChangeRequest(accountId, callId, updatedList)
             }
-
-            daemonBridge.answerMediaChangeRequest(accountId, callId, updatedList)
         }
     }
 
@@ -594,86 +598,57 @@ class CallService(
      */
     internal fun onConferenceCreated(accountId: String, conversationId: String, confId: String) {
         scope.launch {
-            val conf = conferences.getOrPut(confId) {
-                Conference(accountId, confId).apply {
-                    if (conversationId.isNotEmpty()) {
-                        this.conversationId = conversationId
+            mutex.withLock {
+                val conf = conferences.getOrPut(confId) {
+                    Conference(accountId, confId).apply {
+                        if (conversationId.isNotEmpty()) this.conversationId = conversationId
                     }
                 }
-            }
-
-            // Fetch state and participants from the daemon.
-            val details = daemonBridge.getConferenceDetails(accountId, confId)
-            details["STATE"]?.let { conf.setState(it) }
-
-            val participants = daemonBridge.getParticipantList(accountId, confId)
-            for (callId in participants) {
-                val call = calls[callId] ?: continue
-                call.confId = confId
-                if (!conf.contains(callId)) {
-                    conf.addParticipant(call)
+                val details = daemonBridge.getConferenceDetails(accountId, confId)
+                details["STATE"]?.let { conf.setState(it) }
+                val participants = daemonBridge.getParticipantList(accountId, confId)
+                for (callId in participants) {
+                    val call = calls[callId] ?: continue
+                    call.confId = confId
+                    if (!conf.contains(callId)) conf.addParticipant(call)
+                    if (callId != confId) conferences.remove(callId)
                 }
-                // Remove the individual call entry from the conferences map if it was
-                // mistakenly inserted there as a single-call conference.
-                if (callId != confId) {
-                    conferences.remove(callId)
-                }
+                _conferenceUpdates.emit(conf)
+                updateCurrentConferences()
             }
-
-            _conferenceUpdates.emit(conf)
-            updateCurrentConferences()
         }
     }
 
     /**
      * Called when a conference state changes.
-     *
-     * Ports jami-client-android CallService.conferenceChanged (:778-825):
-     * re-reconcile participants — add newcomers, remove those no longer present,
-     * and demote the conference back to a plain call when only one participant remains.
      */
     internal fun onConferenceChanged(accountId: String, confId: String, state: String) {
         scope.launch {
-            val conf = conferences.getOrPut(confId) { Conference(accountId, confId) }
-            conf.setState(state)
-
-            // Fetch the current participant set from the daemon.
-            val participants = daemonBridge.getParticipantList(accountId, confId).toSet()
-
-            // Add participants that aren't yet in the conference model.
-            for (callId in participants) {
-                val call = calls[callId] ?: continue
-                call.confId = confId
-                if (!conf.contains(callId)) {
-                    conf.addParticipant(call)
+            mutex.withLock {
+                val conf = conferences.getOrPut(confId) { Conference(accountId, confId) }
+                conf.setState(state)
+                val participants = daemonBridge.getParticipantList(accountId, confId).toSet()
+                for (callId in participants) {
+                    val call = calls[callId] ?: continue
+                    call.confId = confId
+                    if (!conf.contains(callId)) conf.addParticipant(call)
+                    if (callId != confId) conferences.remove(callId)
                 }
-                if (callId != confId) {
-                    conferences.remove(callId)
+                val toRemove = conf.participants.filter { it.daemonId !in participants }
+                for (call in toRemove) { call.confId = null; conf.removeParticipant(call) }
+                val remaining = conf.participants
+                if (remaining.size == 1) {
+                    val lastCall = remaining.first()
+                    lastCall.confId = null
+                    conferences.remove(confId)
+                    _callUpdates.emit(lastCall)
+                    updateCurrentCalls()
+                    updateCurrentConferences()
+                    return@withLock
                 }
-            }
-
-            // Remove participants that are no longer in the conference.
-            val toRemove = conf.participants.filter { it.daemonId !in participants }
-            for (call in toRemove) {
-                call.confId = null
-                conf.removeParticipant(call)
-            }
-
-            // Demote to a plain call when only one participant remains.
-            val remaining = conf.participants
-            if (remaining.size == 1) {
-                val lastCall = remaining.first()
-                lastCall.confId = null
-                conferences.remove(confId)
-                // Emit the lone call so the UI knows the conference dissolved.
-                _callUpdates.emit(lastCall)
-                updateCurrentCalls()
+                _conferenceUpdates.emit(conf)
                 updateCurrentConferences()
-                return@launch
             }
-
-            _conferenceUpdates.emit(conf)
-            updateCurrentConferences()
         }
     }
 
@@ -682,15 +657,17 @@ class CallService(
      */
     internal fun onConferenceRemoved(accountId: String, confId: String) {
         scope.launch {
-            conferences.remove(confId)?.let { conf ->
-                conf.removeParticipants()
-                conf.hostCall?.let { hostCall ->
-                    hostCall.setCallState(CallStatus.OVER)
-                    _callUpdates.emit(hostCall)
+            mutex.withLock {
+                conferences.remove(confId)?.let { conf ->
+                    conf.removeParticipants()
+                    conf.hostCall?.let { hostCall ->
+                        hostCall.setCallState(CallStatus.OVER)
+                        _callUpdates.emit(hostCall)
+                    }
+                    _conferenceUpdates.emit(conf)
                 }
-                _conferenceUpdates.emit(conf)
+                updateCurrentConferences()
             }
-            updateCurrentConferences()
         }
     }
 
@@ -699,33 +676,25 @@ class CallService(
      */
     internal fun onConferenceInfoUpdated(confId: String, info: List<Map<String, String>>) {
         scope.launch {
-            val conference = conferences[confId] ?: return@launch
-            val account = accountService.getAccount(conference.accountId) ?: return@launch
-            var isModerator = false
-
-            val newInfo = info.mapNotNull { i ->
-                val uriStr = i["uri"] ?: ""
-                val contactUri = if (uriStr.isEmpty()) {
-                    Uri.fromId(account.username)
-                } else {
-                    Uri.fromString(uriStr)
+            mutex.withLock {
+                val conference = conferences[confId] ?: return@withLock
+                val account = accountService.getAccount(conference.accountId) ?: return@withLock
+                var isModerator = false
+                val newInfo = info.mapNotNull { i ->
+                    val uriStr = i["uri"] ?: ""
+                    val contactUri = if (uriStr.isEmpty()) Uri.fromId(account.username)
+                                     else Uri.fromString(uriStr)
+                    val call = conference.findCallByContact(contactUri)
+                    val contact = account.getContactFromCache(contactUri)
+                    val confInfo = Conference.ParticipantInfo(call, contact, i)
+                    if (confInfo.isEmpty) return@mapNotNull null
+                    if (contact.uri.rawRingId == account.username && confInfo.isModerator) isModerator = true
+                    confInfo
                 }
-
-                val call = conference.findCallByContact(contactUri)
-                val contact = account.getContactFromCache(contactUri)
-                
-                val confInfo = Conference.ParticipantInfo(call, contact, i)
-                if (confInfo.isEmpty) return@mapNotNull null
-
-                if (contact.uri.rawRingId == account.username && confInfo.isModerator) {
-                    isModerator = true
-                }
-                confInfo
+                conference.isModerator = isModerator
+                conference.setInfo(newInfo)
+                _conferenceUpdates.emit(conference)
             }
-
-            conference.isModerator = isModerator
-            conference.setInfo(newInfo)
-            _conferenceUpdates.emit(conference)
         }
     }
 

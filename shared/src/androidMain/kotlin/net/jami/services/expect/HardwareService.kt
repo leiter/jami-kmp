@@ -35,7 +35,7 @@ import java.lang.ref.WeakReference
 
 actual class HardwareService(private val context: Context) : KoinComponent, OnAudioFocusChangeListener {
 
-    private val _videoEvents = MutableSharedFlow<VideoEvent>()
+    private val _videoEvents = MutableSharedFlow<VideoEvent>(replay = 1)
     private val _cameraEvents = MutableSharedFlow<VideoEvent>()
     private val _bluetoothEvents = MutableSharedFlow<BluetoothEvent>()
     private val _audioState = MutableStateFlow(AudioState(AudioOutput(AudioOutputType.INTERNAL)))
