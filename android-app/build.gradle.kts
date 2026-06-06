@@ -39,6 +39,11 @@ android {
         targetSdk = libs.versions.androidTargetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0.0"
+        // x86_64 is emulator-only; excluding it keeps the APK 16KB-page-clean
+        // (the x86_64 jami-core libs are 4KB-aligned and can't be recompiled here).
+        ndk {
+            abiFilters += setOf("arm64-v8a", "armeabi-v7a")
+        }
     }
 
     signingConfigs {
