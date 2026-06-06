@@ -317,7 +317,7 @@ private fun CallScreenContent(
             ) {
                 VideoRenderer(
                     modifier = Modifier.fillMaxSize(),
-                    callId = state.remoteVideoSinkId,
+                    callId = state.localVideoSinkId.ifEmpty { "local_preview" },
                     isLocalVideo = true
                 )
             }

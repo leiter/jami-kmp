@@ -65,6 +65,8 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
 
     // Decode-side state: tracks native windows for sinks registered before decodingStarted
     private val videoWindows = mutableMapOf<String, Long>()
+    // Dimensions reported by decodingStarted, needed when the surface arrives after the daemon event
+    private val videoSizes = mutableMapOf<String, Pair<Int, Int>>()
 
     // Handler for posting camera operations to the camera thread
     private val uiHandler: Handler by lazy {
@@ -221,9 +223,7 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
 
     actual fun decodingStarted(id: String, shmPath: String, width: Int, height: Int, isMixer: Boolean) {
         Log.i(TAG, "decodingStarted() $id ${width}x$height")
-        // If a surface was already registered (addVideoSurface fired before decodingStarted),
-        // bind the native window now. Otherwise just emit the sizing event; when the surface
-        // arrives addVideoSurface will register/bind it via registerVideoCallback.
+        videoSizes[id] = width to height
         val window = videoWindows[id]
         if (window != null && window != 0L) {
             daemonBridge.setNativeWindowGeometry(window, width, height)
@@ -233,6 +233,7 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
 
     actual fun decodingStopped(id: String, shmPath: String, isMixer: Boolean) {
         Log.i(TAG, "decodingStopped() $id")
+        videoSizes.remove(id)
         _videoEvents.tryEmit(VideoEvent(sinkId = id))
     }
 
@@ -386,11 +387,22 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
             is android.view.Surface -> holder
             else -> null
         }
-        val window = surface?.let { daemonBridge.acquireNativeWindow(it) } ?: return
-        if (window != 0L) {
-            videoWindows[id] = window
-            daemonBridge.registerVideoCallback(id, window)
+        if (surface == null) {
+            Log.e(TAG, "addVideoSurface: unsupported holder type ${holder::class.simpleName} for id=$id")
+            return
         }
+        val window = daemonBridge.acquireNativeWindow(surface)
+        Log.i(TAG, "addVideoSurface id=$id window=$window storedSize=${videoSizes[id]}")
+        if (window == 0L) {
+            Log.e(TAG, "addVideoSurface: acquireNativeWindow returned 0 for id=$id")
+            return
+        }
+        videoWindows[id] = window
+        // Apply geometry before registering so the daemon knows output dimensions.
+        // decodingStarted normally fires before the surface is ready; if it already did,
+        // the stored size is available here.
+        videoSizes[id]?.let { (w, h) -> daemonBridge.setNativeWindowGeometry(window, w, h) }
+        daemonBridge.registerVideoCallback(id, window)
     }
 
     actual fun updateVideoSurfaceId(currentId: String, newId: String) {
@@ -398,6 +410,7 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     }
 
     actual fun removeVideoSurface(id: String) {
+        videoSizes.remove(id)
         videoWindows.remove(id)?.let { window ->
             if (window != 0L) {
                 daemonBridge.unregisterVideoCallback(id, window)

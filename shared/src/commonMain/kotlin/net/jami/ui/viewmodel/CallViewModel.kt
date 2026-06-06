@@ -645,6 +645,7 @@ class CallViewModel(
 
     private fun handleVideoEvent(event: VideoEvent) {
         val callId = currentCallId ?: return
+        Log.d(TAG, "handleVideoEvent: sinkId=${event.sinkId} started=${event.started} ${event.width}x${event.height} callId=$callId")
 
         if (event.started && event.width > 0 && event.height > 0) {
             // Remote video started — update last event time for loss detection
