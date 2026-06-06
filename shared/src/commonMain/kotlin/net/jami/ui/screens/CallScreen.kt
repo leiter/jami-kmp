@@ -143,10 +143,10 @@ fun CallScreen(
         onAcceptAudio = { viewModel.acceptCurrent(withVideo = false) },
         onAcceptVideo = { viewModel.acceptCurrent(withVideo = true) },
         onDecline = { viewModel.refuseCurrent() },
-        onEnd = {
-            viewModel.endCall()
-            onEnd()
-        },
+        // Only tell the ViewModel to end the call; navigation is driven exclusively by
+        // onEnded (fired by LaunchedEffect when callMode = Ended). Calling popBackStack()
+        // here AND in onEnded causes a double-pop that removes the Home screen too.
+        onEnd = { viewModel.endCall() },
         onToggleMute = { viewModel.toggleMute() },
         onToggleSpeaker = { viewModel.toggleSpeaker() },
         onToggleVideo = { viewModel.toggleVideo() },
@@ -214,10 +214,7 @@ fun IncomingCallScreen(
         onAcceptAudio = { viewModel.acceptCurrent(withVideo = false) },
         onAcceptVideo = { viewModel.acceptCurrent(withVideo = true) },
         onDecline = { viewModel.refuseCurrent() },
-        onEnd = {
-            viewModel.endCall()
-            onEnd()
-        },
+        onEnd = { viewModel.endCall() },
         onToggleMute = { viewModel.toggleMute() },
         onToggleSpeaker = { viewModel.toggleSpeaker() },
         onToggleVideo = { viewModel.toggleVideo() },
@@ -306,9 +303,11 @@ private fun CallScreenContent(
                 }
             },
     ) {
-        // Video rendering
+        // Video rendering — skip entirely once the call has ended so we never show a
+        // black surface during the brief window between endCall() and navigation.
+        val callEnded = state.callMode is CallMode.Ended
         // Remote video or conference grid
-        if (state.hasRemoteVideo && !state.videoLoss.isFallbackToAudioOnly) {
+        if (state.hasRemoteVideo && !state.videoLoss.isFallbackToAudioOnly && !callEnded) {
             if (state.isConference && state.participants.isNotEmpty()) {
                 ConferenceVideoLayout(
                     participants = state.participants,
@@ -325,7 +324,7 @@ private fun CallScreenContent(
 
         // Local camera preview while an incoming video call is ringing (full-screen, not draggable).
         // Mirrors Android's CallFragment.initIncomingCallDisplay(hasVideo=true).
-        if (state.callMode is CallMode.Incoming && state.isVideo && state.hasLocalVideo) {
+        if (!callEnded && state.callMode is CallMode.Incoming && state.isVideo && state.hasLocalVideo) {
             VideoRenderer(
                 modifier = Modifier.fillMaxSize(),
                 callId = state.localVideoSinkId.ifEmpty { "local_preview" },
@@ -334,7 +333,7 @@ private fun CallScreenContent(
         }
 
         // Local video preview during an active call (draggable pip)
-        if (state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing && !state.videoLoss.isFallbackToAudioOnly) {
+        if (!callEnded && state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing && !state.videoLoss.isFallbackToAudioOnly) {
             DraggablePreview(
                 modifier = Modifier.fillMaxSize(),
                 isVisible = state.isLocalPreviewVisible,
@@ -349,9 +348,11 @@ private fun CallScreenContent(
         }
 
         // Audio-only call background if no video is active or in fallback mode.
-        // Not shown when there is a local incoming-video preview or an active local video.
+        // Not shown when there is a local incoming-video preview, active local video, or
+        // the call has ended (navigation is imminent; keep the screen clean).
         val hasIncomingVideoPreview = state.callMode is CallMode.Incoming && state.isVideo && state.hasLocalVideo
-        if ((!state.hasRemoteVideo || state.videoLoss.isFallbackToAudioOnly) &&
+        if (!callEnded &&
+            (!state.hasRemoteVideo || state.videoLoss.isFallbackToAudioOnly) &&
             !(state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing) &&
             !hasIncomingVideoPreview) {
             AudioCallBackground(
