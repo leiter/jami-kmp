@@ -381,8 +381,12 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     }
 
     actual fun addVideoSurface(id: String, holder: Any) {
-        if (holder !is SurfaceHolder) return
-        val window = daemonBridge.acquireNativeWindow(holder.surface)
+        val surface: android.view.Surface? = when (holder) {
+            is SurfaceHolder -> holder.surface
+            is android.view.Surface -> holder
+            else -> null
+        }
+        val window = surface?.let { daemonBridge.acquireNativeWindow(it) } ?: return
         if (window != 0L) {
             videoWindows[id] = window
             daemonBridge.registerVideoCallback(id, window)
