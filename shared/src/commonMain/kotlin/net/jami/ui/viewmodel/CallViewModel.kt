@@ -167,7 +167,10 @@ class CallViewModel(
             }
             currentAccountId = resolvedAccountId
             val peerUri = Uri.fromString(contactUri)
-            Log.d(TAG, "initOutgoing: resolvedAccount=$resolvedAccountId peerUri=${peerUri.uri} scheme=${peerUri.scheme}")
+
+            // Mirror CallPresenter.initOutGoing(): only allow video if the device has a camera.
+            val effectiveVideo = hasVideo && hardwareService.hasCamera()
+            Log.d(TAG, "initOutgoing: resolvedAccount=$resolvedAccountId peerUri=${peerUri.uri} scheme=${peerUri.scheme} effectiveVideo=$effectiveVideo")
 
             _state.value = _state.value.copy(
                 callMode = CallMode.Outgoing,
@@ -175,8 +178,8 @@ class CallViewModel(
                 peerUri = contactUri,
                 peerName = contactUri,
                 isIncoming = false,
-                hasVideo = hasVideo,
-                hasLocalVideo = hasVideo,
+                hasVideo = effectiveVideo,
+                hasLocalVideo = effectiveVideo,
                 isFrontCamera = hardwareService.isPreviewFromFrontCamera
             )
 
@@ -186,7 +189,7 @@ class CallViewModel(
                 val call = callService.placeCall(
                     accountId = resolvedAccountId,
                     contactUri = peerUri,
-                    hasVideo = hasVideo,
+                    hasVideo = effectiveVideo,
                     conversationUri = convUri
                 )
                 Log.d(TAG, "initOutgoing: placeCall returned daemonId=${call.daemonId}")
@@ -206,10 +209,13 @@ class CallViewModel(
 
     /**
      * Attach to an existing incoming daemon call (arrived via notification).
-     * Mirrors CallPresenter.initIncomingCall().
+     * Mirrors CallPresenter.initIncomingCall() and LetsJam's initializeAcceptedCall().
      *
-     * @param callId The daemon call ID from the notification.
-     * @param actionViewOnly When true, just display the call state (call already answered elsewhere).
+     * If the call is already CURRENT when this is called (e.g. the user accepted it from
+     * the notification action button and the app was then opened, or they are returning to
+     * an active call via the ongoing-call notification) we jump straight to OnGoing mode
+     * instead of Incoming — this avoids a flash of the ringing UI for a call that is
+     * already connected.
      */
     fun initIncoming(callId: String, actionViewOnly: Boolean = false) {
         val call = callService.getCall(callId)
@@ -221,14 +227,29 @@ class CallViewModel(
             media.mediaType == net.jami.model.Media.MediaType.MEDIA_TYPE_VIDEO
         } ?: false
 
+        // Map current daemon call state to a UI mode. Mirrors LetsJam's
+        // initializeAcceptedCall() which queries the daemon for current state so the UI
+        // never shows the ringing screen for a call that is already answered.
+        val initialMode: CallMode = when (call?.callStatus) {
+            Call.CallStatus.CURRENT -> CallMode.OnGoing
+            Call.CallStatus.HOLD -> CallMode.OnHold
+            Call.CallStatus.OVER,
+            Call.CallStatus.HUNGUP,
+            Call.CallStatus.FAILURE,
+            Call.CallStatus.BUSY -> CallMode.Ended(
+                call.hangupReason.takeIf { it != Call.HangupReason.NONE } ?: Call.HangupReason.REMOTE
+            )
+            else -> CallMode.Incoming
+        }
+
         if (call != null) {
             currentAccountId = call.account
             _state.value = _state.value.copy(
-                callMode = CallMode.Incoming,
+                callMode = initialMode,
                 callStatus = call.callStatus.name,
                 peerUri = call.peerUri.uri,
                 peerName = call.peerUri.uri,
-                isIncoming = true,
+                isIncoming = call.isIncoming,
                 isVideo = hasVideoOffered,
                 hasVideo = hasVideoOffered,
                 hasLocalVideo = hasVideoOffered,
@@ -237,7 +258,7 @@ class CallViewModel(
             resolveContactName(call.account, call.peerUri, call)
         } else {
             _state.value = _state.value.copy(
-                callMode = CallMode.Incoming,
+                callMode = initialMode,
                 isIncoming = true,
                 peerUri = callId,
                 isVideo = hasVideoOffered
@@ -245,6 +266,25 @@ class CallViewModel(
         }
 
         subscribeToConferenceUpdates(callId)
+    }
+
+    // ==================== Incoming preview ====================
+
+    /**
+     * Start the local camera preview while an incoming video call is ringing.
+     * Mirrors Android's CallFragment.initIncomingCallDisplay(hasVideo=true):
+     * the user sees their own camera feed in the background before deciding to accept.
+     * Call this only after camera permission is confirmed and [state.isVideo] is true.
+     */
+    fun startIncomingPreview() {
+        scope.launch {
+            hardwareService.initVideo()
+            hardwareService.startCameraPreview(true)
+        }
+        _state.value = _state.value.copy(
+            hasLocalVideo = true,
+            isFrontCamera = hardwareService.isPreviewFromFrontCamera
+        )
     }
 
     // ==================== Call actions ====================

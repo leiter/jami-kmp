@@ -31,6 +31,8 @@
     <string name="content_desc_hold">Hold</string>
     <string name="content_desc_resume">Resume</string>
     <string name="content_desc_answer_call">Answer call</string>
+    <string name="content_desc_answer_audio_call">Answer with audio only</string>
+    <string name="content_desc_answer_video_call">Answer with video</string>
     <string name="content_desc_decline_call">Decline call</string>
     <string name="content_desc_dialpad">Open dialpad</string>
     <string name="content_desc_peer_avatar">Caller avatar</string>

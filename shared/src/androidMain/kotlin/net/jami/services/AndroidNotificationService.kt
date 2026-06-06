@@ -246,6 +246,18 @@ class AndroidNotificationService(
         val piFlags = PendingIntent.FLAG_UPDATE_CURRENT or
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
 
+        // Keep the foreground service alive for every active call state so the call
+        // survives app swipe-away. Mirrors LetsJam's CallService which is started on
+        // any call event (incoming, outgoing-ringing, or active).
+        // Safe to call multiple times — the OS deduplicates; CallNotificationService
+        // self-stops when currentCalls becomes empty.
+        try {
+            val serviceIntent = Intent(context, Class.forName("net.jami.android.service.CallNotificationService"))
+            androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent)
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not start CallNotificationService: ${e.message}")
+        }
+
         when {
             state == Call.CallStatus.RINGING && isIncoming -> {
                 // Receiver: wake screen and offer Answer / Decline
@@ -266,9 +278,6 @@ class AndroidNotificationService(
                     android.R.drawable.ic_menu_close_clear_cancel, "Decline",
                     createCallActionPendingIntent(callId, accountId, ACTION_DECLINE, 102)
                 )
-                // Keep foreground service alive so notification survives backgrounding
-                val serviceIntent = Intent(context, Class.forName("net.jami.android.service.CallNotificationService"))
-                androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent)
             }
 
             state == Call.CallStatus.RINGING -> {

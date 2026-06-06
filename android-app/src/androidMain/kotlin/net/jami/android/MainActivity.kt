@@ -121,10 +121,14 @@ class MainActivity : ComponentActivity() {
 
             ACTION_ACCEPT_CALL -> {
                 Log.d(TAG, "ACCEPT_CALL: callId=$callId")
-                val resolvedAccount = accountId
-                    ?: callService.getCall(callId)?.account
-                    ?: return
-                callService.accept(resolvedAccount, callId, hasVideo = false)
+                val call = callService.getCall(callId)
+                val resolvedAccount = accountId ?: call?.account ?: return
+                // Honour the offered video flag from the call's media list, matching the
+                // in-app IncomingCallScreen behaviour (CallViewModel.initIncoming).
+                val hasVideo = call?.mediaList?.any {
+                    it.mediaType == net.jami.model.Media.MediaType.MEDIA_TYPE_VIDEO
+                } ?: false
+                callService.accept(resolvedAccount, callId, hasVideo = hasVideo)
                 callService.setPendingCallNavId(callId)
             }
         }

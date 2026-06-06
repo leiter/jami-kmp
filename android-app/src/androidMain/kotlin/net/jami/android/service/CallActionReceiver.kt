@@ -39,7 +39,12 @@ class CallActionReceiver : BroadcastReceiver(), KoinComponent {
         when (intent.action) {
             AndroidNotificationService.ACTION_ANSWER -> {
                 Log.d(TAG, "Answer call: callId=$callId accountId=$accountId")
-                callService.accept(accountId, callId, hasVideo = false)
+                // Honour the offered video flag from the call's media list —
+                // mirrors CallViewModel.initIncoming video detection.
+                val hasVideo = callService.getCall(callId)?.mediaList?.any {
+                    it.mediaType == net.jami.model.Media.MediaType.MEDIA_TYPE_VIDEO
+                } ?: false
+                callService.accept(accountId, callId, hasVideo = hasVideo)
                 val viewIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
                     action = ACTION_VIEW_CALL
                     putExtra(NotificationService.KEY_CALL_ID, callId)

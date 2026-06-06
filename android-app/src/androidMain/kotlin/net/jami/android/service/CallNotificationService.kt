@@ -67,11 +67,14 @@ class CallNotificationService : Service() {
 
     private fun computeServiceType(): Int {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return 0
-        // FOREGROUND_SERVICE_TYPE_PHONE_CALL requires the DIALER role on Android 14+, which
-        // a third-party app cannot hold. Include MEDIA_PROJECTION so getMediaProjection() can
-        // be called during screen share without a SecurityException (Android 14+ requirement).
-        return ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE or
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+        // FOREGROUND_SERVICE_TYPE_PHONE_CALL requires the DIALER role on Android 14+.
+        // FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION requires an active MediaProjection session
+        // (granted by MediaProjectionManager) at the moment startForeground() is called —
+        // declaring the type alone is not enough and causes a SecurityException on API 34+.
+        // Screen sharing acquires its own projection token on demand via
+        // MainActivity.requestScreenSharePermission(); it does not need this service to hold it.
+        // microphone is sufficient to keep call audio alive in the background.
+        return ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
     }
 
     companion object {

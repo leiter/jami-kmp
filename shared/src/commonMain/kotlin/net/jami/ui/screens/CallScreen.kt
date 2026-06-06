@@ -140,7 +140,8 @@ fun CallScreen(
 
     CallScreenContent(
         state = state,
-        onAccept = { viewModel.acceptCurrent(withVideo = isVideo) },
+        onAcceptAudio = { viewModel.acceptCurrent(withVideo = false) },
+        onAcceptVideo = { viewModel.acceptCurrent(withVideo = true) },
         onDecline = { viewModel.refuseCurrent() },
         onEnd = {
             viewModel.endCall()
@@ -184,6 +185,14 @@ fun IncomingCallScreen(
 
     var requestCameraPermission by remember { mutableStateOf(false) }
 
+    // When video is offered, request camera permission immediately so the ringing preview
+    // can start — mirroring Android's CallFragment.initIncomingCallDisplay(hasVideo=true).
+    LaunchedEffect(state.isVideo) {
+        if (state.isVideo) {
+            if (viewModel.hasCameraPermission()) viewModel.startIncomingPreview()
+            else requestCameraPermission = true
+        }
+    }
     LaunchedEffect(Unit) {
         viewModel.cameraPermissionRequest.collect { requestCameraPermission = true }
     }
@@ -192,13 +201,15 @@ fun IncomingCallScreen(
         request = requestCameraPermission,
         onResult = { granted ->
             requestCameraPermission = false
+            if (granted && state.isVideo) viewModel.startIncomingPreview()
             viewModel.onCameraPermissionResult(granted)
         }
     )
 
     CallScreenContent(
         state = state,
-        onAccept = { viewModel.acceptCurrent(withVideo = state.isVideo) },
+        onAcceptAudio = { viewModel.acceptCurrent(withVideo = false) },
+        onAcceptVideo = { viewModel.acceptCurrent(withVideo = true) },
         onDecline = { viewModel.refuseCurrent() },
         onEnd = {
             viewModel.endCall()
@@ -227,7 +238,8 @@ fun IncomingCallScreen(
 @Composable
 private fun CallScreenContent(
     state: CallState,
-    onAccept: () -> Unit,
+    onAcceptAudio: () -> Unit,
+    onAcceptVideo: () -> Unit,
     onDecline: () -> Unit,
     onEnd: () -> Unit,
     onToggleMute: () -> Unit,
@@ -308,7 +320,17 @@ private fun CallScreenContent(
             }
         }
 
-        // Local video preview (draggable)
+        // Local camera preview while an incoming video call is ringing (full-screen, not draggable).
+        // Mirrors Android's CallFragment.initIncomingCallDisplay(hasVideo=true).
+        if (state.callMode is CallMode.Incoming && state.isVideo && state.hasLocalVideo) {
+            VideoRenderer(
+                modifier = Modifier.fillMaxSize(),
+                callId = state.localVideoSinkId.ifEmpty { "local_preview" },
+                isLocalVideo = true
+            )
+        }
+
+        // Local video preview during an active call (draggable pip)
         if (state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing && !state.videoLoss.isFallbackToAudioOnly) {
             DraggablePreview(
                 modifier = Modifier.fillMaxSize(),
@@ -323,9 +345,12 @@ private fun CallScreenContent(
             }
         }
 
-        // Audio-only call background if no video is active or in fallback mode
+        // Audio-only call background if no video is active or in fallback mode.
+        // Not shown when there is a local incoming-video preview or an active local video.
+        val hasIncomingVideoPreview = state.callMode is CallMode.Incoming && state.isVideo && state.hasLocalVideo
         if ((!state.hasRemoteVideo || state.videoLoss.isFallbackToAudioOnly) &&
-            !(state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing)) {
+            !(state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing) &&
+            !hasIncomingVideoPreview) {
             AudioCallBackground(
                 state = state,
                 modifier = Modifier.fillMaxSize()
@@ -379,7 +404,9 @@ private fun CallScreenContent(
                 ) {
                     when (state.callMode) {
                         is CallMode.Incoming -> IncomingControls(
-                            onAccept = onAccept,
+                            isVideo = state.isVideo,
+                            onAcceptAudio = onAcceptAudio,
+                            onAcceptVideo = onAcceptVideo,
                             onDecline = onDecline
                         )
                         is CallMode.Outgoing -> OutgoingControls(onHangup = onEnd)
@@ -488,7 +515,9 @@ private fun AudioCallBackground(
 
             // Status
             val statusText = when (state.callMode) {
-                is CallMode.Incoming -> stringResource(Res.string.call_incoming_audio)
+                is CallMode.Incoming -> stringResource(
+                    if (state.isVideo) Res.string.call_incoming_video else Res.string.call_incoming_audio
+                )
                 is CallMode.Outgoing -> stringResource(Res.string.call_outgoing)
                 is CallMode.OnHold -> stringResource(Res.string.call_on_hold)
                 is CallMode.OnGoing -> if (state.isConference)
@@ -496,12 +525,32 @@ private fun AudioCallBackground(
                 else stringResource(Res.string.call_human_state_current)
                 is CallMode.Ended -> stringResource(Res.string.call_human_state_over)
             }
-            Text(
-                text = statusText,
-                style = JamiTheme.typography.bodyLarge,
-                color = if (state.callMode is CallMode.OnHold) Color.Yellow.copy(alpha = 0.9f)
-                else Color.White.copy(alpha = 0.75f),
-            )
+            // For incoming video calls, show text + videocam icon side by side
+            if (state.callMode is CallMode.Incoming && state.isVideo) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.xs),
+                ) {
+                    Text(
+                        text = statusText,
+                        style = JamiTheme.typography.bodyLarge,
+                        color = Color.White.copy(alpha = 0.75f),
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Videocam,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.75f),
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            } else {
+                Text(
+                    text = statusText,
+                    style = JamiTheme.typography.bodyLarge,
+                    color = if (state.callMode is CallMode.OnHold) Color.Yellow.copy(alpha = 0.9f)
+                    else Color.White.copy(alpha = 0.75f),
+                )
+            }
 
             // Duration
             if (state.duration > 0 && state.callMode is CallMode.OnGoing) {
@@ -546,8 +595,20 @@ private fun CallInfoOverlay(
 
 // ==================== Control sub-composables ====================
 
+/**
+ * Accept/decline controls for an incoming call.
+ *
+ * Audio-only call: Decline + single Accept (phone icon).
+ * Video call: Decline + Accept-audio (phone icon) + Accept-video (videocam icon).
+ * Mirrors Android's CallFragment.initIncomingCallDisplay(hasVideo).
+ */
 @Composable
-private fun IncomingControls(onAccept: () -> Unit, onDecline: () -> Unit) {
+private fun IncomingControls(
+    isVideo: Boolean,
+    onAcceptAudio: () -> Unit,
+    onAcceptVideo: () -> Unit,
+    onDecline: () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -567,18 +628,36 @@ private fun IncomingControls(onAccept: () -> Unit, onDecline: () -> Unit) {
             Icon(Icons.Default.PhoneDisabled, contentDescription = null, modifier = Modifier.size(36.dp))
         }
 
-        // Answer (green)
-        val answerDesc = stringResource(Res.string.content_desc_answer_call)
+        // Accept audio-only (phone icon, always present)
+        val answerAudioDesc = stringResource(
+            if (isVideo) Res.string.content_desc_answer_audio_call else Res.string.content_desc_answer_call
+        )
         IconButton(
-            onClick = onAccept,
+            onClick = onAcceptAudio,
             modifier = Modifier
                 .size(72.dp)
                 .clip(CircleShape)
                 .background(JamiColors.Green500)
-                .semantics { contentDescription = answerDesc },
+                .semantics { contentDescription = answerAudioDesc },
             colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
         ) {
             Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(36.dp))
+        }
+
+        // Accept with video (videocam icon, only shown for video calls)
+        if (isVideo) {
+            val answerVideoDesc = stringResource(Res.string.content_desc_answer_video_call)
+            IconButton(
+                onClick = onAcceptVideo,
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(CircleShape)
+                    .background(JamiColors.Blue500)
+                    .semantics { contentDescription = answerVideoDesc },
+                colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White),
+            ) {
+                Icon(Icons.Default.Videocam, contentDescription = null, modifier = Modifier.size(36.dp))
+            }
         }
     }
 }

@@ -23,7 +23,6 @@
 
     <!-- Call foreground service permissions (API 29+) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
     <application
         android:name=".JamiApplication"
@@ -89,12 +88,14 @@
             </intent-filter>
         </receiver>
 
-        <!-- Call foreground service: keeps audio alive while app is backgrounded.
-             mediaProjection type is required by Android 14+ to call getMediaProjection(). -->
+        <!-- Call foreground service: keeps microphone/audio alive while app is backgrounded.
+             mediaProjection is intentionally omitted — it requires an active capture session
+             at startForeground() time (API 34+), which a regular call does not have.
+             Screen sharing acquires its own projection token on demand via MainActivity. -->
         <service
             android:name=".service.CallNotificationService"
             android:exported="false"
-            android:foregroundServiceType="microphone|mediaProjection" />
+            android:foregroundServiceType="microphone" />
 
         <!-- Broadcast receiver for notification Answer / Decline / Hang Up actions -->
         <receiver
