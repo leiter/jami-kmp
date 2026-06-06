@@ -48,8 +48,8 @@ actual class HardwareService : KoinComponent {
     private val userDefaults = NSUserDefaults.standardUserDefaults
     private val scope = CoroutineScope(Dispatchers.Main)
 
-    private val _videoEvents = MutableSharedFlow<VideoEvent>(replay = 1)
-    private val _cameraEvents = MutableSharedFlow<VideoEvent>(replay = 1)
+    private val _videoEvents = MutableSharedFlow<VideoEvent>(extraBufferCapacity = 1)
+    private val _cameraEvents = MutableSharedFlow<VideoEvent>(extraBufferCapacity = 1)
     private val _bluetoothEvents = MutableSharedFlow<BluetoothEvent>()
     private val _audioState = MutableStateFlow(STATE_INTERNAL)
     private val _connectivityState = MutableStateFlow(true)

@@ -573,41 +573,10 @@ class CallViewModel(
     }
 
     private fun startVideoLossDetection() {
-        videoLossJob?.cancel()
-        videoLossJob = scope.launch {
-            while (isActive) {
-                val now = net.jami.utils.currentTimeMillis()
-                val remoteVideoLoss = _state.value.hasRemoteVideo &&
-                        (now - lastRemoteVideoEventTime) > VIDEO_LOSS_TIMEOUT_MS
-
-                if (remoteVideoLoss && !_state.value.videoLoss.isVideoLost) {
-                    _state.value = _state.value.copy(
-                        videoLoss = _state.value.videoLoss.copy(
-                            isVideoLost = true,
-                            lostSinkId = _state.value.remoteVideoSinkId,
-                            lossDurationSeconds = (now - lastRemoteVideoEventTime) / 1000,
-                            isRetrying = true,
-                            retryAttempt = 0
-                        )
-                    )
-                    retryRemoteVideo()
-                } else if (_state.value.videoLoss.isVideoLost) {
-                    val lossDuration = (now - lastRemoteVideoEventTime) / 1000
-                    _state.value = _state.value.copy(
-                        videoLoss = _state.value.videoLoss.copy(
-                            lossDurationSeconds = lossDuration
-                        )
-                    )
-
-                    if (lossDuration > FALLBACK_TIMEOUT_MS / 1000 &&
-                        !_state.value.videoLoss.isFallbackToAudioOnly) {
-                        fallbackToAudioOnly()
-                    }
-                }
-
-                delay(500)
-            }
-        }
+        // Time-based detection requires frame-level callbacks to keep lastRemoteVideoEventTime
+        // fresh. We don't have those — decodingStarted fires once at decoder start and never
+        // again while frames flow. Polling would fire a false "video lost" every 2 s into any
+        // call. Detection is driven by decodingStopped (via handleVideoEvent) instead.
     }
 
     // ==================== Internal ====================
