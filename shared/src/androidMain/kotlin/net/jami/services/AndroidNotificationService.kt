@@ -357,13 +357,13 @@ class AndroidNotificationService(
 
     override fun showMissedCallNotification(call: Call) {
         val notifId = NOTIF_MISSED_CALL_BASE + call.getDaemonIdString().hashCode()
+        val title = runBlocking { getString(Res.string.notif_missed_incoming_call) }
         val peerName = call.getBestName()
-        val contentText = runBlocking { getString(Res.string.notif_missed_incoming_call) }
 
         val notification = NotificationCompat.Builder(context, CHANNEL_CALLS)
             .setSmallIcon(android.R.drawable.ic_menu_call)
-            .setContentTitle(peerName)
-            .setContentText(contentText)
+            .setContentTitle(title)
+            .setContentText(peerName)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_MISSED_CALL)
             .setAutoCancel(true)

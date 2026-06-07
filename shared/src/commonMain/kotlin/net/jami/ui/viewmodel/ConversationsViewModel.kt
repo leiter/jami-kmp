@@ -42,6 +42,9 @@ import net.jami.services.ConversationEvent
 import net.jami.services.DeviceRuntimeService
 import net.jami.services.VCardService
 import net.jami.utils.Log
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.getString
 
 /**
  * Item representing an account in the account switcher.
@@ -298,7 +301,7 @@ class ConversationsViewModel(
     /**
      * Build conversation item list from the current account.
      */
-    private fun buildConversationItems(accountId: String, query: String): List<ConversationItem> {
+    private suspend fun buildConversationItems(accountId: String, query: String): List<ConversationItem> {
         val account = accountService.getAccount(accountId) ?: return emptyList()
         val conversations = account.getConversations()
 
@@ -376,35 +379,25 @@ class ConversationsViewModel(
         }
     }
 
-    /**
-     * Return a one-line summary of the last interaction for display in the conversation list.
-     * Mirrors the Android SmartListViewHolder.getLastEventSummary() behaviour:
-     *  - Text (outgoing): "You: <body>"
-     *  - Text (incoming): "<body>"
-     *  - Call (missed incoming): "Missed call"
-     *  - Call (missed outgoing / canceled): "Canceled call"
-     *  - Call (answered): "Call (<duration>)"
-     *  - File (incoming): "📎 <filename>"
-     *  - File (outgoing): "You: 📎 <filename>"
-     *  - Other / unknown: ""
-     */
-    private fun getLastEventSummary(event: Interaction): String = when (event.type) {
+    private suspend fun getLastEventSummary(event: Interaction): String = when (event.type) {
         Interaction.InteractionType.TEXT -> {
             val body = event.body ?: ""
-            if (event.isIncoming) body else "You: $body"
+            if (event.isIncoming) body
+            else "${getString(Res.string.you_txt_prefix)} $body"
         }
         Interaction.InteractionType.CALL -> {
             val call = event as? CallHistory
             when {
-                call == null -> "Call"
-                call.isMissed && call.isIncoming -> "Missed call"
-                call.isMissed -> "Canceled call"
-                else -> "Call (${call.durationString})"
+                call == null -> getString(Res.string.notif_incoming_call)
+                call.isMissed && call.isIncoming -> getString(Res.string.notif_missed_incoming_call)
+                call.isMissed -> getString(Res.string.notif_missed_outgoing_call)
+                call.isIncoming -> getString(Res.string.hist_in_call, call.durationString)
+                else -> getString(Res.string.hist_out_call, call.durationString)
             }
         }
         Interaction.InteractionType.DATA_TRANSFER -> {
-            val name = (event as? DataTransfer)?.body?.takeIf { it.isNotBlank() } ?: "file"
-            if (event.isIncoming) "File: $name" else "You: File: $name"
+            if (event.isIncoming) getString(Res.string.hist_file_received)
+            else getString(Res.string.hist_file_sent)
         }
         else -> ""
     }
