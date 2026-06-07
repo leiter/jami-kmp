@@ -208,11 +208,17 @@ class CallService(
         val call = getCall(callId) ?: return
         var videoExists = false
         val newMediaList = call.mediaList.map { media ->
-            if (media.mediaType == Media.MediaType.MEDIA_TYPE_VIDEO) {
-                videoExists = true
-                media.copy(source = uri, isMuted = false)
-            } else {
-                media
+            when (media.mediaType) {
+                Media.MediaType.MEDIA_TYPE_VIDEO -> {
+                    videoExists = true
+                    media.copy(source = uri, isMuted = false)
+                }
+                Media.MediaType.MEDIA_TYPE_AUDIO ->
+                    // The media list entry is not updated by muteLocalMedia; only call.isAudioMuted
+                    // is kept current by onAudioMuted callbacks. Use that authoritative flag so the
+                    // renegotiation doesn't inadvertently unmute audio that was already muted.
+                    media.copy(isMuted = call.isAudioMuted)
+                else -> media
             }
         }.toMutableList()
         if (!videoExists) {

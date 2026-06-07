@@ -727,12 +727,13 @@ private fun OnGoingControls(
                 onClick = onToggleSpeaker,
             )
 
+            val videoActive = state.hasLocalVideo && !state.isVideoMuted
             CallControlButton(
-                icon = if (state.isVideoMuted) Icons.Default.VideocamOff else Icons.Default.Videocam,
+                icon = if (videoActive) Icons.Default.Videocam else Icons.Default.VideocamOff,
                 contentDescription = stringResource(
-                    if (state.isVideoMuted) Res.string.content_desc_enable_video else Res.string.content_desc_disable_video
+                    if (videoActive) Res.string.content_desc_disable_video else Res.string.content_desc_enable_video
                 ),
-                isActive = !state.isVideoMuted,
+                isActive = videoActive,
                 onClick = onToggleVideo,
             )
 
