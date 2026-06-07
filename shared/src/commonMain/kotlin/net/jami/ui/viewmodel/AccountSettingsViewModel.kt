@@ -16,10 +16,13 @@
  */
 package net.jami.ui.viewmodel
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,6 +32,7 @@ import net.jami.model.ConfigKey
 import net.jami.repository.SettingsRepository
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
+import net.jami.services.LookupState
 import net.jami.services.BiometricAvailability
 import net.jami.services.BiometricResult
 import net.jami.services.BiometricService
@@ -65,6 +69,15 @@ data class AccountSettingsState(
     val isLinkingDevice: Boolean = false,
     val linkDeviceSuccess: Boolean = false,
     val linkDeviceError: Boolean = false,
+    // Register name dialog state
+    val registerNameDialogOpen: Boolean = false,
+    val registerNameInput: String = "",
+    val registerNameChecking: Boolean = false,
+    val registerNameAvailable: Boolean? = null,
+    val registerNameError: UsernameCheckError? = null,
+    val registerNameInProgress: Boolean = false,
+    /** null = no result yet, true = success, false = failed */
+    val registerNameResult: Boolean? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -82,7 +95,14 @@ data class AccountSettingsState(
             hasBiometric == other.hasBiometric &&
             isLinkingDevice == other.isLinkingDevice &&
             linkDeviceSuccess == other.linkDeviceSuccess &&
-            linkDeviceError == other.linkDeviceError
+            linkDeviceError == other.linkDeviceError &&
+            registerNameDialogOpen == other.registerNameDialogOpen &&
+            registerNameInput == other.registerNameInput &&
+            registerNameChecking == other.registerNameChecking &&
+            registerNameAvailable == other.registerNameAvailable &&
+            registerNameError == other.registerNameError &&
+            registerNameInProgress == other.registerNameInProgress &&
+            registerNameResult == other.registerNameResult
     }
 
     override fun hashCode(): Int {
@@ -100,6 +120,13 @@ data class AccountSettingsState(
         result = 31 * result + isLinkingDevice.hashCode()
         result = 31 * result + linkDeviceSuccess.hashCode()
         result = 31 * result + linkDeviceError.hashCode()
+        result = 31 * result + registerNameDialogOpen.hashCode()
+        result = 31 * result + registerNameInput.hashCode()
+        result = 31 * result + registerNameChecking.hashCode()
+        result = 31 * result + registerNameAvailable.hashCode()
+        result = 31 * result + registerNameError.hashCode()
+        result = 31 * result + registerNameInProgress.hashCode()
+        result = 31 * result + registerNameResult.hashCode()
         return result
     }
 }
@@ -119,6 +146,7 @@ class AccountSettingsViewModel(
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     private val scope = scope
+    private var lookupJob: Job? = null
 
     private val _state = MutableStateFlow(AccountSettingsState())
     val state: StateFlow<AccountSettingsState> = _state.asStateFlow()
@@ -157,6 +185,19 @@ class AccountSettingsViewModel(
                                 0 -> _state.update { it.copy(isLinkingDevice = false, linkDeviceSuccess = true, linkDeviceError = false) }
                                 else -> _state.update { it.copy(isLinkingDevice = false, linkDeviceSuccess = false, linkDeviceError = true) }
                             }
+                        }
+                    }
+                    is AccountEvent.NameRegistrationEnded -> {
+                        val account = accountService.currentAccount.value ?: return@collect
+                        if (event.accountId == account.accountId) {
+                            val success = event.state == 0
+                            _state.update { it.copy(
+                                registerNameInProgress = false,
+                                registerNameResult = success,
+                                registerNameDialogOpen = false,
+                                // Refresh username from account if registration succeeded
+                            )}
+                            if (success) loadAccount()
                         }
                     }
                     else -> { /* Other events */ }
@@ -421,6 +462,83 @@ class AccountSettingsViewModel(
             )
         }
         _state.value = _state.value.copy(devices = deviceItems)
+    }
+
+    // ── Register Name ─────────────────────────────────────────────────────────
+
+    fun openRegisterNameDialog() {
+        _state.update { it.copy(
+            registerNameDialogOpen = true,
+            registerNameInput = "",
+            registerNameChecking = false,
+            registerNameAvailable = null,
+            registerNameError = null,
+            registerNameResult = null,
+        )}
+    }
+
+    fun dismissRegisterNameDialog() {
+        lookupJob?.cancel()
+        _state.update { it.copy(
+            registerNameDialogOpen = false,
+            registerNameInput = "",
+            registerNameChecking = false,
+            registerNameAvailable = null,
+            registerNameError = null,
+        )}
+    }
+
+    fun setRegisterNameInput(name: String) {
+        val trimmed = name.trim()
+        _state.update { it.copy(
+            registerNameInput = trimmed,
+            registerNameAvailable = null,
+            registerNameChecking = false,
+            registerNameError = null,
+        )}
+        lookupJob?.cancel()
+        if (trimmed.isEmpty()) return
+        lookupJob = scope.launch {
+            _state.update { it.copy(registerNameChecking = true) }
+            delay(500)
+            if (trimmed != _state.value.registerNameInput) return@launch
+            val accountId = accountService.currentAccount.value?.accountId ?: ""
+            try {
+                val result = accountService.findRegistrationByName(accountId, "", trimmed)
+                if (trimmed != _state.value.registerNameInput) return@launch
+                _state.update { s -> s.copy(
+                    registerNameChecking = false,
+                    registerNameAvailable = when (result.state) {
+                        LookupState.NotFound -> true
+                        else -> false
+                    },
+                    registerNameError = when (result.state) {
+                        LookupState.Invalid -> UsernameCheckError.INVALID
+                        LookupState.NetworkError -> UsernameCheckError.NETWORK_ERROR
+                        else -> null
+                    },
+                )}
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (trimmed == _state.value.registerNameInput) {
+                    _state.update { it.copy(registerNameChecking = false, registerNameError = UsernameCheckError.NETWORK_ERROR) }
+                }
+            }
+        }
+    }
+
+    fun confirmRegisterName(password: String = "") {
+        val name = _state.value.registerNameInput.trim()
+        if (name.isEmpty() || _state.value.registerNameAvailable != true) return
+        val account = accountService.currentAccount.value ?: return
+        _state.update { it.copy(registerNameInProgress = true) }
+        val scheme = if (password.isNotEmpty()) AccountService.ACCOUNT_SCHEME_PASSWORD else ""
+        accountService.registerName(account.accountId, name, scheme, password)
+    }
+
+    fun clearRegisterNameResult() {
+        _state.update { it.copy(registerNameResult = null) }
     }
 
     /**

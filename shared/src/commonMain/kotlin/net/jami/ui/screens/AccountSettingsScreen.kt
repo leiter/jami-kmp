@@ -110,6 +110,7 @@ import net.jami.ui.platform.FilePickerEffect
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.AccountSettingsViewModel
 import net.jami.ui.viewmodel.DeviceItem
+import net.jami.ui.viewmodel.UsernameCheckError
 import net.jami.utils.FileUtils
 import net.jami.utils.QRCodeColors
 import net.jami.utils.QRCodeUtils
@@ -180,6 +181,31 @@ fun AccountSettingsScreen(
                 viewModel.cancelLinkDevice()
             }
         }
+    }
+
+    val registerNameSuccessMsg = stringResource(Res.string.register_name_success)
+    val registerNameFailedMsg = stringResource(Res.string.register_name_failed)
+    LaunchedEffect(state.registerNameResult) {
+        when (state.registerNameResult) {
+            true -> {
+                snackbarHostState.showSnackbar(registerNameSuccessMsg)
+                viewModel.clearRegisterNameResult()
+            }
+            false -> {
+                snackbarHostState.showSnackbar(registerNameFailedMsg)
+                viewModel.clearRegisterNameResult()
+            }
+            null -> Unit
+        }
+    }
+
+    if (state.registerNameDialogOpen) {
+        RegisterNameDialog(
+            state = state,
+            onNameChange = { viewModel.setRegisterNameInput(it) },
+            onConfirm = { password -> viewModel.confirmRegisterName(password) },
+            onDismiss = { viewModel.dismissRegisterNameDialog() },
+        )
     }
 
     // Image picker effect — reads selected image bytes and updates the avatar
@@ -390,13 +416,33 @@ fun AccountSettingsScreen(
 
             AccountCard {
                 // Registered username row
-                LabelValueRow(
-                    label = stringResource(Res.string.registered_username),
-                    value = state.username.ifEmpty {
-                        stringResource(Res.string.no_registered_name_for_account)
-                    },
-                    valueBold = state.username.isNotEmpty(),
-                )
+                if (state.username.isNotEmpty()) {
+                    LabelValueRow(
+                        label = stringResource(Res.string.registered_username),
+                        value = state.username,
+                        valueBold = true,
+                    )
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.no_registered_name_for_account),
+                            style = JamiTheme.typography.bodyMedium,
+                            color = JamiTheme.colors.onSurfaceVariant,
+                        )
+                        TextButton(onClick = { viewModel.openRegisterNameDialog() }) {
+                            Text(
+                                text = stringResource(Res.string.register_name),
+                                color = JamiTheme.colors.primary,
+                            )
+                        }
+                    }
+                }
 
                 HorizontalDivider(color = JamiTheme.colors.outline)
 
@@ -887,5 +933,82 @@ private fun LinkDeviceSheetContent(
             }
         }
     }
+}
+
+/**
+ * Dialog for registering a public username on the name server.
+ * Shows a username field with live availability feedback and an optional
+ * password field for password-protected accounts.
+ */
+@Composable
+private fun RegisterNameDialog(
+    state: net.jami.ui.viewmodel.AccountSettingsState,
+    onNameChange: (String) -> Unit,
+    onConfirm: (password: String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var password by remember { mutableStateOf("") }
+    val canConfirm = state.registerNameAvailable == true && !state.registerNameInProgress
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.register_username)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s)) {
+                OutlinedTextField(
+                    value = state.registerNameInput,
+                    onValueChange = onNameChange,
+                    label = { Text(stringResource(Res.string.register_name)) },
+                    singleLine = true,
+                    isError = state.registerNameAvailable == false,
+                    trailingIcon = when {
+                        state.registerNameChecking -> {{ CircularProgressIndicator(modifier = androidx.compose.ui.Modifier.size(20.dp), strokeWidth = 2.dp) }}
+                        state.registerNameAvailable == true -> {{ Icon(androidx.compose.material.icons.Icons.Default.AccountCircle, null, tint = JamiTheme.colors.primary) }}
+                        else -> null
+                    },
+                    supportingText = when {
+                        state.registerNameChecking -> {{ Text(stringResource(Res.string.looking_for_username_availability)) }}
+                        state.registerNameAvailable == true -> {{ Text(stringResource(Res.string.username_available), color = JamiTheme.colors.primary) }}
+                        state.registerNameAvailable == false && state.registerNameError == null -> {{ Text(stringResource(Res.string.username_already_taken), color = JamiTheme.colors.error) }}
+                        state.registerNameError == UsernameCheckError.INVALID -> {{ Text(stringResource(Res.string.invalid_username), color = JamiTheme.colors.error) }}
+                        state.registerNameError != null -> {{ Text(stringResource(Res.string.unknown_error), color = JamiTheme.colors.error) }}
+                        else -> null
+                    },
+                    modifier = androidx.compose.ui.Modifier.fillMaxWidth(),
+                )
+                if (state.hasPassword) {
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text(stringResource(Res.string.account_password_label)) },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        modifier = androidx.compose.ui.Modifier.fillMaxWidth(),
+                    )
+                }
+                if (state.registerNameInProgress) {
+                    Text(
+                        text = stringResource(Res.string.trying_to_register_name),
+                        style = JamiTheme.typography.bodySmall,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(password) },
+                enabled = canConfirm && (!state.hasPassword || password.isNotEmpty()),
+            ) {
+                Text(stringResource(Res.string.register_name))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.export_side_step2_cancel))
+            }
+        },
+    )
 }
 
