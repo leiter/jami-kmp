@@ -52,7 +52,7 @@ class JamiDaemonService : Service() {
             .setContentTitle("Jami")
             .setContentText("Ready to receive calls and messages")
             .setContentIntent(tapIntent)
-            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setOngoing(true)
             .setSilent(true)
@@ -71,7 +71,7 @@ class JamiDaemonService : Service() {
         val channel = NotificationChannel(
             CHANNEL_ID,
             "Jami background service",
-            NotificationManager.IMPORTANCE_MIN
+            NotificationManager.IMPORTANCE_LOW
         ).apply {
             description = "Keeps Jami ready to receive calls"
             setShowBadge(false)

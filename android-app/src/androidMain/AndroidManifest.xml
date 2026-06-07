@@ -37,6 +37,7 @@
             android:showWhenLocked="true"
             android:turnScreenOn="true"
             android:supportsPictureInPicture="true"
+            android:windowSoftInputMode="adjustNothing"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
             android:theme="@style/Theme.JamiKmp">
             <intent-filter>
@@ -77,11 +78,12 @@
         <!-- Boot receiver: starts JamiDaemonService after device reboot -->
         <receiver
             android:name=".service.BootReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.REBOOT" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
 

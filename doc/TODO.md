@@ -63,6 +63,10 @@
 
 - [x] **SIP account creation** — `CreateAccountScreen` now has a Jami/SIP tab toggle; SIP tab shows server, username, password, port (optional), and display name fields; `AccountCreationViewModel.createSipAccount()` builds `ACCOUNT_TYPE=SIP` details map and calls `accountService.addAccount()`.
 
+## Android Service
+
+- [ ] **Foreground service notification not showing on Pixel 2** — `JamiDaemonService` is started from `JamiApplication.onCreate()` and calls `startForeground()` with `IMPORTANCE_LOW`, but no notification appears in the shade. Attempted: bumped channel/priority from `IMPORTANCE_MIN` → `IMPORTANCE_LOW`; still not visible. Needs investigation: check if `startForeground()` is actually reached (logcat), whether the channel is being created fresh (clear app data), and whether `FOREGROUND_SERVICE_DATA_SYNC` permission is causing a silent failure on this API level.
+
 ## Known Gaps (Lower Priority)
 
 - [ ] **Desktop DaemonBridge** — All 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.
