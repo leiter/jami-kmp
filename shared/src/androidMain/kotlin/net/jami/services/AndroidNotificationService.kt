@@ -86,6 +86,13 @@ class AndroidNotificationService(
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
 
+    // Resolve the app's own notification icon by name so shared module doesn't need
+    // a compile-time dependency on android-app's R class.
+    private val smallIcon: Int by lazy {
+        context.resources.getIdentifier("ic_jami_24", "drawable", context.packageName)
+            .takeIf { it != 0 } ?: android.R.drawable.ic_dialog_info
+    }
+
     // Track active notifications
     private val activeCallNotifications = mutableSetOf<Int>()
     private val selfUser: Person = Person.Builder().setName("You").build()
@@ -107,47 +114,45 @@ class AndroidNotificationService(
             val channels = listOf(
                 NotificationChannel(
                     CHANNEL_CALLS,
-                    "Calls",
+                    runBlocking { getString(Res.string.notif_channel_incoming_calls) },
                     NotificationManager.IMPORTANCE_HIGH
                 ).apply {
-                    description = "Incoming and ongoing call notifications"
                     setShowBadge(true)
                     enableVibration(true)
                     setBypassDnd(true)
                 },
+                // v2: recreated at IMPORTANCE_HIGH (was IMPORTANCE_DEFAULT — no heads-up banners)
                 NotificationChannel(
                     CHANNEL_MESSAGES,
-                    "Messages",
-                    NotificationManager.IMPORTANCE_DEFAULT
+                    runBlocking { getString(Res.string.notif_channel_messages) },
+                    NotificationManager.IMPORTANCE_HIGH
                 ).apply {
-                    description = "New message notifications"
                     setShowBadge(true)
                     enableVibration(true)
                 },
                 NotificationChannel(
                     CHANNEL_FILE_TRANSFER,
-                    "File Transfers",
+                    runBlocking { getString(Res.string.notif_channel_file_transfer) },
                     NotificationManager.IMPORTANCE_LOW
                 ).apply {
-                    description = "File transfer progress notifications"
                     setShowBadge(false)
                     enableVibration(false)
                 },
+                // v2: recreated at IMPORTANCE_LOW (was IMPORTANCE_MIN — no status bar icon)
                 NotificationChannel(
                     CHANNEL_SERVICE,
-                    "Background Service",
-                    NotificationManager.IMPORTANCE_MIN
+                    runBlocking { getString(Res.string.notif_channel_background_service) },
+                    NotificationManager.IMPORTANCE_LOW
                 ).apply {
-                    description = "Jami background service"
+                    description = runBlocking { getString(Res.string.notif_channel_background_service_descr) }
                     setShowBadge(false)
                     enableVibration(false)
                 },
                 NotificationChannel(
                     CHANNEL_REQUESTS,
-                    "Contact Requests",
+                    runBlocking { getString(Res.string.notif_channel_requests) },
                     NotificationManager.IMPORTANCE_DEFAULT
                 ).apply {
-                    description = "New contact request notifications"
                     setShowBadge(true)
                     enableVibration(true)
                 }
@@ -171,9 +176,8 @@ class AndroidNotificationService(
         // Create a simple ongoing call notification
         // In a full implementation, this would include call actions and caller info
         val builder = NotificationCompat.Builder(context, CHANNEL_CALLS)
-            .setSmallIcon(android.R.drawable.ic_menu_call)
-            .setContentTitle("Jami Call")
-            .setContentText("Ongoing call")
+            .setSmallIcon(smallIcon)
+            .setContentTitle(runBlocking { getString(Res.string.notif_current_call) })
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setOngoing(true)
@@ -260,7 +264,7 @@ class AndroidNotificationService(
         }
 
         val builder = NotificationCompat.Builder(context, CHANNEL_CALLS)
-            .setSmallIcon(android.R.drawable.ic_menu_call)
+            .setSmallIcon(smallIcon)
             .setContentTitle(title)
             .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -295,11 +299,11 @@ class AndroidNotificationService(
                     PendingIntent.getActivity(context, 100, fullScreenIntent, piFlags), true
                 )
                 builder.addAction(
-                    android.R.drawable.ic_menu_call, answerLabel,
+                    smallIcon, answerLabel,
                     createCallActionPendingIntent(callId, accountId, ACTION_ANSWER, 101)
                 )
                 builder.addAction(
-                    android.R.drawable.ic_menu_close_clear_cancel, declineLabel,
+                    smallIcon, declineLabel,
                     createCallActionPendingIntent(callId, accountId, ACTION_DECLINE, 102)
                 )
             }
@@ -313,7 +317,7 @@ class AndroidNotificationService(
                 }
                 builder.setContentIntent(PendingIntent.getActivity(context, 104, tapIntent, piFlags))
                 builder.addAction(
-                    android.R.drawable.ic_menu_close_clear_cancel, hangUpLabel,
+                    smallIcon, hangUpLabel,
                     createCallActionPendingIntent(callId, accountId, ACTION_HANGUP, 103)
                 )
             }
@@ -327,7 +331,7 @@ class AndroidNotificationService(
                 }
                 builder.setContentIntent(PendingIntent.getActivity(context, 104, tapIntent, piFlags))
                 builder.addAction(
-                    android.R.drawable.ic_menu_close_clear_cancel, hangUpLabel,
+                    smallIcon, hangUpLabel,
                     createCallActionPendingIntent(callId, accountId, ACTION_HANGUP, 103)
                 )
             }
@@ -361,7 +365,7 @@ class AndroidNotificationService(
         val peerName = call.getBestName()
 
         val notification = NotificationCompat.Builder(context, CHANNEL_CALLS)
-            .setSmallIcon(android.R.drawable.ic_menu_call)
+            .setSmallIcon(smallIcon)
             .setContentTitle(title)
             .setContentText(peerName)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -386,7 +390,7 @@ class AndroidNotificationService(
         val contentText = runBlocking { getString(Res.string.notif_inprogress_group_call) }
 
         val notification = NotificationCompat.Builder(context, CHANNEL_CALLS)
-            .setSmallIcon(android.R.drawable.ic_menu_call)
+            .setSmallIcon(smallIcon)
             .setContentTitle(conversationName)
             .setContentText(contentText)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -462,15 +466,11 @@ class AndroidNotificationService(
             .build()
 
         val replyAction = NotificationCompat.Action.Builder(
-            android.R.drawable.ic_menu_send,
-            replyLabel,
-            replyPendingIntent
+            smallIcon, replyLabel, replyPendingIntent
         ).addRemoteInput(remoteInput).build()
 
         val markReadAction = NotificationCompat.Action.Builder(
-            android.R.drawable.ic_menu_close_clear_cancel,
-            markReadLabel,
-            markReadPendingIntent
+            smallIcon, markReadLabel, markReadPendingIntent
         ).build()
 
         // Build the individual message notification
@@ -479,7 +479,7 @@ class AndroidNotificationService(
             .addMessage(lastMessage, System.currentTimeMillis(), Person.Builder().setName(senderName).build())
 
         val builder = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
-            .setSmallIcon(android.R.drawable.ic_dialog_email)
+            .setSmallIcon(smallIcon)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setAutoCancel(true)
@@ -498,8 +498,7 @@ class AndroidNotificationService(
         // Create and update the group summary notification
         val summaryNotificationId = NOTIF_MESSAGE_GROUP_SUMMARY_BASE + conversationKey.hashCode()
         val summaryBuilder = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
-            .setSmallIcon(android.R.drawable.ic_dialog_email)
-            .setContentTitle("Jami")
+            .setSmallIcon(smallIcon)
             .setContentText(senderName)
             .setGroup(groupKey)
             .setGroupSummary(true) // This is the group summary
@@ -541,9 +540,8 @@ class AndroidNotificationService(
         val notifId = NOTIF_TRUST_REQUEST_BASE + account.accountId.hashCode()
 
         val builder = NotificationCompat.Builder(context, CHANNEL_REQUESTS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("New Contact Request")
-            .setContentText("You have a new contact request")
+            .setSmallIcon(smallIcon)
+            .setContentTitle(runBlocking { getString(Res.string.new_invitation_request_title) })
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_SOCIAL)
             .setAutoCancel(true)
@@ -575,7 +573,7 @@ class AndroidNotificationService(
         }
 
         val notification = NotificationCompat.Builder(context, CHANNEL_FILE_TRANSFER)
-            .setSmallIcon(android.R.drawable.stat_sys_download)
+            .setSmallIcon(smallIcon)
             .setContentTitle(info.displayName)
             .setContentText("${info.bytesProgress} / ${info.totalSize} bytes")
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -637,9 +635,8 @@ class AndroidNotificationService(
         val notifId = NOTIF_LOCATION_BASE + contact.uri.uri.hashCode()
 
         val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
-            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setContentTitle("Location Sharing")
-            .setContentText("Sharing location with ${contact.displayName}")
+            .setSmallIcon(smallIcon)
+            .setContentTitle(runBlocking { getString(Res.string.notif_location_title, contact.displayName ?: contact.uri.uri) })
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setAutoCancel(false)
@@ -662,22 +659,19 @@ class AndroidNotificationService(
 
     private fun createServiceNotification(): Notification {
         return NotificationCompat.Builder(context, CHANNEL_SERVICE)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Jami")
-            .setContentText("Running in background")
-            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setSmallIcon(smallIcon)
+            .setContentText(runBlocking { getString(Res.string.notif_background_service) })
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setAutoCancel(false)
             .build()
     }
 
     override fun onConnectionUpdate(connected: Boolean) {
-        // Update service notification with connection status
         val notification = NotificationCompat.Builder(context, CHANNEL_SERVICE)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Jami")
-            .setContentText(if (connected) "Connected" else "Connecting...")
-            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setSmallIcon(smallIcon)
+            .setContentText(runBlocking { getString(Res.string.notif_background_service) })
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setAutoCancel(false)
             .build()
@@ -698,7 +692,7 @@ class AndroidNotificationService(
         val notifId = NOTIF_TEST_PUSH
 
         val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(smallIcon)
             .setContentTitle("Push Test")
             .setContentText("Push notification working for account: $accountId")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -758,10 +752,11 @@ class AndroidNotificationService(
         private const val TAG = "AndroidNotificationService"
 
         // Notification channels
+        // _v2 suffix forces channel recreation when importance level changed
         const val CHANNEL_CALLS = "jami_calls"
-        const val CHANNEL_MESSAGES = "jami_messages"
+        const val CHANNEL_MESSAGES = "jami_messages_v2"   // was DEFAULT, now HIGH
         const val CHANNEL_FILE_TRANSFER = "jami_file_transfer"
-        const val CHANNEL_SERVICE = "jami_service"
+        const val CHANNEL_SERVICE = "jami_service_v2"     // was MIN, now LOW
         const val CHANNEL_REQUESTS = "jami_requests"
 
         // Notification ID bases

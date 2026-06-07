@@ -12,6 +12,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import net.jami.android.MainActivity
+import net.jami.android.R
 import net.jami.utils.Log
 
 /**
@@ -48,9 +49,9 @@ class JamiDaemonService : Service() {
         )
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Jami")
-            .setContentText("Ready to receive calls and messages")
+            .setSmallIcon(R.drawable.ic_jami_24)
+            .setContentTitle(getString(R.string.app_name))
+            .setContentText(getString(R.string.notif_background_service))
             .setContentIntent(tapIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
@@ -70,10 +71,10 @@ class JamiDaemonService : Service() {
         if (nm.getNotificationChannel(CHANNEL_ID) != null) return
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Jami background service",
+            getString(R.string.notif_channel_background_service),
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Keeps Jami ready to receive calls"
+            description = getString(R.string.notif_channel_background_service_descr)
             setShowBadge(false)
         }
         nm.createNotificationChannel(channel)
@@ -81,7 +82,8 @@ class JamiDaemonService : Service() {
 
     companion object {
         private const val TAG = "JamiDaemonService"
-        private const val CHANNEL_ID = "jami_daemon_service"
-        private const val NOTIF_ID = 1  // lowest-priority persistent slot
+        // v2: forces channel recreation at IMPORTANCE_LOW (old channel was created at IMPORTANCE_MIN)
+        const val CHANNEL_ID = "jami_daemon_service_v2"
+        const val NOTIF_ID = 1
     }
 }
