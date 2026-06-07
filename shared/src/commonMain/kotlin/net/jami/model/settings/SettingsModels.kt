@@ -76,6 +76,32 @@ enum class ConversationSort {
 }
 
 /**
+ * Connectivity strategy for receiving calls and messages.
+ * Mirrors the Android reference client's four-option modal.
+ */
+@Serializable
+enum class ConnectivityMode {
+    /** Use a local DHT node only — no push service required. */
+    LOCAL_NODE,
+    /** Use Google Firebase for push + a DHT proxy. */
+    GOOGLE_SERVICES,
+    /** Use a custom UnifiedPush server for push. */
+    UNIFIED_PUSH,
+    /** Custom / does not match a known preset. */
+    CUSTOM
+}
+
+/**
+ * Notification visibility on the lock screen.
+ * Values match Android NotificationCompat.VISIBILITY_*.
+ */
+object NotificationVisibility {
+    const val PRIVATE = 0
+    const val PUBLIC = 1
+    const val SECRET = 2
+}
+
+/**
  * Privacy-related settings that sync across devices.
  */
 @Serializable

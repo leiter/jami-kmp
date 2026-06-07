@@ -32,6 +32,8 @@ package net.jami.ui.platform
 expect object LocalPrefs {
     fun getBoolean(key: String, default: Boolean): Boolean
     fun setBoolean(key: String, value: Boolean)
+    fun getInt(key: String, default: Int): Int
+    fun setInt(key: String, value: Int)
 }
 
 /**
@@ -41,4 +43,9 @@ object LocalPrefKeys {
     const val SCREENSHOT_BLOCKING = "local_screenshot_blocking"
     const val START_ON_BOOT = "local_start_on_boot"
     const val RUN_IN_BACKGROUND = "local_run_in_background"
+    const val CONNECTIVITY_MODE = "local_connectivity_mode"
+    const val NOTIFICATION_VISIBILITY = "local_notification_visibility"
+    const val VIDEO_BITRATE = "local_video_bitrate"
+    const val VIDEO_RESOLUTION = "local_video_resolution"
+    const val PLACE_SYSTEM_CALLS = "local_place_system_calls"
 }

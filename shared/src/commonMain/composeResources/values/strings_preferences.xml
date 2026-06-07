@@ -96,6 +96,9 @@
     <string name="notification_public">Public\n(show notifications and their content on lock screen)\n</string>
     <string name="notification_private">Private\n(show notifications but hide their content on lock screen)\n</string>
     <string name="notification_secret">Secret\n(do not show notifications on lock screen)</string>
+    <string name="notification_visibility_public">Public</string>
+    <string name="notification_visibility_private">Private</string>
+    <string name="notification_visibility_secret">Secret</string>
 
     <string name="connectivity_google_services_title">Google services</string>
     <string name="connectivity_google_services_description">Use Google Firebase and a DHT proxy to receive push notifications.</string>

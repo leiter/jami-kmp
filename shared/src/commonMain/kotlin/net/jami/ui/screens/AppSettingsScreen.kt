@@ -45,7 +45,9 @@ import androidx.compose.ui.Modifier
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import net.jami.di.getViewModel
+import net.jami.model.settings.ConnectivityMode
 import net.jami.model.settings.ConversationSort
+import net.jami.model.settings.NotificationVisibility
 import net.jami.ui.components.actions.JamiFilterChip
 import net.jami.ui.components.content.JamiSectionTitle
 import net.jami.ui.components.content.JamiToggle
@@ -226,6 +228,86 @@ fun AppSettingsScreen(
                 onCheckedChange = { viewModel.toggleQuietHours() },
             )
 
+            SettingLabelRow(label = stringResource(Res.string.pref_notification_title))
+            Text(
+                text = stringResource(Res.string.pref_notification_summary),
+                style = JamiTheme.typography.bodySmall,
+                color = JamiTheme.colors.onSurfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+            ) {
+                JamiFilterChip(
+                    text = stringResource(Res.string.notification_visibility_private),
+                    selected = state.notificationVisibility == NotificationVisibility.PRIVATE,
+                    onClick = { viewModel.setNotificationVisibility(NotificationVisibility.PRIVATE) },
+                )
+                JamiFilterChip(
+                    text = stringResource(Res.string.notification_visibility_public),
+                    selected = state.notificationVisibility == NotificationVisibility.PUBLIC,
+                    onClick = { viewModel.setNotificationVisibility(NotificationVisibility.PUBLIC) },
+                )
+                JamiFilterChip(
+                    text = stringResource(Res.string.notification_visibility_secret),
+                    selected = state.notificationVisibility == NotificationVisibility.SECRET,
+                    onClick = { viewModel.setNotificationVisibility(NotificationVisibility.SECRET) },
+                )
+            }
+
+            HorizontalDivider()
+
+            // ==================== Connectivity ====================
+            JamiSectionTitle(title = stringResource(Res.string.pref_connectivity_title))
+
+            Text(
+                text = stringResource(Res.string.pref_connectivity_summary),
+                style = JamiTheme.typography.bodySmall,
+                color = JamiTheme.colors.onSurfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+            ) {
+                JamiFilterChip(
+                    text = stringResource(Res.string.connectivity_local_node_title),
+                    selected = state.connectivityMode == ConnectivityMode.LOCAL_NODE,
+                    onClick = { viewModel.setConnectivityMode(ConnectivityMode.LOCAL_NODE) },
+                )
+                JamiFilterChip(
+                    text = stringResource(Res.string.connectivity_google_services_title),
+                    selected = state.connectivityMode == ConnectivityMode.GOOGLE_SERVICES,
+                    onClick = { viewModel.setConnectivityMode(ConnectivityMode.GOOGLE_SERVICES) },
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+            ) {
+                JamiFilterChip(
+                    text = stringResource(Res.string.connectivity_unified_push_title),
+                    selected = state.connectivityMode == ConnectivityMode.UNIFIED_PUSH,
+                    onClick = { viewModel.setConnectivityMode(ConnectivityMode.UNIFIED_PUSH) },
+                )
+                JamiFilterChip(
+                    text = stringResource(Res.string.connectivity_custom_title),
+                    selected = state.connectivityMode == ConnectivityMode.CUSTOM,
+                    onClick = { viewModel.setConnectivityMode(ConnectivityMode.CUSTOM) },
+                )
+            }
+
             HorizontalDivider()
 
             // ==================== Calls ====================
@@ -261,6 +343,54 @@ fun AppSettingsScreen(
                 checked = state.isAutoAnswer,
                 onCheckedChange = { viewModel.toggleAutoAnswer() },
             )
+
+            JamiSectionTitle(title = stringResource(Res.string.pref_category_video_settings))
+
+            SettingLabelRow(label = stringResource(Res.string.pref_videoBitrate_title))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+            ) {
+                for ((label, value) in listOf("Auto" to 0, "64" to 64, "128" to 128, "256" to 256, "512" to 512, "1024" to 1024)) {
+                    JamiFilterChip(
+                        text = if (value == 0) label else "$label kb/s",
+                        selected = state.videoBitrate == value,
+                        onClick = { viewModel.setVideoBitrate(value) },
+                    )
+                }
+            }
+
+            SettingLabelRow(label = stringResource(Res.string.pref_videoResolution_title))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+            ) {
+                for ((label, value) in listOf("480p" to 480, "720p" to 720, "1080p" to 1080)) {
+                    JamiFilterChip(
+                        text = label,
+                        selected = state.videoResolution == value,
+                        onClick = { viewModel.setVideoResolution(value) },
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+            ) {
+                for ((label, value) in listOf("1440p" to 1440, "4K" to 2160)) {
+                    JamiFilterChip(
+                        text = label,
+                        selected = state.videoResolution == value,
+                        onClick = { viewModel.setVideoResolution(value) },
+                    )
+                }
+            }
 
             HorizontalDivider()
 
@@ -326,6 +456,12 @@ fun AppSettingsScreen(
                 description = stringResource(Res.string.pref_persistNotification_summary),
                 checked = state.isRunInBackground,
                 onCheckedChange = { viewModel.toggleRunInBackground() },
+            )
+            JamiToggle(
+                label = stringResource(Res.string.pref_systemDialer_title),
+                description = stringResource(Res.string.pref_systemDialer_summary),
+                checked = state.isPlaceSystemCalls,
+                onCheckedChange = { viewModel.togglePlaceSystemCalls() },
             )
 
             Spacer(Modifier.height(JamiTheme.spacing.xxl))

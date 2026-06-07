@@ -33,4 +33,10 @@ actual object LocalPrefs {
 
     actual fun setBoolean(key: String, value: Boolean) =
         settings.setBoolean(key, value)
+
+    actual fun getInt(key: String, default: Int): Int =
+        settings.getInt(key, default)
+
+    actual fun setInt(key: String, value: Int) =
+        settings.setInt(key, value)
 }

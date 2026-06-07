@@ -25,7 +25,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import net.jami.model.settings.ConnectivityMode
 import net.jami.model.settings.ConversationSort
+import net.jami.model.settings.NotificationVisibility
 import net.jami.model.settings.Theme
 import net.jami.repository.SettingsRepository
 import net.jami.ui.platform.LocalPrefKeys
@@ -71,6 +73,17 @@ data class AppSettingsState(
     // --- System ---
     val isStartOnBoot: Boolean = false,
     val isRunInBackground: Boolean = false,
+    val isPlaceSystemCalls: Boolean = false,
+
+    // --- Connectivity ---
+    val connectivityMode: ConnectivityMode = ConnectivityMode.LOCAL_NODE,
+
+    // --- Notification Visibility ---
+    val notificationVisibility: Int = NotificationVisibility.PRIVATE,
+
+    // --- Video Quality ---
+    val videoBitrate: Int = 0,
+    val videoResolution: Int = 480,
 )
 
 /**
@@ -96,6 +109,13 @@ class AppSettingsViewModel(
             isScreenshotBlocking = LocalPrefs.getBoolean(LocalPrefKeys.SCREENSHOT_BLOCKING, false),
             isStartOnBoot = LocalPrefs.getBoolean(LocalPrefKeys.START_ON_BOOT, false),
             isRunInBackground = LocalPrefs.getBoolean(LocalPrefKeys.RUN_IN_BACKGROUND, false),
+            isPlaceSystemCalls = LocalPrefs.getBoolean(LocalPrefKeys.PLACE_SYSTEM_CALLS, false),
+            connectivityMode = ConnectivityMode.entries.getOrElse(
+                LocalPrefs.getInt(LocalPrefKeys.CONNECTIVITY_MODE, ConnectivityMode.LOCAL_NODE.ordinal)
+            ) { ConnectivityMode.LOCAL_NODE },
+            notificationVisibility = LocalPrefs.getInt(LocalPrefKeys.NOTIFICATION_VISIBILITY, NotificationVisibility.PRIVATE),
+            videoBitrate = LocalPrefs.getInt(LocalPrefKeys.VIDEO_BITRATE, 0),
+            videoResolution = LocalPrefs.getInt(LocalPrefKeys.VIDEO_RESOLUTION, 480),
         )}
 
         // Observe daemon-synced settings reactively
@@ -304,6 +324,38 @@ class AppSettingsViewModel(
         val new = !_state.value.isRunInBackground
         _state.update { it.copy(isRunInBackground = new) }
         LocalPrefs.setBoolean(LocalPrefKeys.RUN_IN_BACKGROUND, new)
+    }
+
+    fun togglePlaceSystemCalls() {
+        val new = !_state.value.isPlaceSystemCalls
+        _state.update { it.copy(isPlaceSystemCalls = new) }
+        LocalPrefs.setBoolean(LocalPrefKeys.PLACE_SYSTEM_CALLS, new)
+    }
+
+    // ==================== Connectivity ====================
+
+    fun setConnectivityMode(mode: ConnectivityMode) {
+        _state.update { it.copy(connectivityMode = mode) }
+        LocalPrefs.setInt(LocalPrefKeys.CONNECTIVITY_MODE, mode.ordinal)
+    }
+
+    // ==================== Notification Visibility ====================
+
+    fun setNotificationVisibility(visibility: Int) {
+        _state.update { it.copy(notificationVisibility = visibility) }
+        LocalPrefs.setInt(LocalPrefKeys.NOTIFICATION_VISIBILITY, visibility)
+    }
+
+    // ==================== Video Quality ====================
+
+    fun setVideoBitrate(bitrate: Int) {
+        _state.update { it.copy(videoBitrate = bitrate) }
+        LocalPrefs.setInt(LocalPrefKeys.VIDEO_BITRATE, bitrate)
+    }
+
+    fun setVideoResolution(resolution: Int) {
+        _state.update { it.copy(videoResolution = resolution) }
+        LocalPrefs.setInt(LocalPrefKeys.VIDEO_RESOLUTION, resolution)
     }
 
     /**
