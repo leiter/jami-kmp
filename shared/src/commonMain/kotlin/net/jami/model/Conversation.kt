@@ -401,9 +401,12 @@ class Conversation(
         dirty = true
         aggregateHistory.clear()
         for (interaction in loadedConversation) {
-            setInteractionProperties(interaction)
-            aggregateHistory.add(interaction)
-            rawHistory[interaction.timestamp] = interaction
+            val item = if (interaction.type == Interaction.InteractionType.CALL)
+                CallHistory(interaction)
+            else interaction
+            setInteractionProperties(item)
+            aggregateHistory.add(item)
+            rawHistory[item.timestamp] = item
         }
         sortHistory()
     }

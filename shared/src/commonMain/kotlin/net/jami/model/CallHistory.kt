@@ -57,7 +57,10 @@ class CallHistory : Interaction {
         timestamp = call.timestamp
         type = InteractionType.CALL
         contact = call.contact
-        isMissed = duration == 0L
+        // duration setter sets isMissed=false when > 0; for missed calls duration stays 0
+        // Use call.isMissed (set when call reaches CURRENT state) rather than the raw
+        // timestamp delta, which is positive even for declined/ringing-only calls.
+        duration = if (call.isMissed) 0L else call.duration
     }
 
     constructor(interaction: Interaction) : super() {

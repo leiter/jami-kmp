@@ -18,6 +18,7 @@ package net.jami.services
 
 import net.jami.database.JamiDatabase
 import net.jami.model.Account
+import net.jami.model.CallHistory
 import net.jami.model.Conversation
 import net.jami.model.Interaction
 import net.jami.model.Uri
@@ -99,9 +100,11 @@ class SqlDelightHistoryService(
             body = interaction.body,
             is_read = if (interaction.isRead) 1L else 0L,
             is_notified = if (interaction.isNotified) 1L else 0L,
-            extra_data = interaction.extraFlag,
+            extra_data = if (interaction is CallHistory && interaction.duration > 0)
+                """{"duration":${interaction.duration}}"""
+            else interaction.extraFlag,
             parent_id = interaction.parentId,
-            duration = null, // Call duration - can be added later
+            duration = null,
             transfer_status = interaction.transferStatus.takeIf { it != Interaction.TransferStatus.INVALID }?.name,
             file_path = null, // File path for transfers
             display_name = null // Display name for transfers
