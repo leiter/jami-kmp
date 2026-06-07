@@ -1111,18 +1111,16 @@ class ConversationFacade(
         Log.d(TAG, "onMessageReceived: $conversationId msgId=${message.id}")
         val account = accountService.getAccount(accountId)
         val conversation = account?.getSwarm(conversationId)
+        var isIncoming = false
         if (account != null && conversation != null) {
             val interaction = swarmMessageToInteraction(account, conversation, message)
             conversation.addSwarmElement(interaction, true)
+            isIncoming = interaction.isIncoming
         }
         _conversationEvents.emit(ConversationEvent.MessageReceived(accountId, conversationId, message))
 
-        // Show notification if message is from another user
-        if (account != null && conversation != null) {
-            val isOwnMessage = message.author == account.accountId
-            if (!isOwnMessage) {
-                notificationService.showTextNotification(conversation)
-            }
+        if (isIncoming) {
+            notificationService.showTextNotification(conversation!!)
         }
     }
 
