@@ -77,9 +77,15 @@ data class AccountSubSettingsState(
     val turnServer: String = "",
     val turnUsername: String = "",
     val turnPassword: String = "",
+    // STUN
+    val stunEnabled: Boolean = false,
+    val stunServer: String = "",
     // Audio-RTP port range
     val audioPortMin: String = "",
     val audioPortMax: String = "",
+    // Video-RTP port range
+    val videoPortMin: String = "",
+    val videoPortMax: String = "",
 
     val isLoading: Boolean = false,
 )
@@ -159,8 +165,12 @@ class AccountSubSettingsViewModel(
                 turnServer = str(ConfigKey.TURN_SERVER),
                 turnUsername = str(ConfigKey.TURN_USERNAME),
                 turnPassword = str(ConfigKey.TURN_PASSWORD),
+                stunEnabled = bool(ConfigKey.STUN_ENABLE),
+                stunServer = str(ConfigKey.STUN_SERVER),
                 audioPortMin = str(ConfigKey.AUDIO_PORT_MIN),
                 audioPortMax = str(ConfigKey.AUDIO_PORT_MAX),
+                videoPortMin = str(ConfigKey.VIDEO_PORT_MIN),
+                videoPortMax = str(ConfigKey.VIDEO_PORT_MAX),
                 isLoading = false,
             )
         }
@@ -294,6 +304,26 @@ class AccountSubSettingsViewModel(
     fun setAudioPortMax(port: String) {
         _state.update { it.copy(audioPortMax = port) }
         updateDetail(ConfigKey.AUDIO_PORT_MAX, port)
+    }
+
+    fun setStunEnabled(enabled: Boolean) {
+        _state.update { it.copy(stunEnabled = enabled) }
+        updateDetail(ConfigKey.STUN_ENABLE, enabled.toString())
+    }
+
+    fun setStunServer(server: String) {
+        _state.update { it.copy(stunServer = server) }
+        updateDetail(ConfigKey.STUN_SERVER, server)
+    }
+
+    fun setVideoPortMin(port: String) {
+        _state.update { it.copy(videoPortMin = port) }
+        updateDetail(ConfigKey.VIDEO_PORT_MIN, port)
+    }
+
+    fun setVideoPortMax(port: String) {
+        _state.update { it.copy(videoPortMax = port) }
+        updateDetail(ConfigKey.VIDEO_PORT_MAX, port)
     }
 
     // ── Internal ──────────────────────────────────────────────────────────────

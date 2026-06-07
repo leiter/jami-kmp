@@ -231,6 +231,26 @@ fun AccountAdvancedSettingsScreen(
                 )
             }
 
+            HorizontalDivider(color = JamiTheme.colors.outline)
+
+            JamiToggle(
+                label = stringResource(Res.string.account_stun_enable_label),
+                checked = state.stunEnabled,
+                onCheckedChange = { viewModel.setStunEnabled(it) },
+            )
+
+            if (state.stunEnabled) {
+                OutlinedTextField(
+                    value = state.stunServer,
+                    onValueChange = { viewModel.setStunServer(it) },
+                    label = { Text(stringResource(Res.string.account_stun_server_label)) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+                )
+            }
+
             Spacer(Modifier.height(JamiTheme.spacing.m))
 
             // ── Audio-RTP Port Range ──────────────────────────────────────────
@@ -251,6 +271,33 @@ fun AccountAdvancedSettingsScreen(
                 value = state.audioPortMax,
                 onValueChange = { viewModel.setAudioPortMax(it) },
                 label = { Text(stringResource(Res.string.account_audio_rtp_max_label)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+            )
+
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+
+            // ── Video-RTP Port Range ──────────────────────────────────────────
+            JamiSectionTitle(title = stringResource(Res.string.account_video_rtp_label))
+
+            OutlinedTextField(
+                value = state.videoPortMin,
+                onValueChange = { viewModel.setVideoPortMin(it) },
+                label = { Text(stringResource(Res.string.account_video_rtp_min_label)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+            )
+
+            OutlinedTextField(
+                value = state.videoPortMax,
+                onValueChange = { viewModel.setVideoPortMax(it) },
+                label = { Text(stringResource(Res.string.account_video_rtp_max_label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier

@@ -100,6 +100,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_audio_rtp_label">Audio-RTP Port Range</string>
     <string name="account_audio_rtp_min_label">Minimum</string>
     <string name="account_audio_rtp_max_label">Maximum</string>
+    <string name="account_video_rtp_label">Video-RTP Port Range</string>
+    <string name="account_video_rtp_min_label">Minimum</string>
+    <string name="account_video_rtp_max_label">Maximum</string>
     <string name="account_proxy_field">Proxy</string>
 
     <!-- Extension Details -->
