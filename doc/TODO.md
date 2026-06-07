@@ -65,7 +65,7 @@
 
 ## Android Service
 
-- [ ] **Foreground service notification not showing on Pixel 2** — `JamiDaemonService` is started from `JamiApplication.onCreate()` and calls `startForeground()` with `IMPORTANCE_LOW`, but no notification appears in the shade. Attempted: bumped channel/priority from `IMPORTANCE_MIN` → `IMPORTANCE_LOW`; still not visible. Needs investigation: check if `startForeground()` is actually reached (logcat), whether the channel is being created fresh (clear app data), and whether `FOREGROUND_SERVICE_DATA_SYNC` permission is causing a silent failure on this API level.
+- [x] **Foreground service notification not showing on Pixel 2** — Root cause: channel `"jami_daemon_service"` was originally created at `IMPORTANCE_MIN` and Android channels are immutable once created. Fixed by bumping to `"jami_daemon_service_v2"` (forces fresh creation at `IMPORTANCE_LOW`). Also replaced system `android.R.drawable.*` icons with the app's own `ic_jami_24` across all notification types.
 
 ## Known Gaps (Lower Priority)
 
