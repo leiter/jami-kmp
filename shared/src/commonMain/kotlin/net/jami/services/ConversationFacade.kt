@@ -813,12 +813,17 @@ class ConversationFacade(
 
         val conversation = findConversationForCall(account, conversationUri, contact)
 
-        // Populate call.contact before the notification fires so the notification
-        // shows a human-readable name rather than the raw peerUri (e.g. "swarm:…").
-        // Use the conversation's peer contact when available (already resolved),
-        // falling back to the account's contact cache (may carry a registeredName).
+        // Populate call.contact before the notification fires so the notification shows a
+        // human-readable name. Resolution priority:
+        //   1. conversation's peer contact — already has profile/username from swarm sync
+        //   2. 1:1 conversation found by peer URI   — also profile-loaded
+        //   3. contact service cache               — may have username from earlier lookup
+        //   4. account contact cache               — bare contact, at least has the URI
         if (call.contact == null) {
-            call.contact = conversation?.contact ?: account.getContactFromCache(call.peerUri)
+            call.contact = conversation?.contact
+                ?: account.getByContact(call.peerUri)?.contact
+                ?: contactService.findContactInCache(call.account, call.peerUri)
+                ?: account.getContactFromCache(call.peerUri)
         }
 
         val conference = findOrCreateConference(conversation, call, newState)

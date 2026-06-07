@@ -25,32 +25,37 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
 import kotlinx.coroutines.runBlocking
 import net.jami.model.*
 import net.jami.repository.SettingsRepository
 import net.jami.utils.Log
+import org.jetbrains.compose.resources.getString
 
-// Extension functions for model properties
-private fun Call.getDisplayName(): String {
+// Returns the best available human-readable name for a call peer.
+// Priority: contact displayName → registered username → first 12 chars of Jami hash.
+private fun Call.getBestName(): String {
     val c = contact
     if (c != null) {
-        // Prefer display name, then registered username, then a short hash
         return c.displayName?.takeIf { it.isNotBlank() }
             ?: c.username?.takeIf { it.isNotBlank() }
-            ?: peerUri.rawRingId.take(12)
+            ?: peerUri.rawRingId.take(12).ifEmpty { peerUri.uri }
     }
-    // No contact resolved yet — show a short hash rather than the full scheme-prefixed URI
-    return peerUri.rawRingId.ifEmpty { peerUri.uri }.take(12)
+    return peerUri.rawRingId.take(12).ifEmpty { peerUri.uri }
 }
+
+private fun Conference.getBestName(): String = firstCall?.getBestName() ?: id
 
 private fun Call.getDaemonIdString(): String =
     daemonId ?: ""
 
-private fun Conference.getDisplayName(): String =
-    firstCall?.getDisplayName() ?: id
-
-private fun Conversation.getDisplayName(): String =
-    contact?.displayName ?: profileFlow.value.displayName?.takeIf { it.isNotEmpty() } ?: uri.uri
+private fun Conversation.getBestName(): String =
+    contact?.let { c ->
+        c.displayName?.takeIf { it.isNotBlank() }
+            ?: c.username?.takeIf { it.isNotBlank() }
+    } ?: profileFlow.value.displayName?.takeIf { it.isNotEmpty() }
+    ?: uri.rawRingId.take(12).ifEmpty { uri.uri }
 
 private fun Conversation.getLastMessage(): String? =
     lastEventFlow.value?.body
@@ -228,25 +233,36 @@ class AndroidNotificationService(
         activeCallNotifications.add(notifId)
 
         val state = conference.state
-        // Resolve the actual daemon call ID from the first participant.
         val callId = conference.firstCall?.daemonId ?: conference.id
         val accountId = conference.accountId
         val isIncoming = conference.firstCall?.isIncoming ?: false
+        val peerName = conference.getBestName()
 
-        // RINGING state has two meanings depending on direction:
-        //   incoming  → receiver's phone is ringing (show Answer/Decline, wake screen)
-        //   outgoing  → remote phone is ringing     (show "Calling…" + Hang Up only)
+        // Title carries the peer name; content text is the call type label.
+        // Mirrors NotificationServiceImpl: notif_*_call_title (%s) + notif_*_call.
         val title = when {
-            state == Call.CallStatus.RINGING && isIncoming -> "Incoming Call"
-            state == Call.CallStatus.RINGING -> "Calling…"
-            state == Call.CallStatus.CURRENT || state == Call.CallStatus.HOLD -> "Ongoing Call"
-            else -> "Call"
+            state == Call.CallStatus.RINGING && isIncoming ->
+                getString(Res.string.notif_incoming_call_title, peerName)
+            state == Call.CallStatus.RINGING ->
+                getString(Res.string.notif_outgoing_call_title, peerName)
+            state == Call.CallStatus.CURRENT || state == Call.CallStatus.HOLD ->
+                getString(Res.string.notif_current_call_title, peerName)
+            else -> peerName
+        }
+        val text = when {
+            state == Call.CallStatus.RINGING && isIncoming ->
+                getString(Res.string.notif_incoming_call)
+            state == Call.CallStatus.RINGING ->
+                getString(Res.string.notif_outgoing_call)
+            state == Call.CallStatus.CURRENT || state == Call.CallStatus.HOLD ->
+                getString(Res.string.notif_current_call)
+            else -> ""
         }
 
         val builder = NotificationCompat.Builder(context, CHANNEL_CALLS)
             .setSmallIcon(android.R.drawable.ic_menu_call)
             .setContentTitle(title)
-            .setContentText(conference.getDisplayName())
+            .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setOngoing(true)
@@ -255,11 +271,7 @@ class AndroidNotificationService(
         val piFlags = PendingIntent.FLAG_UPDATE_CURRENT or
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
 
-        // Keep the foreground service alive for every active call state so the call
-        // survives app swipe-away. Mirrors LetsJam's CallService which is started on
-        // any call event (incoming, outgoing-ringing, or active).
-        // Safe to call multiple times — the OS deduplicates; CallNotificationService
-        // self-stops when currentCalls becomes empty.
+        // Keep the foreground service alive for every active call state.
         try {
             val serviceIntent = Intent(context, Class.forName("net.jami.android.service.CallNotificationService"))
             androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent)
@@ -267,9 +279,12 @@ class AndroidNotificationService(
             Log.w(TAG, "Could not start CallNotificationService: ${e.message}")
         }
 
+        val answerLabel  = getString(Res.string.action_call_accept)
+        val declineLabel = getString(Res.string.action_call_decline)
+        val hangUpLabel  = getString(Res.string.action_call_hangup)
+
         when {
             state == Call.CallStatus.RINGING && isIncoming -> {
-                // Receiver: wake screen and offer Answer / Decline
                 val fullScreenIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
                     action = ACTION_VIEW_CALL
                     putExtra(KEY_CALL_ID, callId)
@@ -280,17 +295,16 @@ class AndroidNotificationService(
                     PendingIntent.getActivity(context, 100, fullScreenIntent, piFlags), true
                 )
                 builder.addAction(
-                    android.R.drawable.ic_menu_call, "Answer",
+                    android.R.drawable.ic_menu_call, answerLabel,
                     createCallActionPendingIntent(callId, accountId, ACTION_ANSWER, 101)
                 )
                 builder.addAction(
-                    android.R.drawable.ic_menu_close_clear_cancel, "Decline",
+                    android.R.drawable.ic_menu_close_clear_cancel, declineLabel,
                     createCallActionPendingIntent(callId, accountId, ACTION_DECLINE, 102)
                 )
             }
 
             state == Call.CallStatus.RINGING -> {
-                // Caller: remote phone is ringing — tap to return, hang up to cancel
                 val tapIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
                     action = ACTION_VIEW_CALL
                     putExtra(KEY_CALL_ID, callId)
@@ -299,13 +313,12 @@ class AndroidNotificationService(
                 }
                 builder.setContentIntent(PendingIntent.getActivity(context, 104, tapIntent, piFlags))
                 builder.addAction(
-                    android.R.drawable.ic_menu_close_clear_cancel, "Hang Up",
+                    android.R.drawable.ic_menu_close_clear_cancel, hangUpLabel,
                     createCallActionPendingIntent(callId, accountId, ACTION_HANGUP, 103)
                 )
             }
 
             state == Call.CallStatus.CURRENT || state == Call.CallStatus.HOLD -> {
-                // Active call: tap to return, hang up action
                 val tapIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
                     action = ACTION_VIEW_CALL
                     putExtra(KEY_CALL_ID, callId)
@@ -314,7 +327,7 @@ class AndroidNotificationService(
                 }
                 builder.setContentIntent(PendingIntent.getActivity(context, 104, tapIntent, piFlags))
                 builder.addAction(
-                    android.R.drawable.ic_menu_close_clear_cancel, "Hang Up",
+                    android.R.drawable.ic_menu_close_clear_cancel, hangUpLabel,
                     createCallActionPendingIntent(callId, accountId, ACTION_HANGUP, 103)
                 )
             }
@@ -344,11 +357,13 @@ class AndroidNotificationService(
 
     override fun showMissedCallNotification(call: Call) {
         val notifId = NOTIF_MISSED_CALL_BASE + call.getDaemonIdString().hashCode()
+        val peerName = call.getBestName()
+        val contentText = runBlocking { getString(Res.string.notif_missed_incoming_call) }
 
         val notification = NotificationCompat.Builder(context, CHANNEL_CALLS)
             .setSmallIcon(android.R.drawable.ic_menu_call)
-            .setContentTitle("Missed Call")
-            .setContentText("From ${call.getDisplayName()}")
+            .setContentTitle(peerName)
+            .setContentText(contentText)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_MISSED_CALL)
             .setAutoCancel(true)
@@ -367,10 +382,13 @@ class AndroidNotificationService(
             return
         }
 
+        val conversationName = conversation.getBestName()
+        val contentText = runBlocking { getString(Res.string.notif_inprogress_group_call) }
+
         val notification = NotificationCompat.Builder(context, CHANNEL_CALLS)
             .setSmallIcon(android.R.drawable.ic_menu_call)
-            .setContentTitle("Group Call")
-            .setContentText("Ongoing group call in ${conversation.getDisplayName()}")
+            .setContentTitle(conversationName)
+            .setContentText(contentText)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setAutoCancel(true)
@@ -395,8 +413,8 @@ class AndroidNotificationService(
         }
 
         val lastMessage = conversation.getLastMessage() ?: return
-        val senderName = conversation.getDisplayName()
-        val groupKey = "jami_messages_$conversationKey" // Unique group key for the conversation
+        val senderName = conversation.getBestName()
+        val groupKey = "jami_messages_$conversationKey"
 
         val notificationActionReceiverClass = try {
             Class.forName("net.jami.android.service.NotificationActionReceiver")
@@ -436,19 +454,22 @@ class AndroidNotificationService(
         )
 
         // Add RemoteInput for quick reply
+        val replyLabel    = runBlocking { getString(Res.string.notif_reply) }
+        val markReadLabel = runBlocking { getString(Res.string.notif_mark_as_read) }
+
         val remoteInput = androidx.core.app.RemoteInput.Builder(KEY_REPLY_TEXT)
-            .setLabel("Reply to $senderName")
+            .setLabel(replyLabel)
             .build()
 
         val replyAction = NotificationCompat.Action.Builder(
             android.R.drawable.ic_menu_send,
-            "Reply",
+            replyLabel,
             replyPendingIntent
         ).addRemoteInput(remoteInput).build()
 
         val markReadAction = NotificationCompat.Action.Builder(
             android.R.drawable.ic_menu_close_clear_cancel,
-            "Mark as read",
+            markReadLabel,
             markReadPendingIntent
         ).build()
 
@@ -479,7 +500,7 @@ class AndroidNotificationService(
         val summaryBuilder = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
             .setSmallIcon(android.R.drawable.ic_dialog_email)
             .setContentTitle("Jami")
-            .setContentText("New messages from $senderName") // More specific summary
+            .setContentText(senderName)
             .setGroup(groupKey)
             .setGroupSummary(true) // This is the group summary
             .setAutoCancel(true)
