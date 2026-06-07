@@ -812,6 +812,15 @@ class ConversationFacade(
         val conversationUri = call.conversationUri
 
         val conversation = findConversationForCall(account, conversationUri, contact)
+
+        // Populate call.contact before the notification fires so the notification
+        // shows a human-readable name rather than the raw peerUri (e.g. "swarm:…").
+        // Use the conversation's peer contact when available (already resolved),
+        // falling back to the account's contact cache (may carry a registeredName).
+        if (call.contact == null) {
+            call.contact = conversation?.contact ?: account.getContactFromCache(call.peerUri)
+        }
+
         val conference = findOrCreateConference(conversation, call, newState)
 
         hardwareService.updateAudioState(conference, call, incomingCall, call.hasVideo())

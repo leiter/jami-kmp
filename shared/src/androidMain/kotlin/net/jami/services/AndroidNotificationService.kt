@@ -31,8 +31,17 @@ import net.jami.repository.SettingsRepository
 import net.jami.utils.Log
 
 // Extension functions for model properties
-private fun Call.getDisplayName(): String =
-    contact?.displayName ?: peerUri.uri
+private fun Call.getDisplayName(): String {
+    val c = contact
+    if (c != null) {
+        // Prefer display name, then registered username, then a short hash
+        return c.displayName?.takeIf { it.isNotBlank() }
+            ?: c.username?.takeIf { it.isNotBlank() }
+            ?: peerUri.rawRingId.take(12)
+    }
+    // No contact resolved yet — show a short hash rather than the full scheme-prefixed URI
+    return peerUri.rawRingId.ifEmpty { peerUri.uri }.take(12)
+}
 
 private fun Call.getDaemonIdString(): String =
     daemonId ?: ""
