@@ -107,7 +107,7 @@ class AppSettingsViewModel(
         // Load device-local settings once at startup (not reactive — these never change remotely)
         _state.update { it.copy(
             isScreenshotBlocking = LocalPrefs.getBoolean(LocalPrefKeys.SCREENSHOT_BLOCKING, false),
-            isStartOnBoot = LocalPrefs.getBoolean(LocalPrefKeys.START_ON_BOOT, false),
+            isStartOnBoot = LocalPrefs.getBoolean(LocalPrefKeys.START_ON_BOOT, true),
             isRunInBackground = LocalPrefs.getBoolean(LocalPrefKeys.RUN_IN_BACKGROUND, false),
             isPlaceSystemCalls = LocalPrefs.getBoolean(LocalPrefKeys.PLACE_SYSTEM_CALLS, false),
             connectivityMode = ConnectivityMode.entries.getOrElse(

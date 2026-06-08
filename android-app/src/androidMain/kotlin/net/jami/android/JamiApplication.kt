@@ -1,13 +1,10 @@
 package net.jami.android
 
 import android.app.Application
-import android.content.Intent
 import android.util.Log
-import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import net.jami.android.service.JamiDaemonService
 import net.jami.di.initKoin
 import net.jami.services.AccountService
 import net.jami.services.DaemonBridge
@@ -32,10 +29,10 @@ class JamiApplication : Application(), KoinComponent {
             androidContext(this@JamiApplication)
         }
 
-        // Keep the daemon process alive even when the UI is closed
-        ContextCompat.startForegroundService(this, Intent(this, JamiDaemonService::class.java))
-
         // Initialize Jami daemon
+        // Note: JamiDaemonService is started from MainActivity (foreground-safe) and from
+        // BootReceiver. Starting a foreground service from Application.onCreate() is
+        // disallowed on Android 12+ when the app is launched in a background/restricted state.
         try {
             Log.d(TAG, "Initializing Jami daemon...")
             val initResult = daemonBridge.init(daemonCallbacks)

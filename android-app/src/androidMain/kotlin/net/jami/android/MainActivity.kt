@@ -7,9 +7,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import net.jami.android.service.CallActionReceiver
+import net.jami.android.service.JamiDaemonService
 import net.jami.services.AccountService
 import net.jami.services.AndroidPictureInPictureManager
 import net.jami.services.CallService
@@ -32,6 +34,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         pipManager.attachActivity(this)
+        ContextCompat.startForegroundService(this, Intent(this, JamiDaemonService::class.java))
         setContent {
             JamiApp()
         }

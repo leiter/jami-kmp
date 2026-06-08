@@ -25,7 +25,7 @@ class BootReceiver : BroadcastReceiver() {
             action != Intent.ACTION_MY_PACKAGE_REPLACED &&
             action != "android.intent.action.QUICKBOOT_POWERON") return
 
-        if (!LocalPrefs.getBoolean(LocalPrefKeys.START_ON_BOOT, false)) {
+        if (!LocalPrefs.getBoolean(LocalPrefKeys.START_ON_BOOT, true)) {
             Log.d(TAG, "Start on boot disabled — skipping")
             return
         }
