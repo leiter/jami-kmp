@@ -99,7 +99,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="ongoing_call">Poziv u toku</string>
     <string name="hist_in_call">Dolazni poziv od %1$s</string>
     <string name="hist_out_call">Odlazni poziv za %1$s</string>
-    <string name="call_duration">Trajalo %s</string>
+    <string name="call_duration">Trajalo %1$s</string>
     <string name="start_error_title">Nije moguće pokrenuti Jami</string>
     <string name="action_call_accept">Prihvati poziv</string>
     <string name="action_call_accept_audio">Prihvati sa zvukom</string>

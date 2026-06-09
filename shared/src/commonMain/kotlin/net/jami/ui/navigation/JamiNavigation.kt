@@ -104,6 +104,10 @@ private fun OnboardingNavigation(appViewModel: AppViewModel) {
                     appViewModel.startOnboarding()
                     navController.navigate(Screen.ImportAccount.route)
                 },
+                onLinkDevice = {
+                    appViewModel.startOnboarding()
+                    navController.navigate(Screen.LinkDeviceImport.route)
+                },
             )
         }
 
@@ -152,6 +156,20 @@ private fun OnboardingNavigation(appViewModel: AppViewModel) {
                 },
                 onImported = {
                     appViewModel.finishOnboarding()
+                },
+            )
+        }
+
+        composable(Screen.LinkDeviceImport.route) {
+            LinkDeviceImportScreen(
+                onBack = {
+                    appViewModel.finishOnboarding()
+                    navController.popBackStack()
+                },
+                onSuccess = {
+                    navController.navigate(Screen.ProfileSetup.route) {
+                        popUpTo(Screen.LinkDeviceImport.route) { inclusive = true }
+                    }
                 },
             )
         }

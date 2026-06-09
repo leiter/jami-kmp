@@ -99,7 +99,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="ongoing_call">Folyamatban lévő hívás</string>
     <string name="hist_in_call">Bejövő hívás (%1$s)</string>
     <string name="hist_out_call">Kimenő hívás (%1$s)</string>
-    <string name="call_duration">%s tartott</string>
+    <string name="call_duration">%1$s tartott</string>
     <string name="start_error_title">Nem sikerült elindítani a Jamit</string>
     <string name="action_call_accept">Hívás fogadása</string>
     <string name="action_call_accept_audio">Elfogadás hanggal</string>

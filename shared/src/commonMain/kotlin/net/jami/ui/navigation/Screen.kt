@@ -27,6 +27,7 @@ sealed class Screen(val route: String) {
     data object Welcome : Screen("welcome")
     data object CreateAccount : Screen("create_account")
     data object ImportAccount : Screen("import_account")
+    data object LinkDeviceImport : Screen("link_device_import")
     data object ProfileSetup : Screen("profile_setup")
     data object AccountSummary : Screen("account_summary")
     data object Home : Screen("home")

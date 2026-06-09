@@ -761,7 +761,8 @@ class ChatViewModel(
 
         val item = when {
             msg.isCall -> {
-                val durationMs = (msg.body["duration"]?.toLongOrNull() ?: 0L) * 1000L
+                // Duration from daemon is in milliseconds; non-zero means the call was answered.
+                val durationMs = msg.body["duration"]?.toLongOrNull() ?: 0L
                 MessageItem(
                     id = msg.id, text = "", author = displayName,
                     timestamp = timestampMs, isOutgoing = isOutgoing,

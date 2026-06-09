@@ -294,41 +294,6 @@ class CallService(
         scope.launch { daemonBridge.addParticipant(accountId, callId, account2Id, confId) }
     }
 
-    // ==================== Video Quality Control ====================
-
-    /**
-     * Set video quality for a call.
-     *
-     * Updates camera resolution, frame rate, and bitrate constraints.
-     */
-    fun setVideoQuality(accountId: String, callId: String, quality: net.jami.model.VideoQuality) {
-        scope.launch {
-            daemonBridge.setVideoQuality(accountId, callId, quality.width, quality.height, quality.frameRate, quality.bitrateOptimal)
-        }
-    }
-
-    /**
-     * Set bitrate limit for video encoding.
-     *
-     * @param bitrate Maximum bitrate in kbps (0 = no limit)
-     */
-    fun setVideoBitrate(accountId: String, callId: String, bitrate: Int) {
-        scope.launch {
-            daemonBridge.setVideoBitrate(accountId, callId, bitrate)
-        }
-    }
-
-    /**
-     * Request current video stats (bitrate, resolution, framerate).
-     *
-     * Stats are returned via daemon callback onVideoStats().
-     */
-    fun requestVideoStats(accountId: String, callId: String) {
-        scope.launch {
-            daemonBridge.requestVideoStats(accountId, callId)
-        }
-    }
-
     /**
      * Mute all audio in a conference (moderator only).
      */

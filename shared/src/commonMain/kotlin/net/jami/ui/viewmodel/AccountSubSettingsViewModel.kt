@@ -200,11 +200,38 @@ class AccountSubSettingsViewModel(
                 s.copy(audioCodecs = updatedAudio, videoCodecs = updatedVideo)
             }
 
-            val enabledIds = (_state.value.audioCodecs + _state.value.videoCodecs)
-                .filter { it.isEnabled }
-                .map { it.id }
-            accountService.setActiveCodecList(accountId, enabledIds)
+            pushActiveCodecList(accountId)
         }
+    }
+
+    /**
+     * Move a codec up or down within its group (audio or video), changing its priority.
+     * Visual order = daemon priority order.
+     */
+    fun moveCodec(id: Long, isAudio: Boolean, up: Boolean) {
+        scope.launch {
+            val account = accountService.currentAccount.value ?: return@launch
+            val accountId = account.accountId
+
+            _state.update { s ->
+                val list = if (isAudio) s.audioCodecs.toMutableList() else s.videoCodecs.toMutableList()
+                val idx = list.indexOfFirst { it.id == id }
+                val targetIdx = if (up) idx - 1 else idx + 1
+                if (idx < 0 || targetIdx < 0 || targetIdx >= list.size) return@update s
+                val tmp = list[idx]; list[idx] = list[targetIdx]; list[targetIdx] = tmp
+                if (isAudio) s.copy(audioCodecs = list) else s.copy(videoCodecs = list)
+            }
+
+            pushActiveCodecList(accountId)
+        }
+    }
+
+    /** Send the current enabled codec ids in display order to the daemon. */
+    private suspend fun pushActiveCodecList(accountId: String) {
+        val enabledIds = (_state.value.audioCodecs + _state.value.videoCodecs)
+            .filter { it.isEnabled }
+            .map { it.id }
+        accountService.setActiveCodecList(accountId, enabledIds)
     }
 
     // ── Messages ──────────────────────────────────────────────────────────────

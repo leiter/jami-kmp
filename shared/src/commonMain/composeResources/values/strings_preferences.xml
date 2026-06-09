@@ -140,4 +140,50 @@
     <string name="default_emoji_8" translatable="false">😍</string>
     <string name="default_emoji_9" translatable="false">🙏</string>
 
+    <!-- Privacy -->
+    <string name="pref_read_receipts">Read receipts</string>
+    <string name="pref_read_receipts_description">Let others know when you have read their messages</string>
+    <string name="pref_block_unknown">Block unknown contacts</string>
+    <string name="pref_block_unknown_description">Only accept messages from your contacts</string>
+
+    <!-- Notifications -->
+    <string name="pref_category_notifications">Notifications</string>
+    <string name="pref_call_notifications">Call notifications</string>
+    <string name="pref_call_notifications_description">Show notifications for incoming calls</string>
+    <string name="pref_message_notifications">Message notifications</string>
+    <string name="pref_message_notifications_description">Show notifications for new messages</string>
+    <string name="pref_notification_sound">Notification sound</string>
+    <string name="pref_notification_sound_description">Play a sound for notifications</string>
+    <string name="pref_vibration">Vibration</string>
+    <string name="pref_vibration_description">Vibrate for notifications</string>
+    <string name="pref_quiet_hours">Quiet hours</string>
+    <string name="pref_quiet_hours_description">Silence notifications during the night (23:00–07:00)</string>
+
+    <!-- Calls -->
+    <string name="pref_category_calls">Calls</string>
+    <string name="pref_video_enabled">Enable video in calls</string>
+    <string name="pref_video_enabled_description">Start calls with video enabled by default</string>
+    <string name="pref_hardware_acceleration">Hardware acceleration</string>
+    <string name="pref_hardware_acceleration_description">Use hardware-accelerated video encoding and decoding</string>
+    <string name="pref_noise_suppression">Noise suppression</string>
+    <string name="pref_noise_suppression_description">Reduce background noise during calls</string>
+    <string name="pref_echo_cancellation">Echo cancellation</string>
+    <string name="pref_echo_cancellation_description">Prevent audio echo during calls</string>
+    <string name="pref_auto_answer">Auto-answer calls</string>
+    <string name="pref_auto_answer_description">Automatically answer incoming calls</string>
+
+    <!-- File Transfers -->
+    <string name="pref_category_file_transfers">File transfers</string>
+    <string name="pref_max_file_size">Max auto-accept size</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_auto_download_wifi">Auto-download on Wi-Fi</string>
+    <string name="pref_auto_download_wifi_description">Automatically download files when on Wi-Fi</string>
+    <string name="pref_auto_download_mobile">Auto-download on mobile data</string>
+    <string name="pref_auto_download_mobile_description">Automatically download files when on mobile data</string>
+
+    <!-- Additional preference categories -->
+    <string name="pref_category_media">Media</string>
+    <string name="pref_category_messages">Messages</string>
+    <string name="pref_category_advanced">Advanced</string>
+
 </resources>

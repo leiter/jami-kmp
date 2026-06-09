@@ -156,7 +156,6 @@ fun CallScreen(
         onToggleScreenShare = { viewModel.toggleScreenShare() },
         onMuteAll = { viewModel.muteAllParticipants() },
         onToggleConferenceLock = { locked -> viewModel.toggleConferenceLock(locked) },
-        onToggleStats = { viewModel.toggleVideoStats() },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onEnded = onEnd,
         onRetryVideo = { viewModel.retryRemoteVideo() },
@@ -224,7 +223,6 @@ fun IncomingCallScreen(
         onToggleScreenShare = { viewModel.toggleScreenShare() },
         onMuteAll = { viewModel.muteAllParticipants() },
         onToggleConferenceLock = { locked -> viewModel.toggleConferenceLock(locked) },
-        onToggleStats = { viewModel.toggleVideoStats() },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onEnded = onEnd,
         onRetryVideo = { viewModel.retryRemoteVideo() },
@@ -251,7 +249,6 @@ private fun CallScreenContent(
     onToggleScreenShare: () -> Unit,
     onMuteAll: () -> Unit = {},
     onToggleConferenceLock: (Boolean) -> Unit = {},
-    onToggleStats: () -> Unit = {},
     onSendDtmf: (Char) -> Unit,
     onEnded: () -> Unit,
     onRetryVideo: () -> Unit,
@@ -327,7 +324,7 @@ private fun CallScreenContent(
         if (!callEnded && state.callMode is CallMode.Incoming && state.isVideo && state.hasLocalVideo) {
             VideoRenderer(
                 modifier = Modifier.fillMaxSize(),
-                callId = state.localVideoSinkId.ifEmpty { "local_preview" },
+                callId = "local_preview",
                 isLocalVideo = true
             )
         }
@@ -341,7 +338,7 @@ private fun CallScreenContent(
             ) {
                 VideoRenderer(
                     modifier = Modifier.fillMaxSize(),
-                    callId = state.localVideoSinkId.ifEmpty { "local_preview" },
+                    callId = "local_preview",
                     isLocalVideo = true
                 )
             }
@@ -371,12 +368,6 @@ private fun CallScreenContent(
             videoLoss = state.videoLoss,
             onRetry = onRetryVideo,
             onAudioOnly = onFallbackAudio,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        // Video stats overlay
-        VideoStatsOverlay(
-            videoQuality = state.videoQuality,
             modifier = Modifier.fillMaxSize()
         )
 
@@ -425,7 +416,6 @@ private fun CallScreenContent(
                             onToggleScreenShare = onToggleScreenShare,
                             onMuteAll = onMuteAll,
                             onToggleConferenceLock = onToggleConferenceLock,
-                            onToggleStats = onToggleStats,
                             onOpenDtmf = { showDtmfSheet = true },
                         )
                         is CallMode.Ended -> Unit
@@ -699,7 +689,6 @@ private fun OnGoingControls(
     onToggleScreenShare: () -> Unit,
     onMuteAll: () -> Unit = {},
     onToggleConferenceLock: (Boolean) -> Unit = {},
-    onToggleStats: () -> Unit = {},
     onOpenDtmf: () -> Unit,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -751,14 +740,6 @@ private fun OnGoingControls(
                 contentDescription = stringResource(Res.string.content_desc_dialpad),
                 isActive = false,
                 onClick = onOpenDtmf,
-            )
-
-            // Video stats button
-            CallControlButton(
-                icon = Icons.Default.Info,
-                contentDescription = "Video stats",
-                isActive = state.videoQuality.isShowingStats,
-                onClick = onToggleStats,
             )
         }
 

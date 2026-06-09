@@ -39,16 +39,18 @@ import net.jami.ui.theme.JamiTheme
 /**
  * Welcome screen shown on first launch when no account is configured.
  *
- * Displays the Jami branding and provides options to create a new
- * account or import an existing one from a backup archive.
+ * Displays the Jami branding and provides options to create a new account,
+ * import from a backup archive, or link from an existing device.
  *
  * @param onCreateAccount Called when the user taps "Create Account".
  * @param onImportAccount Called when the user taps "Import Account".
+ * @param onLinkDevice    Called when the user taps "Link from another device".
  */
 @Composable
 fun WelcomeScreen(
     onCreateAccount: () -> Unit,
     onImportAccount: () -> Unit,
+    onLinkDevice: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -90,6 +92,16 @@ fun WelcomeScreen(
         JamiButton(
             text = stringResource(Res.string.action_import_account),
             onClick = onImportAccount,
+            modifier = Modifier.fillMaxWidth(),
+            style = JamiButtonStyle.Secondary,
+        )
+
+        Spacer(Modifier.height(JamiTheme.spacing.m))
+
+        // Link from another device button
+        JamiButton(
+            text = stringResource(Res.string.account_link_device),
+            onClick = onLinkDevice,
             modifier = Modifier.fillMaxWidth(),
             style = JamiButtonStyle.Secondary,
         )

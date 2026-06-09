@@ -29,6 +29,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -157,7 +159,14 @@ fun AccountMediaSettingsScreen(
 
                 state.audioCodecs.forEachIndexed { index, codec ->
                     if (index > 0) HorizontalDivider(color = JamiTheme.colors.outline)
-                    CodecRow(codec = codec, onToggle = { viewModel.setCodecEnabled(codec.id, it) })
+                    CodecRow(
+                        codec = codec,
+                        isFirst = index == 0,
+                        isLast = index == state.audioCodecs.lastIndex,
+                        onToggle = { viewModel.setCodecEnabled(codec.id, it) },
+                        onMoveUp = { viewModel.moveCodec(codec.id, isAudio = true, up = true) },
+                        onMoveDown = { viewModel.moveCodec(codec.id, isAudio = true, up = false) },
+                    )
                 }
 
                 Spacer(Modifier.height(JamiTheme.spacing.m))
@@ -175,7 +184,14 @@ fun AccountMediaSettingsScreen(
             if (state.videoCodecs.isNotEmpty()) {
                 state.videoCodecs.forEachIndexed { index, codec ->
                     if (index > 0) HorizontalDivider(color = JamiTheme.colors.outline)
-                    CodecRow(codec = codec, onToggle = { viewModel.setCodecEnabled(codec.id, it) })
+                    CodecRow(
+                        codec = codec,
+                        isFirst = index == 0,
+                        isLast = index == state.videoCodecs.lastIndex,
+                        onToggle = { viewModel.setCodecEnabled(codec.id, it) },
+                        onMoveUp = { viewModel.moveCodec(codec.id, isAudio = false, up = true) },
+                        onMoveDown = { viewModel.moveCodec(codec.id, isAudio = false, up = false) },
+                    )
                 }
             }
 
@@ -187,7 +203,11 @@ fun AccountMediaSettingsScreen(
 @Composable
 private fun CodecRow(
     codec: CodecItem,
+    isFirst: Boolean,
+    isLast: Boolean,
     onToggle: (Boolean) -> Unit,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -195,6 +215,24 @@ private fun CodecRow(
             .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // Priority reorder controls — disabled at list edges
+        IconButton(onClick = onMoveUp, enabled = !isFirst) {
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowUp,
+                contentDescription = stringResource(Res.string.action_move_up),
+                tint = if (isFirst) JamiTheme.colors.onSurfaceVariant.copy(alpha = 0.3f)
+                       else JamiTheme.colors.onSurfaceVariant,
+            )
+        }
+        IconButton(onClick = onMoveDown, enabled = !isLast) {
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = stringResource(Res.string.action_move_down),
+                tint = if (isLast) JamiTheme.colors.onSurfaceVariant.copy(alpha = 0.3f)
+                       else JamiTheme.colors.onSurfaceVariant,
+            )
+        }
+
         Text(
             text = codec.name,
             style = JamiTheme.typography.bodyLarge,

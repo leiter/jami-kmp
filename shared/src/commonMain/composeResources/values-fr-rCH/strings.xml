@@ -99,7 +99,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="ongoing_call">Appel en cours</string>
     <string name="hist_in_call">Appel entrant de %1$s</string>
     <string name="hist_out_call">Appel sortant de %1$s</string>
-    <string name="call_duration">Dernier %s</string>
+    <string name="call_duration">Dernier %1$s</string>
     <string name="start_error_title">Impossible de démarrer Jami !</string>
     <string name="action_call_accept">Prendre l\'appel</string>
     <string name="action_call_accept_audio">Accepter en audio</string>

@@ -421,6 +421,30 @@ class AccountService(
         daemonBridge.addDevice(accountId, uri)
 
     /**
+     * Confirm the peer identity during the export-side add-device handshake.
+     * Call this when the user taps "Yes, this is the correct device".
+     */
+    fun confirmAddDevice(accountId: String, opId: Long) {
+        daemonBridge.confirmAddDevice(accountId, opId)
+    }
+
+    /**
+     * Cancel an in-progress add-device operation (export side).
+     */
+    fun cancelAddDevice(accountId: String, opId: Long) {
+        daemonBridge.cancelAddDevice(accountId, opId)
+    }
+
+    /**
+     * Provide authentication (password) to unlock the account being imported on this device.
+     * Pass an empty string when no password is required.
+     */
+    fun provideAccountAuthentication(accountId: String, password: String) {
+        val scheme = if (password.isEmpty()) "" else "password"
+        daemonBridge.provideAccountAuthentication(accountId, password, scheme)
+    }
+
+    /**
      * Rename a device.
      */
     fun renameDevice(accountId: String, newName: String) {
@@ -1060,9 +1084,12 @@ class AccountService(
     internal fun onNameRegistrationEnded(accountId: String, state: Int, name: String) {
         scope.launch {
             accountsMap[accountId]?.registeringUsername = false
-            if (state == 0) {
-                accountsMap[accountId]?.let { account ->
-                    account.volatileDetails[ConfigKey.ACCOUNT_REGISTERED_NAME.key] = name
+            accountsMap[accountId]?.let { account ->
+                // Refresh all volatile details from daemon (may include registered name + status)
+                account.volatileDetails.putAll(daemonBridge.getVolatileAccountDetails(accountId))
+                if (state == 0) {
+                    // Also persist the name in permanent account details to survive restart
+                    account.details[ConfigKey.ACCOUNT_REGISTERED_NAME.key] = name
                     _accounts.value = accountsMap.values.toList()
                 }
             }
@@ -1359,6 +1386,54 @@ sealed class AccountEvent {
         val messages: List<SwarmMessage>
     ) : AccountEvent()
 }
+
+/**
+ * Auth state machine shared by both sides of the add-device protocol.
+ * Mirrors AccountService.AuthState in jami-client-android.
+ */
+enum class AuthState(val value: Int) {
+    INIT(0),
+    TOKEN_AVAILABLE(1),
+    CONNECTING(2),
+    AUTHENTICATING(3),
+    IN_PROGRESS(4),
+    DONE(5);
+
+    companion object {
+        fun fromInt(value: Int): AuthState = entries.getOrElse(value) { DONE }
+    }
+}
+
+/**
+ * Terminal error codes for the add-device protocol (state DONE with error).
+ */
+enum class AuthError {
+    NETWORK,
+    AUTHENTICATION,
+    TIMEOUT,
+    CANCELED,
+    UNKNOWN;
+
+    companion object {
+        fun fromString(value: String): AuthError = when (value) {
+            "network"    -> NETWORK
+            "auth_error" -> AUTHENTICATION
+            "timeout"    -> TIMEOUT
+            "canceled"   -> CANCELED
+            else         -> UNKNOWN
+        }
+    }
+}
+
+/**
+ * Parsed result of an [AccountEvent.AddDeviceStateChanged] event.
+ */
+data class AuthResult(
+    val accountId: String,
+    val state: AuthState,
+    val details: Map<String, String> = emptyMap(),
+    val operationId: Long? = null
+)
 
 /**
  * A batch of search results from [AccountService.searchConversation].

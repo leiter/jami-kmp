@@ -227,6 +227,18 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         return JamiService.addDevice(accountId, uri)
     }
 
+    override fun confirmAddDevice(accountId: String, opId: Long): Boolean {
+        return JamiService.confirmAddDevice(accountId, opId)
+    }
+
+    override fun cancelAddDevice(accountId: String, opId: Long): Boolean {
+        return JamiService.cancelAddDevice(accountId, opId)
+    }
+
+    override fun provideAccountAuthentication(accountId: String, password: String, scheme: String): Boolean {
+        return JamiService.provideAccountAuthentication(accountId, password, scheme)
+    }
+
     override fun setDeviceName(accountId: String, deviceName: String) {
         val details = JamiService.getAccountDetails(accountId)
         details["Account.deviceName"] = deviceName
@@ -950,9 +962,6 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         }
     }
 
-    override fun setVideoQuality(accountId: String, callId: String, width: Int, height: Int, fps: Int, bitrate: Int) {}
-    override fun setVideoBitrate(accountId: String, callId: String, bitrate: Int) {}
-    override fun requestVideoStats(accountId: String, callId: String) {}
     override fun muteAllParticipants(accountId: String, confId: String) {
         JamiService.setConferenceLayout(accountId, confId, 0)
     }

@@ -45,6 +45,7 @@ import net.jami.model.Profile
 import net.jami.model.SwarmMessage
 import net.jami.model.TextMessage
 import net.jami.model.Uri
+import net.jami.services.AccountEvent
 import net.jami.services.expect.HardwareService
 import net.jami.utils.Log
 import net.jami.utils.currentTimeMillis
@@ -130,6 +131,24 @@ class ConversationFacade(
                     refreshAllConversations()
                 }
                 previouslyConnected = isConnected
+            }
+        }
+
+        // When account becomes REGISTERED, retry DHT name lookups for contacts that were
+        // unresolved during loadSmartlist (which runs before the account connects to DHT).
+        scope.launch {
+            accountService.accountEvents.collect { event ->
+                if (event is AccountEvent.RegistrationStateChanged) {
+                    val account = accountService.getAccount(event.accountId) ?: return@collect
+                    if (!account.isRegistered) return@collect
+                    for (conversation in account.getConversations()) {
+                        for (contact in conversation.contacts) {
+                            if (!contact.isUser && contact.username.isNullOrEmpty()) {
+                                accountService.lookupAddress(account.accountId, contact.uri.rawRingId)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -1273,7 +1292,13 @@ class ConversationFacade(
                 contactNumber = author.ifEmpty { null },
                 direction = if (contact.isUser) Call.Direction.OUTGOING else Call.Direction.INCOMING,
                 timestamp = timestamp
-            )
+            ).apply {
+                // Duration from daemon is in milliseconds; non-zero means the call was answered.
+                message.body["duration"]?.toLongOrNull()?.let { duration = it }
+                message.body["confId"]?.let { confId = it }
+                message.body["device"]?.let { hostDevice = it }
+                message.body["uri"]?.let { hostUri = it }
+            }
             else -> Interaction(account.accountId).also { it.timestamp = timestamp }
         }
 

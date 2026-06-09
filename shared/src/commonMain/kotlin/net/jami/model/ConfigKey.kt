@@ -30,6 +30,7 @@ enum class ConfigKey(val key: String) {
     ACCOUNT_ARCHIVE_HAS_PASSWORD("Account.archiveHasPassword"),
     ACCOUNT_ARCHIVE_PATH("Account.archivePath"),
     ACCOUNT_ARCHIVE_PIN("Account.archivePIN"),
+    ACCOUNT_ARCHIVE_URL("Account.archiveURL"),
     ACCOUNT_DEVICE_ID("Account.deviceID"),
     ACCOUNT_DEVICE_NAME("Account.deviceName"),
     ACCOUNT_REGISTERED_NAME("Account.registeredName"),

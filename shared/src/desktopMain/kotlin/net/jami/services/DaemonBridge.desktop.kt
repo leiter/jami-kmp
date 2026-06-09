@@ -558,9 +558,6 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "answerMediaChangeRequest called (stub): $callId")
     }
 
-    override fun setVideoQuality(accountId: String, callId: String, width: Int, height: Int, fps: Int, bitrate: Int) {}
-    override fun setVideoBitrate(accountId: String, callId: String, bitrate: Int) {}
-    override fun requestVideoStats(accountId: String, callId: String) {}
     override fun muteAllParticipants(accountId: String, confId: String) {}
     override fun setConferenceLocked(accountId: String, confId: String, locked: Boolean) {}
     override fun muteParticipantAudio(accountId: String, confId: String, participantId: String) {}

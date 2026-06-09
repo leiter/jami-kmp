@@ -73,7 +73,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_call_mute">Tắt tiếng</string>
     <string name="action_call_unmute">Bỏ tắt tiếng</string>
     <string name="ongoing_call">Cuộc gọi đang diễn ra</string>
-    <string name="call_duration">Đã gọi %s</string>
+    <string name="call_duration">Đã gọi %1$s</string>
     <string name="start_error_title">Không thể khởi động Jami</string>
     <string name="action_call_decline">Từ chối</string>
     <string name="action_call_mic_mute">Tắt tiếng micrô</string>

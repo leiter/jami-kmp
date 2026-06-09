@@ -258,7 +258,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="ongoing_call">Ongoing call</string>
     <string name="hist_in_call">Incoming call of %1$s</string>
     <string name="hist_out_call">Outgoing call of %1$s</string>
-    <string name="call_duration">Lasted %s</string>
+    <string name="call_duration">Lasted %1$s</string>
     <string name="call_on_hold">Call is on hold</string>
     <string name="start_error_title">Unable to start Jami</string>
     <string name="action_call_accept">Accept call</string>
@@ -743,5 +743,56 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="date_yesterday">Yesterday</string>
     <string name="account_type_jami">Jami</string>
     <string name="account_type_sip">SIP</string>
+
+    <!-- Welcome / Onboarding -->
+    <string name="welcome_text">Free and universal communication platform\nthat respects the freedom and privacy of its users.</string>
+    <string name="action_create_account">Create Account</string>
+    <string name="action_import_account">Import Account</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_continue_to_jami">Continue to Jami</string>
+    <string name="action_browse">Browse</string>
+
+    <!-- Profile Setup -->
+    <string name="screen_title_profile_setup">Set Up Profile</string>
+    <string name="prompt_add_profile_photo">Add a profile photo</string>
+    <string name="prompt_display_name">Display name</string>
+
+    <!-- Home -->
+    <string name="home_no_conversation_title">No conversations yet</string>
+    <string name="home_no_conversation_hint">Start a new conversation to begin messaging</string>
+    <string name="action_new_conversation">Start conversation</string>
+    <string name="action_new_group">New Group</string>
+    <string name="menu_app_settings">App Settings</string>
+
+    <!-- Chat -->
+    <string name="conversation_type_message">Message</string>
+    <string name="conversation_typing">typing…</string>
+    <string name="menu_item_copy">Copy</string>
+    <string name="menu_item_edit">Edit</string>
+
+    <!-- New Conversation / Search -->
+    <string name="screen_title_new_conversation">New Conversation</string>
+    <string name="placeholder_search_contacts">Search contacts or Jami ID…</string>
+    <string name="toggle_create_group">Create group conversation</string>
+    <string name="placeholder_search">Search or add</string>
+
+    <!-- QR Code -->
+    <string name="screen_title_qr_scan">Scan QR Code</string>
+    <string name="qr_scan_manual_hint">Or paste a Jami ID</string>
+    <string name="action_qr_code">QR Code</string>
+    <string name="action_move_up">Move up</string>
+    <string name="action_move_down">Move down</string>
+
+    <!-- Details -->
+    <string name="screen_title_details">Details</string>
+    <string name="empty_members">No members to display</string>
+
+    <!-- Settings screens -->
+    <string name="screen_title_app_settings">Settings</string>
+
+    <!-- About -->
+    <string name="screen_title_about">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_license">Licensed under the GNU General Public License v3.0</string>
 
 </resources>

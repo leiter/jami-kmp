@@ -38,8 +38,14 @@ interface DaemonBridgeApi {
     fun getKnownRingDevices(accountId: String): Map<String, String>
     fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String)
     fun setDeviceName(accountId: String, deviceName: String)
-    /** Initiate linking a new device using its device-request URI. Returns an operation ID. */
+    /** Initiate linking a new device using its device-request URI. Returns an operation ID ≥ 0, or negative on error. */
     fun addDevice(accountId: String, uri: String): Long
+    /** Confirm the peer identity during the export-side add-device handshake. */
+    fun confirmAddDevice(accountId: String, opId: Long): Boolean
+    /** Cancel an in-progress add-device operation. */
+    fun cancelAddDevice(accountId: String, opId: Long): Boolean
+    /** Provide authentication (password) to unlock an account being imported on this device. */
+    fun provideAccountAuthentication(accountId: String, password: String, scheme: String): Boolean
 
     // ==================== Profile ====================
     fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int)
@@ -294,36 +300,6 @@ interface DaemonBridgeApi {
      */
     fun answerMediaChangeRequest(accountId: String, callId: String, mediaList: List<Map<String, String>>)
 
-    // ==================== Video Quality & Bitrate ====================
-    /**
-     * Set video quality parameters for a call.
-     *
-     * @param accountId Account ID
-     * @param callId Call ID
-     * @param width Video width in pixels
-     * @param height Video height in pixels
-     * @param fps Frames per second
-     * @param bitrate Bitrate in kbps
-     */
-    fun setVideoQuality(accountId: String, callId: String, width: Int, height: Int, fps: Int, bitrate: Int)
-
-    /**
-     * Set the video bitrate for a call.
-     *
-     * @param accountId Account ID
-     * @param callId Call ID
-     * @param bitrate Bitrate in kbps
-     */
-    fun setVideoBitrate(accountId: String, callId: String, bitrate: Int)
-
-    /**
-     * Request video statistics for a call.
-     *
-     * @param accountId Account ID
-     * @param callId Call ID
-     */
-    fun requestVideoStats(accountId: String, callId: String)
-
     // ==================== Conference Participant Controls ====================
     /**
      * Mute audio for all participants in a conference.
@@ -523,6 +499,9 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String) {}
     override fun setDeviceName(accountId: String, deviceName: String) {}
     override fun addDevice(accountId: String, uri: String): Long = 0L
+    override fun confirmAddDevice(accountId: String, opId: Long): Boolean = true
+    override fun cancelAddDevice(accountId: String, opId: Long): Boolean = true
+    override fun provideAccountAuthentication(accountId: String, password: String, scheme: String): Boolean = true
 
     override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {}
 
@@ -635,9 +614,6 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun requestMediaChange(accountId: String, callId: String, mediaList: List<Map<String, String>>) {}
     override fun answerMediaChangeRequest(accountId: String, callId: String, mediaList: List<Map<String, String>>) {}
 
-    override fun setVideoQuality(accountId: String, callId: String, width: Int, height: Int, fps: Int, bitrate: Int) {}
-    override fun setVideoBitrate(accountId: String, callId: String, bitrate: Int) {}
-    override fun requestVideoStats(accountId: String, callId: String) {}
     override fun muteAllParticipants(accountId: String, confId: String) {}
     override fun setConferenceLocked(accountId: String, confId: String, locked: Boolean) {}
     override fun muteParticipantAudio(accountId: String, confId: String, participantId: String) {}

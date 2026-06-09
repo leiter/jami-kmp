@@ -54,6 +54,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.CallMade
+import androidx.compose.material.icons.filled.CallMissed
+import androidx.compose.material.icons.filled.CallMissedOutgoing
+import androidx.compose.material.icons.filled.CallReceived
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.FileDownload
@@ -782,13 +786,25 @@ private fun DateSeparatorItem(label: String) {
 
 /**
  * Call history item: centered row with phone icon, direction/missed label, and duration.
- * Missed calls are shown in error (red) colour; answered calls use onSurfaceVariant.
+ * Missed calls are shown in error (red) colour; answered calls use directional icons.
  */
 @Composable
 private fun CallMessage(message: MessageItem) {
     val isMissed = message.isMissed
     val isOutgoing = message.isOutgoing
-    val iconColor = if (isMissed) JamiTheme.colors.error else JamiTheme.colors.onSurface
+
+    val icon = when {
+        isMissed && !isOutgoing -> Icons.Default.CallMissed
+        isMissed && isOutgoing  -> Icons.Default.CallMissedOutgoing
+        !isMissed && isOutgoing -> Icons.Default.CallMade
+        else                    -> Icons.Default.CallReceived
+    }
+    val iconColor = when {
+        isMissed              -> JamiTheme.colors.error
+        !isMissed && isOutgoing -> JamiTheme.colors.primary
+        else                  -> JamiTheme.colors.onSurface
+    }
+    val textColor = if (isMissed) JamiTheme.colors.error else JamiTheme.colors.onSurfaceVariant
 
     val label = when {
         isMissed && !isOutgoing  -> stringResource(Res.string.notif_missed_incoming_call)
@@ -814,7 +830,7 @@ private fun CallMessage(message: MessageItem) {
             horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.xs),
         ) {
             Icon(
-                imageVector = Icons.Default.Call,
+                imageVector = icon,
                 contentDescription = null,
                 tint = iconColor,
                 modifier = Modifier.size(16.dp),
@@ -822,7 +838,7 @@ private fun CallMessage(message: MessageItem) {
             Text(
                 text = "$label$durationText",
                 style = JamiTheme.typography.bodySmall,
-                color = if (isMissed) JamiTheme.colors.error else JamiTheme.colors.onSurfaceVariant,
+                color = textColor,
             )
             Text(
                 text = formatMessageTime(message.timestamp),

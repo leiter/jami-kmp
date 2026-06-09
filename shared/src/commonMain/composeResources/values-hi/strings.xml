@@ -86,7 +86,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="ongoing_call">चल रही कॉल </string>
     <string name="hist_in_call">%1$s का आने वाला कॉल</string>
     <string name="hist_out_call">%1$s का आउटगोइंग कॉल</string>
-    <string name="call_duration">%sचला</string>
+    <string name="call_duration">%1$sचला</string>
     <string name="action_call_decline">गिरावट</string>
     <string name="action_call_mic_mute">मूक माइक्रोफोन</string>
     <string name="ab_action_contact_add">संपर्क के खाते में जोड़ें</string>

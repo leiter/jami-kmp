@@ -32,6 +32,8 @@ import net.jami.model.ConfigKey
 import net.jami.repository.SettingsRepository
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
+import net.jami.services.AuthError
+import net.jami.services.AuthState
 import net.jami.services.LookupState
 import net.jami.services.BiometricAvailability
 import net.jami.services.BiometricResult
@@ -40,6 +42,25 @@ import net.jami.services.DeviceRuntimeService
 import net.jami.utils.VCardUtils
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+
+/**
+ * State machine for the export side of the add-device protocol (existing device).
+ * Mirrors AddDeviceExportState in jami-client-android ExportSideViewModel.
+ */
+sealed class AddDeviceExportState {
+    /** Sheet just opened — waiting for the user to scan/paste a jami-auth URI. */
+    data class Init(val error: ExportInputError? = null) : AddDeviceExportState()
+    /** URI submitted; daemon connecting to the new device. */
+    object Connecting : AddDeviceExportState()
+    /** New device identified; showing peer address for user to confirm. */
+    data class Authenticating(val peerAddress: String?) : AddDeviceExportState()
+    /** User confirmed; account sync in progress. */
+    object InProgress : AddDeviceExportState()
+    /** Terminal state — null error means success. */
+    data class Done(val error: AuthError? = null) : AddDeviceExportState()
+}
+
+enum class ExportInputError { INVALID_INPUT }
 
 /**
  * Item representing a linked device.
@@ -65,10 +86,8 @@ data class AccountSettingsState(
     val hasPassword: Boolean = false,
     val hasManager: Boolean = false,
     val hasBiometric: Boolean = false,
-    // Link device state
-    val isLinkingDevice: Boolean = false,
-    val linkDeviceSuccess: Boolean = false,
-    val linkDeviceError: Boolean = false,
+    // Link device state — drives the multi-step export-side sheet
+    val linkDeviceState: AddDeviceExportState = AddDeviceExportState.Init(),
     // Register name dialog state
     val registerNameDialogOpen: Boolean = false,
     val registerNameInput: String = "",
@@ -93,9 +112,7 @@ data class AccountSettingsState(
             hasPassword == other.hasPassword &&
             hasManager == other.hasManager &&
             hasBiometric == other.hasBiometric &&
-            isLinkingDevice == other.isLinkingDevice &&
-            linkDeviceSuccess == other.linkDeviceSuccess &&
-            linkDeviceError == other.linkDeviceError &&
+            linkDeviceState == other.linkDeviceState &&
             registerNameDialogOpen == other.registerNameDialogOpen &&
             registerNameInput == other.registerNameInput &&
             registerNameChecking == other.registerNameChecking &&
@@ -117,9 +134,7 @@ data class AccountSettingsState(
         result = 31 * result + hasPassword.hashCode()
         result = 31 * result + hasManager.hashCode()
         result = 31 * result + hasBiometric.hashCode()
-        result = 31 * result + isLinkingDevice.hashCode()
-        result = 31 * result + linkDeviceSuccess.hashCode()
-        result = 31 * result + linkDeviceError.hashCode()
+        result = 31 * result + linkDeviceState.hashCode()
         result = 31 * result + registerNameDialogOpen.hashCode()
         result = 31 * result + registerNameInput.hashCode()
         result = 31 * result + registerNameChecking.hashCode()
@@ -147,6 +162,8 @@ class AccountSettingsViewModel(
 ) {
     private val scope = scope
     private var lookupJob: Job? = null
+    /** Operation ID of the in-flight add-device export, or null if none. */
+    private var _linkOperationId: Long? = null
 
     private val _state = MutableStateFlow(AccountSettingsState())
     val state: StateFlow<AccountSettingsState> = _state.asStateFlow()
@@ -180,12 +197,26 @@ class AccountSettingsViewModel(
                     }
                     is AccountEvent.AddDeviceStateChanged -> {
                         val account = accountService.currentAccount.value ?: return@collect
-                        if (event.accountId == account.accountId) {
-                            when (event.state) {
-                                0 -> _state.update { it.copy(isLinkingDevice = false, linkDeviceSuccess = true, linkDeviceError = false) }
-                                else -> _state.update { it.copy(isLinkingDevice = false, linkDeviceSuccess = false, linkDeviceError = true) }
+                        if (event.accountId != account.accountId) return@collect
+                        val opId = _linkOperationId ?: return@collect
+                        if (event.opId != opId) return@collect
+                        val newState = when (AuthState.fromInt(event.state)) {
+                            AuthState.CONNECTING ->
+                                AddDeviceExportState.Connecting
+                            AuthState.AUTHENTICATING ->
+                                AddDeviceExportState.Authenticating(event.details["peer_address"])
+                            AuthState.IN_PROGRESS ->
+                                AddDeviceExportState.InProgress
+                            AuthState.DONE -> {
+                                _linkOperationId = null
+                                val errStr = event.details["error"]
+                                val error = if (errStr.isNullOrEmpty() || errStr == "none") null
+                                            else AuthError.fromString(errStr)
+                                AddDeviceExportState.Done(error)
                             }
+                            else -> return@collect
                         }
+                        _state.update { it.copy(linkDeviceState = newState) }
                     }
                     is AccountEvent.NameRegistrationEnded -> {
                         val account = accountService.currentAccount.value ?: return@collect
@@ -428,22 +459,53 @@ class AccountSettingsViewModel(
     }
 
     /**
-     * Initiate linking a new device using its device-request URI.
-     * Progress arrives as [AccountEvent.AddDeviceStateChanged] in the init observer.
+     * Initiate linking a new device using its jami-auth:// URI (scanned or pasted by user).
+     * Progress arrives as [AccountEvent.AddDeviceStateChanged] and drives [AddDeviceExportState].
      */
     fun startLinkDevice(uri: String) {
+        // Validate format — jami-auth:// URIs are either 59 or 83 chars
+        if (uri.isEmpty() || !uri.startsWith("jami-auth://") ||
+            (uri.length != 59 && uri.length != 83)) {
+            _state.update { it.copy(linkDeviceState = AddDeviceExportState.Init(ExportInputError.INVALID_INPUT)) }
+            return
+        }
         scope.launch {
             val account = accountService.currentAccount.value ?: return@launch
-            _state.update { it.copy(isLinkingDevice = true, linkDeviceSuccess = false, linkDeviceError = false) }
-            accountService.addDevice(account.accountId, uri)
+            val opId = accountService.addDevice(account.accountId, uri)
+            if (opId < 0) {
+                _state.update { it.copy(linkDeviceState = AddDeviceExportState.Init(ExportInputError.INVALID_INPUT)) }
+                return@launch
+            }
+            _linkOperationId = opId
+            // State will advance through the state machine via AddDeviceStateChanged callbacks
         }
     }
 
     /**
-     * Reset link-device state (e.g. when the sheet is dismissed).
+     * Confirm the peer identity during step 2 of the export-side handshake.
+     * Call when the user taps "Yes, this is the right device".
+     */
+    fun onIdentityConfirmation() {
+        scope.launch {
+            val account = accountService.currentAccount.value ?: return@launch
+            val opId = _linkOperationId ?: return@launch
+            accountService.confirmAddDevice(account.accountId, opId)
+        }
+    }
+
+    /**
+     * Cancel the in-progress link-device operation and reset the sheet to its initial state.
      */
     fun cancelLinkDevice() {
-        _state.update { it.copy(isLinkingDevice = false, linkDeviceSuccess = false, linkDeviceError = false) }
+        scope.launch {
+            val account = accountService.currentAccount.value ?: return@launch
+            val opId = _linkOperationId
+            if (opId != null) {
+                accountService.cancelAddDevice(account.accountId, opId)
+                _linkOperationId = null
+            }
+            _state.update { it.copy(linkDeviceState = AddDeviceExportState.Init()) }
+        }
     }
 
     /**

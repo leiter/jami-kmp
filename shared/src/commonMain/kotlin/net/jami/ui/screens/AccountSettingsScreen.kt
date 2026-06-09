@@ -102,6 +102,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.jami.di.getViewModel
+import net.jami.services.AuthError
+import net.jami.ui.components.QrCodeScannerView
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.JamiSectionTitle
@@ -109,7 +111,9 @@ import net.jami.ui.components.inputs.JamiFormattedTextField
 import net.jami.ui.platform.FilePickerEffect
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.AccountSettingsViewModel
+import net.jami.ui.viewmodel.AddDeviceExportState
 import net.jami.ui.viewmodel.DeviceItem
+import net.jami.ui.viewmodel.ExportInputError
 import net.jami.ui.viewmodel.UsernameCheckError
 import net.jami.utils.FileUtils
 import net.jami.utils.QRCodeColors
@@ -168,18 +172,14 @@ fun AccountSettingsScreen(
         viewModel.loadAccount()
     }
 
-    // Show snackbar when link-device state changes, then reset
-    LaunchedEffect(state.linkDeviceSuccess, state.linkDeviceError) {
-        when {
-            state.linkDeviceSuccess -> {
-                showLinkDeviceSheet = false
-                snackbarHostState.showSnackbar(linkSuccessMsg)
-                viewModel.cancelLinkDevice()
-            }
-            state.linkDeviceError -> {
-                snackbarHostState.showSnackbar(linkErrorMsg)
-                viewModel.cancelLinkDevice()
-            }
+    // Close the sheet and show a snackbar when linking completes successfully.
+    // Errors are shown inline inside the sheet — no snackbar needed for them.
+    LaunchedEffect(state.linkDeviceState) {
+        val s = state.linkDeviceState
+        if (s is AddDeviceExportState.Done && s.error == null) {
+            showLinkDeviceSheet = false
+            snackbarHostState.showSnackbar(linkSuccessMsg)
+            viewModel.cancelLinkDevice()
         }
     }
 
@@ -691,8 +691,9 @@ fun AccountSettingsScreen(
                 containerColor = JamiTheme.colors.surface,
             ) {
                 LinkDeviceSheetContent(
-                    isLinking = state.isLinkingDevice,
+                    linkState = state.linkDeviceState,
                     onLink = { uri -> viewModel.startLinkDevice(uri) },
+                    onConfirm = { viewModel.onIdentityConfirmation() },
                     onCancel = {
                         showLinkDeviceSheet = false
                         viewModel.cancelLinkDevice()
@@ -852,14 +853,24 @@ private fun RenameDeviceDialog(
  * Content for the "Link New Device" bottom sheet.
  *
  * The user pastes the device-request URI generated on the new device.
- * Once submitted the ViewModel initiates linking via [AccountService.addDevice].
+ * Multi-step sheet for linking another device to this account (export side).
+ *
+ * Steps mirror jami-client-android ExportSideViewModel / export_side_step* strings:
+ *  - Init      → scan QR or paste URI manually
+ *  - Connecting→ spinner while daemon contacts the peer
+ *  - Authenticating → show peer address, ask user to confirm identity
+ *  - InProgress → spinner while account data transfers
+ *  - Done(ok)  → handled by parent (sheet closes + snackbar)
+ *  - Done(err) → inline error + dismiss button
  */
 @Composable
 private fun LinkDeviceSheetContent(
-    isLinking: Boolean,
+    linkState: AddDeviceExportState,
     onLink: (uri: String) -> Unit,
+    onConfirm: () -> Unit,
     onCancel: () -> Unit,
 ) {
+    var manualEntry by remember { mutableStateOf(false) }
     var uri by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
@@ -870,6 +881,7 @@ private fun LinkDeviceSheetContent(
             .padding(bottom = JamiTheme.spacing.xxl),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // ── Header ──────────────────────────────────────────────────────────
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = Icons.Default.AddLink,
@@ -883,52 +895,173 @@ private fun LinkDeviceSheetContent(
                 color = JamiTheme.colors.onSurface,
             )
         }
-
         Spacer(Modifier.height(JamiTheme.spacing.m))
 
-        if (isLinking) {
-            Spacer(Modifier.height(JamiTheme.spacing.xl))
-            CircularProgressIndicator()
-            Spacer(Modifier.height(JamiTheme.spacing.m))
-            Text(
-                text = stringResource(Res.string.account_link_device_linking),
-                style = JamiTheme.typography.bodyMedium,
-                color = JamiTheme.colors.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(JamiTheme.spacing.xl))
-        } else {
-            Text(
-                text = stringResource(Res.string.account_link_device_hint),
-                style = JamiTheme.typography.bodyMedium,
-                color = JamiTheme.colors.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(JamiTheme.spacing.m))
-            OutlinedTextField(
-                value = uri,
-                onValueChange = { uri = it },
-                label = { Text("ring:…") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = {
-                    focusManager.clearFocus()
-                    if (uri.isNotBlank()) onLink(uri.trim())
-                }),
-            )
-            Spacer(Modifier.height(JamiTheme.spacing.m))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                TextButton(onClick = onCancel) {
+        when (linkState) {
+            // ── Step 1: scan QR or paste URI ─────────────────────────────────
+            is AddDeviceExportState.Init -> {
+                if (linkState.error != null) {
+                    Text(
+                        text = stringResource(Res.string.account_link_device_error),
+                        color = JamiTheme.colors.error,
+                        style = JamiTheme.typography.bodySmall,
+                    )
+                    Spacer(Modifier.height(JamiTheme.spacing.s))
+                }
+
+                if (manualEntry) {
+                    Text(
+                        text = stringResource(Res.string.account_link_device_hint),
+                        style = JamiTheme.typography.bodyMedium,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(JamiTheme.spacing.m))
+                    OutlinedTextField(
+                        value = uri,
+                        onValueChange = { uri = it },
+                        label = { Text(stringResource(Res.string.account_link_device_hint)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = {
+                            focusManager.clearFocus()
+                            if (uri.isNotBlank()) onLink(uri.trim())
+                        }),
+                    )
+                    Spacer(Modifier.height(JamiTheme.spacing.s))
+                    TextButton(onClick = { manualEntry = false; uri = "" }) {
+                        Text(stringResource(Res.string.export_side_step1_switch_to_qr))
+                    }
+                    Spacer(Modifier.height(JamiTheme.spacing.m))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        TextButton(onClick = onCancel) {
+                            Text(stringResource(Res.string.export_side_step2_cancel))
+                        }
+                        Spacer(Modifier.width(JamiTheme.spacing.s))
+                        Button(
+                            onClick = { focusManager.clearFocus(); onLink(uri.trim()) },
+                            enabled = uri.isNotBlank(),
+                        ) {
+                            Text(stringResource(Res.string.action_link_device))
+                        }
+                    }
+                } else {
+                    Text(
+                        text = stringResource(Res.string.export_side_step1_advice_qr),
+                        style = JamiTheme.typography.bodyMedium,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(JamiTheme.spacing.m))
+                    QrCodeScannerView(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(260.dp),
+                        onQrDetected = { scanned -> onLink(scanned) },
+                    )
+                    Spacer(Modifier.height(JamiTheme.spacing.s))
+                    TextButton(onClick = { manualEntry = true }) {
+                        Text(stringResource(Res.string.export_side_step1_switch_to_code))
+                    }
+                    Spacer(Modifier.height(JamiTheme.spacing.m))
+                    TextButton(
+                        modifier = Modifier.align(Alignment.End),
+                        onClick = onCancel,
+                    ) {
+                        Text(stringResource(Res.string.export_side_step2_cancel))
+                    }
+                }
+            }
+
+            // ── Step 2: connecting (daemon contacting peer) ──────────────────
+            is AddDeviceExportState.Connecting -> {
+                Spacer(Modifier.height(JamiTheme.spacing.xl))
+                CircularProgressIndicator()
+                Spacer(Modifier.height(JamiTheme.spacing.m))
+                Text(
+                    text = stringResource(Res.string.import_side_step1_connecting),
+                    style = JamiTheme.typography.bodyMedium,
+                    color = JamiTheme.colors.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(JamiTheme.spacing.xl))
+                TextButton(
+                    modifier = Modifier.align(Alignment.End),
+                    onClick = onCancel,
+                ) {
                     Text(stringResource(Res.string.export_side_step2_cancel))
                 }
-                Spacer(Modifier.width(JamiTheme.spacing.s))
-                Button(
-                    onClick = { focusManager.clearFocus(); onLink(uri.trim()) },
-                    enabled = uri.isNotBlank(),
+            }
+
+            // ── Step 3: confirm peer identity ────────────────────────────────
+            is AddDeviceExportState.Authenticating -> {
+                Text(
+                    text = if (linkState.peerAddress != null)
+                        stringResource(Res.string.export_side_step2_advice)
+                    else
+                        stringResource(Res.string.export_side_step2_advice_ip_only),
+                    style = JamiTheme.typography.bodyMedium,
+                    color = JamiTheme.colors.onSurfaceVariant,
+                )
+                if (linkState.peerAddress != null) {
+                    Spacer(Modifier.height(JamiTheme.spacing.s))
+                    Text(
+                        text = linkState.peerAddress,
+                        style = JamiTheme.typography.bodySmall,
+                        color = JamiTheme.colors.onSurface,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                    )
+                }
+                Spacer(Modifier.height(JamiTheme.spacing.m))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
                 ) {
-                    Text(stringResource(Res.string.action_link_device))
+                    TextButton(onClick = onCancel) {
+                        Text(stringResource(Res.string.export_side_step2_cancel))
+                    }
+                    Spacer(Modifier.width(JamiTheme.spacing.s))
+                    Button(onClick = onConfirm) {
+                        Text(stringResource(Res.string.export_side_step2_confirm))
+                    }
+                }
+            }
+
+            // ── Step 4: transfer in progress ─────────────────────────────────
+            is AddDeviceExportState.InProgress -> {
+                Spacer(Modifier.height(JamiTheme.spacing.xl))
+                CircularProgressIndicator()
+                Spacer(Modifier.height(JamiTheme.spacing.m))
+                Text(
+                    text = stringResource(Res.string.export_side_step3_body_loading),
+                    style = JamiTheme.typography.bodyMedium,
+                    color = JamiTheme.colors.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(JamiTheme.spacing.xl))
+            }
+
+            // ── Step 5: done — success handled by parent; only errors shown ──
+            is AddDeviceExportState.Done -> {
+                val errorMsg = when (linkState.error) {
+                    AuthError.NETWORK        -> stringResource(Res.string.link_device_error_network)
+                    AuthError.AUTHENTICATION -> stringResource(Res.string.link_device_error_authentication)
+                    AuthError.TIMEOUT        -> stringResource(Res.string.link_device_error_timeout)
+                    AuthError.CANCELED       -> stringResource(Res.string.link_device_error_canceled)
+                    AuthError.UNKNOWN, null  -> stringResource(Res.string.link_device_error_unknown)
+                }
+                Spacer(Modifier.height(JamiTheme.spacing.m))
+                Text(
+                    text = errorMsg,
+                    color = JamiTheme.colors.error,
+                    style = JamiTheme.typography.bodyMedium,
+                )
+                Spacer(Modifier.height(JamiTheme.spacing.m))
+                Button(
+                    modifier = Modifier.align(Alignment.End),
+                    onClick = onCancel,
+                ) {
+                    Text(stringResource(Res.string.export_side_step3_exit))
                 }
             }
         }

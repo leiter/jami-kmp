@@ -87,7 +87,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_call_mute">Stummschalten</string>
     <string name="action_call_unmute">Stummschaltung aufheben</string>
     <string name="ongoing_call">Laufender Anruf</string>
-    <string name="call_duration">Dauerte %s</string>
+    <string name="call_duration">Dauerte %1$s</string>
     <string name="start_error_title">Jami kann nicht gestartet werden</string>
     <string name="action_call_accept">Anruf annehmen</string>
     <string name="action_call_accept_audio">Mit Audio antworten</string>
