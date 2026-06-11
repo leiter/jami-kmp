@@ -19,6 +19,7 @@ package net.jami.ui.platform
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -34,12 +35,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polygon
 import java.io.File
 
 @Composable
@@ -53,6 +58,7 @@ actual fun OsmMapView(
     val context = LocalContext.current
     var mapView by remember { mutableStateOf<MapView?>(null) }
     var marker by remember { mutableStateOf<Marker?>(null) }
+    var accuracyCircle by remember { mutableStateOf<Polygon?>(null) }
     var contactOverlays by remember { mutableStateOf<Map<String, Marker>>(emptyMap()) }
     var locationManager by remember { mutableStateOf<LocationManager?>(null) }
 
@@ -74,7 +80,7 @@ actual fun OsmMapView(
 
         val locationListener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
-                onLocationUpdate(GeoLocation(location.latitude, location.longitude))
+                onLocationUpdate(GeoLocation(location.latitude, location.longitude, location.accuracy))
             }
 
             override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
@@ -105,7 +111,7 @@ actual fun OsmMapView(
                 val lastLocation = lm?.getLastKnownLocation(LocationManager.GPS_PROVIDER)
                     ?: lm?.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
                 lastLocation?.let {
-                    onLocationUpdate(GeoLocation(it.latitude, it.longitude))
+                    onLocationUpdate(GeoLocation(it.latitude, it.longitude, it.accuracy))
                 }
             } catch (e: Exception) {
                 // Location provider not available
@@ -121,15 +127,49 @@ actual fun OsmMapView(
         }
     }
 
-    // Update marker when location changes
+    // Update marker and accuracy circle when location changes
     LaunchedEffect(myLocation) {
-        if (myLocation != null && mapView != null && marker != null) {
+        val map = mapView ?: return@LaunchedEffect
+        val m = marker ?: return@LaunchedEffect
+        if (myLocation != null) {
             val geoPoint = GeoPoint(myLocation.latitude, myLocation.longitude)
-            marker?.position = geoPoint
-            if (centerOnMyLocation) {
-                mapView?.controller?.animateTo(geoPoint)
+            m.position = geoPoint
+
+            // Remove old accuracy circle and redraw with current radius
+            accuracyCircle?.let { map.overlays.remove(it) }
+            val radiusMeters = myLocation.accuracy.toDouble()
+            if (radiusMeters > 0) {
+                val newCircle = Polygon(map).apply {
+                    points = buildAccuracyCirclePoints(geoPoint, radiusMeters)
+                    fillColor = Color.argb(34, 0, 148, 209)
+                    strokeColor = Color.argb(180, 0, 148, 209)
+                    strokeWidth = 2f
+                }
+                // Insert below the user marker so the marker stays on top
+                val markerIndex = map.overlays.indexOf(m)
+                if (markerIndex >= 0) {
+                    map.overlays.add(markerIndex, newCircle)
+                } else {
+                    map.overlays.add(newCircle)
+                }
+                accuracyCircle = newCircle
+            } else {
+                accuracyCircle = null
             }
-            mapView?.invalidate()
+
+            if (centerOnMyLocation) {
+                map.controller.animateTo(geoPoint)
+            }
+            map.invalidate()
+        }
+    }
+
+    // Re-center when the "Center on me" FAB is tapped (location may be unchanged)
+    LaunchedEffect(centerOnMyLocation) {
+        if (centerOnMyLocation) {
+            val loc = myLocation ?: return@LaunchedEffect
+            val map = mapView ?: return@LaunchedEffect
+            map.controller.animateTo(GeoPoint(loc.latitude, loc.longitude))
         }
     }
 
@@ -215,4 +255,21 @@ actual fun OsmMapView(
             mapView?.onDetach()
         }
     }
+}
+
+/**
+ * Approximates a geodesic circle as a closed polygon suitable for osmdroid overlay.
+ * Uses a flat-earth approximation — accurate to within 1% for radii up to ~20 km.
+ */
+private fun buildAccuracyCirclePoints(center: GeoPoint, radiusMeters: Double): List<GeoPoint> {
+    val points = ArrayList<GeoPoint>(37)
+    val latDeg = center.latitude
+    val lonDeg = center.longitude
+    val latDelta = radiusMeters / 111320.0
+    val lonDelta = radiusMeters / (111320.0 * cos(latDeg * PI / 180.0))
+    for (i in 0..36) { // 37 points — last equals first to close the polygon
+        val angle = i * 10.0 * PI / 180.0
+        points.add(GeoPoint(latDeg + latDelta * cos(angle), lonDeg + lonDelta * sin(angle)))
+    }
+    return points
 }

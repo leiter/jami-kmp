@@ -35,8 +35,6 @@
 ## Location Sharing
 
 - [x] **OsmMapView — iOS** — Full `MapKit` implementation: `UIKitView` wrapping `MKMapView`, `CLLocationManager` for live location updates, `MKPointAnnotation` per contact marker, `setRegion` when `centerOnMyLocation`.
-- [ ] **OsmMapView — macOS** — Stub retained: no stable `NSView` embedding API in Compose Multiplatform for macOS targets. Shows location coordinates as text.
-- [ ] **OsmMapView — Desktop** — Stub retained; no viable JVM map library in scope.
 
 ## Biometric Auth
 
@@ -67,6 +65,61 @@
 
 - [x] **Foreground service notification not showing on Pixel 2** — Root cause: channel `"jami_daemon_service"` was originally created at `IMPORTANCE_MIN` and Android channels are immutable once created. Fixed by bumping to `"jami_daemon_service_v2"` (forces fresh creation at `IMPORTANCE_LOW`). Also replaced system `android.R.drawable.*` icons with the app's own `ic_jami_24` across all notification types.
 
+## Call Recording
+
+- [ ] **Call recording** — `toggleRecording` / `setRecordPath` / `getRecordPath` exist in `callmanager_interface.h` and are fully functional in the reference client. Expose them in `DaemonBridge.kt`, wire into `CallService` and `CallViewModel`, add a record button to `CallScreen`.
+
+## Push Notifications
+
+- [ ] **FCM push notifications (Android)** — Firebase integration missing. Calls and messages only arrive while the daemon is running in the foreground.
+- [ ] **APNs push notifications (iOS)** — Same gap on iOS.
+
+## Deep Links & Intents
+
+- [ ] **URI scheme intent filters** — Reference manifest handles `ring://`, `jami://`, `sip://`, `tel://`. KMP `AndroidManifest.xml` has none of these; tapping a Jami link from outside the app does nothing.
+- [ ] **Share-to-Jami (ACTION_SEND)** — Reference has a `ShareActivity` with `ACTION_SEND` / `ACTION_SEND_MULTIPLE` intent filter. KMP manifest has no `ACTION_SEND` filter — "Share via Jami" does not appear in the Android share sheet.
+
+## Chat — Missing Features
+
+- [ ] **Message reactions UI** — Data model is complete (`Interaction.reactions`, `Conversation.addReaction/removeReaction`, `Interaction.reactionsFlow`) but nothing in `ChatScreen.kt` or `ChatViewModel.kt` reads or renders reactions, and there is no UI to send them.
+- [ ] **Read receipt display (checkmarks)** — `SEND_READ_RECEIPT` is stored and enforced. The reference client shows sent/delivered/read checkmarks per message bubble. `ChatScreen.kt` has no status indicator rendering.
+- [ ] **@Mentions in group chat** — Reference client parses `@username` in message text and highlights them. No mention system in KMP's chat UI or viewmodel.
+- [ ] **Full-screen image viewer** — Reference uses `MediaViewerFragment` with pinch-zoom. Tapping an image in KMP chat does nothing; no image viewer composable exists.
+- [ ] **Video message playback in chat** — Reference plays received video files inline. No video player composable in `ChatScreen.kt`.
+- [ ] **Retry failed file transfer** — Reference shows a retry button on failed transfers. Not present in KMP.
+- [ ] **Message long-press: copy / share** — Long-press on a message shows delete/edit only. Copy-to-clipboard and share-file actions are missing.
+
+## Home Screen — Missing Features
+
+- [ ] **Conversation filtering tabs (All / Groups / Contacts)** — Reference `HomeFragment` has tab filtering. KMP `HomeScreen` shows a single flat list.
+- [ ] **Long-press context menu on conversation rows** — Reference shows mute / pin / block / delete. KMP `HomeScreen` has no long-press handler.
+- [ ] **Swipe-to-archive / swipe-to-delete** — Reference `SmartListAdapter` supports swipe gestures. Not implemented in KMP.
+
+## Calls — Missing Features
+
+- [ ] **Proximity sensor (screen off during calls)** — Setting `proximityEnabled` exists in `SettingsModels.kt` but `PROXIMITY_SCREEN_OFF_WAKE_LOCK` is never acquired in the Android `HardwareService`.
+- [ ] **Haptic feedback on call answer/decline** — No `Vibrator` / `HapticFeedbackConstants` calls in the call flow.
+- [ ] **Bluetooth headset routing** — `toggleSpeaker()` backend exists; full 3-way routing (earpiece / speaker / BT) may not be fully wired through `AudioManager`.
+
+## Notifications — Missing Features
+
+- [ ] **Inline reply handler** — `RemoteInput` builder is wired in `AndroidNotificationService.kt` but the receiving side never reads `KEY_REPLY_TEXT`; the reply action is built but never dispatched.
+
+## Location Sharing — Missing Features
+
+- [x] **Location share duration selector** — `LocationSharingScreen` has 10 min / 1 hour `FilterChip` duration selector wired to `LocationSharingViewModel.selectDuration()`.
+- [x] **Multi-peer location on same map** — `ContactLocationsInfo` map in `LocationSharingState` tracks all peers; each is rendered as a separate `ContactMarker` / `MKPointAnnotation`.
+- [x] **"Center on me" button** — `LocationSharingScreen` has a `FloatingActionButton` (MyLocation icon) wired to `viewModel.centerOnMyLocation()`; Android OsmMapView now has a dedicated `LaunchedEffect(centerOnMyLocation)` to re-center even when the location has not changed.
+- [x] **Location accuracy radius circle** — Android: `Polygon` overlay drawn around the user marker scaled to `GeoLocation.accuracy` meters (flat-earth approximation, accurate to <1% for radii ≤20 km). iOS: `MKMapView.showsUserLocation = true` renders the native blue-dot accuracy circle automatically via MapKit.
+
+## App Settings — Missing Features
+
+- [ ] **Battery optimisation exemption prompt** — Reference prompts the user to whitelist the app. No `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` intent in KMP.
+- [ ] **Language selector** — Reference has a locale preference. Not found in `AppSettingsScreen`.
+- [ ] **Display name in notifications setting** — Reference lets users hide contact names from notifications for privacy. Not in `AppSettingsScreen`.
+- [ ] **Log export / debug mode** — Reference has `LogsActivity`. No log viewer integrated into the KMP app.
+- [ ] **App shortcuts** — Reference `AndroidManifest.xml` declares conversation shortcuts. Not in KMP manifest.
+
 ## Known Gaps (Lower Priority)
 
 - [ ] **Desktop DaemonBridge** — All 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.
@@ -74,6 +127,8 @@
 - [ ] **Desktop/Web VideoSurface** — `VideoSurface.desktop.kt` and `.js.kt` show placeholder text. No viable path without daemon bridge working first.
 - [x] **ShareUtils — iOS/macOS** — See completed items above (implemented with UIActivityViewController / NSSharingService).
 - [ ] **QRCodeUtils — Web/JS** — `QRCodeUtils.js.kt` returns null (no QR generation on Web).
+- [ ] **OsmMapView — macOS** — Stub retained: no stable `NSView` embedding API in Compose Multiplatform for macOS targets. Shows location coordinates as text.
+- [ ] **OsmMapView — Desktop** — Stub retained; no viable JVM map library in scope.
 
 ## Testing
 

@@ -49,8 +49,9 @@ actual fun OsmMapView(
         object : NSObject(), CLLocationManagerDelegateProtocol {
             override fun locationManager(manager: CLLocationManager, didUpdateLocations: List<*>) {
                 val loc = didUpdateLocations.lastOrNull() as? CLLocation ?: return
+                val accuracy = loc.horizontalAccuracy.toFloat()
                 loc.coordinate.useContents {
-                    onLocationUpdate(GeoLocation(latitude, longitude))
+                    onLocationUpdate(GeoLocation(latitude, longitude, accuracy))
                 }
             }
             override fun locationManager(manager: CLLocationManager, didFailWithError: NSError) {}
