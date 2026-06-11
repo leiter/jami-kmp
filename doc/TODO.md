@@ -87,7 +87,7 @@
 - [ ] **Full-screen image viewer** — Reference uses `MediaViewerFragment` with pinch-zoom. Tapping an image in KMP chat does nothing; no image viewer composable exists.
 - [ ] **Video message playback in chat** — Reference plays received video files inline. No video player composable in `ChatScreen.kt`.
 - [ ] **Retry failed file transfer** — Reference shows a retry button on failed transfers. Not present in KMP.
-- [ ] **Message long-press: copy / share** — Long-press on a message shows delete/edit only. Copy-to-clipboard and share-file actions are missing.
+- [ ] **Message long-press: share file** — Copy-to-clipboard is done (`clipboardManager.setText` in `ChatBubble` long-press menu). Share-file action (for received file transfers) is still missing.
 
 ## Home Screen — Missing Features
 
