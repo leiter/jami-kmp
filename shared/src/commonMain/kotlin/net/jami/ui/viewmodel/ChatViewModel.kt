@@ -92,7 +92,14 @@ data class MessageItem(
     /** Local path of the downloaded file; non-null only when TRANSFER_FINISHED. */
     val destinationPath: String? = null,
     val reactions: List<ReactionGroup> = emptyList(),
+    val deliveryStatus: DeliveryStatus = DeliveryStatus.SENDING,
 )
+
+/**
+ * Aggregated delivery/read state for an outgoing message bubble.
+ * SENDING = not yet confirmed, DELIVERED = remote received, READ = remote displayed.
+ */
+enum class DeliveryStatus { SENDING, DELIVERED, READ }
 
 /**
  * A grouped emoji reaction: one entry per distinct emoji with an aggregated count.
@@ -651,7 +658,8 @@ class ChatViewModel(
             Interaction.InteractionType.TEXT -> MessageItem(
                 id = id, text = interaction.body ?: "", author = author,
                 timestamp = timestamp, isOutgoing = isOutgoing, type = MessageType.Text,
-                reactions = groupReactions(interaction.reactions)
+                reactions = groupReactions(interaction.reactions),
+                deliveryStatus = if (isOutgoing) aggregateStatus(interaction.statusMap) else DeliveryStatus.SENDING,
             )
             Interaction.InteractionType.CALL -> {
                 val call = interaction as? CallHistory
@@ -965,6 +973,15 @@ class ChatViewModel(
         if (idx >= 0) {
             msgs[idx] = msgs[idx].copy(reactions = newReactions)
             _state.value = _state.value.copy(messages = msgs)
+        }
+    }
+
+    private fun aggregateStatus(statusMap: Map<String, Interaction.MessageStates>): DeliveryStatus {
+        if (statusMap.isEmpty()) return DeliveryStatus.SENDING
+        return when {
+            statusMap.values.any { it == Interaction.MessageStates.DISPLAYED } -> DeliveryStatus.READ
+            statusMap.values.any { it == Interaction.MessageStates.SUCCESS }   -> DeliveryStatus.DELIVERED
+            else -> DeliveryStatus.SENDING
         }
     }
 

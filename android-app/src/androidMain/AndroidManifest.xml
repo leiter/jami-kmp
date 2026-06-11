@@ -49,6 +49,17 @@
                 <action android:name="net.jami.action.ACCEPT_CALL" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <!-- URI scheme deep links: ring://, jami://, sip:, tel: -->
+            <intent-filter>
+                <action android:name="android.intent.action.DIAL" />
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ring" />
+                <data android:scheme="jami" />
+                <data android:scheme="sip" />
+                <data android:scheme="tel" />
+            </intent-filter>
         </activity>
 
         <!-- FileProvider for sharing camera captures and other files -->

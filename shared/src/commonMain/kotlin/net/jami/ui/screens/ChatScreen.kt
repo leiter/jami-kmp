@@ -40,7 +40,10 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import net.jami.model.ContactEvent
 import net.jami.model.Interaction
+import net.jami.ui.viewmodel.DeliveryStatus
 import net.jami.ui.viewmodel.ReactionGroup
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.lazy.LazyColumn
@@ -674,25 +677,50 @@ private fun ChatBubble(
                     ),
                 ) {
                     // Message text with an invisible trailing spacer whose width
-                    // matches the timestamp so that the last text line always has
-                    // room for the timestamp next to it.
+                    // matches the timestamp (+ checkmark for outgoing) so the last
+                    // text line always has room for the overlay next to it.
                     Text(
                         text = buildAnnotatedString {
                             append(message.text)
                             withStyle(SpanStyle(color = Color.Transparent, fontSize = timeFontSize)) {
-                                append("  $timeText")
+                                if (isOutgoing) append("  $timeText  ") else append("  $timeText")
                             }
                         },
                         style = JamiTheme.typography.bodyMedium,
                         color = textColor,
                     )
-                    // Visible timestamp overlaid at the bottom-right of the bubble content.
-                    Text(
-                        text = timeText,
-                        style = JamiTheme.typography.labelSmall,
-                        color = timeColor,
-                        modifier = Modifier.align(Alignment.BottomEnd),
-                    )
+                    // Timestamp (+ checkmark for outgoing) overlaid at bottom-right.
+                    if (isOutgoing) {
+                        val (checkIcon, checkTint) = when (message.deliveryStatus) {
+                            DeliveryStatus.READ      -> Icons.Default.DoneAll to JamiTheme.colors.primary
+                            DeliveryStatus.DELIVERED -> Icons.Default.DoneAll to timeColor
+                            DeliveryStatus.SENDING   -> Icons.Default.Done    to timeColor
+                        }
+                        Row(
+                            modifier = Modifier.align(Alignment.BottomEnd),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            Text(
+                                text = timeText,
+                                style = JamiTheme.typography.labelSmall,
+                                color = timeColor,
+                            )
+                            Icon(
+                                imageVector = checkIcon,
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                                tint = checkTint,
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = timeText,
+                            style = JamiTheme.typography.labelSmall,
+                            color = timeColor,
+                            modifier = Modifier.align(Alignment.BottomEnd),
+                        )
+                    }
                 }
             }
 
