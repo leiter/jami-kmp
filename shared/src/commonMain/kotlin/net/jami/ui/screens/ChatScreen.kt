@@ -40,6 +40,9 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import net.jami.model.ContactEvent
 import net.jami.model.Interaction
+import net.jami.ui.viewmodel.ReactionGroup
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -458,6 +461,7 @@ fun ChatScreen(
                                 isHighlighted = message.id == state.highlightedMessageId,
                                 onDelete = { viewModel.deleteMessage(message.id) },
                                 onEdit = { newText -> viewModel.editMessage(message.id, newText) },
+                                onReact = { emoji -> viewModel.sendReaction(message.id, emoji) },
                             )
                         }
                     }
@@ -597,6 +601,7 @@ private fun ChatBubble(
     isHighlighted: Boolean = false,
     onDelete: () -> Unit = {},
     onEdit: (String) -> Unit = {},
+    onReact: (String) -> Unit = {},
 ) {
     val isOutgoing = message.isOutgoing
     val alignment = if (isOutgoing) Alignment.CenterEnd else Alignment.CenterStart
@@ -613,6 +618,7 @@ private fun ChatBubble(
     )
 
     var showMenu by remember { mutableStateOf(false) }
+    var showEmojiPicker by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
     val timeText = formatMessageTime(message.timestamp)
     val timeFontSize = JamiTheme.typography.labelSmall.fontSize
@@ -690,10 +696,18 @@ private fun ChatBubble(
                 }
             }
 
+            // Context menu (long-press)
             DropdownMenu(
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false },
             ) {
+                DropdownMenuItem(
+                    text = { Text("React") },
+                    onClick = {
+                        showMenu = false
+                        showEmojiPicker = true
+                    },
+                )
                 DropdownMenuItem(
                     text = { Text(stringResource(Res.string.menu_item_copy)) },
                     onClick = {
@@ -719,6 +733,45 @@ private fun ChatBubble(
                         onDelete()
                     },
                 )
+            }
+
+            // Emoji quick-reaction picker
+            DropdownMenu(
+                expanded = showEmojiPicker,
+                onDismissRequest = { showEmojiPicker = false },
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    listOf("👍", "❤️", "😂", "😮", "😢", "👏").forEach { emoji ->
+                        Text(
+                            text = emoji,
+                            modifier = Modifier
+                                .clickable {
+                                    onReact(emoji)
+                                    showEmojiPicker = false
+                                }
+                                .padding(6.dp),
+                            fontSize = 22.sp,
+                        )
+                    }
+                }
+            }
+        }
+
+        // Reaction pills below the bubble
+        if (message.reactions.isNotEmpty()) {
+            Row(
+                modifier = Modifier.padding(top = 3.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                message.reactions.forEach { reaction ->
+                    ReactionPill(
+                        reaction = reaction,
+                        onClick = { onReact(reaction.emoji) },
+                    )
+                }
             }
         }
     }
@@ -1453,6 +1506,36 @@ private fun LocationSharingBanner(
                     .size(16.dp)
                     .graphicsLayer { rotationZ = 180f },
             )
+        }
+    }
+}
+
+/**
+ * A compact emoji + count chip shown below a message bubble.
+ * Highlighted with a primary-colour border when the current user has reacted.
+ */
+@Composable
+private fun ReactionPill(reaction: ReactionGroup, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = if (reaction.isMine) JamiTheme.colors.primary.copy(alpha = 0.15f)
+                else JamiTheme.colors.surfaceVariant,
+        border = if (reaction.isMine) BorderStroke(1.dp, JamiTheme.colors.primary) else null,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(text = reaction.emoji, fontSize = 14.sp)
+            if (reaction.count > 1) {
+                Text(
+                    text = reaction.count.toString(),
+                    style = JamiTheme.typography.labelSmall,
+                    color = if (reaction.isMine) JamiTheme.colors.primary else JamiTheme.colors.onSurfaceVariant,
+                )
+            }
         }
     }
 }

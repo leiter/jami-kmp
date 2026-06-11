@@ -81,7 +81,7 @@
 
 ## Chat — Missing Features
 
-- [ ] **Message reactions UI** — Data model is complete (`Interaction.reactions`, `Conversation.addReaction/removeReaction`, `Interaction.reactionsFlow`) but nothing in `ChatScreen.kt` or `ChatViewModel.kt` reads or renders reactions, and there is no UI to send them.
+- [x] **Message reactions UI** — `ReactionGroup` data class aggregates emoji+count+isMine. `ChatViewModel` handles `ReactionAdded/ReactionRemoved` events via `rebuildMessageReactions`; `interactionToMessageItem` snapshots reactions via `groupReactions`. `ConversationFacade.onReactionAdded/Removed` now updates the `Conversation` model before emitting events; `swarmMessageToInteraction` loads history reactions from `SwarmMessage.reactions`. `ChatBubble` shows reaction pills below bubbles and an emoji quick-picker (👍 ❤️ 😂 😮 😢 👏) in the long-press menu.
 - [ ] **Read receipt display (checkmarks)** — `SEND_READ_RECEIPT` is stored and enforced. The reference client shows sent/delivered/read checkmarks per message bubble. `ChatScreen.kt` has no status indicator rendering.
 - [ ] **@Mentions in group chat** — Reference client parses `@username` in message text and highlights them. No mention system in KMP's chat UI or viewmodel.
 - [ ] **Full-screen image viewer** — Reference uses `MediaViewerFragment` with pinch-zoom. Tapping an image in KMP chat does nothing; no image viewer composable exists.
@@ -103,7 +103,7 @@
 
 ## Notifications — Missing Features
 
-- [ ] **Inline reply handler** — `RemoteInput` builder is wired in `AndroidNotificationService.kt` but the receiving side never reads `KEY_REPLY_TEXT`; the reply action is built but never dispatched.
+- [x] **Inline reply handler** — `NotificationActionReceiver.handleReply` reads `RemoteInput.getResultsFromIntent` → `KEY_REPLY_TEXT`, calls `daemonBridge.sendMessage(accountId, conversationId, text, "", 0)`, then cancels the notification. Mark-read action calls `setConversationPreferences` + cancels notification.
 
 ## Location Sharing — Missing Features
 

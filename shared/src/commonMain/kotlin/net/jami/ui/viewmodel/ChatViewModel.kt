@@ -91,6 +91,17 @@ data class MessageItem(
     val isVideo: Boolean = false,
     /** Local path of the downloaded file; non-null only when TRANSFER_FINISHED. */
     val destinationPath: String? = null,
+    val reactions: List<ReactionGroup> = emptyList(),
+)
+
+/**
+ * A grouped emoji reaction: one entry per distinct emoji with an aggregated count.
+ */
+data class ReactionGroup(
+    val emoji: String,
+    val count: Int,
+    val isMine: Boolean,
+    val reactionIds: List<String> = emptyList(),
 )
 
 /**
@@ -189,6 +200,12 @@ class ChatViewModel(
                         if (event.conversationId == convId) {
                             loadMessagesFromHistory()
                         }
+                    }
+                    is ConversationEvent.ReactionAdded -> {
+                        if (event.conversationId == convId) rebuildMessageReactions(event.messageId)
+                    }
+                    is ConversationEvent.ReactionRemoved -> {
+                        if (event.conversationId == convId) rebuildMessageReactions(event.messageId)
                     }
                     else -> { /* Handled elsewhere */ }
                 }
@@ -633,7 +650,8 @@ class ChatViewModel(
         return when (interaction.type) {
             Interaction.InteractionType.TEXT -> MessageItem(
                 id = id, text = interaction.body ?: "", author = author,
-                timestamp = timestamp, isOutgoing = isOutgoing, type = MessageType.Text
+                timestamp = timestamp, isOutgoing = isOutgoing, type = MessageType.Text,
+                reactions = groupReactions(interaction.reactions)
             )
             Interaction.InteractionType.CALL -> {
                 val call = interaction as? CallHistory
@@ -920,6 +938,47 @@ class ChatViewModel(
         onLeave()
         scope.cancel()
     }
+
+    fun sendReaction(messageId: String, emoji: String) {
+        scope.launch {
+            val accountId = currentAccountId ?: return@launch
+            val conversationId = currentConversationId ?: return@launch
+            accountService.sendConversationReaction(
+                accountId,
+                net.jami.model.Uri(net.jami.model.Uri.SWARM_SCHEME, conversationId),
+                emoji,
+                messageId,
+            )
+        }
+    }
+
+    private fun rebuildMessageReactions(messageId: String) {
+        val accountId = currentAccountId ?: return
+        val conversationId = currentConversationId ?: return
+        val conversation = conversationFacade.getConversation(
+            accountId, net.jami.model.Uri(net.jami.model.Uri.SWARM_SCHEME, conversationId)
+        ) ?: return
+        val interaction = conversation.getMessage(messageId) ?: return
+        val newReactions = groupReactions(interaction.reactions)
+        val msgs = _state.value.messages.toMutableList()
+        val idx = msgs.indexOfFirst { it.id == messageId }
+        if (idx >= 0) {
+            msgs[idx] = msgs[idx].copy(reactions = newReactions)
+            _state.value = _state.value.copy(messages = msgs)
+        }
+    }
+
+    private fun groupReactions(reactions: List<Interaction>): List<ReactionGroup> =
+        reactions.groupBy { it.body ?: "" }
+            .filter { it.key.isNotEmpty() }
+            .map { (emoji, list) ->
+                ReactionGroup(
+                    emoji = emoji,
+                    count = list.size,
+                    isMine = list.any { !it.isIncoming },
+                    reactionIds = list.mapNotNull { it.messageId },
+                )
+            }
 
     companion object {
         private const val TAG = "ChatViewModel"

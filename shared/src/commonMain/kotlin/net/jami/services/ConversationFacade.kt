@@ -1309,6 +1309,22 @@ class ConversationFacade(
         interaction.setSwarmInfo(conversation.uri.rawRingId, message.id, message.linearizedParent.ifEmpty { null })
         interaction.statusMap = message.status.mapValues { Interaction.MessageStates.fromInt(it.value) }
 
+        // Populate reactions from the history snapshot provided by the daemon
+        if (message.reactions.isNotEmpty()) {
+            val reactionInteractions = message.reactions.flatMap { (emoji, authors) ->
+                authors.mapNotNull { authorUri ->
+                    val reactionContact = conversation.findContact(net.jami.model.Uri.fromString(authorUri))
+                        ?: account.getContactFromCache(net.jami.model.Uri.fromString(authorUri))
+                    Interaction().apply {
+                        body = emoji
+                        this.contact = reactionContact
+                        isIncoming = !reactionContact.isUser
+                    }
+                }
+            }
+            interaction.addReactions(reactionInteractions)
+        }
+
         return interaction
     }
 
@@ -1340,6 +1356,21 @@ class ConversationFacade(
      */
     internal fun onReactionAdded(accountId: String, conversationId: String, messageId: String, reaction: Map<String, String>) {
         Log.d(TAG, "onReactionAdded: $conversationId msgId=$messageId")
+        val account = accountService.getAccount(accountId)
+        val conversation = account?.getSwarm(conversationId)
+        if (account != null && conversation != null) {
+            val authorUri = reaction["author"] ?: ""
+            val contact = if (authorUri.isEmpty()) account.getContactFromCache(net.jami.model.Uri.fromString(accountId))
+                          else conversation.findContact(net.jami.model.Uri.fromString(authorUri))
+                              ?: account.getContactFromCache(net.jami.model.Uri.fromString(authorUri))
+            val reactionInteraction = Interaction().apply {
+                body = reaction["body"] ?: ""
+                this.contact = contact
+                isIncoming = !contact.isUser
+                reaction["id"]?.ifEmpty { null }?.let { setSwarmInfo(conversationId, it, null) }
+            }
+            conversation.addReaction(reactionInteraction, messageId)
+        }
         scope.launch {
             _conversationEvents.emit(ConversationEvent.ReactionAdded(accountId, conversationId, messageId, reaction))
         }
@@ -1349,7 +1380,8 @@ class ConversationFacade(
      * Called when a reaction is removed from a message.
      */
     internal fun onReactionRemoved(accountId: String, conversationId: String, messageId: String, reactionId: String) {
-        Log.d(TAG, "onReactionRemoved: $conversationId msgId=$messageId")
+        Log.d(TAG, "onReactionRemoved: $conversationId msgId=$messageId reactionId=$reactionId")
+        accountService.getAccount(accountId)?.getSwarm(conversationId)?.removeReaction(messageId, reactionId)
         scope.launch {
             _conversationEvents.emit(ConversationEvent.ReactionRemoved(accountId, conversationId, messageId, reactionId))
         }
