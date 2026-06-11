@@ -29,7 +29,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -120,6 +126,7 @@ fun CallScreen(
     }
 
     var requestCameraPermission by remember { mutableStateOf(false) }
+    var requestMicPermission by remember { mutableStateOf(false) }
 
     // Request camera permission if this is a video call and permission is not yet granted
     LaunchedEffect(isVideo) {
@@ -135,6 +142,19 @@ fun CallScreen(
         onResult = { granted ->
             requestCameraPermission = false
             viewModel.onCameraPermissionResult(granted)
+        }
+    )
+
+    // Mic permission — requested at call start; also surfaced mid-call via ViewModel
+    LaunchedEffect(Unit) {
+        viewModel.micPermissionRequest.collect { requestMicPermission = true }
+    }
+    PermissionRequesterEffect(
+        permission = AppPermission.Microphone,
+        request = requestMicPermission,
+        onResult = { granted ->
+            requestMicPermission = false
+            viewModel.onMicPermissionResult(granted)
         }
     )
 
@@ -160,6 +180,8 @@ fun CallScreen(
         onEnded = onEnd,
         onRetryVideo = { viewModel.retryRemoteVideo() },
         onFallbackAudio = { viewModel.fallbackToAudioOnly() },
+        onRequestMicPermission = { viewModel.requestMicPermission() },
+        onRequestCameraPermission = { viewModel.requestCameraPermission() },
     )
 }
 
@@ -186,6 +208,7 @@ fun IncomingCallScreen(
     }
 
     var requestCameraPermission by remember { mutableStateOf(false) }
+    var requestMicPermission by remember { mutableStateOf(false) }
 
     // When video is offered, request camera permission immediately so the ringing preview
     // can start — mirroring Android's CallFragment.initIncomingCallDisplay(hasVideo=true).
@@ -208,6 +231,21 @@ fun IncomingCallScreen(
         }
     )
 
+    // Request mic permission when the ringing screen appears; if denied the user is shown
+    // a warning and can still answer (to hear the caller) but their audio won't be sent.
+    LaunchedEffect(Unit) {
+        if (!viewModel.hasMicrophonePermission()) requestMicPermission = true
+        viewModel.micPermissionRequest.collect { requestMicPermission = true }
+    }
+    PermissionRequesterEffect(
+        permission = AppPermission.Microphone,
+        request = requestMicPermission,
+        onResult = { granted ->
+            requestMicPermission = false
+            viewModel.onMicPermissionResult(granted)
+        }
+    )
+
     CallScreenContent(
         state = state,
         onAcceptAudio = { viewModel.acceptCurrent(withVideo = false) },
@@ -227,6 +265,8 @@ fun IncomingCallScreen(
         onEnded = onEnd,
         onRetryVideo = { viewModel.retryRemoteVideo() },
         onFallbackAudio = { viewModel.fallbackToAudioOnly() },
+        onRequestMicPermission = { viewModel.requestMicPermission() },
+        onRequestCameraPermission = { viewModel.requestCameraPermission() },
     )
 }
 
@@ -253,6 +293,8 @@ private fun CallScreenContent(
     onEnded: () -> Unit,
     onRetryVideo: () -> Unit,
     onFallbackAudio: () -> Unit,
+    onRequestMicPermission: () -> Unit = {},
+    onRequestCameraPermission: () -> Unit = {},
 ) {
     // Navigate back on terminal state
     LaunchedEffect(state.callMode) {
@@ -386,7 +428,9 @@ private fun CallScreenContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .align(Alignment.TopCenter)
-                            .padding(top = JamiTheme.spacing.xl)
+                            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top)),
+                        onRequestMicPermission = onRequestMicPermission,
+                        onRequestCameraPermission = onRequestCameraPermission,
                     )
                 }
 
@@ -423,6 +467,7 @@ private fun CallScreenContent(
                 }
             }
         }
+
     }
 
     // DTMF dialpad bottom sheet
@@ -562,27 +607,42 @@ private fun AudioCallBackground(
 @Composable
 private fun CallInfoOverlay(
     state: CallState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRequestMicPermission: () -> Unit = {},
+    onRequestCameraPermission: () -> Unit = {},
 ) {
     Column(
-        modifier = modifier
-            .background(Color.Black.copy(alpha = 0.5f))
-            .padding(JamiTheme.spacing.m),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = state.peerName.ifEmpty { state.peerUri },
-            style = JamiTheme.typography.titleMedium,
-            color = Color.White,
-        )
-
-        if (state.duration > 0 && state.callMode is CallMode.OnGoing) {
-            Spacer(Modifier.height(JamiTheme.spacing.xs))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .padding(JamiTheme.spacing.m),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
             Text(
-                text = formatDuration(state.duration),
-                style = JamiTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.8f),
+                text = state.peerName.ifEmpty { state.peerUri },
+                style = JamiTheme.typography.titleMedium,
+                color = Color.White,
             )
+
+            if (state.duration > 0 && state.callMode is CallMode.OnGoing) {
+                Spacer(Modifier.height(JamiTheme.spacing.xs))
+                Text(
+                    text = formatDuration(state.duration),
+                    style = JamiTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.8f),
+                )
+            }
+        }
+
+        if (state.callMode is CallMode.OnGoing) {
+            if (!state.hasMicPermission)
+                MicPermissionBanner(onClick = onRequestMicPermission)
+            if (!state.hasCamPermission && state.hasVideo)
+                CamPermissionBanner(onClick = onRequestCameraPermission)
         }
     }
 }
@@ -827,6 +887,51 @@ private fun OnGoingControls(
             Icon(Icons.Default.CallEnd, contentDescription = null, modifier = Modifier.size(32.dp))
         }
     }
+}
+
+@Composable
+private fun PermissionWarningBanner(icon: ImageVector, text: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .background(Color.Black.copy(alpha = 0.75f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = JamiTheme.spacing.m, vertical = JamiTheme.spacing.s),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = Color.Yellow,
+            modifier = Modifier.size(20.dp),
+        )
+        Text(
+            text = text,
+            style = JamiTheme.typography.bodySmall,
+            color = Color.Yellow,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun MicPermissionBanner(onClick: () -> Unit) {
+    PermissionWarningBanner(
+        icon = Icons.Default.MicOff,
+        text = stringResource(Res.string.call_mic_permission_denied),
+        onClick = onClick,
+    )
+}
+
+@Composable
+private fun CamPermissionBanner(onClick: () -> Unit) {
+    PermissionWarningBanner(
+        icon = Icons.Default.VideocamOff,
+        text = stringResource(Res.string.call_cam_permission_denied),
+        onClick = onClick,
+    )
 }
 
 @Composable

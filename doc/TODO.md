@@ -72,7 +72,7 @@
 - [ ] **Desktop DaemonBridge** — All 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.
 - [ ] **Web/JS platform** — Entire daemon bridge is REST stubs with `// TODO: Call REST API`. Explicitly experimental per CLAUDE.md; candidate for removal if REST bridge server is not developed.
 - [ ] **Desktop/Web VideoSurface** — `VideoSurface.desktop.kt` and `.js.kt` show placeholder text. No viable path without daemon bridge working first.
-- [ ] **ShareUtils — iOS/macOS** — `ShareUtils.ios.kt` and `.macos.kt` are `// TODO` stubs (`UIActivityViewController` / `NSSharingService`). Low impact.
+- [x] **ShareUtils — iOS/macOS** — See completed items above (implemented with UIActivityViewController / NSSharingService).
 - [ ] **QRCodeUtils — Web/JS** — `QRCodeUtils.js.kt` returns null (no QR generation on Web).
 
 ## Testing

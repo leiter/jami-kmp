@@ -63,6 +63,7 @@ interface DaemonBridgeApi {
     fun playDtmf(key: String)
     fun muteRingtone(mute: Boolean)
     fun muteCapture(mute: Boolean)
+    fun restartAudioLayer()
     fun isCaptureMuted(): Boolean
     fun transfer(accountId: String, callId: String, to: String): Boolean
     fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean
@@ -517,6 +518,7 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun muteRingtone(mute: Boolean) {}
     override fun muteCapture(mute: Boolean) {}
     override fun isCaptureMuted(): Boolean = false
+    override fun restartAudioLayer() {}
     override fun transfer(accountId: String, callId: String, to: String): Boolean = true
     override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean = true
     override fun getCallDetails(accountId: String, callId: String): Map<String, String> = emptyMap()

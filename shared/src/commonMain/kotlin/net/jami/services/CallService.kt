@@ -200,6 +200,10 @@ class CallService(
         }
     }
 
+    fun restartAudioLayer() {
+        scope.launch { daemonBridge.restartAudioLayer() }
+    }
+
     /**
      * Change the video source for an active call via media renegotiation.
      * Used for screen sharing: sets source to "camera://desktop" or back to a camera URI.

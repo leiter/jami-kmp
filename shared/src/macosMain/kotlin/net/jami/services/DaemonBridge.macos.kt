@@ -219,6 +219,8 @@ actual class DaemonBridge() : DaemonBridgeApi {
         }
     }
 
+    override fun restartAudioLayer() {}
+
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {
         return bridge.holdConference(accountId, conferenceId = confId)

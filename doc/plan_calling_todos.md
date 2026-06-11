@@ -1,5 +1,7 @@
 # Plan: Fix Three Calling TODOs
 
+> **Status: COMPLETED** — All three phases implemented (see `doc/TODO.md`).
+
 Three bugs to fix in order of complexity. Each phase is self-contained.
 
 ---

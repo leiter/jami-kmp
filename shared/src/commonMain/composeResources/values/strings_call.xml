@@ -47,5 +47,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_decline">Decline</string>
     <string name="call_dtmf_dialpad">Dialpad</string>
     <string name="call_perm_microphone_required">Microphone permission required to answer</string>
+    <string name="call_mic_permission_denied">Microphone unavailable — tap to grant permission</string>
+    <string name="call_cam_permission_denied">Camera unavailable — tap to grant permission</string>
 
 </resources>

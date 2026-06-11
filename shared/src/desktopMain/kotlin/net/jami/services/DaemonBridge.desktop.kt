@@ -221,6 +221,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun muteRingtone(mute: Boolean) { Log.d(TAG, "muteRingtone (stub): $mute") }
     override fun muteCapture(mute: Boolean) { Log.d(TAG, "muteCapture (stub): $mute") }
     override fun isCaptureMuted(): Boolean = false
+    override fun restartAudioLayer() { Log.d(TAG, "restartAudioLayer (stub)") }
     override fun transfer(accountId: String, callId: String, to: String): Boolean = false
     override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean = false
     override fun getCallDetails(accountId: String, callId: String): Map<String, String> = emptyMap()

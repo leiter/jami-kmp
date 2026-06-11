@@ -305,6 +305,10 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         return JamiService.isCaptureMuted()
     }
 
+    override fun restartAudioLayer() {
+        JamiService.setAudioPlugin(JamiService.getCurrentAudioOutputPlugin())
+    }
+
     override fun transfer(accountId: String, callId: String, to: String): Boolean {
         return JamiService.transfer(accountId, callId, to)
     }

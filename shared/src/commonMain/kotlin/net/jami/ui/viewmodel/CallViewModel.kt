@@ -82,6 +82,8 @@ data class CallState(
     val isAudioMuted: Boolean = false,
     val isVideoMuted: Boolean = false,
     val isSpeakerOn: Boolean = false,
+    val hasMicPermission: Boolean = true,
+    val hasCamPermission: Boolean = true,
     val isIncoming: Boolean = false,
     val isOnHold: Boolean = false,
     val isConference: Boolean = false,
@@ -127,6 +129,9 @@ class CallViewModel(
     private val _cameraPermissionRequest = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val cameraPermissionRequest: SharedFlow<Unit> = _cameraPermissionRequest.asSharedFlow()
 
+    private val _micPermissionRequest = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val micPermissionRequest: SharedFlow<Unit> = _micPermissionRequest.asSharedFlow()
+
     private val _state = MutableStateFlow(CallState())
     val state: StateFlow<CallState> = _state.asStateFlow()
 
@@ -156,6 +161,13 @@ class CallViewModel(
      */
     fun initOutgoing(accountId: String = "", contactUri: String, hasVideo: Boolean, conversationUri: String? = null) {
         Log.d(TAG, "initOutgoing: contactUri=$contactUri hasVideo=$hasVideo conversationUri=$conversationUri")
+        _state.value = _state.value.copy(
+            hasMicPermission = deviceRuntimeService.hasMicrophonePermission(),
+            hasCamPermission = deviceRuntimeService.hasCameraPermission(),
+        )
+        if (!deviceRuntimeService.hasMicrophonePermission()) {
+            _micPermissionRequest.tryEmit(Unit)
+        }
         scope.launch {
             val resolvedAccountId = accountId.ifEmpty {
                 accountService.currentAccount.value?.accountId ?: return@launch
@@ -316,6 +328,14 @@ class CallViewModel(
     }
 
     fun hasCameraPermission(): Boolean = deviceRuntimeService.hasCameraPermission()
+    fun hasMicrophonePermission(): Boolean = deviceRuntimeService.hasMicrophonePermission()
+
+    fun onMicPermissionResult(granted: Boolean) {
+        _state.value = _state.value.copy(hasMicPermission = granted)
+        if (granted) {
+            callService.restartAudioLayer()
+        }
+    }
 
     fun toggleVideo() {
         val callId = currentCallId ?: return
@@ -336,11 +356,15 @@ class CallViewModel(
     }
 
     fun onCameraPermissionResult(granted: Boolean) {
+        _state.value = _state.value.copy(hasCamPermission = granted)
         if (!granted) return
         val callId = currentCallId ?: return
         val accountId = currentAccountId ?: return
         enableVideoStream(accountId, callId)
     }
+
+    fun requestMicPermission() { _micPermissionRequest.tryEmit(Unit) }
+    fun requestCameraPermission() { _cameraPermissionRequest.tryEmit(Unit) }
 
     // Mirrors jami-android-client CallPresenter.switchOnOffCamera():
     // initialise hardware, get camera id, then do a media renegotiation via requestMediaChange
@@ -660,7 +684,9 @@ class CallViewModel(
             isOnHold = isHold,
             hangupReason = call.hangupReason,
             hasVideo = hasVideo,
-            hasLocalVideo = hasActiveVideo && !call.isVideoMuted
+            hasLocalVideo = hasActiveVideo && !call.isVideoMuted,
+            hasMicPermission = deviceRuntimeService.hasMicrophonePermission(),
+            hasCamPermission = deviceRuntimeService.hasCameraPermission()
         )
 
         if (status == CallStatus.CURRENT && durationJob == null) {

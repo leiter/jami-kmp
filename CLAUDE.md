@@ -51,15 +51,15 @@ jami-kmp/
 │       │   ├── model/        # Domain data classes (Account, Call, Conversation, …)
 │       │   │   ├── interaction/   # TextMessage, DataTransfer, CallHistory, …
 │       │   │   └── settings/      # @Serializable settings models
-│       │   ├── services/     # 13 services + ConversationFacade
+│       │   ├── services/     # 20 services including ConversationFacade
 │       │   ├── repository/   # SettingsRepository, DraftRepository
 │       │   ├── domain/       # Use cases
 │       │   ├── ui/
 │       │   │   ├── JamiApp.kt           # Root Compose entry point (all platforms)
-│       │   │   ├── navigation/          # Screen (16 routes), JamiNavigation
-│       │   │   ├── screens/             # 16 screens
-│       │   │   ├── viewmodel/           # 14 ViewModels
-│       │   │   ├── components/          # 13 reusable components
+│       │   │   ├── navigation/          # Screen (23 routes), JamiNavigation
+│       │   │   ├── screens/             # 25 screens
+│       │   │   ├── viewmodel/           # 17 ViewModels
+│       │   │   ├── components/          # Reusable components
 │       │   │   │   ├── actions/         # JamiButton, JamiIconButton, JamiFilterChip
 │       │   │   │   ├── content/         # JamiAvatar, JamiBadge, JamiToggle, JamiSectionTitle
 │       │   │   │   ├── inputs/          # JamiSearchField, JamiMessageInput, JamiInputText
@@ -68,7 +68,7 @@ jami-kmp/
 │       │   │   │   └── notification/    # JamiAlertDialog
 │       │   │   └── theme/               # JamiTheme, JamiColors, JamiTypography, ThemeTokens
 │       │   └── utils/        # Log, FileUtils, QRCodeUtils, HashUtils, StringUtils, …
-│       ├── commonTest/       # 51 test files (ViewModel + model + utility tests)
+│       ├── commonTest/       # 55 test files (ViewModel + model + service + utility tests)
 │       ├── androidMain/      # JNI bridge, Android services, SharedPreferences, JNI libs
 │       ├── iosMain/          # C interop bridge, Foundation/AVFoundation services
 │       ├── macosMain/        # C interop bridge, macOS AppKit services
@@ -135,15 +135,18 @@ All user-visible strings live in `shared/src/commonMain/composeResources/`. The 
 
 ---
 
-## Known Gaps (as of last audit)
+## Known Gaps (as of 2026-06-11)
 
-- **CallScreen** — basic layout only; video rendering, advanced controls, and PiP are missing
-- **QrScanScreen** — minimal stub; camera scanning not wired
-- **AccountSettingsScreen** — sub-settings screens (Media, Messages, Advanced) implemented; Change Password and Biometric Auth deferred
-- **AppSettingsScreen** — minimal; many preference categories from the Android client are absent
-- **strings_kmp.xml** — legacy file still present; contents must be migrated into the 5 canonical files and file removed
-- **Web/JS platform** — daemon bridge is largely a stub; candidate for deprioritisation
-- **Migration dialog** — `needsMigration` flag detected in `JamiNavigation` but overlay not yet shown
+- **Push notifications** — FCM (Android) and APNs (iOS) not integrated; calls and messages only work when the daemon is running in the foreground.
+- **CallKit (iOS)** — iOS CallKit not integrated; incoming calls on iOS do not use the native call UI and do not wake the device from background.
+- **AppSettingsScreen** — screenshot blocking enforcement and audio/video hardware settings (noise suppression, echo cancellation) are stored but not applied at the platform layer.
+- **AccountSettingsScreen** — change password dialog and full export-account flow are deferred.
+- **Chat video recording** — deferred; requires Camera2/AVFoundation capture session. Menu item shows a "coming soon" snackbar.
+- **Chat plugins** — Jami plugin system not ported to KMP. Menu item shows a "not yet supported" snackbar.
+- **OsmMapView (Desktop/macOS)** — no viable JVM or AppKit map library in scope; shows coordinate text instead of a map.
+- **strings_kmp.xml** — the `values/` default is clean, but legacy locale folders (e.g. `values-de/`) still contain a `strings_kmp.xml` file; these must be migrated into the 5 canonical files and removed.
+- **Desktop DaemonBridge** — all 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.
+- **Web/JS platform** — entire daemon bridge is REST stubs. Explicitly experimental; candidate for removal if a REST bridge server is not developed.
 
 ---
 
@@ -156,7 +159,7 @@ The `DaemonBridge` expect class (100+ methods) is the gateway to `libjami`:
 | Android | JNI via SWIG-generated bindings + `libjami-core-jni.so` | Working |
 | iOS | Kotlin/Native C interop via `JamiBridge.def` / `JamiBridgeWrapper.mm` | Working |
 | macOS | Kotlin/Native C interop (same as iOS) | Working |
-| Desktop | JVM FFI or socket bridge | Partial |
-| Web/JS | WebSocket / HTTP | Stub |
+| Desktop | JVM FFI or socket bridge | No-op stubs (deprioritised) |
+| Web/JS | WebSocket / HTTP | REST stubs (experimental) |
 
 When adding a new daemon capability, add the method to `DaemonBridge` and implement it in at minimum the Android and iOS source sets. Other platforms are best-effort.

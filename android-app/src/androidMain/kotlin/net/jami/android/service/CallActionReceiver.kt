@@ -20,6 +20,7 @@ import org.koin.core.component.inject
 class CallActionReceiver : BroadcastReceiver(), KoinComponent {
 
     private val callService: CallService by inject()
+    private val notificationService: NotificationService by inject()
 
     override fun onReceive(context: Context, intent: Intent) {
         val callId = intent.getStringExtra(NotificationService.KEY_CALL_ID) ?: run {
@@ -45,6 +46,11 @@ class CallActionReceiver : BroadcastReceiver(), KoinComponent {
                     it.mediaType == net.jami.model.Media.MediaType.MEDIA_TYPE_VIDEO
                 } ?: false
                 callService.accept(accountId, callId, hasVideo = hasVideo)
+                // Dismiss the incoming call notification immediately rather than waiting for
+                // the CURRENT state callback. Mirrors letsJam's CallNotificationReceiver
+                // pattern: cancel first, then open the call screen. The ongoing-call
+                // notification is re-posted by ConversationFacade once CURRENT fires.
+                notificationService.removeCallNotification()
                 val viewIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
                     action = ACTION_VIEW_CALL
                     putExtra(NotificationService.KEY_CALL_ID, callId)
