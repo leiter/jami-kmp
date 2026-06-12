@@ -135,18 +135,15 @@ All user-visible strings live in `shared/src/commonMain/composeResources/`. The 
 
 ---
 
-## Known Gaps (as of 2026-06-11)
+## Known Gaps (as of 2026-06-12)
 
-Recently closed: message reactions UI, read receipt checkmarks (SENDING/DELIVERED/READ), location accuracy circle + center-on-me FAB, URI scheme deep links (`ring://`, `jami://`, `sip:`, `tel:`).
+Recently closed: message reactions UI, read receipt checkmarks (SENDING/DELIVERED/READ), location accuracy circle + center-on-me FAB, URI scheme deep links (`ring://`, `jami://`, `sip:`, `tel:`), chat media (full-screen image viewer + inline video), biometric authentication (lock on background, unlock prompt), Share-to-Jami (ACTION_SEND / ACTION_SEND_MULTIPLE), AccountSettingsScreen change-password and export-account flows.
 
 Still open:
 
 - **Push notifications** — FCM (Android) and APNs (iOS) not integrated; calls and messages only work when the daemon is running in the foreground.
 - **CallKit (iOS)** — iOS CallKit not integrated; incoming calls on iOS do not use the native call UI and do not wake the device from background.
-- **Share-to-Jami (ACTION_SEND)** — no `ACTION_SEND` / `ACTION_SEND_MULTIPLE` intent filter in the manifest; Jami does not appear in the Android share sheet.
 - **AppSettingsScreen** — screenshot blocking enforcement and audio/video hardware settings (noise suppression, echo cancellation) are stored but not applied at the platform layer.
-- **AccountSettingsScreen** — change password dialog and full export-account flow are deferred.
-- **Chat media** — full-screen image viewer, inline video playback, and video recording are not yet implemented.
 - **Chat plugins** — Jami plugin system not ported to KMP. Menu item shows a "not yet supported" snackbar.
 - **OsmMapView (Desktop/macOS)** — no viable JVM or AppKit map library in scope; shows coordinate text instead of a map.
 - **strings_kmp.xml** — the `values/` default is clean, but legacy locale folders (e.g. `values-de/`) still contain a `strings_kmp.xml` file; these must be migrated into the 5 canonical files and removed.

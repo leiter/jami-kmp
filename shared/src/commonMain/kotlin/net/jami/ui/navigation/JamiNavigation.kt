@@ -279,6 +279,17 @@ private fun MainNavigation(needsMigration: Boolean) {
         }
     }
 
+    // Navigate to SharePicker when an ACTION_SEND / ACTION_SEND_MULTIPLE intent arrives.
+    val navigateToSharePicker by ShareState.navigateToSharePicker.collectAsState()
+    LaunchedEffect(navigateToSharePicker) {
+        if (navigateToSharePicker) {
+            ShareState.consumeNavSignal()
+            navController.navigate(Screen.SharePicker.route) {
+                launchSingleTop = true
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route,
@@ -541,6 +552,22 @@ private fun MainNavigation(needsMigration: Boolean) {
 
         composable(Screen.About.route) {
             AboutScreen(
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        // ==================== Media Viewer ====================
+
+        // ==================== Share Picker ====================
+
+        composable(Screen.SharePicker.route) {
+            SharePickerScreen(
+                onConversationClick = { id ->
+                    navController.navigate(Screen.Chat.createRoute(id)) {
+                        // Pop SharePicker off the back stack so Back from Chat returns to Home
+                        popUpTo(Screen.SharePicker.route) { inclusive = true }
+                    }
+                },
                 onBack = { navController.popBackStack() },
             )
         }

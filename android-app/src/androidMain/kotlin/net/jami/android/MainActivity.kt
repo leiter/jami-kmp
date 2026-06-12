@@ -2,6 +2,7 @@ package net.jami.android
 
 import android.content.Intent
 import android.media.projection.MediaProjectionManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -9,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.jami.android.service.CallActionReceiver
 import net.jami.android.service.JamiDaemonService
@@ -19,8 +21,10 @@ import net.jami.services.NotificationService
 import net.jami.services.SyncManager
 import net.jami.services.expect.HardwareService
 import net.jami.ui.JamiApp
+import net.jami.ui.navigation.ShareState
 import net.jami.utils.Log
 import org.koin.android.ext.android.inject
+import java.io.File
 
 class MainActivity : ComponentActivity() {
 
@@ -39,6 +43,7 @@ class MainActivity : ComponentActivity() {
             JamiApp()
         }
         handleCallIntent(intent)
+        handleShareIntent(intent)
         lifecycleScope.launch {
             hardwareService.screenShareRequest.collect {
                 requestScreenSharePermission()
@@ -49,6 +54,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleCallIntent(intent)
+        handleShareIntent(intent)
     }
 
     override fun onDestroy() {
@@ -134,6 +140,66 @@ class MainActivity : ComponentActivity() {
                 callService.accept(resolvedAccount, callId, hasVideo = hasVideo)
                 callService.setPendingCallNavId(callId)
             }
+        }
+    }
+
+    /**
+     * Handles ACTION_SEND / ACTION_SEND_MULTIPLE from the Android share sheet.
+     * Copies content URIs to cache so the daemon can read them by file path,
+     * stores the payload in [ShareState], then signals navigation to SharePickerScreen.
+     */
+    private fun handleShareIntent(intent: Intent?) {
+        val action = intent?.action ?: return
+        if (action != Intent.ACTION_SEND && action != Intent.ACTION_SEND_MULTIPLE) return
+
+        val mimeType = intent.type ?: "*/*"
+        ShareState.mimeType = mimeType
+
+        when {
+            action == Intent.ACTION_SEND && mimeType == "text/plain" -> {
+                val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
+                ShareState.pendingText = text
+            }
+            action == Intent.ACTION_SEND -> {
+                val uri: Uri? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.getParcelableExtra(Intent.EXTRA_STREAM)
+                }
+                val path = uri?.let { copyUriToCache(it, mimeType) } ?: return
+                ShareState.pendingFilePaths = listOf(path)
+            }
+            action == Intent.ACTION_SEND_MULTIPLE -> {
+                val uris: ArrayList<Uri>? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
+                }
+                val paths = uris?.mapNotNull { copyUriToCache(it, mimeType) } ?: return
+                if (paths.isEmpty()) return
+                ShareState.pendingFilePaths = paths
+            }
+            else -> return
+        }
+
+        ShareState.signalSharePicker()
+    }
+
+    private fun copyUriToCache(uri: Uri, mimeType: String): String? {
+        return try {
+            val ext = mimeType.substringAfter("/")
+                .takeIf { it.isNotEmpty() && it != "*" && !it.contains("/") }
+                ?.let { ".$it" } ?: ""
+            val cacheFile = File(cacheDir, "share_${System.currentTimeMillis()}$ext")
+            contentResolver.openInputStream(uri)?.use { input ->
+                cacheFile.outputStream().use { output -> input.copyTo(output) }
+            }
+            cacheFile.absolutePath
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to copy share URI to cache: $e")
+            null
         }
     }
 

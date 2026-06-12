@@ -87,4 +87,5 @@ sealed class Screen(val route: String) {
 
     data object MediaViewer : Screen("media_viewer")
     data object VideoPlayer : Screen("video_player")
+    data object SharePicker : Screen("share_picker")
 }

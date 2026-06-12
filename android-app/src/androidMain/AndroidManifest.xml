@@ -49,6 +49,18 @@
                 <action android:name="net.jami.action.ACCEPT_CALL" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <!-- Share-to-Jami: receive content from the Android share sheet -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+
             <!-- URI scheme deep links: ring://, jami://, sip:, tel: -->
             <intent-filter>
                 <action android:name="android.intent.action.DIAL" />

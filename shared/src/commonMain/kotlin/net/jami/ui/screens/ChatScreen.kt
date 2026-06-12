@@ -197,6 +197,23 @@ fun ChatScreen(
     // Load conversation on first composition
     LaunchedEffect(conversationId) {
         viewModel.loadConversation(conversationId)
+        // Pre-fill shared text immediately (does not need conversation to be fully loaded)
+        net.jami.ui.navigation.ShareState.consumeText()?.let { text ->
+            viewModel.updateInput(text)
+        }
+    }
+
+    // Send pending shared files once the conversation is ready (isLoading transitions to false)
+    val isLoading = state.isLoading
+    var sharePending by remember { mutableStateOf(net.jami.ui.navigation.ShareState.pendingFilePaths.isNotEmpty()) }
+    LaunchedEffect(isLoading) {
+        if (!isLoading && sharePending) {
+            sharePending = false
+            val files = net.jami.ui.navigation.ShareState.consumeFiles()
+            for (path in files) {
+                viewModel.sendFile(path)
+            }
+        }
     }
 
     // Mark conversation as no longer visible when leaving the screen
