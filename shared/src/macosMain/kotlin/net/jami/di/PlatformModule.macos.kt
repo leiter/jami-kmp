@@ -120,4 +120,8 @@ actual val platformModule: Module = module {
     single {
         SyncManager()
     }
+
+    single {
+        BiometricService()
+    }
 }

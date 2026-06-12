@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.jami.services.AccountService
+import net.jami.services.BiometricResult
+import net.jami.services.BiometricService
 import net.jami.utils.Log
 
 sealed class AppState {
@@ -38,11 +40,15 @@ sealed class AppState {
 
 class AppViewModel(
     private val accountService: AccountService,
+    private val biometricService: BiometricService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     private val scope = scope
     private val _appState = MutableStateFlow<AppState>(AppState.Loading)
     val appState: StateFlow<AppState> = _appState.asStateFlow()
+
+    private val _isLocked = MutableStateFlow(false)
+    val isLocked: StateFlow<Boolean> = _isLocked.asStateFlow()
 
     // When true, account creation is in progress and we stay in Onboarding
     // instead of switching to HasAccounts. Cleared when the wizard completes.
@@ -99,6 +105,41 @@ class AppViewModel(
                 AppState.HasAccounts(needsMigration = true)
             else -> AppState.HasAccounts()
         }
+    }
+
+    /**
+     * Lock the app if the current account has biometric authentication enabled.
+     * Called when the app goes to background (ON_STOP lifecycle event).
+     */
+    fun lockIfNeeded() {
+        scope.launch {
+            val account = accountService.currentAccount.value ?: return@launch
+            if (biometricService.isEnabled(account.accountId)) {
+                Log.d(TAG, "lockIfNeeded: locking app")
+                _isLocked.value = true
+            }
+        }
+    }
+
+    /**
+     * Unlock the app after successful biometric authentication.
+     */
+    fun unlock() {
+        Log.d(TAG, "unlock")
+        _isLocked.value = false
+    }
+
+    /**
+     * Trigger biometric authentication for the current account.
+     * Returns the result to the caller; call [unlock] on success.
+     */
+    suspend fun authenticateBiometric(
+        promptTitle: String,
+        promptDescription: String,
+    ): BiometricResult {
+        val account = accountService.currentAccount.value
+            ?: return BiometricResult.Error("No account", false)
+        return biometricService.authenticate(account.accountId, promptTitle, promptDescription)
     }
 
     fun onCleared() {

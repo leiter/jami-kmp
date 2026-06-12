@@ -86,6 +86,7 @@ data class AccountSettingsState(
     val hasPassword: Boolean = false,
     val hasManager: Boolean = false,
     val hasBiometric: Boolean = false,
+    val biometricAvailability: BiometricAvailability = BiometricAvailability.UNKNOWN_ERROR,
     // Link device state — drives the multi-step export-side sheet
     val linkDeviceState: AddDeviceExportState = AddDeviceExportState.Init(),
     // Register name dialog state
@@ -273,7 +274,12 @@ class AccountSettingsViewModel(
                 val hasManager = account.details[ConfigKey.ACCOUNT_MANAGER_URI.key]?.isNotEmpty() ?: false
 
                 // Load biometric state
-                val hasBiometric = biometricService?.isEnabled(accountId) ?: false
+                val biometricAvailability = biometricService?.checkAvailability()
+                    ?: BiometricAvailability.NO_HARDWARE
+                val hasBiometric = if (biometricAvailability == BiometricAvailability.AVAILABLE ||
+                    biometricAvailability == BiometricAvailability.NOT_ENROLLED)
+                    biometricService?.isEnabled(accountId) ?: false
+                else false
 
                 _state.value = AccountSettingsState(
                     displayName = displayName,
@@ -287,6 +293,7 @@ class AccountSettingsViewModel(
                     hasPassword = hasPassword,
                     hasManager = hasManager,
                     hasBiometric = hasBiometric,
+                    biometricAvailability = biometricAvailability,
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)

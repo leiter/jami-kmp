@@ -26,9 +26,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -64,9 +68,32 @@ private fun androidx.navigation.NavBackStackEntry.extractArg(key: String): Strin
 fun JamiNavigation() {
     val appViewModel = getViewModel<AppViewModel>()
     val appState by appViewModel.appState.collectAsState()
+    val isLocked by appViewModel.isLocked.collectAsState()
 
     DisposableEffect(appViewModel) {
         onDispose { appViewModel.onCleared() }
+    }
+
+    // Lock when the app goes to background; the composable is recomposed on resume
+    // so the lock screen appears before content is visible again.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, appViewModel) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                appViewModel.lockIfNeeded()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Show the biometric lock screen on top of whatever app state we're in
+    if (isLocked && appState is AppState.HasAccounts) {
+        BiometricLockScreen(
+            onAuthenticate = { appViewModel.authenticateBiometric("Unlock Jami", "Use biometric to unlock") },
+            onUnlocked = { appViewModel.unlock() },
+        )
+        return
     }
 
     when (val state = appState) {

@@ -312,8 +312,10 @@ fun AccountDetailsSettingsScreen(
                     onClick = { showChangePasswordDialog = true },
                 )
 
-                // 3. Biometrische Authentifizierung — only if account has a password
-                if (state.hasPassword) {
+                // 3. Biometrische Authentifizierung — only if account has a password and hardware supports it
+                if (state.hasPassword &&
+                    state.biometricAvailability != net.jami.services.BiometricAvailability.NO_HARDWARE &&
+                    state.biometricAvailability != net.jami.services.BiometricAvailability.UNKNOWN_ERROR) {
                     AccountActionRow(
                         icon = Icons.Default.Fingerprint,
                         label = if (state.hasBiometric)
