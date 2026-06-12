@@ -17,6 +17,19 @@ import java.io.ByteArrayOutputStream
 actual fun ByteArray.toImageBitmap(): ImageBitmap? =
     BitmapFactory.decodeByteArray(this, 0, size)?.asImageBitmap()
 
+actual suspend fun extractVideoThumbnail(filePath: String): ImageBitmap? =
+    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            val retriever = android.media.MediaMetadataRetriever()
+            retriever.setDataSource(filePath)
+            val bitmap = retriever.getFrameAtTime(0, android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+            retriever.release()
+            bitmap?.asImageBitmap()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
 actual fun scaleImageBytes(data: ByteArray, maxSize: Int): ByteArray {
     // Decode bounds only — no pixel allocation.
     val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }

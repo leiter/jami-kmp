@@ -55,6 +55,10 @@ import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.components.content.AvatarSize
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.JamiToggle
 import net.jami.ui.theme.JamiTheme
@@ -78,6 +82,7 @@ fun NewConversationScreen(
     val viewModel = getViewModel<NewConversationViewModel>()
     val state by viewModel.state.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(Unit) { viewModel.resetSearch() }
 
@@ -116,6 +121,8 @@ fun NewConversationScreen(
                 onValueChange = { viewModel.search(it) },
                 placeholder = { Text(stringResource(Res.string.placeholder_search_contacts)) },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -138,6 +145,8 @@ fun NewConversationScreen(
                     onValueChange = { viewModel.setGroupName(it) },
                     placeholder = { Text(stringResource(Res.string.placeholder_group_name)) },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(

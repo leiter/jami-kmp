@@ -12,6 +12,8 @@ sqldelight = "2.0.2"
 compose-multiplatform = "1.9.0"
 navigation-compose = "2.9.1"
 
+media3 = "1.5.1"
+
 # Android specific
 androidMinSdk = "24"
 androidCompileSdk = "36"
@@ -81,6 +83,10 @@ camerax-view = { module = "androidx.camera:camera-view", version = "1.5.3" }
 
 # OSMDroid (OpenStreetMap for Android)
 osmdroid = { module = "org.osmdroid:osmdroid-android", version = "6.1.20" }
+
+# Media3 (ExoPlayer for video playback)
+androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3" }
+androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3" }
 
 # Testing
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

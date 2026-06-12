@@ -367,6 +367,16 @@ private fun MainNavigation(needsMigration: Boolean) {
                         Screen.LocationSharing.createRoute(conversationId)
                     )
                 },
+                onImageClick = { filePath ->
+                    MediaNavigationState.filePath = filePath
+                    MediaNavigationState.fileName = ""
+                    navController.navigate(Screen.MediaViewer.route)
+                },
+                onVideoClick = { filePath, fileName ->
+                    MediaNavigationState.filePath = filePath
+                    MediaNavigationState.fileName = fileName
+                    navController.navigate(Screen.VideoPlayer.route)
+                },
             )
         }
 
@@ -504,6 +514,25 @@ private fun MainNavigation(needsMigration: Boolean) {
 
         composable(Screen.About.route) {
             AboutScreen(
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        // ==================== Media Viewer ====================
+
+        composable(Screen.MediaViewer.route) {
+            MediaViewerScreen(
+                filePath = MediaNavigationState.filePath,
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        // ==================== Video Player ====================
+
+        composable(Screen.VideoPlayer.route) {
+            VideoPlayerScreen(
+                filePath = MediaNavigationState.filePath,
+                fileName = MediaNavigationState.fileName,
                 onBack = { navController.popBackStack() },
             )
         }

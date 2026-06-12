@@ -45,6 +45,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import net.jami.ui.components.QrCodeScannerView
 import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.theme.JamiTheme
@@ -112,6 +115,11 @@ fun QrScanScreen(
                         onValueChange = { input = it },
                         placeholder = { Text("jami:…") },
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                        keyboardActions = KeyboardActions(onGo = {
+                            val jamiId = resolveJamiId(input)
+                            if (jamiId != null) onConversationClick(jamiId)
+                        }),
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(JamiTheme.spacing.m))

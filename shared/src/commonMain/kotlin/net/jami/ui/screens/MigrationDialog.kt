@@ -31,7 +31,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.account_enter_password
@@ -96,6 +100,16 @@ fun MigrationDialog(
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
                     isError = error != null,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                    ),
+                    keyboardActions = KeyboardActions(onDone = {
+                        if (password.length >= 6 && !isLoading) {
+                            isLoading = true
+                            accountService.migrateAccount(accountId, password)
+                        }
+                    }),
                 )
             }
         },

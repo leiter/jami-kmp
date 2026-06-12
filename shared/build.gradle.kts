@@ -157,6 +157,8 @@ kotlin {
                 implementation(libs.androidx.core)
                 implementation(libs.androidx.biometric)
                 implementation(libs.osmdroid)
+                implementation(libs.androidx.media3.exoplayer)
+                implementation(libs.androidx.media3.ui)
             }
         }
 

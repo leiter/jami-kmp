@@ -72,12 +72,14 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.jami.ui.utils.extractVideoThumbnail
 import net.jami.ui.utils.toImageBitmap
 import net.jami.utils.FileUtils
 import net.jami.utils.Log
@@ -169,6 +171,8 @@ fun ChatScreen(
     onCallClick: (String, Boolean) -> Unit,
     onDetailsClick: () -> Unit,
     onShareLocation: () -> Unit = {},
+    onImageClick: (filePath: String) -> Unit = {},
+    onVideoClick: (filePath: String, fileName: String) -> Unit = { _, _ -> },
 ) {
     val viewModel = getViewModel<ChatViewModel>()
     val state by viewModel.state.collectAsState()
@@ -458,6 +462,8 @@ fun ChatScreen(
                                 message = message,
                                 onAccept = { viewModel.acceptTransfer(message.id, message.fileId ?: "") },
                                 onCancel = { viewModel.cancelTransfer(message.id, message.fileId ?: "") },
+                                onImageClick = onImageClick,
+                                onVideoClick = onVideoClick,
                             )
                             else -> ChatBubble(
                                 message = message,
@@ -954,6 +960,8 @@ private fun FileTransferMessage(
     message: MessageItem,
     onAccept: () -> Unit = {},
     onCancel: () -> Unit = {},
+    onImageClick: (filePath: String) -> Unit = {},
+    onVideoClick: (filePath: String, fileName: String) -> Unit = { _, _ -> },
 ) {
     // Asynchronously load image bytes for completed picture transfers
     var imageBitmap by remember(message.destinationPath) { mutableStateOf<ImageBitmap?>(null) }
@@ -967,6 +975,18 @@ private fun FileTransferMessage(
             imageBitmap = bytes?.toImageBitmap()
         } else {
             imageBitmap = null
+        }
+    }
+
+    // Asynchronously extract first-frame thumbnail for completed video transfers
+    var videoThumbnail by remember(message.destinationPath) { mutableStateOf<ImageBitmap?>(null) }
+    LaunchedEffect(message.destinationPath, message.transferStatus) {
+        if (message.isVideo &&
+            message.transferStatus == Interaction.TransferStatus.TRANSFER_FINISHED &&
+            message.destinationPath != null) {
+            videoThumbnail = extractVideoThumbnail(message.destinationPath)
+        } else {
+            videoThumbnail = null
         }
     }
     val isOutgoing = message.isOutgoing
@@ -1062,7 +1082,7 @@ private fun FileTransferMessage(
                     }
                 }
 
-                // ── Image preview (completed pictures only) ──
+                // ── Image preview (completed pictures only) — tap to open full-screen viewer ──
                 if (imageBitmap != null) {
                     Spacer(modifier = Modifier.height(JamiTheme.spacing.xs))
                     Image(
@@ -1071,9 +1091,53 @@ private fun FileTransferMessage(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = 200.dp)
-                            .clip(RoundedCornerShape(JamiTheme.radius.s)),
+                            .clip(RoundedCornerShape(JamiTheme.radius.s))
+                            .clickable {
+                                message.destinationPath?.let { onImageClick(it) }
+                            },
                         contentScale = ContentScale.Crop,
                     )
+                }
+
+                // ── Video preview (completed videos only) — tap to open player ──
+                if (message.isVideo &&
+                    message.transferStatus == Interaction.TransferStatus.TRANSFER_FINISHED &&
+                    message.destinationPath != null
+                ) {
+                    Spacer(modifier = Modifier.height(JamiTheme.spacing.xs))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp)
+                            .clip(RoundedCornerShape(JamiTheme.radius.s))
+                            .background(Color.Black)
+                            .clickable { onVideoClick(message.destinationPath, message.text) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (videoThumbnail != null) {
+                            Image(
+                                bitmap = videoThumbnail!!,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                            )
+                        }
+                        // Play icon overlay
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(RoundedCornerShape(28.dp))
+                                .background(Color.Black.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = "Play video",
+                                tint = androidx.compose.ui.graphics.Color.White,
+                                modifier = Modifier.size(36.dp),
+                            )
+                        }
+                    }
                 }
 
                 // ── Progress bar (TRANSFER_ONGOING only) ──

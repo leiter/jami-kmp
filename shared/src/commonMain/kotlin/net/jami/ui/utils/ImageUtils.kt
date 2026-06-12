@@ -25,3 +25,12 @@ expect fun ByteArray.toImageBitmap(): ImageBitmap?
  * Other platforms: stub — returns [data] unchanged until platform support is added.
  */
 expect fun scaleImageBytes(data: ByteArray, maxSize: Int = 512): ByteArray
+
+/**
+ * Extract the first frame of a video file as an [ImageBitmap].
+ * Returns null if extraction fails or is not supported on this platform.
+ *
+ * Android: uses [android.media.MediaMetadataRetriever].
+ * Other platforms: stub — returns null.
+ */
+expect suspend fun extractVideoThumbnail(filePath: String): ImageBitmap?

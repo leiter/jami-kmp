@@ -97,6 +97,9 @@ import net.jami.ui.components.actions.JamiIconButton
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.theme.JamiTheme
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import net.jami.ui.viewmodel.ContactDetailsViewModel
 import net.jami.utils.QRCodeColors
 import net.jami.utils.QRCodeUtils
@@ -645,6 +648,14 @@ private fun GroupMemberSection(
                     onValueChange = { newMemberInput = it },
                     label = { Text(stringResource(Res.string.group_enter_jami_id)) },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        if (newMemberInput.isNotBlank()) {
+                            onAdd(newMemberInput.trim())
+                            newMemberInput = ""
+                            showAddDialog = false
+                        }
+                    }),
                 )
             },
             confirmButton = {

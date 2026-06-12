@@ -20,3 +20,5 @@ actual fun ByteArray.toImageBitmap(): ImageBitmap? = try {
 
 // Android-first stub: scaling not yet implemented on Desktop.
 actual fun scaleImageBytes(data: ByteArray, maxSize: Int): ByteArray = data
+
+actual suspend fun extractVideoThumbnail(filePath: String): ImageBitmap? = null

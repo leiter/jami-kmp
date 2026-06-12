@@ -84,4 +84,7 @@ sealed class Screen(val route: String) {
             fun createRoute(conversationId: String) = "location_sharing/$conversationId"
         }
     }
+
+    data object MediaViewer : Screen("media_viewer")
+    data object VideoPlayer : Screen("video_player")
 }
