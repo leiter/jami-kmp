@@ -112,6 +112,7 @@ kotlin {
                 implementation(libs.koin.compose)
                 implementation(libs.koin.compose.viewmodel)
                 implementation(libs.okio)
+                implementation(libs.ktor.client.core)
                 implementation(libs.sqldelight.runtime)
                 implementation(libs.sqldelight.coroutines)
                 implementation(compose.runtime)
@@ -146,6 +147,7 @@ kotlin {
 
         val androidMain by getting {
             dependencies {
+                implementation(libs.ktor.client.okhttp)
                 implementation(libs.kotlinx.coroutines.android)
                 implementation(libs.koin.android)
                 implementation(libs.sqldelight.android)

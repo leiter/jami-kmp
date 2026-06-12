@@ -93,6 +93,7 @@ data class MessageItem(
     val destinationPath: String? = null,
     val reactions: List<ReactionGroup> = emptyList(),
     val deliveryStatus: DeliveryStatus = DeliveryStatus.SENDING,
+    val isEdited: Boolean = false,
 )
 
 /**
@@ -660,6 +661,7 @@ class ChatViewModel(
                 timestamp = timestamp, isOutgoing = isOutgoing, type = MessageType.Text,
                 reactions = groupReactions(interaction.reactions),
                 deliveryStatus = if (isOutgoing) aggregateStatus(interaction.statusMap) else DeliveryStatus.SENDING,
+                isEdited = interaction.edit != null,
             )
             Interaction.InteractionType.CALL -> {
                 val call = interaction as? CallHistory

@@ -795,5 +795,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="about_version">Version %1$s</string>
     <string name="about_license">Licensed under the GNU General Public License v3.0</string>
     <string name="permission_dialog_open_settings">Open settings</string>
+    <string name="edited_message_label">edited</string>
 
 </resources>

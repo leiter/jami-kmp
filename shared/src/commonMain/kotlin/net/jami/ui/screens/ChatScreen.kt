@@ -65,6 +65,7 @@ import androidx.compose.material.icons.filled.CallMissed
 import androidx.compose.material.icons.filled.CallMissedOutgoing
 import androidx.compose.material.icons.filled.CallReceived
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.LocationOn
@@ -181,6 +182,15 @@ fun ChatScreen(
     val searchFocusRequester = remember { FocusRequester() }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+
+    // Link preview setting
+    val settingsRepository: net.jami.repository.SettingsRepository = org.koin.compose.koinInject()
+    val privacySettings by settingsRepository.privacySettings.collectAsState()
+    val showLinkPreviews = privacySettings.showLinkPreviews
+
+    // Edit mode state — set when user taps "Edit" on a message
+    var editingMessageId by remember { mutableStateOf<String?>(null) }
+    var editingMessageText by remember { mutableStateOf("") }
 
     // Camera permission and capture state
     var requestCameraPermission by remember { mutableStateOf(false) }
@@ -485,8 +495,13 @@ fun ChatScreen(
                             else -> ChatBubble(
                                 message = message,
                                 isHighlighted = message.id == state.highlightedMessageId,
+                                showLinkPreviews = showLinkPreviews,
                                 onDelete = { viewModel.deleteMessage(message.id) },
-                                onEdit = { newText -> viewModel.editMessage(message.id, newText) },
+                                onEdit = { originalText ->
+                                    editingMessageId = message.id
+                                    editingMessageText = originalText
+                                    viewModel.updateInput(originalText)
+                                },
                                 onReact = { emoji -> viewModel.sendReaction(message.id, emoji) },
                             )
                         }
@@ -553,12 +568,68 @@ fun ChatScreen(
                 }
             }
 
+            // Editing banner — shown while the user is editing an existing message
+            if (editingMessageId != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = JamiTheme.colors.primary,
+                    )
+                    Spacer(Modifier.width(JamiTheme.spacing.s))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(Res.string.menu_message_edit),
+                            style = JamiTheme.typography.labelSmall,
+                            color = JamiTheme.colors.primary,
+                        )
+                        Text(
+                            text = editingMessageText,
+                            style = JamiTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            editingMessageId = null
+                            editingMessageText = ""
+                            viewModel.updateInput("")
+                        },
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
+            }
+
             // Message input bar (hidden during search)
             if (!state.isSearchActive) {
                 MessageInputBar(
                     value = state.inputText,
                     onValueChange = { viewModel.updateInput(it) },
-                    onSend = { viewModel.sendMessage() },
+                    onSend = {
+                        val editId = editingMessageId
+                        if (editId != null) {
+                            viewModel.editMessage(editId, state.inputText)
+                            editingMessageId = null
+                            editingMessageText = ""
+                        } else {
+                            viewModel.sendMessage()
+                        }
+                    },
                     onSendEmoji = { viewModel.sendEmoji() },
                     onTakePicture = {
                         // Check if we have camera permission
@@ -625,6 +696,7 @@ fun ChatScreen(
 private fun ChatBubble(
     message: MessageItem,
     isHighlighted: Boolean = false,
+    showLinkPreviews: Boolean = false,
     onDelete: () -> Unit = {},
     onEdit: (String) -> Unit = {},
     onReact: (String) -> Unit = {},
@@ -747,6 +819,49 @@ private fun ChatBubble(
                 }
             }
 
+            // "(edited)" label — shown beneath the bubble when this message has been edited
+            if (message.isEdited) {
+                Text(
+                    text = stringResource(Res.string.edited_message_label),
+                    style = JamiTheme.typography.labelSmall,
+                    color = JamiTheme.colors.onSurfaceVariant,
+                    textAlign = if (isOutgoing) TextAlign.End else TextAlign.Start,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 2.dp),
+                )
+            }
+
+            // Link preview card — shown below the bubble when the message contains a URL
+            // and the user has link previews enabled
+            if (showLinkPreviews && message.type == net.jami.ui.viewmodel.MessageType.Text
+                && message.text.isNotEmpty()) {
+                val urls = remember(message.text) {
+                    net.jami.ui.utils.extractUrls(message.text)
+                }
+                val firstUrl = urls.firstOrNull()
+                if (firstUrl != null) {
+                    var linkPreview by remember(firstUrl) { mutableStateOf<net.jami.ui.utils.LinkPreview?>(null) }
+                    var previewLoading by remember(firstUrl) { mutableStateOf(true) }
+
+                    LaunchedEffect(firstUrl) {
+                        linkPreview = net.jami.ui.utils.fetchLinkPreview(firstUrl)
+                        previewLoading = false
+                    }
+
+                    if (!previewLoading && linkPreview != null) {
+                        LinkPreviewCard(
+                            preview = linkPreview!!,
+                            bubbleColor = bubbleColor,
+                            textColor = textColor,
+                            modifier = Modifier
+                                .padding(top = JamiTheme.spacing.xxs)
+                                .then(if (isOutgoing) Modifier else Modifier),
+                        )
+                    }
+                }
+            }
+
             // Context menu (long-press)
             DropdownMenu(
                 expanded = showMenu,
@@ -771,8 +886,6 @@ private fun ChatBubble(
                         text = { Text(stringResource(Res.string.menu_item_edit)) },
                         onClick = {
                             showMenu = false
-                            // For now, re-send the message text as an edit.
-                            // A full implementation would open an edit dialog.
                             onEdit(message.text)
                         },
                     )
@@ -1615,6 +1728,58 @@ private fun LocationSharingBanner(
                     .size(16.dp)
                     .graphicsLayer { rotationZ = 180f },
             )
+        }
+    }
+}
+
+/**
+ * A small card rendered below a chat bubble showing the title and description
+ * extracted from the first URL in the message text.
+ */
+@Composable
+private fun LinkPreviewCard(
+    preview: net.jami.ui.utils.LinkPreview,
+    bubbleColor: androidx.compose.ui.graphics.Color,
+    textColor: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier,
+) {
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    Surface(
+        onClick = { runCatching { uriHandler.openUri(preview.url) } },
+        modifier = modifier.widthIn(max = 280.dp),
+        shape = RoundedCornerShape(JamiTheme.radius.s),
+        color = bubbleColor,
+        border = BorderStroke(1.dp, textColor.copy(alpha = 0.2f)),
+    ) {
+        Column(modifier = Modifier.padding(JamiTheme.spacing.s)) {
+            Text(
+                text = preview.url
+                    .removePrefix("https://")
+                    .removePrefix("http://")
+                    .substringBefore("/"),
+                style = JamiTheme.typography.labelSmall,
+                color = textColor.copy(alpha = 0.6f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = preview.title,
+                style = JamiTheme.typography.bodySmall,
+                color = textColor,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (!preview.description.isNullOrEmpty()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = preview.description,
+                    style = JamiTheme.typography.labelSmall,
+                    color = textColor.copy(alpha = 0.75f),
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }
