@@ -28,14 +28,11 @@ Items confirmed as already implemented are listed at the bottom for reference.
 - Show a contact-picker or URI input dialog; call `callService.transfer(callId, target)`.
 - **Reference**: `CallFragment.kt` transfer flow in `jami-client-android`
 
-### Advanced account settings (TLS / SRTP / DHT / Proxy)
-Missing fields in `AccountAdvancedSettingsScreen`:
-- TLS method, CA certificate, client certificate, private key
-- SRTP key exchange (SDES / DTLS-SRTP), encryption enabled toggle
-- DHT bootstrap node list (add/remove)
-- Proxy server URI + proxy push token
-- TURN server URI + credentials
-- **Reference**: `AccountAdvancedFragment.kt` in `jami-client-android`
+### ~~Advanced account settings (TLS / SRTP / DHT / Proxy)~~ ✓ DONE (2026-06-13)
+DHT bootstrap, proxy, TURN/STUN, UPnP, and RTP port ranges were already present.
+Added TLS/SRTP Security section: SRTP toggle, TLS enable + port + 3 cert file pickers
+(CA list, client cert, private key) + password + method + ciphers + server name +
+verify server/client + require client cert + negotiation timeout.
 
 ### Audio/video codec selection UI
 - `DaemonBridge.getCodecList()` / `setActiveCodecList()` / `getCodecDetails()` already exist.
