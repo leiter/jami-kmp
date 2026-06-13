@@ -58,6 +58,8 @@ data class AccountItem(
     val isOnline: Boolean,
 )
 
+enum class ConversationFilter { ALL, UNREAD, GROUPS }
+
 /**
  * Item representing a conversation in the list.
  */
@@ -73,6 +75,7 @@ data class ConversationItem(
     val isOnline: Boolean,
     /** False when the last interaction has not been read yet — drives bold styling. */
     val isRead: Boolean,
+    val isGroup: Boolean = false,
 )
 
 /**
@@ -87,6 +90,7 @@ data class ConversationsState(
     /** True when the current account is registered with the daemon. */
     val isAccountOnline: Boolean = false,
     val accounts: List<AccountItem> = emptyList(),
+    val activeFilter: ConversationFilter = ConversationFilter.ALL,
 )
 
 /**
@@ -111,6 +115,9 @@ class ConversationsViewModel(
 
     private val _state = MutableStateFlow(ConversationsState())
     val state: StateFlow<ConversationsState> = _state.asStateFlow()
+
+    /** Full unfiltered list; preserved so filter changes don't require a daemon round-trip. */
+    private var cachedConversations: List<ConversationItem> = emptyList()
 
     /** Tracks (accountId, contactRawRingId) pairs that have an active presence subscription. */
     private val subscribedBuddies = mutableSetOf<Pair<String, String>>()
@@ -194,17 +201,18 @@ class ConversationsViewModel(
                     val contactRawId = event.contact.uri.rawRingId
                     val isOnline = event.contact.isOnline
                     Log.d(TAG, "PresenceUpdated received: contactRawId=$contactRawId isOnline=$isOnline")
-                    val current = _state.value.conversations
-                    val matchingItems = current.filter { it.contactId == contactRawId }
+                    val matchingItems = cachedConversations.filter { it.contactId == contactRawId }
                     Log.d(TAG, "Found ${matchingItems.size} matching conversation items for $contactRawId")
                     if (matchingItems.isEmpty()) {
-                        Log.w(TAG, "No matching conversation for presence update. Available contactIds: ${current.map { it.contactId }}")
+                        Log.w(TAG, "No matching conversation for presence update. Available contactIds: ${cachedConversations.map { it.contactId }}")
                     }
-                    val updated = current.map { item ->
+                    cachedConversations = cachedConversations.map { item ->
                         if (item.contactId == contactRawId) item.copy(isOnline = isOnline)
                         else item
                     }
-                    _state.value = _state.value.copy(conversations = updated)
+                    _state.value = _state.value.copy(
+                        conversations = applyFilter(cachedConversations, _state.value.activeFilter)
+                    )
                     Log.d(TAG, "State updated with presence change")
                 }
             }
@@ -257,8 +265,9 @@ class ConversationsViewModel(
 
                 val accountItems = buildAccountItems()
 
+                cachedConversations = syncedConversations
                 _state.value = _state.value.copy(
-                    conversations = syncedConversations,
+                    conversations = applyFilter(syncedConversations, _state.value.activeFilter),
                     isLoading = false,
                     pendingRequests = pendingCount,
                     currentAccountAvatarBytes = accountAvatarBytes ?: _state.value.currentAccountAvatarBytes,
@@ -287,6 +296,23 @@ class ConversationsViewModel(
     }
 
     /**
+     * Switch the active filter. Re-applies immediately from the cached list without hitting the daemon.
+     */
+    fun setFilter(filter: ConversationFilter) {
+        _state.value = _state.value.copy(
+            activeFilter = filter,
+            conversations = applyFilter(cachedConversations, filter),
+        )
+    }
+
+    private fun applyFilter(all: List<ConversationItem>, filter: ConversationFilter): List<ConversationItem> =
+        when (filter) {
+            ConversationFilter.ALL -> all
+            ConversationFilter.UNREAD -> all.filter { !it.isRead }
+            ConversationFilter.GROUPS -> all.filter { it.isGroup }
+        }
+
+    /**
      * Remove a conversation by its ID.
      */
     fun removeConversation(conversationId: String) {
@@ -306,7 +332,9 @@ class ConversationsViewModel(
         val conversations = account.getConversations()
 
         return conversations.mapNotNull { conversation ->
-            val contact = conversation.contact
+            val isGroup = conversation.isGroup
+            // contact throws for group conversations with >2 members
+            val contact = if (isGroup) null else conversation.contact
 
             // Subscribe to presence for this contact if not already subscribed.
             if (contact != null) {
@@ -346,6 +374,7 @@ class ConversationsViewModel(
                 avatarBytes = avatarBytes,
                 isOnline = contact?.isOnline == true,
                 isRead = isRead,
+                isGroup = isGroup,
             )
         }
             // Sort by timestamp descending (most recent first)

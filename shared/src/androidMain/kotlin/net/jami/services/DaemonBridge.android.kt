@@ -309,6 +309,14 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         JamiService.setAudioPlugin(JamiService.getCurrentAudioOutputPlugin())
     }
 
+    override fun setNoiseSuppression(enabled: Boolean) {
+        JamiService.setNoiseSuppressState(if (enabled) "enabled" else "disabled")
+    }
+
+    override fun setEchoCancellation(enabled: Boolean) {
+        JamiService.setAgcState(enabled)
+    }
+
     override fun transfer(accountId: String, callId: String, to: String): Boolean {
         return JamiService.transfer(accountId, callId, to)
     }

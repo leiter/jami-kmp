@@ -63,6 +63,8 @@ data class AppSettingsState(
     val isNoiseSuppression: Boolean = true,
     val isEchoCancellation: Boolean = true,
     val isAutoAnswer: Boolean = false,
+    /** Custom ringtone URI; empty string means system default. */
+    val ringtone: String = "",
 
     // --- File Transfers ---
     /** Max auto-accept size in MB (stored as bytes in repository). */
@@ -158,6 +160,7 @@ class AppSettingsViewModel(
                     isNoiseSuppression = c.noiseSuppression,
                     isEchoCancellation = c.echoCancellation,
                     isAutoAnswer = c.autoAnswer,
+                    ringtone = c.ringtone,
                 )}
             }
         }
@@ -291,6 +294,10 @@ class AppSettingsViewModel(
         val new = !_state.value.isAutoAnswer
         _state.update { it.copy(isAutoAnswer = new) }
         settingsRepository.updateAutoAnswer(new)
+    }
+
+    fun updateRingtone(uri: String) {
+        settingsRepository.updateRingtone(uri)
     }
 
     // ==================== File Transfers ====================

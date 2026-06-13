@@ -792,12 +792,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
     <!-- About -->
     <string name="screen_title_about">About</string>
+    <string name="screen_title_debug_logs">Debug Logs</string>
+    <string name="action_share">Share</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="debug_logs_empty">No logs captured.</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_license">Licensed under the GNU General Public License v3.0</string>
     <string name="permission_dialog_open_settings">Open settings</string>
     <string name="edited_message_label">edited</string>
 
     <!-- Notifications permission -->
+    <string name="filter_all">All</string>
+    <string name="filter_unread">Unread</string>
+    <string name="filter_groups">Groups</string>
+
     <string name="permission_dialog_post_notifications_title">Allow notifications</string>
     <string name="permission_dialog_post_notifications_message">Jami needs the notifications permission to alert you of incoming calls and messages, even when the app is in the background. Without it, you may miss calls.</string>
     <string name="permission_dialog_post_notifications_blocked_message">Notifications are disabled for Jami. Without them you will miss incoming calls and messages. Please enable notifications for Jami in the device settings.</string>

@@ -109,4 +109,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="extension_invalid_format">Ungültiges Erweiterungsformat: <b>%1$s</b></string>
     <string name="extension_force_install">erzwingen\ninstallieren</string>
     <string name="extension_path_image_add">Neues Bild hinzufügen</string>
+    <string name="pref_category_account">Konto</string>
+    <string name="pref_category_media">Medium</string>
+    <string name="pref_category_messages">Nachrichten</string>
 </resources>

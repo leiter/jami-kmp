@@ -528,6 +528,13 @@ private fun MainNavigation(needsMigration: Boolean) {
         composable(Screen.AppSettings.route) {
             AppSettingsScreen(
                 onBack = { navController.popBackStack() },
+                onNavigateToDebugLogs = { navController.navigate(Screen.DebugLogs.route) },
+            )
+        }
+
+        composable(Screen.DebugLogs.route) {
+            DebugLogsScreen(
+                onBack = { navController.popBackStack() },
             )
         }
 

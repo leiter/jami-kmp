@@ -52,6 +52,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.PhoneDisabled
+import androidx.compose.material.icons.filled.PhoneForwarded
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.ScreenShare
 import androidx.compose.material.icons.filled.StopScreenShare
@@ -60,9 +61,11 @@ import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -177,6 +180,7 @@ fun CallScreen(
         onMuteAll = { viewModel.muteAllParticipants() },
         onToggleConferenceLock = { locked -> viewModel.toggleConferenceLock(locked) },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
+        onTransfer = { to -> viewModel.transfer(to) },
         onEnded = onEnd,
         onRetryVideo = { viewModel.retryRemoteVideo() },
         onFallbackAudio = { viewModel.fallbackToAudioOnly() },
@@ -262,6 +266,7 @@ fun IncomingCallScreen(
         onMuteAll = { viewModel.muteAllParticipants() },
         onToggleConferenceLock = { locked -> viewModel.toggleConferenceLock(locked) },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
+        onTransfer = { to -> viewModel.transfer(to) },
         onEnded = onEnd,
         onRetryVideo = { viewModel.retryRemoteVideo() },
         onFallbackAudio = { viewModel.fallbackToAudioOnly() },
@@ -290,6 +295,7 @@ private fun CallScreenContent(
     onMuteAll: () -> Unit = {},
     onToggleConferenceLock: (Boolean) -> Unit = {},
     onSendDtmf: (Char) -> Unit,
+    onTransfer: (String) -> Unit,
     onEnded: () -> Unit,
     onRetryVideo: () -> Unit,
     onFallbackAudio: () -> Unit,
@@ -319,6 +325,7 @@ private fun CallScreenContent(
     }
 
     var showDtmfSheet by remember { mutableStateOf(false) }
+    var showTransferSheet by remember { mutableStateOf(false) }
     var showControls by remember { mutableStateOf(true) }
 
     // Auto-hide controls after 3 seconds during ongoing video call
@@ -461,6 +468,7 @@ private fun CallScreenContent(
                             onMuteAll = onMuteAll,
                             onToggleConferenceLock = onToggleConferenceLock,
                             onOpenDtmf = { showDtmfSheet = true },
+                            onOpenTransfer = { showTransferSheet = true },
                         )
                         is CallMode.Ended -> Unit
                     }
@@ -478,6 +486,24 @@ private fun CallScreenContent(
             sheetState = sheetState,
         ) {
             DtmfDialpad(onKey = onSendDtmf)
+            Spacer(Modifier.height(JamiTheme.spacing.xl))
+        }
+    }
+
+    // Transfer bottom sheet
+    if (showTransferSheet) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = { showTransferSheet = false },
+            sheetState = sheetState,
+        ) {
+            TransferSheet(
+                onTransfer = { destination ->
+                    showTransferSheet = false
+                    onTransfer(destination)
+                },
+                onDismiss = { showTransferSheet = false },
+            )
             Spacer(Modifier.height(JamiTheme.spacing.xl))
         }
     }
@@ -750,6 +776,7 @@ private fun OnGoingControls(
     onMuteAll: () -> Unit = {},
     onToggleConferenceLock: (Boolean) -> Unit = {},
     onOpenDtmf: () -> Unit,
+    onOpenTransfer: () -> Unit,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         // First row: mute, speaker, video, screen share / camera switch
@@ -800,6 +827,14 @@ private fun OnGoingControls(
                 contentDescription = stringResource(Res.string.content_desc_dialpad),
                 isActive = false,
                 onClick = onOpenDtmf,
+            )
+
+            // Transfer button
+            CallControlButton(
+                icon = Icons.Default.PhoneForwarded,
+                contentDescription = stringResource(Res.string.content_desc_transfer),
+                isActive = false,
+                onClick = onOpenTransfer,
             )
         }
 
@@ -992,6 +1027,42 @@ private fun DtmfDialpad(onKey: (Char) -> Unit) {
                 }
             }
             Spacer(Modifier.height(JamiTheme.spacing.s))
+        }
+    }
+}
+
+@Composable
+private fun TransferSheet(
+    onTransfer: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var destination by remember { mutableStateOf("") }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.m),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = stringResource(Res.string.call_transfer_title),
+            style = JamiTheme.typography.titleMedium,
+            color = JamiTheme.colors.onSurface,
+        )
+        Spacer(Modifier.height(JamiTheme.spacing.m))
+        OutlinedTextField(
+            value = destination,
+            onValueChange = { destination = it },
+            label = { Text(stringResource(Res.string.call_transfer_hint)) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(Modifier.height(JamiTheme.spacing.m))
+        Button(
+            onClick = { if (destination.isNotBlank()) onTransfer(destination.trim()) },
+            enabled = destination.isNotBlank(),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(Res.string.call_transfer_action))
         }
     }
 }

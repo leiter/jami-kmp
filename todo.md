@@ -22,11 +22,10 @@ Items confirmed as already implemented are listed at the bottom for reference.
 
 ## P2 — High Priority Features
 
-### Call transfer UI
-- `transfer()` and `attendedTransfer()` already exist in `CallService` (daemon wired).
-- Add a transfer button to `CallScreen` controls row.
-- Show a contact-picker or URI input dialog; call `callService.transfer(callId, target)`.
-- **Reference**: `CallFragment.kt` transfer flow in `jami-client-android`
+### ~~Call transfer UI~~ ✓ DONE (2026-06-13)
+`transfer()` in `CallViewModel` wired to `CallService.transfer()`.
+Transfer button (`PhoneForwarded`) added to `OnGoingControls` first row.
+`TransferSheet` bottom sheet with URI/number input added to `CallScreenContent`.
 
 ### ~~Advanced account settings (TLS / SRTP / DHT / Proxy)~~ ✓ DONE (2026-06-13)
 DHT bootstrap, proxy, TURN/STUN, UPnP, and RTP port ranges were already present.
@@ -46,11 +45,10 @@ verify server/client + require client cert + negotiation timeout.
 - On enable: call `ContactService.loadContacts(accountId)` which reads the phone book via `DeviceRuntimeService.loadContactsData()`.
 - Optionally write discovered Jami usernames back to the phone book (`WRITE_CONTACTS`).
 
-### Ringtone picker
-- Notification channel for incoming calls currently uses the default notification sound.
-- Add a ringtone picker in `AppSettingsScreen` using `RingtoneManager.ACTION_RINGTONE_PICKER`.
-- Persist the selected URI in `SettingsRepository`; apply it to the calls notification channel on change.
-- **Reference**: `jami-client-android` `PreferencesFragment`
+### ~~Ringtone picker~~ ✓ DONE (2026-06-13)
+`RingtoneLauncherEffect` expect/actual added (Android: `RingtoneManager.ACTION_RINGTONE_PICKER`; other platforms: no-op).
+`ringtone: String` field added to `AppSettingsState`; `updateRingtone()` added to `AppSettingsViewModel`.
+`RingtoneRow` in AppSettingsScreen Notifications section — shows current name or "Default".
 
 ---
 
@@ -62,20 +60,25 @@ verify server/client + require client cert + negotiation timeout.
 - Declare `MANAGE_OWN_CALLS` permission (already in reference manifest; confirm in kmp manifest).
 - **Reference**: `JamiConnectionService.kt` in `jami-client-android`
 
-### Conversation categories / filtering
-- Add filter chips above the conversation list in `HomeScreen` (All / Unread / Groups / Requests).
-- Filtering can be done in `ConversationListViewModel` over the existing `StateFlow<List<Conversation>>`.
-- **Reference**: `SmartListFragment.kt` filter behaviour
+### ~~Conversation categories / filtering~~ ✓ DONE (2026-06-13)
+`ConversationFilter` enum (ALL / UNREAD / GROUPS) added to `ConversationsViewModel`.
+`isGroup: Boolean` added to `ConversationItem`; filter applied from cached list (no daemon round-trip).
+Filter chips row added to `HomeScreen` below the search bar.
 
-### Debug logs viewer
-- In-app log viewer screen accessible from `AppSettingsScreen` or About.
-- Capture Logcat output (or use a ring-buffer logger) and display it in a scrollable text area.
-- Add a share/export button.
-- **Reference**: `DebugLogsFragment.kt` in `jami-client-android`
+### ~~Debug logs viewer~~ DONE
+`DebugLogsScreen.kt` added with scrollable monospace log view, Refresh FAB, and Share button in top bar.
+`LogCapture` expect/actual function captures logcat on Android; no-op on other platforms.
+Accessible from AppSettingsScreen → Advanced → Debug logs.
 
 ### AppSettingsScreen — hardware settings enforcement
 - Noise suppression and echo cancellation toggles exist in `SettingsRepository` but are not applied at the platform layer.
 - Wire them to `DaemonBridge.setHardwareAcceleration()` / audio processing flags on start.
+
+### Ringtone — apply to notification channel (Android)
+- `CallSettings.ringtone` is persisted and displayed in `AppSettingsScreen`, but the `jami_calls` notification channel is created once at app startup and its sound is set by the OS thereafter.
+- On Android O+ (API 26), channel sound can only be configured at channel creation time; the OS ignores `setSound()` on an already-created channel.
+- To apply a user-chosen ringtone: delete `jami_calls` (channel ID `"jami_calls_v2"`) and recreate it with the new `AudioAttributes`-wrapped URI before showing the next call notification.
+- Guard with a stored "last applied ringtone" preference so the channel is only recreated when the setting actually changes, avoiding unnecessary notification interruptions.
 
 ---
 

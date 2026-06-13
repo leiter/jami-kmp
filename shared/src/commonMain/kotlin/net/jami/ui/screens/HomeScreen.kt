@@ -78,7 +78,9 @@ import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.JamiBadge
 import net.jami.ui.components.content.PresenceStatus
 import net.jami.ui.theme.JamiTheme
+import net.jami.ui.components.actions.JamiFilterChip
 import net.jami.ui.viewmodel.AccountItem
+import net.jami.ui.viewmodel.ConversationFilter
 import net.jami.ui.viewmodel.ConversationItem
 import net.jami.ui.viewmodel.ConversationsViewModel
 
@@ -231,6 +233,30 @@ fun HomeScreen(
                         }
                     }
                 }
+            }
+
+            // Filter chips
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+            ) {
+                JamiFilterChip(
+                    text = stringResource(Res.string.filter_all),
+                    selected = state.activeFilter == ConversationFilter.ALL,
+                    onClick = { viewModel.setFilter(ConversationFilter.ALL) },
+                )
+                JamiFilterChip(
+                    text = stringResource(Res.string.filter_unread),
+                    selected = state.activeFilter == ConversationFilter.UNREAD,
+                    onClick = { viewModel.setFilter(ConversationFilter.UNREAD) },
+                )
+                JamiFilterChip(
+                    text = stringResource(Res.string.filter_groups),
+                    selected = state.activeFilter == ConversationFilter.GROUPS,
+                    onClick = { viewModel.setFilter(ConversationFilter.GROUPS) },
+                )
             }
 
             // Pending requests banner

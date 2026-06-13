@@ -16,6 +16,7 @@
  */
 package net.jami.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +29,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -40,8 +42,12 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import net.jami.ui.platform.RingtoneLauncherEffect
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import net.jami.di.getViewModel
@@ -73,9 +79,20 @@ import kotlin.math.roundToInt
 @Composable
 fun AppSettingsScreen(
     onBack: () -> Unit,
+    onNavigateToDebugLogs: () -> Unit = {},
 ) {
     val viewModel = getViewModel<AppSettingsViewModel>()
     val state by viewModel.state.collectAsState()
+
+    var showRingtonePicker by remember { mutableStateOf(false) }
+    RingtoneLauncherEffect(
+        show = showRingtonePicker,
+        currentUri = state.ringtone,
+        onResult = { uri ->
+            showRingtonePicker = false
+            if (uri != null) viewModel.updateRingtone(uri)
+        },
+    )
 
     Scaffold(
         topBar = {
@@ -226,6 +243,12 @@ fun AppSettingsScreen(
                 description = stringResource(Res.string.pref_quiet_hours_description),
                 checked = state.isQuietHours,
                 onCheckedChange = { viewModel.toggleQuietHours() },
+            )
+            RingtoneRow(
+                label = stringResource(Res.string.pref_ringtone_title),
+                ringtoneUri = state.ringtone,
+                defaultLabel = stringResource(Res.string.pref_ringtone_default),
+                onClick = { showRingtonePicker = true },
             )
 
             SettingLabelRow(label = stringResource(Res.string.pref_notification_title))
@@ -464,6 +487,17 @@ fun AppSettingsScreen(
                 onCheckedChange = { viewModel.togglePlaceSystemCalls() },
             )
 
+            HorizontalDivider()
+
+            // ==================== Advanced ====================
+            JamiSectionTitle(title = stringResource(Res.string.pref_category_advanced))
+
+            NavigationRow(
+                label = stringResource(Res.string.pref_debugLogs_title),
+                description = stringResource(Res.string.pref_debugLogs_summary),
+                onClick = onNavigateToDebugLogs,
+            )
+
             Spacer(Modifier.height(JamiTheme.spacing.xxl))
         }
     }
@@ -485,4 +519,72 @@ private fun SettingLabelRow(label: String) {
                 vertical = JamiTheme.spacing.xs,
             ),
     )
+}
+
+@Composable
+private fun NavigationRow(
+    label: String,
+    description: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                style = JamiTheme.typography.bodyLarge,
+                color = JamiTheme.colors.onSurface,
+            )
+            Text(
+                text = description,
+                style = JamiTheme.typography.bodySmall,
+                color = JamiTheme.colors.onSurfaceVariant,
+            )
+        }
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = JamiTheme.colors.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun RingtoneRow(
+    label: String,
+    ringtoneUri: String,
+    defaultLabel: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                style = JamiTheme.typography.bodyLarge,
+                color = JamiTheme.colors.onSurface,
+            )
+            Text(
+                text = if (ringtoneUri.isEmpty()) defaultLabel
+                       else ringtoneUri.substringAfterLast('/'),
+                style = JamiTheme.typography.bodySmall,
+                color = JamiTheme.colors.onSurfaceVariant,
+            )
+        }
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = JamiTheme.colors.onSurfaceVariant,
+        )
+    }
 }

@@ -65,6 +65,8 @@ interface DaemonBridgeApi {
     fun muteCapture(mute: Boolean)
     fun restartAudioLayer()
     fun isCaptureMuted(): Boolean
+    fun setNoiseSuppression(enabled: Boolean)
+    fun setEchoCancellation(enabled: Boolean)
     fun transfer(accountId: String, callId: String, to: String): Boolean
     fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean
     fun getCallDetails(accountId: String, callId: String): Map<String, String>
@@ -519,6 +521,8 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun muteCapture(mute: Boolean) {}
     override fun isCaptureMuted(): Boolean = false
     override fun restartAudioLayer() {}
+    override fun setNoiseSuppression(enabled: Boolean) {}
+    override fun setEchoCancellation(enabled: Boolean) {}
     override fun transfer(accountId: String, callId: String, to: String): Boolean = true
     override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean = true
     override fun getCallDetails(accountId: String, callId: String): Map<String, String> = emptyMap()

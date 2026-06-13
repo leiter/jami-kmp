@@ -393,6 +393,7 @@ class SettingsRepository(
         val current = _callSettings.value
         if (current.noiseSuppression != enabled) {
             updateCallSettings(current.copy(noiseSuppression = enabled))
+            daemonBridge.setNoiseSuppression(enabled)
         }
     }
 
@@ -403,6 +404,7 @@ class SettingsRepository(
         val current = _callSettings.value
         if (current.echoCancellation != enabled) {
             updateCallSettings(current.copy(echoCancellation = enabled))
+            daemonBridge.setEchoCancellation(enabled)
         }
     }
 
@@ -604,8 +606,11 @@ class SettingsRepository(
                 }
 
                 details[SettingsKeys.CALLS]?.let { jsonStr ->
-                    _callSettings.value = runCatching { json.decodeFromString<CallSettings>(jsonStr) }
+                    val calls = runCatching { json.decodeFromString<CallSettings>(jsonStr) }
                         .getOrDefault(CallSettings())
+                    _callSettings.value = calls
+                    daemonBridge.setNoiseSuppression(calls.noiseSuppression)
+                    daemonBridge.setEchoCancellation(calls.echoCancellation)
                 }
 
                 details[SettingsKeys.FILE_TRANSFER]?.let { jsonStr ->

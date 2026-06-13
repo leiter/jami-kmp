@@ -182,8 +182,13 @@
     <string name="pref_auto_download_mobile_description">Automatically download files when on mobile data</string>
 
     <!-- Additional preference categories -->
+    <string name="pref_ringtone_title">Call ringtone</string>
+    <string name="pref_ringtone_default">Default</string>
+
     <string name="pref_category_media">Media</string>
     <string name="pref_category_messages">Messages</string>
     <string name="pref_category_advanced">Advanced</string>
+    <string name="pref_debugLogs_title">Debug logs</string>
+    <string name="pref_debugLogs_summary">View and share recent application logs</string>
 
 </resources>

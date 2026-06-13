@@ -408,6 +408,12 @@ class CallViewModel(
         callService.playDtmf(key.toString())
     }
 
+    fun transfer(to: String) {
+        val accountId = currentAccountId ?: return
+        val callId = currentCallId ?: return
+        callService.transfer(accountId, callId, to)
+    }
+
     fun setConferenceLayout(layout: Int) {
         val accountId = currentAccountId ?: return
         val confId = currentConference?.id ?: currentCallId ?: return
