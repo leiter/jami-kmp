@@ -33,11 +33,8 @@ Added TLS/SRTP Security section: SRTP toggle, TLS enable + port + 3 cert file pi
 (CA list, client cert, private key) + password + method + ciphers + server name +
 verify server/client + require client cert + negotiation timeout.
 
-### Audio/video codec selection UI
-- `DaemonBridge.getCodecList()` / `setActiveCodecList()` / `getCodecDetails()` already exist.
-- Add a codec preference screen reachable from `AccountMediaSettingsScreen`.
-- Show audio and video codecs separately; allow drag-to-reorder priority.
-- **Reference**: `AccountAudioVideoFragment.kt`
+### ~~Audio/video codec selection UI~~ DONE
+Already implemented in `AccountMediaSettingsScreen` with enable/disable toggles and up/down reorder arrows for both audio and video codecs. Backed by `AccountSubSettingsViewModel.setCodecEnabled()` / `moveCodec()` → `pushActiveCodecList()` → daemon.
 
 ### System contacts sync UI
 - Permissions (`READ_CONTACTS`, `WRITE_CONTACTS`) are now declared and requested at onboarding.
@@ -70,9 +67,11 @@ Filter chips row added to `HomeScreen` below the search bar.
 `LogCapture` expect/actual function captures logcat on Android; no-op on other platforms.
 Accessible from AppSettingsScreen → Advanced → Debug logs.
 
-### AppSettingsScreen — hardware settings enforcement
-- Noise suppression and echo cancellation toggles exist in `SettingsRepository` but are not applied at the platform layer.
-- Wire them to `DaemonBridge.setHardwareAcceleration()` / audio processing flags on start.
+### ~~AppSettingsScreen — hardware settings enforcement~~ DONE
+Noise suppression → `DaemonBridge.setNoiseSuppression()` → `JamiService.setNoiseSuppressState("enabled"/"disabled")`.
+Echo cancellation → `DaemonBridge.setEchoCancellation()` → `JamiService.setAgcState(Boolean)`.
+Applied on load in `SettingsRepository.loadSettings()` and on every toggle.
+Screenshot blocking → `WindowSecureEffect` expect/actual called from `JamiApp.kt`; Android adds/clears `FLAG_SECURE` reactively via `AppSettingsViewModel.state`.
 
 ### Ringtone — apply to notification channel (Android)
 - `CallSettings.ringtone` is persisted and displayed in `AppSettingsScreen`, but the `jami_calls` notification channel is created once at app startup and its sound is set by the OS thereafter.

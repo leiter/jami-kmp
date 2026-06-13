@@ -20,9 +20,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import net.jami.di.getViewModel
 import net.jami.ui.navigation.JamiNavigation
+import net.jami.ui.platform.WindowSecureEffect
 import net.jami.ui.theme.JamiTheme
+import net.jami.ui.viewmodel.AppSettingsViewModel
 
 /**
  * Root composable for the Jami application.
@@ -33,6 +38,11 @@ import net.jami.ui.theme.JamiTheme
  */
 @Composable
 fun JamiApp() {
+    val appSettingsViewModel = getViewModel<AppSettingsViewModel>()
+    val appSettingsState by appSettingsViewModel.state.collectAsState()
+
+    WindowSecureEffect(enabled = appSettingsState.isScreenshotBlocking)
+
     JamiTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
