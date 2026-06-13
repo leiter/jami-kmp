@@ -615,8 +615,22 @@ fun ChatScreen(
                 }
             }
 
-            // Message input bar (hidden during search)
-            if (!state.isSearchActive) {
+            // Message input bar (hidden during search; replaced by call-only notice for SIP)
+            if (!state.isSearchActive && state.isLegacy) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(JamiTheme.spacing.m),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(Res.string.chat_sip_call_only),
+                        style = JamiTheme.typography.bodyMedium,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                    )
+                }
+            }
+            if (!state.isSearchActive && !state.isLegacy) {
                 MessageInputBar(
                     value = state.inputText,
                     onValueChange = { viewModel.updateInput(it) },
@@ -673,7 +687,7 @@ fun ChatScreen(
                         }
                     },
                 )
-            }
+            } // end !isSearchActive && !isLegacy
         }
     }
 }

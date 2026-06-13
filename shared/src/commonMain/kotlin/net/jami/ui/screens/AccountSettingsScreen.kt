@@ -414,75 +414,88 @@ fun AccountSettingsScreen(
             // ── KONTO ─────────────────────────────────────────────────────
             JamiSectionTitle(title = stringResource(Res.string.navigation_item_account))
 
-            AccountCard {
-                // Registered username row
-                if (state.username.isNotEmpty()) {
+            if (state.isSip) {
+                // SIP account: show server + username instead of Jami identity
+                AccountCard {
                     LabelValueRow(
-                        label = stringResource(Res.string.registered_username),
-                        value = state.username,
-                        valueBold = true,
+                        label = stringResource(Res.string.account_sip_server),
+                        value = state.sipHostname.ifEmpty { "—" },
                     )
-                } else {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = stringResource(Res.string.no_registered_name_for_account),
-                            style = JamiTheme.typography.bodyMedium,
-                            color = JamiTheme.colors.onSurfaceVariant,
+                    HorizontalDivider(color = JamiTheme.colors.outline)
+                    LabelValueRow(
+                        label = stringResource(Res.string.account_sip_username),
+                        value = state.sipUsername.ifEmpty { "—" },
+                    )
+                }
+            } else {
+                AccountCard {
+                    // Registered username row
+                    if (state.username.isNotEmpty()) {
+                        LabelValueRow(
+                            label = stringResource(Res.string.registered_username),
+                            value = state.username,
+                            valueBold = true,
                         )
-                        TextButton(onClick = { viewModel.openRegisterNameDialog() }) {
+                    } else {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             Text(
-                                text = stringResource(Res.string.register_name),
-                                color = JamiTheme.colors.primary,
+                                text = stringResource(Res.string.no_registered_name_for_account),
+                                style = JamiTheme.typography.bodyMedium,
+                                color = JamiTheme.colors.onSurfaceVariant,
                             )
+                            TextButton(onClick = { viewModel.openRegisterNameDialog() }) {
+                                Text(
+                                    text = stringResource(Res.string.register_name),
+                                    color = JamiTheme.colors.primary,
+                                )
+                            }
                         }
                     }
-                }
 
-                HorizontalDivider(color = JamiTheme.colors.outline)
+                    HorizontalDivider(color = JamiTheme.colors.outline)
 
-                // Identity hash row
-                LabelValueRow(
-                    label = stringResource(Res.string.identity),
-                    value = state.identityHash,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                HorizontalDivider(color = JamiTheme.colors.outline)
-
-                // Share + QR-Code buttons
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    TextButton(
-                        onClick = {
-                            shareText(shareSubject, shareBody)
-                        },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Icon(Icons.Default.Share, contentDescription = null)
-                        Spacer(Modifier.width(JamiTheme.spacing.xs))
-                        Text(stringResource(Res.string.account_contact_me))
-                    }
-                    // Vertical separator
-                    Box(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(48.dp)
-                            .background(JamiTheme.colors.outline)
-                            .align(Alignment.CenterVertically),
+                    // Identity hash row
+                    LabelValueRow(
+                        label = stringResource(Res.string.identity),
+                        value = state.identityHash,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
-                    TextButton(
-                        onClick = { showQrSheet = true },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Icon(Icons.Default.QrCode, contentDescription = null)
-                        Spacer(Modifier.width(JamiTheme.spacing.xs))
-                        Text(stringResource(Res.string.qr_code))
+
+                    HorizontalDivider(color = JamiTheme.colors.outline)
+
+                    // Share + QR-Code buttons
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        TextButton(
+                            onClick = { shareText(shareSubject, shareBody) },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(Icons.Default.Share, contentDescription = null)
+                            Spacer(Modifier.width(JamiTheme.spacing.xs))
+                            Text(stringResource(Res.string.account_contact_me))
+                        }
+                        // Vertical separator
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(48.dp)
+                                .background(JamiTheme.colors.outline)
+                                .align(Alignment.CenterVertically),
+                        )
+                        TextButton(
+                            onClick = { showQrSheet = true },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(Icons.Default.QrCode, contentDescription = null)
+                            Spacer(Modifier.width(JamiTheme.spacing.xs))
+                            Text(stringResource(Res.string.qr_code))
+                        }
                     }
                 }
             }
@@ -490,6 +503,8 @@ fun AccountSettingsScreen(
             Spacer(Modifier.height(JamiTheme.spacing.m))
 
             // ── GERÄTE ────────────────────────────────────────────────────
+            // SIP accounts have no linked devices — the section is Jami-only.
+            if (!state.isSip) {
             JamiSectionTitle(title = stringResource(Res.string.devices_header))
 
             val otherDevices = state.devices.filter { !it.isCurrent }
@@ -566,6 +581,7 @@ fun AccountSettingsScreen(
                     )
                 }
             }
+            } // end !isSip devices section
 
             Spacer(Modifier.height(JamiTheme.spacing.m))
 

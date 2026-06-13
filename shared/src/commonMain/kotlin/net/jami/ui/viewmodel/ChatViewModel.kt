@@ -147,6 +147,8 @@ data class ChatState(
      * "Found 0 device(s)" because the daemon treats it as an unknown ring ID.
      */
     val peerUri: String = "",
+    /** True for SIP/legacy conversations that do not support messaging. */
+    val isLegacy: Boolean = false,
 )
 
 /**
@@ -237,8 +239,13 @@ class ChatViewModel(
                 // Observe drafts for this account
                 draftRepository.observeAccount(account.accountId)
 
-                val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
-                val conversation = conversationFacade.getConversation(account.accountId, conversationUri)
+                // Try swarm URI first; fall back to searching all conversations by rawRingId
+                // for legacy (SIP) conversations whose URI uses ring:/sip: scheme, not swarm:.
+                val swarmUri = Uri(Uri.SWARM_SCHEME, conversationId)
+                val conversation = conversationFacade.getConversation(account.accountId, swarmUri)
+                    ?: accountService.getAccount(account.accountId)
+                        ?.getConversations()
+                        ?.find { it.uri.rawRingId == conversationId }
 
                 val title = conversation?.contact?.displayUsername ?: conversationId
                 val avatarBytes = conversation?.contact?.let { contact ->
@@ -249,13 +256,15 @@ class ChatViewModel(
                     )
                 }
                 val peerUri = conversation?.contact?.uri?.uri ?: ""
-                Log.d(TAG, "loadConversation: id=$conversationId contact=${conversation?.contact?.uri} peerUri=$peerUri isGroup=${conversation?.isGroup}")
+                val isLegacy = conversation?.isLegacy ?: false
+                Log.d(TAG, "loadConversation: id=$conversationId contact=${conversation?.contact?.uri} peerUri=$peerUri isGroup=${conversation?.isGroup} isLegacy=$isLegacy")
                 _state.value = _state.value.copy(
                     conversationTitle = title,
                     contactAvatarBytes = avatarBytes,
                     hasMoreHistory = true,
                     isLoadingMore = false,
                     peerUri = peerUri,
+                    isLegacy = isLegacy,
                 )
 
                 // Mark conversation as visible and read all pending messages.

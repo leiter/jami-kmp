@@ -87,6 +87,10 @@ data class AccountSettingsState(
     val hasManager: Boolean = false,
     val hasBiometric: Boolean = false,
     val biometricAvailability: BiometricAvailability = BiometricAvailability.UNKNOWN_ERROR,
+    /** True when the active account is a SIP account (not a Jami/DHT account). */
+    val isSip: Boolean = false,
+    val sipHostname: String = "",
+    val sipUsername: String = "",
     // Link device state — drives the multi-step export-side sheet
     val linkDeviceState: AddDeviceExportState = AddDeviceExportState.Init(),
     // Register name dialog state
@@ -113,6 +117,9 @@ data class AccountSettingsState(
             hasPassword == other.hasPassword &&
             hasManager == other.hasManager &&
             hasBiometric == other.hasBiometric &&
+            isSip == other.isSip &&
+            sipHostname == other.sipHostname &&
+            sipUsername == other.sipUsername &&
             linkDeviceState == other.linkDeviceState &&
             registerNameDialogOpen == other.registerNameDialogOpen &&
             registerNameInput == other.registerNameInput &&
@@ -133,6 +140,9 @@ data class AccountSettingsState(
         result = 31 * result + devices.hashCode()
         result = 31 * result + isLoading.hashCode()
         result = 31 * result + hasPassword.hashCode()
+        result = 31 * result + isSip.hashCode()
+        result = 31 * result + sipHostname.hashCode()
+        result = 31 * result + sipUsername.hashCode()
         result = 31 * result + hasManager.hashCode()
         result = 31 * result + hasBiometric.hashCode()
         result = 31 * result + linkDeviceState.hashCode()
@@ -294,6 +304,9 @@ class AccountSettingsViewModel(
                     hasManager = hasManager,
                     hasBiometric = hasBiometric,
                     biometricAvailability = biometricAvailability,
+                    isSip = account.isSip,
+                    sipHostname = account.host,
+                    sipUsername = account.username,
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)
