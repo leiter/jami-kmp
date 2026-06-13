@@ -117,7 +117,7 @@ fun PendingRequestsScreen(
 }
 
 @Composable
-private fun PendingRequestRow(
+internal fun PendingRequestRow(
     item: PendingRequestItem,
     onAccept: () -> Unit,
     onRefuse: () -> Unit,

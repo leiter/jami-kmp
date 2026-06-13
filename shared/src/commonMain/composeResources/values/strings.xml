@@ -806,6 +806,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">All</string>
     <string name="filter_unread">Unread</string>
     <string name="filter_groups">Groups</string>
+    <string name="filter_requests">Requests</string>
+    <string name="home_no_pending_requests">No pending invitations</string>
 
     <string name="permission_dialog_post_notifications_title">Allow notifications</string>
     <string name="permission_dialog_post_notifications_message">Jami needs the notifications permission to alert you of incoming calls and messages, even when the app is in the background. Without it, you may miss calls.</string>

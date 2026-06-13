@@ -58,7 +58,7 @@ data class AccountItem(
     val isOnline: Boolean,
 )
 
-enum class ConversationFilter { ALL, UNREAD, GROUPS }
+enum class ConversationFilter { ALL, UNREAD, GROUPS, REQUESTS }
 
 /**
  * Item representing a conversation in the list.
@@ -86,6 +86,7 @@ data class ConversationsState(
     val isLoading: Boolean = false,
     val searchQuery: String = "",
     val pendingRequests: Int = 0,
+    val pendingRequestItems: List<PendingRequestItem> = emptyList(),
     val currentAccountAvatarBytes: ByteArray? = null,
     /** True when the current account is registered with the daemon. */
     val isAccountOnline: Boolean = false,
@@ -119,6 +120,9 @@ class ConversationsViewModel(
     /** Full unfiltered list; preserved so filter changes don't require a daemon round-trip. */
     private var cachedConversations: List<ConversationItem> = emptyList()
 
+    /** Cached pending request items; refreshed on every loadConversations(). */
+    private var cachedRequests: List<PendingRequestItem> = emptyList()
+
     /** Tracks (accountId, contactRawRingId) pairs that have an active presence subscription. */
     private val subscribedBuddies = mutableSetOf<Pair<String, String>>()
 
@@ -143,6 +147,15 @@ class ConversationsViewModel(
                         loadConversations()
                     }
                     else -> { /* Other events don't require list refresh */ }
+                }
+            }
+        }
+
+        // Reload pending requests on incoming trust requests (old-protocol contacts)
+        scope.launch {
+            accountService.accountEvents.collect { event ->
+                if (event is AccountEvent.IncomingTrustRequest) {
+                    loadConversations()
                 }
             }
         }
@@ -237,9 +250,39 @@ class ConversationsViewModel(
                 val accountId = account.accountId
                 val query = _state.value.searchQuery.lowercase()
 
-                // Get conversation requests count
-                val requests = accountService.getConversationRequests(accountId)
-                val pendingCount = requests.size
+                // Build pending request items (union of in-memory pending + daemon-sourced)
+                val seen = mutableSetOf<String>()
+                val pending = mutableListOf<PendingRequestItem>()
+                for (conv in account.getPending()) {
+                    val contact = conv.contact ?: continue
+                    val convId = conv.uri.rawRingId
+                    if (seen.add(convId)) {
+                        pending.add(PendingRequestItem(
+                            accountId = accountId,
+                            conversationUri = conv.uri,
+                            displayName = contact.displayUsername.ifEmpty { contact.uri.rawRingId },
+                            ringId = contact.uri.rawRingId,
+                        ))
+                    }
+                }
+                val daemonRequests = accountService.getConversationRequests(accountId)
+                for (req in daemonRequests) {
+                    val convId = req["id"] ?: continue
+                    val fromId = req["from"] ?: continue
+                    if (seen.add(convId)) {
+                        val convUri = Uri(Uri.SWARM_SCHEME, convId)
+                        val fromUri = Uri.fromId(fromId)
+                        val contact = account.getContactFromCache(fromUri)
+                        pending.add(PendingRequestItem(
+                            accountId = accountId,
+                            conversationUri = convUri,
+                            displayName = contact.displayUsername.ifEmpty { fromUri.rawRingId },
+                            ringId = fromUri.rawRingId,
+                        ))
+                    }
+                }
+                cachedRequests = pending
+                val pendingCount = pending.size
 
                 // Load current account avatar from local VCard (scaled + cached)
                 val accountAvatarBytes = vCardService.loadLocalAvatar(accountId)
@@ -270,6 +313,7 @@ class ConversationsViewModel(
                     conversations = applyFilter(syncedConversations, _state.value.activeFilter),
                     isLoading = false,
                     pendingRequests = pendingCount,
+                    pendingRequestItems = cachedRequests,
                     currentAccountAvatarBytes = accountAvatarBytes ?: _state.value.currentAccountAvatarBytes,
                     isAccountOnline = account.isRegistered,
                     accounts = accountItems,
@@ -302,6 +346,7 @@ class ConversationsViewModel(
         _state.value = _state.value.copy(
             activeFilter = filter,
             conversations = applyFilter(cachedConversations, filter),
+            pendingRequestItems = if (filter == ConversationFilter.REQUESTS) cachedRequests else _state.value.pendingRequestItems,
         )
     }
 
@@ -310,7 +355,47 @@ class ConversationsViewModel(
             ConversationFilter.ALL -> all
             ConversationFilter.UNREAD -> all.filter { !it.isRead }
             ConversationFilter.GROUPS -> all.filter { it.isGroup }
+            ConversationFilter.REQUESTS -> emptyList()
         }
+
+    fun acceptRequest(item: PendingRequestItem) {
+        scope.launch {
+            try {
+                val account = accountService.currentAccount.value ?: return@launch
+                val conv = account.getPending().firstOrNull { it.uri == item.conversationUri }
+                if (conv != null) {
+                    conversationFacade.acceptRequest(conv)
+                } else {
+                    accountService.acceptTrustRequest(item.accountId, item.conversationUri)
+                }
+                loadConversations()
+            } catch (e: Exception) {
+                Log.e(TAG, "acceptRequest: error", e)
+            }
+        }
+    }
+
+    fun discardRequest(item: PendingRequestItem) {
+        scope.launch {
+            try {
+                conversationFacade.discardRequest(item.accountId, item.conversationUri)
+                loadConversations()
+            } catch (e: Exception) {
+                Log.e(TAG, "discardRequest: error", e)
+            }
+        }
+    }
+
+    fun blockRequest(item: PendingRequestItem) {
+        scope.launch {
+            try {
+                conversationFacade.blockConversation(item.accountId, item.conversationUri)
+                loadConversations()
+            } catch (e: Exception) {
+                Log.e(TAG, "blockRequest: error", e)
+            }
+        }
+    }
 
     /**
      * Remove a conversation by its ID.

@@ -83,6 +83,7 @@ import net.jami.ui.viewmodel.AccountItem
 import net.jami.ui.viewmodel.ConversationFilter
 import net.jami.ui.viewmodel.ConversationItem
 import net.jami.ui.viewmodel.ConversationsViewModel
+import net.jami.ui.viewmodel.PendingRequestItem
 
 /**
  * Main home screen displaying the conversation list.
@@ -257,10 +258,21 @@ fun HomeScreen(
                     selected = state.activeFilter == ConversationFilter.GROUPS,
                     onClick = { viewModel.setFilter(ConversationFilter.GROUPS) },
                 )
+                if (state.pendingRequests > 0 || state.activeFilter == ConversationFilter.REQUESTS) {
+                    val requestsLabel = if (state.pendingRequests > 0)
+                        "${stringResource(Res.string.filter_requests)} (${state.pendingRequests})"
+                    else
+                        stringResource(Res.string.filter_requests)
+                    JamiFilterChip(
+                        text = requestsLabel,
+                        selected = state.activeFilter == ConversationFilter.REQUESTS,
+                        onClick = { viewModel.setFilter(ConversationFilter.REQUESTS) },
+                    )
+                }
             }
 
-            // Pending requests banner
-            if (state.pendingRequests > 0) {
+            // Pending requests banner — hidden when the Requests filter chip is active
+            if (state.pendingRequests > 0 && state.activeFilter != ConversationFilter.REQUESTS) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -296,8 +308,36 @@ fun HomeScreen(
                 }
             }
 
-            // Conversation list
-            if (state.conversations.isEmpty() && !state.isLoading) {
+            // Conversation list (or inline pending requests when the Requests chip is active)
+            if (state.activeFilter == ConversationFilter.REQUESTS) {
+                if (state.pendingRequestItems.isEmpty() && !state.isLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.home_no_pending_requests),
+                            style = JamiTheme.typography.bodyLarge,
+                            color = JamiTheme.colors.onSurfaceVariant,
+                        )
+                    }
+                } else {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(state.pendingRequestItems, key = { it.ringId }) { item ->
+                            PendingRequestRow(
+                                item = item,
+                                onAccept = {
+                                    viewModel.acceptRequest(item)
+                                    onConversationClick(item.conversationUri.uri)
+                                },
+                                onRefuse = { viewModel.discardRequest(item) },
+                                onBlock = { viewModel.blockRequest(item) },
+                            )
+                            HorizontalDivider(color = JamiTheme.colors.outline.copy(alpha = 0.5f))
+                        }
+                    }
+                }
+            } else if (state.conversations.isEmpty() && !state.isLoading) {
                 // Empty state
                 Box(
                     modifier = Modifier.fillMaxSize(),
