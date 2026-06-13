@@ -84,7 +84,8 @@ private fun Conversation.getLastMessage(): String? =
 class AndroidNotificationService(
     private val context: Context,
     private val settingsRepository: SettingsRepository,
-    private val notificationGuard: NotificationGuard
+    private val notificationGuard: NotificationGuard,
+    private val telecomManager: JamiTelecomManager,
 ) : NotificationService {
 
     private val notificationManager: NotificationManager by lazy {

@@ -25,6 +25,7 @@ import net.jami.services.*
 import net.jami.services.AndroidPictureInPictureManager
 import net.jami.services.CameraService
 import net.jami.services.DaemonBridgeApi
+import net.jami.services.JamiTelecomManager
 import net.jami.services.PictureInPictureManager
 import net.jami.services.expect.AudioRecorderService
 import net.jami.services.expect.HardwareService
@@ -100,6 +101,17 @@ actual val platformModule: Module = module {
     single { get<PictureInPictureManager>() as AndroidPictureInPictureManager }
 
     /**
+     * Telecom API integration — registers Jami as a self-managed PhoneAccount so that
+     * calls appear in the system call log and audio routing is handled by the platform.
+     */
+    single {
+        JamiTelecomManager(
+            context = androidContext(),
+            callService = get()
+        )
+    }
+
+    /**
      * Android notification service.
      * Uses NotificationManager and NotificationCompat for system notifications.
      * Enforces NotificationSettings via NotificationGuard.
@@ -108,7 +120,8 @@ actual val platformModule: Module = module {
         AndroidNotificationService(
             context = androidContext(),
             settingsRepository = get(),
-            notificationGuard = get()
+            notificationGuard = get(),
+            telecomManager = get()
         )
     }
 
