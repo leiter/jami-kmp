@@ -1,0 +1,137 @@
+# jami-kmp — Open Work Items
+
+Derived from gap analysis screenshots (2026-06-09) cross-referenced against current codebase (2026-06-13).
+Items confirmed as already implemented are listed at the bottom for reference.
+
+---
+
+## P1 — Core / Blocking
+
+### Push notifications (FCM + APNs)
+- Android: integrate Firebase Cloud Messaging; register device token with Jami server; handle `RemoteMessage` in a `FirebaseMessagingService` subclass; wake the daemon on push arrival.
+- iOS: integrate APNs via `UNUserNotificationCenter`; handle VoIP pushes with `PKPushRegistry` for call wakeup.
+- Both platforms: pass token to `DaemonBridge.setPushNotificationConfig()`.
+- **Reference**: `jami-client-android` `JamiFirebaseMessagingService.kt`
+
+### CallKit (iOS)
+- Implement `CXProvider` / `CXCallController` integration so incoming Jami calls use the native iOS call UI.
+- Wire `CXProviderDelegate` callbacks (answer, end, hold) to `CallService`.
+- **Reference**: `jami-client-ios` `CallKitAdapter`
+
+---
+
+## P2 — High Priority Features
+
+### Call transfer UI
+- `transfer()` and `attendedTransfer()` already exist in `CallService` (daemon wired).
+- Add a transfer button to `CallScreen` controls row.
+- Show a contact-picker or URI input dialog; call `callService.transfer(callId, target)`.
+- **Reference**: `CallFragment.kt` transfer flow in `jami-client-android`
+
+### Advanced account settings (TLS / SRTP / DHT / Proxy)
+Missing fields in `AccountAdvancedSettingsScreen`:
+- TLS method, CA certificate, client certificate, private key
+- SRTP key exchange (SDES / DTLS-SRTP), encryption enabled toggle
+- DHT bootstrap node list (add/remove)
+- Proxy server URI + proxy push token
+- TURN server URI + credentials
+- **Reference**: `AccountAdvancedFragment.kt` in `jami-client-android`
+
+### Audio/video codec selection UI
+- `DaemonBridge.getCodecList()` / `setActiveCodecList()` / `getCodecDetails()` already exist.
+- Add a codec preference screen reachable from `AccountMediaSettingsScreen`.
+- Show audio and video codecs separately; allow drag-to-reorder priority.
+- **Reference**: `AccountAudioVideoFragment.kt`
+
+### System contacts sync UI
+- Permissions (`READ_CONTACTS`, `WRITE_CONTACTS`) are now declared and requested at onboarding.
+- Need: a "Sync phone contacts" toggle in `AppSettingsScreen` or `AccountSettingsScreen`.
+- On enable: call `ContactService.loadContacts(accountId)` which reads the phone book via `DeviceRuntimeService.loadContactsData()`.
+- Optionally write discovered Jami usernames back to the phone book (`WRITE_CONTACTS`).
+
+### Ringtone picker
+- Notification channel for incoming calls currently uses the default notification sound.
+- Add a ringtone picker in `AppSettingsScreen` using `RingtoneManager.ACTION_RINGTONE_PICKER`.
+- Persist the selected URI in `SettingsRepository`; apply it to the calls notification channel on change.
+- **Reference**: `jami-client-android` `PreferencesFragment`
+
+---
+
+## P3 — Medium Priority
+
+### Telecom API / ConnectionService (Android)
+- Register a `ConnectionService` so Jami calls appear in the system call log and are routable through Bluetooth/car audio.
+- Wire `Connection.onAnswer()`, `onDisconnect()`, `onHold()` to `CallService`.
+- Declare `MANAGE_OWN_CALLS` permission (already in reference manifest; confirm in kmp manifest).
+- **Reference**: `JamiConnectionService.kt` in `jami-client-android`
+
+### Conversation categories / filtering
+- Add filter chips above the conversation list in `HomeScreen` (All / Unread / Groups / Requests).
+- Filtering can be done in `ConversationListViewModel` over the existing `StateFlow<List<Conversation>>`.
+- **Reference**: `SmartListFragment.kt` filter behaviour
+
+### Debug logs viewer
+- In-app log viewer screen accessible from `AppSettingsScreen` or About.
+- Capture Logcat output (or use a ring-buffer logger) and display it in a scrollable text area.
+- Add a share/export button.
+- **Reference**: `DebugLogsFragment.kt` in `jami-client-android`
+
+### AppSettingsScreen — hardware settings enforcement
+- Noise suppression and echo cancellation toggles exist in `SettingsRepository` but are not applied at the platform layer.
+- Wire them to `DaemonBridge.setHardwareAcceleration()` / audio processing flags on start.
+
+---
+
+## P4 — Polish / Low Priority
+
+### strings_kmp.xml locale cleanup
+- Legacy locale folders (`values-de/`, `values-fr/`, etc.) still contain a `strings_kmp.xml` file.
+- Migrate any unique keys into the 5 canonical files; delete the `strings_kmp.xml` files.
+
+### Chat plugins
+- Plugin system not ported to KMP.
+- Current state: menu item shows a "not yet supported" snackbar.
+- Defer until core gaps are closed.
+
+### OsmMapView (Desktop/macOS)
+- No viable cross-platform map library; shows coordinate text fallback.
+- Revisit when a JVM-compatible map tile renderer is available.
+
+---
+
+## Out of Scope (Deprioritised)
+
+| Item | Reason |
+|---|---|
+| Desktop DaemonBridge | Architectural blocker (SWIG/KMP JNI conflict); separate JVM module required |
+| Web/JS platform | REST bridge server not developed; candidate for removal |
+| Android TV | Separate product; low overlap with mobile KMP goals |
+
+---
+
+## Already Implemented (verified 2026-06-13)
+
+These were listed as missing/partial in the June 9 gap scan but are confirmed working in the current codebase:
+
+| Feature | Evidence |
+|---|---|
+| Video call rendering | `VideoRenderer.kt` (TextureView + `HardwareService.addVideoSurface()`); `CallScreen.kt:356` |
+| SIP account creation | `CreateAccountScreen.kt:196` — full SIP form with server/user/pass/port/display-name |
+| Call controls (mute/speaker/camera flip) | `CallScreen.kt:761–818`; `CallViewModel.toggleMute/Speaker/Camera()` |
+| DTMF dial pad | `DtmfDialpad()` composable `CallScreen.kt:954`; `CallViewModel.sendDtmf()` |
+| Device export / link-new-device | `LinkDeviceSheetContent()` in `AccountSettingsScreen.kt:867+` |
+| Conference calls | `ConferenceVideoLayout()` `CallScreen.kt:350`; moderator controls `CallScreen.kt:847` |
+| Screen sharing | `CallViewModel.toggleScreenShare()`; `MainActivity` MediaProjection flow |
+| Message reactions UI | `ReactionPill` composable; reaction picker wired in `ChatScreen` |
+| Read receipts | SENDING/DELIVERED/READ checkmarks in `ChatBubble` |
+| URI scheme deep links | `ring://`, `jami://`, `sip:`, `tel:` intent filters in manifest + `MainActivity` |
+| Full-screen image viewer | `MediaViewerScreen` with pinch-to-zoom |
+| Inline video player | `VideoPlayerScreen` using ExoPlayer/Media3 |
+| Biometric lock | `BiometricLockScreen`; lifecycle lock on `ON_STOP` |
+| Share-to-Jami | `ACTION_SEND` / `ACTION_SEND_MULTIPLE` intent filters; `SharePickerScreen` |
+| Message editing UX | Edit mode banner + inline edit in `ChatScreen`; `isEdited` indicator on bubble |
+| Link previews | `LinkPreviewFetcher` (OG tags); `LinkPreviewCard` in `ChatBubble` |
+| File-transfer auto-accept | Enforced in `ConversationFacade.onDataTransferEvent()` with size limit |
+| POST_NOTIFICATIONS onboarding | `AccountSummaryScreen` requests on first entry with rationale dialog |
+| Foreground service type declarations | All 5 types + READ/WRITE_CONTACTS added to `AndroidManifest.xml` (2026-06-13) |
+| Change password / export account | Flows in `AccountSettingsScreen` |

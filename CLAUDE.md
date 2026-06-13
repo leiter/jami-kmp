@@ -137,12 +137,20 @@ All user-visible strings live in `shared/src/commonMain/composeResources/`. The 
 
 ## Known Gaps (as of 2026-06-12)
 
-Recently closed: message reactions UI, read receipt checkmarks (SENDING/DELIVERED/READ), location accuracy circle + center-on-me FAB, URI scheme deep links (`ring://`, `jami://`, `sip:`, `tel:`), chat media (full-screen image viewer + inline video), biometric authentication (lock on background, unlock prompt), Share-to-Jami (ACTION_SEND / ACTION_SEND_MULTIPLE), AccountSettingsScreen change-password and export-account flows.
+Recently closed: video call rendering (TextureView + daemon video sink), SIP account creation (full server/user/pass/port wizard), call controls (mute, speaker, camera flip, DTMF dial pad), device export / link-new-device sheet (AccountSettingsScreen), conference calls (multi-party grid + moderator controls), screen sharing (MediaProjection + daemon callback), message reactions UI, read receipt checkmarks (SENDING/DELIVERED/READ), location accuracy circle + center-on-me FAB, URI scheme deep links (`ring://`, `jami://`, `sip:`, `tel:`), chat media (full-screen image viewer + inline video), biometric authentication (lock on background, unlock prompt), Share-to-Jami (ACTION_SEND / ACTION_SEND_MULTIPLE), AccountSettingsScreen change-password and export-account flows, message editing UX, link previews, file-transfer auto-accept confirmation, permission handling (POST_NOTIFICATIONS onboarding + foreground service type declarations + READ/WRITE_CONTACTS).
 
 Still open:
 
 - **Push notifications** — FCM (Android) and APNs (iOS) not integrated; calls and messages only work when the daemon is running in the foreground.
 - **CallKit (iOS)** — iOS CallKit not integrated; incoming calls on iOS do not use the native call UI and do not wake the device from background.
+- **Call transfer** — `transfer()` and `attendedTransfer()` exist in `CallService` but no UI to initiate a transfer from `CallScreen`.
+- **Audio/video codec selection** — codec API exists in `DaemonBridge` but no UI to select preferred codec in settings.
+- **Advanced account settings** — TLS/SRTP certificate, DHT bootstrap nodes, proxy/TURN server fields are missing from `AccountAdvancedSettingsScreen`.
+- **System contacts sync** — `READ_CONTACTS`/`WRITE_CONTACTS` now declared and requested at onboarding, but no phone-book import/sync UI exists.
+- **Telecom API / ConnectionService** — native Android dialer integration missing; calls do not appear in the system call log or native dialer.
+- **Ringtone picker** — notification channel uses the default sound; no per-account ringtone selection UI.
+- **Conversation categories / filtering** — no swarm/group filter or unread-only view.
+- **Debug logs viewer** — no in-app log viewer; logs go to logcat only.
 - **AppSettingsScreen** — screenshot blocking enforcement and audio/video hardware settings (noise suppression, echo cancellation) are stored but not applied at the platform layer.
 - **Chat plugins** — Jami plugin system not ported to KMP. Menu item shows a "not yet supported" snackbar.
 - **OsmMapView (Desktop/macOS)** — no viable JVM or AppKit map library in scope; shows coordinate text instead of a map.
