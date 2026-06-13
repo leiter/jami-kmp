@@ -22,14 +22,19 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.net.Uri as AndroidUri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import net.jami.model.*
 import net.jami.repository.SettingsRepository
+import net.jami.ui.platform.LocalPrefKeys
+import net.jami.ui.platform.LocalPrefs
 import net.jami.utils.Log
 import org.jetbrains.compose.resources.getString
 
@@ -163,12 +168,47 @@ class AndroidNotificationService(
 
     // ==================== Call Notifications ====================
 
+    /**
+     * Delete and recreate [CHANNEL_CALLS] with a new ringtone URI when the setting changes.
+     * Channel sound can only be set at creation time on Android O+, so we delete + recreate.
+     * The last applied ringtone is persisted in [LocalPrefs] to avoid redundant channel churn.
+     */
+    private fun refreshCallsChannel(ringtoneUri: String) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val lastApplied = LocalPrefs.getString(LocalPrefKeys.LAST_APPLIED_RINGTONE, "")
+        if (ringtoneUri == lastApplied) return
+        notificationManager.deleteNotificationChannel(CHANNEL_CALLS)
+        val channel = NotificationChannel(
+            CHANNEL_CALLS,
+            runBlocking { getString(Res.string.notif_channel_incoming_calls) },
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            setShowBadge(true)
+            enableVibration(true)
+            setBypassDnd(true)
+            if (ringtoneUri.isNotBlank()) {
+                val sound = AndroidUri.parse(ringtoneUri)
+                val attrs = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+                setSound(sound, attrs)
+            }
+        }
+        notificationManager.createNotificationChannel(channel)
+        LocalPrefs.setString(LocalPrefKeys.LAST_APPLIED_RINGTONE, ringtoneUri)
+    }
+
     override fun showCallNotification(notifId: Int): Any? {
         // Check settings before showing
         if (!notificationGuard.shouldShowCallNotification()) {
             Log.d(TAG, "Call notifications disabled in settings")
             return null
         }
+
+        // Recreate the calls channel if the ringtone setting has changed
+        val currentRingtone = runBlocking { settingsRepository.callSettings.first().ringtone }
+        refreshCallsChannel(currentRingtone)
 
         currentCallNotificationId = notifId
         activeCallNotifications.add(notifId)

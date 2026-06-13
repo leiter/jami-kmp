@@ -34,6 +34,8 @@ expect object LocalPrefs {
     fun setBoolean(key: String, value: Boolean)
     fun getInt(key: String, default: Int): Int
     fun setInt(key: String, value: Int)
+    fun getString(key: String, default: String): String
+    fun setString(key: String, value: String)
 }
 
 /**
@@ -48,4 +50,6 @@ object LocalPrefKeys {
     const val VIDEO_BITRATE = "local_video_bitrate"
     const val VIDEO_RESOLUTION = "local_video_resolution"
     const val PLACE_SYSTEM_CALLS = "local_place_system_calls"
+    const val SYSTEM_CONTACTS_SYNC = "local_system_contacts_sync"
+    const val LAST_APPLIED_RINGTONE = "local_last_applied_ringtone"
 }

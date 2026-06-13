@@ -486,6 +486,12 @@ fun AppSettingsScreen(
                 checked = state.isPlaceSystemCalls,
                 onCheckedChange = { viewModel.togglePlaceSystemCalls() },
             )
+            JamiToggle(
+                label = stringResource(Res.string.pref_syncContacts_title),
+                description = stringResource(Res.string.pref_syncContacts_summary),
+                checked = state.isSystemContactsSync,
+                onCheckedChange = { viewModel.toggleSystemContactsSync() },
+            )
 
             HorizontalDivider()
 

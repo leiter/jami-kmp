@@ -35,4 +35,10 @@ actual object LocalPrefs {
 
     actual fun setInt(key: String, value: Int) =
         settings.setInt(key, value)
+
+    actual fun getString(key: String, default: String): String =
+        settings.getString(key, default)
+
+    actual fun setString(key: String, value: String) =
+        settings.setString(key, value)
 }

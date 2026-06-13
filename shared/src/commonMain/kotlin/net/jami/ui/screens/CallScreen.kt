@@ -62,6 +62,7 @@ import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -101,6 +102,7 @@ import net.jami.ui.composables.VideoRenderer
 import net.jami.ui.theme.JamiColors
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.CallMode
+import net.jami.ui.viewmodel.CallPickerItem
 import net.jami.ui.viewmodel.CallState
 import net.jami.ui.viewmodel.CallViewModel
 import net.jami.ui.viewmodel.ParticipantUi
@@ -181,6 +183,8 @@ fun CallScreen(
         onToggleConferenceLock = { locked -> viewModel.toggleConferenceLock(locked) },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onTransfer = { to -> viewModel.transfer(to) },
+        onAttendedTransfer = { callId -> viewModel.attendedTransfer(callId) },
+        onGetOtherActiveCalls = { viewModel.getOtherActiveCalls() },
         onEnded = onEnd,
         onRetryVideo = { viewModel.retryRemoteVideo() },
         onFallbackAudio = { viewModel.fallbackToAudioOnly() },
@@ -267,6 +271,8 @@ fun IncomingCallScreen(
         onToggleConferenceLock = { locked -> viewModel.toggleConferenceLock(locked) },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onTransfer = { to -> viewModel.transfer(to) },
+        onAttendedTransfer = { callId -> viewModel.attendedTransfer(callId) },
+        onGetOtherActiveCalls = { viewModel.getOtherActiveCalls() },
         onEnded = onEnd,
         onRetryVideo = { viewModel.retryRemoteVideo() },
         onFallbackAudio = { viewModel.fallbackToAudioOnly() },
@@ -296,6 +302,8 @@ private fun CallScreenContent(
     onToggleConferenceLock: (Boolean) -> Unit = {},
     onSendDtmf: (Char) -> Unit,
     onTransfer: (String) -> Unit,
+    onAttendedTransfer: (String) -> Unit,
+    onGetOtherActiveCalls: () -> List<CallPickerItem>,
     onEnded: () -> Unit,
     onRetryVideo: () -> Unit,
     onFallbackAudio: () -> Unit,
@@ -493,6 +501,7 @@ private fun CallScreenContent(
     // Transfer bottom sheet
     if (showTransferSheet) {
         val sheetState = rememberModalBottomSheetState()
+        val otherActiveCalls = remember { onGetOtherActiveCalls() }
         ModalBottomSheet(
             onDismissRequest = { showTransferSheet = false },
             sheetState = sheetState,
@@ -502,6 +511,11 @@ private fun CallScreenContent(
                     showTransferSheet = false
                     onTransfer(destination)
                 },
+                onAttendedTransfer = { callId ->
+                    showTransferSheet = false
+                    onAttendedTransfer(callId)
+                },
+                activeCalls = otherActiveCalls,
                 onDismiss = { showTransferSheet = false },
             )
             Spacer(Modifier.height(JamiTheme.spacing.xl))
@@ -1034,6 +1048,8 @@ private fun DtmfDialpad(onKey: (Char) -> Unit) {
 @Composable
 private fun TransferSheet(
     onTransfer: (String) -> Unit,
+    onAttendedTransfer: (String) -> Unit,
+    activeCalls: List<CallPickerItem>,
     onDismiss: () -> Unit,
 ) {
     var destination by remember { mutableStateOf("") }
@@ -1063,6 +1079,28 @@ private fun TransferSheet(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(stringResource(Res.string.call_transfer_action))
+        }
+        if (activeCalls.isNotEmpty()) {
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+            HorizontalDivider()
+            Spacer(Modifier.height(JamiTheme.spacing.s))
+            Text(
+                text = stringResource(Res.string.call_attended_transfer_header),
+                style = JamiTheme.typography.labelMedium,
+                color = JamiTheme.colors.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            activeCalls.forEach { call ->
+                TextButton(
+                    onClick = { onAttendedTransfer(call.callId) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = call.peerName,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
         }
     }
 }

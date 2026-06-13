@@ -56,6 +56,11 @@ sealed class CallMode {
 }
 
 /**
+ * A call that can be used as the target of an attended transfer.
+ */
+data class CallPickerItem(val callId: String, val peerName: String)
+
+/**
  * Minimal participant info surfaced to the UI.
  */
 data class ParticipantUi(
@@ -412,6 +417,25 @@ class CallViewModel(
         val accountId = currentAccountId ?: return
         val callId = currentCallId ?: return
         callService.transfer(accountId, callId, to)
+    }
+
+    fun attendedTransfer(targetCallId: String) {
+        val accountId = currentAccountId ?: return
+        val callId = currentCallId ?: return
+        callService.attendedTransfer(accountId, callId, targetCallId)
+    }
+
+    fun getOtherActiveCalls(): List<CallPickerItem> {
+        val myCallId = currentCallId ?: return emptyList()
+        return callService.getActiveCalls()
+            .filter { it.daemonId != myCallId }
+            .mapNotNull { call ->
+                val id = call.daemonId ?: return@mapNotNull null
+                val name = call.contact?.displayName?.takeIf { it.isNotBlank() }
+                    ?: call.contact?.username?.takeIf { it.isNotBlank() }
+                    ?: call.peerUri.rawRingId.take(12).ifEmpty { call.peerUri.uri }
+                CallPickerItem(callId = id, peerName = name)
+            }
     }
 
     fun setConferenceLayout(layout: Int) {

@@ -199,7 +199,7 @@ val jamiModule = module {
     viewModelFactory { LinkDeviceImportViewModel(get()) }
     viewModelFactory { AccountSettingsViewModel(get(), get(), get(), get()) }
     viewModelFactory { AccountSubSettingsViewModel(get(), get()) }
-    viewModelFactory { AppSettingsViewModel(get()) }
+    viewModelFactory { AppSettingsViewModel(get(), get(), get()) }
     viewModelFactory { PendingRequestsViewModel(get(), get()) }
     viewModelFactory { CallViewModel(get(), get(), get(), get(), get()) }
     viewModelFactory { ContactsViewModel(get(), get()) }

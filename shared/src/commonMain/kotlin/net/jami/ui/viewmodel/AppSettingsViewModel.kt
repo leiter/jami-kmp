@@ -30,6 +30,8 @@ import net.jami.model.settings.ConversationSort
 import net.jami.model.settings.NotificationVisibility
 import net.jami.model.settings.Theme
 import net.jami.repository.SettingsRepository
+import net.jami.services.AccountService
+import net.jami.services.ContactService
 import net.jami.ui.platform.LocalPrefKeys
 import net.jami.ui.platform.LocalPrefs
 
@@ -76,6 +78,7 @@ data class AppSettingsState(
     val isStartOnBoot: Boolean = false,
     val isRunInBackground: Boolean = false,
     val isPlaceSystemCalls: Boolean = false,
+    val isSystemContactsSync: Boolean = false,
 
     // --- Connectivity ---
     val connectivityMode: ConnectivityMode = ConnectivityMode.LOCAL_NODE,
@@ -98,6 +101,8 @@ data class AppSettingsState(
  */
 class AppSettingsViewModel(
     private val settingsRepository: SettingsRepository,
+    private val accountService: AccountService,
+    private val contactService: ContactService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
     private val scope = scope
@@ -112,6 +117,7 @@ class AppSettingsViewModel(
             isStartOnBoot = LocalPrefs.getBoolean(LocalPrefKeys.START_ON_BOOT, true),
             isRunInBackground = LocalPrefs.getBoolean(LocalPrefKeys.RUN_IN_BACKGROUND, false),
             isPlaceSystemCalls = LocalPrefs.getBoolean(LocalPrefKeys.PLACE_SYSTEM_CALLS, false),
+            isSystemContactsSync = LocalPrefs.getBoolean(LocalPrefKeys.SYSTEM_CONTACTS_SYNC, false),
             connectivityMode = ConnectivityMode.entries.getOrElse(
                 LocalPrefs.getInt(LocalPrefKeys.CONNECTIVITY_MODE, ConnectivityMode.LOCAL_NODE.ordinal)
             ) { ConnectivityMode.LOCAL_NODE },
@@ -337,6 +343,18 @@ class AppSettingsViewModel(
         val new = !_state.value.isPlaceSystemCalls
         _state.update { it.copy(isPlaceSystemCalls = new) }
         LocalPrefs.setBoolean(LocalPrefKeys.PLACE_SYSTEM_CALLS, new)
+    }
+
+    fun toggleSystemContactsSync() {
+        val new = !_state.value.isSystemContactsSync
+        _state.update { it.copy(isSystemContactsSync = new) }
+        LocalPrefs.setBoolean(LocalPrefKeys.SYSTEM_CONTACTS_SYNC, new)
+        if (new) {
+            scope.launch {
+                val accountId = accountService.currentAccount.value?.accountId ?: return@launch
+                contactService.loadContacts(accountId)
+            }
+        }
     }
 
     // ==================== Connectivity ====================
