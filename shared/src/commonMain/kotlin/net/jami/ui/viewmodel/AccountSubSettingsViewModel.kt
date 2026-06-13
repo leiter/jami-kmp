@@ -87,6 +87,24 @@ data class AccountSubSettingsState(
     val videoPortMin: String = "",
     val videoPortMax: String = "",
 
+    // ── Security ─────────────────────────────────────────────────────────────
+    // SRTP
+    val srtpKeyExchange: Boolean = false,    // true = "sdes", false = ""
+    // TLS
+    val tlsEnabled: Boolean = false,
+    val tlsPort: String = "",
+    val tlsCaListFile: String = "",
+    val tlsCertFile: String = "",
+    val tlsPrivateKeyFile: String = "",
+    val tlsPassword: String = "",
+    val tlsMethod: String = "",
+    val tlsCiphers: String = "",
+    val tlsServerName: String = "",
+    val tlsVerifyServer: Boolean = false,
+    val tlsVerifyClient: Boolean = false,
+    val tlsRequireClientCert: Boolean = false,
+    val tlsNegotiationTimeout: String = "",
+
     val isLoading: Boolean = false,
 )
 
@@ -171,6 +189,20 @@ class AccountSubSettingsViewModel(
                 audioPortMax = str(ConfigKey.AUDIO_PORT_MAX),
                 videoPortMin = str(ConfigKey.VIDEO_PORT_MIN),
                 videoPortMax = str(ConfigKey.VIDEO_PORT_MAX),
+                srtpKeyExchange = str(ConfigKey.SRTP_KEY_EXCHANGE) == "sdes",
+                tlsEnabled = bool(ConfigKey.TLS_ENABLE),
+                tlsPort = str(ConfigKey.TLS_LISTENER_PORT),
+                tlsCaListFile = str(ConfigKey.TLS_CA_LIST_FILE),
+                tlsCertFile = str(ConfigKey.TLS_CERTIFICATE_FILE),
+                tlsPrivateKeyFile = str(ConfigKey.TLS_PRIVATE_KEY_FILE),
+                tlsPassword = str(ConfigKey.TLS_PASSWORD),
+                tlsMethod = str(ConfigKey.TLS_METHOD),
+                tlsCiphers = str(ConfigKey.TLS_CIPHERS),
+                tlsServerName = str(ConfigKey.TLS_SERVER_NAME),
+                tlsVerifyServer = bool(ConfigKey.TLS_VERIFY_SERVER),
+                tlsVerifyClient = bool(ConfigKey.TLS_VERIFY_CLIENT),
+                tlsRequireClientCert = bool(ConfigKey.TLS_REQUIRE_CLIENT_CERTIFICATE),
+                tlsNegotiationTimeout = str(ConfigKey.TLS_NEGOTIATION_TIMEOUT_SEC),
                 isLoading = false,
             )
         }
@@ -351,6 +383,83 @@ class AccountSubSettingsViewModel(
     fun setVideoPortMax(port: String) {
         _state.update { it.copy(videoPortMax = port) }
         updateDetail(ConfigKey.VIDEO_PORT_MAX, port)
+    }
+
+    // ── Security ──────────────────────────────────────────────────────────────
+
+    fun setSrtpKeyExchange(enabled: Boolean) {
+        _state.update { it.copy(srtpKeyExchange = enabled) }
+        updateDetail(ConfigKey.SRTP_KEY_EXCHANGE, if (enabled) "sdes" else "")
+    }
+
+    fun setTlsEnabled(enabled: Boolean) {
+        _state.update { it.copy(tlsEnabled = enabled) }
+        updateDetail(ConfigKey.TLS_ENABLE, enabled.toString())
+        // TLS and STUN are mutually exclusive in the daemon
+        if (enabled && _state.value.stunEnabled) {
+            _state.update { it.copy(stunEnabled = false) }
+            updateDetail(ConfigKey.STUN_ENABLE, "false")
+        }
+    }
+
+    fun setTlsPort(port: String) {
+        _state.update { it.copy(tlsPort = port) }
+        updateDetail(ConfigKey.TLS_LISTENER_PORT, port)
+    }
+
+    fun setTlsCaListFile(path: String) {
+        _state.update { it.copy(tlsCaListFile = path) }
+        updateDetail(ConfigKey.TLS_CA_LIST_FILE, path)
+    }
+
+    fun setTlsCertFile(path: String) {
+        _state.update { it.copy(tlsCertFile = path) }
+        updateDetail(ConfigKey.TLS_CERTIFICATE_FILE, path)
+    }
+
+    fun setTlsPrivateKeyFile(path: String) {
+        _state.update { it.copy(tlsPrivateKeyFile = path) }
+        updateDetail(ConfigKey.TLS_PRIVATE_KEY_FILE, path)
+    }
+
+    fun setTlsPassword(password: String) {
+        _state.update { it.copy(tlsPassword = password) }
+        updateDetail(ConfigKey.TLS_PASSWORD, password)
+    }
+
+    fun setTlsMethod(method: String) {
+        _state.update { it.copy(tlsMethod = method) }
+        updateDetail(ConfigKey.TLS_METHOD, method)
+    }
+
+    fun setTlsCiphers(ciphers: String) {
+        _state.update { it.copy(tlsCiphers = ciphers) }
+        updateDetail(ConfigKey.TLS_CIPHERS, ciphers)
+    }
+
+    fun setTlsServerName(name: String) {
+        _state.update { it.copy(tlsServerName = name) }
+        updateDetail(ConfigKey.TLS_SERVER_NAME, name)
+    }
+
+    fun setTlsVerifyServer(enabled: Boolean) {
+        _state.update { it.copy(tlsVerifyServer = enabled) }
+        updateDetail(ConfigKey.TLS_VERIFY_SERVER, enabled.toString())
+    }
+
+    fun setTlsVerifyClient(enabled: Boolean) {
+        _state.update { it.copy(tlsVerifyClient = enabled) }
+        updateDetail(ConfigKey.TLS_VERIFY_CLIENT, enabled.toString())
+    }
+
+    fun setTlsRequireClientCert(enabled: Boolean) {
+        _state.update { it.copy(tlsRequireClientCert = enabled) }
+        updateDetail(ConfigKey.TLS_REQUIRE_CLIENT_CERTIFICATE, enabled.toString())
+    }
+
+    fun setTlsNegotiationTimeout(secs: String) {
+        _state.update { it.copy(tlsNegotiationTimeout = secs) }
+        updateDetail(ConfigKey.TLS_NEGOTIATION_TIMEOUT_SEC, secs)
     }
 
     // ── Internal ──────────────────────────────────────────────────────────────
