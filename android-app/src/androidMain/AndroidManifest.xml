@@ -14,9 +14,18 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
-    <!-- Background sync service permissions -->
+    <!-- Contacts sync -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+
+    <!-- Foreground service type permissions (Android 14+ enforcement) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
 
     <!-- Auto-start after device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -91,11 +100,11 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
-        <!-- Persistent daemon service: keeps the process alive for incoming calls -->
+        <!-- Persistent daemon service: keeps the process alive for incoming calls and messages -->
         <service
             android:name=".service.JamiDaemonService"
             android:exported="false"
-            android:foregroundServiceType="dataSync"
+            android:foregroundServiceType="dataSync|remoteMessaging"
             android:stopWithTask="false" />
 
         <!-- Boot receiver: starts JamiDaemonService after device reboot -->
@@ -117,7 +126,7 @@
         <service
             android:name=".service.CallNotificationService"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="microphone|phoneCall|camera" />
 
         <!-- Broadcast receiver for notification Answer / Decline / Hang Up actions -->
         <receiver

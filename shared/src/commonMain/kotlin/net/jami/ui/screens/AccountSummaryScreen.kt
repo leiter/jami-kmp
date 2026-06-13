@@ -30,13 +30,19 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import net.jami.ui.components.actions.JamiButton
+import net.jami.ui.components.notification.JamiAlertDialog
+import net.jami.ui.platform.AppPermission
+import net.jami.ui.platform.PermissionRequesterEffect
 import net.jami.ui.theme.JamiTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,6 +50,35 @@ import net.jami.ui.theme.JamiTheme
 fun AccountSummaryScreen(
     onContinue: () -> Unit,
 ) {
+    // Request notifications then contacts sequentially on first entry.
+    // Notifications are critical — without them incoming calls are missed.
+    var requestNotif by remember { mutableStateOf(false) }
+    var requestContacts by remember { mutableStateOf(false) }
+    var showNotifDeniedDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) { requestNotif = true }
+
+    PermissionRequesterEffect(AppPermission.Notifications, requestNotif) { granted ->
+        requestNotif = false
+        if (!granted) showNotifDeniedDialog = true
+        requestContacts = true
+    }
+
+    PermissionRequesterEffect(AppPermission.Contacts, requestContacts) {
+        requestContacts = false
+    }
+
+    if (showNotifDeniedDialog) {
+        JamiAlertDialog(
+            title = stringResource(Res.string.permission_dialog_post_notifications_title),
+            body = stringResource(Res.string.permission_dialog_post_notifications_blocked_message),
+            confirmText = "OK",
+            dismissText = null,
+            onConfirm = { showNotifDeniedDialog = false },
+            onDismiss = { showNotifDeniedDialog = false },
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
