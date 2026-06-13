@@ -59,7 +59,8 @@ private fun Conversation.getLastMessage(): String? =
  */
 class IOSNotificationService(
     private val settingsRepository: SettingsRepository,
-    private val notificationGuard: NotificationGuard
+    private val notificationGuard: NotificationGuard,
+    private val callKitManager: CallKitManager,
 ) : NotificationService {
 
     private val notificationCenter = UNUserNotificationCenter.currentNotificationCenter()
@@ -213,8 +214,10 @@ class IOSNotificationService(
         currentCallNotificationId = identifier
 
         val state = conference.state
+        // For RINGING calls, CallKit already shows the native incoming-call UI.
+        // Skip the UNNotification to avoid a duplicate banner.
+        if (state == Call.CallStatus.RINGING) return
         val title = when (state) {
-            Call.CallStatus.RINGING -> "Incoming Call"
             Call.CallStatus.CURRENT, Call.CallStatus.HOLD -> "Ongoing Call"
             else -> "Call"
         }

@@ -92,6 +92,14 @@ actual val platformModule: Module = module {
     single { AudioRecorderService() }
 
     /**
+     * CallKit integration — reports incoming/outgoing calls to the iOS native call UI
+     * and handles user actions (answer, decline, mute, hold) from the system.
+     */
+    single {
+        CallKitManager(callService = get())
+    }
+
+    /**
      * iOS notification service.
      * Uses UNUserNotificationCenter for local notifications.
      * Enforces NotificationSettings via NotificationGuard.
@@ -99,7 +107,8 @@ actual val platformModule: Module = module {
     single<NotificationService> {
         IOSNotificationService(
             settingsRepository = get(),
-            notificationGuard = get()
+            notificationGuard = get(),
+            callKitManager = get()
         )
     }
 
