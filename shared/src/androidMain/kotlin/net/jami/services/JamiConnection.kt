@@ -103,10 +103,6 @@ class JamiConnection(
         Log.d(TAG, "onStateChanged: $callId state=${stateToString(state)}")
     }
 
-    override fun onDestroy() {
-        scope.cancel()
-    }
-
     companion object {
         private const val TAG = "JamiConnection"
     }
