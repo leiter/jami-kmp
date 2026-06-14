@@ -16,6 +16,13 @@
  */
 package net.jami.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +39,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -43,20 +51,16 @@ import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.outlined.AccountBox
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.AddToQueue
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
-import androidx.compose.material.icons.outlined.DeviceHub
-import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.ManageAccounts
 import androidx.compose.material.icons.outlined.PermMedia
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Slideshow
-import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -66,9 +70,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -126,6 +132,7 @@ import jami_kmp.shared.generated.resources.account_status_online
 import jami_kmp.shared.generated.resources.action_link_device
 import jami_kmp.shared.generated.resources.action_rename
 import jami_kmp.shared.generated.resources.content_desc_back
+import jami_kmp.shared.generated.resources.content_desc_profile_photo
 import jami_kmp.shared.generated.resources.devices_header
 import jami_kmp.shared.generated.resources.export_side_step1_advice_qr
 import jami_kmp.shared.generated.resources.export_side_step1_switch_to_code
@@ -409,7 +416,8 @@ fun AccountSettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.m),
+                    .padding(horizontal = JamiTheme.spacing.l)
+                    .padding(bottom = JamiTheme.spacing.m),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Avatar — tappable: opens a menu to pick from gallery or remove photo
@@ -418,7 +426,23 @@ fun AccountSettingsScreen(
                         JamiAvatar(
                             displayName = state.displayName.ifEmpty { state.username },
                             avatarBytes = state.avatarBytes,
-                            size = AvatarSize.Large,
+                            size = AvatarSize.XLarge,
+                        )
+                    }
+                    // Camera badge at bottom-right
+                    Surface(
+                        shape = CircleShape,
+                        color = JamiTheme.colors.primary,
+                        modifier = Modifier
+                            .size(28.dp)
+                            .align(Alignment.BottomEnd)
+                            .clickable { showPhotoMenu = true },
+                    ) {
+                        Icon(
+                            Icons.Rounded.PhotoCamera,
+                            contentDescription = stringResource(Res.string.content_desc_profile_photo),
+                            tint = Color.White,
+                            modifier = Modifier.padding(5.dp),
                         )
                     }
                     DropdownMenu(
@@ -440,21 +464,26 @@ fun AccountSettingsScreen(
                     }
                 }
 
-                Spacer(Modifier.width(JamiTheme.spacing.m))
+                Spacer(Modifier.width(12.dp))
 
-                OutlinedTextField(
+                // Filled text field matching textInputFilledStyle from reference
+                TextField(
                     value = displayNameEdit,
                     onValueChange = { displayNameEdit = it },
                     label = { Text(stringResource(Res.string.profile_name)) },
                     singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.weight(1f),
                     trailingIcon = {
-                        IconButton(onClick = {
-                            viewModel.updateDisplayName(displayNameEdit)
-                            focusManager.clearFocus()
-                        }) {
-                            Icon(Icons.Default.Edit, contentDescription = null)
-                        }
+                        Icon(
+                            Icons.Rounded.Edit,
+                            contentDescription = null,
+                            tint = JamiTheme.colors.onSurfaceVariant,
+                            modifier = Modifier.clickable {
+                                viewModel.updateDisplayName(displayNameEdit)
+                                focusManager.clearFocus()
+                            },
+                        )
                     },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = {
@@ -576,7 +605,7 @@ fun AccountSettingsScreen(
             val otherDevices = state.devices.filter { !it.isCurrent }
             var devicesExpanded by remember { mutableStateOf(false) }
 
-            AccountCard {
+            AccountCard(modifier = Modifier.animateContentSize(tween(300))) {
                 // Current device row
                 Row(
                     modifier = Modifier
@@ -624,10 +653,16 @@ fun AccountSettingsScreen(
                             color = JamiTheme.colors.onSurface,
                         )
                     }
-                    if (devicesExpanded) {
-                        otherDevices.forEach { device ->
-                            HorizontalDivider(color = JamiTheme.colors.surfaceVariant)
-                            DeviceRow(device = device)
+                    AnimatedVisibility(
+                        visible = devicesExpanded,
+                        enter = expandVertically(tween(300)) + fadeIn(tween(300)),
+                        exit = shrinkVertically(tween(300)) + fadeOut(tween(200)),
+                    ) {
+                        Column {
+                            otherDevices.forEach { device ->
+                                HorizontalDivider(color = JamiTheme.colors.surfaceVariant)
+                                DeviceRow(device = device)
+                            }
                         }
                     }
                 }
@@ -794,13 +829,14 @@ fun AccountSettingsScreen(
  * Rounded card container used for KONTO, GERÄTE, and EINSTELLUNGEN sections.
  */
 @Composable
-private fun AccountCard(content: @Composable ColumnScope.() -> Unit) {
+private fun AccountCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = JamiTheme.colors.surfaceVariant,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = JamiTheme.spacing.l),
+            .padding(horizontal = JamiTheme.spacing.l)
+            .then(modifier),
     ) {
         Column(content = content)
     }
