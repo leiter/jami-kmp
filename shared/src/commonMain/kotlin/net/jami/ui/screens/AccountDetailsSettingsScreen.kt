@@ -312,9 +312,10 @@ fun AccountDetailsSettingsScreen(
                     onClick = { showChangePasswordDialog = true },
                 )
 
-                // 3. Biometrische Authentifizierung — only if account has a password and hardware supports it
-                if (state.hasPassword &&
-                    state.biometricAvailability != net.jami.services.BiometricAvailability.NO_HARDWARE &&
+                // 3. Biometrische Authentifizierung — shown whenever hardware is present.
+                //    When no password is set yet the row is visible but tapping it opens the
+                //    password-setup dialog so the user can satisfy the prerequisite in one step.
+                if (state.biometricAvailability != net.jami.services.BiometricAvailability.NO_HARDWARE &&
                     state.biometricAvailability != net.jami.services.BiometricAvailability.UNKNOWN_ERROR) {
                     AccountActionRow(
                         icon = Icons.Default.Fingerprint,
@@ -322,14 +323,15 @@ fun AccountDetailsSettingsScreen(
                             stringResource(Res.string.account_biometric_disable)
                         else
                             stringResource(Res.string.account_biometric_set),
-                        summary = stringResource(Res.string.account_biometric_summary),
+                        summary = if (!state.hasPassword)
+                            stringResource(Res.string.account_biometric_needs_password)
+                        else
+                            stringResource(Res.string.account_biometric_summary),
                         onClick = {
-                            if (state.hasBiometric) {
-                                // Show disable confirmation dialog
-                                showDisableBiometricDialog = true
-                            } else {
-                                // Show password confirmation for enrollment
-                                showBiometricSetupDialog = true
+                            when {
+                                state.hasBiometric -> showDisableBiometricDialog = true
+                                !state.hasPassword -> showChangePasswordDialog = true
+                                else -> showBiometricSetupDialog = true
                             }
                         },
                     )

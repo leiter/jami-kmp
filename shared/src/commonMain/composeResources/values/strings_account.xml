@@ -80,6 +80,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_biometric_disable">Disable biometric authentication</string>
     <string name="account_biometric_set">Enable biometric authentication</string>
     <string name="account_biometric_summary">Manage biometric authentication for your account.</string>
+    <string name="account_biometric_needs_password">Set an account password above to enable biometric authentication.</string>
 
     <!-- Basic Details -->
     <string name="account_preferences_basic_tab">General</string>
