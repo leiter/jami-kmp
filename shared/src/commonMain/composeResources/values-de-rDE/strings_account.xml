@@ -60,7 +60,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_export_end_decryption_message">Falsches Passwort. Bitte versuchen Sie es erneut mit dem richtigen Passwort.</string>
     <string name="account_share_body">Kontaktieren Sie mich über „%1$s“ auf der Jami-Plattform für verteilte Kommunikation: %2$s</string>
     <string name="account_share_body_with_username">Kontaktieren Sie mich über „%1$s“ oder meinen öffentlichen Benutzernamen „%2$s“ auf der verteilten Kommunikationsplattform Jami:%3$s</string>
-    <string name="account_contact_me">Kontaktiere mich bei Jami!</string>
+    <string name="account_contact_me">Teilen</string>
     <string name="account_migration_message_dialog">Ihre Konten müssen aktualisiert werden. Möchten Sie zum Bildschirm „Kontoverwaltung“ wechseln, um diesen Vorgang auszuführen?</string>
     <string name="account_cannot_be_found_title">Kontofehler</string>
     <string name="account_cannot_be_found_message">Konto im Jami-Netzwerk konnte nicht gefunden werden. Stellen Sie sicher, dass es von einem vorhandenen Gerät auf Jami exportiert wurde und dass die angegebenen Anmeldeinformationen korrekt sind.</string>

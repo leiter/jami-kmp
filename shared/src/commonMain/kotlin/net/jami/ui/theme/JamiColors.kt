@@ -46,6 +46,7 @@ object JamiColors {
     val Grey900 = Color(0xFF212121)
 
     // Semantic colors
+    val Green400 = Color(0xFF66BB6A)
     val Green500 = Color(0xFF4CAF50)
     val Green700 = Color(0xFF388E3C)
     val Red500 = Color(0xFFF44336)

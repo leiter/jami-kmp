@@ -142,7 +142,6 @@ Recently closed: Telecom API / ConnectionService (JamiTelecomManager registers s
 Still open:
 
 - **Push notifications** — FCM (Android) and APNs (iOS) not integrated; calls and messages only work when the daemon is running in the foreground.
-- **Conversation categories / filtering** — filter chips are live (All / Unread / Groups); Requests filter not yet wired (pending requests are shown via a separate banner, not a filter chip).
 - **Chat plugins** — Jami plugin system not ported to KMP. Menu item shows a "not yet supported" snackbar.
 - **OsmMapView (Desktop/macOS)** — no viable JVM or AppKit map library in scope; shows coordinate text instead of a map.
 - **Desktop DaemonBridge** — all 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.

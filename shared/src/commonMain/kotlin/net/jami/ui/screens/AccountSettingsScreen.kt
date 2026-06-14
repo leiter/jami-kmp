@@ -40,15 +40,23 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddLink
-import androidx.compose.material.icons.filled.ChatBubble
-import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.outlined.AccountBox
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.AddToQueue
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.outlined.DeviceHub
+import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.ManageAccounts
+import androidx.compose.material.icons.outlined.PermMedia
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Slideshow
+import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -64,8 +72,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -86,6 +92,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PointMode
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -97,23 +104,85 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import jami_kmp.shared.generated.resources.*
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.account_contact_me
+import jami_kmp.shared.generated.resources.account_delete_dialog_message
+import jami_kmp.shared.generated.resources.account_delete_dialog_title
+import jami_kmp.shared.generated.resources.account_device_this_indicator
+import jami_kmp.shared.generated.resources.account_link_device_error
+import jami_kmp.shared.generated.resources.account_link_device_hint
+import jami_kmp.shared.generated.resources.account_link_device_success
+import jami_kmp.shared.generated.resources.account_link_device_title
+import jami_kmp.shared.generated.resources.account_link_show_button
+import jami_kmp.shared.generated.resources.account_password_label
+import jami_kmp.shared.generated.resources.account_preferences_advanced_tab
+import jami_kmp.shared.generated.resources.account_preferences_media_tab
+import jami_kmp.shared.generated.resources.account_rename_device
+import jami_kmp.shared.generated.resources.account_share_body
+import jami_kmp.shared.generated.resources.account_sip_server
+import jami_kmp.shared.generated.resources.account_sip_username
+import jami_kmp.shared.generated.resources.account_status_offline
+import jami_kmp.shared.generated.resources.account_status_online
+import jami_kmp.shared.generated.resources.action_link_device
+import jami_kmp.shared.generated.resources.action_rename
+import jami_kmp.shared.generated.resources.content_desc_back
+import jami_kmp.shared.generated.resources.devices_header
+import jami_kmp.shared.generated.resources.export_side_step1_advice_qr
+import jami_kmp.shared.generated.resources.export_side_step1_switch_to_code
+import jami_kmp.shared.generated.resources.export_side_step1_switch_to_qr
+import jami_kmp.shared.generated.resources.export_side_step2_advice
+import jami_kmp.shared.generated.resources.export_side_step2_advice_ip_only
+import jami_kmp.shared.generated.resources.export_side_step2_cancel
+import jami_kmp.shared.generated.resources.export_side_step2_confirm
+import jami_kmp.shared.generated.resources.export_side_step3_body_loading
+import jami_kmp.shared.generated.resources.export_side_step3_exit
+import jami_kmp.shared.generated.resources.identity
+import jami_kmp.shared.generated.resources.import_side_step1_connecting
+import jami_kmp.shared.generated.resources.invalid_username
+import jami_kmp.shared.generated.resources.link_device_error_authentication
+import jami_kmp.shared.generated.resources.link_device_error_canceled
+import jami_kmp.shared.generated.resources.link_device_error_network
+import jami_kmp.shared.generated.resources.link_device_error_timeout
+import jami_kmp.shared.generated.resources.link_device_error_unknown
+import jami_kmp.shared.generated.resources.link_new_device
+import jami_kmp.shared.generated.resources.looking_for_username_availability
+import jami_kmp.shared.generated.resources.menu_delete
+import jami_kmp.shared.generated.resources.menu_item_settings
+import jami_kmp.shared.generated.resources.navigation_item_account
+import jami_kmp.shared.generated.resources.no_registered_name_for_account
+import jami_kmp.shared.generated.resources.open_the_gallery
+import jami_kmp.shared.generated.resources.pref_category_messages
+import jami_kmp.shared.generated.resources.profile
+import jami_kmp.shared.generated.resources.profile_name
+import jami_kmp.shared.generated.resources.qr_code
+import jami_kmp.shared.generated.resources.register_name
+import jami_kmp.shared.generated.resources.register_name_failed
+import jami_kmp.shared.generated.resources.register_name_success
+import jami_kmp.shared.generated.resources.register_username
+import jami_kmp.shared.generated.resources.registered_username
+import jami_kmp.shared.generated.resources.remove_photo
+import jami_kmp.shared.generated.resources.screen_title_account_settings
+import jami_kmp.shared.generated.resources.section_linked_devices
+import jami_kmp.shared.generated.resources.show_qr_code
+import jami_kmp.shared.generated.resources.trying_to_register_name
+import jami_kmp.shared.generated.resources.unknown_error
+import jami_kmp.shared.generated.resources.username_already_taken
+import jami_kmp.shared.generated.resources.username_available
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.jami.di.getViewModel
 import net.jami.services.AuthError
 import net.jami.ui.components.QrCodeScannerView
+import net.jami.ui.components.actions.JamiAccountSwitch
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.JamiSectionTitle
-import net.jami.ui.components.inputs.JamiFormattedTextField
 import net.jami.ui.platform.FilePickerEffect
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.AccountSettingsViewModel
 import net.jami.ui.viewmodel.AddDeviceExportState
 import net.jami.ui.viewmodel.DeviceItem
-import net.jami.ui.viewmodel.ExportInputError
 import net.jami.ui.viewmodel.UsernameCheckError
 import net.jami.utils.FileUtils
 import net.jami.utils.QRCodeColors
@@ -304,32 +373,18 @@ fun AccountSettingsScreen(
                     }
                 },
                 actions = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                    JamiAccountSwitch(
+                        checked = state.isOnline,
+                        onCheckedChange = { viewModel.setOnline(it) },
+                        label = if (state.isOnline)
+                            stringResource(Res.string.account_status_online)
+                        else
+                            stringResource(Res.string.account_status_offline),
                         modifier = Modifier.padding(end = JamiTheme.spacing.m),
-                    ) {
-                        Text(
-                            text = if (state.isOnline)
-                                stringResource(Res.string.account_status_online)
-                            else
-                                stringResource(Res.string.account_status_offline),
-                            style = JamiTheme.typography.bodySmall,
-                            color = if (state.isOnline) JamiTheme.colors.positive
-                                    else JamiTheme.colors.onSurfaceVariant,
-                        )
-                        Spacer(Modifier.width(JamiTheme.spacing.xs))
-                        Switch(
-                            checked = state.isOnline,
-                            onCheckedChange = { viewModel.setOnline(it) },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = JamiTheme.colors.positive,
-                            ),
-                        )
-                    }
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
+                    containerColor = JamiTheme.colors.background,
                     titleContentColor = JamiTheme.colors.onSurface,
                 ),
             )
@@ -346,11 +401,11 @@ fun AccountSettingsScreen(
 
             // ── PROFIL ────────────────────────────────────────────────────
             JamiSectionTitle(title = stringResource(Res.string.profile))
-            JamiFormattedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = textValue,
-                onValueChange = { textValue = it },
-            )
+//            JamiFormattedTextField(
+//                modifier = Modifier.fillMaxWidth(),
+//                value = textValue,
+//                onValueChange = { textValue = it },
+//            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -421,7 +476,7 @@ fun AccountSettingsScreen(
                         label = stringResource(Res.string.account_sip_server),
                         value = state.sipHostname.ifEmpty { "—" },
                     )
-                    HorizontalDivider(color = JamiTheme.colors.outline)
+                    HorizontalDivider(color = JamiTheme.colors.background)
                     LabelValueRow(
                         label = stringResource(Res.string.account_sip_username),
                         value = state.sipUsername.ifEmpty { "—" },
@@ -458,7 +513,7 @@ fun AccountSettingsScreen(
                         }
                     }
 
-                    HorizontalDivider(color = JamiTheme.colors.outline)
+                    HorizontalDivider(color = JamiTheme.colors.background)
 
                     // Identity hash row
                     LabelValueRow(
@@ -468,33 +523,44 @@ fun AccountSettingsScreen(
                         overflow = TextOverflow.Ellipsis,
                     )
 
-                    HorizontalDivider(color = JamiTheme.colors.outline)
+                    HorizontalDivider(color = JamiTheme.colors.background)
 
                     // Share + QR-Code buttons
                     Row(modifier = Modifier.fillMaxWidth()) {
                         TextButton(
                             onClick = { shareText(shareSubject, shareBody) },
+                            shape = RectangleShape,
                             modifier = Modifier.weight(1f),
                         ) {
-                            Icon(Icons.Default.Share, contentDescription = null)
+                            Icon(
+                                Icons.Default.Share,
+                                contentDescription = null,
+                                tint = JamiTheme.colors.onSurfaceVariant
+                            )
                             Spacer(Modifier.width(JamiTheme.spacing.xs))
-                            Text(stringResource(Res.string.account_contact_me))
+                            Text(stringResource(Res.string.account_contact_me),
+                                color = JamiTheme.colors.onSurfaceVariant)
                         }
                         // Vertical separator
                         Box(
                             modifier = Modifier
                                 .width(1.dp)
                                 .height(48.dp)
-                                .background(JamiTheme.colors.outline)
+                                .background(JamiTheme.colors.background)
                                 .align(Alignment.CenterVertically),
                         )
                         TextButton(
                             onClick = { showQrSheet = true },
                             modifier = Modifier.weight(1f),
                         ) {
-                            Icon(Icons.Default.QrCode, contentDescription = null)
+                            Icon(
+                                Icons.Default.QrCode,
+                                contentDescription = null,
+                                tint = JamiTheme.colors.onSurfaceVariant)
                             Spacer(Modifier.width(JamiTheme.spacing.xs))
-                            Text(stringResource(Res.string.qr_code))
+                            Text(
+                                text = stringResource(Res.string.qr_code),
+                                color = JamiTheme.colors.onSurfaceVariant)
                         }
                     }
                 }
@@ -507,7 +573,7 @@ fun AccountSettingsScreen(
             if (!state.isSip) {
             JamiSectionTitle(title = stringResource(Res.string.devices_header))
 
-            val otherDevices = state.devices.filter { !it.isCurrent }
+            val otherDevices = state.devices//.filter { !it.isCurrent }
             var devicesExpanded by remember { mutableStateOf(false) }
 
             AccountCard {
@@ -517,7 +583,7 @@ fun AccountSettingsScreen(
                         .fillMaxWidth()
                         .padding(
                             horizontal = JamiTheme.spacing.m,
-                            vertical = JamiTheme.spacing.s,
+                            
                         ),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -545,7 +611,7 @@ fun AccountSettingsScreen(
 
                 // "Show N more" expandable row
                 if (otherDevices.isNotEmpty()) {
-                    HorizontalDivider(color = JamiTheme.colors.outline)
+                    HorizontalDivider(color = JamiTheme.colors.background)
                     TextButton(
                         onClick = { devicesExpanded = !devicesExpanded },
                         modifier = Modifier.fillMaxWidth(),
@@ -560,20 +626,22 @@ fun AccountSettingsScreen(
                     }
                     if (devicesExpanded) {
                         otherDevices.forEach { device ->
-                            HorizontalDivider(color = JamiTheme.colors.outline)
+                            HorizontalDivider(color = JamiTheme.colors.surfaceVariant)
                             DeviceRow(device = device)
                         }
                     }
                 }
 
-                HorizontalDivider(color = JamiTheme.colors.outline)
+                HorizontalDivider(color = JamiTheme.colors.background)
 
                 // Link new device
                 TextButton(
                     onClick = { showLinkDeviceSheet = true },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Icon(Icons.Default.AddLink, contentDescription = null)
+                    Icon(Icons.Outlined.AddToQueue,
+                        tint = JamiTheme.colors.onSurfaceVariant,
+                        contentDescription = null)
                     Spacer(Modifier.width(JamiTheme.spacing.xs))
                     Text(
                         text = stringResource(Res.string.link_new_device),
@@ -591,39 +659,39 @@ fun AccountSettingsScreen(
             AccountCard {
                 SettingsCardRow(
                     label = stringResource(Res.string.navigation_item_account),
-                    icon = Icons.Default.AccountCircle,
+                    icon = Icons.Outlined.AccountCircle,
                     onClick = onAccount,
                 )
-                HorizontalDivider(color = JamiTheme.colors.outline)
-                SettingsCardRow(
-                    label = stringResource(Res.string.screen_title_blocked_contacts),
-                    icon = Icons.Default.Block,
-                    onClick = onBlockedContacts,
-                )
-                HorizontalDivider(color = JamiTheme.colors.outline)
-                SettingsCardRow(
-                    label = stringResource(Res.string.account_delete_label),
-                    icon = Icons.Default.Delete,
-                    onClick = { showDeleteDialog = true },
-                    tint = JamiTheme.colors.error,
-                    labelColor = JamiTheme.colors.error,
-                )
-                HorizontalDivider(color = JamiTheme.colors.outline)
+//                HorizontalDivider(color = JamiTheme.colors.surfaceVariant)
+//                SettingsCardRow(
+//                    label = stringResource(Res.string.screen_title_blocked_contacts),
+//                    icon = Icons.Default.Block,
+//                    onClick = onBlockedContacts,
+//                )
+//                HorizontalDivider(color = JamiTheme.colors.surfaceVariant)
+//                SettingsCardRow(
+//                    label = stringResource(Res.string.account_delete_label),
+//                    icon = Icons.Default.Delete,
+//                    onClick = { showDeleteDialog = true },
+//                    tint = JamiTheme.colors.error,
+//                    labelColor = JamiTheme.colors.error,
+//                )
+                HorizontalDivider(color = JamiTheme.colors.background)
                 SettingsCardRow(
                     label = stringResource(Res.string.account_preferences_media_tab),
-                    icon = Icons.Default.Image,
+                    icon = Icons.Outlined.PermMedia,
                     onClick = onMedia,
                 )
-                HorizontalDivider(color = JamiTheme.colors.outline)
+                HorizontalDivider(color = JamiTheme.colors.background)
                 SettingsCardRow(
                     label = stringResource(Res.string.pref_category_messages),
-                    icon = Icons.Default.ChatBubble,
+                    icon = Icons.Outlined.ChatBubbleOutline,
                     onClick = onMessages,
                 )
-                HorizontalDivider(color = JamiTheme.colors.outline)
+                HorizontalDivider(color = JamiTheme.colors.background)
                 SettingsCardRow(
                     label = stringResource(Res.string.account_preferences_advanced_tab),
-                    icon = Icons.Default.Settings,
+                    icon = Icons.Outlined.ManageAccounts,
                     onClick = onAdvanced,
                 )
             }
@@ -779,8 +847,8 @@ private fun SettingsCardRow(
     label: String,
     icon: ImageVector,
     onClick: () -> Unit,
-    tint: androidx.compose.ui.graphics.Color = JamiTheme.colors.onSurfaceVariant,
-    labelColor: androidx.compose.ui.graphics.Color = JamiTheme.colors.onSurface,
+    tint: Color = JamiTheme.colors.onSurfaceVariant,
+    labelColor: Color = JamiTheme.colors.onSurface,
 ) {
     Row(
         modifier = Modifier

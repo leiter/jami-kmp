@@ -72,7 +72,7 @@ fun JamiTopBar(
                 modifier = modifier,
                 actions = actions,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
+                    containerColor = JamiTheme.colors.background,
                     titleContentColor = JamiTheme.colors.onSurface,
                     actionIconContentColor = JamiTheme.colors.onSurfaceVariant,
                 ),
@@ -99,7 +99,7 @@ fun JamiTopBar(
                 },
                 actions = actions,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
+                    containerColor = JamiTheme.colors.background,
                     titleContentColor = JamiTheme.colors.onSurface,
                     navigationIconContentColor = JamiTheme.colors.onSurface,
                     actionIconContentColor = JamiTheme.colors.onSurfaceVariant,
@@ -127,7 +127,7 @@ fun JamiTopBar(
                 },
                 actions = actions,
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = JamiTheme.colors.surface,
+                    containerColor = JamiTheme.colors.background,
                     titleContentColor = JamiTheme.colors.onSurface,
                     navigationIconContentColor = JamiTheme.colors.onSurface,
                     actionIconContentColor = JamiTheme.colors.onSurfaceVariant,
