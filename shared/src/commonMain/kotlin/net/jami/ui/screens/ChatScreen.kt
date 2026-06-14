@@ -24,6 +24,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -50,6 +51,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -65,6 +67,7 @@ import androidx.compose.material.icons.filled.CallMissed
 import androidx.compose.material.icons.filled.CallMissedOutgoing
 import androidx.compose.material.icons.filled.CallReceived
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.FileDownload
@@ -75,7 +78,9 @@ import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import kotlinx.coroutines.Dispatchers
@@ -126,6 +131,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -413,6 +419,7 @@ fun ChatScreen(
                             ) {
                                 DropdownMenuItem(
                                     text = { Text(stringResource(Res.string.conversation_details)) },
+                                    leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null) },
                                     onClick = {
                                         overflowMenuExpanded = false
                                         onDetailsClick()
@@ -420,6 +427,7 @@ fun ChatScreen(
                                 )
                                 DropdownMenuItem(
                                     text = { Text(stringResource(Res.string.conversation_search_hint)) },
+                                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                                     onClick = {
                                         overflowMenuExpanded = false
                                         viewModel.openSearch()
@@ -427,6 +435,7 @@ fun ChatScreen(
                                 )
                                 DropdownMenuItem(
                                     text = { Text(stringResource(Res.string.conversation_action_history_clear)) },
+                                    leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
                                     onClick = {
                                         overflowMenuExpanded = false
                                         viewModel.clearHistory()
@@ -1339,7 +1348,7 @@ private fun MessageInputBar(
     // Outer container with background
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = JamiTheme.colors.surface,
+        color = Color.Transparent,
     ) {
         // Card container matching Android's cvMessageInput
         Card(
@@ -1370,7 +1379,7 @@ private fun MessageInputBar(
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = "Message options",
-                            tint = JamiTheme.colors.onSurface,
+                            tint = JamiTheme.colors.onSurfaceVariant,
                             modifier = Modifier.size(20.dp),
                         )
                     }
@@ -1479,33 +1488,38 @@ private fun MessageInputBar(
                     Icon(
                         imageVector = Icons.Default.PhotoCamera,
                         contentDescription = "Take photo",
-                        tint = JamiTheme.colors.onSurface,
+                        tint = JamiTheme.colors.onSurfaceVariant,
                         modifier = Modifier.size(20.dp),
                     )
                 }
 
-                // Text input field (transparent background)
-                TextField(
+                // Text input field — BasicTextField for full padding control
+                val writeAMessage = stringResource(Res.string.write_a_message)
+                BasicTextField(
                     value = value,
                     onValueChange = onValueChange,
-                    placeholder = {
-                        Text(
-                            stringResource(Res.string.conversation_type_message),
-                            color = JamiTheme.colors.onSurfaceVariant,
-                        )
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(vertical = 8.dp),
+                    textStyle = JamiTheme.typography.bodyLarge.copy(
+                        color = JamiTheme.colors.onSurface,
                     ),
+                    cursorBrush = SolidColor(JamiTheme.colors.primary),
                     maxLines = 5,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { onSend() }),
+                    decorationBox = { innerTextField ->
+                        Box(contentAlignment = Alignment.CenterStart) {
+                            if (value.isEmpty()) {
+                                Text(
+                                    text = writeAMessage,
+                                    style = JamiTheme.typography.bodyLarge,
+                                    color = JamiTheme.colors.onSurfaceVariant,
+                                )
+                            }
+                            innerTextField()
+                        }
+                    },
                 )
 
                 // Send button or thumbs up emoji button
@@ -1530,8 +1544,8 @@ private fun MessageInputBar(
                     ) {
                         Text(
                             text = stringResource(Res.string.conversation_default_emoji),
-                            style = JamiTheme.typography.titleLarge,
-                            color = JamiTheme.colors.onSurface,
+                            fontSize = 18.sp,
+                            lineHeight = 18.sp,
                         )
                     }
                 }
@@ -1753,8 +1767,8 @@ private fun LocationSharingBanner(
 @Composable
 private fun LinkPreviewCard(
     preview: net.jami.ui.utils.LinkPreview,
-    bubbleColor: androidx.compose.ui.graphics.Color,
-    textColor: androidx.compose.ui.graphics.Color,
+    bubbleColor: Color,
+    textColor: Color,
     modifier: Modifier = Modifier,
 ) {
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current

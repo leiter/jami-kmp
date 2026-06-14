@@ -419,7 +419,8 @@ fun AccountSettingsScreen(
                     .padding(horizontal = JamiTheme.spacing.l)
                     .padding(bottom = JamiTheme.spacing.m),
                 verticalAlignment = Alignment.CenterVertically,
-            ) {
+            )
+            {
                 // Avatar — tappable: opens a menu to pick from gallery or remove photo
                 Box {
                     Box(modifier = Modifier.clickable { showPhotoMenu = true }) {
