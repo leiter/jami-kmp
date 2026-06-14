@@ -199,7 +199,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Verbindung vom Backup</string>
     <string name="account_new_button">Erstellen Sie ein Jami-Konto</string>
     <string name="account_link_export_button">Verbinde neues Gerät</string>
-    <string name="account_link_show_button">Zeige weitere %d verbundene Geräte</string>
+    <string name="account_link_show_button">Zeige weitere %1$d verbundene Geräte</string>
     <string name="account_link_hide_button">Verstecke dieses verbundene Gerät</string>
     <string name="account_start_export_button">Authentifizierungscode generieren</string>
     <string name="account_end_export_button">Schließen</string>

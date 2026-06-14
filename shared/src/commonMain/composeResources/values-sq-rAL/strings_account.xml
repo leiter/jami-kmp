@@ -196,7 +196,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Lidhje prej kopjeruajtjeje</string>
     <string name="account_new_button">Krijoni një llogari Jami</string>
     <string name="account_link_export_button">Lidhni pajisje të re</string>
-    <string name="account_link_show_button">Shfaq %d pajisje të tjera të lidhura</string>
+    <string name="account_link_show_button">Shfaq %1$d pajisje të tjera të lidhura</string>
     <string name="account_link_hide_button">Fshihe pajisjen e lidhur</string>
     <string name="account_start_export_button">Prodho kod mirëfilltësimi</string>
     <string name="account_end_export_button">mbylle</string>

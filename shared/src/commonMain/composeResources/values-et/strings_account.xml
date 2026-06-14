@@ -196,7 +196,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Loo ühendus varukoopia abil</string>
     <string name="account_new_button">Loo Jami konto</string>
     <string name="account_link_export_button">Seo uus seade</string>
-    <string name="account_link_show_button">Näita veel %d seotud seadet</string>
+    <string name="account_link_show_button">Näita veel %1$d seotud seadet</string>
     <string name="account_link_hide_button">Peida seotud seade</string>
     <string name="account_start_export_button">Loo tuvastuskood</string>
     <string name="account_end_export_button">sulge</string>

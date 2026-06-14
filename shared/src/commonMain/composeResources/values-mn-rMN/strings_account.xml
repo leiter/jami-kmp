@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Дахин хангах</string>
     <string name="account_new_button">Jami-ийн дансыг бий болгох</string>
     <string name="account_link_export_button">Шинэ төхөөрөмжийг холбох</string>
-    <string name="account_link_show_button">%d-ийг холбогдсон төхөөрөмжээр нь харуулна</string>
+    <string name="account_link_show_button">%1$d-ийг холбогдсон төхөөрөмжээр нь харуулна</string>
     <string name="account_link_hide_button">Хаалсан холбогдсон төхөөрөмж</string>
     <string name="account_end_export_button">ойрхон</string>
     <string name="account_export_title">Бусад төхөөрөмжүүдтэй холбогдсон данс</string>

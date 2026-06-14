@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">バックアップから接続</string>
     <string name="account_new_button">Jamiアカウントを作成する</string>
     <string name="account_link_export_button">新しいデバイスを連結する</string>
-    <string name="account_link_show_button">さらに%d個のデバイスを表示</string>
+    <string name="account_link_show_button">さらに%1$d個のデバイスを表示</string>
     <string name="account_link_hide_button">リンクされたデバイスを隠す</string>
     <string name="account_end_export_button">閉じる</string>
     <string name="account_export_title">アカウントを他のデバイスとリンク</string>

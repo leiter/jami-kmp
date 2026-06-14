@@ -196,7 +196,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Qqen seg uḥraz</string>
     <string name="account_new_button">Snulfu-d amiḍan n Jami</string>
     <string name="account_link_export_button">Aseɣwen n yibenk amaynut</string>
-    <string name="account_link_show_button">Sken %d ugar n yibenk icudden</string>
+    <string name="account_link_show_button">Sken %1$d ugar n yibenk icudden</string>
     <string name="account_link_hide_button">Ffer ibenk icudden</string>
     <string name="account_start_export_button">Sirew tangalt n usesteb</string>
     <string name="account_end_export_button">Mdel</string>

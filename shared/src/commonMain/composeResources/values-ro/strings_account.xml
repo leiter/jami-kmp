@@ -196,7 +196,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Conectare din copia de rezervă</string>
     <string name="account_new_button">Creează un cont Jami</string>
     <string name="account_link_export_button">Asociază un nou aparat</string>
-    <string name="account_link_show_button">Arată încă %d aparate asociate</string>
+    <string name="account_link_show_button">Arată încă %1$d aparate asociate</string>
     <string name="account_link_hide_button">Ascunde aparatul asociat</string>
     <string name="account_start_export_button">Generează codul de autentificare</string>
     <string name="account_end_export_button">închide</string>

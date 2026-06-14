@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">காப்பு இருந்து இணைக்கவும்</string>
     <string name="account_new_button">ஜாமி கணக்கை உருவாக்கவும்</string>
     <string name="account_link_export_button">புதிய சாதனத்தை இணைக்கவும்</string>
-    <string name="account_link_show_button">%d இணைக்கப்பட்ட சாதனத்தை காட்டவும்</string>
+    <string name="account_link_show_button">%1$d இணைக்கப்பட்ட சாதனத்தை காட்டவும்</string>
     <string name="account_link_hide_button">இணைக்கப்பட்ட சாதனத்தை மறைக்கவும்</string>
     <string name="account_end_export_button">நெருக்கமான</string>
     <string name="account_export_title">மற்ற சாதனங்களுடன் இணைப்பு கணக்கு</string>

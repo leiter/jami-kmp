@@ -81,7 +81,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Povezivanje sa rezervom</string>
     <string name="account_new_button">Stvoriti račun Jami</string>
     <string name="account_link_export_button">Povezivanje novog uređaja</string>
-    <string name="account_link_show_button">Pokaži %d više povezanih uređaja</string>
+    <string name="account_link_show_button">Pokaži %1$d više povezanih uređaja</string>
     <string name="account_link_hide_button">Skloni se priključeno uređaj</string>
     <string name="account_end_export_button">U blizini</string>
     <string name="account_export_title">Uloženje povezivanja s drugim uređajima</string>

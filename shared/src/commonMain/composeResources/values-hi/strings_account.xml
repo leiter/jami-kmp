@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">बैकअप से कनेक्ट करें</string>
     <string name="account_new_button">Jami खाता बनाएं</string>
     <string name="account_link_export_button">नई डिवाइस लिंक</string>
-    <string name="account_link_show_button">%d अधिक जुड़ी हुई डिवाइस दिखाएँ</string>
+    <string name="account_link_show_button">%1$d अधिक जुड़ी हुई डिवाइस दिखाएँ</string>
     <string name="account_link_hide_button">छुपाए हुए कनेक्टेड डिवाइस</string>
     <string name="account_end_export_button">निकट</string>
     <string name="account_export_title">अन्य उपकरणों से लिंक खाता</string>

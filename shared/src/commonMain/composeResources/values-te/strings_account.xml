@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">బ్యాకప్ నుండి కనెక్ట్</string>
     <string name="account_new_button">జమి ఖాతాను సృష్టించు</string>
     <string name="account_link_export_button">కొత్త పరికరానికి లింక్</string>
-    <string name="account_link_show_button">%d మరింత లింక్ చేయబడిన పరికరాన్ని చూపించు</string>
+    <string name="account_link_show_button">%1$d మరింత లింక్ చేయబడిన పరికరాన్ని చూపించు</string>
     <string name="account_link_hide_button">లింక్ చేయబడిన పరికరాన్ని దాచండి</string>
     <string name="account_end_export_button">దగ్గరగా</string>
     <string name="account_export_title">ఇతర పరికరాలకు లింక్ ఖాతా</string>

@@ -196,7 +196,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Kapcsolódás biztonsági másolatból</string>
     <string name="account_new_button">Jami-fiók létrehozása</string>
     <string name="account_link_export_button">Új eszköz összekapcsolása</string>
-    <string name="account_link_show_button">További %d összekapcsolt eszköz megjelenítése</string>
+    <string name="account_link_show_button">További %1$d összekapcsolt eszköz megjelenítése</string>
     <string name="account_link_hide_button">Összekapcsolt eszköz elrejtése</string>
     <string name="account_start_export_button">Hitelesítési kód létrehozása</string>
     <string name="account_end_export_button">bezárás</string>

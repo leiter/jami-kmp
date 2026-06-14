@@ -148,7 +148,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Jikọọ site nkwado ndabere</string>
     <string name="account_new_button">Mepụta akaụntụ Jami</string>
     <string name="account_link_export_button">Jikọọ ngwaọrụ ọhụrụ</string>
-    <string name="account_link_show_button">Gosi %d ọzọ jikọrọ ngwaọrụ</string>
+    <string name="account_link_show_button">Gosi %1$d ọzọ jikọrọ ngwaọrụ</string>
     <string name="account_link_hide_button">Ochechi njikọ ngwaọrụ</string>
     <string name="account_end_export_button">nso</string>
     <string name="account_export_title">Njikọ akaụntụ na ngwaọrụ ndị ọzọ</string>

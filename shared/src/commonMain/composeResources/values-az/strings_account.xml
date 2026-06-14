@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">پشتیبانلیکدن باغلانیب</string>
     <string name="account_new_button">Jami حسابي يارادين</string>
     <string name="account_link_export_button">یئنی آلینانی باغلا</string>
-    <string name="account_link_show_button">%d داها باغلي اولان آلتی گؤرسهدیر</string>
+    <string name="account_link_show_button">%1$d داها باغلي اولان آلتی گؤرسهدیر</string>
     <string name="account_link_hide_button">باغلي اولان آلتی اؤرت</string>
     <string name="account_end_export_button">یاخینلاشماق</string>
     <string name="account_export_title">باشقا آلاتلارا باغلانان حساب</string>

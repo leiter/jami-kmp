@@ -194,7 +194,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Подключиться через резервную копию</string>
     <string name="account_new_button">Создать учетную запись Jami</string>
     <string name="account_link_export_button">Привязать новое устройство</string>
-    <string name="account_link_show_button">Показать еще %d привязанных устройств</string>
+    <string name="account_link_show_button">Показать еще %1$d привязанных устройств</string>
     <string name="account_link_hide_button">Скрыть привязанное устройство</string>
     <string name="account_end_export_button">закрыть</string>
     <string name="account_export_title">Привязать учётную запись к другому устройству</string>

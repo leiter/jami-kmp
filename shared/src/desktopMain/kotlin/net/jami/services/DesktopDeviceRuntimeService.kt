@@ -115,4 +115,7 @@ class DesktopDeviceRuntimeService : DeviceRuntimeService {
 
     override fun deleteFile(path: String): Boolean =
         File(path).delete()
+
+    override fun getLocalDeviceName(): String =
+        System.getProperty("os.name") ?: "Desktop"
 }

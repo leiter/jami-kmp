@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Συνδέστε από την υποστήριξη</string>
     <string name="account_new_button">Δημιουργήστε λογαριασμό Jami</string>
     <string name="account_link_export_button">Σύνδεση νέας συσκευής</string>
-    <string name="account_link_show_button">Δείξτε %d περισσότερες συνδεδεμένες συσκευές</string>
+    <string name="account_link_show_button">Δείξτε %1$d περισσότερες συνδεδεμένες συσκευές</string>
     <string name="account_link_hide_button">Κρύψτε το συνδεδεμένο όργανο</string>
     <string name="account_end_export_button">Κοντά</string>
     <string name="account_export_title">Λογαριασμός σύνδεσης με άλλες συσκευές</string>

@@ -151,7 +151,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Conectar desde copia de apoio</string>
     <string name="account_new_button">Crea unha conta Jami</string>
     <string name="account_link_export_button">Ligar novo dispositivo</string>
-    <string name="account_link_show_button">Mostar %d dispositivo ligado</string>
+    <string name="account_link_show_button">Mostar %1$d dispositivo ligado</string>
     <string name="account_link_hide_button">Agochar dispositivo ligado</string>
     <string name="account_end_export_button">pechar</string>
     <string name="account_export_title">Ligar conta a outros dispositivos</string>

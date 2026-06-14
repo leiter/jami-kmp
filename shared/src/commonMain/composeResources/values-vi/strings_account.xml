@@ -196,7 +196,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Kết nối từ bản sao lưu</string>
     <string name="account_new_button">Tạo tài khoản Jami</string>
     <string name="account_link_export_button">Kết nối thiết bị mới</string>
-    <string name="account_link_show_button">Hiện %d thiết bị đã kết nối khác</string>
+    <string name="account_link_show_button">Hiện %1$d thiết bị đã kết nối khác</string>
     <string name="account_link_hide_button">Ẩn thiết bị đã kết nối</string>
     <string name="account_start_export_button">Tạo mã xác thực</string>
     <string name="account_end_export_button">đóng</string>

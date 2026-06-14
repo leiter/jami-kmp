@@ -196,7 +196,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Poveži se se iz varnostne kopije</string>
     <string name="account_new_button">Ustvarite račun Jami</string>
     <string name="account_link_export_button">Poveži novo napravo</string>
-    <string name="account_link_show_button">Prikaži %d več povezanih naprav</string>
+    <string name="account_link_show_button">Prikaži %1$d več povezanih naprav</string>
     <string name="account_link_hide_button">Skrij povezano napravo</string>
     <string name="account_start_export_button">Tvori overitveno kodo</string>
     <string name="account_end_export_button">zapri</string>

@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Қосымшадан қосылу</string>
     <string name="account_new_button">Jami тіркелгісін құру</string>
     <string name="account_link_export_button">Жаңа құрылғыны қосу</string>
-    <string name="account_link_show_button">%d қосылған құрылғыны көрсету</string>
+    <string name="account_link_show_button">%1$d қосылған құрылғыны көрсету</string>
     <string name="account_link_hide_button">Қосылған құрылғыны жасыру</string>
     <string name="account_end_export_button">жақындау</string>
     <string name="account_export_title">Басқа құрылғыларға сілтеме беру</string>

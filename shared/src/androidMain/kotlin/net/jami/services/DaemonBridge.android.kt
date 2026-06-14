@@ -17,6 +17,7 @@
 package net.jami.services
 
 import android.content.Context
+import android.os.Build
 import android.util.Base64
 import net.jami.daemon.Blob
 import net.jami.daemon.Callback
@@ -776,6 +777,16 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
 
         override fun userSearchEnded(accountId: String, state: Int, query: String, results: VectMap) {
             callbacks.onUserSearchEnded(accountId, state, query, results.toNative())
+        }
+
+        override fun getDeviceName(ret: StringVect) {
+            val manufacturer = Build.MANUFACTURER
+            val model = Build.MODEL
+            val name = if (model.startsWith(manufacturer, ignoreCase = true))
+                model.replaceFirstChar { it.uppercase() }
+            else
+                "${manufacturer.replaceFirstChar { it.uppercase() }} $model"
+            ret.add(name)
         }
 
         override fun getAppDataPath(name: String, ret: StringVect) {

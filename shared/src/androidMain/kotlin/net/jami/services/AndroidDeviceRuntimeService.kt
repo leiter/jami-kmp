@@ -91,6 +91,15 @@ class AndroidDeviceRuntimeService(
     override fun deleteFile(path: String): Boolean =
         File(path).delete()
 
+    override fun getLocalDeviceName(): String {
+        val manufacturer = Build.MANUFACTURER
+        val model = Build.MODEL
+        return if (model.startsWith(manufacturer, ignoreCase = true))
+            model.replaceFirstChar { it.uppercase() }
+        else
+            "${manufacturer.replaceFirstChar { it.uppercase() }} $model"
+    }
+
     private fun checkPermission(permission: String): Boolean =
         ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 }

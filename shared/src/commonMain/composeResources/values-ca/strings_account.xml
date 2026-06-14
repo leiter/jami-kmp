@@ -150,7 +150,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Connecta des d\'una còpia de seguretat</string>
     <string name="account_new_button">Creació de compte Jami</string>
     <string name="account_link_export_button">Coneix el nou dispositiu</string>
-    <string name="account_link_show_button">Mostra %d més dispositius enllaçats</string>
+    <string name="account_link_show_button">Mostra %1$d més dispositius enllaçats</string>
     <string name="account_link_hide_button">Amaga el dispositiu enllaçat</string>
     <string name="account_end_export_button">tanca</string>
     <string name="account_export_title">Enllaça el compte amb altres dispositius</string>

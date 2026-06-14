@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">ब्याकअपबाट जडान</string>
     <string name="account_new_button">Jami खाता सिर्जना गर्नुहोस्</string>
     <string name="account_link_export_button">नयाँ यन्त्रलाई लिंक गर्नुहोस्</string>
-    <string name="account_link_show_button">%d थप जोडिएको उपकरण देखाउनुहोस्</string>
+    <string name="account_link_show_button">%1$d थप जोडिएको उपकरण देखाउनुहोस्</string>
     <string name="account_link_hide_button">छुपाएर जडान गरिएको उपकरण</string>
     <string name="account_end_export_button">नजिक</string>
     <string name="account_export_title">अन्य उपकरणहरूमा लिंक खाता</string>

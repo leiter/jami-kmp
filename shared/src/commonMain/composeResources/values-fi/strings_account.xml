@@ -196,7 +196,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Yhdistä varmuuskopiosta</string>
     <string name="account_new_button">Luo Jami-tili</string>
     <string name="account_link_export_button">Linkitä uusi laite</string>
-    <string name="account_link_show_button">Näytä %d muuta linkitettyä laitetta</string>
+    <string name="account_link_show_button">Näytä %1$d muuta linkitettyä laitetta</string>
     <string name="account_link_hide_button">Piilota linkitetty laite</string>
     <string name="account_start_export_button">Luo todennuskoodi</string>
     <string name="account_end_export_button">sulje</string>

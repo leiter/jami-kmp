@@ -194,7 +194,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Połącz z kopii zapasowej</string>
     <string name="account_new_button">Utworz konto Jami</string>
     <string name="account_link_export_button">Połącz nowe urządzenie</string>
-    <string name="account_link_show_button">Wyświetlać %d więcej urządzeń połączonych</string>
+    <string name="account_link_show_button">Wyświetlać %1$d więcej urządzeń połączonych</string>
     <string name="account_link_hide_button">Ukryj urządzenie połączone</string>
     <string name="account_end_export_button">zamknij</string>
     <string name="account_export_title">Konty łączenia z innymi urządzeniami</string>

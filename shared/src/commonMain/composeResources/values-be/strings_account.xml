@@ -148,7 +148,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Падключыце з рэзервовай сістэмы</string>
     <string name="account_new_button">Стварэнне ўліковага запісу Jami</string>
     <string name="account_link_export_button">Звязаць новае прылада</string>
-    <string name="account_link_show_button">Паказаць %d больш звязаных прылад</string>
+    <string name="account_link_show_button">Паказаць %1$d больш звязаных прылад</string>
     <string name="account_link_hide_button">Схаваць злучанае прылада</string>
     <string name="account_end_export_button">блізка</string>
     <string name="account_export_title">Уліковы запіс да іншых прылад</string>

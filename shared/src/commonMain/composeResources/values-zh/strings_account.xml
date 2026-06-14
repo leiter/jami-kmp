@@ -196,7 +196,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">从备份文件关联</string>
     <string name="account_new_button">创建 Jami 账号</string>
     <string name="account_link_export_button">关联新设备</string>
-    <string name="account_link_show_button">再显示 %d 个关联设备</string>
+    <string name="account_link_show_button">再显示 %1$d 个关联设备</string>
     <string name="account_link_hide_button">隐藏关联设备</string>
     <string name="account_start_export_button">生成验证码</string>
     <string name="account_end_export_button">关闭</string>

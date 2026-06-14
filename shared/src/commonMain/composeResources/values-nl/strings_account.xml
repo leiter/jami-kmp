@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Verbinden uit back-up</string>
     <string name="account_new_button">Maak een account op Jami</string>
     <string name="account_link_export_button">Nieuw apparaat koppelen</string>
-    <string name="account_link_show_button">Toon %d meer gekoppelde apparaten</string>
+    <string name="account_link_show_button">Toon %1$d meer gekoppelde apparaten</string>
     <string name="account_link_hide_button">Gekoppelde apparaten verbergen</string>
     <string name="account_end_export_button">sluiten</string>
     <string name="account_export_title">Link account naar andere apparaten</string>

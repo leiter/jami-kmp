@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Forbindelse fra backup</string>
     <string name="account_new_button">Oprette Jami-konto</string>
     <string name="account_link_export_button">Tilknyt ny enhed</string>
-    <string name="account_link_show_button">Vis %d flere tilknyttede enheder</string>
+    <string name="account_link_show_button">Vis %1$d flere tilknyttede enheder</string>
     <string name="account_link_hide_button">Skjul det tilkoblede anordning</string>
     <string name="account_end_export_button">luk</string>
     <string name="account_export_title">Link konto til andre enheder</string>

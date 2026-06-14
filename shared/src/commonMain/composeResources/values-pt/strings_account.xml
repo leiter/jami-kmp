@@ -193,7 +193,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Conectar da cópia de segurança</string>
     <string name="account_new_button">Criar uma conta Jami</string>
     <string name="account_link_export_button">Vincular novo dispositivo</string>
-    <string name="account_link_show_button">Mostrar %d mais dispositivos vinculados</string>
+    <string name="account_link_show_button">Mostrar %1$d mais dispositivos vinculados</string>
     <string name="account_link_hide_button">Ocultar dispositivo vinculado</string>
     <string name="account_end_export_button">fechar</string>
     <string name="account_export_title">Vincular a conta a outros dispositivos</string>

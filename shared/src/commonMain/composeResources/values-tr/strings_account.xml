@@ -151,7 +151,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Yedekten bağlan</string>
     <string name="account_new_button">Jami hesabı oluştur</string>
     <string name="account_link_export_button">Yeni aygıt bağla</string>
-    <string name="account_link_show_button">Diğer %d bağlı aygıtı göster</string>
+    <string name="account_link_show_button">Diğer %1$d bağlı aygıtı göster</string>
     <string name="account_link_hide_button">Bağlı aygıtı gizle</string>
     <string name="account_end_export_button">kapat</string>
     <string name="account_export_title">Hesabı diğer aygıtlara bağla</string>

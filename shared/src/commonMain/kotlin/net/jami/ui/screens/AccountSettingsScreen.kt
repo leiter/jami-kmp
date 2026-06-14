@@ -573,7 +573,7 @@ fun AccountSettingsScreen(
             if (!state.isSip) {
             JamiSectionTitle(title = stringResource(Res.string.devices_header))
 
-            val otherDevices = state.devices//.filter { !it.isCurrent }
+            val otherDevices = state.devices.filter { !it.isCurrent }
             var devicesExpanded by remember { mutableStateOf(false) }
 
             AccountCard {
@@ -583,7 +583,7 @@ fun AccountSettingsScreen(
                         .fillMaxWidth()
                         .padding(
                             horizontal = JamiTheme.spacing.m,
-                            
+
                         ),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

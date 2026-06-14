@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">ব্যাকআপ থেকে সংযোগ</string>
     <string name="account_new_button">জামি অ্যাকাউন্ট তৈরি করুন</string>
     <string name="account_link_export_button">নতুন ডিভাইস লিঙ্ক</string>
-    <string name="account_link_show_button">%d আরো সংযুক্ত ডিভাইস দেখান</string>
+    <string name="account_link_show_button">%1$d আরো সংযুক্ত ডিভাইস দেখান</string>
     <string name="account_link_hide_button">সংযুক্ত ডিভাইস লুকান</string>
     <string name="account_end_export_button">ঘনিষ্ঠ</string>
     <string name="account_export_title">অন্যান্য ডিভাইসের সাথে লিঙ্ক অ্যাকাউন্ট</string>

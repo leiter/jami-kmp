@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Konektatu babes-kopiatik</string>
     <string name="account_new_button">Jarri kontu bat Jami-n</string>
     <string name="account_link_export_button">Estekatu gailu berria</string>
-    <string name="account_link_show_button">%d gehiagoren konektatutako gailua erakutsi</string>
+    <string name="account_link_show_button">%1$d gehiagoren konektatutako gailua erakutsi</string>
     <string name="account_link_hide_button">Ezkutatu lotutako gailua</string>
     <string name="account_end_export_button">itxi</string>
     <string name="account_export_title">Beste gailu batzuekin lotutako kontuak</string>

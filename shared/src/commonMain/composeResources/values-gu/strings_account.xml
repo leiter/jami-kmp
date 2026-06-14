@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">બેકઅપ થી કનેક્ટ</string>
     <string name="account_new_button">Jami એકાઉન્ટ બનાવો</string>
     <string name="account_link_export_button">લિંક નવી ઉપકરણ</string>
-    <string name="account_link_show_button">%d વધુ જોડાયેલ ઉપકરણ બતાવો</string>
+    <string name="account_link_show_button">%1$d વધુ જોડાયેલ ઉપકરણ બતાવો</string>
     <string name="account_link_hide_button">જોડાયેલ ઉપકરણ છુપાવો</string>
     <string name="account_end_export_button">નજીક</string>
     <string name="account_export_title">અન્ય ઉપકરણો સાથે લિંક એકાઉન્ટ</string>

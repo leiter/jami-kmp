@@ -123,4 +123,7 @@ class IOSDeviceRuntimeService : DeviceRuntimeService {
 
     override fun deleteFile(path: String): Boolean =
         fileManager.removeItemAtPath(path, error = null)
+
+    override fun getLocalDeviceName(): String =
+        platform.UIKit.UIDevice.currentDevice.name
 }

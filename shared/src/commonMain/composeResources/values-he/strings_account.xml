@@ -148,7 +148,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">חיבור ממחזקה</string>
     <string name="account_new_button">ליצור חשבון Jami</string>
     <string name="account_link_export_button">קישור מכשיר חדש</string>
-    <string name="account_link_show_button">הראה %d יותר מכשיר מקושר</string>
+    <string name="account_link_show_button">הראה %1$d יותר מכשיר מקושר</string>
     <string name="account_link_hide_button">חבוי מכשיר מחובר</string>
     <string name="account_end_export_button">קרוב</string>
     <string name="account_export_title">חשבון חיבור למכשירים אחרים</string>

@@ -194,7 +194,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">З\'єднатися з резервної системи</string>
     <string name="account_new_button">Створення акаунту Jami</string>
     <string name="account_link_export_button">Привʼязати новий пристрій</string>
-    <string name="account_link_show_button">Покажіть %d більше пов\'язаних пристроїв</string>
+    <string name="account_link_show_button">Покажіть %1$d більше пов\'язаних пристроїв</string>
     <string name="account_link_hide_button">Сховати з\'єднане пристрої</string>
     <string name="account_end_export_button">закрити</string>
     <string name="account_export_title">Спіль посилання на інші пристрої</string>

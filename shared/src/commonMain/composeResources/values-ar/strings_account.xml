@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">الاتصال من النسخ الاحتياطي</string>
     <string name="account_new_button">إعداد حساب جامي</string>
     <string name="account_link_export_button">اربط جهاز جديد</string>
-    <string name="account_link_show_button">إظهار %d المزيد من الأجهزة المرتبطة</string>
+    <string name="account_link_show_button">إظهار %1$d المزيد من الأجهزة المرتبطة</string>
     <string name="account_link_hide_button">إخفاء الأجهزة المرتبطة</string>
     <string name="account_end_export_button">إغلاق</string>
     <string name="account_export_title">رابط حساب للأجهزة الأخرى</string>

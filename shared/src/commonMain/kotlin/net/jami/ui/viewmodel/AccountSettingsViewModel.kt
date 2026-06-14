@@ -261,7 +261,16 @@ class AccountSettingsViewModel(
                 val displayName = account.details[ConfigKey.ACCOUNT_DISPLAYNAME.key] ?: ""
                 val username = account.volatileDetails[ConfigKey.ACCOUNT_REGISTERED_NAME.key] ?: ""
                 val identityHash = account.details[ConfigKey.ACCOUNT_USERNAME.key] ?: ""
-                val currentDeviceName = account.details[ConfigKey.ACCOUNT_DEVICE_NAME.key] ?: ""
+                var currentDeviceName = account.details[ConfigKey.ACCOUNT_DEVICE_NAME.key] ?: ""
+                // Daemon defaults to the system hostname ("localhost" on Android).
+                // Auto-correct it to the actual device model on first load.
+                if (currentDeviceName.isBlank() || currentDeviceName.equals("localhost", ignoreCase = true)) {
+                    val localName = deviceRuntimeService?.getLocalDeviceName() ?: ""
+                    if (localName.isNotBlank()) {
+                        accountService.renameDevice(accountId, localName)
+                        currentDeviceName = localName
+                    }
+                }
 
                 // Load profile photo from disk
                 val filesDir = deviceRuntimeService?.getDataPath() ?: ""
@@ -269,15 +278,25 @@ class AccountSettingsViewModel(
                     VCardUtils.loadLocalProfileFromDisk(filesDir, accountId)
                 else null
 
-                // Load known devices
-                val knownDevices = accountService.getKnownRingDevices(accountId)
+                // Prefer account.devices (kept in sync by onKnownDevicesChanged) over the
+                // JNI call which may return empty before the daemon has synced from DHT.
+                // Fall back to the JNI call only when the model cache is empty, and
+                // if that also returns nothing keep whatever the state already has so a
+                // correct list from a prior KnownDevicesChanged event is not overwritten.
                 val currentDeviceId = account.details[ConfigKey.ACCOUNT_DEVICE_ID.key] ?: ""
-                val deviceItems = knownDevices.map { (id, name) ->
-                    DeviceItem(
-                        deviceId = id,
-                        deviceName = name.ifEmpty { id },
-                        isCurrent = id == currentDeviceId
-                    )
+                val knownDevices = account.devices.ifEmpty {
+                    accountService.getKnownRingDevices(accountId)
+                }
+                val deviceItems = if (knownDevices.isNotEmpty()) {
+                    knownDevices.map { (id, name) ->
+                        DeviceItem(
+                            deviceId = id,
+                            deviceName = name.ifEmpty { id },
+                            isCurrent = id == currentDeviceId
+                        )
+                    }
+                } else {
+                    _state.value.devices
                 }
 
                 val hasPassword = account.details[ConfigKey.ACCOUNT_ARCHIVE_HAS_PASSWORD.key]?.toBoolean() ?: false

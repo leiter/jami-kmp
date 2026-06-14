@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Konektiĝi de rezervo</string>
     <string name="account_new_button">Kreu konto Jami</string>
     <string name="account_link_export_button">Ligi novan aparaton</string>
-    <string name="account_link_show_button">Montru %d pli ligitan aparaton</string>
+    <string name="account_link_show_button">Montru %1$d pli ligitan aparaton</string>
     <string name="account_link_hide_button">Kaŝu ligitan aparaton</string>
     <string name="account_end_export_button">proksima</string>
     <string name="account_export_title">Rilata konto al aliaj aparatoj</string>

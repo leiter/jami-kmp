@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Hubungkan melalui cadangan</string>
     <string name="account_new_button">Buat akun Jami</string>
     <string name="account_link_export_button">Tautkan perangkat baru</string>
-    <string name="account_link_show_button">Tampilkan %d lebih banyak perangkat yang ditautkan</string>
+    <string name="account_link_show_button">Tampilkan %1$d lebih banyak perangkat yang ditautkan</string>
     <string name="account_link_hide_button">Sembunyikan perangkat yang tertaut</string>
     <string name="account_end_export_button">tutup</string>
     <string name="account_export_title">Tautkan akun ke perangkat lain</string>

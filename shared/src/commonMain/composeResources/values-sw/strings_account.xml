@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Kuunganisha kutoka salama</string>
     <string name="account_new_button">Unda akaunti ya Jami</string>
     <string name="account_link_export_button">Unganisha kifaa kipya</string>
-    <string name="account_link_show_button">Onyesha %d zaidi kifaa kilichounganishwa</string>
+    <string name="account_link_show_button">Onyesha %1$d zaidi kifaa kilichounganishwa</string>
     <string name="account_link_hide_button">Funga kifaa kilichounganishwa</string>
     <string name="account_end_export_button">karibu</string>
     <string name="account_export_title">Kuunganisha akaunti kwa vifaa vingine</string>

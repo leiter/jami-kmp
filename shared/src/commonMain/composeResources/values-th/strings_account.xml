@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">เชื่อมต่อจากสํารอง</string>
     <string name="account_new_button">สร้างบัญชี Jami</string>
     <string name="account_link_export_button">เชื่อมโยงอุปกรณ์ใหม่</string>
-    <string name="account_link_show_button">แสดง %d หน่วยที่เชื่อมต่อมากกว่า</string>
+    <string name="account_link_show_button">แสดง %1$d หน่วยที่เชื่อมต่อมากกว่า</string>
     <string name="account_link_hide_button">ปิดอุปกรณ์เชื่อมโยง</string>
     <string name="account_end_export_button">ใกล้</string>
     <string name="account_export_title">บัญชีเชื่อมต่อกับอุปกรณ์อื่นๆ</string>

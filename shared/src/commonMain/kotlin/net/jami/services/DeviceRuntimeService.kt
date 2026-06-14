@@ -100,6 +100,12 @@ interface DeviceRuntimeService {
      * Delete a file.
      */
     fun deleteFile(path: String): Boolean
+
+    /**
+     * Return a human-readable name for this device (e.g. "Google Pixel 9").
+     * Used to seed the account device name when it has not been set.
+     */
+    fun getLocalDeviceName(): String
 }
 
 /**
@@ -125,4 +131,5 @@ class StubDeviceRuntimeService : DeviceRuntimeService {
     override fun hasLocationPermission(): Boolean = true
     override fun fileExists(path: String): Boolean = false
     override fun deleteFile(path: String): Boolean = true
+    override fun getLocalDeviceName(): String = "Unknown Device"
 }

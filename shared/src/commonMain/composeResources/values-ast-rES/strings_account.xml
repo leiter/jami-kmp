@@ -149,7 +149,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_archive_button">Conectar dende l\' respaldu</string>
     <string name="account_new_button">Crear cuenta Jami</string>
     <string name="account_link_export_button">Enlaza\'l nuevu dispositivu</string>
-    <string name="account_link_show_button">Mostrar %d más dispositivos enllazaos</string>
+    <string name="account_link_show_button">Mostrar %1$d más dispositivos enllazaos</string>
     <string name="account_link_hide_button">Dispositivu de ocultar conectáu</string>
     <string name="account_end_export_button">La so primer apaición foi en</string>
     <string name="account_export_title">La cuenta de enllaces a otros dispositivos</string>

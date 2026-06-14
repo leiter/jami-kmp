@@ -129,4 +129,7 @@ class MacOSDeviceRuntimeService : DeviceRuntimeService {
 
     override fun deleteFile(path: String): Boolean =
         fileManager.removeItemAtPath(path, error = null)
+
+    override fun getLocalDeviceName(): String =
+        platform.Foundation.NSHost.currentHost().localizedName ?: "Mac"
 }
