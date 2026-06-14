@@ -18,6 +18,7 @@ package net.jami.services
 
 import android.content.ComponentName
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.telecom.DisconnectCause
@@ -48,10 +49,24 @@ import net.jami.utils.Log
  * 6. Call connects → callUpdates(CURRENT) → [android.telecom.Connection.setActive].
  * 7. Call ends → callUpdates(OVER) → [android.telecom.Connection.setDisconnected] + destroy.
  *
+ * ## Call lifecycle (outgoing)
+ * 1. User places call → daemon starts dialing → callUpdates(RINGING + outgoing).
+ * 2. [handleCallUpdate] calls [TelecomManager.placeCall] with the self-managed handle.
+ * 3. Telecom invokes [net.jami.android.service.JamiConnectionService.onCreateOutgoingConnection].
+ * 4. Connection registered via [registerConnection]; pending state (CURRENT/OVER) applied.
+ * 5. Call connects → callUpdates(CURRENT) → [android.telecom.Connection.setActive].
+ * 6. Call ends → callUpdates(OVER) → [android.telecom.Connection.setDisconnected] + destroy.
+ * The call appears in the system call log automatically once the connection is destroyed.
+ *
  * ## Self-managed mode
  * [PhoneAccount.CAPABILITY_SELF_MANAGED] means Jami keeps its own call UI; the system does
  * not overlay a native incoming-call screen on top. Calls still appear in the call log on
  * Android 10+ and audio routing is managed by Telecom.
+ *
+ * ## placeCall permission
+ * Self-managed [PhoneAccount]s only require [android.Manifest.permission.MANAGE_OWN_CALLS]
+ * to call [TelecomManager.placeCall] — no [android.Manifest.permission.CALL_PHONE] needed.
+ * Failures on older devices are caught and logged; the call proceeds normally without Telecom.
  */
 class JamiTelecomManager(
     private val context: Context,
@@ -69,6 +84,11 @@ class JamiTelecomManager(
     private val callToConnection = mutableMapOf<String, android.telecom.Connection>()
     /** daemon call ID → accountId (needed for accept/refuse before connection exists) */
     private val callToAccount = mutableMapOf<String, String>()
+    /**
+     * State updates that arrived before [registerConnection] was called for that call.
+     * placeCall() is asynchronous — the connection may be created after CURRENT/OVER fires.
+     */
+    private val pendingConnectionState = mutableMapOf<String, Call.CallStatus>()
 
     val phoneAccountHandle: PhoneAccountHandle? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
@@ -116,27 +136,41 @@ class JamiTelecomManager(
 
         when (call.callStatus) {
             Call.CallStatus.RINGING -> {
-                if (call.isIncoming && !callToAccount.containsKey(callId)) {
+                if (!callToAccount.containsKey(callId)) {
                     callToAccount[callId] = accountId
-                    val displayName = call.contact?.displayName?.takeIf { it.isNotBlank() }
-                        ?: call.contact?.username?.takeIf { it.isNotBlank() }
-                        ?: call.peerUri.rawRingId.take(12).ifEmpty { call.peerUri.uri }
-                    reportIncomingCall(callId, accountId, displayName, call.hasVideo())
+                    if (call.isIncoming) {
+                        val displayName = call.contact?.displayName?.takeIf { it.isNotBlank() }
+                            ?: call.contact?.username?.takeIf { it.isNotBlank() }
+                            ?: call.peerUri.rawRingId.take(12).ifEmpty { call.peerUri.uri }
+                        reportIncomingCall(callId, accountId, displayName, call.hasVideo())
+                    } else {
+                        reportOutgoingCall(callId, accountId, call.peerUri.uri, call.hasVideo())
+                    }
                 }
             }
-            Call.CallStatus.CURRENT -> callToConnection[callId]?.setActive()
-            Call.CallStatus.HOLD -> callToConnection[callId]?.setOnHold()
+            Call.CallStatus.CURRENT -> {
+                val conn = callToConnection[callId]
+                if (conn != null) conn.setActive()
+                else pendingConnectionState[callId] = Call.CallStatus.CURRENT
+            }
+            Call.CallStatus.HOLD -> {
+                val conn = callToConnection[callId]
+                if (conn != null) conn.setOnHold()
+                else pendingConnectionState[callId] = Call.CallStatus.HOLD
+            }
             Call.CallStatus.OVER -> {
                 val reason = when (call.hangupReason) {
                     Call.HangupReason.BUSY -> DisconnectCause(DisconnectCause.BUSY)
                     Call.HangupReason.TIMEOUT -> DisconnectCause(DisconnectCause.CANCELED)
                     else -> DisconnectCause(DisconnectCause.REMOTE)
                 }
-                callToConnection[callId]?.let { conn ->
+                val conn = callToConnection.remove(callId)
+                if (conn != null) {
                     conn.setDisconnected(reason)
                     conn.destroy()
+                } else {
+                    pendingConnectionState[callId] = Call.CallStatus.OVER
                 }
-                callToConnection.remove(callId)
                 callToAccount.remove(callId)
             }
             else -> { /* CONNECTING / SEARCHING / INACTIVE — no Telecom action needed */ }
@@ -164,10 +198,46 @@ class JamiTelecomManager(
         }
     }
 
-    /** Called by [net.jami.android.service.JamiConnectionService] once a Connection is created. */
+    fun reportOutgoingCall(callId: String, accountId: String, peerUri: String, hasVideo: Boolean) {
+        val tm = telecomManager ?: return
+        val handle = phoneAccountHandle ?: return
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+
+        val extras = Bundle().apply {
+            putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, handle)
+            putString(EXTRA_CALL_ID, callId)
+            putString(EXTRA_ACCOUNT_ID, accountId)
+            putBoolean(EXTRA_HAS_VIDEO, hasVideo)
+        }
+        try {
+            tm.placeCall(Uri.fromParts("jami", peerUri, null), extras)
+            Log.d(TAG, "placeCall: callId=$callId peerUri=$peerUri")
+        } catch (e: SecurityException) {
+            // Self-managed PhoneAccounts only need MANAGE_OWN_CALLS (no CALL_PHONE).
+            // Log and degrade gracefully — call proceeds but won't appear in the call log.
+            Log.e(TAG, "placeCall denied: ${e.message}")
+        } catch (e: Exception) {
+            Log.e(TAG, "placeCall failed: ${e.message}")
+        }
+    }
+
+    /**
+     * Called by [net.jami.android.service.JamiConnectionService] once a Connection is created.
+     * Applies any state update (CURRENT/HOLD/OVER) that arrived before the connection was ready.
+     */
     fun registerConnection(callId: String, connection: android.telecom.Connection) {
         callToConnection[callId] = connection
         Log.d(TAG, "Connection registered for callId=$callId")
+        when (pendingConnectionState.remove(callId)) {
+            Call.CallStatus.CURRENT -> connection.setActive()
+            Call.CallStatus.HOLD -> connection.setOnHold()
+            Call.CallStatus.OVER -> {
+                connection.setDisconnected(DisconnectCause(DisconnectCause.REMOTE))
+                connection.destroy()
+                callToConnection.remove(callId)
+            }
+            else -> {}
+        }
     }
 
     fun getAccountId(callId: String): String? = callToAccount[callId]
