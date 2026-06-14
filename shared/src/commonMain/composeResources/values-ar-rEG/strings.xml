@@ -95,7 +95,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">إنشاء مجموعة جديدة</string>
     <string name="ab_action_flipcamera">قلب كاميرا</string>
     <string name="ab_action_hidepreview">إخفاء معاينة</string>
-    <string name="remote_recording">%s تسجيل... </string>
+    <string name="remote_recording">%1$s تسجيل... </string>
     <string name="send_message">إرسال رسالة</string>
     <string name="message_sending">يتم إرسال رسالة...</string>
     <string name="message_failed">فشل</string>

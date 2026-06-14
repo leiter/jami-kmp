@@ -99,7 +99,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qr_code">Código QR</string>
     <string name="ab_action_flipcamera">Cambiar de cámara</string>
     <string name="ab_action_hidepreview">Agochar vista previa</string>
-    <string name="remote_recording">%s gravando...</string>
+    <string name="remote_recording">%1$s gravando...</string>
     <string name="send_message">Enviar mensaxe</string>
     <string name="message_sending">Enviando mensaxe...</string>
     <string name="message_failed">Fallou</string>

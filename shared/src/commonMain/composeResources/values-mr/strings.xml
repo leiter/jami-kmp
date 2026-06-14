@@ -94,7 +94,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qr_code">QR कोड</string>
     <string name="ab_action_flipcamera">फ्लिप कॅमेरा</string>
     <string name="ab_action_hidepreview">पूर्वावलोकन लपवा</string>
-    <string name="remote_recording">%s रेकॉर्डिंग</string>
+    <string name="remote_recording">%1$s रेकॉर्डिंग</string>
     <string name="send_message">संदेश पाठवा</string>
     <string name="message_sending">मेसेज पाठवत आहे.</string>
     <string name="message_failed">अपयश</string>

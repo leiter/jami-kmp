@@ -95,7 +95,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Шинэ бүлэг үүсгэх</string>
     <string name="ab_action_flipcamera">Хэлтийн камер</string>
     <string name="ab_action_hidepreview">Урьдчилгаа нуух</string>
-    <string name="remote_recording">%s-ийн бүртгэл...</string>
+    <string name="remote_recording">%1$s-ийн бүртгэл...</string>
     <string name="send_message">Мэдээлэл илгээ</string>
     <string name="message_sending">Мэдээлэл хүргүүлэх...</string>
     <string name="message_failed">Үргэлжсэн</string>

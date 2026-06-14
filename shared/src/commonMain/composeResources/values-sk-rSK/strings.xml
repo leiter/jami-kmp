@@ -103,7 +103,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qr_code">QR kód</string>
     <string name="ab_action_flipcamera">Otočiť kameru</string>
     <string name="ab_action_hidepreview">Skryť náhľad</string>
-    <string name="remote_recording">Záznam %s...</string>
+    <string name="remote_recording">Záznam %1$s...</string>
     <string name="send_message">Poslať správu</string>
     <string name="message_sending">Posielanie správy...</string>
     <string name="message_failed">Chyba!</string>

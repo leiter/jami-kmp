@@ -95,7 +95,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">สร้างกลุ่มใหม่</string>
     <string name="ab_action_flipcamera">พลิกกล้อง</string>
     <string name="ab_action_hidepreview">ซ่อนตัวอย่าง</string>
-    <string name="remote_recording">กำลังบันทึก…%s</string>
+    <string name="remote_recording">กำลังบันทึก…%1$s</string>
     <string name="send_message">ส่งข้อความ</string>
     <string name="message_sending">กำลังส่งข้อความ…</string>
     <string name="message_failed">ล้มเหลว</string>

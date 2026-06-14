@@ -94,7 +94,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qr_code">QR کد</string>
     <string name="ab_action_flipcamera">فلپ کاميرا</string>
     <string name="ab_action_hidepreview">اؤنروو اؤرت</string>
-    <string name="remote_recording">%s ضبط...</string>
+    <string name="remote_recording">%1$s ضبط...</string>
     <string name="send_message">پيام ارسال کن</string>
     <string name="message_sending">پيام ارسال...</string>
     <string name="message_failed">شکست</string>

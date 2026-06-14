@@ -124,7 +124,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Utwórz nową grupę</string>
     <string name="ab_action_flipcamera">Zamień kamerę</string>
     <string name="ab_action_hidepreview">Ukryj podgląd</string>
-    <string name="remote_recording">%s nagrywanie...</string>
+    <string name="remote_recording">%1$s nagrywanie...</string>
     <string name="send_message">Wyślij wiadomość</string>
     <string name="message_sending">Trwa wysyłanie wiadomości...</string>
     <string name="message_failed">Nie powiodła się</string>
@@ -199,7 +199,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">Pobieranie rozmowy od peera</string>
     <string name="conversation_blocked">Ten kontakt jest zablokowany.</string>
     <string name="conversation_ended">Rozmowa się skończyła.</string>
-    <string name="conversation_message_deleted">%s usunął wiadomość</string>
+    <string name="conversation_message_deleted">%1$s usunął wiadomość</string>
     <string name="conversation_reply_you">Ty</string>
     <string name="conversation_preference_color">Kolor rozmowy</string>
     <string name="conversation_preference_emoji">Emoji rozmowy</string>
@@ -277,11 +277,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block">Blokuj</string>
     <string name="decline_invitation">Odrzuć zaproszenie</string>
     <string name="accept_invitation">Zaakceptuj zaproszenie</string>
-    <string name="accept_invitation_body">Otrzymano zaproszenie od %s.</string>
+    <string name="accept_invitation_body">Otrzymano zaproszenie od %1$s.</string>
     <string name="new_invitation_request_title">Nowe zaproszenie</string>
     <string name="invitation_message">Masz %1$d zaproszeń do dodania kontaktu</string>
     <string name="no_invitations">Nie ma zaproszeń do wyświetlenia.</string>
-    <string name="invitation_received_message">Otrzymano zaproszenie od %s.\nAkceptować, czy odrzucić?</string>
+    <string name="invitation_received_message">Otrzymano zaproszenie od %1$s.\nAkceptować, czy odrzucić?</string>
     <string name="outgoing_contact_invitation_message">Ten kontakt nie jest w Twojej liście kontaktów.</string>
     <string name="no_blocked_contact">Brak zablokowanych kontaktów</string>
     <string name="no_contact_request">Brak wysłanych zaproszeń</string>
@@ -308,7 +308,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">Anulowano</string>
     <string name="file_transfer_status_error">Błąd podczas przesyłania pliku.</string>
     <string name="file_transfer_status_timed_out">Operacja zakończona niepowodzeniem z powodu przekroczenia limitu czasu.</string>
-    <string name="file_saved_in">Plik zapisany w %s.</string>
+    <string name="file_saved_in">Plik zapisany w %1$s.</string>
     <string name="file_download">Pobierz</string>
     <string name="no_space_left_on_device">Brak miejsca na dysku urządzenia.</string>
     <string name="title_media_viewer">Przeglądarka mediów</string>

@@ -94,7 +94,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qr_code">QR-kode</string>
     <string name="ab_action_flipcamera">Vend kamera</string>
     <string name="ab_action_hidepreview">Skjul forhåndsvisning</string>
-    <string name="remote_recording">%s optagelse...</string>
+    <string name="remote_recording">%1$s optagelse...</string>
     <string name="send_message">Send besked</string>
     <string name="message_sending">Sender besked...</string>
     <string name="message_failed">Fejlede</string>

@@ -95,7 +95,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qr_code">Còdi QR</string>
     <string name="ab_action_flipcamera">Camèra de virar</string>
     <string name="ab_action_hidepreview">Escondir preview</string>
-    <string name="remote_recording">%s enregistrament...</string>
+    <string name="remote_recording">%1$s enregistrament...</string>
     <string name="send_message">Enviar messatge</string>
     <string name="message_sending">Mandadís del messatge…</string>
     <string name="message_failed">Foguèt pas</string>

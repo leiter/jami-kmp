@@ -95,7 +95,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">নতুন গোষ্ঠী বানান</string>
     <string name="ab_action_flipcamera">ফ্লিপ ক্যামেরা</string>
     <string name="ab_action_hidepreview">প্রিভিউ লুকান</string>
-    <string name="remote_recording">%s রেকর্ডিং...</string>
+    <string name="remote_recording">%1$s রেকর্ডিং...</string>
     <string name="send_message">বার্তা পাঠান</string>
     <string name="message_sending">বার্তা পাঠানো...</string>
     <string name="message_failed">ব্যর্থ</string>

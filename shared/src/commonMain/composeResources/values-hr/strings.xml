@@ -95,7 +95,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Stvori novu grupu</string>
     <string name="ab_action_flipcamera">Okreni kameru</string>
     <string name="ab_action_hidepreview">Skrij preview</string>
-    <string name="remote_recording">%s snimanje...</string>
+    <string name="remote_recording">%1$s snimanje...</string>
     <string name="send_message">Pošalji poruku</string>
     <string name="message_sending">Šaljem poruku...</string>
     <string name="message_failed">Neuspjelo</string>

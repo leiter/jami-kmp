@@ -124,7 +124,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Új csoport létrehozása</string>
     <string name="ab_action_flipcamera">Fényképezőgép tükrözése</string>
     <string name="ab_action_hidepreview">Előnézet elrejtése</string>
-    <string name="remote_recording">%s felvétel folyamatban…</string>
+    <string name="remote_recording">%1$s felvétel folyamatban…</string>
     <string name="send_message">Üzenet küldése</string>
     <string name="message_sending">Üzenet küldése…</string>
     <string name="message_failed">Sikertelen</string>
@@ -201,7 +201,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">Beszélgetés letöltése a társaktól</string>
     <string name="conversation_blocked">Ez a kapcsolattartó le van tiltva.</string>
     <string name="conversation_ended">Beszélgetés véget ért.</string>
-    <string name="conversation_message_deleted">%s törölt egy üzenetet</string>
+    <string name="conversation_message_deleted">%1$s törölt egy üzenetet</string>
     <string name="conversation_reply_you">Ön</string>
     <string name="video_not_found">Videofájl nem található</string>
     <string name="conversation_preference_color">Beszélgetés színe</string>
@@ -281,11 +281,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block">Letiltás</string>
     <string name="decline_invitation">Meghívás visszautasítása</string>
     <string name="accept_invitation">Meghívás elfogadása</string>
-    <string name="accept_invitation_body">Meghívó érkezett a következőtől: %s.</string>
+    <string name="accept_invitation_body">Meghívó érkezett a következőtől: %1$s.</string>
     <string name="new_invitation_request_title">Új meghívó</string>
     <string name="invitation_message">%1$d kapcsolatfelvételi kérelme van</string>
     <string name="no_invitations">Nincsenek megjelenítendő meghívók.</string>
-    <string name="invitation_received_message">Meghívó érkezett a következőtől: %s.\nA meghívás elfogadása vagy visszautasítása.</string>
+    <string name="invitation_received_message">Meghívó érkezett a következőtől: %1$s.\nA meghívás elfogadása vagy visszautasítása.</string>
     <string name="outgoing_contact_invitation_message">Ez a kapcsolattartó nem szerepel a kapcsolattartólistáján.</string>
     <string name="no_blocked_contact">Nincsenek letiltott kapcsolattartók</string>
     <string name="no_contact_request">Nincs elküldött kapcsolatfelvételi kérelme</string>
@@ -312,7 +312,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">Törölve</string>
     <string name="file_transfer_status_error">Hiba történt a fájl átvitele közben.</string>
     <string name="file_transfer_status_timed_out">Művelet időtúllépése.</string>
-    <string name="file_saved_in">Fájl mentve ide: %s.</string>
+    <string name="file_saved_in">Fájl mentve ide: %1$s.</string>
     <string name="file_saved_successfully">A fájl mentése sikerült.</string>
     <string name="file_download">Letöltés</string>
     <string name="no_space_left_on_device">Nincs szabad tárhely az eszközön.</string>

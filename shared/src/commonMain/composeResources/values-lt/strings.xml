@@ -152,7 +152,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_members">Nariai</string>
     <string name="conversation_blocked">Šis adresatas yra užblokuotas.</string>
     <string name="conversation_ended">Pokalbis pasibaigė.</string>
-    <string name="conversation_message_deleted">%s ištrynė žinutę</string>
+    <string name="conversation_message_deleted">%1$s ištrynė žinutę</string>
     <string name="conversation_reply_you">Jūs</string>
     <string name="video_not_found">Vaizdo įrašo failas nerastas</string>
     <string name="conversation_preference_color">Pokalbio spalva</string>
@@ -209,7 +209,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block">Užblokuoti</string>
     <string name="decline_invitation">Atmesti pakvietimą</string>
     <string name="accept_invitation">Priimti pakvietimą</string>
-    <string name="accept_invitation_body">Gautas pakvietimas iš %s.</string>
+    <string name="accept_invitation_body">Gautas pakvietimas iš %1$s.</string>
     <string name="new_invitation_request_title">Naujas pakvietimas</string>
     <string name="conversation_placeholder">Kol kas neturite jokių pokalbių</string>
     <string name="contact_request_sent">Adresato užklausa išsiųsta</string>
@@ -221,7 +221,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_created">Inicijuojama</string>
     <string name="file_transfer_status_invalid_file">Neteisingas failas</string>
     <string name="file_transfer_status_canceled">Atsisakyta</string>
-    <string name="file_saved_in">Failas įrašytas į %s.</string>
+    <string name="file_saved_in">Failas įrašytas į %1$s.</string>
     <string name="file_download">Atsisiųsti</string>
     <string name="title_media_viewer">Medijos žiūryklė</string>
     <string name="menu_file_open">Atverti failą</string>

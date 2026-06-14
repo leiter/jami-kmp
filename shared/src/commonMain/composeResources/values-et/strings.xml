@@ -124,7 +124,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Loo uus grupp</string>
     <string name="ab_action_flipcamera">Pööra kaamerat</string>
     <string name="ab_action_hidepreview">Peida eelvaade</string>
-    <string name="remote_recording">%s on salvestamas...</string>
+    <string name="remote_recording">%1$s on salvestamas...</string>
     <string name="send_message">Saada sõnum</string>
     <string name="message_sending">Saadan sõnumit...</string>
     <string name="message_failed">Ebaõnnestunud</string>
@@ -201,7 +201,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">Laadi vestlus alla teise osapoole juurest</string>
     <string name="conversation_blocked">See kontakt on blokeeritud.</string>
     <string name="conversation_ended">Vestlus on lõppenud.</string>
-    <string name="conversation_message_deleted">%s kustutas sõnumi</string>
+    <string name="conversation_message_deleted">%1$s kustutas sõnumi</string>
     <string name="conversation_reply_you">Sina</string>
     <string name="video_not_found">Videofaili ei leidu</string>
     <string name="conversation_preference_color">Vestluse värv</string>
@@ -281,11 +281,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block">Blokeeri</string>
     <string name="decline_invitation">Lükka kutse tagasi</string>
     <string name="accept_invitation">Võta kutse vastu</string>
-    <string name="accept_invitation_body">Kutse kasutajalt %s.</string>
+    <string name="accept_invitation_body">Kutse kasutajalt %1$s.</string>
     <string name="new_invitation_request_title">Uus kutse</string>
     <string name="invitation_message">Sul on %1$d kontaktipäring(ut)</string>
     <string name="no_invitations">Pole kutseid, mida kuvada.</string>
-    <string name="invitation_received_message">Said kutse kasutajalt %s.\nKas võtad kutse vastu või lükkad tagasi?</string>
+    <string name="invitation_received_message">Said kutse kasutajalt %1$s.\nKas võtad kutse vastu või lükkad tagasi?</string>
     <string name="outgoing_contact_invitation_message">Antud kontakt ei leidu sinu kontaktide loendis.</string>
     <string name="no_blocked_contact">Ei ole blokeeritud kontakte</string>
     <string name="no_contact_request">Kontaktipäringut pole veel saadetud</string>
@@ -312,7 +312,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">Katkestatud</string>
     <string name="file_transfer_status_error">Faili edastamisel tekkis viga.</string>
     <string name="file_transfer_status_timed_out">Tegevus aegus.</string>
-    <string name="file_saved_in">Fail on salvestatud kausta %s</string>
+    <string name="file_saved_in">Fail on salvestatud kausta %1$s</string>
     <string name="file_saved_successfully">Faili salvestamine õnnestus.</string>
     <string name="file_download">Laadi alla</string>
     <string name="no_space_left_on_device">Siin nutiseadmes pole piisavalt andmeruumi</string>

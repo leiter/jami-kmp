@@ -122,7 +122,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Vytvořit novou skupinu</string>
     <string name="ab_action_flipcamera">Otočit kameru</string>
     <string name="ab_action_hidepreview">Skrýt náhled</string>
-    <string name="remote_recording">%s nahrávání...</string>
+    <string name="remote_recording">%1$s nahrávání...</string>
     <string name="send_message">Odeslat zprávu</string>
     <string name="message_sending">Odesílám zprávu…</string>
     <string name="message_failed">Hovor selhal</string>
@@ -193,7 +193,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">Stahování konverzace z peeru</string>
     <string name="conversation_blocked">Tento kontakt je blokován</string>
     <string name="conversation_ended">Konverzace skončila.</string>
-    <string name="conversation_message_deleted">%s smazaná zpráva</string>
+    <string name="conversation_message_deleted">%1$s smazaná zpráva</string>
     <string name="conversation_reply_you">Vy</string>
     <string name="conversation_preference_color">Barva konverzace</string>
     <string name="conversation_preference_emoji">Emoji konverzace</string>

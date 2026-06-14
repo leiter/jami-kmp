@@ -96,7 +96,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Skapa ny grupp</string>
     <string name="ab_action_flipcamera">Vänd kameran</string>
     <string name="ab_action_hidepreview">Dölj förhandsvisningen</string>
-    <string name="remote_recording">%s spelar in...</string>
+    <string name="remote_recording">%1$s spelar in...</string>
     <string name="send_message">Skicka meddelande</string>
     <string name="message_sending">Skickar meddelande...</string>
     <string name="message_failed">Misslyckades</string>

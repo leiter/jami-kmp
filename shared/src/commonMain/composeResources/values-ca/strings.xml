@@ -114,7 +114,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Crea un grup nou</string>
     <string name="ab_action_flipcamera">Canvia la càmera</string>
     <string name="ab_action_hidepreview">Amaga la previsualització</string>
-    <string name="remote_recording">%s gravant...</string>
+    <string name="remote_recording">%1$s gravant...</string>
     <string name="send_message">Envia el missatge</string>
     <string name="message_sending">S\'està enviant el missatge</string>
     <string name="message_failed">Ha fallat</string>

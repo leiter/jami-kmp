@@ -124,7 +124,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Ustvari novo skupino</string>
     <string name="ab_action_flipcamera">Zrcali kamero</string>
     <string name="ab_action_hidepreview">Skrij predogled</string>
-    <string name="remote_recording">%s snema …</string>
+    <string name="remote_recording">%1$s snema …</string>
     <string name="send_message">Pošlji sporočilo</string>
     <string name="message_sending">Pošiljanje sporočila...</string>
     <string name="message_failed">Neuspelo</string>
@@ -200,7 +200,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">Prenašanje pogovora s soležnika</string>
     <string name="conversation_blocked">Ta stik je blokiran.</string>
     <string name="conversation_ended">Pogovor končan.</string>
-    <string name="conversation_message_deleted">%s je izbrisal/a sporočilo</string>
+    <string name="conversation_message_deleted">%1$s je izbrisal/a sporočilo</string>
     <string name="conversation_reply_you">Vi</string>
     <string name="video_not_found">Videodatoteke ni možno najti</string>
     <string name="conversation_preference_color">Barva pogovora</string>
@@ -280,11 +280,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block">Blokiraj</string>
     <string name="decline_invitation">Zavrni povabilo</string>
     <string name="accept_invitation">Sprejmi povabilo</string>
-    <string name="accept_invitation_body">Prejeto povabilo %s.</string>
+    <string name="accept_invitation_body">Prejeto povabilo %1$s.</string>
     <string name="new_invitation_request_title">Novo povabilo</string>
     <string name="invitation_message">Imate%1$d zahtev za stik</string>
     <string name="no_invitations">Ni povabil za prikaz.</string>
-    <string name="invitation_received_message">Prejeto povabilo %s.\nAli želite sprejeti ali zavrniti povabilo?</string>
+    <string name="invitation_received_message">Prejeto povabilo %1$s.\nAli želite sprejeti ali zavrniti povabilo?</string>
     <string name="outgoing_contact_invitation_message">Ta stik ni na seznamu vaših stikov.</string>
     <string name="no_blocked_contact">Ni blokiranih stikov</string>
     <string name="no_contact_request">Ni poslanih zahtev za stik</string>
@@ -311,7 +311,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">Preklicano</string>
     <string name="file_transfer_status_error">Pri prenosu datoteke je prišlo do napake.</string>
     <string name="file_transfer_status_timed_out">Operacija je časovno potekla.</string>
-    <string name="file_saved_in">Datoteka je shranjena v %s</string>
+    <string name="file_saved_in">Datoteka je shranjena v %1$s</string>
     <string name="file_saved_successfully">Datoteka je bila uspešno shranjena</string>
     <string name="file_download">Prenesi</string>
     <string name="no_space_left_on_device">Na tej napravi ni več prostora za hrambo.</string>

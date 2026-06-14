@@ -124,7 +124,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Створити нову групу</string>
     <string name="ab_action_flipcamera">Змінити камеру</string>
     <string name="ab_action_hidepreview">Сховати передогляд</string>
-    <string name="remote_recording">Запис %s...</string>
+    <string name="remote_recording">Запис %1$s...</string>
     <string name="send_message">Відправити повідомлення</string>
     <string name="message_sending"> Повідомлення надсилається...</string>
     <string name="message_failed">Невдало</string>
@@ -199,7 +199,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">Завантаження розмови з вузла</string>
     <string name="conversation_blocked">Цей контакт заблокований.</string>
     <string name="conversation_ended">Розмова закінчилася.</string>
-    <string name="conversation_message_deleted">%s видалив(-ла) повідомлення</string>
+    <string name="conversation_message_deleted">%1$s видалив(-ла) повідомлення</string>
     <string name="conversation_reply_you">Ви</string>
     <string name="conversation_preference_color">Колір розмови</string>
     <string name="conversation_preference_emoji">Емоджи розмови</string>
@@ -277,11 +277,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block">Заблокувати</string>
     <string name="decline_invitation">Відхилити запрошення</string>
     <string name="accept_invitation">Прийняти запрошення</string>
-    <string name="accept_invitation_body">Запрошення отримано від %s.</string>
+    <string name="accept_invitation_body">Запрошення отримано від %1$s.</string>
     <string name="new_invitation_request_title">Нове запрошення</string>
     <string name="invitation_message">У вас є %1$d запити контактів</string>
     <string name="no_invitations">Немає запрошень для відображення.</string>
-    <string name="invitation_received_message">Отримано запрошення від %s.\nПрийняти чи відхилити запрошення?</string>
+    <string name="invitation_received_message">Отримано запрошення від %1$s.\nПрийняти чи відхилити запрошення?</string>
     <string name="no_blocked_contact">Заблоковані користувачі відсутні</string>
     <string name="no_contact_request">Не було відправлено жодних запитів контакту</string>
     <string name="conversation_placeholder">Поки що діалоги відсутні</string>
@@ -307,7 +307,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">Скасовано</string>
     <string name="file_transfer_status_error">Сталася помилка під час передачі файлу.</string>
     <string name="file_transfer_status_timed_out">Час очікування операції вичерпано.</string>
-    <string name="file_saved_in">Файл збережено в %s.</string>
+    <string name="file_saved_in">Файл збережено в %1$s.</string>
     <string name="file_download">Завантажити</string>
     <string name="no_space_left_on_device">Немає доступного місця для зберігання на пристрої.</string>
     <string name="title_media_viewer">Медіа переглядач</string>

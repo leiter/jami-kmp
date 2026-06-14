@@ -145,7 +145,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="copied_to_clipboard">%1$sin die Zwischenablage kopiert.</string>
     <string name="conversation_action_incoming_call">Eingehender Anruf</string>
     <string name="clip_message">Nachrichteninhalt</string>
-    <string name="conversation_message_deleted">%s hat eine Nachricht gelöscht</string>
+    <string name="conversation_message_deleted">%1$s hat eine Nachricht gelöscht</string>
     <string name="video_not_found">Videodatei nicht gefunden</string>
     <string name="conversation_type_private">Privat</string>
     <string name="conversation_type_group">Gruppe</string>
@@ -176,11 +176,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="decline">Ablehnen</string>
     <string name="decline_invitation">Einladung ablehnen</string>
     <string name="accept_invitation">Einladung annehmen</string>
-    <string name="accept_invitation_body">Einladung erhalten von %s.</string>
+    <string name="accept_invitation_body">Einladung erhalten von %1$s.</string>
     <string name="new_invitation_request_title">Neue Einladung</string>
     <string name="invitation_message">Du hast %1$d Kontaktanfragen</string>
     <string name="no_invitations">Es sind keine Einladungen zum Anzeigen vorhanden.</string>
-    <string name="invitation_received_message">Einladung erhalten von %s.\nEinladung annehmen oder ablehnen?</string>
+    <string name="invitation_received_message">Einladung erhalten von %1$s.\nEinladung annehmen oder ablehnen?</string>
     <string name="outgoing_contact_invitation_message">Dieser Kontakt ist nicht in Ihrer Kontaktliste.</string>
     <string name="search_results">Suchergebnisse</string>
     <string name="generic_error">Ein unbekannter Fehler ist aufgetreten.</string>
@@ -199,7 +199,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">Abgebrochen</string>
     <string name="file_transfer_status_error">Beim Übertragen der Datei ist ein Fehler aufgetreten.</string>
     <string name="file_transfer_status_timed_out">Beim Vorgang ist das Zeitlimit überschritten.</string>
-    <string name="file_saved_in">Datei gespeichert in %s.</string>
+    <string name="file_saved_in">Datei gespeichert in %1$s.</string>
     <string name="file_saved_successfully">Die Datei wurde erfolgreich gespeichert.</string>
     <string name="file_download">Herunterladen</string>
     <string name="no_space_left_on_device">Auf dem Gerät ist kein Speicherplatz verfügbar.</string>

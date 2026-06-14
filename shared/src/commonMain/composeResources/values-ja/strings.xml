@@ -99,7 +99,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">新規グループを作成</string>
     <string name="ab_action_flipcamera">カメラを押す</string>
     <string name="ab_action_hidepreview">プレビューを隠す</string>
-    <string name="remote_recording">%s記録中…</string>
+    <string name="remote_recording">%1$s記録中…</string>
     <string name="send_message">メッセージを送信</string>
     <string name="message_sending">メッセージを送信中…</string>
     <string name="message_failed">失敗しました</string>

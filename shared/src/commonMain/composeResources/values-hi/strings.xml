@@ -101,7 +101,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">नया समूह बनाएँ</string>
     <string name="ab_action_flipcamera">फ्लिप कैमरा</string>
     <string name="ab_action_hidepreview">पूर्वावलोकन छिपाएँ</string>
-    <string name="remote_recording">%s रिकॉर्डिंग...</string>
+    <string name="remote_recording">%1$s रिकॉर्डिंग...</string>
     <string name="send_message">संदेश भेजें</string>
     <string name="message_sending">संदेश भेजने...</string>
     <string name="message_failed">असफल</string>
@@ -162,7 +162,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">सहकर्मी से बातचीत डाउनलोड करना</string>
     <string name="conversation_blocked">यह संपर्क अवरुद्ध है.</string>
     <string name="conversation_ended">बातचीत समाप्त हो गई।</string>
-    <string name="conversation_message_deleted">%s ने एक संदेश हटा दिया</string>
+    <string name="conversation_message_deleted">%1$s ने एक संदेश हटा दिया</string>
     <string name="conversation_reply_you">तुम</string>
     <string name="conversation_preference_color">वार्तालाप का रंग</string>
     <string name="conversation_preference_emoji">वार्तालाप इमोजी</string>

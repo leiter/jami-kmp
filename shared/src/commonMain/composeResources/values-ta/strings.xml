@@ -112,7 +112,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">ஒரு புதிய குழுவை உருவாக்கவும்</string>
     <string name="ab_action_flipcamera">ஃபில்ப் கேமரா</string>
     <string name="ab_action_hidepreview">முன்னோட்டத்தை மறைக்கவும்</string>
-    <string name="remote_recording">%s பதிவு.</string>
+    <string name="remote_recording">%1$s பதிவு.</string>
     <string name="send_message">செய்தி அனுப்பவும்</string>
     <string name="message_sending">செய்தி அனுப்புதல்...</string>
     <string name="message_failed">தோல்வி</string>

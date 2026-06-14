@@ -95,7 +95,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qr_code">QR код</string>
     <string name="ab_action_flipcamera">Обръщане на камерата</string>
     <string name="ab_action_hidepreview">Скрийте предварителното преглеждане</string>
-    <string name="remote_recording">Записване на %s...</string>
+    <string name="remote_recording">Записване на %1$s...</string>
     <string name="send_message">Изпращане на съобщение</string>
     <string name="message_sending">Изпращане на съобщение…</string>
     <string name="message_failed">Неуспешно</string>

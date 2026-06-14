@@ -124,7 +124,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">建立新群组</string>
     <string name="ab_action_flipcamera">翻转相机</string>
     <string name="ab_action_hidepreview">隐藏预览</string>
-    <string name="remote_recording">%s录制中...</string>
+    <string name="remote_recording">%1$s录制中...</string>
     <string name="send_message">发消息</string>
     <string name="message_sending">正在发送消息…</string>
     <string name="message_failed">失败</string>
@@ -201,7 +201,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">正在从对等端下载对话</string>
     <string name="conversation_blocked">此联系人已屏蔽。</string>
     <string name="conversation_ended">会话已结束。</string>
-    <string name="conversation_message_deleted">%s删除了一条消息</string>
+    <string name="conversation_message_deleted">%1$s删除了一条消息</string>
     <string name="conversation_reply_you">您</string>
     <string name="video_not_found">未找到视频文件</string>
     <string name="conversation_preference_color">会话颜色</string>
@@ -281,11 +281,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block">屏蔽</string>
     <string name="decline_invitation">拒绝邀请</string>
     <string name="accept_invitation">Accept invitation</string>
-    <string name="accept_invitation_body">聊天邀请来自%s</string>
+    <string name="accept_invitation_body">聊天邀请来自%1$s</string>
     <string name="new_invitation_request_title">新邀请</string>
     <string name="invitation_message">您有 %1$d 个联系人请求</string>
     <string name="no_invitations">没有要显示的邀请。</string>
-    <string name="invitation_received_message">收到%s的邀请。\n接受还是拒绝邀请？</string>
+    <string name="invitation_received_message">收到%1$s的邀请。\n接受还是拒绝邀请？</string>
     <string name="outgoing_contact_invitation_message">此联系人不在您的联系人列表中。</string>
     <string name="no_blocked_contact">没有被屏蔽的联系人</string>
     <string name="no_contact_request">未有送出的聯絡人請求</string>
@@ -312,7 +312,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">已取消</string>
     <string name="file_transfer_status_error">传输文件时发生错误。</string>
     <string name="file_transfer_status_timed_out">操作超时。</string>
-    <string name="file_saved_in">文件保存在%s。</string>
+    <string name="file_saved_in">文件保存在%1$s。</string>
     <string name="file_saved_successfully">文件已成功保存。</string>
     <string name="file_download">下载</string>
     <string name="no_space_left_on_device">设备上没有可用存储空间。</string>

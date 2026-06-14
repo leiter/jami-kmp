@@ -124,7 +124,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Rnu agraw amaynut</string>
     <string name="ab_action_flipcamera">Zzi takamirat</string>
     <string name="ab_action_hidepreview">Ffer taskant</string>
-    <string name="remote_recording">%s Usekles...</string>
+    <string name="remote_recording">%1$s Usekles...</string>
     <string name="send_message">Azen izen</string>
     <string name="message_sending"> Tuzna n yizen</string>
     <string name="message_failed">Ur yeddi ara</string>
@@ -201,7 +201,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">Asider n udiwenni seg ayugan</string>
     <string name="conversation_blocked">Anermis-agi yewḥel.</string>
     <string name="conversation_ended">Yekfa udiwenni.</string>
-    <string name="conversation_message_deleted">%s yekkes izen</string>
+    <string name="conversation_message_deleted">%1$s yekkes izen</string>
     <string name="conversation_reply_you">Kečč-Kemm</string>
     <string name="video_not_found">Ulac-it ufaylu n tvidyut</string>
     <string name="conversation_preference_color">Ini n udiwenni</string>
@@ -281,11 +281,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block">Sewḥel</string>
     <string name="decline_invitation">Agwi tinnubga</string>
     <string name="accept_invitation">Qbel tinnubga</string>
-    <string name="accept_invitation_body">Tinnubga tewweḍ-d sɣur %s.</string>
+    <string name="accept_invitation_body">Tinnubga tewweḍ-d sɣur %1$s.</string>
     <string name="new_invitation_request_title">Tinnubga tamaynut</string>
     <string name="invitation_message">Ɣur-k-am %1$d n usuter n unermis</string>
     <string name="no_invitations">Ulac tinubga i uskan.</string>
-    <string name="invitation_received_message">Tinnubga tewweḍ-d sɣur %s.\nQbel neɣ agwi tinnubga?</string>
+    <string name="invitation_received_message">Tinnubga tewweḍ-d sɣur %1$s.\nQbel neɣ agwi tinnubga?</string>
     <string name="outgoing_contact_invitation_message">Anermis-a ulac-it deg wumuɣ-nnek-nnem n unermis. </string>
     <string name="no_blocked_contact">Ulac inermisen weḥlen</string>
     <string name="no_contact_request">Ulac asuter n unermis yettwaznen</string>
@@ -312,7 +312,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">Yettwasefsex</string>
     <string name="file_transfer_status_error">Teḍra-d tuccḍa deg usiweḍ n ufaylu.</string>
     <string name="file_transfer_status_timed_out">Iɛedda wakud n temhelt.</string>
-    <string name="file_saved_in">Afaylu yettwasekles deg %s.</string>
+    <string name="file_saved_in">Afaylu yettwasekles deg %1$s.</string>
     <string name="file_saved_successfully">Afaylu yettwasekles akken iwata.</string>
     <string name="file_download">Asider</string>
     <string name="no_space_left_on_device">Ulac tallunt n usekles deg yibenk.</string>

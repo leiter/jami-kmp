@@ -96,7 +96,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Δημιουργία νέας ομάδας</string>
     <string name="ab_action_flipcamera">Εναλλαγή κάμερας</string>
     <string name="ab_action_hidepreview">Απόκρυψη προεπισκόπησης</string>
-    <string name="remote_recording">%s καταγράφει...</string>
+    <string name="remote_recording">%1$s καταγράφει...</string>
     <string name="send_message">Στείλε μήνυμα</string>
     <string name="message_sending">Μήνυμα αποστέλλεται...</string>
     <string name="message_failed">Απέτυχε</string>

@@ -96,7 +96,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Buat grup baru</string>
     <string name="ab_action_flipcamera">Tukar kamera</string>
     <string name="ab_action_hidepreview">Sembunyikan pratinjau</string>
-    <string name="remote_recording">%smerekam...</string>
+    <string name="remote_recording">%1$smerekam...</string>
     <string name="send_message">Kirim pesan</string>
     <string name="message_sending">Mengirimkan pesan...</string>
     <string name="message_failed">Gagal</string>

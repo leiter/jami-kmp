@@ -42,7 +42,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_incoming_audio">Incoming audio call</string>
     <string name="call_incoming_video">Incoming video call</string>
     <string name="call_outgoing">Calling…</string>
-    <string name="call_conference_participants">Conference (%d participants)</string>
+    <string name="call_conference_participants">Conference (%1$d participants)</string>
     <string name="call_answer">Answer</string>
     <string name="call_decline">Decline</string>
     <string name="call_dtmf_dialpad">Dialpad</string>

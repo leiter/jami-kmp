@@ -94,7 +94,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qr_code">ക്യുആർ കോഡ്</string>
     <string name="ab_action_flipcamera">Tukar kamera</string>
     <string name="ab_action_hidepreview">മുൻകൂർ കാണൽ മറയ്ക്കുക</string>
-    <string name="remote_recording">%s റെക്കോർഡിംഗ്</string>
+    <string name="remote_recording">%1$s റെക്കോർഡിംഗ്</string>
     <string name="send_message">Hantar pesan</string>
     <string name="message_sending">Sedang menghantar pesan…</string>
     <string name="message_failed">Gagal</string>

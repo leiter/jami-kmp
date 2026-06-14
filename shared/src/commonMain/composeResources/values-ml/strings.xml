@@ -124,7 +124,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">പുതിയ ഗ്രൂപ്പ് നിർമ്മിക്കുക</string>
     <string name="ab_action_flipcamera">ഫ്ലിപ്പ് ക്യാമറ</string>
     <string name="ab_action_hidepreview">പ്രിവ്യൂ മറയ്ക്കുക</string>
-    <string name="remote_recording">%s റെക്കോർഡിംഗ്</string>
+    <string name="remote_recording">%1$s റെക്കോർഡിംഗ്</string>
     <string name="send_message">സന്ദേശം അയയ്ക്കുക</string>
     <string name="message_sending">സന്ദേശം അയയ്ക്കുന്നു.</string>
     <string name="message_failed">പരാജയപ്പെട്ടു</string>
@@ -201,7 +201,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">സഹപ്രവർത്തകരുടെ സംഭാഷണം ഡൌൺലോഡ് ചെയ്യുക</string>
     <string name="conversation_blocked">ഈ സമ്പർക്കം തടഞ്ഞിരിക്കുന്നു.</string>
     <string name="conversation_ended">സംഭാഷണം അവസാനിച്ചു.</string>
-    <string name="conversation_message_deleted">%s ഒരു സന്ദേശം മായിച്ചു</string>
+    <string name="conversation_message_deleted">%1$s ഒരു സന്ദേശം മായിച്ചു</string>
     <string name="conversation_reply_you">നീ</string>
     <string name="video_not_found">വീഡിയോ ഫയൽ കാണുന്നില്ല</string>
     <string name="conversation_preference_color">സംഭാഷണ നിറം</string>
@@ -281,11 +281,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block">തടയൽ</string>
     <string name="decline_invitation">ക്ഷണം നിരസിക്കുക</string>
     <string name="accept_invitation">ക്ഷണം സ്വീകരിക്കുക</string>
-    <string name="accept_invitation_body">%s-ൽ നിന്നും ക്ഷണം വന്നു.</string>
+    <string name="accept_invitation_body">%1$s-ൽ നിന്നും ക്ഷണം വന്നു.</string>
     <string name="new_invitation_request_title">പുതിയ ക്ഷണം</string>
     <string name="invitation_message">%1$d കോൺടാക്റ്റ് അഭ്യർത്ഥനകൾ</string>
     <string name="no_invitations">ക്ഷണങ്ങളൊന്നും ഇല്ല.</string>
-    <string name="invitation_received_message">%s-ൽനിന്നും ക്ഷണം വന്നിട്ടുണ്ട്.\nഈ ക്ഷണം സ്വീകരിക്കണോ നിരസിക്കണോ?</string>
+    <string name="invitation_received_message">%1$s-ൽനിന്നും ക്ഷണം വന്നിട്ടുണ്ട്.\nഈ ക്ഷണം സ്വീകരിക്കണോ നിരസിക്കണോ?</string>
     <string name="outgoing_contact_invitation_message">ഈ കോണ്ടാക്റ്റ് താങ്കളുടെ കോണ്ടാക്റ്റുകളിൽ ഇല്ല.</string>
     <string name="no_blocked_contact">തടഞ്ഞ ബന്ധങ്ങളില്ല</string>
     <string name="no_contact_request">ബന്ധപ്പെടാനുള്ള അപേക്ഷ അയച്ചിട്ടില്ല</string>
@@ -312,7 +312,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">റദ്ദാക്കി</string>
     <string name="file_transfer_status_error">ഫയൽ കൈമാറുമ്പോൾ ഒരു പ്രശ്നം വന്നിരിക്കുന്നു.</string>
     <string name="file_transfer_status_timed_out">ഓപ്പറേഷനുള്ള സമയം കഴിഞ്ഞു.</string>
-    <string name="file_saved_in">ഫയൽ %s-ൽ സേവ് ചെയ്തു</string>
+    <string name="file_saved_in">ഫയൽ %1$s-ൽ സേവ് ചെയ്തു</string>
     <string name="file_saved_successfully">ഈ ഫയൽ വിജയകരമായി സേവു ചെയ്തു.</string>
     <string name="file_download">ഡൌൺലോഡ് ചെയ്യുക</string>
     <string name="no_space_left_on_device">ഈ ഉപകരണത്തിൽ സ്റ്റോറേജ് സ്പേസില്ല.</string>

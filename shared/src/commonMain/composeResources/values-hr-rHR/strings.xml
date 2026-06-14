@@ -41,7 +41,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qr_code">QR kod</string>
     <string name="new_group">Stvori novu grupu</string>
     <string name="ab_action_hidepreview">Skrij preview</string>
-    <string name="remote_recording">%s snimanje...</string>
+    <string name="remote_recording">%1$s snimanje...</string>
     <string name="time_just_now">Upravo sad</string>
     <string name="select_media">Otvorena galerija</string>
     <string name="conversation_send_audio">Zapisi audio klip</string>

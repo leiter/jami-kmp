@@ -124,7 +124,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Создать новую группу</string>
     <string name="ab_action_flipcamera">Переключить камеру</string>
     <string name="ab_action_hidepreview">Скрыть предпросмотр</string>
-    <string name="remote_recording">%s запись...</string>
+    <string name="remote_recording">%1$s запись...</string>
     <string name="send_message">Отправить сообщение</string>
     <string name="message_sending">Отправка сообщения...</string>
     <string name="message_failed">Сбой</string>
@@ -199,7 +199,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">Загрузка разговора с участником сети</string>
     <string name="conversation_blocked">Этот контакт заблокирован.</string>
     <string name="conversation_ended">Разговор закончился.</string>
-    <string name="conversation_message_deleted">Cообщение удалено (%s)</string>
+    <string name="conversation_message_deleted">Cообщение удалено (%1$s)</string>
     <string name="conversation_reply_you">Вы</string>
     <string name="video_not_found">Видеофайл не найден</string>
     <string name="conversation_preference_color">Цвет беседы</string>
@@ -278,11 +278,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block">Заблокировать</string>
     <string name="decline_invitation">Отклонить приглашение</string>
     <string name="accept_invitation">Принять приглашение</string>
-    <string name="accept_invitation_body">Получено приглашение от %s.</string>
+    <string name="accept_invitation_body">Получено приглашение от %1$s.</string>
     <string name="new_invitation_request_title">Новое приглашение</string>
     <string name="invitation_message">У вас %1$d запросов на добавление в контакты</string>
     <string name="no_invitations">Нет приглашений для отображения.</string>
-    <string name="invitation_received_message">Получено приглашение от %s.\nПринять или отклонить приглашение?</string>
+    <string name="invitation_received_message">Получено приглашение от %1$s.\nПринять или отклонить приглашение?</string>
     <string name="outgoing_contact_invitation_message">Этого контакта нет в вашем списке контактов.</string>
     <string name="no_blocked_contact">Нет заблокированных контактов</string>
     <string name="no_contact_request">Нет отправленных запросов на добавление в контакты</string>
@@ -309,7 +309,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">Отменено</string>
     <string name="file_transfer_status_error">Произошла ошибка при передаче файла.</string>
     <string name="file_transfer_status_timed_out">Время операции истекло.</string>
-    <string name="file_saved_in">Файл сохранен в %s.</string>
+    <string name="file_saved_in">Файл сохранен в %1$s.</string>
     <string name="file_download">Загрузить</string>
     <string name="no_space_left_on_device">На устройстве нет свободного места.</string>
     <string name="title_media_viewer">Просмотрщик медиа</string>

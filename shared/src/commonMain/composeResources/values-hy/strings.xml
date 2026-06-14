@@ -95,7 +95,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Ստեղծել նոր խումբ</string>
     <string name="ab_action_flipcamera">Կապակային տեսախցիկ</string>
     <string name="ab_action_hidepreview">Գցեք նախադիտություն</string>
-    <string name="remote_recording">%s ձայնագրումը...</string>
+    <string name="remote_recording">%1$s ձայնագրումը...</string>
     <string name="send_message">Հաղորդագրություն ուղարկել</string>
     <string name="message_sending">Հաղորդագրություն ուղարկելը...</string>
     <string name="message_failed">Անհաջողություն</string>

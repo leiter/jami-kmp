@@ -94,7 +94,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qr_code">QR кодтары</string>
     <string name="ab_action_flipcamera">Қалған камера</string>
     <string name="ab_action_hidepreview">Алдын ала қарауды жасыру</string>
-    <string name="remote_recording">%s жазуы...</string>
+    <string name="remote_recording">%1$s жазуы...</string>
     <string name="send_message">Хат жіберу</string>
     <string name="message_sending">Хат жіберу...</string>
     <string name="message_failed">Жеңіссіз</string>

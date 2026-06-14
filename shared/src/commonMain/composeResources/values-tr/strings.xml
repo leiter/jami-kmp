@@ -106,7 +106,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Yeni grup oluştur</string>
     <string name="ab_action_flipcamera">Kamerayı döndür</string>
     <string name="ab_action_hidepreview">Ön izlemeyi gizle</string>
-    <string name="remote_recording">%s kaydediliyor…</string>
+    <string name="remote_recording">%1$s kaydediliyor…</string>
     <string name="send_message">İleti gönder</string>
     <string name="message_sending">İleti gönderiliyor…</string>
     <string name="message_failed">Başarısız</string>

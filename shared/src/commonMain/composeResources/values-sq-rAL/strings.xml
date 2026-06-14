@@ -124,7 +124,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Krijoni grup të ri</string>
     <string name="ab_action_flipcamera">Rrotulloni kamerën</string>
     <string name="ab_action_hidepreview">Fshihe paraparjen</string>
-    <string name="remote_recording">%s po regjistron…</string>
+    <string name="remote_recording">%1$s po regjistron…</string>
     <string name="send_message">Dërgoje mesazhin</string>
     <string name="message_sending">Po dërgohet mesazhi…</string>
     <string name="message_failed">Dështoi</string>
@@ -201,7 +201,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">Po shkarkohet biseda nga ortaku</string>
     <string name="conversation_blocked">Ky kontakt është i bllokuar.</string>
     <string name="conversation_ended">Biseda përfundoi.</string>
-    <string name="conversation_message_deleted">%s fshiu një mesazh</string>
+    <string name="conversation_message_deleted">%1$s fshiu një mesazh</string>
     <string name="conversation_reply_you">Ju</string>
     <string name="video_not_found">S’u gjet kartelë video</string>
     <string name="conversation_preference_color">Ngjyrë bisede</string>
@@ -281,11 +281,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block">Bllokoje</string>
     <string name="decline_invitation">Hidhe poshtë ftesën</string>
     <string name="accept_invitation">Pranoje ftesën</string>
-    <string name="accept_invitation_body">U mor ftesë nga %s.</string>
+    <string name="accept_invitation_body">U mor ftesë nga %1$s.</string>
     <string name="new_invitation_request_title">Ftesë e re</string>
     <string name="invitation_message">Keni %1$d kërkesa kontakti</string>
     <string name="no_invitations">S’ka ftesa për shfaqje.</string>
-    <string name="invitation_received_message">U mor ftesë nga %s.\nTë pranohet, apo të hidhet poshtë ftesa?</string>
+    <string name="invitation_received_message">U mor ftesë nga %1$s.\nTë pranohet, apo të hidhet poshtë ftesa?</string>
     <string name="outgoing_contact_invitation_message">Ky kontakt s’gjendet te lista e kontakteve tuaja.</string>
     <string name="no_blocked_contact">S’ka kontakte të bllokuar</string>
     <string name="no_contact_request">S\’është dërguar ndonjë kërkesë kontakti</string>
@@ -312,7 +312,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">U anulua</string>
     <string name="file_transfer_status_error">Ndodhi një gabim teksa shpërngulej kartela.</string>
     <string name="file_transfer_status_timed_out">Veprimit i mbaroi koha.</string>
-    <string name="file_saved_in">Kartela u ruajt te %s.</string>
+    <string name="file_saved_in">Kartela u ruajt te %1$s.</string>
     <string name="file_saved_successfully">Kartela u ruajt me sukses.</string>
     <string name="file_download">Shkarkoje</string>
     <string name="no_space_left_on_device">S’ka hapësirë depozitimi në këtë pajisje.</string>

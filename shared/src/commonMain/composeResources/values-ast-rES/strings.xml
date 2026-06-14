@@ -94,7 +94,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qr_code">Codiciu QR</string>
     <string name="ab_action_flipcamera">La cámara de vuelta</string>
     <string name="ab_action_hidepreview">La vista previa</string>
-    <string name="remote_recording">El %s grabación...</string>
+    <string name="remote_recording">El %1$s grabación...</string>
     <string name="send_message">Enviar mensaxe</string>
     <string name="message_sending">Enviar un mensaxe...</string>
     <string name="message_failed">Faló</string>

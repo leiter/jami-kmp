@@ -124,7 +124,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Luo uusi ryhmä</string>
     <string name="ab_action_flipcamera">Käännä kamera</string>
     <string name="ab_action_hidepreview">Piilota esikatselu</string>
-    <string name="remote_recording">%s tallentaa…</string>
+    <string name="remote_recording">%1$s tallentaa…</string>
     <string name="send_message">Lähetä viesti</string>
     <string name="message_sending">Viestiä lähetetään...</string>
     <string name="message_failed">Epäonnistui</string>
@@ -201,7 +201,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">Ladataan keskustelua vertaisverkosta</string>
     <string name="conversation_blocked">Tämä henkilö on estetty.</string>
     <string name="conversation_ended">Keskustelu päättyi.</string>
-    <string name="conversation_message_deleted">%s poisti viestin</string>
+    <string name="conversation_message_deleted">%1$s poisti viestin</string>
     <string name="conversation_reply_you">Sinä</string>
     <string name="video_not_found">Videotiedostoa ei löytynyt</string>
     <string name="conversation_preference_color">Keskustelun väri</string>
@@ -281,11 +281,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block">Estä</string>
     <string name="decline_invitation">Hylkää kutsu</string>
     <string name="accept_invitation">Hyväksy kutsu</string>
-    <string name="accept_invitation_body">Kutsu vastaanotettu %s:lta.</string>
+    <string name="accept_invitation_body">Kutsu vastaanotettu %1$s:lta.</string>
     <string name="new_invitation_request_title">Uusi kutsu</string>
     <string name="invitation_message">Sinulla on %1$d pyyntöä</string>
     <string name="no_invitations">Näytettäviä kutsuja ei ole.</string>
-    <string name="invitation_received_message">Kutsu vastaanotettu %s:lta.\nHyväksytkö kutsu?</string>
+    <string name="invitation_received_message">Kutsu vastaanotettu %1$s:lta.\nHyväksytkö kutsu?</string>
     <string name="outgoing_contact_invitation_message">Tämä henkilö ei ole yhteystiedoissa.</string>
     <string name="no_blocked_contact">EI estettyjä henkilöitä</string>
     <string name="no_contact_request">Pyyntöä ei ole lähetetty</string>
@@ -312,7 +312,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">Peruttu</string>
     <string name="file_transfer_status_error">Tiedostoa siirrettäessä tapahtui virhe.</string>
     <string name="file_transfer_status_timed_out">Toiminto on aikakatkaistu.</string>
-    <string name="file_saved_in">Tiedosto tallennettu %s.</string>
+    <string name="file_saved_in">Tiedosto tallennettu %1$s.</string>
     <string name="file_saved_successfully">Tiedosto tallennettiin onnistuneesti.</string>
     <string name="file_download">Lataa</string>
     <string name="no_space_left_on_device">Laitteessa ei ole tallennustilaa.</string>

@@ -117,7 +117,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qr_code">کد QR</string>
     <string name="ab_action_flipcamera">چرخاندن دوربین</string>
     <string name="ab_action_hidepreview">مخفی‌کردن پیش‌نمایش</string>
-    <string name="remote_recording">%s در حال ضبط...</string>
+    <string name="remote_recording">%1$s در حال ضبط...</string>
     <string name="send_message">ارسال پیام</string>
     <string name="message_sending">در حال ارسال پیام…</string>
     <string name="message_failed">شکست خورد</string>

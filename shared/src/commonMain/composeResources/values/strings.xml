@@ -286,7 +286,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="new_group">Create new group</string>
     <string name="ab_action_flipcamera">Flip camera</string>
     <string name="ab_action_hidepreview">Hide preview</string>
-    <string name="remote_recording">%s recording…</string>
+    <string name="remote_recording">%1$s recording…</string>
 
     <!-- Text messages -->
     <string name="send_message">Send message</string>
@@ -382,7 +382,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_syncing">Downloading conversation from peer</string>
     <string name="conversation_blocked">This contact is blocked.</string>
     <string name="conversation_ended">Conversation ended.</string>
-    <string name="conversation_message_deleted">%s deleted a message</string>
+    <string name="conversation_message_deleted">%1$s deleted a message</string>
     <string name="conversation_reply_you">You</string>
     <string name="video_not_found">Video file not found</string>
 
@@ -475,11 +475,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block">Block</string>
     <string name="decline_invitation">Decline invitation</string>
     <string name="accept_invitation">Accept invitation</string>
-    <string name="accept_invitation_body">Invitation received from %s.</string>
+    <string name="accept_invitation_body">Invitation received from %1$s.</string>
     <string name="new_invitation_request_title">New invitation</string>
     <string name="invitation_message">You have %1$d contact requests</string>
     <string name="no_invitations">There are no invitations to display.</string>
-    <string name="invitation_received_message">Invitation received from %s.\nAccept or decline the invitation?</string>
+    <string name="invitation_received_message">Invitation received from %1$s.\nAccept or decline the invitation?</string>
     <string name="outgoing_contact_invitation_message">This contact is not in your contact list.</string>
 
     <!-- Blacklist -->
@@ -514,7 +514,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">Canceled</string>
     <string name="file_transfer_status_error">An error occurred while transferring the file.</string>
     <string name="file_transfer_status_timed_out">The operation timed out.</string>
-    <string name="file_saved_in">File saved in %s.</string>
+    <string name="file_saved_in">File saved in %1$s.</string>
     <string name="file_saved_successfully">The file was saved successfully.</string>
     <string name="file_download">Download</string>
     <string name="no_space_left_on_device">No storage space available on the device.</string>

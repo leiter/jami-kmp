@@ -95,7 +95,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qr_code">QR kodea</string>
     <string name="ab_action_flipcamera">Itzulbiratu kamera</string>
     <string name="ab_action_hidepreview">Ezkutatu aurretiko bista</string>
-    <string name="remote_recording">%s Grabatzen...</string>
+    <string name="remote_recording">%1$s Grabatzen...</string>
     <string name="send_message">Bidali mezua</string>
     <string name="message_sending">Mezua bidaltzen…</string>
     <string name="message_failed">Huts eginda</string>
