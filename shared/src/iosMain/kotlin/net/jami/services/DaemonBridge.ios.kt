@@ -248,8 +248,12 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
 
     override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {
-        Log.d(TAG, "setConferenceLayout: $confId layout=$layout")
-        // TODO: bridge.setConferenceLayout(accountId, confId, layout)
+        val jbLayout = when (layout) {
+            1    -> JBConferenceLayout.JBConferenceLayoutOneBig
+            2    -> JBConferenceLayout.JBConferenceLayoutOneBigSmall
+            else -> JBConferenceLayout.JBConferenceLayoutGrid
+        }
+        bridge.setConferenceLayout(accountId, conferenceId = confId, layout = jbLayout)
     }
 
     override fun hangUpConference(accountId: String, confId: String): Boolean = false
@@ -259,6 +263,22 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun detachParticipant(accountId: String, callId: String): Boolean = false
     override fun getParticipantList(accountId: String, confId: String): List<String> = emptyList()
     override fun getConferenceDetails(accountId: String, confId: String): Map<String, String> = emptyMap()
+
+    override fun muteParticipantAudio(accountId: String, confId: String, participantId: String) {
+        bridge.muteConferenceParticipant(accountId, conferenceId = confId, participantUri = participantId, muted = true)
+    }
+
+    override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {
+        bridge.muteConferenceParticipant(accountId, conferenceId = confId, participantUri = participantId, muted = false)
+    }
+
+    override fun muteAllParticipants(accountId: String, confId: String) {
+        bridge.setConferenceLayout(accountId, conferenceId = confId, layout = JBConferenceLayout.JBConferenceLayoutGrid)
+    }
+
+    override fun setConferenceLocked(accountId: String, confId: String, locked: Boolean) {
+        bridge.setConferenceLayout(accountId, conferenceId = confId, layout = if (locked) JBConferenceLayout.JBConferenceLayoutOneBigSmall else JBConferenceLayout.JBConferenceLayoutGrid)
+    }
 
     // ==================== Conversation Operations ====================
 
@@ -460,14 +480,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
 
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {
-        // TODO: Add to JamiBridgeWrapper.h:
-        // - (void)sendAccountTextMessage:(NSString *)accountId
-        //                 conversationId:(NSString *)conversationId
-        //                       messages:(NSDictionary<NSString *, NSString *> *)messages
-        //                           flag:(int)flag;
-        // This enables sending location updates, reactions, and other MIME-typed messages.
-        // For now, location sharing on iOS will not send updates until this binding is added.
-        Log.w(TAG, "sendAccountTextMessage not implemented on iOS - location sharing disabled")
+        bridge.sendAccountTextMessage(accountId, conversationId = conversationId, messages = messages.toNSDictionary(), flag = flag)
     }
 
     // ==================== File Transfer ====================

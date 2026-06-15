@@ -403,6 +403,11 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
              conversationId:(NSString *)conversationId
                   messageId:(NSString *)messageId;
 
+- (uint64_t)sendAccountTextMessage:(NSString *)accountId
+                    conversationId:(NSString *)conversationId
+                          messages:(NSDictionary<NSString *, NSString *> *)messages
+                              flag:(int)flag;
+
 // =========================================================================
 // Calls (12 methods)
 // =========================================================================
@@ -533,6 +538,13 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
  */
 - (void)presentDocumentPickerWithMimeTypes:(NSArray<NSString *> *)mimeTypes
                                 completion:(void (^)(NSString * _Nullable filePath))completion;
+
+/**
+ * Presents the device camera and delivers the captured photo as a JPEG file path.
+ * Calls completion with the temp file path, or nil if the user cancels or camera is unavailable.
+ * Must be called from the main thread.
+ */
+- (void)presentImageCapture:(void (^)(NSString * _Nullable filePath))completion;
 
 @end
 

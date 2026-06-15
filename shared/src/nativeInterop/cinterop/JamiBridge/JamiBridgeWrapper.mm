@@ -1378,6 +1378,18 @@ static JBCallState toCallState(const std::string& state) {
     libjami::setMessageDisplayed(toCppString(accountId), toCppString(conversationId), toCppString(messageId), 3);
 }
 
+- (uint64_t)sendAccountTextMessage:(NSString *)accountId
+                    conversationId:(NSString *)conversationId
+                          messages:(NSDictionary<NSString *, NSString *> *)messages
+                              flag:(int)flag {
+    NSLog(@"[JamiBridge] sendAccountTextMessage to %@", conversationId);
+    std::map<std::string, std::string> cppMessages;
+    for (NSString *key in messages) {
+        cppMessages[toCppString(key)] = toCppString(messages[key]);
+    }
+    return libjami::sendAccountTextMessage(toCppString(accountId), toCppString(conversationId), cppMessages, flag);
+}
+
 // =============================================================================
 // Calls
 // =============================================================================
@@ -1704,6 +1716,7 @@ static JBCallState toCallState(const std::string& state) {
 // =========================================================================
 
 @class JBDocumentPickerDelegate; // forward declaration
+@class JBImagePickerDelegate;    // forward declaration
 
 - (void)presentDocumentPickerWithMimeTypes:(NSArray<NSString *> *)mimeTypes
                                 completion:(void (^)(NSString * _Nullable filePath))completion {
@@ -1757,6 +1770,41 @@ static JBCallState toCallState(const std::string& state) {
     });
 }
 
+- (void)presentImageCapture:(void (^)(NSString * _Nullable filePath))completion {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIWindow *keyWindow = nil;
+        for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
+            if ([scene isKindOfClass:[UIWindowScene class]]) {
+                UIWindowScene *windowScene = (UIWindowScene *)scene;
+                for (UIWindow *window in windowScene.windows) {
+                    if (window.isKeyWindow) { keyWindow = window; break; }
+                }
+            }
+        }
+        UIViewController *rootVC = keyWindow.rootViewController;
+        while (rootVC.presentedViewController) {
+            rootVC = rootVC.presentedViewController;
+        }
+        if (!rootVC) { completion(nil); return; }
+
+        if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+            FILE_LOG_E("ImageCapture", @"Camera not available on this device");
+            completion(nil);
+            return;
+        }
+
+        UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+        picker.sourceType = UIImagePickerControllerSourceTypeCamera;
+        picker.mediaTypes = @[@"public.image"];
+
+        JBImagePickerDelegate *delegate = [[JBImagePickerDelegate alloc] initWithCompletion:completion];
+        picker.delegate = delegate;
+        objc_setAssociatedObject(picker, "delegate", delegate, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
+        [rootVC presentViewController:picker animated:YES completion:nil];
+    });
+}
+
 @end
 
 // =========================================================================
@@ -1802,6 +1850,50 @@ didPickDocumentsAtURLs:(NSArray<NSURL *> *)urls {
 }
 
 - (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller {
+    _completion(nil);
+}
+
+@end
+
+// =========================================================================
+// Image capture delegate helper
+// =========================================================================
+
+@interface JBImagePickerDelegate : NSObject <UIImagePickerControllerDelegate, UINavigationControllerDelegate>
+- (instancetype)initWithCompletion:(void (^)(NSString * _Nullable))completion;
+@end
+
+@implementation JBImagePickerDelegate {
+    void (^_completion)(NSString * _Nullable);
+}
+
+- (instancetype)initWithCompletion:(void (^)(NSString * _Nullable))completion {
+    self = [super init];
+    if (self) { _completion = [completion copy]; }
+    return self;
+}
+
+- (void)imagePickerController:(UIImagePickerController *)picker
+didFinishPickingMediaWithInfo:(NSDictionary<UIImagePickerControllerInfoKey, id> *)info {
+    [picker dismissViewControllerAnimated:YES completion:nil];
+    UIImage *image = info[UIImagePickerControllerOriginalImage];
+    if (!image) { _completion(nil); return; }
+
+    NSString *filePath = [NSTemporaryDirectory()
+        stringByAppendingPathComponent:
+            [NSString stringWithFormat:@"jami_capture_%lld.jpg",
+             (long long)[[NSDate date] timeIntervalSince1970]]];
+    NSData *imageData = UIImageJPEGRepresentation(image, 0.9f);
+    if ([imageData writeToFile:filePath atomically:YES]) {
+        _completion(filePath);
+    } else {
+        FILE_LOG_E("ImageCapture", @"Failed to write captured image to temp file");
+        _completion(nil);
+    }
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
+    [picker dismissViewControllerAnimated:YES completion:nil];
     _completion(nil);
 }
 

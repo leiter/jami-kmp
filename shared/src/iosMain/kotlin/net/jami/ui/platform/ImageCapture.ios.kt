@@ -18,6 +18,7 @@ package net.jami.ui.platform
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import net.jami.bridge.JamiBridgeWrapper
 
 @Composable
 actual fun ImageCaptureEffect(
@@ -26,9 +27,9 @@ actual fun ImageCaptureEffect(
 ) {
     LaunchedEffect(show) {
         if (show) {
-            // TODO: Implement iOS camera capture using UIImagePickerController
-            // via JamiBridgeWrapper (similar to how file operations are bridged)
-            onImageCaptured(null)
+            JamiBridgeWrapper.shared().presentImageCapture { path ->
+                onImageCaptured(path)
+            }
         }
     }
 }

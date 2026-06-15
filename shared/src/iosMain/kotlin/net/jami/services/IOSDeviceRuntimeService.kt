@@ -17,6 +17,10 @@
 package net.jami.services
 
 import kotlinx.cinterop.ExperimentalForeignApi
+import platform.AVFoundation.AVAuthorizationStatusAuthorized
+import platform.AVFoundation.AVCaptureDevice
+import platform.AVFoundation.AVMediaTypeAudio
+import platform.AVFoundation.AVMediaTypeVideo
 import platform.Foundation.*
 
 /**
@@ -95,19 +99,11 @@ class IOSDeviceRuntimeService : DeviceRuntimeService {
     override fun hasStoragePermission(): Boolean =
         true // iOS doesn't require explicit storage permissions for app sandbox
 
-    override fun hasCameraPermission(): Boolean {
-        // Permission checking should be done at the UI layer using native iOS APIs
-        // AVCaptureDevice.authorizationStatus(for: .video)
-        // Returning true here - UI layer should handle actual permission requests
-        return true
-    }
+    override fun hasCameraPermission(): Boolean =
+        AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeVideo) == AVAuthorizationStatusAuthorized
 
-    override fun hasMicrophonePermission(): Boolean {
-        // Permission checking should be done at the UI layer using native iOS APIs
-        // AVCaptureDevice.authorizationStatus(for: .audio)
-        // Returning true here - UI layer should handle actual permission requests
-        return true
-    }
+    override fun hasMicrophonePermission(): Boolean =
+        AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeAudio) == AVAuthorizationStatusAuthorized
 
     override fun hasContactsPermission(): Boolean =
         true // CNContactStore authorization checked at UI layer via PermissionRequesterEffect
