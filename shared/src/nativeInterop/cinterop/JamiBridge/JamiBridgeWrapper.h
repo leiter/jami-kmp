@@ -337,6 +337,12 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (void)setCredentials:(NSString *)accountId
            credentials:(NSArray<NSDictionary<NSString *, NSString *> *> *)credentials;
 
+- (void)setAccountsOrder:(NSString *)order;
+
+- (BOOL)searchUser:(NSString *)accountId query:(NSString *)query;
+
+- (BOOL)cancelMessage:(NSString *)accountId messageId:(uint64_t)messageId;
+
 - (BOOL)revokeDevice:(NSString *)accountId deviceId:(NSString *)deviceId scheme:(NSString *)scheme password:(NSString *)password;
 
 - (int32_t)addDevice:(NSString *)accountId uri:(NSString *)uri;
@@ -478,6 +484,14 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                                                   callId:(NSString *)callId;
 
 - (NSArray<NSString *> *)getActiveCalls:(NSString *)accountId;
+
+- (void)sendTextMessage:(NSString *)accountId callId:(NSString *)callId
+               messages:(NSDictionary<NSString *, NSString *> *)messages
+                   from:(NSString *)from isMixed:(BOOL)isMixed;
+
+- (BOOL)addMainParticipant:(NSString *)accountId conferenceId:(NSString *)conferenceId;
+
+- (BOOL)detachParticipant:(NSString *)accountId callId:(NSString *)callId;
 
 - (BOOL)transfer:(NSString *)accountId callId:(NSString *)callId to:(NSString *)to;
 

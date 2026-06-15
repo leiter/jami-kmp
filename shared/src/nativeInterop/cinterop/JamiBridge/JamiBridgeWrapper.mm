@@ -1196,6 +1196,18 @@ static JBCallState toCallState(const std::string& state) {
     libjami::setCredentials(toCppString(accountId), creds);
 }
 
+- (void)setAccountsOrder:(NSString *)order {
+    libjami::setAccountsOrder(toCppString(order));
+}
+
+- (BOOL)searchUser:(NSString *)accountId query:(NSString *)query {
+    return libjami::searchUser(toCppString(accountId), toCppString(query));
+}
+
+- (BOOL)cancelMessage:(NSString *)accountId messageId:(uint64_t)messageId {
+    return libjami::cancelMessage(toCppString(accountId), messageId);
+}
+
 - (BOOL)revokeDevice:(NSString *)accountId deviceId:(NSString *)deviceId scheme:(NSString *)scheme password:(NSString *)password {
     return libjami::revokeDevice(toCppString(accountId), toCppString(deviceId),
                                   toCppString(scheme), toCppString(password));
@@ -1581,6 +1593,21 @@ static JBCallState toCallState(const std::string& state) {
 - (NSArray<NSString *> *)getActiveCalls:(NSString *)accountId {
     auto calls = libjami::getCallList(toCppString(accountId));
     return toNSArray(calls);
+}
+
+- (void)sendTextMessage:(NSString *)accountId callId:(NSString *)callId
+               messages:(NSDictionary<NSString *, NSString *> *)messages
+                   from:(NSString *)from isMixed:(BOOL)isMixed {
+    libjami::sendTextMessage(toCppString(accountId), toCppString(callId),
+                              toCppMap(messages), toCppString(from), isMixed);
+}
+
+- (BOOL)addMainParticipant:(NSString *)accountId conferenceId:(NSString *)conferenceId {
+    return libjami::addMainParticipant(toCppString(accountId), toCppString(conferenceId));
+}
+
+- (BOOL)detachParticipant:(NSString *)accountId callId:(NSString *)callId {
+    return libjami::detachParticipant(toCppString(accountId), toCppString(callId));
 }
 
 - (BOOL)transfer:(NSString *)accountId callId:(NSString *)callId to:(NSString *)to {

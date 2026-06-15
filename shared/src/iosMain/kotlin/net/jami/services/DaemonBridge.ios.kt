@@ -131,7 +131,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
 
     override fun setAccountsOrder(order: String) {
-        // Not exposed in JamiBridge
+        bridge.setAccountsOrder(order)
     }
 
     override fun changeAccountPassword(accountId: String, oldPassword: String, newPassword: String): Boolean =
@@ -277,8 +277,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.addParticipantToConference(accountId, callId = callId, conferenceAccountId = account2Id, conferenceId = confId)
         return true
     }
-    override fun addMainParticipant(accountId: String, confId: String): Boolean = false
-    override fun detachParticipant(accountId: String, callId: String): Boolean = false
+    override fun addMainParticipant(accountId: String, confId: String): Boolean =
+        bridge.addMainParticipant(accountId, conferenceId = confId)
+    override fun detachParticipant(accountId: String, callId: String): Boolean =
+        bridge.detachParticipant(accountId, callId = callId)
     override fun getParticipantList(accountId: String, confId: String): List<String> =
         bridge.getConferenceParticipants(accountId, conferenceId = confId)?.toKotlinList() ?: emptyList()
     override fun getConferenceDetails(accountId: String, confId: String): Map<String, String> =
@@ -479,23 +481,23 @@ actual class DaemonBridge() : DaemonBridgeApi {
         return bridge.registerName(accountId, name = name, password = password)
     }
 
-    override fun searchUser(accountId: String, query: String): Boolean {
-        return false
-    }
+    override fun searchUser(accountId: String, query: String): Boolean =
+        bridge.searchUser(accountId, query = query)
 
     // ==================== Messaging ====================
 
     override fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {
-        // Not directly exposed in JamiBridge
+        bridge.sendTextMessage(accountId, callId = callIdOrUri,
+            messages = mapOf("text/plain" to message).toNSDictionary(),
+            from = "", isMixed = false)
     }
 
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
         bridge.setIsComposing(accountId, conversationId = uri, isComposing = isComposing)
     }
 
-    override fun cancelMessage(accountId: String, messageId: Long): Boolean {
-        return false
-    }
+    override fun cancelMessage(accountId: String, messageId: Long): Boolean =
+        bridge.cancelMessage(accountId, messageId = messageId.toULong())
 
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {
         bridge.sendAccountTextMessage(accountId, conversationId = conversationId, messages = messages.toNSDictionary(), flag = flag)
