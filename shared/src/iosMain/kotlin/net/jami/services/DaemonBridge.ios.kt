@@ -119,9 +119,8 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.setAccountActive(accountId, active = active)
     }
 
-    override fun getAccountTemplate(accountType: String): Map<String, String> {
-        return emptyMap()
-    }
+    override fun getAccountTemplate(accountType: String): Map<String, String> =
+        bridge.getAccountTemplate(accountType)?.toKotlinMap() ?: emptyMap()
 
     override fun getVolatileAccountDetails(accountId: String): Map<String, String> {
         return bridge.getVolatileAccountDetails(accountId)?.toKotlinMap() ?: emptyMap()
@@ -135,9 +134,8 @@ actual class DaemonBridge() : DaemonBridgeApi {
         // Not exposed in JamiBridge
     }
 
-    override fun changeAccountPassword(accountId: String, oldPassword: String, newPassword: String): Boolean {
-        return false
-    }
+    override fun changeAccountPassword(accountId: String, oldPassword: String, newPassword: String): Boolean =
+        bridge.changeAccountPassword(accountId, oldPassword = oldPassword, newPassword = newPassword)
 
     override fun exportToFile(accountId: String, path: String, scheme: String, password: String): Boolean {
         return bridge.exportAccount(accountId, toDestinationPath = path, withPassword = password)
@@ -145,19 +143,17 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Credentials ====================
 
-    override fun getCredentials(accountId: String): List<Map<String, String>> {
-        return emptyList()
-    }
+    override fun getCredentials(accountId: String): List<Map<String, String>> =
+        bridge.getCredentials(accountId)?.toKotlinListOfMaps() ?: emptyList()
 
     override fun setCredentials(accountId: String, credentials: List<Map<String, String>>) {
-        // Not exposed in JamiBridge
+        bridge.setCredentials(accountId, credentials = credentials.toNSArrayOfDictionaries())
     }
 
     // ==================== Device Management ====================
 
-    override fun getKnownRingDevices(accountId: String): Map<String, String> {
-        return emptyMap()
-    }
+    override fun getKnownRingDevices(accountId: String): Map<String, String> =
+        bridge.getKnownRingDevices(accountId)?.toKotlinMap() ?: emptyMap()
 
     override fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String) {
         // Not exposed in JamiBridge
@@ -219,16 +215,19 @@ actual class DaemonBridge() : DaemonBridgeApi {
         }
     }
 
-    override fun playDtmf(key: String) { Log.d(TAG, "playDtmf: $key") }
-    override fun muteRingtone(mute: Boolean) { Log.d(TAG, "muteRingtone: $mute") }
-    override fun muteCapture(mute: Boolean) { Log.d(TAG, "muteCapture: $mute") }
-    override fun isCaptureMuted(): Boolean = false
+    override fun playDtmf(key: String) { bridge.playDtmf(key) }
+    override fun muteRingtone(mute: Boolean) { bridge.muteRingtone(mute) }
+    override fun muteCapture(mute: Boolean) { bridge.muteCapture(mute) }
+    override fun isCaptureMuted(): Boolean = bridge.isCaptureMuted()
     override fun restartAudioLayer() { Log.d(TAG, "restartAudioLayer") }
     override fun setNoiseSuppression(enabled: Boolean) {}
     override fun setEchoCancellation(enabled: Boolean) {}
-    override fun transfer(accountId: String, callId: String, to: String): Boolean = false
-    override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean = false
-    override fun getCallDetails(accountId: String, callId: String): Map<String, String> = emptyMap()
+    override fun transfer(accountId: String, callId: String, to: String): Boolean =
+        bridge.transfer(accountId, callId = callId, to = to)
+    override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean =
+        bridge.attendedTransfer(accountId, callId = transferId, targetId = targetId)
+    override fun getCallDetails(accountId: String, callId: String): Map<String, String> =
+        bridge.getCallDetails(accountId, callId = callId)?.toKotlinMap() ?: emptyMap()
 
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {
@@ -256,13 +255,24 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.setConferenceLayout(accountId, conferenceId = confId, layout = jbLayout)
     }
 
-    override fun hangUpConference(accountId: String, confId: String): Boolean = false
-    override fun joinParticipant(accountId: String, selCallId: String, account2Id: String, dragCallId: String): Boolean = false
-    override fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean = false
+    override fun hangUpConference(accountId: String, confId: String): Boolean {
+        bridge.hangUpConference(accountId, conferenceId = confId)
+        return true
+    }
+    override fun joinParticipant(accountId: String, selCallId: String, account2Id: String, dragCallId: String): Boolean {
+        bridge.joinParticipant(accountId, callId = selCallId, accountId2 = account2Id, callId2 = dragCallId)
+        return true
+    }
+    override fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean {
+        bridge.addParticipantToConference(accountId, callId = callId, conferenceAccountId = account2Id, conferenceId = confId)
+        return true
+    }
     override fun addMainParticipant(accountId: String, confId: String): Boolean = false
     override fun detachParticipant(accountId: String, callId: String): Boolean = false
-    override fun getParticipantList(accountId: String, confId: String): List<String> = emptyList()
-    override fun getConferenceDetails(accountId: String, confId: String): Map<String, String> = emptyMap()
+    override fun getParticipantList(accountId: String, confId: String): List<String> =
+        bridge.getConferenceParticipants(accountId, conferenceId = confId)?.toKotlinList() ?: emptyList()
+    override fun getConferenceDetails(accountId: String, confId: String): Map<String, String> =
+        bridge.getConferenceDetails(accountId, conferenceId = confId)?.toKotlinMap() ?: emptyMap()
 
     override fun muteParticipantAudio(accountId: String, confId: String, participantId: String) {
         bridge.muteConferenceParticipant(accountId, conferenceId = confId, participantUri = participantId, muted = true)
@@ -342,13 +352,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.updateConversationInfo(accountId, conversationId = conversationId, info = info.toNSDictionary())
     }
 
-    override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
-        // Not directly exposed in JamiBridge
-        return emptyMap()
-    }
+    override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> =
+        bridge.getConversationPreferences(accountId, conversationId = conversationId)?.toKotlinMap() ?: emptyMap()
 
     override fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {
-        // Not directly exposed in JamiBridge
+        bridge.setConversationPreferences(accountId, conversationId = conversationId, prefs = prefs.toNSDictionary())
     }
 
     override fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int) {
@@ -532,21 +540,18 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Codec Operations ====================
 
-    override fun getCodecList(): List<Long> {
-        return emptyList()
-    }
+    override fun getCodecList(): List<Long> =
+        bridge.getCodecList()?.toKotlinLongList() ?: emptyList()
 
-    override fun getActiveCodecList(accountId: String): List<Long> {
-        return emptyList()
-    }
+    override fun getActiveCodecList(accountId: String): List<Long> =
+        bridge.getActiveCodecList(accountId)?.toKotlinLongList() ?: emptyList()
 
     override fun setActiveCodecList(accountId: String, codecList: List<Long>) {
-        // Not exposed
+        bridge.setActiveCodecList(accountId, codecList = codecList.toNSNumberList())
     }
 
-    override fun getCodecDetails(accountId: String, codecId: Long): Map<String, String> {
-        return emptyMap()
-    }
+    override fun getCodecDetails(accountId: String, codecId: Long): Map<String, String> =
+        bridge.getCodecDetails(accountId, codecId = codecId.toUInt())?.toKotlinMap() ?: emptyMap()
 
     // ==================== Push Notifications ====================
 
@@ -663,6 +668,32 @@ private fun Any?.toKotlinList(): List<String> {
 private fun Map<String, String>.toNSDictionary(): Map<Any?, *> {
     return this as Map<Any?, *>
 }
+
+@Suppress("UNCHECKED_CAST")
+private fun Any?.toKotlinListOfMaps(): List<Map<String, String>> {
+    val array = this as? List<*> ?: return emptyList()
+    return array.mapNotNull { item ->
+        val map = item as? Map<*, *> ?: return@mapNotNull null
+        map.entries.mapNotNull { (k, v) ->
+            val key = k as? String ?: return@mapNotNull null
+            val value = v as? String ?: return@mapNotNull null
+            key to value
+        }.toMap()
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun List<Map<String, String>>.toNSArrayOfDictionaries(): List<Map<Any?, *>> {
+    return this.map { it as Map<Any?, *> }
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun Any?.toKotlinLongList(): List<Long> {
+    val array = this as? List<*> ?: return emptyList()
+    return array.mapNotNull { (it as? Number)?.toLong() }
+}
+
+private fun List<Long>.toNSNumberList(): List<*> = this
 
 // ==================== Delegate Implementation ====================
 

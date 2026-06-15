@@ -1155,6 +1155,46 @@ static JBCallState toCallState(const std::string& state) {
     return nil;
 }
 
+- (NSDictionary<NSString *, NSString *> *)getAccountTemplate:(NSString *)accountType {
+    auto tmpl = libjami::getAccountTemplate(toCppString(accountType));
+    return toNSDictionary(tmpl);
+}
+
+- (NSDictionary<NSString *, NSString *> *)getKnownRingDevices:(NSString *)accountId {
+    auto devices = libjami::getKnownRingDevices(toCppString(accountId));
+    return toNSDictionary(devices);
+}
+
+- (BOOL)changeAccountPassword:(NSString *)accountId
+                  oldPassword:(NSString *)oldPassword
+                  newPassword:(NSString *)newPassword {
+    return libjami::changeAccountPassword(toCppString(accountId),
+                                          toCppString(oldPassword),
+                                          toCppString(newPassword));
+}
+
+- (NSArray<NSDictionary<NSString *, NSString *> *> *)getCredentials:(NSString *)accountId {
+    auto creds = libjami::getCredentials(toCppString(accountId));
+    NSMutableArray *result = [NSMutableArray arrayWithCapacity:creds.size()];
+    for (const auto& credMap : creds) {
+        [result addObject:toNSDictionary(credMap)];
+    }
+    return result;
+}
+
+- (void)setCredentials:(NSString *)accountId
+           credentials:(NSArray<NSDictionary<NSString *, NSString *> *> *)credentials {
+    std::vector<std::map<std::string, std::string>> creds;
+    for (NSDictionary *dict in credentials) {
+        std::map<std::string, std::string> credMap;
+        for (NSString *key in dict) {
+            credMap[toCppString(key)] = toCppString(dict[key]);
+        }
+        creds.push_back(credMap);
+    }
+    libjami::setCredentials(toCppString(accountId), creds);
+}
+
 // =============================================================================
 // Contact Management
 // =============================================================================
@@ -1390,6 +1430,18 @@ static JBCallState toCallState(const std::string& state) {
     return libjami::sendAccountTextMessage(toCppString(accountId), toCppString(conversationId), cppMessages, flag);
 }
 
+- (NSDictionary<NSString *, NSString *> *)getConversationPreferences:(NSString *)accountId
+                                                       conversationId:(NSString *)conversationId {
+    auto prefs = libjami::getConversationPreferences(toCppString(accountId), toCppString(conversationId));
+    return toNSDictionary(prefs);
+}
+
+- (void)setConversationPreferences:(NSString *)accountId
+                    conversationId:(NSString *)conversationId
+                             prefs:(NSDictionary<NSString *, NSString *> *)prefs {
+    libjami::setConversationPreferences(toCppString(accountId), toCppString(conversationId), toCppMap(prefs));
+}
+
 // =============================================================================
 // Calls
 // =============================================================================
@@ -1483,6 +1535,30 @@ static JBCallState toCallState(const std::string& state) {
 - (NSArray<NSString *> *)getActiveCalls:(NSString *)accountId {
     auto calls = libjami::getCallList(toCppString(accountId));
     return toNSArray(calls);
+}
+
+- (BOOL)transfer:(NSString *)accountId callId:(NSString *)callId to:(NSString *)to {
+    return libjami::transfer(toCppString(accountId), toCppString(callId), toCppString(to));
+}
+
+- (BOOL)attendedTransfer:(NSString *)accountId callId:(NSString *)callId targetId:(NSString *)targetId {
+    return libjami::attendedTransfer(toCppString(accountId), toCppString(callId), toCppString(targetId));
+}
+
+- (void)playDtmf:(NSString *)key {
+    libjami::playDTMF(toCppString(key));
+}
+
+- (void)muteCapture:(BOOL)muted {
+    libjami::muteCapture(muted);
+}
+
+- (BOOL)isCaptureMuted {
+    return libjami::isCaptureMuted();
+}
+
+- (void)muteRingtone:(BOOL)muted {
+    libjami::muteRingtone(muted);
 }
 
 - (void)switchCamera {
@@ -1709,6 +1785,41 @@ static JBCallState toCallState(const std::string& state) {
 - (void)setAudioInputDevice:(int)index {
     NSLog(@"[JamiBridge] setAudioInputDevice: %d", index);
     libjami::setAudioInputDevice(index);
+}
+
+// =========================================================================
+// Codec Management
+// =========================================================================
+
+- (NSArray<NSNumber *> *)getCodecList {
+    auto codecs = libjami::getCodecList();
+    NSMutableArray *result = [NSMutableArray arrayWithCapacity:codecs.size()];
+    for (unsigned codecId : codecs) {
+        [result addObject:@(codecId)];
+    }
+    return result;
+}
+
+- (NSArray<NSNumber *> *)getActiveCodecList:(NSString *)accountId {
+    auto codecs = libjami::getActiveCodecList(toCppString(accountId));
+    NSMutableArray *result = [NSMutableArray arrayWithCapacity:codecs.size()];
+    for (unsigned codecId : codecs) {
+        [result addObject:@(codecId)];
+    }
+    return result;
+}
+
+- (void)setActiveCodecList:(NSString *)accountId codecList:(NSArray<NSNumber *> *)codecList {
+    std::vector<unsigned> cppCodecs;
+    for (NSNumber *num in codecList) {
+        cppCodecs.push_back([num unsignedIntValue]);
+    }
+    libjami::setActiveCodecList(toCppString(accountId), cppCodecs);
+}
+
+- (NSDictionary<NSString *, NSString *> *)getCodecDetails:(NSString *)accountId codecId:(uint32_t)codecId {
+    auto details = libjami::getCodecDetails(toCppString(accountId), codecId);
+    return toNSDictionary(details);
 }
 
 // =========================================================================

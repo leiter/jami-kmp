@@ -324,6 +324,19 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 
 - (nullable JBLookupResult *)lookupAddress:(NSString *)accountId address:(NSString *)address;
 
+- (NSDictionary<NSString *, NSString *> *)getAccountTemplate:(NSString *)accountType;
+
+- (NSDictionary<NSString *, NSString *> *)getKnownRingDevices:(NSString *)accountId;
+
+- (BOOL)changeAccountPassword:(NSString *)accountId
+                  oldPassword:(NSString *)oldPassword
+                  newPassword:(NSString *)newPassword;
+
+- (NSArray<NSDictionary<NSString *, NSString *> *> *)getCredentials:(NSString *)accountId;
+
+- (void)setCredentials:(NSString *)accountId
+           credentials:(NSArray<NSDictionary<NSString *, NSString *> *> *)credentials;
+
 // =========================================================================
 // Contact Management (7 methods)
 // =========================================================================
@@ -408,6 +421,13 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                           messages:(NSDictionary<NSString *, NSString *> *)messages
                               flag:(int)flag;
 
+- (NSDictionary<NSString *, NSString *> *)getConversationPreferences:(NSString *)accountId
+                                                       conversationId:(NSString *)conversationId;
+
+- (void)setConversationPreferences:(NSString *)accountId
+                    conversationId:(NSString *)conversationId
+                             prefs:(NSDictionary<NSString *, NSString *> *)prefs;
+
 // =========================================================================
 // Calls (12 methods)
 // =========================================================================
@@ -432,6 +452,18 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                                                   callId:(NSString *)callId;
 
 - (NSArray<NSString *> *)getActiveCalls:(NSString *)accountId;
+
+- (BOOL)transfer:(NSString *)accountId callId:(NSString *)callId to:(NSString *)to;
+
+- (BOOL)attendedTransfer:(NSString *)accountId callId:(NSString *)callId targetId:(NSString *)targetId;
+
+- (void)playDtmf:(NSString *)key;
+
+- (void)muteCapture:(BOOL)muted;
+
+- (BOOL)isCaptureMuted;
+
+- (void)muteRingtone:(BOOL)muted;
 
 - (void)switchCamera;
 
@@ -525,6 +557,15 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (NSArray<NSString *> *)getAudioInputDevices;
 - (void)setAudioOutputDevice:(int)index;
 - (void)setAudioInputDevice:(int)index;
+
+// =========================================================================
+// Codec Management
+// =========================================================================
+
+- (NSArray<NSNumber *> *)getCodecList;
+- (NSArray<NSNumber *> *)getActiveCodecList:(NSString *)accountId;
+- (void)setActiveCodecList:(NSString *)accountId codecList:(NSArray<NSNumber *> *)codecList;
+- (NSDictionary<NSString *, NSString *> *)getCodecDetails:(NSString *)accountId codecId:(uint32_t)codecId;
 
 // =========================================================================
 // File Picker (1 method)
