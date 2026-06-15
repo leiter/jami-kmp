@@ -27,6 +27,9 @@ The following previously-listed gaps have been **resolved**:
 | Media change | `requestMediaChange`, `answerMediaChangeRequest` |
 | Camera capture | `ImageCaptureEffect` — wired to `UIImagePickerController` via bridge |
 | Permissions | `hasCameraPermission`, `hasMicrophonePermission` — real AVFoundation checks |
+| Permissions | `hasContactsPermission` — `CNContactStore.authorizationStatusForEntityType` |
+| Permissions | `hasLocationPermission` — `CLLocationManager.authorizationStatus()` |
+| Permissions | `hasNotificationsPermission` — cached async probe via `UNUserNotificationCenter` |
 | Log capture | `captureRecentLogs` — reads native log file written by bridge |
 
 ---
@@ -81,15 +84,15 @@ This is a platform limitation / architectural decision, not a simple bridging fi
 
 ### 2.1 `IOSDeviceRuntimeService` — Permission Checks
 
-Camera and microphone permissions now use real AVFoundation checks. Remaining permissions still return `true` unconditionally:
+All permission methods now query the real platform APIs:
 
-| Method | Should query | Status |
-|--------|-------------|--------|
-| `hasCameraPermission()` | `AVCaptureDevice.authorizationStatus` | **Fixed** |
-| `hasMicrophonePermission()` | `AVCaptureDevice.authorizationStatus` | **Fixed** |
-| `hasContactsPermission()` | `CNContactStore` | Still returns `true` (S effort) |
-| `hasNotificationsPermission()` | `UNUserNotificationCenter` | Still returns `true` (S effort) |
-| `hasLocationPermission()` | `CLLocationManager` | Still returns `true` (S effort) |
+| Method | API used | Notes |
+|--------|----------|-------|
+| `hasCameraPermission()` | `AVCaptureDevice.authorizationStatus` | Synchronous |
+| `hasMicrophonePermission()` | `AVCaptureDevice.authorizationStatus` | Synchronous |
+| `hasContactsPermission()` | `CNContactStore.authorizationStatusForEntityType` | Synchronous |
+| `hasLocationPermission()` | `CLLocationManager.authorizationStatus()` | Synchronous |
+| `hasNotificationsPermission()` | `UNUserNotificationCenter.getNotificationSettings` | Async; cached at init, defaults `true` until probe completes |
 
 ---
 
@@ -109,4 +112,4 @@ Camera and microphone permissions now use real AVFoundation checks. Remaining pe
 | Video call rendering | **Remaining** — architectural, multi-week |
 | Push notifications | **Remaining** — architectural, affects both platforms |
 | Background sync | **Remaining** — iOS platform limitation |
-| Contacts/notification/location permissions | **Remaining** — S effort each |
+| Contacts/notification/location permissions | **Done** |

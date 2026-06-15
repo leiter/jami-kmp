@@ -21,7 +21,15 @@ import platform.AVFoundation.AVAuthorizationStatusAuthorized
 import platform.AVFoundation.AVCaptureDevice
 import platform.AVFoundation.AVMediaTypeAudio
 import platform.AVFoundation.AVMediaTypeVideo
+import platform.Contacts.CNAuthorizationStatusAuthorized
+import platform.Contacts.CNContactStore
+import platform.Contacts.CNEntityTypeContacts
+import platform.CoreLocation.CLLocationManager
+import platform.CoreLocation.kCLAuthorizationStatusAuthorizedAlways
+import platform.CoreLocation.kCLAuthorizationStatusAuthorizedWhenInUse
 import platform.Foundation.*
+import platform.UserNotifications.UNAuthorizationStatusAuthorized
+import platform.UserNotifications.UNUserNotificationCenter
 
 /**
  * iOS implementation of DeviceRuntimeService.
@@ -34,6 +42,18 @@ import platform.Foundation.*
 class IOSDeviceRuntimeService : DeviceRuntimeService {
 
     private val fileManager: NSFileManager = NSFileManager.defaultManager
+
+    // UNUserNotificationCenter has no synchronous status API; cache the result of an async probe at startup
+    @Volatile
+    private var notificationPermissionGranted: Boolean = true
+
+    init {
+        UNUserNotificationCenter.currentNotificationCenter()
+            .getNotificationSettingsWithCompletionHandler { settings ->
+                notificationPermissionGranted =
+                    settings?.authorizationStatus == UNAuthorizationStatusAuthorized
+            }
+    }
 
     private val documentsDir: String by lazy {
         val paths = NSSearchPathForDirectoriesInDomains(
@@ -106,13 +126,16 @@ class IOSDeviceRuntimeService : DeviceRuntimeService {
         AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeAudio) == AVAuthorizationStatusAuthorized
 
     override fun hasContactsPermission(): Boolean =
-        true // CNContactStore authorization checked at UI layer via PermissionRequesterEffect
+        CNContactStore.authorizationStatusForEntityType(CNEntityTypeContacts) == CNAuthorizationStatusAuthorized
 
     override fun hasNotificationsPermission(): Boolean =
-        true // UNUserNotificationCenter authorization checked at UI layer via PermissionRequesterEffect
+        notificationPermissionGranted
 
-    override fun hasLocationPermission(): Boolean =
-        true // CLLocationManager authorization checked at UI layer via PermissionRequesterEffect
+    override fun hasLocationPermission(): Boolean {
+        val status = CLLocationManager.authorizationStatus()
+        return status == kCLAuthorizationStatusAuthorizedWhenInUse ||
+               status == kCLAuthorizationStatusAuthorizedAlways
+    }
 
     override fun fileExists(path: String): Boolean =
         fileManager.fileExistsAtPath(path)
