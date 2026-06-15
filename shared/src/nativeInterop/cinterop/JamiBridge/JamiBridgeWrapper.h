@@ -418,6 +418,22 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                     fromMessage:(NSString *)fromMessage
                           count:(int)count;
 
+- (uint32_t)loadSwarmUntil:(NSString *)accountId
+            conversationId:(NSString *)conversationId
+               fromMessage:(NSString *)fromMessage
+                 toMessage:(NSString *)toMessage;
+
+- (uint32_t)searchConversation:(NSString *)accountId
+                conversationId:(NSString *)conversationId
+                        author:(NSString *)author
+                        lastId:(NSString *)lastId
+                   regexSearch:(NSString *)regexSearch
+                          type:(NSString *)type
+                         after:(int64_t)after
+                        before:(int64_t)before
+                     maxResult:(uint32_t)maxResult
+                          flag:(int32_t)flag;
+
 - (void)setIsComposing:(NSString *)accountId
         conversationId:(NSString *)conversationId
            isComposing:(BOOL)isComposing;
@@ -571,6 +587,8 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (void)setDeviceOrientation:(NSString *)deviceId angle:(int)angle;
 - (void)applyVideoSettings:(NSString *)deviceId settings:(NSDictionary<NSString *, NSString *> *)settings;
 - (BOOL)switchVideoInput:(NSString *)accountId callId:(NSString *)callId uri:(NSString *)uri;
+- (void)addVideoDevice:(NSString *)node;
+- (void)removeVideoDevice:(NSString *)node;
 
 // =========================================================================
 // Audio Settings (4 methods)

@@ -538,15 +538,14 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Search & History ====================
 
-    override fun searchConversation(accountId: String, conversationId: String, author: String, lastId: String, query: String, type: String, after: Long, before: Long, maxResult: Long, flag: Int): Long {
-        Log.d(TAG, "searchConversation: $conversationId query=$query")
-        return -1L
-    }
+    override fun searchConversation(accountId: String, conversationId: String, author: String, lastId: String, query: String, type: String, after: Long, before: Long, maxResult: Long, flag: Int): Long =
+        bridge.searchConversation(accountId, conversationId = conversationId, author = author,
+            lastId = lastId, regexSearch = query, type = type, after = after, before = before,
+            maxResult = maxResult.toUInt(), flag = flag).toLong()
 
-    override fun loadSwarmUntil(accountId: String, conversationId: String, fromMessage: String, toMessage: String): Long {
-        Log.d(TAG, "loadSwarmUntil: $conversationId")
-        return -1L
-    }
+    override fun loadSwarmUntil(accountId: String, conversationId: String, fromMessage: String, toMessage: String): Long =
+        bridge.loadSwarmUntil(accountId, conversationId = conversationId,
+            fromMessage = fromMessage, toMessage = toMessage).toLong()
 
     // ==================== Codec Operations ====================
 
@@ -580,11 +579,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
     // ==================== Video Device Management ====================
 
     override fun addVideoDevice(deviceId: String) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.addVideoDevice(deviceId)
     }
 
     override fun removeVideoDevice(deviceId: String) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.removeVideoDevice(deviceId)
     }
 
     override fun setDefaultDevice(deviceId: String) {

@@ -1426,6 +1426,30 @@ static JBCallState toCallState(const std::string& state) {
     return static_cast<int>(requestId);
 }
 
+- (uint32_t)loadSwarmUntil:(NSString *)accountId
+            conversationId:(NSString *)conversationId
+               fromMessage:(NSString *)fromMessage
+                 toMessage:(NSString *)toMessage {
+    return libjami::loadSwarmUntil(toCppString(accountId), toCppString(conversationId),
+                                   toCppString(fromMessage), toCppString(toMessage));
+}
+
+- (uint32_t)searchConversation:(NSString *)accountId
+                conversationId:(NSString *)conversationId
+                        author:(NSString *)author
+                        lastId:(NSString *)lastId
+                   regexSearch:(NSString *)regexSearch
+                          type:(NSString *)type
+                         after:(int64_t)after
+                        before:(int64_t)before
+                     maxResult:(uint32_t)maxResult
+                          flag:(int32_t)flag {
+    return libjami::searchConversation(toCppString(accountId), toCppString(conversationId),
+                                       toCppString(author), toCppString(lastId),
+                                       toCppString(regexSearch), toCppString(type),
+                                       after, before, maxResult, flag);
+}
+
 - (void)setIsComposing:(NSString *)accountId
         conversationId:(NSString *)conversationId
            isComposing:(BOOL)isComposing {
@@ -1819,6 +1843,14 @@ static JBCallState toCallState(const std::string& state) {
 
 - (BOOL)switchVideoInput:(NSString *)accountId callId:(NSString *)callId uri:(NSString *)uri {
     return libjami::switchInput(toCppString(accountId), toCppString(callId), toCppString(uri));
+}
+
+- (void)addVideoDevice:(NSString *)node {
+    libjami::addVideoDevice(toCppString(node));
+}
+
+- (void)removeVideoDevice:(NSString *)node {
+    libjami::removeVideoDevice(toCppString(node));
 }
 
 // =============================================================================
