@@ -156,16 +156,26 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.getKnownRingDevices(accountId)?.toKotlinMap() ?: emptyMap()
 
     override fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String) {
-        // Not exposed in JamiBridge
+        bridge.revokeDevice(accountId, deviceId = deviceId, scheme = scheme, password = password)
     }
 
-    override fun addDevice(accountId: String, uri: String): Long {
-        // Not exposed in JamiBridge
-        return 0L
-    }
+    override fun addDevice(accountId: String, uri: String): Long =
+        bridge.addDevice(accountId, uri = uri).toLong()
+
+    override fun confirmAddDevice(accountId: String, opId: Long): Boolean =
+        bridge.confirmAddDevice(accountId, opId = opId.toUInt())
+
+    override fun cancelAddDevice(accountId: String, opId: Long): Boolean =
+        bridge.cancelAddDevice(accountId, opId = opId.toUInt())
+
+    override fun provideAccountAuthentication(accountId: String, password: String, scheme: String): Boolean =
+        bridge.provideAccountAuthentication(accountId, password = password, scheme = scheme)
 
     override fun setDeviceName(accountId: String, deviceName: String) {
-        // Not exposed in JamiBridge
+        // setDeviceName is not a direct libjami API; it's updated via setAccountDetails
+        val details = bridge.getAccountDetails(accountId)?.toKotlinMap()?.toMutableMap() ?: return
+        details["Account.deviceName"] = deviceName
+        bridge.setAccountDetails(accountId, details = details.toNSDictionary())
     }
 
     // ==================== Profile ====================
@@ -640,7 +650,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
 
     override fun requestMediaChange(accountId: String, callId: String, mediaList: List<Map<String, String>>) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.requestMediaChange(accountId, callId = callId, mediaList = mediaList.toNSArrayOfDictionaries())
+    }
+
+    override fun answerMediaChangeRequest(accountId: String, callId: String, mediaList: List<Map<String, String>>) {
+        bridge.answerMediaChangeRequest(accountId, callId = callId, mediaList = mediaList.toNSArrayOfDictionaries())
     }
 }
 

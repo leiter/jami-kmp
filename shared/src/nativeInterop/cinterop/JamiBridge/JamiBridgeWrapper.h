@@ -337,6 +337,16 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (void)setCredentials:(NSString *)accountId
            credentials:(NSArray<NSDictionary<NSString *, NSString *> *> *)credentials;
 
+- (BOOL)revokeDevice:(NSString *)accountId deviceId:(NSString *)deviceId scheme:(NSString *)scheme password:(NSString *)password;
+
+- (int32_t)addDevice:(NSString *)accountId uri:(NSString *)uri;
+
+- (BOOL)confirmAddDevice:(NSString *)accountId opId:(uint32_t)opId;
+
+- (BOOL)cancelAddDevice:(NSString *)accountId opId:(uint32_t)opId;
+
+- (BOOL)provideAccountAuthentication:(NSString *)accountId password:(NSString *)password scheme:(NSString *)scheme;
+
 // =========================================================================
 // Contact Management (7 methods)
 // =========================================================================
@@ -464,6 +474,14 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (BOOL)isCaptureMuted;
 
 - (void)muteRingtone:(BOOL)muted;
+
+- (BOOL)requestMediaChange:(NSString *)accountId
+                    callId:(NSString *)callId
+                 mediaList:(NSArray<NSDictionary<NSString *, NSString *> *> *)mediaList;
+
+- (BOOL)answerMediaChangeRequest:(NSString *)accountId
+                          callId:(NSString *)callId
+                       mediaList:(NSArray<NSDictionary<NSString *, NSString *> *> *)mediaList;
 
 - (void)switchCamera;
 

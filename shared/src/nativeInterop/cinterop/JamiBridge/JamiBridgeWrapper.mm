@@ -1195,6 +1195,27 @@ static JBCallState toCallState(const std::string& state) {
     libjami::setCredentials(toCppString(accountId), creds);
 }
 
+- (BOOL)revokeDevice:(NSString *)accountId deviceId:(NSString *)deviceId scheme:(NSString *)scheme password:(NSString *)password {
+    return libjami::revokeDevice(toCppString(accountId), toCppString(deviceId),
+                                  toCppString(scheme), toCppString(password));
+}
+
+- (int32_t)addDevice:(NSString *)accountId uri:(NSString *)uri {
+    return libjami::addDevice(toCppString(accountId), toCppString(uri));
+}
+
+- (BOOL)confirmAddDevice:(NSString *)accountId opId:(uint32_t)opId {
+    return libjami::confirmAddDevice(toCppString(accountId), opId);
+}
+
+- (BOOL)cancelAddDevice:(NSString *)accountId opId:(uint32_t)opId {
+    return libjami::cancelAddDevice(toCppString(accountId), opId);
+}
+
+- (BOOL)provideAccountAuthentication:(NSString *)accountId password:(NSString *)password scheme:(NSString *)scheme {
+    return libjami::provideAccountAuthentication(toCppString(accountId), toCppString(password), toCppString(scheme));
+}
+
 // =============================================================================
 // Contact Management
 // =============================================================================
@@ -1559,6 +1580,26 @@ static JBCallState toCallState(const std::string& state) {
 
 - (void)muteRingtone:(BOOL)muted {
     libjami::muteRingtone(muted);
+}
+
+- (BOOL)requestMediaChange:(NSString *)accountId
+                    callId:(NSString *)callId
+                 mediaList:(NSArray<NSDictionary<NSString *, NSString *> *> *)mediaList {
+    std::vector<std::map<std::string, std::string>> cppMedia;
+    for (NSDictionary *dict in mediaList) {
+        cppMedia.push_back(toCppMap(dict));
+    }
+    return libjami::requestMediaChange(toCppString(accountId), toCppString(callId), cppMedia);
+}
+
+- (BOOL)answerMediaChangeRequest:(NSString *)accountId
+                          callId:(NSString *)callId
+                       mediaList:(NSArray<NSDictionary<NSString *, NSString *> *> *)mediaList {
+    std::vector<std::map<std::string, std::string>> cppMedia;
+    for (NSDictionary *dict in mediaList) {
+        cppMedia.push_back(toCppMap(dict));
+    }
+    return libjami::answerMediaChangeRequest(toCppString(accountId), toCppString(callId), cppMedia);
 }
 
 - (void)switchCamera {
