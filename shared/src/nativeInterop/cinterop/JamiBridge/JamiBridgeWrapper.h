@@ -642,6 +642,8 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
  */
 - (void)presentImageCapture:(void (^)(NSString * _Nullable filePath))completion;
 
+- (NSString *)captureRecentLogs:(int)maxLines;
+
 @end
 
 NS_ASSUME_NONNULL_END

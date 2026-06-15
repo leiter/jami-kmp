@@ -2033,6 +2033,41 @@ static JBCallState toCallState(const std::string& state) {
     });
 }
 
+- (NSString *)captureRecentLogs:(int)maxLines {
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsPath = paths.firstObject;
+    if (!documentsPath) return @"";
+
+    NSError *error = nil;
+    NSArray *files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:documentsPath error:&error];
+    if (!files) return @"";
+
+    // Find the most recent .log file
+    NSString *latestLog = nil;
+    NSDate *latestDate = nil;
+    for (NSString *file in files) {
+        if ([file hasSuffix:@".log"]) {
+            NSString *fullPath = [documentsPath stringByAppendingPathComponent:file];
+            NSDictionary *attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:fullPath error:nil];
+            NSDate *modDate = attrs[NSFileModificationDate];
+            if (!latestDate || [modDate compare:latestDate] == NSOrderedDescending) {
+                latestDate = modDate;
+                latestLog = fullPath;
+            }
+        }
+    }
+    if (!latestLog) return @"";
+
+    NSString *content = [NSString stringWithContentsOfFile:latestLog encoding:NSUTF8StringEncoding error:nil];
+    if (!content) return @"";
+
+    NSArray<NSString *> *lines = [content componentsSeparatedByString:@"\n"];
+    if ((int)lines.count <= maxLines) return content;
+
+    NSArray *tail = [lines subarrayWithRange:NSMakeRange(lines.count - maxLines, maxLines)];
+    return [tail componentsJoinedByString:@"\n"];
+}
+
 @end
 
 // =========================================================================
