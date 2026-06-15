@@ -13,3 +13,10 @@ kotlin-js-store/
 local.properties
 shared/build/
 web-app/build/
+
+# macOS
+.DS_Store
+
+# Xcode user-specific files
+*.xcuserstate
+xcuserdata/
