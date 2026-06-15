@@ -588,15 +588,15 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
 
     override fun setDefaultDevice(deviceId: String) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.setDefaultVideoDevice(deviceId)
     }
 
     override fun setDeviceOrientation(deviceId: String, rotation: Int) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.setDeviceOrientation(deviceId, angle = rotation)
     }
 
     override fun applySettings(deviceId: String, settings: Map<String, String>) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.applyVideoSettings(deviceId, settings = settings.toNSDictionary())
     }
 
     // ==================== Video Frame Capture ====================
@@ -646,7 +646,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
     // ==================== Video Input Switching ====================
 
     override fun switchVideoInput(accountId: String, callId: String, uri: String) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.switchVideoInput(accountId, callId = callId, uri = uri)
     }
 
     override fun requestMediaChange(accountId: String, callId: String, mediaList: List<Map<String, String>>) {

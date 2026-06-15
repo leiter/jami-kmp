@@ -118,6 +118,7 @@ static void fileLog(const char* level, const char* tag, NSString *message) {
 #include "conversation_interface.h"
 #include "presencemanager_interface.h"
 #include "datatransfer_interface.h"
+#include "videomanager_interface.h"
 #include "account_const.h"
 
 using namespace libjami;
@@ -1802,6 +1803,22 @@ static JBCallState toCallState(const std::string& state) {
 
 - (void)stopVideo {
     NSLog(@"[JamiBridge] stopVideo");
+}
+
+- (void)setDefaultVideoDevice:(NSString *)deviceId {
+    libjami::setDefaultDevice(toCppString(deviceId));
+}
+
+- (void)setDeviceOrientation:(NSString *)deviceId angle:(int)angle {
+    libjami::setDeviceOrientation(toCppString(deviceId), angle);
+}
+
+- (void)applyVideoSettings:(NSString *)deviceId settings:(NSDictionary<NSString *, NSString *> *)settings {
+    libjami::applySettings(toCppString(deviceId), toCppMap(settings));
+}
+
+- (BOOL)switchVideoInput:(NSString *)accountId callId:(NSString *)callId uri:(NSString *)uri {
+    return libjami::switchInput(toCppString(accountId), toCppString(callId), toCppString(uri));
 }
 
 // =============================================================================

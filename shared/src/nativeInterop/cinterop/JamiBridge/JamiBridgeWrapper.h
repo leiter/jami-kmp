@@ -567,6 +567,11 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (void)startVideo;
 - (void)stopVideo;
 
+- (void)setDefaultVideoDevice:(NSString *)deviceId;
+- (void)setDeviceOrientation:(NSString *)deviceId angle:(int)angle;
+- (void)applyVideoSettings:(NSString *)deviceId settings:(NSDictionary<NSString *, NSString *> *)settings;
+- (BOOL)switchVideoInput:(NSString *)accountId callId:(NSString *)callId uri:(NSString *)uri;
+
 // =========================================================================
 // Audio Settings (4 methods)
 // =========================================================================
