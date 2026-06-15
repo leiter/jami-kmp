@@ -16,8 +16,11 @@
  */
 package net.jami.services
 
+import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCAction
+import kotlinx.cinterop.get
+import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.useContents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -172,32 +175,17 @@ class IOSCameraService(
     }
 
     fun getVideoDevices(): VideoDevices {
-        val devices = mutableListOf<DeviceParams>()
-
-        frontCamera?.let { camera ->
-            devices.add(
-                DeviceParams(
-                    id = camera.uniqueID,
-                    name = "Front Camera",
-                    facing = CameraFacing.FRONT
-                )
-            )
+        val result = VideoDevices()
+        frontCamera?.uniqueID?.let { id ->
+            result.addCamera(id)
+            result.cameraFront = id
         }
-
-        backCamera?.let { camera ->
-            devices.add(
-                DeviceParams(
-                    id = camera.uniqueID,
-                    name = "Back Camera",
-                    facing = CameraFacing.BACK
-                )
-            )
+        backCamera?.uniqueID?.let { id ->
+            result.addCamera(id)
+            result.cameraBack = id
         }
-
-        return VideoDevices(
-            devices = devices,
-            currentId = currentCamera?.uniqueID ?: frontCamera?.uniqueID ?: ""
-        )
+        result.currentId = currentCamera?.uniqueID ?: frontCamera?.uniqueID
+        return result
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -296,7 +284,7 @@ class IOSCameraService(
                 if (connection.isVideoMirroringSupported() &&
                     targetCamera.position == AVCaptureDevicePositionFront) {
                     connection.automaticallyAdjustsVideoMirroring = false
-                    connection.isVideoMirrored = true
+                    connection.setVideoMirrored(true)
                 }
             }
 
@@ -416,7 +404,7 @@ class IOSCameraService(
                     }
                     if (connection.isVideoMirroringSupported()) {
                         connection.automaticallyAdjustsVideoMirroring = false
-                        connection.isVideoMirrored = newCamera.position == AVCaptureDevicePositionFront
+                        connection.setVideoMirrored(newCamera.position == AVCaptureDevicePositionFront)
                     }
                 }
 
@@ -490,7 +478,7 @@ class IOSCameraService(
 
     fun setDeviceOrientation(rotation: Int) {
         deviceOrientation = rotation
-        daemonBridge.setDeviceOrientation(rotation)
+        daemonBridge.setDeviceOrientation(currentCamera?.uniqueID ?: "", rotation)
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -521,18 +509,16 @@ class IOSCameraService(
                 val pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) ?: return
 
                 // Lock base address to access raw pixel data
-                platform.CoreVideo.CVPixelBufferLockBaseAddress(pixelBuffer, 0)
+                platform.CoreVideo.CVPixelBufferLockBaseAddress(pixelBuffer, 0u.toULong())
 
                 val baseAddress = platform.CoreVideo.CVPixelBufferGetBaseAddress(pixelBuffer)
                 if (baseAddress != null) {
                     val bytesPerRow = platform.CoreVideo.CVPixelBufferGetBytesPerRow(pixelBuffer).toInt()
                     val frameSize = bytesPerRow * height * 3 / 2  // NV12: 1.5 bytes per pixel
 
-                    // Extract frame data from native memory
-                    val frameData = ByteArray(frameSize)
-                    for (i in 0 until frameSize) {
-                        frameData[i] = (baseAddress + i).readValue<Byte>()
-                    }
+                    // Extract frame data from native memory using typed pointer
+                    val typedPtr = baseAddress.reinterpret<ByteVar>()
+                    val frameData = ByteArray(frameSize) { typedPtr[it] }
 
                     // Forward NV12 frame to daemon
                     daemonBridge.captureVideoFrame(
@@ -543,7 +529,7 @@ class IOSCameraService(
                 }
 
                 // Unlock base address
-                platform.CoreVideo.CVPixelBufferUnlockBaseAddress(pixelBuffer, 0)
+                platform.CoreVideo.CVPixelBufferUnlockBaseAddress(pixelBuffer, 0u.toULong())
             } catch (e: Exception) {
                 Log.w(tag, "Failed to forward frame to daemon: ${e.message}")
             }
@@ -583,10 +569,7 @@ data class IOSVideoParams(
     val width: Int,
     val height: Int,
     val frameRate: Int
-) : VideoParams {
-    override val id: String get() = cameraId
-    override val name: String get() = "iOS Camera"
-}
+)
 
 /**
  * Camera state enum.

@@ -263,7 +263,7 @@ object VCardUtils {
      */
     @OptIn(ExperimentalEncodingApi::class)
     fun loadPeerProfileFromDisk(filesDir: String, accountId: String, peerUri: String): ByteArray? {
-        val filename = Base64.UrlSafe.encode(peerUri.toByteArray()) + ".vcf"
+        val filename = Base64.UrlSafe.encode(peerUri.encodeToByteArray()) + ".vcf"
         val content = FileUtils.readText("$filesDir/$accountId/profiles/$filename") ?: return null
         val vcard = parseVCard(content) ?: return null
         return vcard.photo

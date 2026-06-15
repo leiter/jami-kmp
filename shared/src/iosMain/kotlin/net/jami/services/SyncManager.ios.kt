@@ -37,7 +37,7 @@ import platform.UIKit.UIApplication
  */
 actual class SyncManager {
 
-    @Volatile
+    @kotlin.concurrent.Volatile
     private var backgroundTaskId: platform.UIKit.UIBackgroundTaskIdentifier? = null
 
     actual fun startBackgroundSync() {

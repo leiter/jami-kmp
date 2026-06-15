@@ -136,11 +136,11 @@ fun ConversationDetailsScreen(
     var showQrSheet by remember { mutableStateOf(false) }
     var qrBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     val shareSubject = stringResource(Res.string.share_contact_subject)
-    val shareBody = stringResource(Res.string.share_contact_body)
-        .format(
-            state.displayName.ifEmpty { state.identityHash },
-            "https://jami.net",
-        )
+    val shareBody = stringResource(
+        Res.string.share_contact_body,
+        state.displayName.ifEmpty { state.identityHash },
+        "https://jami.net",
+    )
     val clipboardManager = LocalClipboardManager.current
 
     fun copyToClipboard(value: String) {

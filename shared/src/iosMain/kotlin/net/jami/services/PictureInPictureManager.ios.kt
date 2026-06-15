@@ -24,10 +24,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import net.jami.utils.Log
+import platform.AVFoundation.AVPlayerLayer
 import platform.AVKit.AVPictureInPictureController
 import platform.AVKit.AVPictureInPictureControllerDelegateProtocol
-import platform.AVKit.AVPictureInPictureControllerIsPictureInPictureSupported
-import platform.AVFoundation.AVPlayerLayer
 import platform.Foundation.NSError
 import platform.darwin.NSObject
 
@@ -48,7 +47,7 @@ class IOSPictureInPictureManager : PictureInPictureManager {
     private val _pipState = MutableStateFlow(
         PipState(
             isInPipMode = false,
-            isSupported = AVPictureInPictureControllerIsPictureInPictureSupported()
+            isSupported = AVPictureInPictureController.isPictureInPictureSupported()
         )
     )
     override val pipState: StateFlow<PipState> = _pipState.asStateFlow()
@@ -107,7 +106,7 @@ class IOSPictureInPictureManager : PictureInPictureManager {
     }
 
     override fun isSupported(): Boolean {
-        return AVPictureInPictureControllerIsPictureInPictureSupported()
+        return AVPictureInPictureController.isPictureInPictureSupported()
     }
 
     override fun enterPipMode(aspectRatioWidth: Int, aspectRatioHeight: Int): Boolean {

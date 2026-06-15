@@ -21,9 +21,10 @@ import platform.AVFoundation.AVAuthorizationStatusAuthorized
 import platform.AVFoundation.AVCaptureDevice
 import platform.AVFoundation.AVMediaTypeAudio
 import platform.AVFoundation.AVMediaTypeVideo
+import platform.AVFoundation.authorizationStatusForMediaType
 import platform.Contacts.CNAuthorizationStatusAuthorized
 import platform.Contacts.CNContactStore
-import platform.Contacts.CNEntityTypeContacts
+import platform.Contacts.CNEntityType
 import platform.CoreLocation.CLLocationManager
 import platform.CoreLocation.kCLAuthorizationStatusAuthorizedAlways
 import platform.CoreLocation.kCLAuthorizationStatusAuthorizedWhenInUse
@@ -44,7 +45,7 @@ class IOSDeviceRuntimeService : DeviceRuntimeService {
     private val fileManager: NSFileManager = NSFileManager.defaultManager
 
     // UNUserNotificationCenter has no synchronous status API; cache the result of an async probe at startup
-    @Volatile
+    @kotlin.concurrent.Volatile
     private var notificationPermissionGranted: Boolean = true
 
     init {
@@ -126,7 +127,7 @@ class IOSDeviceRuntimeService : DeviceRuntimeService {
         AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeAudio) == AVAuthorizationStatusAuthorized
 
     override fun hasContactsPermission(): Boolean =
-        CNContactStore.authorizationStatusForEntityType(CNEntityTypeContacts) == CNAuthorizationStatusAuthorized
+        CNContactStore.authorizationStatusForEntityType(CNEntityType.CNEntityTypeContacts) == CNAuthorizationStatusAuthorized
 
     override fun hasNotificationsPermission(): Boolean =
         notificationPermissionGranted

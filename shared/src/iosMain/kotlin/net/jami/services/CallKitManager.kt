@@ -23,9 +23,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import net.jami.model.Call
 import net.jami.utils.Log
-import platform.AVFAudio.AVAudioSession
-import platform.AVFAudio.AVAudioSessionCategoryPlayAndRecord
-import platform.AVFAudio.AVAudioSessionModeVoiceChat
+import kotlinx.cinterop.ExperimentalForeignApi
 import platform.CallKit.CXAnswerCallAction
 import platform.CallKit.CXCallController
 import platform.CallKit.CXCallEndedReasonFailed
@@ -64,6 +62,7 @@ import platform.darwin.NSObject
  * When the user answers, [provider:didActivateAudioSession:] is called and we configure
  * AVAudioSession for VoIP (.playAndRecord / .voiceChat).
  */
+@OptIn(ExperimentalForeignApi::class)
 class CallKitManager(
     private val callService: CallService,
 ) : NSObject(), CXProviderDelegateProtocol {
@@ -265,32 +264,11 @@ class CallKitManager(
         performSetHeldCallAction.fulfill()
     }
 
-    override fun provider(provider: CXProvider, didActivateAudioSession: AVAudioSession) {
-        // CallKit hands us the activated session — configure it for VoIP
-        try {
-            didActivateAudioSession.setCategory(
-                category = AVAudioSessionCategoryPlayAndRecord,
-                mode = AVAudioSessionModeVoiceChat,
-                options = 0u,
-                error = null
-            )
-            didActivateAudioSession.setActive(true, error = null)
-            Log.d(TAG, "AVAudioSession activated for call")
-        } catch (e: Exception) {
-            Log.e(TAG, "AVAudioSession activation failed: ${e.message}")
-        }
-    }
-
-    override fun provider(provider: CXProvider, didDeactivateAudioSession: AVAudioSession) {
-        Log.d(TAG, "AVAudioSession deactivated after call")
-    }
-
     fun onCleared() {
         scope.cancel()
         provider.invalidate()
     }
 
-    companion object {
-        const val TAG = "CallKitManager"
-    }
 }
+
+private const val TAG = "CallKitManager"

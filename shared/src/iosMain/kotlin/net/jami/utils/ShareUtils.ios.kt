@@ -21,8 +21,8 @@ import platform.UIKit.UIApplication
 
 actual fun shareText(subject: String, body: String) {
     val rootVc = UIApplication.sharedApplication.keyWindow?.rootViewController ?: return
-    val vc = UIActivityViewController(activityItems = listOf(body), applicationActivities = null)
-    vc.setValue(subject, forKey = "subject")
+    val items: List<Any> = if (subject.isNotEmpty()) listOf(subject, body) else listOf(body)
+    val vc = UIActivityViewController(activityItems = items, applicationActivities = null)
     val presenter = rootVc.presentedViewController ?: rootVc
     presenter.presentViewController(vc, animated = true, completion = null)
 }

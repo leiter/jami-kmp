@@ -18,8 +18,10 @@ package net.jami.ui.platform
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import kotlinx.cinterop.ExperimentalForeignApi
 import net.jami.bridge.JamiBridgeWrapper
 
+@OptIn(ExperimentalForeignApi::class)
 @Composable
 actual fun ImageCaptureEffect(
     show: Boolean,

@@ -24,6 +24,7 @@ import platform.AVFoundation.AVAuthorizationStatusAuthorized
 import platform.AVFoundation.AVCaptureDevice
 import platform.AVFoundation.AVMediaTypeAudio
 import platform.AVFoundation.AVMediaTypeVideo
+import platform.AVFoundation.requestAccessForMediaType
 import platform.Contacts.CNContactStore
 import platform.Contacts.CNEntityType
 import platform.UserNotifications.UNAuthorizationOptionAlert
@@ -60,7 +61,7 @@ actual fun PermissionRequesterEffect(
 }
 
 @OptIn(ExperimentalForeignApi::class)
-private suspend fun requestAVPermission(mediaType: String): Boolean =
+private suspend fun requestAVPermission(mediaType: String?): Boolean =
     suspendCancellableCoroutine { cont ->
         AVCaptureDevice.requestAccessForMediaType(mediaType) { granted ->
             cont.resume(granted)

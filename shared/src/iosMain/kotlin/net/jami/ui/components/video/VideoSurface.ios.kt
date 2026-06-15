@@ -29,7 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.interop.UIKitView
-import androidx.compose.ui.viewinterop.UIKitInteropProperties
+
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import net.jami.services.expect.HardwareService
@@ -42,8 +42,6 @@ import platform.AVFoundation.AVLayerVideoGravityResizeAspectFill
 import platform.AVFoundation.AVSampleBufferDisplayLayer
 import platform.CoreGraphics.CGRectMake
 import platform.QuartzCore.CALayer
-import platform.QuartzCore.kCALayerHeightSizable
-import platform.QuartzCore.kCALayerWidthSizable
 import platform.UIKit.UIColor
 import platform.UIKit.UIView
 import platform.UIKit.UIViewAutoresizingFlexibleHeight
@@ -93,7 +91,6 @@ actual fun VideoSurface(
                 val layer = AVSampleBufferDisplayLayer().apply {
                     videoGravity = AVLayerVideoGravityResizeAspect
                     backgroundColor = UIColor.blackColor.CGColor
-                    autoresizingMask = kCALayerWidthSizable or kCALayerHeightSizable
                 }
 
                 containerView.layer.addSublayer(layer)
@@ -117,10 +114,6 @@ actual fun VideoSurface(
                     }
                 }
             },
-            properties = UIKitInteropProperties(
-                isInteractive = false,
-                isNativeAccessibilityEnabled = false
-            )
         )
     }
 }
@@ -156,11 +149,8 @@ actual fun CameraPreview(
                 }
             }
 
-            val cameraId = if (isFrontCamera) {
-                cameraService.getVideoDevices().devices.find { it.facing == net.jami.model.CameraFacing.FRONT }?.id
-            } else {
-                cameraService.getVideoDevices().devices.find { it.facing == net.jami.model.CameraFacing.BACK }?.id
-            }
+            val devs = cameraService.getVideoDevices()
+            val cameraId = if (isFrontCamera) devs.cameraFront else devs.cameraBack
 
             val opened = cameraService.openCamera(cameraId)
             if (opened) {
@@ -205,7 +195,7 @@ actual fun CameraPreview(
                 // Get or create preview layer from camera service
                 cameraService.createPreviewLayer()?.let { layer ->
                     layer.videoGravity = AVLayerVideoGravityResizeAspectFill
-                    layer.autoresizingMask = kCALayerWidthSizable or kCALayerHeightSizable
+                    // layer frame is updated in the update callback
                     containerView.layer.addSublayer(layer)
                     previewLayer = layer
                 }
@@ -226,7 +216,7 @@ actual fun CameraPreview(
                 if (previewLayer == null) {
                     cameraService.getPreviewLayer()?.let { layer ->
                         layer.videoGravity = AVLayerVideoGravityResizeAspectFill
-                        layer.autoresizingMask = kCALayerWidthSizable or kCALayerHeightSizable
+                        // layer frame is updated in the update callback
                         view.layer.addSublayer(layer)
                         previewLayer = layer
                         view.bounds.useContents {
@@ -235,10 +225,6 @@ actual fun CameraPreview(
                     }
                 }
             },
-            properties = UIKitInteropProperties(
-                isInteractive = false,
-                isNativeAccessibilityEnabled = false
-            )
         )
     }
 }

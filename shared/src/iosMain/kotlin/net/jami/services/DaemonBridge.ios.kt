@@ -197,7 +197,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
 
     override fun refuse(accountId: String, callId: String) {
-        bridge.refuse(accountId, callId = callId)
+        bridge.refuseCall(accountId, callId = callId)
     }
 
     override fun hangUp(accountId: String, callId: String) {
@@ -255,6 +255,9 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun setActiveParticipant(accountId: String, confId: String, callId: String) {
         bridge.setActiveParticipant(accountId, conferenceId = confId, callId = callId)
     }
+
+    override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {}
+    override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {}
 
     override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {
         val jbLayout = when (layout) {

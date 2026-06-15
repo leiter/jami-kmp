@@ -23,10 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.interop.UIKitView
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
-import platform.CLLocation.CLLocation
-import platform.CLLocationManager.CLLocationManager
-import platform.CLLocationManager.CLLocationManagerDelegateProtocol
+import platform.CoreLocation.CLLocation
 import platform.CoreLocation.CLLocationCoordinate2DMake
+import platform.CoreLocation.CLLocationManager
+import platform.CoreLocation.CLLocationManagerDelegateProtocol
 import platform.Foundation.NSError
 import platform.MapKit.MKCoordinateRegionMakeWithDistance
 import platform.MapKit.MKMapView
@@ -85,8 +85,8 @@ actual fun OsmMapView(
             mapView.removeAnnotations(mapView.annotations)
             contactMarkers.forEach { cm ->
                 val annotation = MKPointAnnotation()
-                annotation.coordinate = CLLocationCoordinate2DMake(cm.latitude, cm.longitude)
-                annotation.title = cm.displayName
+                annotation.setCoordinate(CLLocationCoordinate2DMake(cm.latitude, cm.longitude))
+                annotation.setTitle(cm.displayName)
                 mapView.addAnnotation(annotation)
             }
             if (centerOnMyLocation) {

@@ -6,8 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.interop.UIKitView
 import kotlinx.cinterop.ExperimentalForeignApi
 import net.jami.services.expect.HardwareService
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
+import org.koin.compose.koinInject
 import platform.UIKit.UIView
 
 @OptIn(ExperimentalForeignApi::class)
@@ -17,7 +16,7 @@ actual fun VideoRenderer(
     callId: String,
     isLocalVideo: Boolean
 ) {
-    val hardwareService: HardwareService by inject()
+    val hardwareService: HardwareService = koinInject()
 
     DisposableEffect(callId, isLocalVideo) {
         onDispose {

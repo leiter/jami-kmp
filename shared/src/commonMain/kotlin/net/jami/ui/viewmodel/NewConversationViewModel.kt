@@ -393,7 +393,7 @@ class NewConversationViewModel(
         val existing = _state.value.publicDirectoryResults.associateBy { it.uri }
         val merged = existing.toMutableMap()
         for (result in results) {
-            merged.putIfAbsent(result.uri, result)
+            if (!merged.containsKey(result.uri)) merged[result.uri] = result
         }
 
         _state.value = _state.value.copy(

@@ -72,7 +72,7 @@ class VCardService(
         if (memoryCache.containsKey(key)) return memoryCache[key]
         val dataPath = deviceRuntimeService.getDataPath()
         val cachePath = deviceRuntimeService.getCachePath()
-        val encodedUri = Base64.UrlSafe.encode(peerUri.toByteArray())
+        val encodedUri = Base64.UrlSafe.encode(peerUri.encodeToByteArray())
         val vcfPath = "$dataPath/$accountId/profiles/$encodedUri.vcf"
         val cacheFilePath = "$cachePath/$accountId/profiles/$encodedUri"
         val result = loadWithCache(vcfPath, cacheFilePath)
@@ -90,7 +90,7 @@ class VCardService(
         memoryCache.remove("$accountId:$peerUri")
         // Also delete the stale disk cache so loadWithCache rescales from the new vcf.
         val cachePath = deviceRuntimeService.getCachePath()
-        val encodedUri = Base64.UrlSafe.encode(peerUri.toByteArray())
+        val encodedUri = Base64.UrlSafe.encode(peerUri.encodeToByteArray())
         val cacheFilePath = "$cachePath/$accountId/profiles/$encodedUri"
         if (FileUtils.exists(cacheFilePath)) {
             FileUtils.deleteFile(cacheFilePath)

@@ -123,30 +123,20 @@ abstract class BaseVideoSinkManager : VideoSinkManager {
     }
 
     override suspend fun getSinkSize(id: String): Pair<Int, Int> {
-        return synchronized(videoInputs) {
-            videoInputs[id]?.let { Pair(it.width, it.height) } ?: Pair(0, 0)
-        }
+        return videoInputs[id]?.let { Pair(it.width, it.height) } ?: Pair(0, 0)
     }
 
-    override fun hasInput(id: String): Boolean = synchronized(videoInputs) {
-        videoInputs.containsKey(id)
-    }
+    override fun hasInput(id: String): Boolean = videoInputs.containsKey(id)
 
     protected fun addVideoInput(id: String, width: Int, height: Int) {
-        synchronized(videoInputs) {
-            videoInputs[id] = VideoInput(id, width, height)
-        }
+        videoInputs[id] = VideoInput(id, width, height)
     }
 
     protected fun removeVideoInput(id: String) {
-        synchronized(videoInputs) {
-            videoInputs.remove(id)
-        }
+        videoInputs.remove(id)
     }
 
-    protected fun getVideoInput(id: String): VideoInput? = synchronized(videoInputs) {
-        videoInputs[id]
-    }
+    protected fun getVideoInput(id: String): VideoInput? = videoInputs[id]
 
     protected abstract fun registerVideoCallback(id: String, windowId: Long): Boolean
     protected abstract fun unregisterVideoCallback(id: String, windowId: Long)

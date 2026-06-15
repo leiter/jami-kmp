@@ -321,7 +321,7 @@ private fun CallScreenContent(
     // enterPipMode() sees OnGoing rather than the initial Connecting state.
     DisposableEffect(state.callMode) {
         try {
-            val pipManager = org.koin.core.context.GlobalContext.get().get<net.jami.services.PictureInPictureManager>()
+            val pipManager = org.koin.mp.KoinPlatformTools.defaultContext().get().get<net.jami.services.PictureInPictureManager>()
             pipManager.attachCallState(state)
             onDispose {
                 pipManager.detachCallState()

@@ -145,11 +145,11 @@ actual class HardwareService : KoinComponent {
 
     actual suspend fun initVideo() {
         val devices = cameraService.getVideoDevices()
-        devices.devices.forEach { device -> daemonBridge.addVideoDevice(device.id) }
-        if (devices.currentId.isNotEmpty()) daemonBridge.setDefaultDevice(devices.currentId)
+        devices.cameras.forEach { id -> daemonBridge.addVideoDevice(id) }
+        if (devices.currentId?.isNotEmpty() == true) daemonBridge.setDefaultDevice(devices.currentId!!)
     }
 
-    actual val isVideoAvailable: Boolean get() = cameraService.getVideoDevices().devices.isNotEmpty()
+    actual val isVideoAvailable: Boolean get() = cameraService.getVideoDevices().cameras.isNotEmpty()
 
     actual fun decodingStarted(id: String, shmPath: String, width: Int, height: Int, isMixer: Boolean) {
         scope.launch { _videoEvents.emit(VideoEvent(sinkId = id, started = true, width = width, height = height)) }
@@ -223,8 +223,8 @@ actual class HardwareService : KoinComponent {
     }
 
     actual fun setPreviewSettings() {}
-    actual fun hasCamera(): Boolean = cameraService.getVideoDevices().devices.isNotEmpty()
-    actual fun cameraCount(): Int = cameraService.getVideoDevices().devices.size
+    actual fun hasCamera(): Boolean = cameraService.getVideoDevices().cameras.isNotEmpty()
+    actual fun cameraCount(): Int = cameraService.getVideoDevices().cameras.size
     actual val maxResolutions: Flow<Pair<Int?, Int?>> = _maxResolutions.asStateFlow()
     actual val isPreviewFromFrontCamera: Boolean get() = cameraService.isFrontCamera
     actual fun unregisterCameraDetectionCallback() {}
