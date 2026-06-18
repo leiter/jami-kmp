@@ -34,6 +34,8 @@
 	<string>Jami uses your microphone for audio and video calls.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Jami accesses your photo library so you can send images in conversations.</string>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
