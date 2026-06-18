@@ -63,11 +63,6 @@ xcodebuild archive \
     -configuration "$CONFIGURATION" \
     -destination "generic/platform=iOS" \
     -archivePath "$ARCHIVE_PATH" \
-    CODE_SIGN_STYLE=Manual \
-    "CODE_SIGN_IDENTITY[sdk=iphoneos*]=iPhone Distribution" \
-    "DEVELOPMENT_TEAM[sdk=iphoneos*]=$TEAM_ID" \
-    PROVISIONING_PROFILE_SPECIFIER="" \
-    "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]=$PROVISIONING_PROFILE" \
     | grep -E "error:|warning: Run script|ARCHIVE (SUCCEEDED|FAILED)|Compile Kotlin" \
     || true
 
