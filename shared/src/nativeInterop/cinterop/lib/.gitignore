@@ -1,0 +1,5 @@
+# Symlinks into jami-client-ios DEPS — machine-specific, not committed.
+# Only the compiled ObjC++ bridge wrappers are tracked.
+*.a
+!libJamiBridge_ios.a
+!libJamiBridge_iossim.a
