@@ -41,7 +41,7 @@ import net.jami.services.expect.HardwareService
  * }
  * ```
  */
-actual val platformModule: Module = module {
+actual val platformModule: Module get() = try { module {
 
     // ==================== Daemon Bridge ====================
 
@@ -148,4 +148,7 @@ actual val platformModule: Module = module {
     single {
         SyncManager()
     }
+} } catch (e: Throwable) {
+    println("JAMI_CRASH platformModule init failed: ${e::class.simpleName}: ${e.message}\n${e.stackTraceToString()}")
+    throw e
 }

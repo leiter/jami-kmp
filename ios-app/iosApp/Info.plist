@@ -6,6 +6,8 @@
 	<string>Jami</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -20,6 +22,25 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Jami uses your camera for video calls and to send photos.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Jami uses your contacts to help you find people to connect with.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Jami uses your location to share it with contacts during a conversation.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Jami uses your location to share it with contacts during a conversation.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Jami uses your microphone for audio and video calls.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Jami accesses your photo library so you can send images in conversations.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict/>
+	</dict>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>
@@ -35,19 +56,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-
-	<!-- Privacy usage descriptions — required by App Store review -->
-	<key>NSCameraUsageDescription</key>
-	<string>Jami uses your camera for video calls and to send photos.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Jami uses your microphone for audio and video calls.</string>
-	<key>NSContactsUsageDescription</key>
-	<string>Jami uses your contacts to help you find people to connect with.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Jami uses your location to share it with contacts during a conversation.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Jami uses your location to share it with contacts during a conversation.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Jami accesses your photo library so you can send images in conversations.</string>
 </dict>
 </plist>

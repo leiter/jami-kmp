@@ -93,4 +93,5 @@ fun initKoin(
  * Convenience function for platforms that don't need additional setup.
  * For iOS/macOS, this is exported as `doInitKoin()` for Swift interop.
  */
+@Throws(Throwable::class)
 fun initKoin(): KoinApplication = initKoin(emptyList()) {}

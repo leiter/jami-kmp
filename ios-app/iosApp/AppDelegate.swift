@@ -26,7 +26,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         // 1. Initialize Koin dependency injection
-        KoinInitKt.doInitKoin()
+        do {
+            try KoinInitKt.doInitKoin()
+        } catch {
+            print("JAMI_CRASH initKoin failed: \(error)")
+            NSLog("JAMI_CRASH initKoin failed: %@", error.localizedDescription)
+            return false
+        }
 
         // 2. Start the Jami daemon (mirrors JamiApplication.onCreate on Android)
         IOSApplicationHelperKt.startJami()

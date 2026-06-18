@@ -44,7 +44,7 @@ LIBJAMI_PUBLIC bool refuse(const std::string& accountId, const std::string& call
 LIBJAMI_PUBLIC bool accept(const std::string& accountId, const std::string& callId);
 LIBJAMI_PUBLIC bool hangUp(const std::string& accountId, const std::string& callId);
 LIBJAMI_PUBLIC bool hold(const std::string& accountId, const std::string& callId);
-LIBJAMI_PUBLIC bool unhold(const std::string& accountId, const std::string& callId);
+LIBJAMI_PUBLIC bool resume(const std::string& accountId, const std::string& callId);
 LIBJAMI_PUBLIC bool muteLocalMedia(const std::string& accountId,
                                    const std::string& callId,
                                    const std::string& mediaType,
@@ -101,7 +101,7 @@ LIBJAMI_PUBLIC bool joinConference(const std::string& accountId,
                                    const std::string& drag_confId);
 LIBJAMI_PUBLIC bool hangUpConference(const std::string& accountId, const std::string& confId);
 LIBJAMI_PUBLIC bool holdConference(const std::string& accountId, const std::string& confId);
-LIBJAMI_PUBLIC bool unholdConference(const std::string& accountId, const std::string& confId);
+LIBJAMI_PUBLIC bool resumeConference(const std::string& accountId, const std::string& confId);
 LIBJAMI_PUBLIC std::vector<std::string> getConferenceList(const std::string& accountId);
 LIBJAMI_PUBLIC std::vector<std::string> getParticipantList(const std::string& accountId, const std::string& confId);
 LIBJAMI_PUBLIC std::string getConferenceId(const std::string& accountId, const std::string& callId);

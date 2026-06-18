@@ -51,7 +51,7 @@ kotlin {
                     }
                 }
                 kotlinOptions {
-                    freeCompilerArgs = listOf("-linker-options", "-L$libjamiLibPath -l$libName -ljami -lc++")
+                    freeCompilerArgs = listOf("-linker-options", "-L$libjamiLibPath -l$libName -lc++")
                 }
             }
         }

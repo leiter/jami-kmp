@@ -295,6 +295,14 @@ static JBCallState toCallState(const std::string& state) {
 // JamiBridgeWrapper Implementation
 // =============================================================================
 
+@interface JBDocumentPickerDelegate : NSObject <UIDocumentPickerDelegate>
+- (instancetype)initWithCompletion:(void (^)(NSString * _Nullable))completion;
+@end
+
+@interface JBImagePickerDelegate : NSObject <UIImagePickerControllerDelegate, UINavigationControllerDelegate>
+- (instancetype)initWithCompletion:(void (^)(NSString * _Nullable))completion;
+@end
+
 @interface JamiBridgeWrapper ()
 
 @property (nonatomic, assign) BOOL daemonRunning;
@@ -1205,7 +1213,7 @@ static JBCallState toCallState(const std::string& state) {
 }
 
 - (BOOL)cancelMessage:(NSString *)accountId messageId:(uint64_t)messageId {
-    return libjami::cancelMessage(toCppString(accountId), messageId);
+    return NO; // libjami::cancelMessage not available in this daemon version
 }
 
 - (BOOL)revokeDevice:(NSString *)accountId deviceId:(NSString *)deviceId scheme:(NSString *)scheme password:(NSString *)password {
@@ -1572,7 +1580,7 @@ static JBCallState toCallState(const std::string& state) {
 
 - (void)unholdCall:(NSString *)accountId callId:(NSString *)callId {
     NSLog(@"[JamiBridge] unholdCall: %@", callId);
-    libjami::unhold(toCppString(accountId), toCppString(callId));
+    libjami::resume(toCppString(accountId), toCppString(callId));
 }
 
 - (void)muteAudio:(NSString *)accountId callId:(NSString *)callId muted:(BOOL)muted {
@@ -1943,9 +1951,6 @@ static JBCallState toCallState(const std::string& state) {
 // File Picker
 // =========================================================================
 
-@class JBDocumentPickerDelegate; // forward declaration
-@class JBImagePickerDelegate;    // forward declaration
-
 - (void)presentDocumentPickerWithMimeTypes:(NSArray<NSString *> *)mimeTypes
                                 completion:(void (^)(NSString * _Nullable filePath))completion {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -2074,10 +2079,6 @@ static JBCallState toCallState(const std::string& state) {
 // Document picker delegate helper
 // =========================================================================
 
-@interface JBDocumentPickerDelegate : NSObject <UIDocumentPickerDelegate>
-- (instancetype)initWithCompletion:(void (^)(NSString * _Nullable))completion;
-@end
-
 @implementation JBDocumentPickerDelegate {
     void (^_completion)(NSString * _Nullable);
 }
@@ -2121,10 +2122,6 @@ didPickDocumentsAtURLs:(NSArray<NSURL *> *)urls {
 // =========================================================================
 // Image capture delegate helper
 // =========================================================================
-
-@interface JBImagePickerDelegate : NSObject <UIImagePickerControllerDelegate, UINavigationControllerDelegate>
-- (instancetype)initWithCompletion:(void (^)(NSString * _Nullable))completion;
-@end
 
 @implementation JBImagePickerDelegate {
     void (^_completion)(NSString * _Nullable);

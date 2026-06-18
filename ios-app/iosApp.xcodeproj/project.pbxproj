@@ -10,8 +10,8 @@
 		D1D2D3D4D5D6D7D8D9D0DDDA /* JamiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCA /* JamiApp.swift */; };
 		D1D2D3D4D5D6D7D8D9D0DDDB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCB /* AppDelegate.swift */; };
 		D1D2D3D4D5D6D7D8D9D0DDDC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCC /* ContentView.swift */; };
-		D1D2D3D4D5D6D7D8D9D0DDDE /* NotificationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCF /* NotificationDelegate.swift */; };
 		D1D2D3D4D5D6D7D8D9D0DDDD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCD /* Assets.xcassets */; };
+		D1D2D3D4D5D6D7D8D9D0DDDE /* NotificationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCF /* NotificationDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,7 +35,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		A1A2A3A4A5A6A7A8A9A0AAAB /* Main */ = {
+		A1A2A3A4A5A6A7A8A9A0AAAB = {
 			isa = PBXGroup;
 			children = (
 				A1A2A3A4A5A6A7A8A9A0AAAD /* iosApp */,
@@ -146,7 +146,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"$SRCROOT/..\"\n./gradlew :shared:embedAndSignAppleFrameworkForXcode\n";
+			shellScript = "export JAVA_HOME=\"/Users/Marco/android-studio-jbr/Contents/Home\"\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\ncd \"$SRCROOT/..\"\n./gradlew :shared:embedAndSignAppleFrameworkForXcode\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -169,7 +169,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				SDKROOT = iphoneos;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -222,6 +221,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -231,7 +231,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				SDKROOT = iphoneos;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -276,6 +275,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 			};
@@ -286,12 +286,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_REQUIRED = NO;
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SDKROOT)/System/Library/SubFrameworks",
 				);
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iosApp/Info.plist;
@@ -305,14 +308,40 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"$(SRCROOT)/../shared/src/nativeInterop/cinterop/lib",
+				);
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
 					JamiShared,
 				);
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"-framework", JamiShared,
+					"-lJamiBridge_ios",
+					"-ljami",
+					"-lssl", "-lcrypto", "-ltls",
+					"-lgnutls", "-lnettle", "-lhogweed", "-lgmp",
+					"-lopendht", "-ldhtnet",
+					"-lhttp_parser", "-ljsoncpp", "-lllhttp", "-lfmt", "-lsimdutf",
+					"-lpjsip", "-lpjsip-simple", "-lpjsip-ua", "-lpjsua", "-lpjsua2",
+					"-lpjmedia", "-lpjmedia-audiodev", "-lpjmedia-codec", "-lpjmedia-videodev",
+					"-lpjnath", "-lpjlib-util", "-lpj",
+					"-lspeex", "-lspeexdsp", "-lopus", "-lvpx", "-lx264",
+					"-lsrtp", "-lavcodec", "-lavdevice", "-lavfilter", "-lavformat",
+					"-lavutil", "-lswresample", "-lswscale",
+					"-lixml", "-lnatpmp", "-lupnp",
+					"-lsecp256k1", "-lyaml-cpp", "-lyuv", "-largon2", "-lgit2",
+					"-lsqlite3", "-liconv", "-lc++", "-lz", "-lresolv",
+					"-framework", VideoToolbox,
+					"-framework", AudioToolbox,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.jami.iosapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -324,12 +353,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = K4K982LMZ9;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SDKROOT)/System/Library/SubFrameworks",
 				);
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iosApp/Info.plist;
@@ -343,14 +376,41 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"$(SRCROOT)/../shared/src/nativeInterop/cinterop/lib",
+				);
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
 					JamiShared,
 				);
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"-framework", JamiShared,
+					"-lJamiBridge_ios",
+					"-ljami",
+					"-lssl", "-lcrypto", "-ltls",
+					"-lgnutls", "-lnettle", "-lhogweed", "-lgmp",
+					"-lopendht", "-ldhtnet",
+					"-lhttp_parser", "-ljsoncpp", "-lllhttp", "-lfmt", "-lsimdutf",
+					"-lpjsip", "-lpjsip-simple", "-lpjsip-ua", "-lpjsua", "-lpjsua2",
+					"-lpjmedia", "-lpjmedia-audiodev", "-lpjmedia-codec", "-lpjmedia-videodev",
+					"-lpjnath", "-lpjlib-util", "-lpj",
+					"-lspeex", "-lspeexdsp", "-lopus", "-lvpx", "-lx264",
+					"-lsrtp", "-lavcodec", "-lavdevice", "-lavfilter", "-lavformat",
+					"-lavutil", "-lswresample", "-lswscale",
+					"-lixml", "-lnatpmp", "-lupnp",
+					"-lsecp256k1", "-lyaml-cpp", "-lyuv", "-largon2", "-lgit2",
+					"-lsqlite3", "-liconv", "-lc++", "-lz", "-lresolv",
+					"-framework", VideoToolbox,
+					"-framework", AudioToolbox,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.jami.iosapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Jami-KMP-test";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -379,7 +439,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = A1A2A3A4A5A6A7A8A9A0AAAC /* Project object */;
 }
