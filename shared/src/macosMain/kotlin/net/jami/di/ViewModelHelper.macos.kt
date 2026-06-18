@@ -13,10 +13,16 @@ import org.koin.compose.koinInject
 import org.koin.core.definition.Definition
 import org.koin.core.definition.KoinDefinition
 import org.koin.core.module.Module
+import org.koin.core.module.factory
+import kotlin.reflect.KClass
 
+// Same KN nested-reified-inline KClass bug fix as iosMain — see ViewModelHelper.ios.kt.
 actual inline fun <reified T : Any> Module.viewModelFactory(
     crossinline definition: Definition<T>
-): KoinDefinition<T> = factory { definition(it) }
+): KoinDefinition<T> {
+    val klass: KClass<T> = T::class
+    return factory(kClass = klass, definition = { definition(it) })
+}
 
 @Composable
 actual inline fun <reified T : Any> getViewModel(): T = koinInject()
