@@ -43,14 +43,18 @@ done
 step() { echo; echo "▶  $*"; }
 ok()   { echo "✓  $*"; }
 
-# ── Step 1: Kotlin/Native framework ──────────────────────────────────────────
+# ── Step 1: Clean KMP outputs ────────────────────────────────────────────────
+# Always clean before archiving so Gradle's incremental cache cannot silently
+# embed a stale JamiShared.framework built from an older commit.
+# (embedAndSignAppleFrameworkForXcode, invoked by the Xcode build phase, handles
+# the actual compile+link; we just ensure it starts from a clean slate.)
 if [ "$SKIP_KMP" = false ]; then
-    step "Building KMP release framework (iosArm64)…"
+    step "Cleaning shared module build outputs…"
     cd "$ROOT"
-    ./gradlew :shared:linkReleaseFrameworkIosArm64
-    ok "KMP framework built"
+    ./gradlew :shared:clean
+    ok "Shared module cleaned — xcodebuild will trigger a full recompile"
 else
-    ok "Skipping KMP framework build (--skip-kmp)"
+    ok "Skipping KMP clean (--skip-kmp)"
 fi
 
 # ── Step 2: Xcode archive ─────────────────────────────────────────────────────
