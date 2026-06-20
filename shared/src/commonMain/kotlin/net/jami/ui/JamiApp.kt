@@ -28,6 +28,7 @@ import net.jami.ui.navigation.JamiNavigation
 import net.jami.ui.platform.WindowSecureEffect
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.AppSettingsViewModel
+import net.jami.utils.Log
 
 /**
  * Root composable for the Jami application.
@@ -38,6 +39,7 @@ import net.jami.ui.viewmodel.AppSettingsViewModel
  */
 @Composable
 fun JamiApp() {
+    Log.i("JAMI_KOIN_APP", "JamiApp composable entered — about to resolve AppSettingsViewModel")
     val appSettingsViewModel = getViewModel<AppSettingsViewModel>()
     val appSettingsState by appSettingsViewModel.state.collectAsState()
 

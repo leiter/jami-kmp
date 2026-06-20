@@ -13,27 +13,22 @@ import org.koin.core.definition.Definition
 import org.koin.core.definition.KoinDefinition
 import org.koin.core.module.Module
 import org.koin.core.module.factory
-import org.koin.mp.KoinPlatform
-import kotlin.reflect.KClass
 
-// On Kotlin/Native release builds with DCE, T::class obtained inside a nested inline function
-// (e.g. viewModelFactory → factory<T>, or getViewModel → koinInject → get<T>) can be a
-// different KClass instance than the one captured at the outermost call site. If qualifiedName
-// is stripped, Koin falls back to "KClass@<hash>", causing an IndexKey mismatch between
-// registration and lookup → NoDefinitionFoundException at startup.
+// On Kotlin/Native, T::class at the lookup call site can be a different KClass object
+// (with a different identity-hash fallback name) than the one captured at registration,
+// so Koin's index keys mismatch and a plain get<T>() throws NoDefinitionFoundException.
 //
-// Fix for both sides: capture T::class at the outermost inline boundary and pass it explicitly
-// to the non-reified overloads, so the same KClass instance is used for both registration and
-// lookup regardless of DCE.
+// Registration: register under the registration-site T::class (Koin native factory).
+// Lookup: do NOT trust the lookup-site T::class — delegate to jamiResolveViewModel, which
+// scans Koin's own registry for the factory whose registered primaryType matches by name
+// and resolves with that exact registered KClass object. See KoinDiagnostics.ios.kt.
+
 actual inline fun <reified T : Any> Module.viewModelFactory(
     crossinline definition: Definition<T>
-): KoinDefinition<T> {
-    val klass: KClass<T> = T::class
-    return factory(kClass = klass, definition = { definition(it) })
-}
+): KoinDefinition<T> =
+    factory(kClass = T::class, definition = { definition(it) })
 
 @Composable
-actual inline fun <reified T : Any> getViewModel(): T {
-    val klass: KClass<T> = T::class
-    return KoinPlatform.getKoin().get(klass)
-}
+@Suppress("UNCHECKED_CAST")
+actual inline fun <reified T : Any> getViewModel(): T =
+    jamiResolveViewModel(T::class.qualifiedName, T::class.simpleName) as T

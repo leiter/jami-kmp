@@ -60,7 +60,7 @@ private fun Conversation.getLastMessage(): String? =
 class IOSNotificationService(
     private val settingsRepository: SettingsRepository,
     private val notificationGuard: NotificationGuard,
-    private val callKitManager: CallKitManager,
+    private val callKitManager: CallKitManagerApi,
 ) : NotificationService {
 
     private val notificationCenter = UNUserNotificationCenter.currentNotificationCenter()

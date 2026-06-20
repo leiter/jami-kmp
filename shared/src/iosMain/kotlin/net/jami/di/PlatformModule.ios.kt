@@ -41,7 +41,12 @@ import net.jami.services.expect.HardwareService
  * }
  * ```
  */
-actual val platformModule: Module get() = try { module {
+actual val platformModule: Module get() = try {
+    // Diagnostic: identify any key type whose ::class.hashCode() throws on iOS release
+    // (KClassUnsupportedImpl) before Koin hits it during registration. Crashes with a
+    // type-named marker if found. Removed once the offending type(s) are fixed.
+    jamiProbePlatformKClasses()
+    module {
 
     // ==================== Daemon Bridge ====================
 
@@ -95,8 +100,8 @@ actual val platformModule: Module get() = try { module {
      * CallKit integration — reports incoming/outgoing calls to the iOS native call UI
      * and handles user actions (answer, decline, mute, hold) from the system.
      */
-    single {
-        CallKitManager(callService = get())
+    single<CallKitManagerApi> {
+        CallKitManagerWrapper(CallKitManager(callService = get()))
     }
 
     /**

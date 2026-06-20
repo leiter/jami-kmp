@@ -25,17 +25,18 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        // 1. Initialize Koin dependency injection
-        do {
-            try KoinInitKt.doInitKoin()
-        } catch {
-            print("JAMI_CRASH initKoin failed: \(error)")
-            NSLog("JAMI_CRASH initKoin failed: %@", error.localizedDescription)
-            return false
-        }
+        // 1. Initialize Koin dependency injection.
+        // Intentionally NOT wrapped in do/catch: doInitKoin() is no longer @Throws, so any
+        // failure propagates as an unhandled Kotlin exception and the crash report carries
+        // the original throwing stack instead of being silently swallowed here.
+        NSLog("JAMI_KOIN_APPDELEGATE didFinishLaunching: calling doInitKoin()")
+        KoinInitKt.doInitKoin()
+        NSLog("JAMI_KOIN_APPDELEGATE doInitKoin() returned OK")
 
         // 2. Start the Jami daemon (mirrors JamiApplication.onCreate on Android)
+        NSLog("JAMI_KOIN_APPDELEGATE calling startJami()")
         IOSApplicationHelperKt.startJami()
+        NSLog("JAMI_KOIN_APPDELEGATE startJami() returned")
 
         // 3. Register for remote notifications (token delivery handled by daemon when push is wired)
         application.registerForRemoteNotifications()

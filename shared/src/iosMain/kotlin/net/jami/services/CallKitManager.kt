@@ -62,6 +62,34 @@ import platform.darwin.NSObject
  * When the user answers, [provider:didActivateAudioSession:] is called and we configure
  * AVAudioSession for VoIP (.playAndRecord / .voiceChat).
  */
+/**
+ * Pure-Kotlin interface for CallKit integration, used as the Koin binding type.
+ *
+ * IMPORTANT: [CallKitManager] extends [NSObject] (required by CXProviderDelegateProtocol),
+ * and Kotlin/Native does NOT provide a usable `KClass` for Objective-C-derived classes —
+ * `CallKitManager::class.hashCode()` throws (KClassUnsupportedImpl), which aborts
+ * `startKoin` on release builds. Kotlin/Native also forbids an ObjC-derived class from
+ * implementing a Kotlin interface ("Mixing Kotlin and Objective-C supertypes is not
+ * supported"). So Koin binds this interface to [CallKitManagerWrapper], a pure-Kotlin
+ * adapter (well-formed `KClass`) that delegates to the NSObject-based [CallKitManager].
+ */
+interface CallKitManagerApi {
+    fun reportIncomingCall(callId: String, displayName: String, hasVideo: Boolean)
+    fun reportOutgoingCallStarted(callId: String, accountId: String, displayName: String, hasVideo: Boolean)
+    fun onCleared()
+}
+
+/** Pure-Kotlin Koin-facing adapter delegating to the NSObject-based [CallKitManager]. */
+class CallKitManagerWrapper(private val delegate: CallKitManager) : CallKitManagerApi {
+    override fun reportIncomingCall(callId: String, displayName: String, hasVideo: Boolean) =
+        delegate.reportIncomingCall(callId, displayName, hasVideo)
+
+    override fun reportOutgoingCallStarted(callId: String, accountId: String, displayName: String, hasVideo: Boolean) =
+        delegate.reportOutgoingCallStarted(callId, accountId, displayName, hasVideo)
+
+    override fun onCleared() = delegate.onCleared()
+}
+
 @OptIn(ExperimentalForeignApi::class)
 class CallKitManager(
     private val callService: CallService,
