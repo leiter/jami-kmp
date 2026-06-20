@@ -30,28 +30,32 @@ kotlin {
     val iosSimArm64Target = iosSimulatorArm64()
 
     listOf(iosArm64Target, iosX64Target, iosSimArm64Target).forEach { iosTarget ->
+        val libPath = when (iosTarget) {
+            iosArm64Target -> libjamiLibPath
+            else -> "${projectDir}/src/nativeInterop/cinterop/lib-sim"
+        }
         iosTarget.binaries.framework {
             baseName = "JamiShared"
             isStatic = true
             if (enableJamiBridgeCinterop) {
-                linkerOpts("-L$libjamiLibPath", "-lc++")
+                linkerOpts("-L$libPath", "-lc++")
             }
         }
         if (enableJamiBridgeCinterop) {
             val libName = when (iosTarget) {
                 iosArm64Target -> "JamiBridge_ios"
-                else -> "JamiBridge_iossim"  // x64 and simulatorArm64 use simulator lib
+                else -> "JamiBridge_iossim"
             }
             iosTarget.compilations.getByName("main") {
                 cinterops {
                     create("JamiBridge") {
                         defFile(project.file("src/nativeInterop/cinterop/JamiBridge.def"))
                         includeDirs(jamiBridgePath)
-                        extraOpts("-libraryPath", libjamiLibPath)
+                        extraOpts("-libraryPath", libPath)
                     }
                 }
                 kotlinOptions {
-                    freeCompilerArgs = listOf("-linker-options", "-L$libjamiLibPath -l$libName -lc++")
+                    freeCompilerArgs = listOf("-linker-options", "-L$libPath -l$libName -lc++")
                 }
             }
         }

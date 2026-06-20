@@ -9,14 +9,14 @@
 package net.jami.di
 
 import androidx.compose.runtime.Composable
-import org.koin.compose.koinInject
+import org.koin.compose.currentKoinScope
 import org.koin.core.definition.Definition
 import org.koin.core.definition.KoinDefinition
 import org.koin.core.module.Module
 import org.koin.core.module.factory
 import kotlin.reflect.KClass
 
-// Same KN nested-reified-inline KClass bug fix as iosMain — see ViewModelHelper.ios.kt.
+// Same KN DCE/KClass-hash fix as iosMain — see ViewModelHelper.ios.kt for full explanation.
 actual inline fun <reified T : Any> Module.viewModelFactory(
     crossinline definition: Definition<T>
 ): KoinDefinition<T> {
@@ -25,4 +25,7 @@ actual inline fun <reified T : Any> Module.viewModelFactory(
 }
 
 @Composable
-actual inline fun <reified T : Any> getViewModel(): T = koinInject()
+actual inline fun <reified T : Any> getViewModel(): T {
+    val klass: KClass<T> = T::class
+    return currentKoinScope().get(klass)
+}
