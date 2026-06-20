@@ -21,7 +21,7 @@ ROOT="$SCRIPT_DIR/.."
 XCPROJECT="$ROOT/ios-app/iosApp.xcodeproj"
 SCHEME="iosApp"
 CONFIGURATION="Release"
-ARCHIVE_PATH="/tmp/JamiKMP.xcarchive"
+ARCHIVE_PATH="$HOME/Library/Developer/Xcode/Archives/$(date +%Y-%m-%d)/JamiKMP $(date '+%d-%m-%Y, %H.%M').xcarchive"
 EXPORT_OPTIONS_PLIST="$ROOT/ios-app/ExportOptions.plist"
 
 TEAM_ID="K4K982LMZ9"
@@ -59,6 +59,7 @@ fi
 
 # ── Step 2: Xcode archive ─────────────────────────────────────────────────────
 step "Archiving Xcode project…"
+mkdir -p "$(dirname "$ARCHIVE_PATH")"
 rm -rf "$ARCHIVE_PATH"
 
 xcodebuild archive \
