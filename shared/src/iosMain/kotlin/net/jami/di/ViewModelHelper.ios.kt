@@ -9,11 +9,11 @@
 package net.jami.di
 
 import androidx.compose.runtime.Composable
-import org.koin.compose.currentKoinScope
 import org.koin.core.definition.Definition
 import org.koin.core.definition.KoinDefinition
 import org.koin.core.module.Module
 import org.koin.core.module.factory
+import org.koin.mp.KoinPlatform
 import kotlin.reflect.KClass
 
 // On Kotlin/Native release builds with DCE, T::class obtained inside a nested inline function
@@ -35,5 +35,5 @@ actual inline fun <reified T : Any> Module.viewModelFactory(
 @Composable
 actual inline fun <reified T : Any> getViewModel(): T {
     val klass: KClass<T> = T::class
-    return currentKoinScope().get(klass)
+    return KoinPlatform.getKoin().get(klass)
 }
