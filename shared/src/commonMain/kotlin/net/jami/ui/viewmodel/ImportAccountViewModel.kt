@@ -53,11 +53,17 @@ class ImportAccountViewModel(
     private val _state = MutableStateFlow(ImportAccountState())
     val state: StateFlow<ImportAccountState> = _state.asStateFlow()
 
+    // Id of the account created by importAccount(), used to correlate daemon events.
+    private var importedAccountId: String? = null
+
     init {
         // Observe account events to detect successful import
         scope.launch {
             accountService.accountEvents.collect { event ->
                 when (event) {
+                    is AccountEvent.AccountsChanged -> {
+                        handleAccountsChanged()
+                    }
                     is AccountEvent.RegistrationStateChanged -> {
                         handleRegistrationState(event)
                     }
@@ -105,12 +111,15 @@ class ImportAccountViewModel(
         scope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
             try {
-                accountService.createJamiAccount(
+                val accountId = accountService.createJamiAccount(
                     displayName = "",
                     password = current.password,
                     archivePath = current.archivePath
                 )
-                // Import progress is tracked via AccountEvent callbacks
+                importedAccountId = accountId.ifEmpty { null }
+                // The account may already be present if the daemon added it synchronously.
+                handleAccountsChanged()
+                // Otherwise, completion is tracked via AccountsChanged / registration events.
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
@@ -121,9 +130,28 @@ class ImportAccountViewModel(
     }
 
     /**
+     * Detect a successful import the moment the daemon adds the account to its list.
+     *
+     * This is network-independent: a freshly imported Jami account only reaches the
+     * "REGISTERED" registration state once it connects to the DHT, so relying on that
+     * alone leaves the user stranded on the import screen when offline (the account is
+     * created but never reported as registered until an app restart re-evaluates state).
+     * Account presence is the same criterion the app uses to show Home after a restart.
+     */
+    private fun handleAccountsChanged() {
+        val id = importedAccountId ?: return
+        if (_state.value.isImported) return
+        if (accountService.accounts.value.any { it.accountId == id }) {
+            _state.value = _state.value.copy(isLoading = false, isImported = true)
+        }
+    }
+
+    /**
      * Handle registration state changes to detect successful import.
      */
     private fun handleRegistrationState(event: AccountEvent.RegistrationStateChanged) {
+        // Only react to the account we just imported.
+        if (importedAccountId != null && event.accountId != importedAccountId) return
         when (event.state) {
             "REGISTERED" -> {
                 _state.value = _state.value.copy(

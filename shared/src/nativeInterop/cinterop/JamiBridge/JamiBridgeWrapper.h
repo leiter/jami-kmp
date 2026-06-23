@@ -136,6 +136,8 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 @optional
 
 // Account Events
+- (void)onAccountsChanged;
+
 - (void)onRegistrationStateChanged:(NSString *)accountId
                              state:(JBRegistrationState)state
                               code:(int)code
@@ -154,6 +156,7 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                            name:(NSString *)name;
 
 - (void)onRegisteredNameFound:(NSString *)accountId
+                  requestName:(NSString *)requestName
                         state:(JBLookupState)state
                       address:(NSString *)address
                          name:(NSString *)name;

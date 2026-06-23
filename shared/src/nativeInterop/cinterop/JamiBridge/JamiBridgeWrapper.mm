@@ -376,6 +376,20 @@ static JBCallState toCallState(const std::string& state) {
             });
         }));
 
+    // Accounts list changed (account added/removed/reordered). Without this the app
+    // never refreshes its account list at runtime — newly created/imported accounts only
+    // appear after a restart re-loads the list from the daemon.
+    handlers.insert(exportable_callback<ConfigurationSignal::AccountsChanged>(
+        [weakSelf]() {
+            FILE_LOG_I("JamiBridge-C++", @"AccountsChanged CALLBACK");
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onAccountsChanged)]) {
+                    [strongSelf.delegate onAccountsChanged];
+                }
+            });
+        }));
+
     // Account details changed
     handlers.insert(exportable_callback<ConfigurationSignal::AccountDetailsChanged>(
         [weakSelf](const std::string& accountId, const std::map<std::string, std::string>& details) {
@@ -476,6 +490,7 @@ static JBCallState toCallState(const std::string& state) {
                    int state, const std::string& address, const std::string& name) {
             // Copy data before async dispatch to avoid use-after-free
             NSString *accountIdNS = toNSString(accountId);
+            NSString *requestNameNS = toNSString(requestName);
             NSString *addressNS = toNSString(address);
             NSString *nameNS = toNSString(name);
             JBLookupState lookupState;
@@ -487,8 +502,9 @@ static JBCallState toCallState(const std::string& state) {
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 JamiBridgeWrapper *strongSelf = weakSelf;
-                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onRegisteredNameFound:state:address:name:)]) {
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onRegisteredNameFound:requestName:state:address:name:)]) {
                     [strongSelf.delegate onRegisteredNameFound:accountIdNS
+                                                   requestName:requestNameNS
                                                          state:lookupState
                                                        address:addressNS
                                                           name:nameNS];

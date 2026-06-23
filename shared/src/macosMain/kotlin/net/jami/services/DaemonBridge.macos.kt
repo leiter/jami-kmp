@@ -626,6 +626,10 @@ private class JamiBridgeDelegateImpl(
     private val callbacks: DaemonCallbacks
 ) : NSObject(), JamiBridgeDelegateProtocol {
 
+    override fun onAccountsChanged() {
+        callbacks.onAccountsChanged()
+    }
+
     override fun onRegistrationStateChanged(
         accountId: String,
         state: JBRegistrationState,
@@ -669,6 +673,7 @@ private class JamiBridgeDelegateImpl(
 
     override fun onRegisteredNameFound(
         accountId: String,
+        requestName: String,
         state: JBLookupState,
         address: String,
         name: String
@@ -680,7 +685,8 @@ private class JamiBridgeDelegateImpl(
             JBLookupState.JBLookupStateError -> 3
             else -> 3
         }
-        callbacks.onRegisteredNameFound(accountId, stateInt, address, name)
+        // requestName is the queried name — forward as the correlation query (see iOS note).
+        callbacks.onRegisteredNameFound(accountId, stateInt, address, name, query = requestName)
     }
 
     override fun onKnownDevicesChanged(accountId: String, devices: Map<Any?, *>) {

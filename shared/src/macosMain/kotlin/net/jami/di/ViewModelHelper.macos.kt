@@ -9,6 +9,7 @@
 package net.jami.di
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import org.koin.core.definition.Definition
 import org.koin.core.definition.KoinDefinition
 import org.koin.core.module.Module
@@ -29,9 +30,11 @@ actual inline fun <reified T : Any> Module.viewModelFactory(
     return factory(kClass = klass, definition = { definition(it) })
 }
 
+// remember { } retains the factory-built instance across recompositions so StateFlow-backed
+// input is not discarded on every keystroke. See ViewModelHelper.ios.kt for the full note.
 @Composable
 @Suppress("UNCHECKED_CAST")
-actual inline fun <reified T : Any> getViewModel(): T {
+actual inline fun <reified T : Any> getViewModel(): T = remember {
     val klass = vmKClassCache[T::class.simpleName!!]!! as KClass<T>
-    return KoinPlatform.getKoin().get(klass)
+    KoinPlatform.getKoin().get(klass)
 }

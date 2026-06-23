@@ -9,6 +9,7 @@
 package net.jami.di
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import org.koin.core.definition.Definition
 import org.koin.core.definition.KoinDefinition
 import org.koin.core.module.Module
@@ -28,7 +29,12 @@ actual inline fun <reified T : Any> Module.viewModelFactory(
 ): KoinDefinition<T> =
     factory(kClass = T::class, definition = { definition(it) })
 
+// remember { } retains the resolved instance across recompositions — Koin registers
+// view models as factories (new instance per resolution), and without remember every
+// recomposition (e.g. on each keystroke updating StateFlow-backed UI state) would build
+// a fresh, empty view model and discard the user's input. The Android actual gets this
+// for free because koinInject() remembers internally.
 @Composable
 @Suppress("UNCHECKED_CAST")
 actual inline fun <reified T : Any> getViewModel(): T =
-    jamiResolveViewModel(T::class.qualifiedName, T::class.simpleName) as T
+    remember { jamiResolveViewModel(T::class.qualifiedName, T::class.simpleName) as T }

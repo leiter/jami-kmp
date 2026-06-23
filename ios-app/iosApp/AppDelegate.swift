@@ -25,6 +25,24 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // 0. Install the Kotlin/Native unhandled-exception hook FIRST, so any later
+        // Kotlin exception (including ones that escape into Compose/UIKit) is logged with
+        // its full message+stack, dumped to Documents/jami_last_crash.txt, and re-crashed
+        // via a category-named abort() whose symbol survives in the TestFlight crash report.
+        KoinDiagnostics_iosKt.installJamiCrashDiagnostics()
+
+        // 0.5 Point libjami's TLS stack at a CA bundle. The daemon (GnuTLS) reads the
+        // CA_ROOT_FILE env var to validate HTTPS connections such as the name server
+        // (ns.jami.net) used for username lookup/registration. Without it, those requests
+        // fail certificate validation and surface as "name server unreachable".
+        // Must be set before the daemon performs any TLS (i.e. before startJami()).
+        if let path = self.certificatePath() {
+            setenv("CA_ROOT_FILE", path, 1)
+            NSLog("JAMI_CA CA_ROOT_FILE set to \(path)")
+        } else {
+            NSLog("JAMI_CA WARNING: cacert.pem not found — TLS name lookups may fail")
+        }
+
         // 1. Initialize Koin dependency injection.
         // Intentionally NOT wrapped in do/catch: doInitKoin() is no longer @Throws, so any
         // failure propagates as an unhandled Kotlin exception and the crash report carries
@@ -49,6 +67,31 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
     func applicationWillTerminate(_ application: UIApplication) {
         IOSApplicationHelperKt.stopJami()
+    }
+
+    /// Returns the on-disk path to the CA certificate bundle, copying it out of the app
+    /// bundle into Documents on first launch (libjami needs a stable filesystem path).
+    private func certificatePath() -> String? {
+        let fileName = "cacert"
+        let fileExtension = "pem"
+        let fileManager = FileManager.default
+        guard let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        let certPath = documentsURL.appendingPathComponent(fileName).appendingPathExtension(fileExtension)
+        if fileManager.fileExists(atPath: certPath.path) {
+            return certPath.path
+        }
+        guard let certSource = Bundle.main.url(forResource: fileName, withExtension: fileExtension) else {
+            return nil
+        }
+        do {
+            try fileManager.copyItem(at: certSource, to: certPath)
+            return certPath.path
+        } catch {
+            // Fall back to the in-bundle path if the copy fails.
+            return certSource.path
+        }
     }
 
     // MARK: - Remote notifications (placeholder — APNs not yet integrated)

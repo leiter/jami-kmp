@@ -11,6 +11,16 @@ package net.jami.di
 import org.koin.core.annotation.KoinInternalApi
 import org.koin.mp.KoinPlatform
 import platform.Foundation.NSLog
+import platform.Foundation.NSDocumentDirectory
+import platform.Foundation.NSUserDomainMask
+import platform.Foundation.NSSearchPathForDirectoriesInDomains
+import platform.Foundation.NSString
+import platform.Foundation.NSUTF8StringEncoding
+import platform.Foundation.writeToFile
+import platform.posix.abort
+import kotlin.experimental.ExperimentalNativeApi
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlin.native.setUnhandledExceptionHook
 import kotlin.reflect.KClass
 import app.cash.sqldelight.db.SqlDriver
 import net.jami.database.JamiDatabase
@@ -133,4 +143,64 @@ internal fun jamiResolveViewModel(reqQualifiedName: String?, reqSimpleName: Stri
     )
     // Resolve with the EXACT registered KClass object → index key is guaranteed to match.
     return koin.get(primaryType)
+}
+
+// ── Global unhandled-exception diagnostic ────────────────────────────────────
+// TestFlight .crash reports carry only a backtrace — no exception message, and when
+// an exception escapes into Compose/UIKit (the run loop) it is rethrown as an ObjC
+// exception, so by the time Kotlin's terminate handler runs the original throw stack
+// is already unwound. We therefore install a Kotlin/Native unhandled-exception hook
+// that runs BEFORE the unwind completes: it (1) logs the full type+message+stack,
+// (2) writes the same text to Documents/jami_last_crash.txt (retrievable via the
+// Xcode device container), and (3) calls abort() from a category-named function.
+// abort() crashes IN PLACE (no unwind), so that function's name survives as the top
+// Kotlin frame in the message-less crash report and tells us the exception category.
+
+private fun fatal_NoBeanDefinition(): Nothing { abort(); error("unreachable") }
+private fun fatal_KClassUnsupported(): Nothing { abort(); error("unreachable") }
+private fun fatal_NullPointer(): Nothing { abort(); error("unreachable") }
+private fun fatal_ClassCast(): Nothing { abort(); error("unreachable") }
+private fun fatal_IllegalState(): Nothing { abort(); error("unreachable") }
+private fun fatal_IllegalArgument(): Nothing { abort(); error("unreachable") }
+private fun fatal_MissingResource(): Nothing { abort(); error("unreachable") }
+private fun fatal_Other(): Nothing { abort(); error("unreachable") }
+
+private fun jamiDispatchFatal(typeName: String, message: String): Nothing {
+    val t = typeName.lowercase()
+    val m = message.lowercase()
+    return when {
+        "nobeandefinition" in t || "no definition found" in m || "nodefinitionfound" in t -> fatal_NoBeanDefinition()
+        "kclass" in m || "unsupported" in m || "kclassunsupported" in t -> fatal_KClassUnsupported()
+        "nullpointer" in t -> fatal_NullPointer()
+        "classcast" in t -> fatal_ClassCast()
+        "missingresource" in t || "resource" in m -> fatal_MissingResource()
+        "illegalstate" in t -> fatal_IllegalState()
+        "illegalargument" in t -> fatal_IllegalArgument()
+        else -> fatal_Other()
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private fun jamiDumpCrashToFile(text: String) {
+    runCatching {
+        val dirs = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
+        val docs = dirs.firstOrNull() as? String ?: return
+        val path = "$docs/jami_last_crash.txt"
+        (text as NSString).writeToFile(path, atomically = true, encoding = NSUTF8StringEncoding, error = null)
+        jamiKoinLog("JAMI_FATAL wrote crash details to $path")
+    }
+}
+
+@OptIn(ExperimentalNativeApi::class)
+fun installJamiCrashDiagnostics() {
+    setUnhandledExceptionHook { t: Throwable ->
+        val typeName = runCatching { t::class.qualifiedName ?: t::class.simpleName }.getOrNull() ?: "<unknown>"
+        val message = runCatching { t.message }.getOrNull() ?: ""
+        val stack = runCatching { t.stackTraceToString() }.getOrNull() ?: "<no stack>"
+        val full = "JAMI_FATAL type=$typeName\nmessage=$message\nstack=\n$stack"
+        jamiKoinLog(full)
+        jamiDumpCrashToFile(full)
+        jamiDispatchFatal(typeName, message)
+    }
+    jamiKoinLog("JAMI_FATAL unhandled-exception hook installed")
 }

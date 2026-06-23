@@ -12,6 +12,7 @@
 		D1D2D3D4D5D6D7D8D9D0DDDC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCC /* ContentView.swift */; };
 		D1D2D3D4D5D6D7D8D9D0DDDD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCD /* Assets.xcassets */; };
 		D1D2D3D4D5D6D7D8D9D0DDDE /* NotificationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCF /* NotificationDelegate.swift */; };
+		CACE71F2CACE71F2CACE71F2 /* cacert.pem in Resources */ = {isa = PBXBuildFile; fileRef = CACE71F1CACE71F1CACE71F1 /* cacert.pem */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +23,7 @@
 		C1C2C3C4C5C6C7C8C9C0CCCD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C1C2C3C4C5C6C7C8C9C0CCCE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C1C2C3C4C5C6C7C8C9C0CCCF /* NotificationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationDelegate.swift; sourceTree = "<group>"; };
+		CACE71F1CACE71F1CACE71F1 /* cacert.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = cacert.pem; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,6 +54,7 @@
 				C1C2C3C4C5C6C7C8C9C0CCCF /* NotificationDelegate.swift */,
 				C1C2C3C4C5C6C7C8C9C0CCCD /* Assets.xcassets */,
 				C1C2C3C4C5C6C7C8C9C0CCCE /* Info.plist */,
+				CACE71F1CACE71F1CACE71F1 /* cacert.pem */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
@@ -124,6 +127,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D1D2D3D4D5D6D7D8D9D0DDDD /* Assets.xcassets in Resources */,
+				CACE71F2CACE71F2CACE71F2 /* cacert.pem in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -289,7 +293,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_REQUIRED = NO;
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -381,7 +385,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = K4K982LMZ9;
 				FRAMEWORK_SEARCH_PATHS = (
