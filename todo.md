@@ -83,6 +83,13 @@ Screenshot blocking → `WindowSecureEffect` expect/actual called from `JamiApp.
 
 ## P4 — Polish / Low Priority
 
+### Adopt koin-compose-viewmodel (koinViewModel) across all platforms
+- Currently: Android uses `koinInject()` (+ implicit `remember`); iOS/macOS use a custom Koin-core resolver (`jamiResolveViewModel` / `vmKClassCache`) wrapped in `remember { }`. The 18 view models in `ui/viewmodel/` are plain classes with a hand-rolled `onCleared()` and their own `CoroutineScope`.
+- Goal: switch registration/lookup to `koinViewModel { }` / `koinViewModel()` (dep already in `libs.versions.toml`; Koin 4.1 supports this on iOS/macOS via Compose Multiplatform `lifecycle-viewmodel-compose`). Gains proper `LocalViewModelStoreOwner` (nav back-stack) scoping + auto-clear, and lets the per-platform `getViewModel` expect/actual largely collapse to one common impl.
+- Migrate all 18 VMs to `androidx.lifecycle.ViewModel` (`onCleared()` → `override`; own scope → `viewModelScope`). Do it on **all** platforms so they don't diverge.
+- **Gate on an on-device check**: `koinViewModel()` resolves via Koin core `get(KClass)` — the exact Kotlin/Native KClass path the custom resolver was built to avoid; verify it doesn't regress iOS startup/resolution before trusting it.
+- Not a bugfix — the `remember { }` fix already resolved the "Jami-tab input resets each keystroke" bug. This is a quality/architecture upgrade.
+
 ### strings_kmp.xml locale cleanup
 - Legacy locale folders (`values-de/`, `values-fr/`, etc.) still contain a `strings_kmp.xml` file.
 - Migrate any unique keys into the 5 canonical files; delete the `strings_kmp.xml` files.
