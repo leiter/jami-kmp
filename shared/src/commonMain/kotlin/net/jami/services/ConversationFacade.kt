@@ -134,13 +134,30 @@ class ConversationFacade(
             }
         }
 
-        // When account becomes REGISTERED, retry DHT name lookups for contacts that were
-        // unresolved during loadSmartlist (which runs before the account connects to DHT).
+        // Reload the smartlist whenever the daemon signals that accounts have changed.
+        // The currentAccount StateFlow only re-emits when the *value* changes; if loadAccounts()
+        // reuses the same Account object (which it always does for an existing account), the
+        // collector above never fires again and loadSmartlist() never re-runs.  AccountsChanged
+        // fires after libjami has finished loading all conversation git repos from disk, so this
+        // is the right moment to query getConversations() and get a non-empty result.
+        scope.launch {
+            accountService.accountEvents.collect { event ->
+                if (event is AccountEvent.AccountsChanged) {
+                    val account = accountService.currentAccount.value ?: return@collect
+                    loadSmartlist(account)
+                }
+            }
+        }
+
+        // When the account becomes REGISTERED: reload the smartlist (peers may have pushed
+        // conversations that weren't in the local git repos yet) then retry any unresolved
+        // registered-name lookups.
         scope.launch {
             accountService.accountEvents.collect { event ->
                 if (event is AccountEvent.RegistrationStateChanged) {
                     val account = accountService.getAccount(event.accountId) ?: return@collect
                     if (!account.isRegistered) return@collect
+                    loadSmartlist(account)
                     for (conversation in account.getConversations()) {
                         for (contact in conversation.contacts) {
                             if (!contact.isUser && contact.username.isNullOrEmpty()) {

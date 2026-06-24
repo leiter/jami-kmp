@@ -151,6 +151,17 @@ class ConversationsViewModel(
             }
         }
 
+        // When the daemon signals AccountsChanged the conversation list in the account model has
+        // just been (re-)populated by ConversationFacade.  Reload here so the UI reflects the
+        // updated list without waiting for a user gesture.
+        scope.launch {
+            accountService.accountEvents.collect { event ->
+                if (event is AccountEvent.AccountsChanged) {
+                    loadConversations()
+                }
+            }
+        }
+
         // Reload pending requests on incoming trust requests (old-protocol contacts)
         scope.launch {
             accountService.accountEvents.collect { event ->
