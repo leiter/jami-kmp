@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.services.BiometricResult
 import net.jami.services.BiometricService
@@ -68,6 +69,8 @@ class AppViewModel(
                 val current = _appState.value
                 val next = when {
                     onboardingInProgress -> AppState.Onboarding
+                    // Keep HasAccounts during transient daemon-driven empty states (e.g. on
+                    // reconnect). Deliberate deletions are handled separately via AccountRemoved.
                     accountList.isEmpty() && current is AppState.HasAccounts -> current
                     accountList.isEmpty() -> AppState.NoAccounts
                     accountList.any { it.needsMigration } ->
@@ -77,6 +80,20 @@ class AppViewModel(
                 Log.d(TAG, "accounts=${accountList.size} onboarding=$onboardingInProgress " +
                         "$current -> $next")
                 _appState.value = next
+            }
+        }
+
+        // React to deliberate account removals. When the user deletes the last account we
+        // must override the transient-empty guard above and navigate to onboarding.
+        scope.launch {
+            accountService.accountEvents.collect { event ->
+                if (event is AccountEvent.AccountRemoved &&
+                    accountService.accounts.value.isEmpty()) {
+                    Log.d(TAG, "AccountRemoved(${event.accountId}): last account deleted, " +
+                            "navigating to NoAccounts")
+                    onboardingInProgress = false
+                    _appState.value = AppState.NoAccounts
+                }
             }
         }
     }

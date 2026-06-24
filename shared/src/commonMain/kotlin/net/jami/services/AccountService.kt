@@ -298,6 +298,11 @@ class AccountService(
 
     /**
      * Remove an account.
+     *
+     * Calls the daemon bridge synchronously, updates local state, then emits an
+     * [AccountEvent.AccountRemoved] event so that [AppViewModel] can navigate to onboarding
+     * when the last account is deleted — distinguishing a deliberate removal from a transient
+     * daemon-driven empty account list.
      */
     fun removeAccount(accountId: String) {
         daemonBridge.removeAccount(accountId)
@@ -306,6 +311,10 @@ class AccountService(
 
         if (_currentAccount.value?.accountId == accountId) {
             _currentAccount.value = _accounts.value.firstOrNull()
+        }
+
+        scope.launch {
+            _accountEvents.emit(AccountEvent.AccountRemoved(accountId))
         }
     }
 
@@ -1295,6 +1304,13 @@ data class IncomingMessage(
  */
 sealed class AccountEvent {
     data object AccountsChanged : AccountEvent()
+
+    /**
+     * Emitted when [AccountService.removeAccount] is called deliberately by the user.
+     * Unlike the daemon-driven [AccountsChanged], this event signals an intentional removal so
+     * that [AppViewModel] can navigate to onboarding when the last account is deleted.
+     */
+    data class AccountRemoved(val accountId: String) : AccountEvent()
 
     data class RegistrationStateChanged(
         val accountId: String,

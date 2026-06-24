@@ -371,17 +371,25 @@ class AccountSettingsViewModel(
     /**
      * Export the current account to a generated file path.
      */
-    fun exportAccount(password: String): Boolean {
-        val account = accountService.currentAccount.value ?: return false
+    /**
+     * Export the account archive to a temporary path.
+     *
+     * @return The file path of the exported archive on success, or null if the export failed.
+     *         The caller should present the file to the user (e.g. via a share sheet on iOS or
+     *         a file-sharing intent on Android) so it is not lost in the sandbox temp dir.
+     */
+    fun exportAccount(password: String): String? {
+        val account = accountService.currentAccount.value ?: return null
         val timestamp = net.jami.utils.currentTimeMillis()
         val dir = deviceRuntimeService?.getTempPath() ?: "/tmp"
         val path = "$dir/jami_export_${timestamp}.gz"
-        return accountService.exportToFile(
+        val success = accountService.exportToFile(
             accountId = account.accountId,
             path = path,
             scheme = AccountService.ACCOUNT_SCHEME_PASSWORD,
             password = password
         )
+        return if (success) path else null
     }
 
     /**

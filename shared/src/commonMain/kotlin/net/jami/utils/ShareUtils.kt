@@ -23,3 +23,14 @@ package net.jami.utils
  * @param body    Full text body to share.
  */
 expect fun shareText(subject: String, body: String)
+
+/**
+ * Present a platform-native share sheet for a file at the given absolute path.
+ *
+ * On iOS this opens a [UIActivityViewController] so the user can save or send the file.
+ * On Android this fires an ACTION_SEND intent via the FileProvider.
+ * On Desktop / macOS / JS this is a no-op (files are written to accessible paths there).
+ *
+ * @param path Absolute path to the file to share.
+ */
+expect fun shareFile(path: String)

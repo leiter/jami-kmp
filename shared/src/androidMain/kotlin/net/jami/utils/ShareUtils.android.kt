@@ -18,7 +18,9 @@ package net.jami.utils
 
 import android.content.Context
 import android.content.Intent
+import androidx.core.content.FileProvider
 import org.koin.mp.KoinPlatform
+import java.io.File
 
 actual fun shareText(subject: String, body: String) {
     val context: Context = KoinPlatform.getKoin().get()
@@ -26,6 +28,24 @@ actual fun shareText(subject: String, body: String) {
         type = "text/plain"
         putExtra(Intent.EXTRA_SUBJECT, subject)
         putExtra(Intent.EXTRA_TEXT, body)
+    }
+    context.startActivity(
+        Intent.createChooser(intent, null).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+    )
+}
+
+actual fun shareFile(path: String) {
+    val context: Context = KoinPlatform.getKoin().get()
+    val file = File(path)
+    if (!file.exists()) return
+    val authority = "${context.packageName}.fileprovider"
+    val uri = FileProvider.getUriForFile(context, authority, file)
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "application/octet-stream"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
     context.startActivity(
         Intent.createChooser(intent, null).apply {

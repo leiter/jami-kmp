@@ -25,3 +25,11 @@ actual fun shareText(subject: String, body: String) {
     val service = services.firstOrNull() as? NSSharingService ?: return
     service.performWithItems(items)
 }
+
+actual fun shareFile(path: String) {
+    val fileUrl = platform.Foundation.NSURL.fileURLWithPath(path)
+    val items = listOf(fileUrl)
+    val services = NSSharingService.sharingServicesForItems(items)
+    val service = services.firstOrNull() as? NSSharingService ?: return
+    service.performWithItems(items)
+}

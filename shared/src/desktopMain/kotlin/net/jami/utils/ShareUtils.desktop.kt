@@ -23,3 +23,7 @@ actual fun shareText(subject: String, body: String) {
     val selection = StringSelection(body)
     Toolkit.getDefaultToolkit().systemClipboard.setContents(selection, selection)
 }
+
+// On Desktop the exported file is written to a path the user can reach directly;
+// no share-sheet presentation is needed.
+actual fun shareFile(path: String) = Unit

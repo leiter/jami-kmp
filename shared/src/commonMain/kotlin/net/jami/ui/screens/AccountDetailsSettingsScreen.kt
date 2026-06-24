@@ -70,6 +70,7 @@ import kotlinx.coroutines.launch
 import net.jami.di.getViewModel
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.AccountSettingsViewModel
+import net.jami.utils.shareFile
 import org.jetbrains.compose.resources.stringResource
 
 private const val PASSWORD_MIN_LENGTH = 6
@@ -137,10 +138,14 @@ fun AccountDetailsSettingsScreen(
             onDismiss = { showExportDialog = false },
             onExport = { password ->
                 showExportDialog = false
-                val success = viewModel.exportAccount(password)
+                val exportPath = viewModel.exportAccount(password)
                 coroutineScope.launch {
-                    if (success) snackbarHostState.showSnackbar(exportSuccessMsg)
-                    else snackbarHostState.showSnackbar(exportErrorMsg)
+                    if (exportPath != null) {
+                        snackbarHostState.showSnackbar(exportSuccessMsg)
+                        shareFile(exportPath)
+                    } else {
+                        snackbarHostState.showSnackbar(exportErrorMsg)
+                    }
                 }
             },
         )

@@ -19,3 +19,7 @@ package net.jami.utils
 actual fun shareText(subject: String, body: String) {
     // TODO: implement via navigator.share() Web Share API
 }
+
+actual fun shareFile(path: String) {
+    // TODO: implement via navigator.share() / Blob download for Web
+}
