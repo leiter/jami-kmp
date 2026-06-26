@@ -43,6 +43,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CallEnd
 import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.Dialpad
+import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Mic
@@ -186,6 +187,7 @@ fun CallScreen(
         onFallbackAudio = { viewModel.fallbackToAudioOnly() },
         onRequestMicPermission = { viewModel.requestMicPermission() },
         onRequestCameraPermission = { viewModel.requestCameraPermission() },
+        onToggleRecording = { viewModel.toggleRecording() },
     )
 }
 
@@ -270,6 +272,7 @@ fun IncomingCallScreen(
         onFallbackAudio = { viewModel.fallbackToAudioOnly() },
         onRequestMicPermission = { viewModel.requestMicPermission() },
         onRequestCameraPermission = { viewModel.requestCameraPermission() },
+        onToggleRecording = { viewModel.toggleRecording() },
     )
 }
 
@@ -301,6 +304,7 @@ private fun CallScreenContent(
     onFallbackAudio: () -> Unit,
     onRequestMicPermission: () -> Unit = {},
     onRequestCameraPermission: () -> Unit = {},
+    onToggleRecording: () -> Unit = {},
 ) {
     // Navigate back on terminal state
     LaunchedEffect(state.callMode) {
@@ -469,6 +473,7 @@ private fun CallScreenContent(
                             onToggleConferenceLock = onToggleConferenceLock,
                             onOpenDtmf = { showDtmfSheet = true },
                             onOpenTransfer = { showTransferSheet = true },
+                            onToggleRecording = onToggleRecording,
                         )
                         is CallMode.Ended -> Unit
                     }
@@ -783,6 +788,7 @@ private fun OnGoingControls(
     onToggleConferenceLock: (Boolean) -> Unit = {},
     onOpenDtmf: () -> Unit,
     onOpenTransfer: () -> Unit,
+    onToggleRecording: () -> Unit,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         // First row: mute, speaker, video, screen share / camera switch
@@ -841,6 +847,17 @@ private fun OnGoingControls(
                 contentDescription = stringResource(Res.string.content_desc_transfer),
                 isActive = false,
                 onClick = onOpenTransfer,
+            )
+
+            // Record button
+            CallControlButton(
+                icon = Icons.Default.FiberManualRecord,
+                contentDescription = stringResource(
+                    if (state.isRecording) Res.string.content_desc_stop_recording
+                    else Res.string.content_desc_start_recording
+                ),
+                isActive = state.isRecording,
+                onClick = onToggleRecording,
             )
         }
 

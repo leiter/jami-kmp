@@ -221,6 +221,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun restartAudioLayer() {}
 
+    // Recording: stub until the native JamiBridgeWrapper exposes the recording API
+    // (see doc/plan_call_recording.md "iOS / macOS follow-up").
+    override fun toggleRecording(accountId: String, callId: String): Boolean = false
+    override fun getIsRecording(accountId: String, callId: String): Boolean = false
+
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {
         return bridge.holdConference(accountId, conferenceId = confId)

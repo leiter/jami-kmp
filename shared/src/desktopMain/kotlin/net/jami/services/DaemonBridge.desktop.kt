@@ -225,6 +225,8 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun transfer(accountId: String, callId: String, to: String): Boolean = false
     override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean = false
     override fun getCallDetails(accountId: String, callId: String): Map<String, String> = emptyMap()
+    override fun toggleRecording(accountId: String, callId: String): Boolean = false
+    override fun getIsRecording(accountId: String, callId: String): Boolean = false
 
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {

@@ -47,7 +47,7 @@ class Call(
     private var isPeerHolding = false
     var isAudioMuted = false
     var isVideoMuted = false
-    private var isRecording = false
+    var isRecording = false
 
     // Timestamps
     var timestamp: Long = 0

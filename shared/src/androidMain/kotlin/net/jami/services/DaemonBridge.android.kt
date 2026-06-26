@@ -330,6 +330,14 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         return JamiService.getCallDetails(accountId, callId).toNative()
     }
 
+    override fun toggleRecording(accountId: String, callId: String): Boolean {
+        return JamiService.toggleRecording(accountId, callId)
+    }
+
+    override fun getIsRecording(accountId: String, callId: String): Boolean {
+        return JamiService.getIsRecording(accountId, callId)
+    }
+
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {
         return JamiService.holdConference(accountId, confId)
@@ -815,6 +823,11 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
 
         override fun mediaChangeRequested(accountId: String, callId: String, mediaList: VectMap) {
             callbacks.onMediaChangeRequested(accountId, callId, mediaList.toNative())
+        }
+
+        override fun recordingStateChanged(callId: String, code: Int) {
+            // code: 0 = stopped, non-zero = recording
+            callbacks.onRecordingStateChanged(callId, code != 0)
         }
 
         override fun conferenceCreated(accountId: String, conversationId: String, confId: String) {

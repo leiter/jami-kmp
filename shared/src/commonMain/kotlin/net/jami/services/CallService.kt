@@ -278,6 +278,15 @@ class CallService(
         scope.launch { daemonBridge.transfer(accountId, callId, to) }
     }
 
+    /**
+     * Toggle recording of the active call. The daemon captures, mixes, and writes the file to
+     * the account's recording path; the authoritative recording state arrives back via
+     * [onRecordingStateChanged].
+     */
+    fun toggleRecording(accountId: String, callId: String) {
+        scope.launch { daemonBridge.toggleRecording(accountId, callId) }
+    }
+
     fun attendedTransfer(accountId: String, transferId: String, targetId: String) {
         scope.launch { daemonBridge.attendedTransfer(accountId, transferId, targetId) }
     }
@@ -511,6 +520,23 @@ class CallService(
             }
             conferences[callId]?.let { conf ->
                 conf.isVideoMuted = muted
+                _conferenceUpdates.emit(conf)
+            }
+        }
+    }
+
+    /**
+     * Called when the daemon's recording state for a call changes (local or remote initiated).
+     */
+    internal fun onRecordingStateChanged(callId: String, recording: Boolean) {
+        scope.launch {
+            calls[callId]?.let { call ->
+                call.isRecording = recording
+                if (call.callStatus == CallStatus.CURRENT) {
+                    _callUpdates.emit(call)
+                }
+            }
+            conferences[callId]?.let { conf ->
                 _conferenceUpdates.emit(conf)
             }
         }

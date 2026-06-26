@@ -70,6 +70,8 @@ interface DaemonBridgeApi {
     fun transfer(accountId: String, callId: String, to: String): Boolean
     fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean
     fun getCallDetails(accountId: String, callId: String): Map<String, String>
+    fun toggleRecording(accountId: String, callId: String): Boolean
+    fun getIsRecording(accountId: String, callId: String): Boolean
 
     // ==================== Conference Operations ====================
     fun holdConference(accountId: String, confId: String): Boolean
@@ -400,6 +402,7 @@ interface DaemonCallbacks {
     fun onMediaChangeRequested(accountId: String, callId: String, mediaList: List<Map<String, String>>)
     fun onAudioMuted(callId: String, muted: Boolean)
     fun onVideoMuted(callId: String, muted: Boolean)
+    fun onRecordingStateChanged(callId: String, recording: Boolean)
     fun onMediaNegotiationStatus(callId: String, event: String, mediaList: List<Map<String, String>>)
     fun onConferenceCreated(accountId: String, conversationId: String, confId: String)
     fun onConferenceChanged(accountId: String, confId: String, state: String)
@@ -526,6 +529,8 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun transfer(accountId: String, callId: String, to: String): Boolean = true
     override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean = true
     override fun getCallDetails(accountId: String, callId: String): Map<String, String> = emptyMap()
+    override fun toggleRecording(accountId: String, callId: String): Boolean = false
+    override fun getIsRecording(accountId: String, callId: String): Boolean = false
 
     override fun holdConference(accountId: String, confId: String): Boolean = true
     override fun unholdConference(accountId: String, confId: String): Boolean = true

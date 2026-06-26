@@ -88,6 +88,7 @@ data class CallState(
     val duration: Long = 0L,
     val isAudioMuted: Boolean = false,
     val isVideoMuted: Boolean = false,
+    val isRecording: Boolean = false,
     val isSpeakerOn: Boolean = false,
     val hasMicPermission: Boolean = true,
     val hasCamPermission: Boolean = true,
@@ -332,6 +333,15 @@ class CallViewModel(
         val newMuteState = !_state.value.isAudioMuted
         callService.muteLocalMedia(accountId, callId, CallService.MEDIA_TYPE_AUDIO, newMuteState)
         _state.value = _state.value.copy(isAudioMuted = newMuteState)
+    }
+
+    fun toggleRecording() {
+        val callId = currentCallId ?: return
+        val accountId = currentAccountId ?: return
+        callService.toggleRecording(accountId, callId)
+        // Optimistic flip for responsiveness; corrected by the daemon's
+        // onRecordingStateChanged signal mapped in the call-updates collector.
+        _state.value = _state.value.copy(isRecording = !_state.value.isRecording)
     }
 
     fun hasCameraPermission(): Boolean = deviceRuntimeService.hasCameraPermission()
@@ -712,6 +722,7 @@ class CallViewModel(
             peerUri = call.peerUri.uri,
             isAudioMuted = call.isAudioMuted,
             isVideoMuted = call.isVideoMuted,
+            isRecording = call.isRecording,
             isIncoming = call.isIncoming,
             isOnHold = isHold,
             hangupReason = call.hangupReason,

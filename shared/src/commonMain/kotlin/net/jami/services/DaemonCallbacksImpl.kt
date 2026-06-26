@@ -184,6 +184,10 @@ class DaemonCallbacksImpl(
         scope.launch { callService.onVideoMuted(callId, muted) }
     }
 
+    override fun onRecordingStateChanged(callId: String, recording: Boolean) {
+        scope.launch { callService.onRecordingStateChanged(callId, recording) }
+    }
+
     override fun onMediaNegotiationStatus(callId: String, event: String, mediaList: List<Map<String, String>>) {
         scope.launch { callService.onMediaNegotiationStatus(callId, event, mediaList) }
     }

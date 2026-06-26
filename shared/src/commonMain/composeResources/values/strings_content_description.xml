@@ -36,6 +36,8 @@
     <string name="content_desc_decline_call">Decline call</string>
     <string name="content_desc_dialpad">Open dialpad</string>
     <string name="content_desc_transfer">Transfer call</string>
+    <string name="content_desc_start_recording">Start recording</string>
+    <string name="content_desc_stop_recording">Stop recording</string>
     <string name="content_desc_peer_avatar">Caller avatar</string>
     <string name="content_desc_attach_file">Attach file</string>
     <string name="content_desc_take_photo">Take photo</string>
