@@ -67,7 +67,8 @@
 
 ## Call Recording
 
-- [ ] **Call recording** — `toggleRecording` / `setRecordPath` / `getRecordPath` exist in `callmanager_interface.h` and are fully functional in the reference client. Expose them in `DaemonBridge.kt`, wire into `CallService` and `CallViewModel`, add a record button to `CallScreen`.
+- [x] **Call recording (Android)** — `toggleRecording` / `getIsRecording` exposed in `DaemonBridgeApi`, wired through `CallService` (action + `onRecordingStateChanged` callback fed by the daemon's `RecordingStateChanged` signal), `CallViewModel` (`CallState.isRecording` + `toggleRecording()`), and a `FiberManualRecord` record button in `OnGoingControls`. `Call.isRecording` promoted to observable. See `doc/plan_call_recording.md`.
+- [ ] **Call recording (iOS/macOS)** — Stubbed (returns false, inert). Requires `JamiBridgeWrapper.h/.mm` to expose `toggleRecording`/`getIsRecording` + a `RecordingStateChanged` delegate, then a `libJamiBridge.a` rebuild. See "iOS / macOS follow-up" in `doc/plan_call_recording.md`.
 
 ## Push Notifications
 
@@ -91,9 +92,9 @@
 
 ## Home Screen — Missing Features
 
-- [ ] **Conversation filtering tabs (All / Groups / Contacts)** — Reference `HomeFragment` has tab filtering. KMP `HomeScreen` shows a single flat list.
-- [ ] **Long-press context menu on conversation rows** — Reference shows mute / pin / block / delete. KMP `HomeScreen` has no long-press handler.
-- [ ] **Swipe-to-archive / swipe-to-delete** — Reference `SmartListAdapter` supports swipe gestures. Not implemented in KMP.
+- [x] **Conversation filtering tabs** — Done. `HomeScreen` has a `JamiFilterChip` row (All / Unread / Groups) wired to `ConversationsViewModel.setFilter(ConversationFilter)`; `state.activeFilter` drives the filtered list (verified 2026-06-26).
+- [ ] **Long-press context menu on conversation rows** — Reference shows mute / pin / block / delete. KMP `HomeScreen` has no per-row long-press handler (the only `DropdownMenu` is the top-bar overflow: settings/about).
+- [~] **Swipe-to-delete** — Scaffolded but disabled. `HomeScreen` already wraps each row in a `SwipeToDismissBox` (EndToStart → red Delete background) and `ConversationsViewModel.removeConversation(id)` exists, but the swipe-completion call is commented out (`// viewModel.removeConversation(...)`). Enabling is ~1 line plus a confirm dialog. Swipe-to-archive proper (distinct from delete) is not implemented (verified 2026-06-26).
 
 ## Calls — Missing Features
 

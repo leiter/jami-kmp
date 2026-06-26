@@ -73,7 +73,13 @@ Echo cancellation → `DaemonBridge.setEchoCancellation()` → `JamiService.setA
 Applied on load in `SettingsRepository.loadSettings()` and on every toggle.
 Screenshot blocking → `WindowSecureEffect` expect/actual called from `JamiApp.kt`; Android adds/clears `FLAG_SECURE` reactively via `AppSettingsViewModel.state`.
 
-### Ringtone — apply to notification channel (Android)
+### ~~Ringtone — apply to notification channel (Android)~~ ✓ DONE (verified 2026-06-26)
+`AndroidNotificationService.refreshCallsChannel(ringtoneUri)` deletes and recreates `CHANNEL_CALLS`
+with the new `AudioAttributes`-wrapped (`USAGE_NOTIFICATION_RINGTONE`) URI, guarded by a
+`LAST_APPLIED_RINGTONE` `LocalPrefs` value so the channel is only churned when the setting
+actually changes. Invoked before showing call notifications with the current
+`callSettings.ringtone`. Implements exactly the approach described below.
+
 - `CallSettings.ringtone` is persisted and displayed in `AppSettingsScreen`, but the `jami_calls` notification channel is created once at app startup and its sound is set by the OS thereafter.
 - On Android O+ (API 26), channel sound can only be configured at channel creation time; the OS ignores `setSound()` on an already-created channel.
 - To apply a user-chosen ringtone: delete `jami_calls` (channel ID `"jami_calls_v2"`) and recreate it with the new `AudioAttributes`-wrapped URI before showing the next call notification.
