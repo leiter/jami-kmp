@@ -16,6 +16,8 @@
  */
 package net.jami.ui.viewmodel
 
+import androidx.lifecycle.ViewModel
+
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -170,7 +172,7 @@ class AccountSettingsViewModel(
     private val biometricService: BiometricService? = null,
     private val deviceRuntimeService: DeviceRuntimeService? = null,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-) {
+) : ViewModel() {
     private val scope = scope
     private var lookupJob: Job? = null
     /** Operation ID of the in-flight add-device export, or null if none. */
@@ -661,7 +663,7 @@ class AccountSettingsViewModel(
     /**
      * Cancel the coroutine scope when this ViewModel is no longer needed.
      */
-    fun onCleared() {
+    public override fun onCleared() {
         scope.cancel()
     }
 }

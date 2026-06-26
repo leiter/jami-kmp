@@ -1,5 +1,7 @@
 package net.jami.ui.viewmodel
 
+import androidx.lifecycle.ViewModel
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,7 +19,7 @@ data class DebugLogsState(
 
 class DebugLogsViewModel(
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-) {
+) : ViewModel() {
     private val scope = scope
 
     private val _state = MutableStateFlow(DebugLogsState())
@@ -35,7 +37,7 @@ class DebugLogsViewModel(
         }
     }
 
-    fun onCleared() {
+    public override fun onCleared() {
         scope.cancel()
     }
 }

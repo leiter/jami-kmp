@@ -16,6 +16,8 @@
  */
 package net.jami.ui.viewmodel
 
+import androidx.lifecycle.ViewModel
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -128,7 +130,7 @@ class CallViewModel(
     private val hardwareService: HardwareService,
     private val deviceRuntimeService: DeviceRuntimeService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-) {
+) : ViewModel() {
     private val scope = scope
 
     private val _cameraPermissionRequest = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
@@ -820,7 +822,7 @@ class CallViewModel(
         }
     }
 
-    fun onCleared() {
+    public override fun onCleared() {
         durationJob?.cancel()
         confUpdatesJob?.cancel()
         callUpdatesJob?.cancel()

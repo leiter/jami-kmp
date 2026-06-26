@@ -9,6 +9,7 @@
 package net.jami.di
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.ViewModel
 import org.koin.core.definition.Definition
 import org.koin.core.definition.KoinDefinition
 import org.koin.core.module.Module
@@ -18,4 +19,4 @@ expect inline fun <reified T : Any> Module.viewModelFactory(
 ): KoinDefinition<T>
 
 @Composable
-expect inline fun <reified T : Any> getViewModel(): T
+expect inline fun <reified T : ViewModel> getViewModel(): T

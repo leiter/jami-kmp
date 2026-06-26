@@ -70,9 +70,8 @@ fun JamiNavigation() {
     val appState by appViewModel.appState.collectAsState()
     val isLocked by appViewModel.isLocked.collectAsState()
 
-    DisposableEffect(appViewModel) {
-        onDispose { appViewModel.onCleared() }
-    }
+    // appViewModel is scoped to the ViewModelStoreOwner via getViewModel(); onCleared() is
+    // invoked automatically when that owner is destroyed, so no manual disposal is needed.
 
     // Lock when the app goes to background; the composable is recomposed on resume
     // so the lock screen appears before content is visible again.

@@ -16,6 +16,8 @@
  */
 package net.jami.ui.viewmodel
 
+import androidx.lifecycle.ViewModel
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -104,7 +106,7 @@ class AppSettingsViewModel(
     private val accountService: AccountService,
     private val contactService: ContactService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-) {
+) : ViewModel() {
     private val scope = scope
 
     private val _state = MutableStateFlow(AppSettingsState())
@@ -386,7 +388,7 @@ class AppSettingsViewModel(
     /**
      * Cancel the coroutine scope when this ViewModel is no longer needed.
      */
-    fun onCleared() {
+    public override fun onCleared() {
         scope.cancel()
     }
 }

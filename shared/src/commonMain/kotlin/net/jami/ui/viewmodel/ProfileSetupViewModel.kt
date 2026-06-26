@@ -16,6 +16,8 @@
  */
 package net.jami.ui.viewmodel
 
+import androidx.lifecycle.ViewModel
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,7 +40,7 @@ data class ProfileSetupState(
 class ProfileSetupViewModel(
     private val accountService: AccountService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-) {
+) : ViewModel() {
     private val scope = scope
 
     private val _state = MutableStateFlow(ProfileSetupState())
@@ -87,7 +89,7 @@ class ProfileSetupViewModel(
         }
     }
 
-    fun onCleared() {
+    public override fun onCleared() {
         scope.cancel()
     }
 }

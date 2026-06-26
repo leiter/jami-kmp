@@ -16,6 +16,8 @@
  */
 package net.jami.ui.viewmodel
 
+import androidx.lifecycle.ViewModel
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -43,7 +45,7 @@ class AppViewModel(
     private val accountService: AccountService,
     private val biometricService: BiometricService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-) {
+) : ViewModel() {
     private val scope = scope
     private val _appState = MutableStateFlow<AppState>(AppState.Loading)
     val appState: StateFlow<AppState> = _appState.asStateFlow()
@@ -159,7 +161,7 @@ class AppViewModel(
         return biometricService.authenticate(account.accountId, promptTitle, promptDescription)
     }
 
-    fun onCleared() {
+    public override fun onCleared() {
         Log.d(TAG, "onCleared")
         scope.cancel()
     }

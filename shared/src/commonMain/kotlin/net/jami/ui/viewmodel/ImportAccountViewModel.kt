@@ -16,6 +16,8 @@
  */
 package net.jami.ui.viewmodel
 
+import androidx.lifecycle.ViewModel
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -47,7 +49,7 @@ data class ImportAccountState(
 class ImportAccountViewModel(
     private val accountService: AccountService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-) {
+) : ViewModel() {
     private val scope = scope
 
     private val _state = MutableStateFlow(ImportAccountState())
@@ -196,7 +198,7 @@ class ImportAccountViewModel(
     /**
      * Cancel the coroutine scope when this ViewModel is no longer needed.
      */
-    fun onCleared() {
+    public override fun onCleared() {
         scope.cancel()
     }
 }

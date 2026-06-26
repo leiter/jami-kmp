@@ -9,7 +9,8 @@
 package net.jami.di
 
 import androidx.compose.runtime.Composable
-import org.koin.compose.koinInject
+import androidx.lifecycle.ViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.definition.Definition
 import org.koin.core.definition.KoinDefinition
 import org.koin.core.module.Module
@@ -19,4 +20,4 @@ actual inline fun <reified T : Any> Module.viewModelFactory(
 ): KoinDefinition<T> = factory { definition(it) }
 
 @Composable
-actual inline fun <reified T : Any> getViewModel(): T = koinInject()
+actual inline fun <reified T : ViewModel> getViewModel(): T = koinViewModel()

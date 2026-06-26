@@ -16,6 +16,8 @@
  */
 package net.jami.ui.viewmodel
 
+import androidx.lifecycle.ViewModel
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -68,7 +70,7 @@ class NewConversationViewModel(
     private val accountService: AccountService,
     private val deviceRuntimeService: DeviceRuntimeService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-) {
+) : ViewModel() {
     private val scope = scope
     private var searchJob: Job? = null
 
@@ -405,7 +407,7 @@ class NewConversationViewModel(
     /**
      * Cancel the coroutine scope when this ViewModel is no longer needed.
      */
-    fun onCleared() {
+    public override fun onCleared() {
         scope.cancel()
     }
 }

@@ -16,6 +16,8 @@
  */
 package net.jami.ui.viewmodel
 
+import androidx.lifecycle.ViewModel
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -80,7 +82,7 @@ class LocationSharingViewModel(
     private val conversationFacade: ConversationFacade,
     private val accountService: AccountService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
-) {
+) : ViewModel() {
     private val scope = scope
 
     private val _state = MutableStateFlow(LocationSharingState())
@@ -301,7 +303,7 @@ class LocationSharingViewModel(
     /**
      * Clean up when ViewModel is no longer needed.
      */
-    fun onCleared() {
+    public override fun onCleared() {
         stopSharing()
         locationUpdatesJob?.cancel()
         locationUpdatesJob = null

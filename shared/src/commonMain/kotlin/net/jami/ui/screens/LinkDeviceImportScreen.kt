@@ -43,7 +43,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -101,10 +100,8 @@ fun LinkDeviceImportScreen(
     val viewModel = getViewModel<LinkDeviceImportViewModel>()
     val uiState by viewModel.state.collectAsState()
 
-    // Clean up the temp account if the user leaves without completing.
-    DisposableEffect(Unit) {
-        onDispose { viewModel.onCleared() }
-    }
+    // The temp account is cleaned up in the ViewModel's onCleared(), invoked automatically
+    // when this screen's ViewModelStoreOwner is destroyed (e.g. the user navigates away).
 
     // Navigate away on success.
     LaunchedEffect(uiState) {

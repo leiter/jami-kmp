@@ -126,10 +126,6 @@ fun CallScreen(
         viewModel.initOutgoing(contactUri = contactId, hasVideo = isVideo)
     }
 
-    DisposableEffect(Unit) {
-        onDispose { viewModel.onCleared() }
-    }
-
     var requestCameraPermission by remember { mutableStateOf(false) }
     var requestMicPermission by remember { mutableStateOf(false) }
 
@@ -210,10 +206,6 @@ fun IncomingCallScreen(
     remember(callId) { viewModel.initIncoming(callId, actionViewOnly = false) }
 
     val state by viewModel.state.collectAsState()
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.onCleared() }
-    }
 
     var requestCameraPermission by remember { mutableStateOf(false) }
     var requestMicPermission by remember { mutableStateOf(false) }

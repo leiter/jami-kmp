@@ -16,6 +16,8 @@
  */
 package net.jami.ui.viewmodel
 
+import androidx.lifecycle.ViewModel
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -107,7 +109,7 @@ class ConversationsViewModel(
     private val contactService: ContactService,
     private val vCardService: VCardService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-) {
+) : ViewModel() {
     companion object {
         private const val TAG = "ConversationsVM"
     }
@@ -530,7 +532,7 @@ class ConversationsViewModel(
     /**
      * Cancel the coroutine scope and release all presence subscriptions.
      */
-    fun onCleared() {
+    public override fun onCleared() {
         val accountId = accountService.currentAccount.value?.accountId
         if (accountId != null) {
             for ((subAccountId, rawRingId) in subscribedBuddies) {

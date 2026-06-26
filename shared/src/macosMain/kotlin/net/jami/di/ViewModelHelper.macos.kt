@@ -9,7 +9,8 @@
 package net.jami.di
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import org.koin.core.definition.Definition
 import org.koin.core.definition.KoinDefinition
 import org.koin.core.module.Module
@@ -30,11 +31,13 @@ actual inline fun <reified T : Any> Module.viewModelFactory(
     return factory(kClass = klass, definition = { definition(it) })
 }
 
-// remember { } retains the factory-built instance across recompositions so StateFlow-backed
-// input is not discarded on every keystroke. See ViewModelHelper.ios.kt for the full note.
+// viewModel { } retains the factory-built instance across recompositions (so StateFlow-backed
+// input is not discarded on every keystroke) AND clears it — calling onCleared() — when the
+// owner is destroyed. The instance is built in the initializer via the name-keyed KClass cache
+// to avoid the Kotlin/Native KClass-identity bug. See ViewModelHelper.ios.kt for the full note.
 @Composable
 @Suppress("UNCHECKED_CAST")
-actual inline fun <reified T : Any> getViewModel(): T = remember {
+actual inline fun <reified T : ViewModel> getViewModel(): T = viewModel(key = T::class.simpleName) {
     val klass = vmKClassCache[T::class.simpleName!!]!! as KClass<T>
     KoinPlatform.getKoin().get(klass)
 }
