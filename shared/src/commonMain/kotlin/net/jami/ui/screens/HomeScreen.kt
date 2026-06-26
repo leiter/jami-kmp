@@ -18,7 +18,9 @@ package net.jami.ui.screens
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,7 +40,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -79,6 +85,7 @@ import net.jami.ui.components.content.JamiBadge
 import net.jami.ui.components.content.PresenceStatus
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.components.actions.JamiFilterChip
+import net.jami.ui.components.notification.JamiAlertDialog
 import net.jami.ui.viewmodel.AccountItem
 import net.jami.ui.viewmodel.ConversationFilter
 import net.jami.ui.viewmodel.ConversationItem
@@ -119,6 +126,9 @@ fun HomeScreen(
     val state by viewModel.state.collectAsState()
     var menuExpanded by remember { mutableStateOf(false) }
     var showAccountPicker by remember { mutableStateOf(false) }
+    // Destructive row actions (swipe or long-press menu) route through a confirm dialog.
+    var pendingDelete by remember { mutableStateOf<ConversationItem?>(null) }
+    var pendingBlock by remember { mutableStateOf<ConversationItem?>(null) }
 
     Scaffold(
         floatingActionButton = {
@@ -365,13 +375,17 @@ fun HomeScreen(
                         items = state.conversations,
                         key = { it.id },
                     ) { conversation ->
-                        val dismissState = rememberSwipeToDismissBoxState()
-
-                        LaunchedEffect(dismissState.currentValue) {
-                            if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
-                               // viewModel.removeConversation(conversation.id)
+                        // Swipe-end-to-start arms a delete confirmation rather than deleting
+                        // immediately; confirmValueChange returns false so the row snaps back
+                        // and the actual removal happens only after the user confirms.
+                        val dismissState = rememberSwipeToDismissBoxState(
+                            confirmValueChange = { value ->
+                                if (value == SwipeToDismissBoxValue.EndToStart) {
+                                    pendingDelete = conversation
+                                }
+                                false
                             }
-                        }
+                        )
 
                         SwipeToDismissBox(
                             state = dismissState,
@@ -404,6 +418,10 @@ fun HomeScreen(
                                 ConversationListItem(
                                     conversation = conversation,
                                     onClick = { onConversationClick(conversation.id) },
+                                    onTogglePin = { viewModel.toggleConversationPin(conversation.id) },
+                                    onToggleMute = { viewModel.toggleConversationMute(conversation.id) },
+                                    onBlock = { pendingBlock = conversation },
+                                    onDelete = { pendingDelete = conversation },
                                 )
                             }
                         }
@@ -432,6 +450,34 @@ fun HomeScreen(
                 },
             )
         }
+    }
+
+    pendingDelete?.let { target ->
+        JamiAlertDialog(
+            title = stringResource(Res.string.conversation_action_delete_this_title),
+            body = stringResource(Res.string.conversation_action_delete_this_message),
+            confirmText = stringResource(Res.string.ic_delete_menu),
+            isDestructive = true,
+            onConfirm = {
+                viewModel.removeConversation(target.id)
+                pendingDelete = null
+            },
+            onDismiss = { pendingDelete = null },
+        )
+    }
+
+    pendingBlock?.let { target ->
+        JamiAlertDialog(
+            title = stringResource(Res.string.block_contact_dialog_title, target.displayName),
+            body = stringResource(Res.string.block_contact_dialog_message, target.displayName),
+            confirmText = stringResource(Res.string.block),
+            isDestructive = true,
+            onConfirm = {
+                viewModel.blockConversation(target.id)
+                pendingBlock = null
+            },
+            onDismiss = { pendingBlock = null },
+        )
     }
 }
 
@@ -564,15 +610,26 @@ private fun AccountPickerRow(
  * Displays avatar with presence indicator, display name, timestamp,
  * last message preview, and unread badge.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ConversationListItem(
     conversation: ConversationItem,
     onClick: () -> Unit,
+    onTogglePin: () -> Unit = {},
+    onToggleMute: () -> Unit = {},
+    onBlock: () -> Unit = {},
+    onDelete: () -> Unit = {},
 ) {
+    // Long-press opens a per-row action menu (pin / mute / block / delete).
+    var menuExpanded by remember { mutableStateOf(false) }
+    Box {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { menuExpanded = true },
+            )
             .padding(
                 horizontal = JamiTheme.spacing.l,
                 vertical = JamiTheme.spacing.m,
@@ -601,15 +658,36 @@ private fun ConversationListItem(
         Column(
             modifier = Modifier.weight(1f),
         ) {
-            // Row 1: contact name only
-            Text(
-                text = conversation.displayName,
-                style = JamiTheme.typography.titleSmall,
-                fontWeight = if (isUnread) FontWeight.Bold else JamiTheme.typography.titleSmall.fontWeight,
-                color = JamiTheme.colors.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            // Row 1: contact name, with pin / mute status indicators
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = conversation.displayName,
+                    style = JamiTheme.typography.titleSmall,
+                    fontWeight = if (isUnread) FontWeight.Bold else JamiTheme.typography.titleSmall.fontWeight,
+                    color = JamiTheme.colors.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (conversation.isMuted) {
+                    Spacer(Modifier.width(JamiTheme.spacing.xs))
+                    Icon(
+                        imageVector = Icons.Default.NotificationsOff,
+                        contentDescription = stringResource(Res.string.content_desc_mute),
+                        tint = JamiTheme.colors.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+                if (conversation.isPinned) {
+                    Spacer(Modifier.width(JamiTheme.spacing.xs))
+                    Icon(
+                        imageVector = Icons.Default.PushPin,
+                        contentDescription = stringResource(Res.string.conversation_action_pin),
+                        tint = JamiTheme.colors.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+            }
 
             Spacer(Modifier.height(JamiTheme.spacing.xxs))
 
@@ -644,6 +722,71 @@ private fun ConversationListItem(
                 }
             }
         }
+    }
+
+    DropdownMenu(
+        expanded = menuExpanded,
+        onDismissRequest = { menuExpanded = false },
+    ) {
+        DropdownMenuItem(
+            text = {
+                Text(
+                    stringResource(
+                        if (conversation.isPinned) Res.string.conversation_action_unpin
+                        else Res.string.conversation_action_pin
+                    )
+                )
+            },
+            leadingIcon = { Icon(Icons.Default.PushPin, contentDescription = null) },
+            onClick = {
+                menuExpanded = false
+                onTogglePin()
+            },
+        )
+        DropdownMenuItem(
+            text = {
+                Text(
+                    stringResource(
+                        if (conversation.isMuted) Res.string.content_desc_unmute
+                        else Res.string.content_desc_mute
+                    )
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    if (conversation.isMuted) Icons.Default.Notifications
+                    else Icons.Default.NotificationsOff,
+                    contentDescription = null,
+                )
+            },
+            onClick = {
+                menuExpanded = false
+                onToggleMute()
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(Res.string.conversation_action_block_this)) },
+            leadingIcon = { Icon(Icons.Default.Block, contentDescription = null) },
+            onClick = {
+                menuExpanded = false
+                onBlock()
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(Res.string.ic_delete_menu)) },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = JamiTheme.colors.error,
+                )
+            },
+            onClick = {
+                menuExpanded = false
+                onDelete()
+            },
+        )
+    }
     }
 }
 

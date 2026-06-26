@@ -362,6 +362,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_action_select_peer_number">Select a number</string>
     <string name="conversation_action_block_this">Block contact</string>
     <string name="conversation_action_unblock_this">Unblock contact</string>
+    <string name="conversation_action_pin">Pin</string>
+    <string name="conversation_action_unpin">Unpin</string>
     <string name="conversation_action_go_to_call">Return to call</string>
     <string name="conversation_action_incoming_call">Incoming call</string>
     <string name="conversation_action_latest">Jump to latest</string>
