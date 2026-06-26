@@ -122,14 +122,18 @@
             </intent-filter>
         </receiver>
 
-        <!-- Call foreground service: keeps microphone/audio alive while app is backgrounded.
+        <!-- Call foreground service: keeps the call process alive while the app is backgrounded.
+             dataSync is required because CallNotificationService.computeServiceType() starts the
+             service with FOREGROUND_SERVICE_TYPE_DATA_SYNC (it can be started from a background
+             context on API 34+, unlike microphone). The type passed to startForeground() must be
+             a subset of what is declared here, so dataSync must be present.
              mediaProjection is intentionally omitted — it requires an active capture session
              at startForeground() time (API 34+), which a regular call does not have.
              Screen sharing acquires its own projection token on demand via MainActivity. -->
         <service
             android:name=".service.CallNotificationService"
             android:exported="false"
-            android:foregroundServiceType="microphone|phoneCall|camera" />
+            android:foregroundServiceType="microphone|phoneCall|camera|dataSync" />
 
         <!-- Broadcast receiver for notification Answer / Decline / Hang Up actions -->
         <receiver
