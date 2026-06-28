@@ -89,6 +89,25 @@ data class RegistrationStateChanged(
 @SerialName("error")
 data class ErrorEvent(val message: String) : DomainEvent
 
+/** Response to [GetAccountUri]: the account's own Jami address (fingerprint). */
+@Serializable
+@SerialName("accountUri")
+data class AccountUri(val accountId: String, val uri: String) : DomainEvent
+
+/** Observed when a peer's contact/trust request arrives over the real DHT channel. */
+@Serializable
+@SerialName("incomingContactRequest")
+data class IncomingContactRequest(val accountId: String, val fromUri: String) : DomainEvent
+
+/** Observed when a contact is added; [confirmed] true once the handshake is two-sided. */
+@Serializable
+@SerialName("contactAdded")
+data class ContactAdded(
+    val accountId: String,
+    val peerUri: String,
+    val confirmed: Boolean,
+) : DomainEvent
+
 /** Commands the host runner issues to control device program state. */
 @Serializable
 sealed interface Directive
@@ -108,6 +127,21 @@ data class CreateJamiAccount(val username: String, val password: String = "") : 
 @Serializable
 @SerialName("removeAccount")
 data class RemoveAccount(val accountId: String) : Directive
+
+/** Ask the device for an account's own Jami address (relayed out-of-band, not over DHT). */
+@Serializable
+@SerialName("getAccountUri")
+data class GetAccountUri(val accountId: String) : Directive
+
+/** Initiate a real contact/trust request to [peerUri] over the DHT (the initiator side). */
+@Serializable
+@SerialName("sendContactRequest")
+data class SendContactRequest(val accountId: String, val peerUri: String) : Directive
+
+/** Accept a pending contact/trust request from [peerUri] (the receiver side). */
+@Serializable
+@SerialName("acceptContactRequest")
+data class AcceptContactRequest(val accountId: String, val peerUri: String) : Directive
 
 /** Shared Json instance — sealed hierarchies use the `type` discriminator + @SerialName. */
 val HarnessJson: Json = Json {

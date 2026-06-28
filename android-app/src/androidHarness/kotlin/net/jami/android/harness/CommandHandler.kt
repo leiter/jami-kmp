@@ -16,16 +16,24 @@
  */
 package net.jami.android.harness
 
+import net.jami.e2e.protocol.AcceptContactRequest
+import net.jami.e2e.protocol.AccountUri
 import net.jami.e2e.protocol.AccountsSnapshot
 import net.jami.e2e.protocol.CreateJamiAccount
 import net.jami.e2e.protocol.Directive
 import net.jami.e2e.protocol.DomainEvent
+import net.jami.e2e.protocol.GetAccountUri
 import net.jami.e2e.protocol.GetAccounts
 import net.jami.e2e.protocol.Ping
 import net.jami.e2e.protocol.Pong
 import net.jami.e2e.protocol.RemoveAccount
+import net.jami.e2e.protocol.SendContactRequest
+import net.jami.model.ConfigKey
+import net.jami.model.Uri
 import net.jami.services.AccountService
+import net.jami.services.DaemonBridgeApi
 import net.jami.ui.viewmodel.AccountCreationViewModel
+import kotlinx.coroutines.delay
 import org.koin.core.Koin
 
 /**
@@ -53,6 +61,33 @@ class CommandHandler(private val koin: Koin) {
             }
 
             is RemoveAccount -> koin.get<AccountService>().removeAccount(directive.accountId)
+
+            is GetAccountUri -> {
+                // A Jami account's own address is its public-key fingerprint, which the
+                // daemon assigns under Account.username shortly after creation. Read it
+                // live from the daemon (the cached Account may briefly lag REGISTERED),
+                // with a short retry. Relayed out-of-band, never over DHT.
+                val bridge = koin.get<DaemonBridgeApi>()
+                var uri = bridge.getAccountDetails(directive.accountId)[ConfigKey.ACCOUNT_USERNAME.key].orEmpty()
+                var tries = 0
+                while (uri.isBlank() && tries < 20) {
+                    delay(100)
+                    uri = bridge.getAccountDetails(directive.accountId)[ConfigKey.ACCOUNT_USERNAME.key].orEmpty()
+                    tries++
+                }
+                emit(AccountUri(directive.accountId, uri))
+            }
+
+            is SendContactRequest -> {
+                // Initiator side: real trust request — flows peer-to-peer over the DHT.
+                koin.get<AccountService>()
+                    .sendTrustRequest(directive.accountId, Uri.fromString(directive.peerUri))
+            }
+
+            is AcceptContactRequest -> {
+                koin.get<AccountService>()
+                    .acceptTrustRequest(directive.accountId, Uri.fromString(directive.peerUri))
+            }
         }
     }
 }

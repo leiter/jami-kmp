@@ -4,19 +4,26 @@ Groundwork vertical slice for the end-to-end device test harness. Design: see
 `doc/end2endTesting.md`. Plan: `~/.claude/plans/polymorphic-sparking-hippo.md`.
 
 - **Branch:** `feature/e2e-test-harness`
-- **Status:** all 5 groundwork phases implemented; compiles, assembles, packages.
-  **Live device run PASSED** — M0 `ping` and M1 `account-creation` both green on a
-  physical device (Pixel 2 / Android 11); M0 `ping` also green on a second device
-  (Pixel 7a / Android 16).
+- **Status:** groundwork + M3 implemented; compiles, assembles, packages.
+  **Live device run PASSED** — M0 `ping`, M1 `account-creation`, and M3
+  `two-device-contact` all green on physical hardware (Pixel 2 / Android 11 +
+  Pixel 7a / Android 16).
 - **Last verified:** 2026-06-28
 
 ## Scope
 
-Single-device vertical slice that proves the full machinery before two-device DHT timing:
+The machinery, proven on real hardware from single-device transport up to a
+two-device DHT handshake:
 - **M0 `ping`** — proves transport: install → `adb reverse` → app + agent boot → role
   assignment → bidirectional WebSocket → ledger. No daemon interaction.
 - **M1 `account-creation`** — drives the real `AccountCreationViewModel.createAccount()`
-  and asserts the account is added (then removes it). Name-registration/REGISTERED is M2.
+  and asserts the account is added (then removes it).
+- **M3 `two-device-contact`** — two devices (roles A/B). Both create real Jami accounts
+  and announce on the DHT (folds in the M2 REGISTERED await); each device's own Jami
+  fingerprint is fetched over the **out-of-band coordination channel** (the identity
+  relay); **B initiates a real contact request to A peer-to-peer over the DHT**; A observes
+  it arrive (core proof) and accepts; both sides confirm the contact. Coordination channel
+  carries the relayed identity + commands only — never the contact request itself.
 
 ## What was built
 
@@ -39,6 +46,7 @@ Single-device vertical slice that proves the full machinery before two-device DH
 | `.../e2e/Main.kt` | Entry point: start server → adb reverse + launch → await roles → run scenario → ledger → exit code |
 | `.../e2e/scenarios/PingScenario.kt` | M0 |
 | `.../e2e/scenarios/AccountCreationScenario.kt` | M1 |
+| `.../e2e/scenarios/TwoDeviceContactScenario.kt` | M3 (two devices + identity relay) |
 
 The runner is the **brain**: it owns scenarios, controls device state, stamps every event
 with its own clock into a single merged timeline, and emits the verdict (exit code).
@@ -49,12 +57,13 @@ with its own clock into a single merged timeline, and emits the verdict (exit co
 | `android-app/build.gradle.kts` | `harness` product flavor (`applicationIdSuffix = ".harness"`); flavor-scoped Ktor-client deps |
 | `src/androidHarness/AndroidManifest.xml` | `usesCleartextTraffic`; foreground `HarnessAgentService` |
 | `src/androidHarness/.../harness/HarnessAgentService.kt` | Foreground service that hosts the agent |
-| `src/androidHarness/.../harness/HarnessAgent.kt` | WS client; observes `AccountService.accounts`/`accountEvents` → `DomainEvent`s; waits for `JamiKoinHolder.koin` |
-| `src/androidHarness/.../harness/CommandHandler.kt` | Maps `Directive` → real `AccountCreationViewModel`/`AccountService` calls |
+| `src/androidHarness/.../harness/HarnessAgent.kt` | WS client; observes accounts, registration, and contacts (`IncomingTrustRequest`/`ContactAdded`) → `DomainEvent`s; waits for `JamiKoinHolder.koin` |
+| `src/androidHarness/.../harness/CommandHandler.kt` | Maps `Directive` → real `AccountCreationViewModel`/`AccountService`/`DaemonBridgeApi` calls (incl. account URI, send/accept contact request) |
 
 The device is a **thin executor**: no scenario knowledge. It exposes a command surface
 (`CommandHandler`) and a state/observation surface (flow collection). No production-code or
-`commonMain` changes — observability reuses existing public service Flows.
+`commonMain` changes — observability reuses existing public service Flows, and the account
+fingerprint is read live via the already-bound `DaemonBridgeApi`.
 
 ## Wire protocol (out-of-band only)
 
@@ -63,7 +72,9 @@ device → runner:  Hello(requestedRole?)            ReportFrame(role, event, de
 runner → device:  CommandFrame(commandId, directive)
 DomainEvent:      Pong | AccountsSnapshot | AccountAdded | AccountRemoved
                   | RegistrationStateChanged | ErrorEvent
+                  | AccountUri | IncomingContactRequest | ContactAdded
 Directive:        Ping | GetAccounts | CreateJamiAccount | RemoveAccount
+                  | GetAccountUri | SendContactRequest | AcceptContactRequest
 ```
 
 Reached over `ws://127.0.0.1:8080` via `adb reverse`. Carries **no Jami payload** — the
@@ -80,6 +91,7 @@ real daemon-to-daemon traffic flows separately over the DHT.
 | `:android-app:assembleHarnessDebug` | ✅ (APK packaged) |
 | `:e2e-runner:e2e -Pscenario=ping` (live) | ✅ Pong round-trip on two devices |
 | `:e2e-runner:e2e -Pscenario=account-creation` (live) | ✅ created + removed a real Jami account |
+| `:e2e-runner:e2e -Pscenario=two-device-contact` (live) | ✅ B reached A over the DHT; contact confirmed on both (~14s) |
 
 ## Running it (once a device is attached)
 
@@ -118,7 +130,8 @@ first online device from `adb devices` if omitted.
 
 ## Deferred (not in this groundwork)
 
-- **M2** name registration (first DHT-async await; scenario parameters).
-- **M3** second device + identity relay; **M4** call + recording.
+- **M2** name registration (registering a public username + `NameRegistrationEnded` await).
+  Note: M3 already folds in the DHT-async REGISTERED await that M2 was scoped around.
+- **M4** call + recording (audio/video over the established connection).
 - Account strategy beyond ephemeral-create-then-remove (reset-able pool).
 - An `EventSink` seam in `commonMain` — only if a future event isn't already a public Flow.

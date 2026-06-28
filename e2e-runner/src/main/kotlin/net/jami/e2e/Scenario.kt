@@ -20,6 +20,7 @@ import net.jami.e2e.protocol.DomainEvent
 import net.jami.e2e.protocol.Directive
 import net.jami.e2e.scenarios.AccountCreationScenario
 import net.jami.e2e.scenarios.PingScenario
+import net.jami.e2e.scenarios.TwoDeviceContactScenario
 
 /** Roles are addressed by name; the runner maps connected devices to A, B, … in order. */
 val ROLE_NAMES = listOf("A", "B", "C", "D")
@@ -59,5 +60,6 @@ interface Scenario {
 /** Registry of available scenarios, keyed by id. */
 object ScenarioRegistry {
     val scenarios: Map<String, Scenario> =
-        listOf<Scenario>(PingScenario, AccountCreationScenario).associateBy { it.id }
+        listOf<Scenario>(PingScenario, AccountCreationScenario, TwoDeviceContactScenario)
+            .associateBy { it.id }
 }

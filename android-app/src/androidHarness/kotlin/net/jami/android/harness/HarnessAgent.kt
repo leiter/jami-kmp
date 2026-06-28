@@ -35,10 +35,12 @@ import net.jami.di.JamiKoinHolder
 import net.jami.e2e.protocol.AccountAdded
 import net.jami.e2e.protocol.AccountRemoved
 import net.jami.e2e.protocol.CommandFrame
+import net.jami.e2e.protocol.ContactAdded
 import net.jami.e2e.protocol.DomainEvent
 import net.jami.e2e.protocol.Envelope
 import net.jami.e2e.protocol.HarnessJson
 import net.jami.e2e.protocol.Hello
+import net.jami.e2e.protocol.IncomingContactRequest
 import net.jami.e2e.protocol.RegistrationStateChanged
 import net.jami.e2e.protocol.ReportFrame
 import net.jami.services.AccountEvent
@@ -84,6 +86,7 @@ class HarnessAgent(private val scope: CoroutineScope) {
                     val observers = listOf(
                         scope.launch { observeAccounts(accountService, ::emit) },
                         scope.launch { observeRegistration(accountService, ::emit) },
+                        scope.launch { observeContacts(accountService, ::emit) },
                     )
                     try {
                         for (frame in incoming) {
@@ -126,6 +129,22 @@ class HarnessAgent(private val scope: CoroutineScope) {
         accountService.accountEvents.collect { ev ->
             if (ev is AccountEvent.RegistrationStateChanged) {
                 emit(RegistrationStateChanged(ev.accountId, ev.state, ev.code))
+            }
+        }
+    }
+
+    /** Contact handshake side of the real DHT channel: incoming requests and confirmations. */
+    private suspend fun observeContacts(
+        accountService: AccountService,
+        emit: suspend (DomainEvent) -> Unit,
+    ) {
+        accountService.accountEvents.collect { ev ->
+            when (ev) {
+                is AccountEvent.IncomingTrustRequest ->
+                    emit(IncomingContactRequest(ev.accountId, ev.request.from.rawRingId))
+                is AccountEvent.ContactAdded ->
+                    emit(ContactAdded(ev.accountId, ev.uri, ev.confirmed))
+                else -> {}
             }
         }
     }
