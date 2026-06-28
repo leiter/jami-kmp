@@ -47,6 +47,14 @@ android {
         }
     }
 
+    // KMP android-source-set-layout-v2 reads the flavor's *Kotlin* from
+    // `src/androidHarness/`, but AGP-managed files (manifest, res) for a flavor
+    // still default to the legacy `src/harness/` path. Repoint the harness
+    // manifest so the on-device agent's <service> lives next to its Kotlin.
+    sourceSets.getByName("harness") {
+        manifest.srcFile("src/androidHarness/AndroidManifest.xml")
+    }
+
     defaultConfig {
         applicationId = "net.jami.android"
         minSdk = libs.versions.androidMinSdk.get().toInt()

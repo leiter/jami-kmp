@@ -4,8 +4,10 @@ Groundwork vertical slice for the end-to-end device test harness. Design: see
 `doc/end2endTesting.md`. Plan: `~/.claude/plans/polymorphic-sparking-hippo.md`.
 
 - **Branch:** `feature/e2e-test-harness`
-- **Status:** all 5 groundwork phases implemented; compiles, assembles, packages. **Live
-  device run not yet executed** (no device attached at implementation time).
+- **Status:** all 5 groundwork phases implemented; compiles, assembles, packages.
+  **Live device run PASSED** — M0 `ping` and M1 `account-creation` both green on a
+  physical device (Pixel 2 / Android 11); M0 `ping` also green on a second device
+  (Pixel 7a / Android 16).
 - **Last verified:** 2026-06-28
 
 ## Scope
@@ -76,7 +78,8 @@ real daemon-to-daemon traffic flows separately over the DHT.
 | `:e2e-runner:e2eList` | ✅ lists `account-creation`, `ping` |
 | `:android-app:compileHarnessDebugKotlinAndroid` | ✅ |
 | `:android-app:assembleHarnessDebug` | ✅ (APK packaged) |
-| Live device scenario run | ⏳ pending (no device attached) |
+| `:e2e-runner:e2e -Pscenario=ping` (live) | ✅ Pong round-trip on two devices |
+| `:e2e-runner:e2e -Pscenario=account-creation` (live) | ✅ created + removed a real Jami account |
 
 ## Running it (once a device is attached)
 
@@ -95,12 +98,18 @@ first online device from `adb devices` if omitted.
   `androidHarness`, install task `installHarnessDebug`.
 - Adding the flavor splits `android-app` install tasks into `installStandardDebug` /
   `installHarnessDebug` (no bare `installDebug`). Shared-module compile tasks are unaffected.
+- **Flavor manifest path override** — under KMP android-source-set-layout-v2 the flavor's
+  Kotlin is read from `src/androidHarness/`, but AGP-managed files (manifest, res) for a
+  flavor still default to the legacy `src/harness/` path. The overlay manifest declaring
+  `HarnessAgentService` was therefore silently ignored (the service compiled into the APK
+  but was never registered → `am start-foreground-service` failed with "Not found"). Fixed
+  by repointing the source set: `sourceSets.getByName("harness").manifest.srcFile(
+  "src/androidHarness/AndroidManifest.xml")`, keeping manifest + Kotlin in one directory.
 
 ## Risks / things to watch on first live run
 
-- **Agent start path** — launched via `am start-foreground-service`. adb-initiated starts are
-  normally privileged enough; if Android blocks the background FGS start, start the agent
-  from the app side (harness flavor) instead.
+- **Agent start path** — launched via `am start-foreground-service`. Validated on the live
+  run (Android 11 + Android 16): adb-initiated starts are privileged enough, no FGS block.
 - **`await` event consumption** — `ScenarioContext.await` drains the role's event channel and
   discards non-matching events. Fine for the sequential M0/M1 scenarios; revisit if a future
   scenario needs to match out-of-order or replay events.
