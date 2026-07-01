@@ -21,6 +21,7 @@ import net.jami.e2e.protocol.AcceptContactRequest
 import net.jami.e2e.protocol.AccountExported
 import net.jami.e2e.protocol.AccountUri
 import net.jami.e2e.protocol.AccountsSnapshot
+import net.jami.e2e.protocol.ChangePassword
 import net.jami.e2e.protocol.CreateBareAccount
 import net.jami.e2e.protocol.CreateJamiAccount
 import net.jami.e2e.protocol.Directive
@@ -29,6 +30,7 @@ import net.jami.e2e.protocol.ExportAccount
 import net.jami.e2e.protocol.GetAccountUri
 import net.jami.e2e.protocol.GetAccounts
 import net.jami.e2e.protocol.ImportAccount
+import net.jami.e2e.protocol.PasswordChanged
 import net.jami.e2e.protocol.Ping
 import net.jami.e2e.protocol.Pong
 import net.jami.e2e.protocol.RegisterName
@@ -78,6 +80,15 @@ class CommandHandler(private val koin: Koin) {
             }
 
             is RemoveAccount -> koin.get<AccountService>().removeAccount(directive.accountId)
+
+            is ChangePassword -> {
+                // Local archive re-encryption via the real service path. The daemon returns
+                // false when oldPassword doesn't unlock the archive (also a password check).
+                val ok = koin.get<AccountService>().changeAccountPassword(
+                    directive.accountId, directive.oldPassword, directive.newPassword,
+                )
+                emit(PasswordChanged(directive.accountId, ok))
+            }
 
             is ExportAccount -> {
                 // Write the archive into the app's private filesDir, which the runner pulls

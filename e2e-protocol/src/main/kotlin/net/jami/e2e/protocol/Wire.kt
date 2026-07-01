@@ -132,6 +132,15 @@ data class AccountExported(
     val success: Boolean,
 ) : DomainEvent
 
+/**
+ * Result of [ChangePassword]: the daemon's `changeAccountPassword` return value. [success]
+ * is false when the supplied *old* password does not unlock the archive (so it doubles as a
+ * password check), and true once the local archive has been re-encrypted under the new one.
+ */
+@Serializable
+@SerialName("passwordChanged")
+data class PasswordChanged(val accountId: String, val success: Boolean) : DomainEvent
+
 /** Commands the host runner issues to control device program state. */
 @Serializable
 sealed interface Directive
@@ -188,6 +197,21 @@ data class ImportAccount(
 @Serializable
 @SerialName("removeAccount")
 data class RemoveAccount(val accountId: String) : Directive
+
+/**
+ * Change an account's archive password via the real `AccountService.changeAccountPassword`
+ * path — a purely local re-encryption (no DHT / name server). Following the daemon
+ * convention: [oldPassword] `""` means the archive is currently unprotected (so this *adds*
+ * a password) and [newPassword] `""` *removes* the password. Result arrives as
+ * [PasswordChanged]; a wrong [oldPassword] yields `success=false` (a no-op).
+ */
+@Serializable
+@SerialName("changePassword")
+data class ChangePassword(
+    val accountId: String,
+    val oldPassword: String,
+    val newPassword: String,
+) : Directive
 
 /** Ask the device for an account's own Jami address (relayed out-of-band, not over DHT). */
 @Serializable

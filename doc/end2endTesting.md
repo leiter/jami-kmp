@@ -153,10 +153,11 @@ CommandFrame(commandId, directive)    runner → device   a Directive to execute
 The protocol types live in the shared **`:e2e-protocol`** module, depended on by both the
 runner and the `harness` flavor — one source of truth, type-safe end to end. Current
 directives: `Ping`, `GetAccounts`, `CreateJamiAccount`, `CreateBareAccount`, `ExportAccount`,
-`ImportAccount`, `RemoveAccount`, `GetAccountUri`, `RegisterName`, `SendContactRequest`,
-`AcceptContactRequest`. Current events: `Pong`, `AccountsSnapshot`, `AccountAdded`,
-`AccountRemoved`, `RegistrationStateChanged`, `NameRegistrationEnded`, `AccountExported`,
-`AccountUri`, `IncomingContactRequest`, `ContactAdded`, `ErrorEvent`.
+`ImportAccount`, `RemoveAccount`, `ChangePassword`, `GetAccountUri`, `RegisterName`,
+`SendContactRequest`, `AcceptContactRequest`. Current events: `Pong`, `AccountsSnapshot`,
+`AccountAdded`, `AccountRemoved`, `RegistrationStateChanged`, `NameRegistrationEnded`,
+`AccountExported`, `PasswordChanged`, `AccountUri`, `IncomingContactRequest`, `ContactAdded`,
+`ErrorEvent`.
 
 ## Account fixtures & the reuse pool (the account strategy — resolved)
 
@@ -217,6 +218,7 @@ merged timeline, exit code = verdict.
 | `import-correct-password` | 1 | protected archive + correct password restores identity |
 | `import-wrong-password` | 1 | wrong password rejected (no usable account) |
 | `import-no-password` | 1 | empty password on a protected archive rejected |
+| `change-password` | 1 | add / change / remove an archive password; the re-encrypted archive imports under the new password and rejects the old (reuses a `pw` fixture, non-consuming) |
 | `seed-pool` | 1 | status-aware pool top-up, zero name burns |
 | `two-device-contact` | 2 | B's contact request reaches A over the real DHT, accept + confirm (M3, **validated on 2 devices 2026-07-01**) |
 
@@ -230,8 +232,8 @@ daemon-backed, user-reachable operations are listed (unit-testable logic is out 
 
 | candidate | operation | proves | notes |
 |---|---|---|---|
-| `change-password` | `changeAccountPassword(id, old, new)` | add / change / remove an archive password | **Top pick.** Create acct w/ `P1` → change to `P2` → export → import with `P2` succeeds, `P1` now fails (`ERROR_GENERIC` teardown, as in `import-wrong-password`). One scenario covers add (`old=""`), change, and remove (`new=""`). Ephemeral account (op mutates the archive), so it doesn't disturb the pool. Needs one directive returning a result event. |
-| `account-enable-disable` | `setAccountEnabled(id, false/true)` | registration toggle | Non-consuming: claim an unnamed fixture → `REGISTERED` → disable → await `UNREGISTERED` → enable → await `REGISTERED`. Reuses the pool. Needs a `SetAccountEnabled` directive. |
+| ~~`change-password`~~ ✅ **DONE (2026-07-01)** | `changeAccountPassword(id, old, new)` | add / change / remove an archive password | Implemented as `change-password` (see the suite above). Reuses a `pw` pool fixture (realistic "change an existing password"), drives change → remove → add on the phone copy, and proves the archive re-encrypted via an export→re-import round-trip (new password imports + preserves identity; old password rejected with `ERROR_GENERIC` teardown). Non-consuming — the phone copy is removed, the host blob never rewritten. A **negative control** (wrong old password ⇒ `success=false`) anchors the boolean. Gate: password ops must wait for `REGISTERED` — `changeAccountPassword` fails while the account is still `INITIALIZING`. Added `ChangePassword` directive + `PasswordChanged` event. |
+| `account-enable-disable` | `setAccountEnabled(id, false/true)` | registration toggle | **Next pick.** Non-consuming: claim an unnamed fixture → `REGISTERED` → disable → await `UNREGISTERED` → enable → await `REGISTERED`. Reuses the pool. Needs a `SetAccountEnabled` directive. |
 | `name-lookup` | `lookupName` / `findRegistrationByName` | name-server **read** side | Look up the already-burned `e2e-<word>-<word>` → resolves to its owner fingerprint; a random name → not found. Non-consuming, fast. Needs a `LookupName`/`NameLookupResult` wire pair. |
 
 ### Two-device / higher effort — gate on M3
@@ -247,8 +249,8 @@ daemon-backed, user-reachable operations are listed (unit-testable logic is out 
 - **`updateProfile`** — weak observability; belongs with the deferred contact/profile scenarios.
 - **SIP account creation** (`createSipAccount`) — reachable, but SIP has no Jami identity / DHT; a separate track, not "account handling" here.
 
-Suggested order: `change-password` → `account-enable-disable` → `name-lookup` (all single-device,
-reuse existing infra), then device management with the two-device work.
+Suggested order: ~~`change-password`~~ (done) → `account-enable-disable` → `name-lookup` (all
+single-device, reuse existing infra), then device management with the two-device work.
 
 ## Module layout
 
@@ -285,6 +287,12 @@ default — both are repointed to `src/androidHarness/` in `android-app/build.gr
   resolves).
 - **Name-server result codes** (`NameRegistrationEnded.state`): `0` = success, `3` = already
   taken. The app treats any non-zero as failure without distinguishing codes.
+- **`changeAccountPassword` needs a fully-loaded account.** It re-encrypts the on-disk archive
+  and returns `false` if the account is still `INITIALIZING` (observed: a call ~6 ms after
+  `AccountAdded` failed even with the correct current password). Wait for `REGISTERED` before
+  any password operation. A wrong *old* password also returns `false`, so the boolean doubles
+  as a password check — pair it with a known-good positive to disambiguate "wrong password"
+  from "not ready yet".
 
 ## Hard parts to design around
 
