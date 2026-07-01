@@ -36,6 +36,7 @@ import net.jami.e2e.protocol.Pong
 import net.jami.e2e.protocol.RegisterName
 import net.jami.e2e.protocol.RemoveAccount
 import net.jami.e2e.protocol.SendContactRequest
+import net.jami.e2e.protocol.SetAccountEnabled
 import net.jami.model.ConfigKey
 import net.jami.model.Uri
 import net.jami.services.AccountService
@@ -88,6 +89,12 @@ class CommandHandler(private val koin: Koin) {
                     directive.accountId, directive.oldPassword, directive.newPassword,
                 )
                 emit(PasswordChanged(directive.accountId, ok))
+            }
+
+            is SetAccountEnabled -> {
+                // Toggle registration (sendRegister); the resulting UNREGISTERED/REGISTERED
+                // transition is observed via the RegistrationStateChanged flow in HarnessAgent.
+                koin.get<AccountService>().setAccountEnabled(directive.accountId, directive.enabled)
             }
 
             is ExportAccount -> {

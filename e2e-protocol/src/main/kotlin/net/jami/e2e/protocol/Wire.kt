@@ -213,6 +213,16 @@ data class ChangePassword(
     val newPassword: String,
 ) : Directive
 
+/**
+ * Enable or disable an account's registration via `AccountService.setAccountEnabled`
+ * (`sendRegister`). Disabling unregisters the account (→ `UNREGISTERED`); enabling
+ * re-registers it (→ `TRYING` → `REGISTERED`). The transition is observed through the
+ * existing [RegistrationStateChanged] flow, so there is no dedicated result event.
+ */
+@Serializable
+@SerialName("setAccountEnabled")
+data class SetAccountEnabled(val accountId: String, val enabled: Boolean) : Directive
+
 /** Ask the device for an account's own Jami address (relayed out-of-band, not over DHT). */
 @Serializable
 @SerialName("getAccountUri")
