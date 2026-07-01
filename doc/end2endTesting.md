@@ -1,6 +1,10 @@
-# End-to-End Device Testing — Design Sketch
+# End-to-End Device Testing
 
-Status: **DRAFT** — architecture settled; module/code layout not yet implemented.
+Status: **IMPLEMENTED (single- and two-device)** — the harness runs real scenarios against
+the live daemon on USB-connected Android devices. M0–M2 plus an account-fixture pool and the
+import/name-registration edge cases are **live-validated on hardware**. Two-device contact
+(M3) is now **live-validated on two devices** (2026-07-01: B's DHT contact request reached A
+and the contact confirmed bidirectionally); calls + recording (M4) are not started.
 
 ## Goal
 
@@ -16,7 +20,7 @@ DHT**.
 
 Scope ranges from single-device "much less" probes (one capability: account creation,
 one daemon round-trip) up to full two-device "much more" scenarios (account → invite →
-accept → message → call → record). We start single-device and grow into two-device.
+accept → message → call → record). We started single-device and are growing into two-device.
 
 ## Two independent channels (critical)
 
@@ -31,16 +35,20 @@ There are two completely separate channels, and they must never mix:
    it ever relayed call/message content, we would be testing the harness instead of
    Jami.
 
-One deliberate exception that is *not* daemon traffic: relaying a device's **Jami ID**
-over the coordination channel stands in for the real-world out-of-band identity exchange
-(QR scan, share-link, contact card) — it's coordination metadata, never daemon
-communication.
+Two deliberate exceptions that are *not* daemon traffic and legitimately cross the
+coordination channel:
+
+- Relaying a device's **Jami ID** (fingerprint) stands in for the real-world out-of-band
+  identity exchange (QR scan, share-link, contact card).
+- Transferring an **account archive** (`account.gz`) between host and device — pulled/pushed
+  over adb `run-as` — stands in for an out-of-band backup/restore. This powers the reusable
+  fixture pool; it is never daemon-to-daemon traffic.
 
 ## The brain is in the service
 
 The host **service is the test director**. It owns the scenario, sequences the steps,
 controls each device's program state, records the run, and decides pass/fail. The
-devices are **thin, controllable executors** — they run the same `testHarness` build,
+devices are **thin, controllable executors** — they run the same `harness` build,
 expose a command + state surface, obey what the service tells them, and report back.
 The devices hold *no scenario knowledge of their own*.
 
@@ -50,7 +58,7 @@ The service has three jobs, matching the objectives:
    tell B to answer until A's call has actually reached the daemon).
 2. **Protocol the run** — record a timestamped, merged timeline of every command issued
    and every state/event each device reported. This is the live documentation and the
-   basis for the verdict.
+   basis for the verdict. On failure, screenshots of every role are auto-captured.
 3. **Control device program state** — push each device into specific states (create
    account, place call, answer, toggle recording, …) through the device's real app
    entry points, and query/await each device's reported state.
@@ -65,11 +73,11 @@ Host (laptop / CI)
    adb reverse            adb reverse
         │ ws                   │ ws
   Pixel 7a (role A)      Pixel 2 (role B)        ← thin controllable executors
-   command + state        command + state           (same testHarness build)
+   command + state        command + state           (same harness build)
    surface, agent         surface, agent
 ```
 
-For single-device scenarios (the starting point) only one device/role is connected; the
+For single-device scenarios (the current default) only one device/role is connected; the
 topology and protocol are otherwise identical.
 
 ### Reachability — `adb reverse` over USB
@@ -88,160 +96,239 @@ deterministic.
 
 ### 1. Scenario layer — lives in the runner (host), not on devices
 
-A scenario is defined as host-side Kotlin in the runner module. It addresses devices by
-**Role** (`A`/`B`, or `inviter`/`invitee`, `caller`/`callee`); the runner maps roles to
-connected devices at launch.
+A scenario is host-side Kotlin in `:e2e-runner`. It addresses devices by **Role**
+(`A`/`B`, …); the runner maps roles to connected devices at launch. A `Scenario`
+implements `suspend fun run(ctx: ScenarioContext): Verdict` and declares `requiredRoles`.
+`ScenarioContext` is the whole control + observation surface:
 
 ```
-Role        — logical participant the runner addresses ("caller", "callee", …)
-Step        — a command the runner issues to a role (createAccount, invite, call, …)
-Expectation — "await a DomainEvent from a role matching <predicate> within <timeout>"
-Scenario    — ordered steps + expectations across roles; declares how many roles it needs
+send(role, directive)                 issue a command to a role's device
+await(role, timeout, predicate)       suspend until a matching DomainEvent (never a sleep)
+log(message)                          append to the merged timeline
+snapshot(role, label)                 screenshot into the run dir
+pull/pushArtifact(role, …)            move an account.gz over the coordination channel
+memory                                the persistent fixture registry (MemoryStore)
+captureAsset / installAsset / pushAsset   export→store / restore / push-only for fixtures
 ```
 
-A single-device "much less" probe is just a one-role, one-step scenario.
+A single-device "much less" probe is just a one-role scenario.
 
-### 2. Device command + state surface — testHarness flavor, on device
+### 2. Device command + state surface — `harness` flavor, on device
 
-The thin executor side. Wraps the **real app entry points** (ViewModels / services
-resolved via Koin) so the harness exercises the same paths users hit:
+The thin executor side (`android-app/src/androidHarness/`). `HarnessAgent` connects back
+over the WebSocket and `CommandHandler` maps each `Directive` to the **real app entry
+points** (ViewModels / services resolved via Koin), so the harness exercises the same
+paths users hit. The device knows *how* to perform atomic actions and *how* to report; it
+does not know the scenario.
 
-- **Command surface** — the agent receives a `Command` and invokes the matching real
-  action (e.g. `AccountCreationViewModel.createAccount(...)`).
-- **State / event surface** — see the observability layer below; the agent reports
-  `DomainEvent`s and current state back to the runner.
+### 3. Observability — `HarnessAgent` collects the existing service Flows
 
-The device knows *how* to perform atomic actions and *how* to report; it does not know
-the scenario.
+The originally-sketched `EventSink` seam (a commonMain interface with a no-op prod binding)
+proved unnecessary and was **not** built. Because all agent code lives only in the `harness`
+flavor and is absent from the production APK, the agent can subscribe to the real service
+`Flow`s **directly** and translate them into `DomainEvent`s on the wire:
 
-### 3. Observability layer — commonMain interface + testHarness impl
+- `AccountService.accounts` diffed → `AccountAdded` / `AccountRemoved`
+- `AccountService.accountEvents` → `RegistrationStateChanged`, `NameRegistrationEnded`,
+  `IncomingContactRequest`, `ContactAdded`
 
-```
-DomainEvent — normalized, serializable event (account ready, registration state, call
-              placed, incoming call, message received, recording state changed, …)
-EventSink   — the seam: an interface that domain events are emitted to
-```
+The daemon runs **in the same process** as the UI (no `android:process` in the manifest),
+so events are already in-process coroutine Flows — no `BroadcastReceiver` indirection.
 
-- **Production** binds a **no-op** `EventSink` (zero overhead, absent from prod APK).
-- **testHarness** binds an impl that **collects the existing service `Flow`s**
-  (`CallService._callUpdates`, `ConversationFacade` conversation/message events,
-  `AccountService` account events, the `DaemonCallbacksImpl` fan-out) and translates
-  them into `DomainEvent`s shipped to the runner.
-
-The daemon runs **in the same process** as the UI (confirmed: no `android:process` in
-the manifest), so events are already in-process coroutine Flows. No `BroadcastReceiver`
-indirection is needed for intra-device signalling.
+> Caveat baked into the harness: `AccountAdded` is derived by **diffing the accounts Flow
+> from its value at connect time**, so an account stranded by a previous run is invisible in
+> the timeline. Any account-touching scenario therefore calls `ensureNoAccounts` first (see
+> "Clean-slate precondition").
 
 ## Wire protocol
 
-Persistent bidirectional **WebSocket** per device (control needs server→device push, so
-plain HTTP POST is insufficient).
+Persistent bidirectional **WebSocket** per device. Frames (`Envelope` sealed hierarchy):
 
 ```
-Report(event: DomainEvent)        device → runner   (events + state)
-Command(directive: Directive)     runner → device   (createAccount, call, answer,
-                                                      here-is-peer-id, abort, …)
+Hello(requestedRole?)                 device → runner   announce presence / request a role
+ReportFrame(event, deviceTsMillis)    device → runner   observed DomainEvent
+CommandFrame(commandId, directive)    runner → device   a Directive to execute
 ```
 
-The protocol types (`DomainEvent`, `Directive`, …) live in a **shared protocol module**
-depended on by both the runner and the `testHarness` flavor — one source of truth for
-the wire schema, type-safe end to end.
+The protocol types live in the shared **`:e2e-protocol`** module, depended on by both the
+runner and the `harness` flavor — one source of truth, type-safe end to end. Current
+directives: `Ping`, `GetAccounts`, `CreateJamiAccount`, `CreateBareAccount`, `ExportAccount`,
+`ImportAccount`, `RemoveAccount`, `GetAccountUri`, `RegisterName`, `SendContactRequest`,
+`AcceptContactRequest`. Current events: `Pong`, `AccountsSnapshot`, `AccountAdded`,
+`AccountRemoved`, `RegistrationStateChanged`, `NameRegistrationEnded`, `AccountExported`,
+`AccountUri`, `IncomingContactRequest`, `ContactAdded`, `ErrorEvent`.
+
+## Account fixtures & the reuse pool (the account strategy — resolved)
+
+Account **creation** (key gen + DHT bootstrap) is the slow operation, and name registration
+is worse — it **permanently burns a global name** on the Jami name server. So the harness
+minimizes both by reusing a persistent pool of pre-created account archives.
+
+- **`MemoryStore`** (`:e2e-runner`, under `harness-memory/` — git-ignored, archives hold
+  private keys) is the registry: `fixtures/index.json` is the source of truth,
+  `fixtures/blobs/<fingerprint>.gz` are identity-keyed archives, and
+  `fixtures/accounts/acct__<state-hint>__<fp8>.json` are **regenerated human-hint**
+  descriptor filenames (never parsed for logic).
+- **Claim by STATE, not fixed key**: `claim(named=?, hasPassword=?)`. A scenario asks for the
+  state it needs; only a `null` result triggers creation (last resort).
+- **Consuming vs non-consuming.** Name registration is *consuming* (flips an asset
+  unnamed→named and burns a global name — one-way, logged in `burnedNames`). Import and
+  password checks are *non-consuming* — one password-protected fixture serves forever.
+- **`seed-pool`** is a status-aware, idempotent producer: it reports the current composition
+  and creates **only the missing** unnamed accounts to reach per-state targets — **zero name
+  burns**. Named assets are never seeded; they *emerge* when the registration test flips one.
+- **Memorable names.** Registration test names are human-memorable and namespaced
+  (`e2e-<adjective>-<noun>`, e.g. `e2e-mellow-raven`), generated by `MemorableNames` and
+  deduped against `burnedNames`. Charset matches Jami's registered-name filter.
+
+## Clean-slate precondition
+
+An import/registration is an onboarding-state operation — it must run with **no account
+loaded**. `ensureNoAccounts(ctx, role)` snapshots via `GetAccounts`, removes any loaded
+account, and re-snapshots to *confirm* empty (recorded in the timeline). Scenarios also run
+a best-effort `ensureNoAccounts` sweep in `finally`, so a run can never strand an account for
+the next one.
 
 ## Entry point — parameterized Gradle task
 
-The task is a thin launcher; all logic lives in the runner (real, debuggable Kotlin),
-not in the build script.
+The task is a thin launcher; all logic lives in the runner (real, debuggable Kotlin).
 
 ```
-./gradlew e2e -Pscenario=bare-account-creation
-./gradlew e2e -Pscenario=call-and-record -Pdevices=37281JEHN03065,FA7AJ1A06417
-./gradlew e2eList            # prints the scenario registry
+./gradlew :e2e-runner:e2e -Pscenario=account-creation-bare -Pdevices=37281JEHN03065
+./gradlew :e2e-runner:e2e -Pscenario=two-device-contact -Pdevices=37281JEHN03065,FA7AJ1A06417
+./gradlew :e2e-runner:e2eList            # prints the scenario registry
 ```
 
-`-Pscenario=` selects from a **scenario registry** (`id → Scenario`) in the runner. Each
-scenario declares how many roles it needs, so the runner validates the device set first.
+`-Pscenario=` selects from the **scenario registry** (`id → Scenario`) in the runner. Each
+scenario declares `requiredRoles`, so the runner validates the device set first. What the
+task orchestrates: build + install the `harnessDebug` APK (`dependsOn installHarnessDebug`),
+`adb reverse tcp:8080`, start the runner + launch the agent, run the scenario, print the
+merged timeline, exit code = verdict.
 
-What the task orchestrates, in order:
+## Scenario suite (implemented)
 
-1. **Build + install** the `testHarnessDebug` APK on each assigned device
-   (`dependsOn installTestHarnessDebug`).
-2. **`adb reverse tcp:8080 tcp:8080`** on each device.
-3. **Start the runner (brain)** and **launch the harness app** on each device
-   (`am start`); each agent connects back over WebSocket and requests a role.
-4. **Run the selected scenario** — issue commands, await reported events, record the
-   merged timeline.
-5. **Exit code = verdict** (non-zero on failure so CI gates on it); print the timeline.
-6. **Teardown** — `adb reverse --remove`, reset accounts per the isolation strategy.
+| id | roles | what it proves |
+|---|---|---|
+| `ping` | 1 | round-trip Report/Command (M0) |
+| `account-creation-bare` | 1 | bare account, no username (M1) |
+| `account-creation-username` | 1 | reuse-first name registration → `REGISTERED` + `NameRegistrationEnded state=0` (M2, consuming) |
+| `register-name-taken` | 1 | registering an already-burned name is rejected (`state=3`) |
+| `account-reuse` | 1 | export → pull → remove → push → import preserves identity |
+| `import-correct-password` | 1 | protected archive + correct password restores identity |
+| `import-wrong-password` | 1 | wrong password rejected (no usable account) |
+| `import-no-password` | 1 | empty password on a protected archive rejected |
+| `seed-pool` | 1 | status-aware pool top-up, zero name burns |
+| `two-device-contact` | 2 | B's contact request reaches A over the real DHT, accept + confirm (M3, **validated on 2 devices 2026-07-01**) |
 
-Role→device mapping: explicit `-Pdevices=serialA,serialB` wins; otherwise auto-assign by
-`adb devices` order. Scenario-specific parameters (e.g. a username to register) come in
-once M2 needs them.
+## Recommended additional scenarios — account handling
+
+Gaps found by cross-referencing the `AccountService` surface against the suite above
+(2026-07-01). Prioritized by value × reachability × fit with the existing harness. Only
+daemon-backed, user-reachable operations are listed (unit-testable logic is out of scope).
+
+### Single-device — high value, do first
+
+| candidate | operation | proves | notes |
+|---|---|---|---|
+| `change-password` | `changeAccountPassword(id, old, new)` | add / change / remove an archive password | **Top pick.** Create acct w/ `P1` → change to `P2` → export → import with `P2` succeeds, `P1` now fails (`ERROR_GENERIC` teardown, as in `import-wrong-password`). One scenario covers add (`old=""`), change, and remove (`new=""`). Ephemeral account (op mutates the archive), so it doesn't disturb the pool. Needs one directive returning a result event. |
+| `account-enable-disable` | `setAccountEnabled(id, false/true)` | registration toggle | Non-consuming: claim an unnamed fixture → `REGISTERED` → disable → await `UNREGISTERED` → enable → await `REGISTERED`. Reuses the pool. Needs a `SetAccountEnabled` directive. |
+| `name-lookup` | `lookupName` / `findRegistrationByName` | name-server **read** side | Look up the already-burned `e2e-<word>-<word>` → resolves to its owner fingerprint; a random name → not found. Non-consuming, fast. Needs a `LookupName`/`NameLookupResult` wire pair. |
+
+### Two-device / higher effort — gate on M3
+
+| candidate | operation | proves | notes |
+|---|---|---|---|
+| device linking & management | `addDevice` / `confirmAddDevice` / `provideAccountAuthentication`, `getKnownRingDevices`, `revokeDevice`, `renameDevice` | link a new device to an existing account over the DHT, list, revoke | The **biggest untested account area.** The link flow is inherently two-device (DHT-async) → fold into the M3 push. `renameDevice` + `getKnownRingDevices` are single-device observable and could be a small standalone test sooner. |
+| multi-account coexistence | `setCurrentAccount`, `setAccountOrder` | two Jami accounts on one device, independent registration + switching | Reachable, single-device, but requires relaxing the `ensureNoAccounts` precondition for just this scenario. Medium value. |
+
+### Deliberately out of scope
+
+- **`migrateAccount`** — needs a legacy-format archive we can't easily produce.
+- **`updateProfile`** — weak observability; belongs with the deferred contact/profile scenarios.
+- **SIP account creation** (`createSipAccount`) — reachable, but SIP has no Jami identity / DHT; a separate track, not "account handling" here.
+
+Suggested order: `change-password` → `account-enable-disable` → `name-lookup` (all single-device,
+reuse existing infra), then device management with the two-device work.
 
 ## Module layout
 
 ```
-:e2e-protocol   common/JVM — wire types (DomainEvent, Directive); shared source of truth
-:e2e-runner     JVM        — the brain: scenario registry, orchestration, ledger,
-                             verdict; hosts the Ktor WebSocket service; the `e2e`
-                             Gradle task drives this
-shared / android-app
-  testHarness flavor       — on-device agent, EventSink impl, harness DI module;
-                             depends on :e2e-protocol; absent from production APK
+:e2e-protocol   JVM   — wire types (Envelope/DomainEvent/Directive); shared source of truth
+:e2e-runner     JVM   — the brain: scenario registry, orchestration, ledger, verdict,
+                        MemoryStore fixture registry, DeviceController (adb); hosts the Ktor
+                        WebSocket server; the `e2e` / `e2eList` Gradle tasks drive this
+android-app
+  harness flavor      — src/androidHarness/: HarnessAgent + CommandHandler, distinct app
+                        icon + applicationId suffix `.harness`; depends on :e2e-protocol;
+                        absent from the production APK
 ```
 
 ### Build setup
 
-A dedicated product **flavor**, not just a build type:
+A dedicated product **flavor** (dimension `mode`): `standard` (production) and `harness`.
+AGP forbids flavor names starting with `test`, hence `harness`. Combined with `debug` →
+`harnessDebug` (`applicationIdSuffix = ".harness"`, so it installs alongside a standard
+build). KMP's android-source-set-layout-v2 reads the flavor's **Kotlin** from
+`src/androidHarness/`, while AGP reads the flavor's manifest/res from `src/harness/` by
+default — both are repointed to `src/androidHarness/` in `android-app/build.gradle.kts`.
 
-```
-flavorDimension "mode"
-  standard      — production
-  testHarness   — adds src/testHarness/ : agent, EventSink impl, harness DI module,
-                  test-only permissions; absent from the production APK
-```
+## Daemon behaviours observed (empirical, on-device)
 
-Combined with the `debug` build type → `testHarnessDebug`. The harness DI module swaps
-the no-op `EventSink` for the real Flow-collecting one and binds the command surface.
+- **A Jami account's own address is its public-key fingerprint**, exposed by the daemon under
+  `ConfigKey.ACCOUNT_USERNAME`. It appears shortly *after* creation (key derivation lags,
+  notably for password accounts), so `GetAccountUri` retries.
+- **Import is optimistic.** `addAccount(archive)` emits `AccountAdded` → `INITIALIZING`
+  *before* it decrypts, even for a wrong/empty password — then fails with `ERROR_GENERIC` and
+  the daemon **tears the account down** (`AccountRemoved`). So `AccountAdded` is **not** a
+  success signal for imports; success is judged by the **resolved fingerprint** (correct
+  decrypt → URI equals the known asset fingerprint; failed decrypt → torn down / never
+  resolves).
+- **Name-server result codes** (`NameRegistrationEnded.state`): `0` = success, `3` = already
+  taken. The app treats any non-zero as failure without distinguishing codes.
 
 ## Hard parts to design around
 
-- **Async DHT is slow / non-deterministic.** DHT bootstrap, NAT traversal, swarm clone
-  vary in timing. Every assertion is **event-driven with generous timeouts** (await on
-  the reported event stream) — never fixed sleeps. The event stream *is* the
-  synchronization primitive.
-- **Account lifecycle / isolation.** Fresh ephemeral accounts per run = clean but slow
-  (creation hits the network); a reset-able pool of pre-created accounts is the
-  pragmatic middle. Still open — it shapes the harness lifecycle.
-- **Identity handshake.** A's Jami ID must reach B at runtime; the runner relays it as
-  coordination metadata via a `Command`.
+- **Async DHT is slow / non-deterministic.** Every assertion is **event-driven with generous
+  timeouts** (`await` on the reported event stream) — never fixed sleeps. The event stream
+  *is* the synchronization primitive.
+- **Account lifecycle / isolation** — resolved via the reset-able fixture pool +
+  `ensureNoAccounts` (above).
+- **Identity handshake** — A's Jami ID reaches B at runtime as coordination metadata via a
+  `GetAccountUri` relay.
 
 ## Milestone ladder
 
-Single-device first to prove the whole machinery before adding two-device DHT timing.
-
-- **M0** — harness skeleton: runner + Ktor service up, one device connects via
-  `adb reverse`, round-trip a `ping` Report/Command.
-- **M1** — single-device **bare account creation** (no username): runner commands
-  `createAccount` via the real `AccountCreationViewModel`; `EventSink` observes
-  `AccountAdded` + local registration state. First real proof of the full stack.
-- **M2** — add **name registration** (`TRYING → REGISTERED`): first genuine DHT-async
-  await; introduces scenario parameters (the username).
-- **M3** — second device joins; identity relay; first two-device scenario (contact /
-  swarm invite + accept).
-- **M4** — call + recording end to end across two devices.
+- **M0** ✅ harness skeleton: runner + Ktor service, one device via `adb reverse`, `ping`
+  round-trip.
+- **M1** ✅ single-device bare account creation via the real service path; agent observes
+  `AccountAdded` + registration state.
+- **M2** ✅ name registration (`TRYING → REGISTERED → NameRegistrationEnded state=0`), the
+  first genuine DHT-async await; introduced scenario parameters (the username) and the
+  fixture pool.
+- **M3** ✅ second device joins; identity relay; two-device contact request + accept
+  (`two-device-contact` **validated on two devices 2026-07-01**: full run ~13 s — both
+  accounts `REGISTERED`, B's request reached A over the DHT, contact confirmed bidirectionally,
+  clean teardown with no stranded accounts).
+- **M4** ⬜ call + recording end to end across two devices.
 
 ## Resolved decisions
 
-- **Brain location** — in the host service/runner (scenario, control, verdict). Devices
-  are thin controllable executors with no scenario knowledge.
-- **Service implementation** — small **Ktor** WebSocket server inside the `:e2e-runner`
-  JVM module; wire schema shared via `:e2e-protocol`.
-- **Entry point** — parameterized `./gradlew e2e -Pscenario=…` driving the runner
-  (installs, wires `adb reverse`, launches agents, runs scenario, verdict = exit code).
-- **In-process signalling** — collect existing service `Flow`s via the `EventSink` seam;
-  no `BroadcastReceiver`s.
+- **Brain location** — in the host runner (scenario, control, verdict); devices are thin
+  executors with no scenario knowledge.
+- **Service implementation** — Ktor WebSocket server in `:e2e-runner`; wire schema shared via
+  `:e2e-protocol`.
+- **Entry point** — `./gradlew :e2e-runner:e2e -Pscenario=…` driving the runner.
+- **In-process signalling** — the `harness`-flavor agent collects existing service `Flow`s
+  directly (no `EventSink` seam, no `BroadcastReceiver`s).
+- **Account strategy** — reset-able **fixture pool** (`MemoryStore`, claim-by-state), creation
+  minimized and treated as a producer; clean-slate precondition per run.
 
 ## Still open
 
-- **Account strategy** — ephemeral-per-run vs. reset-able pool of pre-created accounts.
-  Decide before M1's isolation/teardown is finalized.
+- **Harden `two-device-contact` onto the pool** — the two-device run is validated (2026-07-01),
+  but the scenario still creates fresh accounts per run and does **not** call `ensureNoAccounts`
+  first. Fold it onto the fixture pool (claim two unnamed assets) + add the clean-slate
+  precondition/sweep both roles, matching the single-device scenarios.
+- **M4** — calls + recording across two devices.
+- **Contact / data-state fixtures** — the registry models identity + password + name only;
+  contacts / swarm membership are deferred to the contact scenarios.
