@@ -29,6 +29,7 @@ import net.jami.e2e.scenarios.ChangePasswordScenario
 import net.jami.e2e.scenarios.ImportCorrectPasswordScenario
 import net.jami.e2e.scenarios.ImportNoPasswordScenario
 import net.jami.e2e.scenarios.ImportWrongPasswordScenario
+import net.jami.e2e.scenarios.NameLookupScenario
 import net.jami.e2e.scenarios.PingScenario
 import net.jami.e2e.scenarios.RegisterNameTakenScenario
 import net.jami.e2e.scenarios.SeedPoolScenario
@@ -133,6 +134,7 @@ object ScenarioRegistry {
             AccountReuseScenario,
             ChangePasswordScenario,
             AccountEnableDisableScenario,
+            NameLookupScenario,
             ImportCorrectPasswordScenario,
             ImportWrongPasswordScenario,
             ImportNoPasswordScenario,

@@ -153,11 +153,11 @@ CommandFrame(commandId, directive)    runner → device   a Directive to execute
 The protocol types live in the shared **`:e2e-protocol`** module, depended on by both the
 runner and the `harness` flavor — one source of truth, type-safe end to end. Current
 directives: `Ping`, `GetAccounts`, `CreateJamiAccount`, `CreateBareAccount`, `ExportAccount`,
-`ImportAccount`, `RemoveAccount`, `ChangePassword`, `SetAccountEnabled`, `GetAccountUri`,
-`RegisterName`, `SendContactRequest`, `AcceptContactRequest`. Current events: `Pong`, `AccountsSnapshot`,
-`AccountAdded`, `AccountRemoved`, `RegistrationStateChanged`, `NameRegistrationEnded`,
-`AccountExported`, `PasswordChanged`, `AccountUri`, `IncomingContactRequest`, `ContactAdded`,
-`ErrorEvent`.
+`ImportAccount`, `RemoveAccount`, `ChangePassword`, `SetAccountEnabled`, `LookupName`,
+`GetAccountUri`, `RegisterName`, `SendContactRequest`, `AcceptContactRequest`. Current events:
+`Pong`, `AccountsSnapshot`, `AccountAdded`, `AccountRemoved`, `RegistrationStateChanged`,
+`NameRegistrationEnded`, `AccountExported`, `PasswordChanged`, `NameLookupResult`, `AccountUri`,
+`IncomingContactRequest`, `ContactAdded`, `ErrorEvent`.
 
 ## Account fixtures & the reuse pool (the account strategy — resolved)
 
@@ -220,6 +220,7 @@ merged timeline, exit code = verdict.
 | `import-no-password` | 1 | empty password on a protected archive rejected |
 | `change-password` | 1 | add / change / remove an archive password; the re-encrypted archive imports under the new password and rejects the old (reuses a `pw` fixture, non-consuming) |
 | `account-enable-disable` | 1 | registration toggle: disable → `UNREGISTERED`, enable → `REGISTERED` (reuses a fixture, non-consuming) |
+| `name-lookup` | 1 | name-server **read**: a burned name resolves to its exact owner fingerprint (`state=0`), an unregistered name returns NotFound (`state=2`) — non-consuming |
 | `seed-pool` | 1 | status-aware pool top-up, zero name burns |
 | `two-device-contact` | 2 | B's contact request reaches A over the real DHT, accept + confirm (M3, **validated on 2 devices 2026-07-01**) |
 
@@ -235,7 +236,7 @@ daemon-backed, user-reachable operations are listed (unit-testable logic is out 
 |---|---|---|---|
 | ~~`change-password`~~ ✅ **DONE (2026-07-01)** | `changeAccountPassword(id, old, new)` | add / change / remove an archive password | Implemented as `change-password` (see the suite above). Reuses a `pw` pool fixture (realistic "change an existing password"), drives change → remove → add on the phone copy, and proves the archive re-encrypted via an export→re-import round-trip (new password imports + preserves identity; old password rejected with `ERROR_GENERIC` teardown). Non-consuming — the phone copy is removed, the host blob never rewritten. A **negative control** (wrong old password ⇒ `success=false`) anchors the boolean. Gate: password ops must wait for `REGISTERED` — `changeAccountPassword` fails while the account is still `INITIALIZING`. Added `ChangePassword` directive + `PasswordChanged` event. |
 | ~~`account-enable-disable`~~ ✅ **DONE (2026-07-01)** | `setAccountEnabled(id, false/true)` | registration toggle | Implemented as `account-enable-disable` (see the suite above). Non-consuming: claim a fixture → baseline `REGISTERED` → disable → `UNREGISTERED` → enable → `REGISTERED`, observed via the existing `RegistrationStateChanged` flow (no result event needed). Added a `SetAccountEnabled` directive. Validated on Pixel 7a (~4s). |
-| `name-lookup` | `lookupName` / `findRegistrationByName` | name-server **read** side | **Next pick.** Look up the already-burned `e2e-<word>-<word>` → resolves to its owner fingerprint; a random name → not found. Non-consuming, fast. Needs a `LookupName`/`NameLookupResult` wire pair. |
+| ~~`name-lookup`~~ ✅ **DONE (2026-07-01)** | `findRegistrationByName` | name-server **read** side | Implemented as `name-lookup` (see the suite above). Uses the harness burn log as ground truth: a burned name resolves to its exact owner fingerprint (`state=0`), an unregistered name returns NotFound (`state=2`). Non-consuming. `findRegistrationByName` is `suspend` → the handler awaits it (bounded, `-1` sentinel on no answer) and emits a synchronous `NameLookupResult`; no new agent Flow needed. Added `LookupName` directive + `NameLookupResult` event. Validated on Pixel 7a (~4s). |
 
 ### Two-device / higher effort — gate on M3
 
@@ -250,9 +251,9 @@ daemon-backed, user-reachable operations are listed (unit-testable logic is out 
 - **`updateProfile`** — weak observability; belongs with the deferred contact/profile scenarios.
 - **SIP account creation** (`createSipAccount`) — reachable, but SIP has no Jami identity / DHT; a separate track, not "account handling" here.
 
-Suggested order: ~~`change-password`~~ (done) → ~~`account-enable-disable`~~ (done) →
-`name-lookup` (single-device, reuses existing infra), then device management with the
-two-device work.
+Suggested order: ~~`change-password`~~ → ~~`account-enable-disable`~~ → ~~`name-lookup`~~ — **all
+three single-device recommendations are now done.** Remaining account-handling work is the
+two-device / gated tier (device linking & management, multi-account coexistence).
 
 ## Module layout
 

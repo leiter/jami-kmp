@@ -141,6 +141,22 @@ data class AccountExported(
 @SerialName("passwordChanged")
 data class PasswordChanged(val accountId: String, val success: Boolean) : DomainEvent
 
+/**
+ * Result of [LookupName]: the name server's answer for [query]. [state] mirrors the daemon's
+ * `LookupState` — `0`=success, `1`=invalid, `2`=not-found, `3`=network-error — plus a harness
+ * sentinel `-1` when the daemon gave no answer within the handler's timeout. On success [name]
+ * echoes the resolved name and [address] is the owner's Jami fingerprint.
+ */
+@Serializable
+@SerialName("nameLookupResult")
+data class NameLookupResult(
+    val accountId: String,
+    val query: String,
+    val name: String,
+    val address: String,
+    val state: Int,
+) : DomainEvent
+
 /** Commands the host runner issues to control device program state. */
 @Serializable
 sealed interface Directive
@@ -222,6 +238,15 @@ data class ChangePassword(
 @Serializable
 @SerialName("setAccountEnabled")
 data class SetAccountEnabled(val accountId: String, val enabled: Boolean) : Directive
+
+/**
+ * Look up a registered [name] on the name server (the **read** side) via the awaitable
+ * `AccountService.findRegistrationByName`. Result arrives as [NameLookupResult]. Non-consuming
+ * — a pure query, it never mutates account or name-server state.
+ */
+@Serializable
+@SerialName("lookupName")
+data class LookupName(val accountId: String, val name: String) : Directive
 
 /** Ask the device for an account's own Jami address (relayed out-of-band, not over DHT). */
 @Serializable

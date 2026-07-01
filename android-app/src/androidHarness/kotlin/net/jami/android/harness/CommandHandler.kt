@@ -30,6 +30,8 @@ import net.jami.e2e.protocol.ExportAccount
 import net.jami.e2e.protocol.GetAccountUri
 import net.jami.e2e.protocol.GetAccounts
 import net.jami.e2e.protocol.ImportAccount
+import net.jami.e2e.protocol.LookupName
+import net.jami.e2e.protocol.NameLookupResult
 import net.jami.e2e.protocol.PasswordChanged
 import net.jami.e2e.protocol.Ping
 import net.jami.e2e.protocol.Pong
@@ -44,6 +46,7 @@ import net.jami.services.DaemonBridgeApi
 import net.jami.ui.viewmodel.AccountCreationViewModel
 import java.io.File
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.core.Koin
 
 /**
@@ -95,6 +98,24 @@ class CommandHandler(private val koin: Koin) {
                 // Toggle registration (sendRegister); the resulting UNREGISTERED/REGISTERED
                 // transition is observed via the RegistrationStateChanged flow in HarnessAgent.
                 koin.get<AccountService>().setAccountEnabled(directive.accountId, directive.enabled)
+            }
+
+            is LookupName -> {
+                // Awaitable name-server read. findRegistrationByName suspends until the daemon
+                // answers; a bounded wait maps a silent name server to the -1 sentinel instead
+                // of hanging the command.
+                val result = withTimeoutOrNull(20_000) {
+                    koin.get<AccountService>().findRegistrationByName(directive.accountId, "", directive.name)
+                }
+                emit(
+                    if (result == null) {
+                        NameLookupResult(directive.accountId, directive.name, "", "", state = -1)
+                    } else {
+                        NameLookupResult(
+                            directive.accountId, result.query, result.name, result.address, result.state.value,
+                        )
+                    },
+                )
             }
 
             is ExportAccount -> {
