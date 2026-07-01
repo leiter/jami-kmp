@@ -17,6 +17,11 @@
 package net.jami.e2e
 
 import kotlinx.coroutines.runBlocking
+import net.jami.e2e.memory.MemoryStore
+import java.io.File
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.system.exitProcess
 
 const val HARNESS_PORT = 8080
@@ -59,25 +64,49 @@ fun main(args: Array<String>) {
 
     val controllers = serials.take(scenario.requiredRoles).map { DeviceController(it) }
 
+    val stamp = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"))
+    val runDir = File("harness-memory/runs/${stamp}__$scenarioId").apply { mkdirs() }
+    println("Run artifacts → ${runDir.absolutePath}")
+
+    val memory = MemoryStore()
+
     val verdict = runBlocking {
+        // Bring every device up first (these adb calls return immediately).
         controllers.forEach { ctrl ->
             ctrl.adbReverse(HARNESS_PORT)
             ctrl.startApp()
+        }
+        // Start agents one at a time, binding each connection to the serial just launched.
+        // Roles are assigned in connect order, so sequential start makes role ↔ serial
+        // deterministic — needed so a snapshot of role "A" always hits A's physical device.
+        val conns = LinkedHashMap<String, DeviceConnection>()
+        val roleControllers = LinkedHashMap<String, DeviceController>()
+        for (ctrl in controllers) {
             ctrl.startAgent()
+            val conn = try {
+                server.awaitNextConnection(CONNECT_TIMEOUT_MS)
+            } catch (e: Exception) {
+                return@runBlocking Verdict(
+                    false,
+                    "device ${ctrl.serial} did not connect within ${CONNECT_TIMEOUT_MS}ms: ${e.message}",
+                )
+            }
+            conns[conn.role] = conn
+            roleControllers[conn.role] = ctrl
         }
 
-        val conns = try {
-            server.awaitRoles(scenario.requiredRoles, CONNECT_TIMEOUT_MS)
-        } catch (e: Exception) {
-            return@runBlocking Verdict(false, "device(s) did not connect within ${CONNECT_TIMEOUT_MS}ms: ${e.message}")
-        }
-
-        val ctx = ScenarioContextImpl(conns, ledger)
-        try {
+        val ctx = ScenarioContextImpl(conns, roleControllers, ledger, runDir, memory)
+        val result = try {
             scenario.run(ctx)
         } catch (e: Exception) {
             Verdict(false, "scenario threw: ${e.message}")
         }
+        // Auto-capture every device on failure — highest-value diagnostic, attributable per role.
+        if (!result.pass) {
+            ctx.log("failure — capturing screenshots of all roles")
+            ctx.snapshotAll("fail")
+        }
+        result
     }
 
     controllers.forEach { it.adbReverseRemove(HARNESS_PORT) }

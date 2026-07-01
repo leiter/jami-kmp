@@ -7,7 +7,8 @@ Groundwork vertical slice for the end-to-end device test harness. Design: see
 - **Status:** groundwork + M3 implemented; compiles, assembles, packages.
   **Live device run PASSED** — M0 `ping`, M1 `account-creation`, and M3
   `two-device-contact` all green on physical hardware (Pixel 2 / Android 11 +
-  Pixel 7a / Android 16).
+  Pixel 7a / Android 16). Plus host-side **screenshot diagnostics** (on-demand +
+  auto-on-failure) and a **distinct harness app icon** (amber launcher background).
 - **Last verified:** 2026-06-28
 
 ## Scope
@@ -41,9 +42,9 @@ two-device DHT handshake:
 |------|------|
 | `e2e-runner/build.gradle.kts` | JVM + serialization + `application`; registers `e2e` and `e2eList` Gradle tasks |
 | `.../e2e/Scenario.kt` | `Scenario`, `ScenarioContext`, `Verdict`, `ScenarioRegistry`, `ROLE_NAMES` |
-| `.../e2e/HarnessServer.kt` | Ktor CIO WebSocket server, `DeviceConnection`, `Ledger`, `ScenarioContextImpl` |
-| `.../e2e/DeviceController.kt` | adb/am wrappers (`reverse`, `startApp`, `startAgent`, `listDevices`) |
-| `.../e2e/Main.kt` | Entry point: start server → adb reverse + launch → await roles → run scenario → ledger → exit code |
+| `.../e2e/HarnessServer.kt` | Ktor CIO WebSocket server, `DeviceConnection`, `Ledger`, `ScenarioContextImpl` (incl. `snapshot`/`snapshotAll`), `awaitNextConnection` |
+| `.../e2e/DeviceController.kt` | adb/am wrappers (`reverse`, `startApp`, `startAgent`, `screenshot`, `listDevices`) |
+| `.../e2e/Main.kt` | Entry point: start server → adb reverse + launch agents **sequentially** (deterministic role↔serial) → run scenario → auto-snapshot on failure → ledger → exit code |
 | `.../e2e/scenarios/PingScenario.kt` | M0 |
 | `.../e2e/scenarios/AccountCreationScenario.kt` | M1 |
 | `.../e2e/scenarios/TwoDeviceContactScenario.kt` | M3 (two devices + identity relay) |
@@ -64,6 +65,32 @@ The device is a **thin executor**: no scenario knowledge. It exposes a command s
 (`CommandHandler`) and a state/observation surface (flow collection). No production-code or
 `commonMain` changes — observability reuses existing public service Flows, and the account
 fingerprint is read live via the already-bound `DaemonBridgeApi`.
+
+### Diagnostics — screenshots + run artifacts (host-only)
+
+First slice of the plan's Phase 7 "visible state", entirely host-side (no wire/APK change):
+
+- **`DeviceController.screenshot(file)`** — `adb exec-out screencap -p` captured as raw bytes
+  (stderr kept separate so the PNG isn't corrupted); never throws, returns `false` on failure
+  so diagnostics can't derail a run or flip a verdict.
+- **`ScenarioContext.snapshot(role, label): Path?`** — a scenario can grab a labeled
+  screenshot at any point; it lands in the run dir and adds a timeline line.
+- **Auto-snapshot on failure** — when a scenario returns a failing verdict *or* throws, the
+  runner captures every assigned role (`snapshotAll("fail")`). Highest-value diagnostic.
+- **Run directory** — each run writes to `e2e-runner/harness-memory/runs/<utcStamp>__<scenario>/`
+  (gitignored via `e2e-runner/.gitignore`). Lightweight precursor to the Phase 6 `MemoryStore`.
+- **Deterministic role ↔ serial** — a `snapshot("A", …)` must hit A's *physical* device, but
+  roles were assigned in connect order. `Main` now starts agents one at a time and binds each
+  connection to the serial just launched (`HarnessServer.awaitNextConnection`), so role A is
+  always the first-launched device.
+
+### Harness app icon
+
+The `harness` flavor overlays `res/values/ic_launcher_background.xml` with a vivid amber
+(`#FFAB00`) launcher background (same Jami logo foreground), so the E2E build is
+unmistakable next to a white-background production install. The flavor's `res` dir is
+repointed to `src/androidHarness/res` in `android-app/build.gradle.kts` — same KMP
+layout-v2 reason the manifest needed repointing. `standard` flavor is unaffected.
 
 ## Wire protocol (out-of-band only)
 
@@ -92,6 +119,8 @@ real daemon-to-daemon traffic flows separately over the DHT.
 | `:e2e-runner:e2e -Pscenario=ping` (live) | ✅ Pong round-trip on two devices |
 | `:e2e-runner:e2e -Pscenario=account-creation` (live) | ✅ created + removed a real Jami account |
 | `:e2e-runner:e2e -Pscenario=two-device-contact` (live) | ✅ B reached A over the DHT; contact confirmed on both (~14s) |
+| Auto-snapshot on failure (live) | ✅ failing scenario wrote a valid 1080×2400 PNG to the run dir |
+| `:android-app:assembleHarnessDebug` (amber icon) | ✅ merged `ic_launcher_background` = `#FFAB00` for harness flavor |
 
 ## Running it (once a device is attached)
 

@@ -16,16 +16,22 @@
  */
 package net.jami.android.harness
 
+import android.content.Context
 import net.jami.e2e.protocol.AcceptContactRequest
+import net.jami.e2e.protocol.AccountExported
 import net.jami.e2e.protocol.AccountUri
 import net.jami.e2e.protocol.AccountsSnapshot
+import net.jami.e2e.protocol.CreateBareAccount
 import net.jami.e2e.protocol.CreateJamiAccount
 import net.jami.e2e.protocol.Directive
 import net.jami.e2e.protocol.DomainEvent
+import net.jami.e2e.protocol.ExportAccount
 import net.jami.e2e.protocol.GetAccountUri
 import net.jami.e2e.protocol.GetAccounts
+import net.jami.e2e.protocol.ImportAccount
 import net.jami.e2e.protocol.Ping
 import net.jami.e2e.protocol.Pong
+import net.jami.e2e.protocol.RegisterName
 import net.jami.e2e.protocol.RemoveAccount
 import net.jami.e2e.protocol.SendContactRequest
 import net.jami.model.ConfigKey
@@ -33,6 +39,7 @@ import net.jami.model.Uri
 import net.jami.services.AccountService
 import net.jami.services.DaemonBridgeApi
 import net.jami.ui.viewmodel.AccountCreationViewModel
+import java.io.File
 import kotlinx.coroutines.delay
 import org.koin.core.Koin
 
@@ -60,7 +67,41 @@ class CommandHandler(private val koin: Koin) {
                 vm.createAccount()
             }
 
+            is CreateBareAccount -> {
+                // No username → no ACCOUNT_REGISTERED_NAME → the daemon never contacts the
+                // name server. Uses the real account-creation service path directly (the
+                // ViewModel mandates a username, so it can't produce a bare account).
+                koin.get<AccountService>().createJamiAccount(
+                    displayName = directive.displayName,
+                    password = directive.password,
+                )
+            }
+
             is RemoveAccount -> koin.get<AccountService>().removeAccount(directive.accountId)
+
+            is ExportAccount -> {
+                // Write the archive into the app's private filesDir, which the runner pulls
+                // via `run-as` over adb. AccountService.exportToFile is the real backup path.
+                // [password] is the account's *current* archive password (unlocks the key);
+                // scheme follows the same convention as the rest of the app.
+                val file = File(koin.get<Context>().filesDir, directive.fileName)
+                val scheme = if (directive.password.isEmpty()) "" else "password"
+                val ok = koin.get<AccountService>().exportToFile(
+                    directive.accountId, file.absolutePath, scheme = scheme, password = directive.password,
+                )
+                emit(AccountExported(directive.accountId, directive.fileName, ok))
+            }
+
+            is ImportAccount -> {
+                // Re-create the account from a previously-pushed archive; AccountAdded is
+                // observed separately via the accounts Flow.
+                val file = File(koin.get<Context>().filesDir, directive.fileName)
+                koin.get<AccountService>().createJamiAccount(
+                    displayName = directive.displayName,
+                    password = directive.password,
+                    archivePath = file.absolutePath,
+                )
+            }
 
             is GetAccountUri -> {
                 // A Jami account's own address is its public-key fingerprint, which the
@@ -70,12 +111,21 @@ class CommandHandler(private val koin: Koin) {
                 val bridge = koin.get<DaemonBridgeApi>()
                 var uri = bridge.getAccountDetails(directive.accountId)[ConfigKey.ACCOUNT_USERNAME.key].orEmpty()
                 var tries = 0
-                while (uri.isBlank() && tries < 20) {
+                // Key derivation can be slow (notably for password-protected accounts, where
+                // the account lingers in INITIALIZING), so allow up to ~10s for the fingerprint.
+                while (uri.isBlank() && tries < 100) {
                     delay(100)
                     uri = bridge.getAccountDetails(directive.accountId)[ConfigKey.ACCOUNT_USERNAME.key].orEmpty()
                     tries++
                 }
                 emit(AccountUri(directive.accountId, uri))
+            }
+
+            is RegisterName -> {
+                // Register a name on the name server; result observed via NameRegistrationEnded.
+                koin.get<AccountService>().registerName(
+                    directive.accountId, directive.name, scheme = "", password = directive.password,
+                )
             }
 
             is SendContactRequest -> {

@@ -57,6 +57,11 @@ Already implemented in `AccountMediaSettingsScreen` with enable/disable toggles 
 - Declare `MANAGE_OWN_CALLS` permission (already in reference manifest; confirm in kmp manifest).
 - **Reference**: `JamiConnectionService.kt` in `jami-client-android`
 
+### Guard against re-importing an account that is already present (settings import)
+- On a settings-screen account import, compare the jamiId (RingID fingerprint) of the archive being loaded against the jamiId of every account already present on the device. If any match, **abort the import** before adding the account and inform the user that this account is already set up on this device (rather than silently creating a duplicate / letting the daemon add a second row for the same identity).
+- Where: `ImportAccountViewModel.importAccount()` — resolve the incoming archive's jamiId and check it against the existing accounts' jamiIds prior to `createJamiAccount(archivePath = …)`; surface a clear "account already exists on this device" message in `ImportAccountState.error`.
+- Edge case only — the onboarding import path can't reach it (it runs with zero accounts loaded), so it needs handling but not an automated test. Identified while building the E2E harness import scenarios (2026-07-01).
+
 ### ~~Conversation categories / filtering~~ ✓ DONE (2026-06-13)
 `ConversationFilter` enum (ALL / UNREAD / GROUPS) added to `ConversationsViewModel`.
 `isGroup: Boolean` added to `ConversationItem`; filter applied from cached list (no daemon round-trip).

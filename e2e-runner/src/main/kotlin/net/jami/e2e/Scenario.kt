@@ -16,11 +16,22 @@
  */
 package net.jami.e2e
 
+import net.jami.e2e.memory.AccountAsset
+import net.jami.e2e.memory.MemoryStore
 import net.jami.e2e.protocol.DomainEvent
 import net.jami.e2e.protocol.Directive
+import net.jami.e2e.scenarios.AccountCreationBareScenario
 import net.jami.e2e.scenarios.AccountCreationScenario
+import net.jami.e2e.scenarios.AccountCreationUsernameScenario
+import net.jami.e2e.scenarios.AccountReuseScenario
+import net.jami.e2e.scenarios.ImportCorrectPasswordScenario
+import net.jami.e2e.scenarios.ImportNoPasswordScenario
+import net.jami.e2e.scenarios.ImportWrongPasswordScenario
 import net.jami.e2e.scenarios.PingScenario
+import net.jami.e2e.scenarios.RegisterNameTakenScenario
+import net.jami.e2e.scenarios.SeedPoolScenario
 import net.jami.e2e.scenarios.TwoDeviceContactScenario
+import java.nio.file.Path
 
 /** Roles are addressed by name; the runner maps connected devices to A, B, … in order. */
 val ROLE_NAMES = listOf("A", "B", "C", "D")
@@ -48,6 +59,56 @@ interface ScenarioContext {
 
     /** Append a human-readable line to the run timeline. */
     fun log(message: String)
+
+    /**
+     * Capture a screenshot of [role]'s device into the run directory and record it on the
+     * timeline. [label] is a short human tag (e.g. "after-create"). Returns the written PNG
+     * path, or null if capture failed — diagnostics never fail a scenario.
+     */
+    suspend fun snapshot(role: String, label: String): Path?
+
+    /**
+     * Pull an artifact (e.g. an exported `account.gz`) from [role]'s device — read from the
+     * harness app's private `filesDir` — into the run directory as [localName]. Returns the
+     * written path, or null on failure. Out-of-band: carries no Jami payload.
+     */
+    suspend fun pullArtifact(role: String, deviceFileName: String, localName: String = deviceFileName): Path?
+
+    /**
+     * Push an artifact from the run directory ([localName]) to [role]'s device, into the
+     * harness app's private `filesDir` as [deviceFileName] — e.g. to restore an exported
+     * account before [net.jami.e2e.protocol.ImportAccount]. Returns true on success.
+     */
+    suspend fun pushArtifact(role: String, localName: String, deviceFileName: String = localName): Boolean
+
+    /** The persistent asset registry — claim reusable accounts before creating new ones. */
+    val memory: MemoryStore
+
+    /**
+     * Export the live account [accountId] on [role], pull its archive into the registry, and
+     * record it as a reusable asset. [password] is the archive password to export with
+     * (`""` = unprotected). Returns the stored asset, or null if export/pull failed.
+     */
+    suspend fun captureAsset(
+        role: String,
+        accountId: String,
+        registeredName: String?,
+        password: String,
+    ): AccountAsset?
+
+    /**
+     * Push [asset]'s archive to [role] and import it (reusing its identity). Returns the
+     * on-device accountId of the imported account, or null on failure.
+     */
+    suspend fun installAsset(role: String, asset: AccountAsset): String?
+
+    /**
+     * Push [asset]'s archive to [role]'s device as [deviceFileName] **without importing it** —
+     * the low-level half of [installAsset], for scenarios that must drive
+     * [net.jami.e2e.protocol.ImportAccount] themselves (e.g. importing with a deliberately
+     * wrong or empty password). Returns true on success. Non-consuming: the asset is unchanged.
+     */
+    suspend fun pushAsset(role: String, asset: AccountAsset, deviceFileName: String): Boolean
 }
 
 /** A host-side, device-agnostic test definition. */
@@ -60,6 +121,17 @@ interface Scenario {
 /** Registry of available scenarios, keyed by id. */
 object ScenarioRegistry {
     val scenarios: Map<String, Scenario> =
-        listOf<Scenario>(PingScenario, AccountCreationScenario, TwoDeviceContactScenario)
-            .associateBy { it.id }
+        listOf<Scenario>(
+            PingScenario,
+            SeedPoolScenario,
+            AccountCreationScenario,
+            AccountCreationBareScenario,
+            AccountCreationUsernameScenario,
+            RegisterNameTakenScenario,
+            AccountReuseScenario,
+            ImportCorrectPasswordScenario,
+            ImportWrongPasswordScenario,
+            ImportNoPasswordScenario,
+            TwoDeviceContactScenario,
+        ).associateBy { it.id }
 }

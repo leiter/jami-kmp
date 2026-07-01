@@ -41,6 +41,7 @@ import net.jami.e2e.protocol.Envelope
 import net.jami.e2e.protocol.HarnessJson
 import net.jami.e2e.protocol.Hello
 import net.jami.e2e.protocol.IncomingContactRequest
+import net.jami.e2e.protocol.NameRegistrationEnded
 import net.jami.e2e.protocol.RegistrationStateChanged
 import net.jami.e2e.protocol.ReportFrame
 import net.jami.services.AccountEvent
@@ -86,6 +87,7 @@ class HarnessAgent(private val scope: CoroutineScope) {
                     val observers = listOf(
                         scope.launch { observeAccounts(accountService, ::emit) },
                         scope.launch { observeRegistration(accountService, ::emit) },
+                        scope.launch { observeNameRegistration(accountService, ::emit) },
                         scope.launch { observeContacts(accountService, ::emit) },
                     )
                     try {
@@ -129,6 +131,18 @@ class HarnessAgent(private val scope: CoroutineScope) {
         accountService.accountEvents.collect { ev ->
             if (ev is AccountEvent.RegistrationStateChanged) {
                 emit(RegistrationStateChanged(ev.accountId, ev.state, ev.code))
+            }
+        }
+    }
+
+    /** Name-server registration outcome (the username path's DHT-async confirmation). */
+    private suspend fun observeNameRegistration(
+        accountService: AccountService,
+        emit: suspend (DomainEvent) -> Unit,
+    ) {
+        accountService.accountEvents.collect { ev ->
+            if (ev is AccountEvent.NameRegistrationEnded) {
+                emit(NameRegistrationEnded(ev.accountId, ev.state, ev.name))
             }
         }
     }

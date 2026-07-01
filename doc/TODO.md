@@ -93,8 +93,8 @@
 ## Home Screen — Missing Features
 
 - [x] **Conversation filtering tabs** — Done. `HomeScreen` has a `JamiFilterChip` row (All / Unread / Groups) wired to `ConversationsViewModel.setFilter(ConversationFilter)`; `state.activeFilter` drives the filtered list (verified 2026-06-26).
-- [ ] **Long-press context menu on conversation rows** — Reference shows mute / pin / block / delete. KMP `HomeScreen` has no per-row long-press handler (the only `DropdownMenu` is the top-bar overflow: settings/about).
-- [~] **Swipe-to-delete** — Scaffolded but disabled. `HomeScreen` already wraps each row in a `SwipeToDismissBox` (EndToStart → red Delete background) and `ConversationsViewModel.removeConversation(id)` exists, but the swipe-completion call is commented out (`// viewModel.removeConversation(...)`). Enabling is ~1 line plus a confirm dialog. Swipe-to-archive proper (distinct from delete) is not implemented (verified 2026-06-26).
+- [x] **Long-press context menu on conversation rows** — Done. Each row is wrapped in `combinedClickable` (`onLongClick` opens a `DropdownMenu` with Pin/Unpin, Mute/Unmute, Block, Delete). Pin/mute state is read from `SettingsRepository` and surfaced as row indicator icons; pinned conversations float to the top of the list. `ConversationsViewModel` gained `toggleConversationPin`, `toggleConversationMute`, and `blockConversation` (verified 2026-06-26, commit e6cd592).
+- [x] **Swipe-to-delete** — Done. `SwipeToDismissBox` EndToStart now sets `pendingDelete` and shows a `JamiAlertDialog` confirmation (instead of silently deleting); confirming calls `ConversationsViewModel.removeConversation(id)`. Swipe-to-archive proper (distinct from delete) is still not implemented (verified 2026-06-26, commit e6cd592).
 
 ## Calls — Missing Features
 

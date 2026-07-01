@@ -108,6 +108,30 @@ data class ContactAdded(
     val confirmed: Boolean,
 ) : DomainEvent
 
+/**
+ * Result of a username registration on the name server. [state] == 0 is success
+ * (mirrors the daemon's name-registration result code).
+ */
+@Serializable
+@SerialName("nameRegistrationEnded")
+data class NameRegistrationEnded(
+    val accountId: String,
+    val state: Int,
+    val name: String,
+) : DomainEvent
+
+/**
+ * Result of [ExportAccount]: the account archive was written to [fileName] (relative to
+ * the device app's private `filesDir`), ready to be pulled over the coordination channel.
+ */
+@Serializable
+@SerialName("accountExported")
+data class AccountExported(
+    val accountId: String,
+    val fileName: String,
+    val success: Boolean,
+) : DomainEvent
+
 /** Commands the host runner issues to control device program state. */
 @Serializable
 sealed interface Directive
@@ -124,6 +148,43 @@ data object GetAccounts : Directive
 @SerialName("createJamiAccount")
 data class CreateJamiAccount(val username: String, val password: String = "") : Directive
 
+/**
+ * Create a Jami account with **no registered username** — a bare account that never hits
+ * the name server. Drives the real account-creation service path directly (the creation
+ * ViewModel mandates a username, so this is the service-level entry point).
+ */
+@Serializable
+@SerialName("createBareAccount")
+data class CreateBareAccount(
+    val displayName: String = "Harness",
+    val password: String = "",
+) : Directive
+
+/**
+ * Export an account's archive to a device-local file under the app's private `filesDir`.
+ * The runner then pulls it over the coordination channel (no Jami payload — the archive
+ * stands in for an out-of-band backup/restore, like the account-reuse fixture pool).
+ */
+@Serializable
+@SerialName("exportAccount")
+data class ExportAccount(
+    val accountId: String,
+    val fileName: String,
+    val password: String = "",
+) : Directive
+
+/**
+ * Import an account from a previously-pushed archive file (relative to the app's private
+ * `filesDir`). The created account reuses the archive's identity (same Jami fingerprint).
+ */
+@Serializable
+@SerialName("importAccount")
+data class ImportAccount(
+    val fileName: String,
+    val password: String = "",
+    val displayName: String = "Harness",
+) : Directive
+
 @Serializable
 @SerialName("removeAccount")
 data class RemoveAccount(val accountId: String) : Directive
@@ -132,6 +193,19 @@ data class RemoveAccount(val accountId: String) : Directive
 @Serializable
 @SerialName("getAccountUri")
 data class GetAccountUri(val accountId: String) : Directive
+
+/**
+ * Register [name] on the name server for [accountId] (the consuming operation — a name is
+ * burned globally). Result arrives as [NameRegistrationEnded]. Used to register a name on a
+ * reused, previously-unnamed account.
+ */
+@Serializable
+@SerialName("registerName")
+data class RegisterName(
+    val accountId: String,
+    val name: String,
+    val password: String = "",
+) : Directive
 
 /** Initiate a real contact/trust request to [peerUri] over the DHT (the initiator side). */
 @Serializable
