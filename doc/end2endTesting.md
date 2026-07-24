@@ -154,10 +154,11 @@ The protocol types live in the shared **`:e2e-protocol`** module, depended on by
 runner and the `harness` flavor — one source of truth, type-safe end to end. Current
 directives: `Ping`, `GetAccounts`, `CreateJamiAccount`, `CreateBareAccount`, `ExportAccount`,
 `ImportAccount`, `RemoveAccount`, `ChangePassword`, `SetAccountEnabled`, `LookupName`,
-`GetAccountUri`, `RegisterName`, `SendContactRequest`, `AcceptContactRequest`. Current events:
+`GetKnownDevices`, `RenameDevice`, `GetAccountUri`, `RegisterName`, `SendContactRequest`,
+`AcceptContactRequest`. Current events:
 `Pong`, `AccountsSnapshot`, `AccountAdded`, `AccountRemoved`, `RegistrationStateChanged`,
-`NameRegistrationEnded`, `AccountExported`, `PasswordChanged`, `NameLookupResult`, `AccountUri`,
-`IncomingContactRequest`, `ContactAdded`, `ErrorEvent`.
+`NameRegistrationEnded`, `AccountExported`, `PasswordChanged`, `NameLookupResult`,
+`KnownDevices`, `AccountUri`, `IncomingContactRequest`, `ContactAdded`, `ErrorEvent`.
 
 ## Account fixtures & the reuse pool (the account strategy — resolved)
 
@@ -221,6 +222,7 @@ merged timeline, exit code = verdict.
 | `change-password` | 1 | add / change / remove an archive password; the re-encrypted archive imports under the new password and rejects the old (reuses a `pw` fixture, non-consuming) |
 | `account-enable-disable` | 1 | registration toggle: disable → `UNREGISTERED`, enable → `REGISTERED` (reuses a fixture, non-consuming) |
 | `name-lookup` | 1 | name-server **read**: a burned name resolves to its exact owner fingerprint (`state=0`), an unregistered name returns NotFound (`state=2`) — non-consuming |
+| `device-rename` | 1 | `renameDevice` is read back from the daemon's known-device registry under the same device id, then restored to the baseline name (reuses a fixture, non-consuming) |
 | `seed-pool` | 1 | status-aware pool top-up, zero name burns |
 | `two-device-contact` | 2 | B's contact request reaches A over the real DHT, accept + confirm (M3, **validated on 2 devices 2026-07-01**) — pool-backed: two *distinct* fixtures, `ensureNoAccounts` on both roles, non-consuming, zero name burns |
 
@@ -242,7 +244,8 @@ daemon-backed, user-reachable operations are listed (unit-testable logic is out 
 
 | candidate | operation | proves | notes |
 |---|---|---|---|
-| device linking & management | `addDevice` / `confirmAddDevice` / `provideAccountAuthentication`, `getKnownRingDevices`, `revokeDevice`, `renameDevice` | link a new device to an existing account over the DHT, list, revoke | The **biggest untested account area.** The link flow is inherently two-device (DHT-async) → fold into the M3 push. `renameDevice` + `getKnownRingDevices` are single-device observable and could be a small standalone test sooner. |
+| device linking & management | `addDevice` / `confirmAddDevice` / `provideAccountAuthentication`, `revokeDevice` | link a new device to an existing account over the DHT, revoke | Still the **biggest untested account area**; the link flow is inherently two-device (DHT-async) → fold into the M3 push. `revokeDevice` only becomes meaningful once a second device is linked, so it rides along. The single-device half (`renameDevice` + `getKnownRingDevices`) is ✅ **DONE (2026-07-24)** as `device-rename` — see below. |
+| ~~`device-rename`~~ ✅ **DONE (2026-07-24)** | `renameDevice`, `getKnownRingDevices` | device naming, read back through the daemon | Implemented as `device-rename` (see the suite above). `renameDevice` returns nothing, so the proof is a **read-back** of the daemon's own `deviceId → deviceName` registry: baseline → rename to a stamped name → the new name appears under the *same* device id with the key set unchanged → rename back to the baseline name and the registry matches the baseline exactly (a live read-write channel, not a one-shot). The device count is deliberately **not** asserted — repeated imports of one identity can leave earlier device ids known to the account. `getKnownRingDevices` is a plain synchronous getter and `onKnownDevicesChanged` is not among the agent's Flows, so the read-back is polled against a deadline rather than awaited (same shape as the `GetAccountUri` retry). Gate: wait for `REGISTERED` before writing account details. Non-consuming. Added `GetKnownDevices` + `RenameDevice` directives and a `KnownDevices` event. Validated on Pixel 7a, first run (~4.4 s). |
 | multi-account coexistence | `setCurrentAccount`, `setAccountOrder` | two Jami accounts on one device, independent registration + switching | Reachable, single-device, but requires relaxing the `ensureNoAccounts` precondition for just this scenario. Medium value. |
 
 ### Deliberately out of scope
@@ -251,9 +254,11 @@ daemon-backed, user-reachable operations are listed (unit-testable logic is out 
 - **`updateProfile`** — weak observability; belongs with the deferred contact/profile scenarios.
 - **SIP account creation** (`createSipAccount`) — reachable, but SIP has no Jami identity / DHT; a separate track, not "account handling" here.
 
-Suggested order: ~~`change-password`~~ → ~~`account-enable-disable`~~ → ~~`name-lookup`~~ — **all
-three single-device recommendations are now done.** Remaining account-handling work is the
-two-device / gated tier (device linking & management, multi-account coexistence).
+Suggested order: ~~`change-password`~~ → ~~`account-enable-disable`~~ → ~~`name-lookup`~~ →
+~~`device-rename`~~ — **every single-device candidate is now done.** What remains in account
+handling needs two devices or a relaxed precondition: device linking (`addDevice` /
+`confirmAddDevice` / `provideAccountAuthentication`) with `revokeDevice` riding along, and
+multi-account coexistence (which must opt out of `ensureNoAccounts`).
 
 ## Module layout
 
@@ -290,6 +295,11 @@ default — both are repointed to `src/androidHarness/` in `android-app/build.gr
   resolves).
 - **Name-server result codes** (`NameRegistrationEnded.state`): `0` = success, `3` = already
   taken. The app treats any non-zero as failure without distinguishing codes.
+- **`setAccountDetails` bounces the registration.** Renaming the device (which rewrites
+  `ACCOUNT_DEVICE_NAME` through `setAccountDetails`) took the account `REGISTERED` →
+  `UNREGISTERED` → `TRYING` on every write, observed in the `device-rename` run. So any
+  details write costs a re-registration round-trip: a scenario that writes details and then
+  awaits a registration state must expect the bounce rather than read the pre-write state.
 - **`changeAccountPassword` needs a fully-loaded account.** It re-encrypts the on-disk archive
   and returns `false` if the account is still `INITIALIZING` (observed: a call ~6 ms after
   `AccountAdded` failed even with the correct current password). Wait for `REGISTERED` before

@@ -29,7 +29,9 @@ import net.jami.e2e.protocol.DomainEvent
 import net.jami.e2e.protocol.ExportAccount
 import net.jami.e2e.protocol.GetAccountUri
 import net.jami.e2e.protocol.GetAccounts
+import net.jami.e2e.protocol.GetKnownDevices
 import net.jami.e2e.protocol.ImportAccount
+import net.jami.e2e.protocol.KnownDevices
 import net.jami.e2e.protocol.LookupName
 import net.jami.e2e.protocol.NameLookupResult
 import net.jami.e2e.protocol.PasswordChanged
@@ -37,6 +39,7 @@ import net.jami.e2e.protocol.Ping
 import net.jami.e2e.protocol.Pong
 import net.jami.e2e.protocol.RegisterName
 import net.jami.e2e.protocol.RemoveAccount
+import net.jami.e2e.protocol.RenameDevice
 import net.jami.e2e.protocol.SendContactRequest
 import net.jami.e2e.protocol.SetAccountEnabled
 import net.jami.model.ConfigKey
@@ -158,6 +161,18 @@ class CommandHandler(private val koin: Koin) {
                     tries++
                 }
                 emit(AccountUri(directive.accountId, uri))
+            }
+
+            is GetKnownDevices -> {
+                // Synchronous read of the daemon's own device registry (deviceId → name).
+                val devices = koin.get<AccountService>().getKnownRingDevices(directive.accountId)
+                emit(KnownDevices(directive.accountId, devices))
+            }
+
+            is RenameDevice -> {
+                // Real settings path: rewrites ACCOUNT_DEVICE_NAME via setAccountDetails.
+                // Returns nothing, so the runner proves it with a GetKnownDevices read-back.
+                koin.get<AccountService>().renameDevice(directive.accountId, directive.newName)
             }
 
             is RegisterName -> {

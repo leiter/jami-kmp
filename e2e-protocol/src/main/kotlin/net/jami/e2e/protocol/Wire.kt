@@ -157,6 +157,19 @@ data class NameLookupResult(
     val state: Int,
 ) : DomainEvent
 
+/**
+ * Result of [GetKnownDevices]: the daemon's own device registry for the account, as
+ * `deviceId → deviceName`. Read synchronously from `getKnownRingDevices`, so it is the
+ * authoritative view rather than a cached UI copy — which makes it the read-back proof for
+ * [RenameDevice]. A freshly imported account holds exactly one entry: this device.
+ */
+@Serializable
+@SerialName("knownDevices")
+data class KnownDevices(
+    val accountId: String,
+    val devices: Map<String, String>,
+) : DomainEvent
+
 /** Commands the host runner issues to control device program state. */
 @Serializable
 sealed interface Directive
@@ -275,6 +288,23 @@ data class SendContactRequest(val accountId: String, val peerUri: String) : Dire
 @Serializable
 @SerialName("acceptContactRequest")
 data class AcceptContactRequest(val accountId: String, val peerUri: String) : Directive
+
+/**
+ * Read the account's known-device registry from the daemon. Result arrives as [KnownDevices].
+ * Non-consuming — a pure query.
+ */
+@Serializable
+@SerialName("getKnownDevices")
+data class GetKnownDevices(val accountId: String) : Directive
+
+/**
+ * Set this device's display name (`ACCOUNT_DEVICE_NAME`) to [newName]. Fire-and-forget: the
+ * service call returns nothing, so the proof is a [GetKnownDevices] read-back. Non-consuming —
+ * the name lives in the on-device account copy, which the scenario removes on teardown.
+ */
+@Serializable
+@SerialName("renameDevice")
+data class RenameDevice(val accountId: String, val newName: String) : Directive
 
 /** Shared Json instance — sealed hierarchies use the `type` discriminator + @SerialName. */
 val HarnessJson: Json = Json {
