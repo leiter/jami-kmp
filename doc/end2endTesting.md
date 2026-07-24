@@ -295,6 +295,11 @@ default — both are repointed to `src/androidHarness/` in `android-app/build.gr
   resolves).
 - **Name-server result codes** (`NameRegistrationEnded.state`): `0` = success, `3` = already
   taken. The app treats any non-zero as failure without distinguishing codes.
+- **A freshly-wiped app has a cold DHT.** The first `two-device-contact` run after uninstalling
+  and reinstalling the harness on the Android 11 device blew the 120 s core-proof timeout; the
+  next run on the same devices passed in ~11 s and stayed stable. The daemon has no bootstrap
+  cache on a clean install, so the first peer-to-peer round-trip is far slower than steady state
+   — do not read a single post-wipe failure as a regression.
 - **`setAccountDetails` bounces the registration.** Renaming the device (which rewrites
   `ACCOUNT_DEVICE_NAME` through `setAccountDetails`) took the account `REGISTERED` →
   `UNREGISTERED` → `TRYING` on every write, observed in the `device-rename` run. So any
@@ -357,8 +362,10 @@ default — both are repointed to `src/androidHarness/` in `android-app/build.gr
   name-burn-free. The identity relay doubles as an import identity check: a pool-installed role's
   resolved URI must equal its asset fingerprint. Non-consuming — the contact exists only in the
   on-device copies, which are removed; host archives are never rewritten. Compiles clean and the
-  pool-claim path is regression-checked via `account-enable-disable` (PASS, ~4.4 s); the
-  two-device run itself is **not yet re-validated on hardware** (needs a second device).
+  pool-claim path is regression-checked via `account-enable-disable` (PASS, ~4.4 s).
+  **Re-validated on two devices 2026-07-24** (Pixel 7a as A, Pixel 2 / Android 11 as B): four
+  consecutive passes, full run ~11–15 s, both fixtures installed distinctly, both roles swept
+  clean, no name burned.
 - **M4** — calls + recording across two devices.
 - **Contact / data-state fixtures** — the registry models identity + password + name only;
   contacts / swarm membership are deferred to the contact scenarios.
