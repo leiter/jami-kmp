@@ -25,8 +25,10 @@ import net.jami.utils.Log
  * from being reaped when the UI is not visible.
  *
  * Uses foreground service type SPECIAL_USE on Android 14+ (falling back to DATA_SYNC
- * on older releases). SPECIAL_USE is the only type Android 15+ permits when the service
- * is started from a BOOT_COMPLETED receiver.
+ * on older releases). DATA_SYNC is disallowed from a BOOT_COMPLETED receiver on Android 15+,
+ * and SPECIAL_USE is the type that honestly describes this service: keeping the P2P daemon
+ * reachable when there is no push infrastructure. See
+ * `doc/play-console-special-use-justification.md`.
  */
 class JamiDaemonService : Service() {
 
@@ -61,8 +63,9 @@ class JamiDaemonService : Service() {
             .setSilent(true)
             .build()
 
-        // specialUse is the only category permitted to start a foreground service from a
-        // BOOT_COMPLETED receiver on Android 15+ (dataSync/remoteMessaging are blocked there).
+        // Android 15+ blocks dataSync (among others) from a BOOT_COMPLETED receiver, so the
+        // pre-34 constant cannot be used on the boot path of a modern release. remoteMessaging
+        // is *not* blocked and is the documented fallback if Play review rejects specialUse.
         val serviceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
             ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)

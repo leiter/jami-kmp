@@ -105,8 +105,9 @@
             android:foregroundServiceType="dataSync" />
 
         <!-- Persistent daemon service: keeps the process alive for incoming calls and messages.
-             specialUse is required so the service can be started from BootReceiver on Android 15+,
-             where dataSync/remoteMessaging foreground services are blocked from BOOT_COMPLETED.
+             specialUse is used so the service can be started from BootReceiver on Android 15+,
+             where dataSync foreground services are blocked from BOOT_COMPLETED. Play review of
+             the subtype is covered by doc/play-console-special-use-justification.md.
              The attribute must list every type startForeground() can pass: the framework requires
              the runtime type to be a *subset* of it, and JamiDaemonService only has specialUse
              available on API 34+ — below that it passes dataSync, which crashed the process with

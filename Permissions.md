@@ -174,6 +174,21 @@ they can enable the permission in device settings.
 
 ---
 
+## Post-audit addition — `FOREGROUND_SERVICE_SPECIAL_USE` (2026-07-24)
+
+`JamiDaemonService` declares the `specialUse` foreground service type (subtype `jami_daemon`)
+so it can be started from `BootReceiver` on Android 15+, which blocks `dataSync` foreground
+services from `BOOT_COMPLETED` receivers. Unlike every other permission in this audit, this one
+is **reviewed by Google Play at submission** — the written case, the per-type analysis, and the
+`remoteMessaging` fallback are in
+[`doc/play-console-special-use-justification.md`](doc/play-console-special-use-justification.md).
+
+Note the manifest attribute must list every type `startForeground()` can pass
+(`specialUse|dataSync|remoteMessaging`): the framework requires the runtime type to be a subset
+of it, and the service only uses `specialUse` on API 34+.
+
+---
+
 ## Remaining Gaps (out of scope for this pass)
 
 - `READ_PROFILE` not declared (low priority — profile sync via daemon bridge)
