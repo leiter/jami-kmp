@@ -24,7 +24,9 @@ import net.jami.utils.Log
  * process is created — this service's sole job is to prevent the process
  * from being reaped when the UI is not visible.
  *
- * Uses foreground service type DATA_SYNC (no privileged role required).
+ * Uses foreground service type SPECIAL_USE on Android 14+ (falling back to DATA_SYNC
+ * on older releases). SPECIAL_USE is the only type Android 15+ permits when the service
+ * is started from a BOOT_COMPLETED receiver.
  */
 class JamiDaemonService : Service() {
 
@@ -59,7 +61,11 @@ class JamiDaemonService : Service() {
             .setSilent(true)
             .build()
 
-        val serviceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+        // specialUse is the only category permitted to start a foreground service from a
+        // BOOT_COMPLETED receiver on Android 15+ (dataSync/remoteMessaging are blocked there).
+        val serviceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
             ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0
 
         ServiceCompat.startForeground(this, NOTIF_ID, notification, serviceType)

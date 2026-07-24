@@ -26,6 +26,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <!-- Auto-start after device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -103,12 +104,18 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
-        <!-- Persistent daemon service: keeps the process alive for incoming calls and messages -->
+        <!-- Persistent daemon service: keeps the process alive for incoming calls and messages.
+             specialUse is required so the service can be started from BootReceiver on Android 15+,
+             where dataSync/remoteMessaging foreground services are blocked from BOOT_COMPLETED. -->
         <service
             android:name=".service.JamiDaemonService"
             android:exported="false"
-            android:foregroundServiceType="dataSync|remoteMessaging"
-            android:stopWithTask="false" />
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="jami_daemon" />
+        </service>
 
         <!-- Boot receiver: starts JamiDaemonService after device reboot -->
         <receiver
