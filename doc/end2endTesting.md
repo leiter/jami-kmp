@@ -222,7 +222,7 @@ merged timeline, exit code = verdict.
 | `account-enable-disable` | 1 | registration toggle: disable → `UNREGISTERED`, enable → `REGISTERED` (reuses a fixture, non-consuming) |
 | `name-lookup` | 1 | name-server **read**: a burned name resolves to its exact owner fingerprint (`state=0`), an unregistered name returns NotFound (`state=2`) — non-consuming |
 | `seed-pool` | 1 | status-aware pool top-up, zero name burns |
-| `two-device-contact` | 2 | B's contact request reaches A over the real DHT, accept + confirm (M3, **validated on 2 devices 2026-07-01**) |
+| `two-device-contact` | 2 | B's contact request reaches A over the real DHT, accept + confirm (M3, **validated on 2 devices 2026-07-01**) — pool-backed: two *distinct* fixtures, `ensureNoAccounts` on both roles, non-consuming, zero name burns |
 
 ## Recommended additional scenarios — account handling
 
@@ -336,10 +336,19 @@ default — both are repointed to `src/androidHarness/` in `android-app/build.gr
 
 ## Still open
 
-- **Harden `two-device-contact` onto the pool** — the two-device run is validated (2026-07-01),
-  but the scenario still creates fresh accounts per run and does **not** call `ensureNoAccounts`
-  first. Fold it onto the fixture pool (claim two unnamed assets) + add the clean-slate
-  precondition/sweep both roles, matching the single-device scenarios.
+- ~~**Harden `two-device-contact` onto the pool**~~ ✅ **DONE (2026-07-24)** — the scenario now
+  matches the single-device pattern: `ensureNoAccounts` on **both** roles as precondition and
+  teardown sweep, and each role gets a *distinct* pool fixture via the new
+  `MemoryStore.claimDistinct(2)` (the plain `claim` always returns the first match, so two calls
+  would have installed one identity on both devices — two devices of the *same* peer, which
+  cannot exchange a contact request). Roles the pool cannot cover fall back to
+  `CreateBareAccount`, not `CreateJamiAccount` — the old path registered `harness_a_<stamp>` /
+  `harness_b_<stamp>` on the name server, **burning two usernames per run**; runs are now
+  name-burn-free. The identity relay doubles as an import identity check: a pool-installed role's
+  resolved URI must equal its asset fingerprint. Non-consuming — the contact exists only in the
+  on-device copies, which are removed; host archives are never rewritten. Compiles clean and the
+  pool-claim path is regression-checked via `account-enable-disable` (PASS, ~4.4 s); the
+  two-device run itself is **not yet re-validated on hardware** (needs a second device).
 - **M4** — calls + recording across two devices.
 - **Contact / data-state fixtures** — the registry models identity + password + name only;
   contacts / swarm membership are deferred to the contact scenarios.

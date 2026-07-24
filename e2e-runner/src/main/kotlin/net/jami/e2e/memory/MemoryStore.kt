@@ -80,12 +80,38 @@ class MemoryStore(root: File = File("harness-memory")) {
     /**
      * First asset matching the requested **state** — `null` for a dimension means "don't
      * care". Returns `null` when the pool has nothing matching (the caller's cue to create).
+     * [exclude] holds fingerprints already taken by the caller, so a scenario needing several
+     * assets at once never gets the same identity twice.
      */
-    fun claim(named: Boolean? = null, hasPassword: Boolean? = null): AccountAsset? =
+    fun claim(
+        named: Boolean? = null,
+        hasPassword: Boolean? = null,
+        exclude: Set<String> = emptySet(),
+    ): AccountAsset? =
         index.accounts.firstOrNull { a ->
-            (named == null || a.named == named) &&
+            a.fingerprint !in exclude &&
+                (named == null || a.named == named) &&
                 (hasPassword == null || a.hasPassword == hasPassword)
         }
+
+    /**
+     * Up to [count] assets with **distinct identities**, matching the requested state. Returns
+     * fewer than [count] (possibly none) when the pool is too small — the caller creates the
+     * remainder. Needed by multi-device scenarios, where each role must be a different peer.
+     */
+    fun claimDistinct(
+        count: Int,
+        named: Boolean? = null,
+        hasPassword: Boolean? = null,
+    ): List<AccountAsset> {
+        val taken = mutableListOf<AccountAsset>()
+        repeat(count) {
+            val next = claim(named, hasPassword, taken.mapTo(mutableSetOf()) { a -> a.fingerprint })
+                ?: return taken
+            taken += next
+        }
+        return taken
+    }
 
     /**
      * Add a freshly-captured asset: copy [archiveSource] into the blob store keyed by
