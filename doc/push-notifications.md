@@ -86,7 +86,13 @@ Two ways forward:
 **2. iOS / APNs.** `DaemonBridge.ios.kt` implements `setPushNotificationToken` /
 `pushNotificationReceived`, but nothing registers for remote notifications and there is no
 Notification Service Extension. This is a prerequisite for CallKit waking the device on an
-incoming call.
+incoming call. The shape of the work (from `todo.md` P1):
+
+- register via `UNUserNotificationCenter` for message/sync pushes;
+- handle **VoIP** pushes through `PKPushRegistry` — on iOS a call wake-up must arrive on the
+  PushKit channel and report to CallKit immediately, or the OS kills the app;
+- feed both into the existing `PushConfigNotifier` / `setPushNotificationConfig` path, so the
+  policy layer stays shared with Android.
 
 **3. UnifiedPush.** `ConnectivityMode.UNIFIED_PUSH` is selectable in settings but unimplemented.
 It is the degoogled path and needs the `topic` argument of `setPushNotificationConfig`, which the

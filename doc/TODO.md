@@ -72,21 +72,21 @@
 
 ## Push Notifications
 
-- [ ] **FCM push notifications (Android)** — Firebase integration missing. Calls and messages only arrive while the daemon is running in the foreground.
-- [ ] **APNs push notifications (iOS)** — Same gap on iOS.
+- [x] **FCM push notifications (Android)** — `PushServiceManager` owns the token and reconciles it with the `ConnectivityMode.GOOGLE_SERVICES` setting (previously stored but never applied); `JamiFirebaseMessagingService` receives pushes and feeds `AccountService.pushNotificationReceived`; `PushForegroundService` covers the reconnect window for high-priority call pushes. Firebase is opt-in at build time. **Delivery still needs infrastructure** — the push is sent by the DHT proxy, and the public one only holds SFL's FCM credentials. See `doc/push-notifications.md`.
+- [ ] **APNs push notifications (iOS)** — Same gap on iOS. Needs `UNUserNotificationCenter` registration plus `PKPushRegistry` VoIP pushes for call wake-up, feeding the existing `DaemonBridge.ios.kt` `setPushNotificationToken` / `pushNotificationReceived`. Prerequisite for CallKit waking the device.
 
 ## Deep Links & Intents
 
 - [x] **URI scheme intent filters** — Single `intent-filter` on `MainActivity` handles `ring`, `jami`, `sip`, `tel` schemes with `ACTION_DIAL` + `ACTION_VIEW` + `DEFAULT` + `BROWSABLE` categories. Mirrors `HomeActivity` filter in reference manifest.
-- [ ] **Share-to-Jami (ACTION_SEND)** — Reference has a `ShareActivity` with `ACTION_SEND` / `ACTION_SEND_MULTIPLE` intent filter. KMP manifest has no `ACTION_SEND` filter — "Share via Jami" does not appear in the Android share sheet.
+- [x] **Share-to-Jami (ACTION_SEND)** — `MainActivity` now carries `ACTION_SEND` and `ACTION_SEND_MULTIPLE` intent filters with `mimeType="*/*"`; Jami appears in the Android share sheet.
 
 ## Chat — Missing Features
 
 - [x] **Message reactions UI** — `ReactionGroup` data class aggregates emoji+count+isMine. `ChatViewModel` handles `ReactionAdded/ReactionRemoved` events via `rebuildMessageReactions`; `interactionToMessageItem` snapshots reactions via `groupReactions`. `ConversationFacade.onReactionAdded/Removed` now updates the `Conversation` model before emitting events; `swarmMessageToInteraction` loads history reactions from `SwarmMessage.reactions`. `ChatBubble` shows reaction pills below bubbles and an emoji quick-picker (👍 ❤️ 😂 😮 😢 👏) in the long-press menu.
 - [x] **Read receipt display (checkmarks)** — `DeliveryStatus` enum (SENDING/DELIVERED/READ) added to `ChatViewModel`. `aggregateStatus()` derives it from `Interaction.statusMap` (DISPLAYED→READ, SUCCESS→DELIVERED, else SENDING). `MessageItem.deliveryStatus` wired from `interactionToMessageItem` TEXT case. `ChatBubble` overlays a `Row[timestamp, Icon]` at bottom-right of outgoing bubbles: `Done` (single tick, gray) = SENDING, `DoneAll` (double tick, gray) = DELIVERED, `DoneAll` (double tick, primary color) = READ.
 - [ ] **@Mentions in group chat** — Reference client parses `@username` in message text and highlights them. No mention system in KMP's chat UI or viewmodel.
-- [ ] **Full-screen image viewer** — Reference uses `MediaViewerFragment` with pinch-zoom. Tapping an image in KMP chat does nothing; no image viewer composable exists.
-- [ ] **Video message playback in chat** — Reference plays received video files inline. No video player composable in `ChatScreen.kt`.
+- [x] **Full-screen image viewer** — `ui/screens/MediaViewerScreen.kt`.
+- [x] **Video message playback in chat** — `ui/components/video/VideoPlayerView.kt` + `ui/screens/VideoPlayerScreen.kt`, routed via `MediaNavigationState`.
 - [ ] **Retry failed file transfer** — Reference shows a retry button on failed transfers. Not present in KMP.
 - [ ] **Message long-press: share file** — Copy-to-clipboard is done (`clipboardManager.setText` in `ChatBubble` long-press menu). Share-file action (for received file transfers) is still missing.
 
