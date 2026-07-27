@@ -18,8 +18,10 @@ package net.jami.services
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.jami.model.Call
 import net.jami.utils.Log
@@ -75,6 +77,7 @@ import platform.darwin.NSObject
  */
 interface CallKitManagerApi {
     fun reportIncomingCall(callId: String, displayName: String, hasVideo: Boolean)
+    fun reportIncomingCallFromPush(peerId: String, displayName: String, hasVideo: Boolean)
     fun reportOutgoingCallStarted(callId: String, accountId: String, displayName: String, hasVideo: Boolean)
     fun onCleared()
 }
@@ -83,6 +86,9 @@ interface CallKitManagerApi {
 class CallKitManagerWrapper(private val delegate: CallKitManager) : CallKitManagerApi {
     override fun reportIncomingCall(callId: String, displayName: String, hasVideo: Boolean) =
         delegate.reportIncomingCall(callId, displayName, hasVideo)
+
+    override fun reportIncomingCallFromPush(peerId: String, displayName: String, hasVideo: Boolean) =
+        delegate.reportIncomingCallFromPush(peerId, displayName, hasVideo)
 
     override fun reportOutgoingCallStarted(callId: String, accountId: String, displayName: String, hasVideo: Boolean) =
         delegate.reportOutgoingCallStarted(callId, accountId, displayName, hasVideo)
@@ -106,6 +112,25 @@ class CallKitManager(
     private val uuidToCall = mutableMapOf<String, String>()
     /** daemon call ID → account ID needed for accept / refuse / hangUp */
     private val callToAccount = mutableMapOf<String, String>()
+
+    /**
+     * A CallKit call reported straight off a VoIP push, before the daemon knows about it.
+     *
+     * iOS 13+ terminates the app if a PushKit VoIP push does not produce a
+     * `reportNewIncomingCall` before its completion handler returns, but the daemon needs
+     * seconds to reconnect to the DHT and surface the real call. So the push reports a
+     * placeholder immediately and the real call [adoptPendingPush] es its UUID when it
+     * arrives — the user sees one continuous incoming call, not two.
+     */
+    private class PendingPushCall(
+        val peerId: String,
+        val uuid: NSUUID,
+        var answered: Boolean = false,
+        var rejected: Boolean = false,
+        var timeoutJob: Job? = null,
+    )
+
+    private var pendingPush: PendingPushCall? = null
 
     init {
         val config = CXProviderConfiguration().apply {
@@ -133,12 +158,15 @@ class CallKitManager(
         when (call.callStatus) {
             Call.CallStatus.RINGING -> {
                 if (call.isIncoming && !callToUuid.containsKey(callId)) {
-                    // New incoming call not yet tracked — report to system
                     callToAccount[callId] = accountId
                     val displayName = call.contact?.displayName?.takeIf { it.isNotBlank() }
                         ?: call.contact?.username?.takeIf { it.isNotBlank() }
                         ?: call.peerUri.rawRingId.take(12).ifEmpty { call.peerUri.uri }
-                    reportIncomingCall(callId, displayName, call.hasVideo())
+                    // A VoIP push may already have put this call on screen; take that UUID over
+                    // rather than reporting a second incoming call for the same ring.
+                    if (!adoptPendingPush(call, callId, accountId, displayName)) {
+                        reportIncomingCall(callId, displayName, call.hasVideo())
+                    }
                 }
             }
             Call.CallStatus.CURRENT -> {
@@ -189,6 +217,107 @@ class CallKitManager(
     }
 
     /**
+     * Put an incoming call on screen straight from a VoIP push payload, before the daemon has
+     * reconnected. Must be called synchronously from the PushKit handler — see [PendingPushCall].
+     *
+     * [peerId] is the caller's Jami ID as carried in the push payload; it is what lets the real
+     * call recognise this placeholder as its own. An empty [peerId] still works — the next
+     * incoming call adopts it — which is the right behaviour for payloads without peer info.
+     */
+    fun reportIncomingCallFromPush(peerId: String, displayName: String, hasVideo: Boolean) {
+        // Only one incoming call is supported at a time (maximumCallsPerCallGroup = 1). A second
+        // push before the first resolved means the first is stale.
+        pendingPush?.let { stale ->
+            Log.d(TAG, "Replacing stale pending push call for ${stale.peerId}")
+            stale.timeoutJob?.cancel()
+            provider.reportCallWithUUID(stale.uuid, endedAtDate = null, reason = CXCallEndedReasonFailed)
+        }
+
+        val uuid = NSUUID()
+        val name = displayName.takeIf { it.isNotBlank() }
+            ?: peerId.take(12).takeIf { it.isNotBlank() }
+            ?: "Jami"
+        val pending = PendingPushCall(peerId = peerId, uuid = uuid)
+        pendingPush = pending
+
+        val update = CXCallUpdate().apply {
+            remoteHandle = CXHandle(type = CXHandleTypeGeneric, value = name)
+            localizedCallerName = name
+            this.hasVideo = hasVideo
+        }
+
+        provider.reportNewIncomingCallWithUUID(uuid, update = update) { error ->
+            if (error != null) {
+                Log.e(TAG, "reportNewIncomingCall (push) failed: ${error.localizedDescription}")
+                if (pendingPush === pending) pendingPush = null
+            } else {
+                Log.d(TAG, "Pending push call reported: peer=$peerId uuid=${uuid.UUIDString}")
+            }
+        }
+
+        // If the daemon never produces the call — dead push, network failure, caller gave up —
+        // the placeholder would otherwise ring forever.
+        pending.timeoutJob = scope.launch {
+            delay(PUSH_CALL_TIMEOUT_MS)
+            if (pendingPush === pending) {
+                Log.w(TAG, "Pending push call timed out without a daemon call: peer=$peerId")
+                pendingPush = null
+                provider.reportCallWithUUID(uuid, endedAtDate = null, reason = CXCallEndedReasonUnanswered)
+            }
+        }
+    }
+
+    /**
+     * Hand a placeholder reported from a push over to the real daemon call.
+     *
+     * Returns true when [call] took over an existing pending UUID, meaning the caller must not
+     * report it as a new incoming call.
+     */
+    private fun adoptPendingPush(
+        call: Call,
+        callId: String,
+        accountId: String,
+        displayName: String,
+    ): Boolean {
+        val pending = pendingPush ?: return false
+        // An empty peerId means the payload carried no caller info, so any incoming call is a match.
+        if (pending.peerId.isNotEmpty() && pending.peerId != call.peerUri.rawRingId) return false
+
+        pending.timeoutJob?.cancel()
+        pendingPush = null
+
+        val uuid = pending.uuid
+        callToUuid[callId] = uuid
+        uuidToCall[uuid.UUIDString] = callId
+        callToAccount[callId] = accountId
+        Log.d(TAG, "Pending push call adopted by $callId uuid=${uuid.UUIDString}")
+
+        // Replace the placeholder's guessed caller name with what the daemon actually resolved.
+        provider.reportCallWithUUID(
+            uuid,
+            updated = CXCallUpdate().apply {
+                remoteHandle = CXHandle(type = CXHandleTypeGeneric, value = displayName)
+                localizedCallerName = displayName
+                hasVideo = call.hasVideo()
+            }
+        )
+
+        // The user may have already tapped answer or decline on the placeholder, before the
+        // daemon had a call to act on. Apply that decision now.
+        when {
+            pending.answered -> {
+                Log.d(TAG, "Applying deferred answer to $callId")
+                scope.launch { callService.accept(accountId, callId, hasVideo = false) }
+            }
+            pending.rejected -> {
+                Log.d(TAG, "Applying deferred decline to $callId")
+                scope.launch { callService.refuse(accountId, callId) }
+            }
+        }
+        return true
+    }
+
+    /**
      * Register a new outgoing call with the system.
      * Should be called by [CallService] when it places an outgoing call.
      */
@@ -226,9 +355,22 @@ class CallKitManager(
         callToUuid.clear()
         uuidToCall.clear()
         callToAccount.clear()
+        pendingPush?.timeoutJob?.cancel()
+        pendingPush = null
     }
 
     override fun provider(provider: CXProvider, performAnswerCallAction: CXAnswerCallAction) {
+        // Answered off a push placeholder: there is no daemon call to accept yet, so record the
+        // intent and let adoptPendingPush apply it. Fulfilling keeps the system call UI alive.
+        pendingPush?.let { pending ->
+            if (pending.uuid.UUIDString == performAnswerCallAction.callUUID.UUIDString) {
+                Log.d(TAG, "Answer on pending push call — deferring until the daemon call arrives")
+                pending.answered = true
+                performAnswerCallAction.fulfill()
+                return
+            }
+        }
+
         val callId = uuidToCall[performAnswerCallAction.callUUID.UUIDString]
         val accountId = callId?.let { callToAccount[it] }
         if (callId == null || accountId == null) {
@@ -242,6 +384,18 @@ class CallKitManager(
     }
 
     override fun provider(provider: CXProvider, performEndCallAction: CXEndCallAction) {
+        // Declined off a push placeholder — same deferral as answer. The pending entry is kept
+        // (not cleared) so the call still gets refused on the daemon once it materialises,
+        // otherwise the caller would keep ringing.
+        pendingPush?.let { pending ->
+            if (pending.uuid.UUIDString == performEndCallAction.callUUID.UUIDString) {
+                Log.d(TAG, "Decline on pending push call — deferring until the daemon call arrives")
+                pending.rejected = true
+                performEndCallAction.fulfill()
+                return
+            }
+        }
+
         val callId = uuidToCall[performEndCallAction.callUUID.UUIDString]
         val accountId = callId?.let { callToAccount[it] }
         if (callId == null || accountId == null) {
@@ -293,6 +447,8 @@ class CallKitManager(
     }
 
     fun onCleared() {
+        pendingPush?.timeoutJob?.cancel()
+        pendingPush = null
         scope.cancel()
         provider.invalidate()
     }
@@ -300,3 +456,9 @@ class CallKitManager(
 }
 
 private const val TAG = "CallKitManager"
+
+/**
+ * How long a push-reported placeholder may ring before the daemon produces a matching call.
+ * Generous, because the daemon has to reconnect to the DHT from a cold background process.
+ */
+private const val PUSH_CALL_TIMEOUT_MS = 25_000L

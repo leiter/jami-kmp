@@ -139,7 +139,7 @@ All user-visible strings live in `shared/src/commonMain/composeResources/`. The 
 
 All major mobile features are implemented. The only remaining gaps are:
 
-- **Push notifications** — Android FCM client integration is done (2026-07-27, see `doc/push-notifications.md`); delivery still needs a Firebase project plus a push-capable DHT proxy holding its credentials. iOS/APNs not started, so calls and messages still rely on the daemon running in the foreground.
+- **Push notifications** — Android (FCM) and iOS (APNs + PushKit) client integration are both done (2026-07-27, see `doc/push-notifications.md`). Delivery still needs a push-capable DHT proxy holding the FCM/APNs credentials for this app, so calls and messages currently still rely on the daemon running. The iOS half is uncompiled — Apple targets are skipped on a Linux host.
 - **Chat plugins** — Jami plugin system not ported to KMP. Menu item shows a "not yet supported" snackbar.
 - **OsmMapView (Desktop/macOS)** — no viable JVM or AppKit map library in scope; shows coordinate text instead of a map.
 - **Desktop DaemonBridge** — all 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.

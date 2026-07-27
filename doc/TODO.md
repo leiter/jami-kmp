@@ -73,7 +73,7 @@
 ## Push Notifications
 
 - [x] **FCM push notifications (Android)** — `PushServiceManager` owns the token and reconciles it with the `ConnectivityMode.GOOGLE_SERVICES` setting (previously stored but never applied); `JamiFirebaseMessagingService` receives pushes and feeds `AccountService.pushNotificationReceived`; `PushForegroundService` covers the reconnect window for high-priority call pushes. Firebase is opt-in at build time. **Delivery still needs infrastructure** — the push is sent by the DHT proxy, and the public one only holds SFL's FCM credentials. See `doc/push-notifications.md`.
-- [ ] **APNs push notifications (iOS)** — Same gap on iOS. Needs `UNUserNotificationCenter` registration plus `PKPushRegistry` VoIP pushes for call wake-up, feeding the existing `DaemonBridge.ios.kt` `setPushNotificationToken` / `pushNotificationReceived`. Prerequisite for CallKit waking the device.
+- [x] **APNs push notifications (iOS)** — `IOSPushServiceManager` mirrors the Android policy layer; `AppDelegate` registers for both APNs and PushKit VoIP and forwards tokens via `IOSPushHelperKt`. A VoIP push reports a placeholder call to CallKit synchronously (iOS 13+ requirement) which the real daemon call then adopts. `UIBackgroundModes` + `aps-environment` entitlement added. **Not compiled** — Apple targets are skipped on this Linux host; needs a build on a Mac. See `doc/push-notifications.md`.
 
 ## Deep Links & Intents
 

@@ -17,9 +17,13 @@
 
 import UIKit
 import UserNotifications
+import PushKit
 import JamiShared
 
 class AppDelegate: NSObject, UIApplicationDelegate {
+
+    /// Retained for the app's lifetime — PushKit delivers nothing if the registry is deallocated.
+    private var voipRegistry: PKPushRegistry?
 
     func application(
         _ application: UIApplication,
@@ -56,10 +60,23 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         IOSApplicationHelperKt.startJami()
         NSLog("JAMI_KOIN_APPDELEGATE startJami() returned")
 
-        // 3. Register for remote notifications (token delivery handled by daemon when push is wired)
+        // 3. Wire the push policy layer (reads the connectivity-mode setting, applies tokens to
+        // the daemon). Must run before any token can arrive.
+        IOSPushHelperKt.initPush()
+
+        // 4. Register for standard remote notifications — carries message and sync pushes.
+        // The token lands in didRegisterForRemoteNotificationsWithDeviceToken below.
         application.registerForRemoteNotifications()
 
-        // 4. Set notification delegate so foreground notifications are delivered
+        // 5. Register for PushKit VoIP pushes. This is the only channel iOS allows to wake a
+        // suspended app for an incoming call, so it is what makes CallKit reachable in the
+        // background. Kept in a property: PushKit stops delivering if the registry is released.
+        let registry = PKPushRegistry(queue: .main)
+        registry.delegate = self
+        registry.desiredPushTypes = [.voIP]
+        self.voipRegistry = registry
+
+        // 6. Set notification delegate so foreground notifications are delivered
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
 
         return true
@@ -69,9 +86,94 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         IOSApplicationHelperKt.stopJami()
     }
 
+    /// Flattens an APNs/PushKit payload to the `[String: String]` the daemon expects.
+    private static func stringify(_ payload: [AnyHashable: Any]) -> [String: String] {
+        var result = [String: String]()
+        for (key, value) in payload {
+            result[String(describing: key)] = String(describing: value)
+        }
+        return result
+    }
+}
+
+// MARK: - Remote notifications (APNs)
+
+extension AppDelegate {
+
+    func application(
+        _ application: UIApplication,
+        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+    ) {
+        let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+        NSLog("JAMI_PUSH registered for remote notifications")
+        IOSPushHelperKt.onApnsToken(token: token)
+    }
+
+    func application(
+        _ application: UIApplication,
+        didFailToRegisterForRemoteNotificationsWithError error: Error
+    ) {
+        NSLog("JAMI_PUSH remote notification registration failed: \(error.localizedDescription)")
+        IOSPushHelperKt.onPushRegistrationFailed(reason: error.localizedDescription)
+    }
+
+    func application(
+        _ application: UIApplication,
+        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) {
+        IOSPushHelperKt.onPushReceived(payload: AppDelegate.stringify(userInfo))
+        completionHandler(.newData)
+    }
+}
+
+// MARK: - VoIP pushes (PushKit)
+
+extension AppDelegate: PKPushRegistryDelegate {
+
+    func pushRegistry(
+        _ registry: PKPushRegistry,
+        didUpdate pushCredentials: PKPushCredentials,
+        for type: PKPushType
+    ) {
+        guard type == .voIP else { return }
+        let token = pushCredentials.token.map { String(format: "%02.2hhx", $0) }.joined()
+        NSLog("JAMI_PUSH received PushKit VoIP token")
+        IOSPushHelperKt.onVoipToken(token: token)
+    }
+
+    func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenFor type: PKPushType) {
+        guard type == .voIP else { return }
+        NSLog("JAMI_PUSH PushKit VoIP token invalidated")
+        IOSPushHelperKt.onVoipToken(token: "")
+    }
+
+    func pushRegistry(
+        _ registry: PKPushRegistry,
+        didReceiveIncomingPushWith payload: PKPushPayload,
+        for type: PKPushType,
+        completion: @escaping () -> Void
+    ) {
+        guard type == .voIP else {
+            completion()
+            return
+        }
+        // Synchronous by design. Since iOS 13 the system terminates the app if a VoIP push does
+        // not report an incoming call to CallKit before this completion handler runs, and the
+        // daemon needs seconds to reconnect — so onVoipPushReceived shows CallKit from the
+        // payload first, then hands the push to the daemon. Do not make this async.
+        IOSPushHelperKt.onVoipPushReceived(payload: AppDelegate.stringify(payload.dictionaryPayload))
+        completion()
+    }
+}
+
+// MARK: - Helpers
+
+private extension AppDelegate {
+
     /// Returns the on-disk path to the CA certificate bundle, copying it out of the app
     /// bundle into Documents on first launch (libjami needs a stable filesystem path).
-    private func certificatePath() -> String? {
+    func certificatePath() -> String? {
         let fileName = "cacert"
         let fileExtension = "pem"
         let fileManager = FileManager.default
@@ -92,19 +194,5 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             // Fall back to the in-bundle path if the copy fails.
             return certSource.path
         }
-    }
-
-    // MARK: - Remote notifications (placeholder — APNs not yet integrated)
-
-    func application(_ application: UIApplication,
-                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        // TODO: deliver token to daemon via setPushNotificationToken once APNs integration is wired
-        let token = deviceToken.map { String(format: "%02x", $0) }.joined()
-        print("[Jami] APNs device token: \(token)")
-    }
-
-    func application(_ application: UIApplication,
-                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
-        print("[Jami] Failed to register for remote notifications: \(error)")
     }
 }

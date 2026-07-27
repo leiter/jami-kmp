@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Required for APNs and PushKit. "development" targets the APNs sandbox; release builds
+	     for TestFlight/App Store need "production" (Xcode's Push Notifications capability
+	     normally manages this, and the App ID must have Push Notifications enabled in the
+	     developer portal). See doc/push-notifications.md. -->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>

@@ -1,7 +1,9 @@
 # Push Notifications
 
-**Status:** Android client-side integration complete (2026-07-27). iOS/APNs not started.
+**Status:** Android **and** iOS client-side integration complete (2026-07-27).
 Delivery is **not** yet functional end to end — see "What is still missing" below.
+The iOS code has **not been compiled** — Apple targets are skipped on a Linux host and this
+machine has no macOS toolchain. It needs a build on a Mac before it can be trusted.
 
 ---
 
@@ -83,22 +85,71 @@ Two ways forward:
   key, and point accounts at it via `Account.dhtProxyListUrl` / `Account.proxyServer`.
 - **Ship under Jami's own sender ID**, which is only possible for builds published by SFL.
 
-**2. iOS / APNs.** `DaemonBridge.ios.kt` implements `setPushNotificationToken` /
-`pushNotificationReceived`, but nothing registers for remote notifications and there is no
-Notification Service Extension. This is a prerequisite for CallKit waking the device on an
-incoming call. The shape of the work (from `todo.md` P1):
+**2. An APNs certificate/key on the proxy, and a build on a Mac.** Same shape as the Android
+blocker: the proxy sends the push, so it needs the APNs auth key for this bundle ID. Unlike FCM
+this is tractable for a self-distributed build, because you control the APNs key for your own App
+ID directly — the proxy just has to be configured with it.
 
-- register via `UNUserNotificationCenter` for message/sync pushes;
-- handle **VoIP** pushes through `PKPushRegistry` — on iOS a call wake-up must arrive on the
-  PushKit channel and report to CallKit immediately, or the OS kills the app;
-- feed both into the existing `PushConfigNotifier` / `setPushNotificationConfig` path, so the
-  policy layer stays shared with Android.
+Also outstanding on iOS:
+
+- **the code is uncompiled** (see status above);
+- the **Push Notifications capability** must be enabled on the App ID in the developer portal,
+  and `aps-environment` in `iosApp.entitlements` flipped from `development` to `production` for
+  TestFlight/App Store builds;
+- `iosApp.entitlements` is referenced by `CODE_SIGN_ENTITLEMENTS` but is not in the Xcode file
+  navigator — signing works, but adding it to the project would make it visible;
+- there is **no Notification Service Extension**, so a message push cannot be decrypted and
+  displayed while the app is suspended — only VoIP/call wake-up works. The upstream iOS client
+  has `jamiNotificationExtension` for this.
+
+**4. Which token the daemon gets (iOS).** The daemon holds one token, but iOS has two:
+the APNs token (messages/sync) and the PushKit VoIP token (the only channel allowed to wake a
+suspended app for a call). `IOSPushServiceManager.applyCurrentMode()` **prefers the VoIP token**,
+because waking for calls is the reason push exists in a P2P client. Consequence: a proxy sending
+*message* pushes must address the VoIP topic too. If message delivery turns out to matter more
+than call wake-up, flip the preference — it is one line.
 
 **3. UnifiedPush.** `ConnectivityMode.UNIFIED_PUSH` is selectable in settings but unimplemented.
 It is the degoogled path and needs the `topic` argument of `setPushNotificationConfig`, which the
 FCM path leaves empty.
 
 ---
+
+## How it is wired (iOS)
+
+```
+AppDelegate.didFinishLaunching
+   ├─▶ IOSPushHelperKt.initPush()             (registers the PushConfigNotifier hook)
+   ├─▶ registerForRemoteNotifications()        ─▶ didRegisterFor… ─▶ onApnsToken
+   └─▶ PKPushRegistry(desiredPushTypes: .voIP) ─▶ didUpdate…      ─▶ onVoipToken
+                                                          both ─▶ applyCurrentMode
+                                                                     ├─▶ setPushNotificationConfig
+                                                                     │     (topic = bundle id,
+                                                                     │      platform = "ios")
+                                                                     └─▶ setProxyEnabled(true)
+```
+
+Incoming call, app suspended:
+
+```
+PushKit VoIP push
+   └─▶ IOSPushServiceManager.onVoipPushReceived
+          ├─▶ CallKitManager.reportIncomingCallFromPush   ← synchronous, iOS 13+ requires this
+          │      (placeholder call from the payload's peerId/displayName/hasVideo)
+          └─▶ AccountService.pushNotificationReceived ─▶ daemon reconnects to the DHT
+                 └─▶ callUpdates(RINGING) ─▶ adoptPendingPush
+                        takes over the placeholder UUID, corrects the caller name,
+                        and applies an answer/decline the user already tapped
+```
+
+The adoption step is the whole reason this is not just "call the Android code with different
+names": iOS gives a VoIP push only a few hundred milliseconds to put a call on screen, while the
+daemon needs seconds to reconnect. Reporting a placeholder and letting the real call inherit its
+UUID is what keeps that a single continuous ring rather than two calls or a terminated app. A
+placeholder that is never adopted is ended after 25 s (`PUSH_CALL_TIMEOUT_MS`).
+
+Push is armed on iOS for every connectivity mode **except** `LOCAL_NODE` — unlike Android there
+is no Firebase-or-nothing choice, APNs is the only transport iOS offers.
 
 ## Files
 
@@ -107,5 +158,10 @@ FCM path leaves empty.
 | `android-app/.../push/PushServiceManager.kt` | Token ownership, policy, reconciliation |
 | `android-app/.../push/JamiFirebaseMessagingService.kt` | FCM receiver |
 | `android-app/.../service/PushForegroundService.kt` | Reconnect window for call pushes |
+| `shared/.../services/IOSPushServiceManager.kt` | iOS token ownership, policy, VoIP push entry |
+| `shared/.../net/jami/IOSPushHelper.kt` | Swift-facing forwarders (`IOSPushHelperKt.*`) |
+| `shared/.../services/CallKitManager.kt` | `reportIncomingCallFromPush` + placeholder adoption |
+| `ios-app/iosApp/AppDelegate.swift` | APNs + `PKPushRegistryDelegate` |
+| `ios-app/iosApp/iosApp.entitlements` | `aps-environment` |
 | `shared/.../services/PushConfigNotifier.kt` | commonMain → platform re-apply seam |
 | `shared/.../services/AccountService.kt` | `setPushNotificationConfig` / `pushNotificationReceived` (pre-existing) |

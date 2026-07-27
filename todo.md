@@ -9,8 +9,8 @@ Items confirmed as already implemented are listed at the bottom for reference.
 
 ### Push notifications (FCM + APNs)
 - ~~Android: integrate Firebase Cloud Messaging; register device token with Jami server; handle `RemoteMessage` in a `FirebaseMessagingService` subclass; wake the daemon on push arrival.~~ ✓ DONE (2026-07-27) — `net.jami.android.push.{PushServiceManager, JamiFirebaseMessagingService}` + `PushForegroundService`. Firebase is opt-in at build time (plugin applied only when `google-services.json` is present).
-- iOS: integrate APNs via `UNUserNotificationCenter`; handle VoIP pushes with `PKPushRegistry` for call wakeup.
-- ~~Both platforms: pass token to `DaemonBridge.setPushNotificationConfig()`.~~ Android done; iOS pending.
+- ~~iOS: integrate APNs via `UNUserNotificationCenter`; handle VoIP pushes with `PKPushRegistry` for call wakeup.~~ ✓ DONE (2026-07-27) — `IOSPushServiceManager` + `IOSPushHelper.kt` + `AppDelegate` APNs/PushKit delegates + `CallKitManager.reportIncomingCallFromPush`. **Uncompiled** — needs a macOS build.
+- ~~Both platforms: pass token to `DaemonBridge.setPushNotificationConfig()`.~~ ✓ DONE both platforms.
 - **Still blocked on infrastructure**: the push is sent by the DHT proxy, not the peer, and the public proxy only holds SFL's FCM credentials. Needs a self-hosted `dhtnode --proxyserver` with your own Firebase server key. See `doc/push-notifications.md`.
 - **Reference**: `jami-client-android` `JamiFirebaseMessagingService.kt`
 
