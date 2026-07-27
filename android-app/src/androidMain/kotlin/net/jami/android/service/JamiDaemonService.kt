@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -74,23 +75,32 @@ class JamiDaemonService : Service() {
         ServiceCompat.startForeground(this, NOTIF_ID, notification, serviceType)
     }
 
-    private fun createChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        if (nm.getNotificationChannel(CHANNEL_ID) != null) return
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            getString(R.string.notif_channel_background_service),
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = getString(R.string.notif_channel_background_service_descr)
-            setShowBadge(false)
-        }
-        nm.createNotificationChannel(channel)
-    }
+    private fun createChannel() = ensureChannel(this)
 
     companion object {
         private const val TAG = "JamiDaemonService"
+
+        /**
+         * Create the background-service channel if it does not exist yet.
+         *
+         * Shared with [PushForegroundService], which posts on the same channel and can start
+         * before this service ever has — a push can arrive at a cold process.
+         */
+        fun ensureChannel(context: Context) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (nm.getNotificationChannel(CHANNEL_ID) != null) return
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                context.getString(R.string.notif_channel_background_service),
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = context.getString(R.string.notif_channel_background_service_descr)
+                setShowBadge(false)
+            }
+            nm.createNotificationChannel(channel)
+        }
+
         // v2: forces channel recreation at IMPORTANCE_LOW (old channel was created at IMPORTANCE_MIN)
         const val CHANNEL_ID = "jami_daemon_service_v2"
         const val NOTIF_ID = 1

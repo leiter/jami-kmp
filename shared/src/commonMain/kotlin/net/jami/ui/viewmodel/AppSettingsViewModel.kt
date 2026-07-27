@@ -34,6 +34,7 @@ import net.jami.model.settings.Theme
 import net.jami.repository.SettingsRepository
 import net.jami.services.AccountService
 import net.jami.services.ContactService
+import net.jami.services.PushConfigNotifier
 import net.jami.ui.platform.LocalPrefKeys
 import net.jami.ui.platform.LocalPrefs
 
@@ -364,6 +365,8 @@ class AppSettingsViewModel(
     fun setConnectivityMode(mode: ConnectivityMode) {
         _state.update { it.copy(connectivityMode = mode) }
         LocalPrefs.setInt(LocalPrefKeys.CONNECTIVITY_MODE, mode.ordinal)
+        // Arms or clears the platform push registration for the newly selected mode.
+        PushConfigNotifier.notifyConfigChanged()
     }
 
     // ==================== Notification Visibility ====================

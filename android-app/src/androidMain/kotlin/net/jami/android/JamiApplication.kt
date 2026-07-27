@@ -5,6 +5,7 @@ import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import net.jami.android.push.PushServiceManager
 import net.jami.di.initKoin
 import net.jami.services.AccountService
 import net.jami.services.DaemonBridge
@@ -29,6 +30,10 @@ class JamiApplication : Application(), KoinComponent {
             androidContext(this@JamiApplication)
         }
 
+        // Fetch the FCM token early — it arrives asynchronously and is applied to the daemon by
+        // PushServiceManager once both a token and loaded accounts are available.
+        PushServiceManager.initialize(this)
+
         // Initialize Jami daemon
         // Note: JamiDaemonService is started from MainActivity (foreground-safe) and from
         // BootReceiver. Starting a foreground service from Application.onCreate() is
@@ -46,6 +51,9 @@ class JamiApplication : Application(), KoinComponent {
                     // returns. This guarantees daemonAccountsReady is set so AppViewModel can
                     // exit Loading state regardless.
                     accountService.loadAccountsFromDaemon(isConnected = true)
+                    // Accounts exist now, so a push token can actually be applied to them.
+                    // Safe when Firebase is unconfigured — this just clears the daemon token.
+                    PushServiceManager.applyCurrentMode()
                     // Enumerate cameras and register them (+ screen-sharing device) with the
                     // daemon so video negotiation can proceed.
                     CoroutineScope(Dispatchers.Default).launch {

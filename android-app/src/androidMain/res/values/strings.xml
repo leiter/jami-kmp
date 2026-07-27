@@ -4,4 +4,5 @@
     <string name="notif_background_service">Jami-KMP is running in the background</string>
     <string name="notif_channel_background_service">Background service</string>
     <string name="notif_channel_background_service_descr">Allows receiving calls and messages anytime.</string>
+    <string name="notif_push_sync">Reconnecting…</string>
 </resources>

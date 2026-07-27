@@ -5,6 +5,15 @@ plugins {
     alias(libs.plugins.composeCompiler)
 }
 
+// Firebase Cloud Messaging is opt-in at build time: the google-services plugin is applied only
+// when a `google-services.json` has been dropped in. Without it the app still builds and runs —
+// FirebaseApp.initializeApp() returns null and PushServiceManager falls back to the persistent
+// daemon (LOCAL_NODE connectivity). This keeps the repo buildable without Firebase credentials.
+val hasFirebaseConfig = file("google-services.json").exists()
+if (hasFirebaseConfig) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 kotlin {
     androidTarget {
         compilerOptions {
@@ -24,6 +33,7 @@ kotlin {
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.koin.android)
                 implementation(libs.koin.compose)
+                implementation(libs.firebase.messaging)
             }
         }
     }
