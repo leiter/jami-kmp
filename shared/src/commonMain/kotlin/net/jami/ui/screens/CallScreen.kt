@@ -828,7 +828,9 @@ private fun OnGoingControls(
             // Screen share button
             CallControlButton(
                 icon = if (state.isScreenSharing) Icons.Default.StopScreenShare else Icons.Default.ScreenShare,
-                contentDescription = if (state.isScreenSharing) "Stop screen share" else "Start screen share",
+                contentDescription = stringResource(
+                    if (state.isScreenSharing) Res.string.content_desc_stop_screen_share else Res.string.content_desc_start_screen_share
+                ),
                 isActive = state.isScreenSharing,
                 onClick = onToggleScreenShare,
             )
