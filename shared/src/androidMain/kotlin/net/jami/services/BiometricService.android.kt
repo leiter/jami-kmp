@@ -11,6 +11,7 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.lang.ref.WeakReference
 import java.security.KeyStore
 import java.util.UUID
 import javax.crypto.Cipher
@@ -30,6 +31,19 @@ import kotlin.coroutines.resume
  * - Encrypted data is stored in app-private SharedPreferences
  */
 actual class BiometricService(private val context: Context) {
+    // BiometricPrompt requires a FragmentActivity host; this service is injected with the
+    // application Context (it's a Koin singleton, constructed before any Activity exists), so
+    // the current foreground activity is attached/detached by MainActivity across its lifecycle.
+    private var activityRef: WeakReference<FragmentActivity>? = null
+
+    fun attachActivity(activity: FragmentActivity) {
+        activityRef = WeakReference(activity)
+    }
+
+    fun detachActivity() {
+        activityRef = null
+    }
+
     companion object {
         private const val TAG = "BiometricService"
         private const val PREFS_PREFIX = "biometric_"
@@ -250,9 +264,9 @@ actual class BiometricService(private val context: Context) {
         promptTitle: String,
         promptDescription: String
     ): ByteArray? = suspendCancellableCoroutine { continuation ->
-        val activity = context as? FragmentActivity
+        val activity = activityRef?.get()
         if (activity == null) {
-            Log.e(TAG, "Context is not a FragmentActivity")
+            Log.e(TAG, "No foreground FragmentActivity attached")
             continuation.resume(null)
             return@suspendCancellableCoroutine
         }
@@ -307,9 +321,9 @@ actual class BiometricService(private val context: Context) {
         promptTitle: String,
         promptDescription: String
     ): ByteArray? = suspendCancellableCoroutine { continuation ->
-        val activity = context as? FragmentActivity
+        val activity = activityRef?.get()
         if (activity == null) {
-            Log.e(TAG, "Context is not a FragmentActivity")
+            Log.e(TAG, "No foreground FragmentActivity attached")
             continuation.resume(null)
             return@suspendCancellableCoroutine
         }

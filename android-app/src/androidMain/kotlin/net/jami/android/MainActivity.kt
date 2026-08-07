@@ -5,10 +5,10 @@ import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -16,6 +16,7 @@ import net.jami.android.service.CallActionReceiver
 import net.jami.android.service.JamiDaemonService
 import net.jami.services.AccountService
 import net.jami.services.AndroidPictureInPictureManager
+import net.jami.services.BiometricService
 import net.jami.services.CallService
 import net.jami.services.NotificationService
 import net.jami.services.SyncManager
@@ -27,18 +28,22 @@ import net.jami.utils.Log
 import org.koin.android.ext.android.inject
 import java.io.File
 
-class MainActivity : ComponentActivity() {
+// FragmentActivity (not just ComponentActivity) because BiometricPrompt only accepts a
+// FragmentActivity or Fragment host; see BiometricService.android.kt's attachActivity().
+class MainActivity : FragmentActivity() {
 
     private val syncManager: SyncManager by inject()
     private val accountService: AccountService by inject()
     private val callService: CallService by inject()
     private val hardwareService: HardwareService by inject()
     private val pipManager: AndroidPictureInPictureManager by inject()
+    private val biometricService: BiometricService by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         pipManager.attachActivity(this)
+        biometricService.attachActivity(this)
         ContextCompat.startForegroundService(this, Intent(this, JamiDaemonService::class.java))
         setContent {
             JamiApp()
@@ -63,6 +68,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         pipManager.detachActivity()
+        biometricService.detachActivity()
     }
 
     override fun onUserLeaveHint() {
