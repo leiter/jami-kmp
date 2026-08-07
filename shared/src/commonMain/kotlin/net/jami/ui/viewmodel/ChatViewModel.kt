@@ -845,7 +845,7 @@ class ChatViewModel(
         val current = _state.value.messages
         val updated = current.map { item ->
             if (item.id == msg.id) {
-                item.copy(text = msg.textContent)
+                item.copy(text = msg.textContent, isEdited = msg.editions.isNotEmpty())
             } else {
                 item
             }
