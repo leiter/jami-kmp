@@ -775,6 +775,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="toggle_create_group">Create group conversation</string>
     <string name="placeholder_search">Search or add</string>
 
+    <!-- Media gallery -->
+    <string name="action_view_shared_media">Shared media</string>
+    <string name="screen_title_media_gallery">Shared media</string>
+    <string name="media_gallery_empty">No shared media yet</string>
+
     <!-- QR Code -->
     <string name="screen_title_qr_scan">Scan QR Code</string>
     <string name="qr_scan_manual_hint">Or paste a Jami ID</string>

@@ -425,6 +425,33 @@ private fun MainNavigation(needsMigration: Boolean) {
                     MediaNavigationState.fileName = fileName
                     navController.navigate(Screen.VideoPlayer.route)
                 },
+                onGalleryClick = {
+                    navController.navigate(Screen.MediaGallery.createRoute(conversationId))
+                },
+            )
+        }
+
+        composable(
+            route = Screen.MediaGallery.ROUTE,
+            arguments = listOf(
+                navArgument("conversationId") { type = NavType.StringType },
+            ),
+        ) { backStackEntry ->
+            val conversationId = backStackEntry.extractArg("conversationId")
+            if (conversationId.isEmpty()) return@composable
+            MediaGalleryScreen(
+                conversationId = conversationId,
+                onBack = { navController.popBackStack() },
+                onImageClick = { filePath ->
+                    MediaNavigationState.filePath = filePath
+                    MediaNavigationState.fileName = ""
+                    navController.navigate(Screen.MediaViewer.route)
+                },
+                onVideoClick = { filePath, fileName ->
+                    MediaNavigationState.filePath = filePath
+                    MediaNavigationState.fileName = fileName
+                    navController.navigate(Screen.VideoPlayer.route)
+                },
             )
         }
 

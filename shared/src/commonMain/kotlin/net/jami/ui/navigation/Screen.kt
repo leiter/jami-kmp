@@ -48,6 +48,14 @@ sealed class Screen(val route: String) {
         }
     }
 
+    data class MediaGallery(val conversationId: String) :
+        Screen("media_gallery/$conversationId") {
+        companion object {
+            const val ROUTE = "media_gallery/{conversationId}"
+            fun createRoute(conversationId: String) = "media_gallery/$conversationId"
+        }
+    }
+
     data class Call(val contactId: String, val isVideo: Boolean) :
         Screen("call/$contactId/$isVideo") {
         companion object {

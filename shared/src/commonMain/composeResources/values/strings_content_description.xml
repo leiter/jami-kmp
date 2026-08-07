@@ -45,4 +45,6 @@
     <string name="content_desc_take_photo">Take photo</string>
     <string name="content_desc_send_message">Send message</string>
     <string name="content_desc_send_thumbs_up">Send thumbs up</string>
+    <string name="content_desc_media_thumbnail">Shared media thumbnail</string>
+    <string name="content_desc_video_thumbnail">Shared video thumbnail</string>
 </resources>

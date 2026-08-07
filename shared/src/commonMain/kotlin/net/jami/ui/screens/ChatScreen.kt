@@ -180,6 +180,7 @@ fun ChatScreen(
     onShareLocation: () -> Unit = {},
     onImageClick: (filePath: String) -> Unit = {},
     onVideoClick: (filePath: String, fileName: String) -> Unit = { _, _ -> },
+    onGalleryClick: () -> Unit = {},
 ) {
     val viewModel = getViewModel<ChatViewModel>()
     val state by viewModel.state.collectAsState()
@@ -431,6 +432,14 @@ fun ChatScreen(
                                     onClick = {
                                         overflowMenuExpanded = false
                                         viewModel.openSearch()
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(Res.string.action_view_shared_media)) },
+                                    leadingIcon = { Icon(Icons.Default.Photo, contentDescription = null) },
+                                    onClick = {
+                                        overflowMenuExpanded = false
+                                        onGalleryClick()
                                     },
                                 )
                                 DropdownMenuItem(
