@@ -26,6 +26,7 @@ import net.jami.model.Call
 import net.jami.model.Call.CallStatus
 import net.jami.model.Conference
 import net.jami.model.VideoDevices
+import net.jami.repository.SettingsRepository
 import net.jami.services.CameraService
 import net.jami.services.DaemonBridge
 import net.jami.utils.Log
@@ -46,6 +47,7 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val daemonBridge: DaemonBridge by inject()
     private val cameraService: CameraService by inject()
+    private val settingsRepository: SettingsRepository by inject()
     private var currentFocusRequest: AudioFocusRequest? = null
     private var mShouldSpeakerphone = false
     private val mHasSpeakerPhone: Boolean by lazy { hasSpeakerphone() }
@@ -281,6 +283,12 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     ) {
         videoParams.isCapturing = true
         val safeSurface = previewSurface ?: return
+        // Conferences and extension-provided media are always software-encoded by the daemon
+        // (matches jami-android's HardwareServiceImpl.startCapture/startCameraPreview), on top
+        // of the user's own hardware-acceleration preference.
+        val conf = mCameraPreviewCall.get()
+        val hwAccel = settingsRepository.callSettings.value.hardwareAcceleration &&
+            (conf == null || !conf.isConference)
         uiHandler.post {
             cameraService.openCamera(
                 videoParams,
@@ -294,7 +302,7 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
                         stopCapture(videoParams.id)
                     }
                 },
-                hwAccel = true,
+                hwAccel = hwAccel,
                 resolution = 0,
                 bitrate = 0,
                 codecStart = codecStart,
