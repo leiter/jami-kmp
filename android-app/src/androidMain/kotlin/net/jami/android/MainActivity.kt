@@ -21,6 +21,7 @@ import net.jami.services.NotificationService
 import net.jami.services.SyncManager
 import net.jami.services.expect.HardwareService
 import net.jami.ui.JamiApp
+import net.jami.ui.navigation.DeepLinkState
 import net.jami.ui.navigation.ShareState
 import net.jami.utils.Log
 import org.koin.android.ext.android.inject
@@ -44,6 +45,7 @@ class MainActivity : ComponentActivity() {
         }
         handleCallIntent(intent)
         handleShareIntent(intent)
+        handleDeepLinkIntent(intent)
         lifecycleScope.launch {
             hardwareService.screenShareRequest.collect {
                 requestScreenSharePermission()
@@ -55,6 +57,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         handleCallIntent(intent)
         handleShareIntent(intent)
+        handleDeepLinkIntent(intent)
     }
 
     override fun onDestroy() {
@@ -185,6 +188,24 @@ class MainActivity : ComponentActivity() {
         }
 
         ShareState.signalSharePicker()
+    }
+
+    /**
+     * Handles ACTION_VIEW / ACTION_DIAL for the ring:, jami:, sip:, tel: URI schemes
+     * (see AndroidManifest.xml intent-filter). Mirrors jami-android-client's
+     * HomeFragment.handleIntent(): pre-fills the search box with the bare identifier
+     * rather than placing a call directly, since the target of an externally-supplied
+     * link is not trusted enough to auto-dial.
+     */
+    private fun handleDeepLinkIntent(intent: Intent?) {
+        if (intent?.action != Intent.ACTION_VIEW && intent?.action != Intent.ACTION_DIAL) return
+        val data = intent.data ?: return
+        // Strip the URI scheme (e.g. "jami:1234abcd" -> "1234abcd", "ring://1234abcd" ->
+        // "1234abcd", "sip:alice@example.com" -> "alice@example.com") down to the bare
+        // identifier that NewConversationViewModel.search() expects.
+        val query = data.schemeSpecificPart?.removePrefix("//")?.takeIf { it.isNotBlank() } ?: return
+        Log.d(TAG, "Deep link received: scheme=${data.scheme} query=$query")
+        DeepLinkState.request(query)
     }
 
     private fun copyUriToCache(uri: Uri, mimeType: String): String? {

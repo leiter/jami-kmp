@@ -289,6 +289,17 @@ private fun MainNavigation(needsMigration: Boolean) {
         }
     }
 
+    // Navigate to Search, pre-filled, when a deep link (ring:/jami:/sip:/tel:) arrives.
+    val navigateToSearch by DeepLinkState.navigateToSearch.collectAsState()
+    LaunchedEffect(navigateToSearch) {
+        if (navigateToSearch) {
+            DeepLinkState.consumeNavSignal()
+            navController.navigate(Screen.Search.route) {
+                launchSingleTop = true
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route,

@@ -64,6 +64,7 @@ import net.jami.ui.components.actions.JamiFilterChip
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.PresenceStatus
+import net.jami.ui.navigation.DeepLinkState
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.ContactItem
 import net.jami.ui.viewmodel.ConversationItem
@@ -95,7 +96,12 @@ fun SearchScreen(
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
-        viewModel.resetSearch()
+        val pendingDeepLinkQuery = DeepLinkState.consumeQuery()
+        if (pendingDeepLinkQuery != null) {
+            viewModel.search(pendingDeepLinkQuery)
+        } else {
+            viewModel.resetSearch()
+        }
         focusRequester.requestFocus()
     }
 
