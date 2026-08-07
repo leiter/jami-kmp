@@ -29,6 +29,7 @@ import net.jami.services.JamiTelecomManager
 import net.jami.services.PictureInPictureManager
 import net.jami.services.expect.AudioRecorderService
 import net.jami.services.expect.HardwareService
+import net.jami.services.expect.SystemContactsService
 
 /**
  * Android platform module providing Android-specific service implementations.
@@ -153,6 +154,14 @@ actual val platformModule: Module = module {
      */
     single<BiometricService> {
         BiometricService(androidContext())
+    }
+
+    /**
+     * System (platform address book) contacts lookup, used to enrich Jami contacts with
+     * a display name/photo/phone numbers the user already has stored for them.
+     */
+    single<SystemContactsService> {
+        SystemContactsService(androidContext())
     }
 
     /**

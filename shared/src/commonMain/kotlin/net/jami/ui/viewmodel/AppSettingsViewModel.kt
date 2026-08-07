@@ -35,6 +35,7 @@ import net.jami.repository.SettingsRepository
 import net.jami.services.AccountService
 import net.jami.services.ContactService
 import net.jami.services.PushConfigNotifier
+import net.jami.services.SystemContactsSyncService
 import net.jami.ui.platform.LocalPrefKeys
 import net.jami.ui.platform.LocalPrefs
 
@@ -106,6 +107,7 @@ class AppSettingsViewModel(
     private val settingsRepository: SettingsRepository,
     private val accountService: AccountService,
     private val contactService: ContactService,
+    private val systemContactsSyncService: SystemContactsSyncService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) : ViewModel() {
     private val scope = scope
@@ -356,6 +358,9 @@ class AppSettingsViewModel(
             scope.launch {
                 val accountId = accountService.currentAccount.value?.accountId ?: return@launch
                 contactService.loadContacts(accountId)
+                // READ_CONTACTS is requested during onboarding (AccountSummaryScreen); this is
+                // a safe no-op if it was denied — syncForAccount() checks hasPermission() itself.
+                systemContactsSyncService.syncForAccount(accountId)
             }
         }
     }

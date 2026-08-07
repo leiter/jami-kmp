@@ -23,6 +23,7 @@ import net.jami.database.JamiDatabase
 import net.jami.services.*
 import net.jami.services.expect.AudioRecorderService
 import net.jami.services.expect.HardwareService
+import net.jami.services.expect.SystemContactsService
 
 /**
  * Desktop (JVM) platform module providing desktop-specific service implementations.
@@ -113,5 +114,9 @@ actual val platformModule: Module = module {
 
     single {
         BiometricService()
+    }
+
+    single {
+        SystemContactsService()
     }
 }

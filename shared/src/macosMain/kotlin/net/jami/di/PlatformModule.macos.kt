@@ -22,6 +22,7 @@ import net.jami.database.DatabaseDriverFactory
 import net.jami.database.JamiDatabase
 import net.jami.services.*
 import net.jami.services.expect.AudioRecorderService
+import net.jami.services.expect.SystemContactsService
 
 /**
  * macOS platform module providing macOS-specific service implementations.
@@ -123,5 +124,9 @@ actual val platformModule: Module = module {
 
     single {
         BiometricService()
+    }
+
+    single {
+        SystemContactsService()
     }
 }
