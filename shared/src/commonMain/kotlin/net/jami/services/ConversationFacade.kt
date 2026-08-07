@@ -1355,8 +1355,36 @@ class ConversationFacade(
         val conversation = account.getSwarm(conversationId) ?: return
 
         val title = profile["title"] ?: ""
-        val description = profile["description"] ?: ""
-        conversation.setProfile(Profile(title, null))
+        val description = profile["description"]
+        // Only the changed fields are guaranteed to be present in the update map — decode a new
+        // avatar when sent, otherwise keep the one already cached rather than wiping it to null.
+        @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+        val avatar = profile["avatar"]?.let {
+            try {
+                kotlin.io.encoding.Base64.decode(it)
+            } catch (e: Exception) {
+                null
+            }
+        } ?: conversation.profileFlow.value.avatar
+        conversation.setProfile(Profile(title, avatar, description))
+    }
+
+    /**
+     * Update a swarm group's display title (admin only, enforced at the daemon layer).
+     */
+    fun updateConversationTitle(accountId: String, conversationId: String, title: String) {
+        daemonBridge.updateConversationInfo(accountId, conversationId, mapOf("title" to title))
+    }
+
+    /**
+     * Update a swarm group's avatar (admin only, enforced at the daemon layer).
+     *
+     * @param avatarBytes Raw image bytes, or null to clear the avatar.
+     */
+    @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+    fun updateConversationAvatar(accountId: String, conversationId: String, avatarBytes: ByteArray?) {
+        val base64 = avatarBytes?.let { kotlin.io.encoding.Base64.encode(it) } ?: ""
+        daemonBridge.updateConversationInfo(accountId, conversationId, mapOf("avatar" to base64))
     }
 
     /**
