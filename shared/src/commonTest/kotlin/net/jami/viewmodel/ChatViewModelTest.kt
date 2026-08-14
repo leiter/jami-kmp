@@ -36,7 +36,7 @@ class ChatViewModelTest {
         val contactService = makeContactService(stub, accountService, scope)
         val callService = makeCallService(stub, accountService, scope = scope)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, scope)
-        return ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, scope), scope)
+        return ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, scope), net.jami.services.expect.AudioRecorderService(), scope)
     }
 
     @Test
@@ -85,7 +85,7 @@ class ChatViewModelTest {
         val contactService = makeContactService(stub, accountService, this)
         val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, viewModelScope()), viewModelScope())
+        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, viewModelScope()), net.jami.services.expect.AudioRecorderService(), viewModelScope())
         vm.updateInput("Hello")
         // Load a conversation first so currentAccountId/conversationId are set
         vm.loadConversation("conv_001")
@@ -172,7 +172,7 @@ class ChatViewModelTest {
         val contactService = makeContactService(stub, accountService, this)
         val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, disposableScope()), disposableScope())
+        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, disposableScope()), net.jami.services.expect.AudioRecorderService(), disposableScope())
         vm.onCleared()
     }
 }

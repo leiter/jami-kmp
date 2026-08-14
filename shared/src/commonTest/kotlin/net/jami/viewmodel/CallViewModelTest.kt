@@ -17,8 +17,10 @@
 package net.jami.viewmodel
 
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import net.jami.services.StubDaemonBridge
+import net.jami.services.StubDeviceRuntimeService
 import net.jami.services.expect.HardwareService
 import net.jami.ui.viewmodel.CallMode
 import net.jami.ui.viewmodel.CallViewModel
@@ -34,7 +36,7 @@ class CallViewModelTest {
         val accountService = makeAccountService(stub, scope)
         val contactService = makeContactService(stub, accountService, scope)
         val callService = makeCallService(stub, accountService, scope = scope)
-        val vm = CallViewModel(callService, accountService, contactService, HardwareService(), scope)
+        val vm = CallViewModel(callService, accountService, contactService, HardwareService(), StubDeviceRuntimeService(), scope)
         return Triple(vm, callService, accountService)
     }
 
@@ -111,9 +113,14 @@ class CallViewModelTest {
         callService.onCallStateChanged(TEST_ACCOUNT_ID, "call_001", "CURRENT", 0)
         advanceUntilIdle()
         vm.initIncoming("call_001")
-        advanceUntilIdle()
+        // Not advanceUntilIdle(): the CURRENT status starts an infinite per-second
+        // duration-timer coroutine, which would make advanceUntilIdle() hang forever.
+        runCurrent()
         assertEquals("CURRENT", vm.state.value.callStatus)
         assertIs<CallMode.OnGoing>(vm.state.value.callMode)
+        // The CURRENT status left an infinite per-second duration-timer coroutine running;
+        // cancel it so runTest's own implicit final advanceUntilIdle() doesn't hang.
+        vm.onCleared()
     }
 
     @Test
@@ -126,7 +133,9 @@ class CallViewModelTest {
         callService.onCallStateChanged(TEST_ACCOUNT_ID, "call_001", "CURRENT", 0)
         advanceUntilIdle()
         vm.initIncoming("call_001")
-        advanceUntilIdle()
+        // Not advanceUntilIdle(): the CURRENT status starts an infinite per-second
+        // duration-timer coroutine, which would make advanceUntilIdle() hang forever.
+        runCurrent()
         callService.onCallStateChanged(TEST_ACCOUNT_ID, "call_001", "OVER", 0)
         advanceUntilIdle()
         assertEquals("OVER", vm.state.value.callStatus)

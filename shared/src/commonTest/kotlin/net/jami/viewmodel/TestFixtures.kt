@@ -89,7 +89,7 @@ fun makeContactService(
     stub: StubDaemonBridge = StubDaemonBridge(),
     accountService: AccountService,
     scope: CoroutineScope
-): ContactService = ContactService(scope, accountService, stub)
+): ContactService = ContactService(scope, accountService, stub, VCardService(StubDeviceRuntimeService()))
 
 /**
  * Creates a SettingsRepository wired to the given stub and scope.

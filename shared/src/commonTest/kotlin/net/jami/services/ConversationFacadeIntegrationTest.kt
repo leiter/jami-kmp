@@ -49,7 +49,7 @@ class ConversationFacadeIntegrationTest {
     ): Triple<AccountService, ContactService, ConversationFacade> {
         val accountService = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
         val callService = CallService(stub, accountService, net.jami.repository.SettingsRepository(stub, scope), scope)
-        val contactService = ContactService(scope, accountService, stub)
+        val contactService = ContactService(scope, accountService, stub, VCardService(StubDeviceRuntimeService()))
         val facadeScope = scope.facadeScope()
         val facade = ConversationFacade(
             historyService = StubHistoryService(),

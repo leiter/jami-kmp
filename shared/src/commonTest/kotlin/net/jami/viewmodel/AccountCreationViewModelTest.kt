@@ -97,8 +97,7 @@ class AccountCreationViewModelTest {
         vm.createAccount()
         advanceUntilIdle()
         // No mismatch error — some other state may be set
-        val error = vm.state.value.error
-        assertTrue(error == null || !error.contains("match", ignoreCase = true))
+        assertTrue(vm.state.value.error != net.jami.ui.viewmodel.AccountCreationError.PASSWORDS_DONT_MATCH)
     }
 
     @Test
