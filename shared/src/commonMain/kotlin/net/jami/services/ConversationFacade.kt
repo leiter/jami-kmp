@@ -1322,7 +1322,13 @@ class ConversationFacade(
         interaction.contact = contact
         interaction.account = account.accountId
         interaction.reactToId = message.body["react-to"]?.ifEmpty { null }
+        // `body["edit"]` points at the *target* message id on the separate
+        // "application/edited-message" event, not at whether this message itself was edited.
+        // The actual per-message edit history lives in `message.editions` (mirrors the live
+        // MessageUpdated-event fix in ChatViewModel.updateMessage()) — without this, messages
+        // loaded from history/resync always report isEdited = false even when edited.
         interaction.edit = message.body["edit"]?.ifEmpty { null }
+            ?: message.id.takeIf { message.editions.isNotEmpty() }
         interaction.setSwarmInfo(conversation.uri.rawRingId, message.id, message.linearizedParent.ifEmpty { null })
         interaction.statusMap = message.status.mapValues { Interaction.MessageStates.fromInt(it.value) }
 
