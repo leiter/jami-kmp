@@ -175,6 +175,21 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "setDeviceName called (stub): $accountId, name=$deviceName")
     }
 
+    override fun confirmAddDevice(accountId: String, opId: Long): Boolean {
+        Log.d(TAG, "confirmAddDevice called (stub): $accountId, opId=$opId")
+        return true
+    }
+
+    override fun cancelAddDevice(accountId: String, opId: Long): Boolean {
+        Log.d(TAG, "cancelAddDevice called (stub): $accountId, opId=$opId")
+        return true
+    }
+
+    override fun provideAccountAuthentication(accountId: String, password: String, scheme: String): Boolean {
+        Log.d(TAG, "provideAccountAuthentication called (stub): $accountId, scheme=$scheme")
+        return true
+    }
+
     // ==================== Profile (Stubs) ====================
 
     override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
@@ -220,6 +235,8 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun playDtmf(key: String) { Log.d(TAG, "playDtmf (stub): $key") }
     override fun muteRingtone(mute: Boolean) { Log.d(TAG, "muteRingtone (stub): $mute") }
     override fun muteCapture(mute: Boolean) { Log.d(TAG, "muteCapture (stub): $mute") }
+    override fun setNoiseSuppression(enabled: Boolean) { Log.d(TAG, "setNoiseSuppression (stub): $enabled") }
+    override fun setEchoCancellation(enabled: Boolean) { Log.d(TAG, "setEchoCancellation (stub): $enabled") }
     override fun isCaptureMuted(): Boolean = false
     override fun restartAudioLayer() { Log.d(TAG, "restartAudioLayer (stub)") }
     override fun transfer(accountId: String, callId: String, to: String): Boolean = false
