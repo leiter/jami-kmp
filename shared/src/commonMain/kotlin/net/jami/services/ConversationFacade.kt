@@ -428,20 +428,6 @@ class ConversationFacade(
         }
     }
 
-    /**
-     * Cancel a pending message.
-     */
-    suspend fun cancelMessage(conversation: Conversation, message: Interaction) {
-        val accountId = message.account ?: return
-        if (conversation.isSwarm) return
-
-        try {
-            callService.cancelMessage(accountId, message.id.toLong())
-            conversation.removeInteraction(message)
-        } catch (e: Exception) {
-            Log.e(TAG, "Can't cancel message sending", e)
-        }
-    }
 
     /**
      * Cancel a file transfer.

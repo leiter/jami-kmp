@@ -48,7 +48,7 @@ interface DaemonBridgeApi {
     fun provideAccountAuthentication(accountId: String, password: String, scheme: String): Boolean
 
     // ==================== Profile ====================
-    fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int)
+    fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int)
 
     // ==================== Call Operations ====================
     fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String
@@ -130,7 +130,6 @@ interface DaemonBridgeApi {
     // ==================== Messaging ====================
     fun sendTextMessage(accountId: String, callIdOrUri: String, message: String)
     fun setIsComposing(accountId: String, uri: String, isComposing: Boolean)
-    fun cancelMessage(accountId: String, messageId: Long): Boolean
 
     /**
      * Send a message with multiple mime types to a conversation.
@@ -509,7 +508,7 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun cancelAddDevice(accountId: String, opId: Long): Boolean = true
     override fun provideAccountAuthentication(accountId: String, password: String, scheme: String): Boolean = true
 
-    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {}
+    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int) {}
 
     override fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String = placeCallResult
     override fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {}
@@ -587,7 +586,6 @@ class StubDaemonBridge : DaemonBridgeApi {
 
     override fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {}
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {}
-    override fun cancelMessage(accountId: String, messageId: Long): Boolean = true
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {}
 
     override fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {}

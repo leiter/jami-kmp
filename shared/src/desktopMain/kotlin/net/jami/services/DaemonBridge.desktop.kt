@@ -192,7 +192,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Profile (Stubs) ====================
 
-    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
+    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int) {
         Log.d(TAG, "updateProfile called (stub): $accountId, name=$displayName")
     }
 
@@ -431,10 +431,6 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "setIsComposing called (stub): $uri, composing=$isComposing")
     }
 
-    override fun cancelMessage(accountId: String, messageId: Long): Boolean {
-        Log.d(TAG, "cancelMessage called (stub): $messageId")
-        return false
-    }
 
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {
         Log.d(TAG, "sendAccountTextMessage called (stub): $conversationId, messages=$messages")

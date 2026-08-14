@@ -470,7 +470,7 @@ class AccountService(
      * @param flag 0 = path, 1 = base64, 2 = clear avatar
      */
     fun updateProfile(accountId: String, displayName: String, avatar: String = "", fileType: String = "", flag: Int = 0) {
-        daemonBridge.updateProfile(accountId, displayName, avatar, fileType, flag)
+        daemonBridge.updateProfile(accountId, displayName, avatar, fileType, botOwner = "", flag)
     }
 
     // ==================== Export/Import ====================

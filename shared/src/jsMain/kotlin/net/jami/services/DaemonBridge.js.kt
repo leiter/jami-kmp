@@ -234,7 +234,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Profile ====================
 
-    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
+    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int) {
         // TODO: PUT /accounts/{accountId}/profile
     }
 
@@ -481,10 +481,6 @@ actual class DaemonBridge() : DaemonBridgeApi {
         // TODO: PUT /accounts/{accountId}/conversations/{uri}/composing
     }
 
-    override fun cancelMessage(accountId: String, messageId: Long): Boolean {
-        // TODO: DELETE /accounts/{accountId}/messages/{messageId}
-        return false
-    }
 
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {
         // TODO: POST /accounts/{accountId}/conversations/{conversationId}/message with mime type map

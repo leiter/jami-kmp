@@ -761,13 +761,6 @@ class CallService(
         }
     }
 
-    /**
-     * Cancel a pending message.
-     */
-    suspend fun cancelMessage(accountId: String, messageId: Long): Boolean {
-        return daemonBridge.cancelMessage(accountId, messageId)
-    }
-
     companion object {
         private const val TAG = "CallService"
         const val MIME_TEXT_PLAIN = "text/plain"

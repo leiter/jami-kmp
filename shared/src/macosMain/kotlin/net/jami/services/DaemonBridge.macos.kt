@@ -174,7 +174,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Profile ====================
 
-    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
+    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int) {
         bridge.updateProfile(accountId, displayName = displayName, avatarPath = avatar.takeIf { it.isNotEmpty() })
     }
 
@@ -439,10 +439,6 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
         bridge.setIsComposing(accountId, conversationId = uri, isComposing = isComposing)
-    }
-
-    override fun cancelMessage(accountId: String, messageId: Long): Boolean {
-        return false
     }
 
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {
