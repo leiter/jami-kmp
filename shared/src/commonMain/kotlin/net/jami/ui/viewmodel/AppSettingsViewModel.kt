@@ -358,8 +358,9 @@ class AppSettingsViewModel(
             scope.launch {
                 val accountId = accountService.currentAccount.value?.accountId ?: return@launch
                 contactService.loadContacts(accountId)
-                // READ_CONTACTS is requested during onboarding (AccountSummaryScreen); this is
-                // a safe no-op if it was denied — syncForAccount() checks hasPermission() itself.
+                // AppSettingsScreen requests READ_CONTACTS before calling this (the toggle is
+                // only flipped on if granted); syncForAccount() also checks hasPermission()
+                // itself as a safety net.
                 systemContactsSyncService.syncForAccount(accountId)
             }
         }

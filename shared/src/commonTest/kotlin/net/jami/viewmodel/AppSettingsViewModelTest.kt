@@ -19,7 +19,9 @@ package net.jami.viewmodel
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.model.settings.ConversationSort
+import net.jami.services.SystemContactsSyncService
 import net.jami.services.StubDaemonBridge
+import net.jami.services.expect.SystemContactsService
 import net.jami.ui.viewmodel.AppSettingsViewModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -30,8 +32,12 @@ class AppSettingsViewModelTest {
 
     private fun makeVm(runTest: kotlinx.coroutines.test.TestScope): AppSettingsViewModel {
         val stub = StubDaemonBridge()
-        val repo = makeSettingsRepository(stub, runTest.viewModelScope())
-        return AppSettingsViewModel(repo, runTest.viewModelScope())
+        val scope = runTest.viewModelScope()
+        val repo = makeSettingsRepository(stub, scope)
+        val accountService = makeAccountService(stub, scope)
+        val contactService = makeContactService(stub, accountService, scope)
+        val syncService = SystemContactsSyncService(contactService, SystemContactsService())
+        return AppSettingsViewModel(repo, accountService, contactService, syncService, scope)
     }
 
     // ==================== Initial state ====================
@@ -319,7 +325,10 @@ class AppSettingsViewModelTest {
     fun onClearedDoesNotThrow() = runTest {
         val stub = StubDaemonBridge()
         val repo = makeSettingsRepository(stub, this)
-        val vm = AppSettingsViewModel(repo, disposableScope())
+        val accountService = makeAccountService(stub, this)
+        val contactService = makeContactService(stub, accountService, this)
+        val syncService = SystemContactsSyncService(contactService, SystemContactsService())
+        val vm = AppSettingsViewModel(repo, accountService, contactService, syncService, disposableScope())
         vm.onCleared()
     }
 }
