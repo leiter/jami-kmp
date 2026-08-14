@@ -271,6 +271,18 @@ actual class BiometricService(private val context: Context) {
             return@suspendCancellableCoroutine
         }
 
+        // BiometricPrompt needs to commit a DialogFragment transaction. If the activity's
+        // state has already been saved (e.g. it was briefly backgrounded), the library
+        // silently logs "Unable to start authentication. Called after onSaveInstanceState()"
+        // and never invokes any AuthenticationCallback — leaving this coroutine (and any
+        // UI state gated on it, e.g. a disabled "Authenticating…" button) hung forever.
+        // Fail fast instead so the caller can show an error and let the user retry.
+        if (activity.supportFragmentManager.isStateSaved) {
+            Log.e(TAG, "Cannot show biometric prompt: activity state already saved")
+            continuation.resume(null)
+            return@suspendCancellableCoroutine
+        }
+
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(promptTitle)
             .setDescription(promptDescription)
@@ -324,6 +336,16 @@ actual class BiometricService(private val context: Context) {
         val activity = activityRef?.get()
         if (activity == null) {
             Log.e(TAG, "No foreground FragmentActivity attached")
+            continuation.resume(null)
+            return@suspendCancellableCoroutine
+        }
+
+        // See the matching check in authenticateAndEncrypt: without this, a state-saved
+        // activity causes BiometricPrompt to silently drop the request with no callback,
+        // hanging this coroutine forever and leaving the caller's "Authenticating…" UI
+        // state stuck disabled.
+        if (activity.supportFragmentManager.isStateSaved) {
+            Log.e(TAG, "Cannot show biometric prompt: activity state already saved")
             continuation.resume(null)
             return@suspendCancellableCoroutine
         }
