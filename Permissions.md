@@ -189,6 +189,10 @@ of it, and the service only uses `specialUse` on API 34+.
 
 ---
 
+## Post-audit addition — Telecom API / `MANAGE_OWN_CALLS` (2026-06-13)
+
+`MANAGE_OWN_CALLS` (previously declared but unused) is now consumed by `JamiTelecomManager`/`JamiConnectionService`, which register a self-managed `PhoneAccount` and route calls through the system Telecom stack. See "Telecom API / ConnectionService" in `todo.md`.
+
 ## Remaining Gaps (out of scope for this pass)
 
 - `READ_PROFILE` not declared (low priority — profile sync via daemon bridge)

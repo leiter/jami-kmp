@@ -14,9 +14,8 @@ Items confirmed as already implemented are listed at the bottom for reference.
 - **Still blocked on infrastructure**: the push is sent by the DHT proxy, not the peer, and the public proxy only holds SFL's FCM credentials. Needs a self-hosted `dhtnode --proxyserver` with your own Firebase server key. See `doc/push-notifications.md`.
 - **Reference**: `jami-client-android` `JamiFirebaseMessagingService.kt`
 
-### CallKit (iOS)
-- Implement `CXProvider` / `CXCallController` integration so incoming Jami calls use the native iOS call UI.
-- Wire `CXProviderDelegate` callbacks (answer, end, hold) to `CallService`.
+### ~~CallKit (iOS)~~ ✓ DONE (2026-06-13)
+`CallKitManager` (iosMain) implements `CXProviderDelegateProtocol` and observes `callService.callUpdates`: incoming RINGING calls are reported via `CXProvider` (lock-screen call sheet, wakes device from background); `CXAnswerCallAction`/`CXEndCallAction` wired to `callService.accept()`/`refuse()`.
 - **Reference**: `jami-client-ios` `CallKitAdapter`
 
 ---
@@ -37,11 +36,8 @@ verify server/client + require client cert + negotiation timeout.
 ### ~~Audio/video codec selection UI~~ DONE
 Already implemented in `AccountMediaSettingsScreen` with enable/disable toggles and up/down reorder arrows for both audio and video codecs. Backed by `AccountSubSettingsViewModel.setCodecEnabled()` / `moveCodec()` → `pushActiveCodecList()` → daemon.
 
-### System contacts sync UI
-- Permissions (`READ_CONTACTS`, `WRITE_CONTACTS`) are now declared and requested at onboarding.
-- Need: a "Sync phone contacts" toggle in `AppSettingsScreen` or `AccountSettingsScreen`.
-- On enable: call `ContactService.loadContacts(accountId)` which reads the phone book via `DeviceRuntimeService.loadContactsData()`.
-- Optionally write discovered Jami usernames back to the phone book (`WRITE_CONTACTS`).
+### ~~System contacts sync UI~~ ✓ DONE (2026-08-07)
+`AppSettingsScreen` "Sync system contacts" toggle now actually does something — was previously a no-op that only persisted a preference. `SystemContactsService` (expect/actual) ports `jami-android-client`'s `ContactServiceImpl.findContactBySipNumberFromSystem()`/`findContactByNumberFromSystem()` (`ContactsContract` lookup by SIP/IM address, `PhoneLookup` fallback). `SystemContactsSyncService` (commonMain) drives it from `AppSettingsViewModel.toggleSystemContactsSync()`, merging matches via `Contact.setSystemContactInfo()`/`addNumber()`.
 
 ### ~~Ringtone picker~~ ✓ DONE (2026-06-13)
 `RingtoneLauncherEffect` expect/actual added (Android: `RingtoneManager.ACTION_RINGTONE_PICKER`; other platforms: no-op).
@@ -52,10 +48,8 @@ Already implemented in `AccountMediaSettingsScreen` with enable/disable toggles 
 
 ## P3 — Medium Priority
 
-### Telecom API / ConnectionService (Android)
-- Register a `ConnectionService` so Jami calls appear in the system call log and are routable through Bluetooth/car audio.
-- Wire `Connection.onAnswer()`, `onDisconnect()`, `onHold()` to `CallService`.
-- Declare `MANAGE_OWN_CALLS` permission (already in reference manifest; confirm in kmp manifest).
+### ~~Telecom API / ConnectionService (Android)~~ ✓ DONE (2026-06-13)
+`JamiTelecomManager` registers a self-managed `PhoneAccount` at startup and observes `callUpdates` to call `TelecomManager.addNewIncomingCall()` for each incoming RINGING call. `JamiConnectionService` (manifest-declared with `BIND_TELECOM_CONNECTION_SERVICE`) creates a `JamiConnection` per call, forwarding `onAnswer`/`onReject`/`onHold`/`onUnhold`/`onCallAudioStateChanged` to `CallService`; daemon state changes (CURRENT/HOLD/OVER) drive `setActive`/`setOnHold`/`setDisconnected`+`destroy`. `MANAGE_OWN_CALLS` permission declared.
 - **Reference**: `JamiConnectionService.kt` in `jami-client-android`
 
 ### Guard against re-importing an account that is already present (settings import)

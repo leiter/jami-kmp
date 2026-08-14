@@ -1,6 +1,6 @@
 # iOS Implementation Gap — jami-kmp
 
-Audited: 2026-06-15. Updated: 2026-06-15 after gap-fixing sprint.
+Audited: 2026-06-15. Updated: 2026-08-08 (CallKit + APNs/PushKit landed 2026-06-13 / 2026-07-27).
 Compares `shared/src/iosMain/` against `shared/src/androidMain/` as the reference.
 
 Effort scale: **S** = 1–2 days · **M** = 3–5 days · **L** = 1+ weeks
@@ -56,19 +56,13 @@ The Android video pipeline is built on `ANativeWindow` / shared memory, which ha
 
 ---
 
-### 1.2 Push Notifications (Architectural — L effort)
+### 1.2 Push Notifications — client integration DONE (2026-07-27)
 
-APNs push token delivery and processing are not wired. These methods are no-ops:
+`IOSPushServiceManager` + `IOSPushHelper.kt` + `AppDelegate` APNs/PushKit delegates now wire token delivery and payload handling: `setPushNotificationToken()`/`setPushNotificationConfig()`/`pushNotificationReceived()` are bound and forward to the daemon bridge. A VoIP push reports a placeholder call to CallKit synchronously (iOS 13+ requirement, via `CallKitManager.reportIncomingCallFromPush`), which the real daemon call then adopts. `UIBackgroundModes` + `aps-environment` entitlement added.
 
-| Method | Note |
-|--------|------|
-| `setPushNotificationToken()` | No JamiBridge binding; requires APNs token delivery to daemon |
-| `setPushNotificationConfig()` | No JamiBridge binding |
-| `pushNotificationReceived()` | No JamiBridge binding; payload not processed |
+**Not yet compiled** — Apple targets are skipped on this Linux dev host; needs a build/run on a Mac to verify.
 
-**What this means:** Calls and messages only arrive when the daemon is running in the foreground. Background wake-up via push is not functional.
-
-**This is a known gap in CLAUDE.md** — it also affects Android (FCM). Both platforms require push notification integration at the libjami level.
+**Still blocked on infrastructure** (affects both platforms): the push is sent by the DHT proxy, not the peer, and the public proxy only holds SFL's FCM credentials. Needs a self-hosted `dhtnode --proxyserver` with this app's own APNs/FCM credentials. See `doc/push-notifications.md`.
 
 ---
 
@@ -110,6 +104,8 @@ All permission methods now query the real platform APIs:
 | Search & history | **Done** |
 | Log capture | **Done** |
 | Video call rendering | **Remaining** — architectural, multi-week |
-| Push notifications | **Remaining** — architectural, affects both platforms |
+| Push notifications (client) | **Done** (2026-07-27) — uncompiled, needs Mac build to verify |
+| Push notifications (delivery) | **Remaining** — needs self-hosted DHT proxy with own APNs/FCM credentials |
+| CallKit (native call UI) | **Done** (2026-06-13) |
 | Background sync | **Remaining** — iOS platform limitation |
 | Contacts/notification/location permissions | **Done** |

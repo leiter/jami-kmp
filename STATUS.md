@@ -1,6 +1,6 @@
 # Jami KMP - Implementation Status
 
-**Last Updated:** 2026-06-11
+**Last Updated:** 2026-08-08
 **Version:** In Development
 **Primary Platforms:** Android, iOS
 
@@ -30,6 +30,9 @@
 - Mic / camera permission banners in-call with re-request flow
 - Ringtone + audio state management (HardwareService)
 - Call history logged to SQLDelight
+- CallKit integration (iOS): incoming calls use the native call UI and wake the device from background via `CXProvider`/`CXProviderDelegate`
+- Telecom API / ConnectionService (Android): self-managed `PhoneAccount`, calls appear in the system call log and route through Bluetooth/car audio
+- Push notifications (client side): FCM (Android) and APNs + PushKit VoIP (iOS) both wired to wake the daemon on push arrival — see Push Notifications below
 
 ### Conversation Features
 - Conversation list sorted by last activity
@@ -42,8 +45,9 @@
 - Camera capture integration
 - Message search and filtering
 - Conversation sorting (last activity, alphabetical, unread first)
-- Group conversation management: add/remove members, leave conversation
+- Group conversation management: add/remove members, leave conversation, rename group, change group avatar, admin role badges
 - Link detection in chat messages
+- Conversation media gallery (3-column grid of shared images/videos)
 
 ### Account Management
 - Multi-account support and account switching
@@ -51,6 +55,7 @@
 - Profile management (avatar, display name)
 - Account export/backup
 - Biometric authentication (Android BiometricPrompt, iOS/macOS LocalAuthentication)
+- System contacts sync (Android: ContactsContract lookup by SIP/IM address + PhoneLookup fallback, merged into Jami contacts)
 - Device management
 - Account migration dialog
 
@@ -114,12 +119,10 @@
 
 ## ❌ Not Yet Implemented
 
-### Push Notifications
-- FCM (Android) and APNs (iOS) not integrated
-- Calls and messages only arrive when the daemon is running in the foreground
-
-### iOS Platform Integration
-- CallKit not integrated (incoming calls don't use native call UI and don't wake device from background)
+### Push Notifications — infrastructure only
+- Client integration (FCM/APNs token registration, `DaemonBridge.setPushNotificationConfig()`, wake-on-push) is done on both platforms
+- Still blocked: the push is sent by the DHT proxy, not the peer, and the public proxy only holds SFL's FCM credentials — needs a self-hosted `dhtnode --proxyserver` with this app's own Firebase/APNs server keys. See `doc/push-notifications.md`
+- iOS half is uncompiled — Apple targets are skipped on this Linux dev host; needs a Mac build to verify
 
 ### Chat Features
 - Video recording in chat — deferred (requires Camera2 / AVFoundation capture session)
@@ -142,6 +145,8 @@
 
 - JNI bridge to libjami via SWIG — working
 - Full call stack: audio, video, conference, screen share, PiP
+- Telecom API / ConnectionService integration (system call log, Bluetooth routing)
+- FCM push client integration
 - Notification system complete with settings enforcement
 - Background sync operational
 - 55 passing tests
@@ -155,7 +160,9 @@
 - QR camera scanning (AVFoundation)
 - Location sharing (MapKit)
 - Biometric auth (LocalAuthentication)
-- Missing: CallKit, push notifications (APNs)
+- CallKit integration for native incoming-call UI
+- APNs + PushKit VoIP push client integration
+- Missing: remote video rendering (Metal/CALayer sink target — architectural, multi-week; audio-only calls work fine)
 
 ### macOS
 **Status:** 🟡 Fair — mirrors iOS implementation
