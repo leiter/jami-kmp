@@ -57,6 +57,12 @@ class AppViewModel(
     // instead of switching to HasAccounts. Cleared when the wizard completes.
     private var onboardingInProgress = false
 
+    // Set once the very first Loading -> HasAccounts transition has been evaluated for a
+    // biometric lock. Without this, a freshly created process (e.g. after force-stop, or the
+    // OS killing the app in the background) would start with _isLocked = false and never
+    // re-derive it from the account's biometric setting, bypassing the lock entirely.
+    private var initialLockCheckDone = false
+
     init {
         Log.d(TAG, "AppViewModel created, waiting for daemon accounts ready signal")
         scope.launch {
@@ -81,6 +87,20 @@ class AppViewModel(
                 }
                 Log.d(TAG, "accounts=${accountList.size} onboarding=$onboardingInProgress " +
                         "$current -> $next")
+
+                // On the first transition into HasAccounts after process start, re-derive the
+                // lock state from the account's biometric setting instead of trusting the
+                // in-memory default (false) — see initialLockCheckDone kdoc.
+                if (!initialLockCheckDone && next is AppState.HasAccounts) {
+                    initialLockCheckDone = true
+                    val accountId = accountService.currentAccount.value?.accountId
+                        ?: accountList.firstOrNull()?.accountId
+                    if (accountId != null && biometricService.isEnabled(accountId)) {
+                        Log.d(TAG, "initial lock check: locking app on startup")
+                        _isLocked.value = true
+                    }
+                }
+
                 _appState.value = next
             }
         }
