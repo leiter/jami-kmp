@@ -23,6 +23,16 @@ const val HARNESS_APP_ID = "net.jami.android.harness"
 const val MAIN_ACTIVITY = "net.jami.android.MainActivity"
 const val AGENT_SERVICE = "net.jami.android.harness.HarnessAgentService"
 
+/**
+ * Other real Jami apps that may be installed on the same lab devices — the standard
+ * (non-harness) jami-kmp build and the jami-android-client reference app. Both run a real
+ * daemon against the real DHT; if either is left running while the harness drives its own
+ * daemon on the same physical device/network, it's a source of resource contention (wake
+ * locks, sockets, notifications) and confusing manual-testing crosstalk. Force-stopped as a
+ * precondition before every harness run — see [DeviceController.stopCompetingApps].
+ */
+val COMPETING_APP_IDS = listOf("net.jami.android", "cx.ring")
+
 /** Thin wrapper over `adb`/`am` to install/reverse/launch on one device. */
 class DeviceController(val serial: String) {
 
@@ -181,6 +191,18 @@ class DeviceController(val serial: String) {
 
     /** Hard reset: wipe the harness app's data/state entirely (`pm clear`), like a fresh install. */
     fun clearAppData(): Boolean = adbExit("-s", serial, "shell", "pm", "clear", HARNESS_APP_ID) == 0
+
+    /**
+     * Force-stop [COMPETING_APP_IDS] (the standard jami-kmp build and jami-android-client) on
+     * this device. `am force-stop` on an app that isn't installed/running is a harmless no-op
+     * (non-zero exit is swallowed here, not surfaced as a run failure), so this is safe to call
+     * unconditionally as a precondition on any lab device regardless of what's installed.
+     */
+    fun stopCompetingApps() {
+        for (pkg in COMPETING_APP_IDS) {
+            adbExit("-s", serial, "shell", "am", "force-stop", pkg)
+        }
+    }
 
     private fun adb(vararg args: String) {
         adbExit(*args)

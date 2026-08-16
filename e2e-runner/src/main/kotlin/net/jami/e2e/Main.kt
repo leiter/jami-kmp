@@ -71,6 +71,12 @@ fun main(args: Array<String>) {
     val memory = MemoryStore()
 
     val verdict = runBlocking {
+        // Precondition: the standard jami-kmp app and jami-android-client must not be running —
+        // both drive a real daemon against the real DHT, and left running they're a source of
+        // resource contention and crosstalk with the harness's own daemon session on the same
+        // physical device/network.
+        controllers.forEach { it.stopCompetingApps() }
+
         // Bring every device up first (these adb calls return immediately).
         controllers.forEach { ctrl ->
             ctrl.adbReverse(HARNESS_PORT)

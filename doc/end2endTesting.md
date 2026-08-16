@@ -230,6 +230,17 @@ re-running registration + handshake + send every time.
   delete/reaction tests would be the natural next step) — this tier currently only produces and
   restores the fixture.
 
+## Competing-app precondition
+
+The lab devices may also have the standard (non-harness) jami-kmp build (`net.jami.android`)
+or the jami-android-client reference app (`cx.ring`) installed from manual testing — both run a
+real daemon against the real DHT. Every runner invocation force-stops both
+(`DeviceController.stopCompetingApps`, called once per controller at the very start of `main`,
+before `adbReverse`/`startApp`) so a leftover foreground daemon session never contends with the
+harness's own for sockets/wake locks or produces confusing crosstalk. `am force-stop` on an
+app that isn't installed/running is a harmless no-op, so this runs unconditionally regardless of
+what's on the device.
+
 ## Clean-slate precondition
 
 An import/registration is an onboarding-state operation — it must run with **no account

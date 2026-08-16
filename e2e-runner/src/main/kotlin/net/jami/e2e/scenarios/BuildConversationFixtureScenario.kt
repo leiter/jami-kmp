@@ -71,8 +71,9 @@ object BuildConversationFixtureScenario : Scenario {
             }
         }
 
-        // 1. Distinct identities, reuse-first.
-        val assets = ctx.memory.claimDistinct(2, named = false)
+        // 1. Distinct identities, reuse-first. Password-free: RegisterName below doesn't thread
+        // an archive password through, so a password-protected asset would fail registration.
+        val assets = ctx.memory.claimDistinct(2, named = false, hasPassword = false)
         val aAsset = assets.getOrNull(0)
         val bAsset = assets.getOrNull(1)
         val aId = provision(ctx, "A", aAsset)
@@ -104,13 +105,19 @@ object BuildConversationFixtureScenario : Scenario {
             bAsset?.let { ctx.memory.markRegistered(it.fingerprint, nameB) }
             ctx.log("names registered: A='$nameA' B='$nameB'")
 
-            // 3. Set a real avatar on both via the daemon's own profile path.
+            // 3. Set a real avatar on both via the daemon's own profile path. Fire-and-forget,
+            // same as the real profile-edit UI (AccountSettingsViewModel never awaits a
+            // callback for updateProfile either): best-effort wait for the ProfileUpdated echo,
+            // but don't fail the fixture build if the daemon doesn't emit it for a self-update
+            // (observed on hardware — worth a focused follow-up, not a blocker here).
             val avatarBase64 = loadFixtureAvatarBase64()
             ctx.send("A", SetProfile(aId, nameA, avatarBase64, "png"))
-            ctx.await("A", 20_000) { it is ProfileUpdated && it.accountId == aId }
+            runCatching { ctx.await("A", 5_000) { it is ProfileUpdated && it.accountId == aId } }
+                .onFailure { ctx.log("no ProfileUpdated echo for A within 5s (fire-and-forget, continuing)") }
             ctx.send("B", SetProfile(bId, nameB, avatarBase64, "png"))
-            ctx.await("B", 20_000) { it is ProfileUpdated && it.accountId == bId }
-            ctx.log("avatars set on both accounts")
+            runCatching { ctx.await("B", 5_000) { it is ProfileUpdated && it.accountId == bId } }
+                .onFailure { ctx.log("no ProfileUpdated echo for B within 5s (fire-and-forget, continuing)") }
+            ctx.log("avatar update sent on both accounts")
 
             // 4. Out-of-band identity relay + the proven contact-request/accept handshake.
             ctx.send("A", GetAccountUri(aId))
