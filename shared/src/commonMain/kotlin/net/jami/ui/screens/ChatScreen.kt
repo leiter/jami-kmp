@@ -521,6 +521,7 @@ fun ChatScreen(
                                     viewModel.updateInput(originalText)
                                 },
                                 onReact = { emoji -> viewModel.sendReaction(message.id, emoji) },
+                                onRetry = { viewModel.retryMessage(message.id) },
                             )
                         }
                     }
@@ -732,6 +733,7 @@ private fun ChatBubble(
     onDelete: () -> Unit = {},
     onEdit: (String) -> Unit = {},
     onReact: (String) -> Unit = {},
+    onRetry: () -> Unit = {},
 ) {
     val isOutgoing = message.isOutgoing
     val alignment = if (isOutgoing) Alignment.CenterEnd else Alignment.CenterStart
@@ -791,7 +793,9 @@ private fun ChatBubble(
                         else Modifier
                     )
                     .combinedClickable(
-                        onClick = {},
+                        onClick = {
+                            if (message.deliveryStatus == DeliveryStatus.FAILED) onRetry()
+                        },
                         onLongClick = { showMenu = true },
                     ),
                 shape = bubbleShape,
@@ -822,6 +826,7 @@ private fun ChatBubble(
                             DeliveryStatus.READ      -> Icons.Default.DoneAll to JamiTheme.colors.primary
                             DeliveryStatus.DELIVERED -> Icons.Default.DoneAll to timeColor
                             DeliveryStatus.SENDING   -> Icons.Default.Done    to timeColor
+                            DeliveryStatus.FAILED    -> Icons.Default.Warning to JamiTheme.colors.error
                         }
                         Row(
                             modifier = Modifier.align(Alignment.BottomEnd),

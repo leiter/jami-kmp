@@ -100,9 +100,10 @@ data class MessageItem(
 
 /**
  * Aggregated delivery/read state for an outgoing message bubble.
- * SENDING = not yet confirmed, DELIVERED = remote received, READ = remote displayed.
+ * SENDING = not yet confirmed, DELIVERED = remote received, READ = remote displayed,
+ * FAILED = no daemon echo arrived within the send timeout.
  */
-enum class DeliveryStatus { SENDING, DELIVERED, READ }
+enum class DeliveryStatus { SENDING, DELIVERED, READ, FAILED }
 
 /**
  * A grouped emoji reaction: one entry per distinct emoji with an aggregated count.
@@ -359,34 +360,70 @@ class ChatViewModel(
         val conversationId = currentConversationId ?: return
         val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
 
-        var textToSend: String = ""
-        _state.update { current ->
-            textToSend = current.inputText.trim()
-            if (textToSend.isEmpty()) return@update current
-
-            val optimisticId = "pending-${Clock.System.now().toEpochMilliseconds()}"
-            val optimisticItem = MessageItem(
-                id = optimisticId,
-                text = textToSend,
-                author = "",
-                timestamp = Clock.System.now().toEpochMilliseconds(),
-                isOutgoing = true,
-                type = MessageType.Text,
-            )
-            current.copy(
-                inputText = "",
-                messages = current.messages + optimisticItem,
-            )
-        }
-
+        val textToSend = _state.value.inputText.trim()
         if (textToSend.isEmpty()) return
+        _state.update { it.copy(inputText = "") }
 
         // Stop the typing indicator on the recipient side immediately.
         conversationFacade.setIsComposing(accountId, conversationUri, false)
 
+        scope.launch { draftRepository.clearDraft(conversationId) }
+
+        sendOptimistic(accountId, conversationUri, textToSend)
+    }
+
+    /**
+     * Re-send a message that previously failed to get a daemon echo within [SEND_TIMEOUT_MS].
+     * Drops the failed bubble and re-runs the same optimistic-send flow as [sendMessage].
+     */
+    fun retryMessage(messageId: String) {
+        val accountId = currentAccountId ?: return
+        val conversationId = currentConversationId ?: return
+        val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+
+        val failed = _state.value.messages.firstOrNull { it.id == messageId } ?: return
+        if (failed.deliveryStatus != DeliveryStatus.FAILED) return
+
+        _state.update { current ->
+            current.copy(messages = current.messages.filterNot { it.id == messageId })
+        }
+
+        sendOptimistic(accountId, conversationUri, failed.text)
+    }
+
+    /**
+     * Insert an optimistic "sending" bubble, dispatch the daemon send, and arm a timeout that
+     * flips the bubble to FAILED if [ConversationEvent.MessageReceived] never echoes it back.
+     */
+    private fun sendOptimistic(accountId: String, conversationUri: Uri, text: String) {
+        val optimisticId = "pending-${Clock.System.now().toEpochMilliseconds()}"
+        val optimisticItem = MessageItem(
+            id = optimisticId,
+            text = text,
+            author = "",
+            timestamp = Clock.System.now().toEpochMilliseconds(),
+            isOutgoing = true,
+            type = MessageType.Text,
+            deliveryStatus = DeliveryStatus.SENDING,
+        )
+        _state.update { it.copy(messages = it.messages + optimisticItem) }
+
         scope.launch {
-            draftRepository.clearDraft(conversationId)
-            accountService.sendConversationMessage(accountId, conversationUri, textToSend)
+            accountService.sendConversationMessage(accountId, conversationUri, text)
+        }
+
+        // If the daemon never echoes this message back (network drop, rejected commit, …),
+        // flip the still-pending bubble to FAILED instead of leaving it stuck on "sending"
+        // forever. Reconciliation in appendMessage() cancels this by removing the item first.
+        scope.launch {
+            kotlinx.coroutines.delay(SEND_TIMEOUT_MS)
+            _state.update { current ->
+                val idx = current.messages.indexOfFirst { it.id == optimisticId }
+                if (idx < 0) return@update current
+                val messages = current.messages.toMutableList()
+                messages[idx] = messages[idx].copy(deliveryStatus = DeliveryStatus.FAILED)
+                current.copy(messages = messages)
+            }
         }
     }
 
@@ -789,11 +826,15 @@ class ChatViewModel(
         val isOutgoing = accountUsername.isNotEmpty() &&
             Uri.fromString(msg.author).rawRingId == accountUsername
 
-        // For outgoing messages: remove the optimistic placeholder (pending-*) that has the
-        // same text and was added right before the daemon call, replacing it with the real
-        // daemon-assigned ID now that the echo has arrived.
+        // For outgoing messages: remove the oldest optimistic placeholder (pending-*) that has
+        // the same text, replacing it with the real daemon-assigned ID now that the echo has
+        // arrived. Only the single oldest match is removed (not all matches) so that sending
+        // identical text twice in a row doesn't collapse both pending bubbles on the first echo.
         val withoutOptimistic = if (isOutgoing) {
-            current.filterNot { it.id.startsWith("pending-") && it.text == msg.textContent }
+            val matchIndex = current.indexOfFirst {
+                it.id.startsWith("pending-") && it.text == msg.textContent
+            }
+            if (matchIndex >= 0) current.toMutableList().apply { removeAt(matchIndex) } else current
         } else {
             current
         }
@@ -1015,5 +1056,6 @@ class ChatViewModel(
         private const val DATE_TODAY     = "Today"
         private const val DATE_YESTERDAY = "Yesterday"
         private const val SEARCH_DEBOUNCE_MS = 300L
+        private const val SEND_TIMEOUT_MS = 20_000L
     }
 }
