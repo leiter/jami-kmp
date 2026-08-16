@@ -41,11 +41,14 @@ import net.jami.e2e.protocol.Envelope
 import net.jami.e2e.protocol.HarnessJson
 import net.jami.e2e.protocol.Hello
 import net.jami.e2e.protocol.IncomingContactRequest
+import net.jami.e2e.protocol.MessageReceived
 import net.jami.e2e.protocol.NameRegistrationEnded
 import net.jami.e2e.protocol.RegistrationStateChanged
 import net.jami.e2e.protocol.ReportFrame
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
+import net.jami.services.ConversationEvent
+import net.jami.services.ConversationFacade
 import org.koin.core.Koin
 
 /**
@@ -69,6 +72,7 @@ class HarnessAgent(private val scope: CoroutineScope) {
         while (JamiKoinHolder.koin == null) delay(50)
         val koin: Koin = JamiKoinHolder.koin!!
         val accountService = koin.get<AccountService>()
+        val conversationFacade = koin.get<ConversationFacade>()
         val handler = CommandHandler(koin)
         val client = HttpClient(OkHttp) { install(WebSockets) }
 
@@ -89,6 +93,7 @@ class HarnessAgent(private val scope: CoroutineScope) {
                         scope.launch { observeRegistration(accountService, ::emit) },
                         scope.launch { observeNameRegistration(accountService, ::emit) },
                         scope.launch { observeContacts(accountService, ::emit) },
+                        scope.launch { observeMessages(conversationFacade, ::emit) },
                     )
                     try {
                         for (frame in incoming) {
@@ -155,10 +160,28 @@ class HarnessAgent(private val scope: CoroutineScope) {
         accountService.accountEvents.collect { ev ->
             when (ev) {
                 is AccountEvent.IncomingTrustRequest ->
-                    emit(IncomingContactRequest(ev.accountId, ev.request.from.rawRingId))
+                    emit(IncomingContactRequest(ev.accountId, ev.request.from.rawRingId, ev.request.conversationUri.uri))
                 is AccountEvent.ContactAdded ->
                     emit(ContactAdded(ev.accountId, ev.uri, ev.confirmed))
                 else -> {}
+            }
+        }
+    }
+
+    /**
+     * Messaging: fires for both the receiver's inbound copy and the sender's own echo (the
+     * daemon reports a sent message back through the same swarm callback once its commit is
+     * confirmed) — the scenario disambiguates by comparing [MessageReceived.authorUri] against
+     * the known peer.
+     */
+    private suspend fun observeMessages(
+        conversationFacade: ConversationFacade,
+        emit: suspend (DomainEvent) -> Unit,
+    ) {
+        conversationFacade.conversationEvents.collect { ev ->
+            if (ev is ConversationEvent.MessageReceived) {
+                val msg = ev.message
+                emit(MessageReceived(ev.accountId, ev.conversationId, msg.author, msg.textContent))
             }
         }
     }

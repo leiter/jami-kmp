@@ -41,14 +41,22 @@ import net.jami.e2e.protocol.RegisterName
 import net.jami.e2e.protocol.RemoveAccount
 import net.jami.e2e.protocol.RenameDevice
 import net.jami.e2e.protocol.SendContactRequest
+import net.jami.e2e.protocol.SendMessage
 import net.jami.e2e.protocol.SetAccountEnabled
 import net.jami.model.ConfigKey
 import net.jami.model.Uri
 import net.jami.services.AccountService
+import net.jami.services.ConversationEvent
+import net.jami.services.ConversationFacade
 import net.jami.services.DaemonBridgeApi
 import net.jami.ui.viewmodel.AccountCreationViewModel
 import java.io.File
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.core.Koin
 
@@ -184,13 +192,63 @@ class CommandHandler(private val koin: Koin) {
 
             is SendContactRequest -> {
                 // Initiator side: real trust request — flows peer-to-peer over the DHT.
+                //
+                // NOTE (investigated, not (yet) fixed here): swapping this for
+                // AccountService.addContact() — the call NewConversationViewModel actually uses
+                // for "add a new contact" — reproducibly made the peer never observe the
+                // request at all (two consecutive 120s timeouts), whereas sendTrustRequest
+                // reliably delivers. Left as sendTrustRequest so this scenario (and
+                // two-device-contact) stay on the proven-reliable path. Separately, once B's
+                // ContactAdded(confirmed=true) fires, B's own ConversationFacade never builds a
+                // local swarm Conversation object for it — getConversation(accountId, peerUri)
+                // never resolves even after 30s, even though B's daemon is visibly receiving
+                // swarm commits for that exact conversationId (observed via onMessageReceived).
+                // The real UI's equivalent flow (NewConversationViewModel.createConversation)
+                // calls addContact() then conversationFacade.startConversation(), falling back
+                // to awaiting ConversationEvent.ConversationReady — this harness doesn't
+                // replicate that dance for the initiator side. Likely explains "message sending
+                // broken": a contact you *sent* a request to may never get a locally-resolvable
+                // conversation without this extra step. Worth a focused follow-up.
                 koin.get<AccountService>()
                     .sendTrustRequest(directive.accountId, Uri.fromString(directive.peerUri))
             }
 
             is AcceptContactRequest -> {
+                // Must be the request's own conversationUri (swarm URI for a modern swarm
+                // request), matching the real UI's PendingRequestsViewModel/ConversationsViewModel
+                // — accepting via the bare peer URI takes the legacy path even on a swarm
+                // request, confirming the contact without ever joining the swarm conversation.
                 koin.get<AccountService>()
-                    .acceptTrustRequest(directive.accountId, Uri.fromString(directive.peerUri))
+                    .acceptTrustRequest(directive.accountId, Uri.fromString(directive.conversationUri))
+            }
+
+            is SendMessage -> {
+                // Same pattern as the real UI's NewConversationViewModel.createConversation():
+                // startConversation() resolves immediately if the swarm conversation is already
+                // known locally; if it isn't yet (still propagating over the DHT), it throws and
+                // the fallback awaits the daemon's own ConversationReady signal for this account,
+                // then re-resolves. A blind getConversation() poll was tried first and never
+                // resolved even after 30s+ despite the daemon visibly delivering swarm commits
+                // for the conversation — this is the actual mechanism the app relies on.
+                val conversationFacade = koin.get<ConversationFacade>()
+                val peer = Uri.fromString(directive.peerUri)
+                val conversation = try {
+                    conversationFacade.startConversation(directive.accountId, peer)
+                } catch (e: Exception) {
+                    withTimeoutOrNull(30_000) {
+                        conversationFacade.conversationEvents
+                            .filterIsInstance<ConversationEvent.ConversationReady>()
+                            .filter { it.accountId == directive.accountId }
+                            .map { conversationFacade.getConversation(directive.accountId, peer) }
+                            .filterNotNull()
+                            .first()
+                    }
+                }
+                if (conversation == null) {
+                    emit(net.jami.e2e.protocol.ErrorEvent("no conversation with ${directive.peerUri}"))
+                } else {
+                    conversationFacade.sendTextMessage(conversation, peer, directive.text)
+                }
             }
         }
     }

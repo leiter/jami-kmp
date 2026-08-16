@@ -4,7 +4,9 @@ Status: **IMPLEMENTED (single- and two-device)** — the harness runs real scena
 the live daemon on USB-connected Android devices. M0–M2 plus an account-fixture pool and the
 import/name-registration edge cases are **live-validated on hardware**. Two-device contact
 (M3) is now **live-validated on two devices** (2026-07-01: B's DHT contact request reached A
-and the contact confirmed bidirectionally); calls + recording (M4) are not started.
+and the contact confirmed bidirectionally). M4's messaging half (`send-message`) is
+**implemented but currently FAILS on hardware** (2026-08-14) — see `doc/TODO.md` → "Bug
+Findings (2026-08-14)"; calls + recording are not started.
 
 ## Goal
 
@@ -225,6 +227,7 @@ merged timeline, exit code = verdict.
 | `device-rename` | 1 | `renameDevice` is read back from the daemon's known-device registry under the same device id, then restored to the baseline name (reuses a fixture, non-consuming) |
 | `seed-pool` | 1 | status-aware pool top-up, zero name burns |
 | `two-device-contact` | 2 | B's contact request reaches A over the real DHT, accept + confirm (M3, **validated on 2 devices 2026-07-01**) — pool-backed: two *distinct* fixtures, `ensureNoAccounts` on both roles, non-consuming, zero name burns |
+| `send-message` | 2 | **implemented 2026-08-14, currently FAILS** — bidirectional message exchange over an established swarm conversation. Contact handshake (steps 1-4, shared with `two-device-contact`) passes; the message-send step consistently fails because B's (the request-sender's) device never resolves the swarm conversation locally, even though its daemon is confirmed to be receiving real swarm traffic for it. See `doc/TODO.md` → "Bug Findings (2026-08-14)" for the full writeup — likely the actual root cause of "message sending broken" reports. Pool-backed, non-consuming, zero name burns, same as `two-device-contact`. |
 
 ## Recommended additional scenarios — account handling
 
@@ -335,7 +338,11 @@ default — both are repointed to `src/androidHarness/` in `android-app/build.gr
   (`two-device-contact` **validated on two devices 2026-07-01**: full run ~13 s — both
   accounts `REGISTERED`, B's request reached A over the DHT, contact confirmed bidirectionally,
   clean teardown with no stranded accounts).
-- **M4** ⬜ call + recording end to end across two devices.
+- **M4** 🟡 messaging half implemented but **failing on hardware** (`send-message`,
+  2026-08-14): contact handshake reuses M3's proven path; the message-send step surfaced a
+  reproducible gap where the request-sender's device never locally resolves the swarm
+  conversation it should now be part of, so it can never send into it — see `doc/TODO.md` →
+  "Bug Findings (2026-08-14)" for the full investigation. Call + recording not started.
 
 ## Resolved decisions
 
@@ -366,6 +373,7 @@ default — both are repointed to `src/androidHarness/` in `android-app/build.gr
   **Re-validated on two devices 2026-07-24** (Pixel 7a as A, Pixel 2 / Android 11 as B): four
   consecutive passes, full run ~11–15 s, both fixtures installed distinctly, both roles swept
   clean, no name burned.
-- **M4** — calls + recording across two devices.
+- **M4** — messaging implemented but failing (see above); calls + recording across two
+  devices not started.
 - **Contact / data-state fixtures** — the registry models identity + password + name only;
   contacts / swarm membership are deferred to the contact scenarios.

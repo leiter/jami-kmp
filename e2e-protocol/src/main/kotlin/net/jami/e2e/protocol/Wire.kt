@@ -94,10 +94,22 @@ data class ErrorEvent(val message: String) : DomainEvent
 @SerialName("accountUri")
 data class AccountUri(val accountId: String, val uri: String) : DomainEvent
 
-/** Observed when a peer's contact/trust request arrives over the real DHT channel. */
+/**
+ * Observed when a peer's contact/trust request arrives over the real DHT channel.
+ * [conversationUri] is the daemon's own request handle — a swarm URI (`swarm:<id>`) for a
+ * modern swarm-native request, or a bare fingerprint for a legacy pre-swarm request — and is
+ * what must be passed to [AcceptContactRequest] (the real UI accepts via `TrustRequest
+ * .conversationUri`, never the bare peer URI; passing the peer URI instead sends the request
+ * down the legacy accept path even when the daemon already issued a swarm request, which
+ * confirms the contact but never joins the swarm conversation — see doc/end2endTesting.md).
+ */
 @Serializable
 @SerialName("incomingContactRequest")
-data class IncomingContactRequest(val accountId: String, val fromUri: String) : DomainEvent
+data class IncomingContactRequest(
+    val accountId: String,
+    val fromUri: String,
+    val conversationUri: String,
+) : DomainEvent
 
 /** Observed when a contact is added; [confirmed] true once the handshake is two-sided. */
 @Serializable
@@ -284,10 +296,14 @@ data class RegisterName(
 @SerialName("sendContactRequest")
 data class SendContactRequest(val accountId: String, val peerUri: String) : Directive
 
-/** Accept a pending contact/trust request from [peerUri] (the receiver side). */
+/**
+ * Accept a pending contact/trust request (the receiver side). [conversationUri] must be the
+ * request's own handle — [IncomingContactRequest.conversationUri] — not the bare peer URI; see
+ * that event's doc for why the distinction matters.
+ */
 @Serializable
 @SerialName("acceptContactRequest")
-data class AcceptContactRequest(val accountId: String, val peerUri: String) : Directive
+data class AcceptContactRequest(val accountId: String, val conversationUri: String) : Directive
 
 /**
  * Read the account's known-device registry from the daemon. Result arrives as [KnownDevices].
@@ -305,6 +321,34 @@ data class GetKnownDevices(val accountId: String) : Directive
 @Serializable
 @SerialName("renameDevice")
 data class RenameDevice(val accountId: String, val newName: String) : Directive
+
+/**
+ * Send a real text message to the 1:1 swarm conversation with the confirmed contact
+ * [peerUri]. The device resolves the conversation from the contact relationship (there is
+ * no separate "start conversation" step for an already-confirmed 1:1 contact) and sends via
+ * the real `ConversationFacade.sendTextMessage` path — daemon-to-daemon over the swarm
+ * transport, exactly like the chat UI. Fire-and-forget: delivery/receipt is observed via
+ * [MessageReceived].
+ */
+@Serializable
+@SerialName("sendMessage")
+data class SendMessage(val accountId: String, val peerUri: String, val text: String) : Directive
+
+/**
+ * Observed whenever a swarm message lands in a conversation — both the receiver's inbound
+ * copy and the sender's own echo (the daemon reports a sent message back through the same
+ * callback once its swarm commit is confirmed). [authorUri] is the message's author
+ * fingerprint, so a scenario disambiguates "my own echo" from "the peer's message" by
+ * comparing it against the known peer URI.
+ */
+@Serializable
+@SerialName("messageReceived")
+data class MessageReceived(
+    val accountId: String,
+    val conversationId: String,
+    val authorUri: String,
+    val text: String,
+) : DomainEvent
 
 /** Shared Json instance — sealed hierarchies use the `type` discriminator + @SerialName. */
 val HarnessJson: Json = Json {

@@ -34,6 +34,7 @@ import net.jami.e2e.scenarios.NameLookupScenario
 import net.jami.e2e.scenarios.PingScenario
 import net.jami.e2e.scenarios.RegisterNameTakenScenario
 import net.jami.e2e.scenarios.SeedPoolScenario
+import net.jami.e2e.scenarios.SendMessageScenario
 import net.jami.e2e.scenarios.TwoDeviceContactScenario
 import java.nio.file.Path
 
@@ -141,5 +142,6 @@ object ScenarioRegistry {
             ImportWrongPasswordScenario,
             ImportNoPasswordScenario,
             TwoDeviceContactScenario,
+            SendMessageScenario,
         ).associateBy { it.id }
 }
