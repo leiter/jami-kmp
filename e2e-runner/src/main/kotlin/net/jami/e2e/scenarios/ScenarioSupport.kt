@@ -17,10 +17,14 @@
 package net.jami.e2e.scenarios
 
 import net.jami.e2e.ScenarioContext
+import net.jami.e2e.protocol.AcceptContactRequest
 import net.jami.e2e.protocol.AccountRemoved
 import net.jami.e2e.protocol.AccountsSnapshot
+import net.jami.e2e.protocol.ContactAdded
 import net.jami.e2e.protocol.GetAccounts
+import net.jami.e2e.protocol.IncomingContactRequest
 import net.jami.e2e.protocol.RemoveAccount
+import net.jami.e2e.protocol.SendContactRequest
 
 /** Outcome of [ensureNoAccounts]. */
 data class CleanResult(val startedWith: Int, val clean: Boolean)
@@ -58,4 +62,75 @@ suspend fun ensureNoAccounts(ctx: ScenarioContext, role: String = "A"): CleanRes
     if (clean) ctx.log("device[$role] now clean — no account loaded")
     else ctx.log("device[$role] STILL has ${after.size} account(s) after reset: $after")
     return CleanResult(before.size, clean = clean)
+}
+
+/** The derived swarm conversation from a completed [establishContact]/[acceptAndConfirmContact]. */
+data class ContactHandshakeResult(val conversationId: String)
+
+/**
+ * Step 1 of the handshake — the CORE PROOF half: [initiatorRole] sends a real contact request
+ * to [accepterRole] over the DHT; [accepterRole] observes it arrive. Split out from
+ * [acceptAndConfirmContact] (rather than folded into one [establishContact]) because
+ * `two-device-contact` treats *this* half as a hard requirement (an uncaught timeout here is a
+ * real scenario failure) while treating the accept/confirm half as best-effort — a distinction
+ * that would be lost if both were bundled behind a single try/catch at the call site.
+ */
+suspend fun sendContactRequestAndAwaitIncoming(
+    ctx: ScenarioContext,
+    initiatorRole: String,
+    initiatorId: String,
+    accepterRole: String,
+    accepterId: String,
+    initiatorUri: String,
+    accepterUri: String,
+): IncomingContactRequest {
+    ctx.send(initiatorRole, SendContactRequest(initiatorId, accepterUri))
+    return ctx.await(accepterRole, 120_000) {
+        it is IncomingContactRequest && it.accountId == accepterId && it.fromUri == initiatorUri
+    } as IncomingContactRequest
+}
+
+/**
+ * Step 2 of the handshake: [accepterRole] accepts [incoming] and both sides confirm
+ * `ContactAdded(confirmed = true)`. Returns the derived swarm `conversationId`.
+ *
+ * Accepts via the request's own `conversationUri`, not the bare peer URI — accepting via the
+ * peer URI silently takes the legacy accept path even on a modern swarm request, which confirms
+ * the contact but never joins the swarm conversation (see [IncomingContactRequest]'s doc).
+ */
+suspend fun acceptAndConfirmContact(
+    ctx: ScenarioContext,
+    accepterRole: String,
+    accepterId: String,
+    initiatorRole: String,
+    initiatorId: String,
+    incoming: IncomingContactRequest,
+): ContactHandshakeResult {
+    ctx.send(accepterRole, AcceptContactRequest(accepterId, incoming.conversationUri))
+    ctx.await(accepterRole, 60_000) { it is ContactAdded && it.accountId == accepterId && it.confirmed }
+    ctx.await(initiatorRole, 60_000) { it is ContactAdded && it.accountId == initiatorId && it.confirmed }
+    val conversationId = incoming.conversationUri.substringAfter(':', incoming.conversationUri)
+    return ContactHandshakeResult(conversationId)
+}
+
+/**
+ * The full real, DHT-verified contact handshake — [sendContactRequestAndAwaitIncoming] followed
+ * by [acceptAndConfirmContact] — for callers that treat the whole thing as one all-or-nothing
+ * step (`send-message`, `build-conversation-fixture`, `chat-conversation-git-rewind-resync`,
+ * `default-one-on-one-conversation`). `two-device-contact` calls the two halves directly instead
+ * (see [sendContactRequestAndAwaitIncoming]'s doc for why).
+ */
+suspend fun establishContact(
+    ctx: ScenarioContext,
+    initiatorRole: String,
+    initiatorId: String,
+    initiatorUri: String,
+    accepterRole: String,
+    accepterId: String,
+    accepterUri: String,
+): ContactHandshakeResult {
+    val incoming = sendContactRequestAndAwaitIncoming(
+        ctx, initiatorRole, initiatorId, accepterRole, accepterId, initiatorUri, accepterUri,
+    )
+    return acceptAndConfirmContact(ctx, accepterRole, accepterId, initiatorRole, initiatorId, incoming)
 }

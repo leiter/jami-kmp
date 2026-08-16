@@ -174,14 +174,18 @@ class HarnessAgent(private val scope: CoroutineScope, private val requestedRole:
      * Messaging: fires for both the receiver's inbound copy and the sender's own echo (the
      * daemon reports a sent message back through the same swarm callback once its commit is
      * confirmed) — the scenario disambiguates by comparing [MessageReceived.authorUri] against
-     * the known peer.
+     * the known peer. `ConversationEvent.MessageReceived` fires for **every** swarm commit type
+     * (member/invite/vote events included, not just chat messages) via the same generic
+     * callback — those arrive with an empty `textContent`, so only `text/plain` is forwarded;
+     * otherwise a scenario awaiting a specific message text can match a same-conversation
+     * system commit instead and hang until timeout.
      */
     private suspend fun observeMessages(
         conversationFacade: ConversationFacade,
         emit: suspend (DomainEvent) -> Unit,
     ) {
         conversationFacade.conversationEvents.collect { ev ->
-            if (ev is ConversationEvent.MessageReceived) {
+            if (ev is ConversationEvent.MessageReceived && ev.message.type == "text/plain") {
                 val msg = ev.message
                 emit(MessageReceived(ev.accountId, ev.conversationId, msg.author, msg.textContent))
             }

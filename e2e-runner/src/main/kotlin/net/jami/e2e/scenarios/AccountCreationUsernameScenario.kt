@@ -87,12 +87,17 @@ object AccountCreationUsernameScenario : Scenario {
             return Verdict(true, "registered username '$username' (${if (fromPool) "reused pool asset" else "freshly created"})")
         } finally {
             // Remove from the device; the (now named) identity persists in its archive.
-            runCatching {
-                ctx.send("A", RemoveAccount(accountId))
-                ctx.await("A", 10_000) { it is AccountRemoved && it.accountId == accountId }
+            // Skippable via -PkeepAccounts=true to leave the registered account on-device.
+            if (!ctx.runConfig.keepAccounts) {
+                runCatching {
+                    ctx.send("A", RemoveAccount(accountId))
+                    ctx.await("A", 10_000) { it is AccountRemoved && it.accountId == accountId }
+                }
+                // Hardened sweep — guarantee the device is left with no account loaded.
+                runCatching { ensureNoAccounts(ctx, "A") }
+            } else {
+                ctx.log("keepAccounts=true — skipping teardown, leaving account on-device")
             }
-            // Hardened sweep — guarantee the device is left with no account loaded.
-            runCatching { ensureNoAccounts(ctx, "A") }
         }
     }
 }

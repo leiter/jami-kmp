@@ -20,16 +20,12 @@ import net.jami.e2e.Scenario
 import net.jami.e2e.ScenarioContext
 import net.jami.e2e.Verdict
 import net.jami.e2e.memory.AccountAsset
-import net.jami.e2e.protocol.AcceptContactRequest
 import net.jami.e2e.protocol.AccountAdded
 import net.jami.e2e.protocol.AccountUri
-import net.jami.e2e.protocol.ContactAdded
 import net.jami.e2e.protocol.CreateBareAccount
 import net.jami.e2e.protocol.GetAccountUri
-import net.jami.e2e.protocol.IncomingContactRequest
 import net.jami.e2e.protocol.MessageReceived
 import net.jami.e2e.protocol.RegistrationStateChanged
-import net.jami.e2e.protocol.SendContactRequest
 import net.jami.e2e.protocol.SendMessage
 
 /**
@@ -97,17 +93,7 @@ object SendMessageScenario : Scenario {
             }
 
             // 4. Establish the contact relationship (same handshake as two-device-contact).
-            // Accept via the request's own conversationUri, not the bare peer URI — accepting
-            // via the peer URI silently takes the legacy accept path even on a modern swarm
-            // request, which confirms the contact but never joins the swarm conversation (the
-            // bug this scenario exists to catch — see IncomingContactRequest's doc).
-            ctx.send("B", SendContactRequest(bId, aUri))
-            val incoming = ctx.await("A", 120_000) {
-                it is IncomingContactRequest && it.accountId == aId && it.fromUri == bUri
-            } as IncomingContactRequest
-            ctx.send("A", AcceptContactRequest(aId, incoming.conversationUri))
-            ctx.await("A", 60_000) { it is ContactAdded && it.accountId == aId && it.confirmed }
-            ctx.await("B", 60_000) { it is ContactAdded && it.accountId == bId && it.confirmed }
+            establishContact(ctx, "B", bId, bUri, "A", aId, aUri)
             ctx.log("contact confirmed on both devices — swarm conversation established")
 
             // 5. B → A: the core proof. A observes a message whose author is B, not its own echo.
@@ -133,8 +119,13 @@ object SendMessageScenario : Scenario {
             // Non-consuming: sweep both devices back to a proven no-account state. The contact
             // and messages exchanged here live only in the on-device copies, which are removed;
             // the host archives keep the original contact-free identities.
-            for (role in listOf("A", "B")) {
-                runCatching { ensureNoAccounts(ctx, role) }
+            // Skippable via -PkeepAccounts=true to leave the conversation on both devices.
+            if (!ctx.runConfig.keepAccounts) {
+                for (role in listOf("A", "B")) {
+                    runCatching { ensureNoAccounts(ctx, role) }
+                }
+            } else {
+                ctx.log("keepAccounts=true — skipping teardown, leaving accounts/conversation on-device")
             }
         }
     }

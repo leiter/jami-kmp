@@ -154,7 +154,12 @@ object ChangePasswordScenario : Scenario {
             return Verdict(true, "change / remove / add all verified; identity $identity preserved end-to-end (non-consuming)")
         } finally {
             // Non-consuming: remove the phone copy; the host pool blob is never rewritten.
-            runCatching { ensureNoAccounts(ctx, "A") }
+            // Skippable via -PkeepAccounts=true to leave the account on-device for inspection.
+            if (!ctx.runConfig.keepAccounts) {
+                runCatching { ensureNoAccounts(ctx, "A") }
+            } else {
+                ctx.log("keepAccounts=true — skipping teardown, leaving account on-device")
+            }
         }
     }
 

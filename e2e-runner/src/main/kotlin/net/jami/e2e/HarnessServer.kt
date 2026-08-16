@@ -158,6 +158,7 @@ class ScenarioContextImpl(
     private val runDir: java.io.File,
     override val memory: net.jami.e2e.memory.MemoryStore,
     private val server: HarnessServer,
+    override val runConfig: RunConfig = RunConfig(),
 ) : ScenarioContext {
     private val commandCounter = AtomicInteger(0)
     private val snapshotCounter = AtomicInteger(0)
@@ -171,6 +172,47 @@ class ScenarioContextImpl(
         withTimeout(timeoutMillis) {
             while (server.connection(role) == null) kotlinx.coroutines.delay(200)
         }
+    }
+
+    /**
+     * Relaunch [role]'s app + agent and wait for it to reconnect under the same role — the
+     * launch half of any mid-scenario device restart. Callers handle whatever on-disk mutation
+     * (or none) happens before this; this only brings the process back up and rebinds the
+     * WebSocket. Does not wait for `REGISTERED` — callers with daemon-state expectations await
+     * that themselves afterward.
+     */
+    private suspend fun restartRole(role: String, ctrl: DeviceController, timeoutMillis: Long = 30_000) {
+        ctrl.startApp()
+        ctrl.startAgent(role)
+        awaitReconnect(role, timeoutMillis)
+    }
+
+    /** Extract a tar (as produced by [DeviceController.pullConversationRepo]) into [destDir]. */
+    private fun extractTar(tarFile: java.io.File, destDir: java.io.File): Boolean = try {
+        destDir.mkdirs()
+        val p = ProcessBuilder("tar", "-xf", tarFile.absolutePath, "-C", destDir.absolutePath)
+            .redirectErrorStream(true).start()
+        val out = p.inputStream.bufferedReader().readText()
+        val code = p.waitFor()
+        if (code != 0) ledger.record("tar", "extract exit=$code: ${out.trim()}")
+        code == 0
+    } catch (e: Exception) {
+        ledger.record("tar", "extract failed: ${e.message}")
+        false
+    }
+
+    /** Re-tar [srcDir]'s `files/` subtree back into [tarFile], matching [pullConversationRepo]'s layout. */
+    private fun createTar(srcDir: java.io.File, tarFile: java.io.File): Boolean = try {
+        val p = ProcessBuilder("tar", "-cf", tarFile.absolutePath, "files")
+            .directory(srcDir)
+            .redirectErrorStream(true).start()
+        val out = p.inputStream.bufferedReader().readText()
+        val code = p.waitFor()
+        if (code != 0) ledger.record("tar", "create exit=$code: ${out.trim()}")
+        code == 0
+    } catch (e: Exception) {
+        ledger.record("tar", "create failed: ${e.message}")
+        false
     }
 
     override suspend fun send(role: String, directive: Directive): String {
@@ -369,10 +411,8 @@ class ScenarioContextImpl(
                 ledger.record("pair", "restore FAILED role=$role for '${pair.label}'")
                 return false
             }
-            ctrl.startApp()
-            ctrl.startAgent(role)
             try {
-                awaitReconnect(role, 30_000)
+                restartRole(role, ctrl)
             } catch (e: Exception) {
                 ledger.record("pair", "role=$role did not reconnect after restore: ${e.message}")
                 return false
@@ -390,5 +430,48 @@ class ScenarioContextImpl(
         }
         ledger.record("pair", "installed conversation-pair '${pair.label}' on $roleA/$roleB")
         return true
+    }
+
+    override suspend fun rewindConversation(
+        role: String,
+        accountId: String,
+        conversationId: String,
+        commitsBack: Int,
+    ): Int {
+        val ctrl = controllers[role] ?: run { ledger.record("rewind", "no controller for role '$role'"); return 0 }
+        val pulledTar = java.io.File(runDir, "convrepo-$role-pull.tar")
+        val pushedTar = java.io.File(runDir, "convrepo-$role-push.tar")
+        val extractDir = java.io.File(runDir, "convrepo-$role-extract").apply { deleteRecursively(); mkdirs() }
+
+        ctrl.forceStopSelf()
+        if (!ctrl.pullConversationRepo(accountId, conversationId, pulledTar)) {
+            ledger.record("rewind", "pull failed for role=$role conversation=$conversationId")
+            return 0
+        }
+        if (!extractTar(pulledTar, extractDir)) {
+            ledger.record("rewind", "local extract failed for role=$role")
+            return 0
+        }
+        val repoDir = java.io.File(extractDir, "files/$accountId/conversations/$conversationId")
+        if (!repoDir.exists()) {
+            ledger.record("rewind", "extracted repo dir missing: ${repoDir.absolutePath}")
+            return 0
+        }
+        val reverted = net.jami.e2e.LocalGit.resetHardBack(repoDir, commitsBack)
+        if (reverted == 0) {
+            ledger.record("rewind", "nothing to revert (repo too short or commitsBack<=0) for role=$role")
+            return 0
+        }
+        if (!createTar(extractDir, pushedTar)) {
+            ledger.record("rewind", "local re-tar failed for role=$role")
+            return 0
+        }
+        if (!ctrl.pushConversationRepo(accountId, conversationId, pushedTar)) {
+            ledger.record("rewind", "push failed for role=$role")
+            return 0
+        }
+        restartRole(role, ctrl)
+        ledger.record("rewind", "role=$role conversation=$conversationId rewound $reverted commit(s), relaunched")
+        return reverted
     }
 }

@@ -20,20 +20,16 @@ import net.jami.e2e.Scenario
 import net.jami.e2e.ScenarioContext
 import net.jami.e2e.Verdict
 import net.jami.e2e.memory.AccountAsset
-import net.jami.e2e.protocol.AcceptContactRequest
 import net.jami.e2e.protocol.AccountAdded
 import net.jami.e2e.protocol.AccountUri
-import net.jami.e2e.protocol.ContactAdded
 import net.jami.e2e.protocol.CreateBareAccount
 import net.jami.e2e.protocol.GetAccountUri
-import net.jami.e2e.protocol.IncomingContactRequest
 import net.jami.e2e.protocol.NameRegistrationEnded
 import net.jami.e2e.protocol.ProfileUpdated
 import net.jami.e2e.protocol.RegisterName
 import net.jami.e2e.protocol.RegistrationStateChanged
 import net.jami.e2e.protocol.SeedConversationMessages
 import net.jami.e2e.protocol.SeedMessage
-import net.jami.e2e.protocol.SendContactRequest
 import net.jami.e2e.protocol.SetProfile
 import java.util.Base64
 
@@ -126,14 +122,7 @@ object BuildConversationFixtureScenario : Scenario {
             val bUri = (ctx.await("B", 5_000) { it is AccountUri && it.accountId == bId } as AccountUri).uri
             if (aUri.isBlank() || bUri.isBlank()) return Verdict(false, "empty account URI (A='$aUri' B='$bUri')")
 
-            ctx.send("B", SendContactRequest(bId, aUri))
-            val incoming = ctx.await("A", 120_000) {
-                it is IncomingContactRequest && it.accountId == aId && it.fromUri == bUri
-            } as IncomingContactRequest
-            ctx.send("A", AcceptContactRequest(aId, incoming.conversationUri))
-            ctx.await("A", 60_000) { it is ContactAdded && it.accountId == aId && it.confirmed }
-            ctx.await("B", 60_000) { it is ContactAdded && it.accountId == bId && it.confirmed }
-            val conversationId = incoming.conversationUri.substringAfter(':', incoming.conversationUri)
+            val conversationId = establishContact(ctx, "B", bId, bUri, "A", aId, aUri).conversationId
             ctx.log("contact confirmed on both devices — swarm conversation '$conversationId' established")
 
             // 5. Seed a fixed transcript directly into each device's local history DB, bypassing
@@ -163,8 +152,13 @@ object BuildConversationFixtureScenario : Scenario {
 
             return Verdict(true, "captured conversation-pair fixture '${pair.label}' (${pair.messageCount} messages)")
         } finally {
-            for (role in listOf("A", "B")) {
-                runCatching { ensureNoAccounts(ctx, role) }
+            // Skippable via -PkeepAccounts=true to leave the just-built fixture live on-device.
+            if (!ctx.runConfig.keepAccounts) {
+                for (role in listOf("A", "B")) {
+                    runCatching { ensureNoAccounts(ctx, role) }
+                }
+            } else {
+                ctx.log("keepAccounts=true — skipping teardown, leaving accounts/conversation on-device")
             }
         }
     }

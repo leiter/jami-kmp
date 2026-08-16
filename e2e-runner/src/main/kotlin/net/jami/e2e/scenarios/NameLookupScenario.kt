@@ -99,7 +99,12 @@ object NameLookupScenario : Scenario {
             return Verdict(true, "name server resolved '${burned.name}' → ${burned.fingerprint} and reported an unknown name NotFound")
         } finally {
             // Non-consuming: remove the phone copy; the host blob is never rewritten.
-            runCatching { ensureNoAccounts(ctx, "A") }
+            // Skippable via -PkeepAccounts=true to leave the account on-device for inspection.
+            if (!ctx.runConfig.keepAccounts) {
+                runCatching { ensureNoAccounts(ctx, "A") }
+            } else {
+                ctx.log("keepAccounts=true — skipping teardown, leaving account on-device")
+            }
         }
     }
 

@@ -95,15 +95,20 @@ object AccountReuseScenario : Scenario {
                 Verdict(false, "identity mismatch after restore: '$originalUri' vs '$restoredUri'")
             }
         } finally {
-            // Cleanup — ephemeral account isolation. Never flips the verdict.
-            restoredId?.let { id ->
-                runCatching {
-                    ctx.send("A", RemoveAccount(id))
-                    ctx.await("A", 10_000) { it is AccountRemoved && it.accountId == id }
+            // Cleanup — ephemeral account isolation. Never flips the verdict. Skippable via
+            // -PkeepAccounts=true to leave the restored account on-device for inspection.
+            if (!ctx.runConfig.keepAccounts) {
+                restoredId?.let { id ->
+                    runCatching {
+                        ctx.send("A", RemoveAccount(id))
+                        ctx.await("A", 10_000) { it is AccountRemoved && it.accountId == id }
+                    }
                 }
+                // Hardened sweep — guarantee the device is left with no account loaded.
+                runCatching { ensureNoAccounts(ctx, "A") }
+            } else {
+                ctx.log("keepAccounts=true — skipping teardown, leaving account on-device")
             }
-            // Hardened sweep — guarantee the device is left with no account loaded.
-            runCatching { ensureNoAccounts(ctx, "A") }
         }
     }
 }

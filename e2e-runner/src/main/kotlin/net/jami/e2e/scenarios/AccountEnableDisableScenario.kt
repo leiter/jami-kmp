@@ -78,7 +78,12 @@ object AccountEnableDisableScenario : Scenario {
             return Verdict(true, "registration toggled off (UNREGISTERED) and back on (REGISTERED)")
         } finally {
             // Non-consuming: remove the phone copy; the host blob is never rewritten.
-            runCatching { ensureNoAccounts(ctx, "A") }
+            // Skippable via -PkeepAccounts=true to leave the account on-device for inspection.
+            if (!ctx.runConfig.keepAccounts) {
+                runCatching { ensureNoAccounts(ctx, "A") }
+            } else {
+                ctx.log("keepAccounts=true — skipping teardown, leaving account on-device")
+            }
         }
     }
 

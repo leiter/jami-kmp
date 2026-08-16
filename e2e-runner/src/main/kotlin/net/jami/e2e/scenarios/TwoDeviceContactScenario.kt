@@ -20,15 +20,11 @@ import net.jami.e2e.Scenario
 import net.jami.e2e.ScenarioContext
 import net.jami.e2e.Verdict
 import net.jami.e2e.memory.AccountAsset
-import net.jami.e2e.protocol.AcceptContactRequest
 import net.jami.e2e.protocol.AccountAdded
 import net.jami.e2e.protocol.AccountUri
-import net.jami.e2e.protocol.ContactAdded
 import net.jami.e2e.protocol.CreateBareAccount
 import net.jami.e2e.protocol.GetAccountUri
-import net.jami.e2e.protocol.IncomingContactRequest
 import net.jami.e2e.protocol.RegistrationStateChanged
-import net.jami.e2e.protocol.SendContactRequest
 
 /**
  * M3 — two devices, with the **out-of-band identity relay**.
@@ -107,27 +103,14 @@ object TwoDeviceContactScenario : Scenario {
             mismatchedIdentity("A", aAsset, aUri)?.let { return Verdict(false, it) }
             mismatchedIdentity("B", bAsset, bUri)?.let { return Verdict(false, it) }
 
-            // 4. B initiates a real contact request to A over the DHT.
-            ctx.send("B", SendContactRequest(bId, aUri))
-
-            // 5. CORE PROOF: A observes the request arriving over the DHT.
-            val incoming = ctx.await("A", 120_000) {
-                it is IncomingContactRequest && it.accountId == aId && it.fromUri == bUri
-            } as IncomingContactRequest
+            // 4-5. B initiates a real contact request to A over the DHT. CORE PROOF: A observes
+            // it arrive — a hard requirement, not caught below.
+            val incoming = sendContactRequestAndAwaitIncoming(ctx, "B", bId, "A", aId, bUri, aUri)
             ctx.log("A received B's contact request over the DHT: from=${incoming.fromUri}")
 
             // 6. A accepts → confirm the bidirectional swarm (best-effort second round-trip).
-            // Must accept via the request's own conversationUri, not the bare peer URI — see
-            // IncomingContactRequest's doc for why (accepting via the peer URI silently takes
-            // the legacy accept path even on a modern swarm request).
-            ctx.send("A", AcceptContactRequest(aId, incoming.conversationUri))
             val confirmed = try {
-                ctx.await("A", 60_000) {
-                    it is ContactAdded && it.accountId == aId && it.confirmed
-                }
-                ctx.await("B", 60_000) {
-                    it is ContactAdded && it.accountId == bId && it.confirmed
-                }
+                acceptAndConfirmContact(ctx, "A", aId, "B", bId, incoming)
                 ctx.log("contact confirmed on both devices")
                 true
             } catch (e: Exception) {
@@ -146,8 +129,13 @@ object TwoDeviceContactScenario : Scenario {
             // Non-consuming: sweep both devices back to a proven no-account state. The contact
             // added here lives only in the on-device copies, which are removed; the host
             // archives keep the original contact-free identities. Never flips the verdict.
-            for (role in listOf("A", "B")) {
-                runCatching { ensureNoAccounts(ctx, role) }
+            // Skippable via -PkeepAccounts=true to leave the confirmed contact on both devices.
+            if (!ctx.runConfig.keepAccounts) {
+                for (role in listOf("A", "B")) {
+                    runCatching { ensureNoAccounts(ctx, role) }
+                }
+            } else {
+                ctx.log("keepAccounts=true — skipping teardown, leaving accounts/contact on-device")
             }
         }
     }

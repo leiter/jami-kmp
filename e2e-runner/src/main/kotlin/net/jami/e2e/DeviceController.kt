@@ -193,6 +193,66 @@ class DeviceController(val serial: String) {
     fun clearAppData(): Boolean = adbExit("-s", serial, "shell", "pm", "clear", HARNESS_APP_ID) == 0
 
     /**
+     * Tar just **one conversation's** on-disk swarm git repo —
+     * `files/<accountId>/conversations/<conversationId>` — into [local]. A scoped sibling of
+     * [snapshotAppData] for probing/mutating a single conversation's history (e.g. rewinding it
+     * to test the daemon's peer-resync self-heal) without touching the rest of the account.
+     */
+    fun pullConversationRepo(accountId: String, conversationId: String, local: File): Boolean {
+        local.parentFile?.mkdirs()
+        val path = "files/$accountId/conversations/$conversationId"
+        return try {
+            val cmd = listOf(adbPath(), "-s", serial, "exec-out", "run-as", HARNESS_APP_ID, "tar", "-cf", "-", path)
+            val p = ProcessBuilder(cmd).redirectErrorStream(false).start()
+            val bytes = p.inputStream.readBytes()
+            val err = p.errorStream.bufferedReader().readText()
+            val code = p.waitFor()
+            if (code != 0 || bytes.isEmpty()) {
+                System.err.println("[adb] pullConversationRepo exit=$code on $serial ($path): ${err.trim()}")
+                false
+            } else {
+                local.writeBytes(bytes)
+                true
+            }
+        } catch (e: Exception) {
+            System.err.println("[adb] pullConversationRepo failed on $serial ($path): ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * Replace one conversation's on-disk git repo with the (possibly rewound) tar captured by
+     * [pullConversationRepo]. Wipes the existing directory first so no file present at the old
+     * HEAD but absent from the pushed state lingers. The app should be stopped first
+     * ([forceStopSelf]) so no live daemon handle races the overwrite.
+     */
+    fun pushConversationRepo(accountId: String, conversationId: String, local: File): Boolean {
+        if (!local.exists()) {
+            System.err.println("[adb] pushConversationRepo source missing: ${local.absolutePath}")
+            return false
+        }
+        val path = "files/$accountId/conversations/$conversationId"
+        val tmp = "/data/local/tmp/harness_convrepo.tar"
+        return try {
+            if (adbExit("-s", serial, "shell", "run-as", HARNESS_APP_ID, "rm", "-rf", path) != 0) return false
+            if (adbExit("-s", serial, "push", local.absolutePath, tmp) != 0) return false
+            val restored = adbExit("-s", serial, "shell", "run-as", HARNESS_APP_ID, "tar", "-xf", tmp) == 0
+            adbExit("-s", serial, "shell", "rm", "-f", tmp)
+            restored
+        } catch (e: Exception) {
+            System.err.println("[adb] pushConversationRepo failed on $serial ($path): ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * Force-stop the harness app itself — distinct from [stopCompetingApps] (other apps) and
+     * [clearAppData] (wipes everything via `pm clear`). Used to safely manipulate on-disk files
+     * (e.g. [pushConversationRepo]) without a live process racing the write.
+     */
+    fun forceStopSelf(): Boolean = adbExit("-s", serial, "shell", "am", "force-stop", HARNESS_APP_ID) == 0
+
+    /**
      * Force-stop [COMPETING_APP_IDS] (the standard jami-kmp build and jami-android-client) on
      * this device. `am force-stop` on an app that isn't installed/running is a harmless no-op
      * (non-zero exit is swallowed here, not surfaced as a run failure), so this is safe to call

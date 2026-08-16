@@ -29,7 +29,8 @@ kotlin {
 
 tasks.register<JavaExec>("e2e") {
     group = "verification"
-    description = "Run an end-to-end device scenario (-Pscenario=<id> [-Pdevices=a,b])"
+    description = "Run an end-to-end device scenario (-Pscenario=<id> [-Pdevices=a,b] " +
+        "[-PkeepAccounts=true] [-PaccountState=<label>] [-Pusername=<name>])"
     dependsOn(":android-app:installHarnessDebug")
     classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("net.jami.e2e.MainKt")
@@ -37,7 +38,10 @@ tasks.register<JavaExec>("e2e") {
         val scenario = project.findProperty("scenario") as String?
             ?: throw GradleException("Missing -Pscenario=<id> (see :e2e-runner:e2eList)")
         val devices = project.findProperty("devices") as String? ?: ""
-        args = listOf(scenario, devices)
+        val keepAccounts = project.findProperty("keepAccounts") as String? ?: "false"
+        val accountState = project.findProperty("accountState") as String? ?: ""
+        val username = project.findProperty("username") as String? ?: ""
+        args = listOf(scenario, devices, keepAccounts, accountState, username)
     }
 }
 
@@ -47,4 +51,12 @@ tasks.register<JavaExec>("e2eList") {
     classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("net.jami.e2e.MainKt")
     args = listOf("--list")
+}
+
+tasks.register<JavaExec>("e2eListAccountStates") {
+    group = "verification"
+    description = "List named account-state fixtures available for -PaccountState=<label>"
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("net.jami.e2e.MainKt")
+    args = listOf("--list-account-states")
 }

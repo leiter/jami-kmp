@@ -27,13 +27,17 @@ import net.jami.e2e.scenarios.AccountCreationUsernameScenario
 import net.jami.e2e.scenarios.AccountEnableDisableScenario
 import net.jami.e2e.scenarios.AccountReuseScenario
 import net.jami.e2e.scenarios.BuildConversationFixtureScenario
+import net.jami.e2e.scenarios.CaptureAccountScenario
 import net.jami.e2e.scenarios.ChangePasswordScenario
+import net.jami.e2e.scenarios.ChatConversationGitRewindResyncScenario
+import net.jami.e2e.scenarios.DefaultOneOnOneConversationScenario
 import net.jami.e2e.scenarios.DeviceRenameScenario
 import net.jami.e2e.scenarios.ImportCorrectPasswordScenario
 import net.jami.e2e.scenarios.ImportNoPasswordScenario
 import net.jami.e2e.scenarios.ImportWrongPasswordScenario
 import net.jami.e2e.scenarios.NameLookupScenario
 import net.jami.e2e.scenarios.PingScenario
+import net.jami.e2e.scenarios.RegisterNameOnAccountScenario
 import net.jami.e2e.scenarios.RegisterNameTakenScenario
 import net.jami.e2e.scenarios.SeedPoolScenario
 import net.jami.e2e.scenarios.SendMessageScenario
@@ -45,6 +49,22 @@ val ROLE_NAMES = listOf("A", "B", "C", "D")
 
 /** Outcome of a scenario run. */
 data class Verdict(val pass: Boolean, val reason: String)
+
+/**
+ * Run-level flags set from the command line (`-PkeepAccounts`, `-PaccountState`), not owned by
+ * any one scenario. [keepAccounts] tells a scenario's teardown to skip its `ensureNoAccounts`
+ * sweep (and any other cleanup) so accounts/contacts/conversations survive past the run — for
+ * hand-driven investigation between runs. [accountState] names a conversation-pair fixture a
+ * scenario should restore (if it already exists in the registry) or build-and-save-as (if it
+ * doesn't) — see [ScenarioContext.captureConversationPairAsset]/[installConversationPairAsset].
+ * Both default to today's behavior (wipe on finish, no persisted label).
+ */
+data class RunConfig(
+    val keepAccounts: Boolean = false,
+    val accountState: String? = null,
+    /** Custom username for a scenario that registers a caller-given name (`-Pusername=<name>`). */
+    val username: String? = null,
+)
 
 /**
  * The control + observation surface a scenario uses to drive devices. The brain
@@ -90,6 +110,9 @@ interface ScenarioContext {
 
     /** The persistent asset registry — claim reusable accounts before creating new ones. */
     val memory: MemoryStore
+
+    /** Run-level flags set from the command line — see [RunConfig]. */
+    val runConfig: RunConfig
 
     /**
      * Export the live account [accountId] on [role], pull its archive into the registry, and
@@ -150,6 +173,24 @@ interface ScenarioContext {
         roleA: String,
         roleB: String,
     ): Boolean
+
+    /**
+     * Simulate [role]'s device losing recent history for one conversation, then relaunch it so
+     * a scenario can observe whether the daemon's normal peer sync self-heals: force-stops the
+     * app, pulls just [conversationId]'s on-disk git repo, rewinds it by [commitsBack] commits
+     * (clamped to the repo's own root — never fewer than its first commit), pushes the rewound
+     * repo back, and relaunches the app under the same role (reconnected, but the caller still
+     * awaits its own post-relaunch readiness signals, e.g. `RegistrationStateChanged`). Returns
+     * the number of commits actually reverted — 0 means nothing was reverted (repo too short,
+     * or a pull/push step failed), which the caller should treat as a setup failure, not a
+     * sync-behavior result.
+     */
+    suspend fun rewindConversation(
+        role: String,
+        accountId: String,
+        conversationId: String,
+        commitsBack: Int,
+    ): Int
 }
 
 /** A host-side, device-agnostic test definition. */
@@ -165,6 +206,8 @@ object ScenarioRegistry {
         listOf<Scenario>(
             PingScenario,
             SeedPoolScenario,
+            CaptureAccountScenario,
+            RegisterNameOnAccountScenario,
             AccountCreationScenario,
             AccountCreationBareScenario,
             AccountCreationUsernameScenario,
@@ -180,5 +223,7 @@ object ScenarioRegistry {
             TwoDeviceContactScenario,
             SendMessageScenario,
             BuildConversationFixtureScenario,
+            ChatConversationGitRewindResyncScenario,
+            DefaultOneOnOneConversationScenario,
         ).associateBy { it.id }
 }

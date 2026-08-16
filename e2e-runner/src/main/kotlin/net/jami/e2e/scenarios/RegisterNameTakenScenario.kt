@@ -92,12 +92,17 @@ object RegisterNameTakenScenario : Scenario {
                 Verdict(false, "name server WRONGLY granted already-taken name '$taken' (state=0)")
             }
         } finally {
-            runCatching {
-                ctx.send("A", RemoveAccount(accountId))
-                ctx.await("A", 10_000) { it is AccountRemoved && it.accountId == accountId }
+            // Skippable via -PkeepAccounts=true to leave the account on-device for inspection.
+            if (!ctx.runConfig.keepAccounts) {
+                runCatching {
+                    ctx.send("A", RemoveAccount(accountId))
+                    ctx.await("A", 10_000) { it is AccountRemoved && it.accountId == accountId }
+                }
+                // Hardened sweep — guarantee the device is left with no account loaded.
+                runCatching { ensureNoAccounts(ctx, "A") }
+            } else {
+                ctx.log("keepAccounts=true — skipping teardown, leaving account on-device")
             }
-            // Hardened sweep — guarantee the device is left with no account loaded.
-            runCatching { ensureNoAccounts(ctx, "A") }
         }
     }
 }
