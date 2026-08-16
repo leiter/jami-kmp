@@ -45,7 +45,8 @@ class HarnessAgentService : Service() {
         startInForeground()
         if (!started) {
             started = true
-            scope.launch { HarnessAgent(scope).run() }
+            val role = intent?.getStringExtra("role")
+            scope.launch { HarnessAgent(scope, role).run() }
         }
         return START_STICKY
     }

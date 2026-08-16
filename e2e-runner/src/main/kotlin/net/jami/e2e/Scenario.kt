@@ -17,6 +17,7 @@
 package net.jami.e2e
 
 import net.jami.e2e.memory.AccountAsset
+import net.jami.e2e.memory.ConversationPairAsset
 import net.jami.e2e.memory.MemoryStore
 import net.jami.e2e.protocol.DomainEvent
 import net.jami.e2e.protocol.Directive
@@ -25,6 +26,7 @@ import net.jami.e2e.scenarios.AccountCreationScenario
 import net.jami.e2e.scenarios.AccountCreationUsernameScenario
 import net.jami.e2e.scenarios.AccountEnableDisableScenario
 import net.jami.e2e.scenarios.AccountReuseScenario
+import net.jami.e2e.scenarios.BuildConversationFixtureScenario
 import net.jami.e2e.scenarios.ChangePasswordScenario
 import net.jami.e2e.scenarios.DeviceRenameScenario
 import net.jami.e2e.scenarios.ImportCorrectPasswordScenario
@@ -114,6 +116,40 @@ interface ScenarioContext {
      * wrong or empty password). Returns true on success. Non-consuming: the asset is unchanged.
      */
     suspend fun pushAsset(role: String, asset: AccountAsset, deviceFileName: String): Boolean
+
+    /**
+     * Capture a full **conversation-pair fixture**: snapshot each role's entire on-device app
+     * data (identity + profile + local seeded history — see
+     * [net.jami.e2e.DeviceController.snapshotAppData]) and record it in the registry under
+     * [label]. The caller supplies the metadata it already knows from driving the setup
+     * (fingerprints, names, whether avatars were set, the real swarm [conversationId], and how
+     * many messages were seeded). Returns the stored pair, or null on failure.
+     */
+    suspend fun captureConversationPairAsset(
+        roleA: String,
+        roleB: String,
+        label: String,
+        fingerprintA: String,
+        fingerprintB: String,
+        nameA: String,
+        nameB: String,
+        avatarSet: Boolean,
+        conversationId: String,
+        messageCount: Int,
+    ): ConversationPairAsset?
+
+    /**
+     * Hard-reset [roleA]/[roleB] to exactly the state captured in [pair]: wipes each device's
+     * app data ([net.jami.e2e.DeviceController.clearAppData]), restores the matching tar, then
+     * relaunches the app + agent and waits for both roles to reconnect and re-register on the
+     * DHT. Non-consuming — [pair]'s stored tars are never mutated. Returns true once both
+     * devices are confirmed back up.
+     */
+    suspend fun installConversationPairAsset(
+        pair: ConversationPairAsset,
+        roleA: String,
+        roleB: String,
+    ): Boolean
 }
 
 /** A host-side, device-agnostic test definition. */
@@ -143,5 +179,6 @@ object ScenarioRegistry {
             ImportNoPasswordScenario,
             TwoDeviceContactScenario,
             SendMessageScenario,
+            BuildConversationFixtureScenario,
         ).associateBy { it.id }
 }

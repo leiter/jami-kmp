@@ -138,6 +138,13 @@ class HarnessServer(private val port: Int, private val ledger: Ledger) {
     suspend fun awaitNextConnection(timeoutMillis: Long): DeviceConnection =
         withTimeout(timeoutMillis) { connected.receive() }
 
+    /**
+     * The **live** connection for [role], or null if not currently connected. Unlike a frozen
+     * snapshot taken at scenario start, this reflects reconnects — needed after a mid-scenario
+     * app restart (e.g. [DeviceController.clearAppData] + relaunch for a fixture restore).
+     */
+    fun connection(role: String): DeviceConnection? = conns[role]
+
     fun stop() {
         engine?.stop(500, 1000)
     }
@@ -150,12 +157,21 @@ class ScenarioContextImpl(
     private val ledger: Ledger,
     private val runDir: java.io.File,
     override val memory: net.jami.e2e.memory.MemoryStore,
+    private val server: HarnessServer,
 ) : ScenarioContext {
     private val commandCounter = AtomicInteger(0)
     private val snapshotCounter = AtomicInteger(0)
 
+    // Resolved live off the server, not the frozen connect-time snapshot — a mid-scenario app
+    // restart (fixture restore) reconnects under the same role, and this must see the new one.
     private fun conn(role: String): DeviceConnection =
-        conns[role] ?: error("No device connected for role '$role'")
+        server.connection(role) ?: conns[role] ?: error("No device connected for role '$role'")
+
+    private suspend fun awaitReconnect(role: String, timeoutMillis: Long) {
+        withTimeout(timeoutMillis) {
+            while (server.connection(role) == null) kotlinx.coroutines.delay(200)
+        }
+    }
 
     override suspend fun send(role: String, directive: Directive): String {
         val commandId = "cmd-${commandCounter.incrementAndGet()}"
@@ -312,5 +328,67 @@ class ScenarioContextImpl(
             ledger.record("artifact", "PUSH FAILED role=$role ${local.name}")
             false
         }
+    }
+
+    override suspend fun captureConversationPairAsset(
+        roleA: String,
+        roleB: String,
+        label: String,
+        fingerprintA: String,
+        fingerprintB: String,
+        nameA: String,
+        nameB: String,
+        avatarSet: Boolean,
+        conversationId: String,
+        messageCount: Int,
+    ): net.jami.e2e.memory.ConversationPairAsset? {
+        val ctrlA = controllers[roleA] ?: run { ledger.record("pair", "no controller for role '$roleA'"); return null }
+        val ctrlB = controllers[roleB] ?: run { ledger.record("pair", "no controller for role '$roleB'"); return null }
+        val localA = java.io.File(runDir, "pair-$label-A.tar")
+        val localB = java.io.File(runDir, "pair-$label-B.tar")
+        if (!ctrlA.snapshotAppData(localA) || !ctrlB.snapshotAppData(localB)) {
+            ledger.record("pair", "capture aborted: snapshot failed for '$label'")
+            return null
+        }
+        val pair = memory.addConversationPair(
+            label, fingerprintA, fingerprintB, nameA, nameB, avatarSet, messageCount, conversationId, localA, localB,
+        )
+        ledger.record("pair", "captured conversation-pair '$label' ($fingerprintA <-> $fingerprintB, $messageCount msgs)")
+        return pair
+    }
+
+    override suspend fun installConversationPairAsset(
+        pair: net.jami.e2e.memory.ConversationPairAsset,
+        roleA: String,
+        roleB: String,
+    ): Boolean {
+        for ((role, tag) in listOf(roleA to "A", roleB to "B")) {
+            val ctrl = controllers[role] ?: run { ledger.record("pair", "no controller for role '$role'"); return false }
+            ctrl.clearAppData()
+            if (!ctrl.restoreAppData(memory.pairBlobFile(pair, tag))) {
+                ledger.record("pair", "restore FAILED role=$role for '${pair.label}'")
+                return false
+            }
+            ctrl.startApp()
+            ctrl.startAgent(role)
+            try {
+                awaitReconnect(role, 30_000)
+            } catch (e: Exception) {
+                ledger.record("pair", "role=$role did not reconnect after restore: ${e.message}")
+                return false
+            }
+        }
+        for (role in listOf(roleA, roleB)) {
+            try {
+                await(role, 60_000) {
+                    it is net.jami.e2e.protocol.RegistrationStateChanged && it.state == "REGISTERED"
+                }
+            } catch (e: Exception) {
+                ledger.record("pair", "role=$role did not re-register after restore: ${e.message}")
+                return false
+            }
+        }
+        ledger.record("pair", "installed conversation-pair '${pair.label}' on $roleA/$roleB")
+        return true
     }
 }

@@ -43,6 +43,7 @@ import net.jami.e2e.protocol.Hello
 import net.jami.e2e.protocol.IncomingContactRequest
 import net.jami.e2e.protocol.MessageReceived
 import net.jami.e2e.protocol.NameRegistrationEnded
+import net.jami.e2e.protocol.ProfileUpdated
 import net.jami.e2e.protocol.RegistrationStateChanged
 import net.jami.e2e.protocol.ReportFrame
 import net.jami.services.AccountEvent
@@ -58,7 +59,7 @@ import org.koin.core.Koin
  *
  * Thin by design: it holds no scenario knowledge — the host runner is the brain.
  */
-class HarnessAgent(private val scope: CoroutineScope) {
+class HarnessAgent(private val scope: CoroutineScope, private val requestedRole: String? = null) {
 
     companion object {
         private const val TAG = "HarnessAgent"
@@ -86,7 +87,7 @@ class HarnessAgent(private val scope: CoroutineScope) {
                         sendMutex.withLock { send(HarnessJson.encodeToString<Envelope>(frame)) }
                     }
 
-                    send(HarnessJson.encodeToString<Envelope>(Hello()))
+                    send(HarnessJson.encodeToString<Envelope>(Hello(requestedRole = requestedRole)))
 
                     val observers = listOf(
                         scope.launch { observeAccounts(accountService, ::emit) },
@@ -94,6 +95,7 @@ class HarnessAgent(private val scope: CoroutineScope) {
                         scope.launch { observeNameRegistration(accountService, ::emit) },
                         scope.launch { observeContacts(accountService, ::emit) },
                         scope.launch { observeMessages(conversationFacade, ::emit) },
+                        scope.launch { observeProfile(accountService, ::emit) },
                     )
                     try {
                         for (frame in incoming) {
@@ -182,6 +184,18 @@ class HarnessAgent(private val scope: CoroutineScope) {
             if (ev is ConversationEvent.MessageReceived) {
                 val msg = ev.message
                 emit(MessageReceived(ev.accountId, ev.conversationId, msg.author, msg.textContent))
+            }
+        }
+    }
+
+    /** Echo of the account's own profile after [net.jami.e2e.protocol.SetProfile]. */
+    private suspend fun observeProfile(
+        accountService: AccountService,
+        emit: suspend (DomainEvent) -> Unit,
+    ) {
+        accountService.accountEvents.collect { ev ->
+            if (ev is AccountEvent.ProfileReceived) {
+                emit(ProfileUpdated(ev.accountId, ev.name, ev.photo.isNotEmpty()))
             }
         }
     }

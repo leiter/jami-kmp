@@ -40,9 +40,12 @@ import net.jami.e2e.protocol.Pong
 import net.jami.e2e.protocol.RegisterName
 import net.jami.e2e.protocol.RemoveAccount
 import net.jami.e2e.protocol.RenameDevice
+import net.jami.e2e.protocol.SeedConversationMessages
 import net.jami.e2e.protocol.SendContactRequest
 import net.jami.e2e.protocol.SendMessage
 import net.jami.e2e.protocol.SetAccountEnabled
+import net.jami.e2e.protocol.SetProfile
+import net.jami.database.JamiDatabase
 import net.jami.model.ConfigKey
 import net.jami.model.Uri
 import net.jami.services.AccountService
@@ -248,6 +251,56 @@ class CommandHandler(private val koin: Koin) {
                     emit(net.jami.e2e.protocol.ErrorEvent("no conversation with ${directive.peerUri}"))
                 } else {
                     conversationFacade.sendTextMessage(conversation, peer, directive.text)
+                }
+            }
+
+            is SetProfile -> {
+                // Real profile-edit path: AccountService.updateProfile → daemon → the account's
+                // own ProfileReceived echo (observed separately in HarnessAgent). flag=1: avatar
+                // bytes are supplied as base64, not a file path.
+                koin.get<AccountService>().updateProfile(
+                    accountId = directive.accountId,
+                    displayName = directive.displayName,
+                    avatar = directive.avatarBase64,
+                    fileType = directive.fileType,
+                    flag = if (directive.avatarBase64.isEmpty()) 0 else 1,
+                )
+            }
+
+            is SeedConversationMessages -> {
+                // Bypass the daemon/swarm entirely: write straight into the local SQLDelight
+                // history DB (the same store ConversationFacade reads from), so fixtures don't
+                // depend on the currently-broken real send path. Each device seeds its own copy.
+                val db = koin.get<JamiDatabase>()
+                db.conversationQueries.insert(
+                    id = directive.conversationId,
+                    account_id = directive.accountId,
+                    participant = directive.peerUri,
+                    mode = "OneToOne",
+                    extra_data = null,
+                    last_event_timestamp = directive.baseTimestampMs,
+                    is_syncing = 0L,
+                    created_at = directive.baseTimestampMs,
+                )
+                for (msg in directive.messages) {
+                    db.interactionQueries.insert(
+                        daemon_id = null,
+                        account_id = directive.accountId,
+                        conversation_id = directive.conversationId,
+                        author = msg.authorUri,
+                        timestamp = directive.baseTimestampMs + msg.timestampOffsetMs,
+                        type = "TEXT",
+                        status = "SUCCESS",
+                        body = msg.body,
+                        is_read = 1L,
+                        is_notified = 1L,
+                        extra_data = null,
+                        parent_id = null,
+                        duration = null,
+                        transfer_status = null,
+                        file_path = null,
+                        display_name = null,
+                    )
                 }
             }
         }

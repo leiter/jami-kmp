@@ -95,7 +95,7 @@ fun main(args: Array<String>) {
             roleControllers[conn.role] = ctrl
         }
 
-        val ctx = ScenarioContextImpl(conns, roleControllers, ledger, runDir, memory)
+        val ctx = ScenarioContextImpl(conns, roleControllers, ledger, runDir, memory, server)
         val result = try {
             scenario.run(ctx)
         } catch (e: Exception) {

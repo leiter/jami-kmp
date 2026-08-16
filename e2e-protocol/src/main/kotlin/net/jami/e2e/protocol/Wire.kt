@@ -350,6 +350,50 @@ data class MessageReceived(
     val text: String,
 ) : DomainEvent
 
+/**
+ * Set this account's display name and (optionally) avatar via the real
+ * `AccountService.updateProfile` path — the same call the profile-edit UI uses. [avatarBase64],
+ * when non-empty, is the raw image bytes base64-encoded (flag=1: base64 payload, not a file
+ * path). Result observed as [ProfileUpdated].
+ */
+@Serializable
+@SerialName("setProfile")
+data class SetProfile(
+    val accountId: String,
+    val displayName: String,
+    val avatarBase64: String = "",
+    val fileType: String = "",
+) : Directive
+
+/** Observed once the daemon echoes back the account's own profile after [SetProfile]. */
+@Serializable
+@SerialName("profileUpdated")
+data class ProfileUpdated(val accountId: String, val name: String, val hasPhoto: Boolean) : DomainEvent
+
+/** One message to seed directly into a device's local history — see [SeedConversationMessages]. */
+@Serializable
+data class SeedMessage(val authorUri: String, val body: String, val timestampOffsetMs: Long)
+
+/**
+ * Seed a conversation transcript directly into the device's local SQLDelight history DB —
+ * bypassing the daemon/swarm entirely. Used to build conversation fixtures without depending on
+ * the real send path (see doc/end2endTesting.md's "Bug Findings (2026-08-14)" — the real
+ * initiator-side send is currently broken, so fixtures route around it). [messages] are applied
+ * in order with `timestamp = baseTimestampMs + timestampOffsetMs`; each device seeds its own
+ * local copy independently, so [messages] should agree in content/order across both roles.
+ * Fire-and-forget: no dedicated result event, the effect is verified by reading the conversation
+ * back (or by the fixture-capture step succeeding).
+ */
+@Serializable
+@SerialName("seedConversationMessages")
+data class SeedConversationMessages(
+    val accountId: String,
+    val conversationId: String,
+    val peerUri: String,
+    val baseTimestampMs: Long,
+    val messages: List<SeedMessage>,
+) : Directive
+
 /** Shared Json instance — sealed hierarchies use the `type` discriminator + @SerialName. */
 val HarnessJson: Json = Json {
     ignoreUnknownKeys = true

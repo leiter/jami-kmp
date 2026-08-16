@@ -33,9 +33,17 @@ class DeviceController(val serial: String) {
     /** Launch the host app (boots Koin + daemon + foreground daemon service). */
     fun startApp() = adb("-s", serial, "shell", "am", "start", "-n", "$HARNESS_APP_ID/$MAIN_ACTIVITY")
 
-    /** Start the on-device harness agent service. */
-    fun startAgent() =
-        adb("-s", serial, "shell", "am", "start-foreground-service", "-n", "$HARNESS_APP_ID/$AGENT_SERVICE")
+    /**
+     * Start the on-device harness agent service. [role], when given, is passed through as an
+     * intent extra so the agent requests that exact role on `Hello` instead of taking whatever
+     * the server's connect-order queue hands out — needed when relaunching after a mid-scenario
+     * restart (e.g. [restoreAppData]), where the role is already fixed and the queue is empty.
+     */
+    fun startAgent(role: String? = null) {
+        val args = mutableListOf("-s", serial, "shell", "am", "start-foreground-service", "-n", "$HARNESS_APP_ID/$AGENT_SERVICE")
+        if (role != null) args += listOf("--es", "role", role)
+        adb(*args.toTypedArray())
+    }
 
     /**
      * Capture the device screen into [file] as a PNG (`adb exec-out screencap -p`).
@@ -116,6 +124,63 @@ class DeviceController(val serial: String) {
             false
         }
     }
+
+    /**
+     * Capture the harness app's **entire private data directory** (account archive, cached
+     * `profile.vcf`, the SQLDelight history DB, …) as a tar stream into [local]. Unlike [pull]
+     * (single file, `files/` only), this is the primitive behind conversation-pair fixtures:
+     * seeded message history lives only in the local DB file, which the account-archive export
+     * never includes. `run-as` starts in the app's data root, so a bare relative `.` tars
+     * everything under it. Relies on toybox `tar` being present under `run-as` (true on the
+     * modern lab devices; not guaranteed on very old `minSdk` targets).
+     */
+    fun snapshotAppData(local: File): Boolean {
+        local.parentFile?.mkdirs()
+        return try {
+            val cmd = listOf(adbPath(), "-s", serial, "exec-out", "run-as", HARNESS_APP_ID, "tar", "-cf", "-", ".")
+            val p = ProcessBuilder(cmd).redirectErrorStream(false).start()
+            val bytes = p.inputStream.readBytes()
+            val err = p.errorStream.bufferedReader().readText()
+            val code = p.waitFor()
+            if (code != 0 || bytes.isEmpty()) {
+                System.err.println("[adb] snapshotAppData exit=$code on $serial: ${err.trim()}")
+                false
+            } else {
+                local.writeBytes(bytes)
+                true
+            }
+        } catch (e: Exception) {
+            System.err.println("[adb] snapshotAppData failed on $serial: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * Restore a tar captured by [snapshotAppData] onto the app's private data directory. The
+     * app should be fully stopped first ([clearAppData] or a plain no-account state) so a live
+     * daemon/db handle doesn't race the overwrite. Stages through `/data/local/tmp` like [push].
+     */
+    fun restoreAppData(local: File): Boolean {
+        if (!local.exists()) {
+            System.err.println("[adb] restoreAppData source missing: ${local.absolutePath}")
+            return false
+        }
+        val tmp = "/data/local/tmp/harness_appdata.tar"
+        return try {
+            if (adbExit("-s", serial, "push", local.absolutePath, tmp) != 0) return false
+            val restored = adbExit(
+                "-s", serial, "shell", "run-as", HARNESS_APP_ID, "tar", "-xf", tmp,
+            ) == 0
+            adbExit("-s", serial, "shell", "rm", "-f", tmp)
+            restored
+        } catch (e: Exception) {
+            System.err.println("[adb] restoreAppData failed on $serial: ${e.message}")
+            false
+        }
+    }
+
+    /** Hard reset: wipe the harness app's data/state entirely (`pm clear`), like a fresh install. */
+    fun clearAppData(): Boolean = adbExit("-s", serial, "shell", "pm", "clear", HARNESS_APP_ID) == 0
 
     private fun adb(vararg args: String) {
         adbExit(*args)

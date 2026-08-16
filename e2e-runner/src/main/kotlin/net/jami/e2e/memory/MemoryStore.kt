@@ -58,6 +58,34 @@ private data class RegistryIndex(
 )
 
 /**
+ * A persisted **pair** fixture: two identities that already know each other, each named +
+ * avatar-set, sharing a real swarm [conversationId] with a seeded message transcript. Captured
+ * as a full per-role app-data tar (identity + profile + local history DB — see
+ * [net.jami.e2e.DeviceController.snapshotAppData]), so restoring it puts a device back into the
+ * exact fixture state without touching the daemon. Non-consuming to restore; a fresh capture
+ * only happens when the registry has none matching, or a scenario explicitly asks for one.
+ */
+@Serializable
+data class ConversationPairAsset(
+    val label: String,
+    val fingerprintA: String,
+    val fingerprintB: String,
+    val nameA: String,
+    val nameB: String,
+    val avatarSet: Boolean,
+    val messageCount: Int,
+    val conversationId: String,
+    val archiveA: String,
+    val archiveB: String,
+    val createdUtc: String,
+)
+
+@Serializable
+private data class ConversationPairIndex(
+    val pairs: List<ConversationPairAsset> = emptyList(),
+)
+
+/**
  * Host-side persistent registry of reusable test assets, under `harness-memory/fixtures/`
  * (git-ignored — archives contain private keys). `index.json` is the source of truth; the
  * per-account descriptor filenames merely **hint** the state for at-a-glance scanning and
@@ -68,8 +96,11 @@ class MemoryStore(root: File = File("harness-memory")) {
     private val accountsDir = File(fixturesDir, "accounts")
     private val blobsDir = File(fixturesDir, "blobs")
     private val indexFile = File(fixturesDir, "index.json")
+    private val pairsDir = File(fixturesDir, "conversation-pairs")
+    private val pairsIndexFile = File(pairsDir, "index.json")
 
     private var index: RegistryIndex = load()
+    private var pairIndex: ConversationPairIndex = loadPairs()
 
     /** Absolute path of an asset's archive blob (identity-keyed, stable). */
     fun blobFile(asset: AccountAsset): File = File(blobsDir, asset.archive)
@@ -168,6 +199,66 @@ class MemoryStore(root: File = File("harness-memory")) {
             },
         )
         persist()
+    }
+
+    /** Blob file for one role of a conversation-pair fixture (`A` or `B`). */
+    fun pairBlobFile(pair: ConversationPairAsset, role: String): File =
+        File(File(pairsDir, pair.label), if (role == "A") pair.archiveA else pair.archiveB)
+
+    fun allConversationPairs(): List<ConversationPairAsset> = pairIndex.pairs
+
+    /** By [label] if given, else the first available pair; `null` is the cue to build one. */
+    fun claimConversationPair(label: String? = null): ConversationPairAsset? =
+        if (label != null) pairIndex.pairs.firstOrNull { it.label == label }
+        else pairIndex.pairs.firstOrNull()
+
+    /**
+     * Record a freshly-captured conversation-pair fixture: copy each role's app-data tar
+     * ([archiveASource]/[archiveBSource]) into `conversation-pairs/<label>/`, index it, and
+     * persist. Replaces any existing entry with the same [label].
+     */
+    fun addConversationPair(
+        label: String,
+        fingerprintA: String,
+        fingerprintB: String,
+        nameA: String,
+        nameB: String,
+        avatarSet: Boolean,
+        messageCount: Int,
+        conversationId: String,
+        archiveASource: File,
+        archiveBSource: File,
+    ): ConversationPairAsset {
+        val dir = File(pairsDir, label).apply { mkdirs() }
+        val archiveA = "A.tar"
+        val archiveB = "B.tar"
+        archiveASource.copyTo(File(dir, archiveA), overwrite = true)
+        archiveBSource.copyTo(File(dir, archiveB), overwrite = true)
+        val pair = ConversationPairAsset(
+            label = label,
+            fingerprintA = fingerprintA,
+            fingerprintB = fingerprintB,
+            nameA = nameA,
+            nameB = nameB,
+            avatarSet = avatarSet,
+            messageCount = messageCount,
+            conversationId = conversationId,
+            archiveA = archiveA,
+            archiveB = archiveB,
+            createdUtc = Instant.now().toString(),
+        )
+        pairIndex = pairIndex.copy(pairs = pairIndex.pairs.filter { it.label != label } + pair)
+        persistPairs()
+        return pair
+    }
+
+    private fun loadPairs(): ConversationPairIndex =
+        if (pairsIndexFile.exists()) HarnessJson.decodeFromString(pairsIndexFile.readText())
+        else ConversationPairIndex()
+
+    private fun persistPairs() {
+        pairsDir.mkdirs()
+        pairsIndexFile.writeText(HarnessJson.encodeToString(pairIndex))
     }
 
     private fun load(): RegistryIndex =
