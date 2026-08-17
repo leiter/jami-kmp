@@ -107,6 +107,13 @@ object DefaultOneOnOneConversationScenario : Scenario {
         val conversationId = establishContact(ctx, "B", bId, bUri, "A", aId, aUri).conversationId
         ctx.log("contact confirmed — swarm conversation '$conversationId' established")
 
+        // Gate the first send on B's own confirmation that it has actually processed A's join
+        // commit — ContactAdded(confirmed=true) alone only proves A's local view, not B's (see
+        // doc/end2endTesting.md's A-join precondition race). Testing whether this closes the
+        // 2026-08-17 message-delivery gap found sending immediately after contact confirmation.
+        awaitMemberJoined(ctx, "B", bId, conversationId, aUri, timeoutMillis = 30_000)
+        ctx.log("B confirmed it has processed A's join — safe to send")
+
         // A sends — the reliable direction (B, the contact-request initiator, hits the
         // known initiator-can't-resolve-its-own-conversation bug, doc/TODO.md 2026-08-14).
         val stamp = System.currentTimeMillis()

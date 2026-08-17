@@ -394,9 +394,22 @@ actual A-join precondition investigation, still open.
 day (`send-reply-roundtrip` against a settled fixture, see below) turned out to be a *different*
 race entirely — `AccountService.accountEvents` dropping `RegistrationStateChanged` for
 already-provisioned accounts (fixed, see `doc/TODO.md`'s "Bug Fixes (2026-08-17)"), not the
-A-join race this section describes. The A-join race is still real and still undemonstrated to
-cause an actual failure — `awaitMemberJoined` remains available for whoever picks that
-investigation back up.
+A-join race this section describes.
+
+**Second update, same day**: `DefaultOneOnOneConversationScenario` was patched to gate its first
+send on `awaitMemberJoined(ctx, "B", ...)`, and *that* run — plus two more fresh-build attempts
+without the gate — kept failing at an even earlier step (contact confirmation itself never
+completing on B). Root cause turned out to be a third, unrelated thing entirely: an SELinux
+relabel race triggered by reinstalling the harness APK before every run, stalling the daemon's
+swarm git writes on device B (see `doc/TODO.md`'s "Infra Finding (2026-08-17)"). Once that was
+worked around (`-x :android-app:installHarnessDebug`), a fresh handshake + 3-message round trip
+completed cleanly in ~14s — **with the `awaitMemberJoined` gate still in place**, so this run does
+not distinguish whether the gate itself was load-bearing or just along for the ride. The A-join
+race described above is still real (confirmed via daemon source) but remains **unproven** to
+cause an actual observed failure — every concrete failure chased today traced back to one of the
+other two causes instead. `awaitMemberJoined` stays in `DefaultOneOnOneConversationScenario` as a
+defensive gate (cheap, and correct per the daemon-source finding) but is not validated as fixing
+anything on its own.
 
 ## Shared contact-handshake helper
 

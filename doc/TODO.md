@@ -209,7 +209,31 @@
   This is a real, non-harness-specific fix: any real UI code that subscribes to `accountEvents`
   shortly after a cold launch with an existing account was exposed to the identical gap.
 
-## Known Gaps (Lower Priority)
+## Infra Finding (2026-08-17) — reinstall-triggered SELinux relabel race stalls swarm git writes
+
+- [ ] **Reinstalling the harness APK before a run (`installHarnessDebug`, done by the `e2e`
+  Gradle task on every invocation) can race the SELinux `restorecon` pass it triggers, causing
+  the daemon's swarm conversation git writes to stall silently on whichever device loses the
+  race** — this, not any Kotlin/daemon logic bug, was the actual cause of the message-delivery
+  and contact-confirmation failures chased through most of 2026-08-17 (see the now-superseded
+  "Bug Fixes" entry above, which fixed a real but unrelated `accountEvents` race). Evidence,
+  device B (Pixel 2, Android 11/API 30) logcat during a failing run: `installd` logs `"Detected
+  label change ... running recursive restorecon"` for the app's data dir right after every
+  reinstall; moments later, mid-handshake, 12 SELinux denials appear —
+  `avc: denied { link }` for `HEAD.lock`, `index.lock`, `main.lock`, `tmp_object_git2_*`,
+  `pack_git2_*.idx.lock` (libgit2's lock-file mechanism uses `link()`); the daemon's own log then
+  shows the new swarm conversation stuck — `fetching '<oid>'` → `Not yet bootstrapped, save
+  notification` → nothing further, ever. That stall is why `ContactAdded(confirmed=true)`/
+  `MessageReceived` never arrived: the conversation object never finished syncing locally.
+  **Confirmed by experiment**: rerunning the identical scenario with `-x
+  :android-app:installHarnessDebug` (skip the reinstall — APK already present, unchanged) — same
+  devices, same code — passed cleanly and fast (full handshake + 3-message round trip in ~14s,
+  vs. 60–120s timeouts on every prior attempt that reinstalled first). Not yet turned into a
+  permanent fix (would mean conditionally skipping/delaying the install step, or adding a settle
+  wait after `startApp` before the scenario proceeds) — flagging here since it explains several
+  of today's "reproducible" failures were actually a self-inflicted harness artifact, not real
+  app/daemon bugs. Device-specific: unconfirmed whether the Pixel 7a (role A) is equally exposed,
+  or whether this is particular to the Pixel 2's storage/SELinux timing.
 
 - [ ] **Desktop DaemonBridge** — All 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.
 - [ ] **Web/JS platform** — Entire daemon bridge is REST stubs with `// TODO: Call REST API`. Explicitly experimental per CLAUDE.md; candidate for removal if REST bridge server is not developed.
