@@ -45,6 +45,7 @@ import net.jami.model.ContactLocation
 import net.jami.model.ContactLocationEntry
 import net.jami.model.Conversation
 import net.jami.model.Interaction
+import net.jami.model.MemberRole
 import net.jami.model.SwarmMessage
 import net.jami.model.TrustRequest
 import net.jami.model.Uri
@@ -1174,8 +1175,38 @@ class AccountService(
         }
     }
 
+    /**
+     * Proactively registers the 1:1 swarm conversation locally the moment a contact is
+     * confirmed, instead of relying solely on `ConversationReady` firing afterward. Ports
+     * `jami-android-client`'s `AccountService.contactAdded()` — the reference implementation
+     * never depends on `ConversationReady` for this case either. Needed because, in this port,
+     * `ConversationReady` doesn't reliably fire on the *sender's* own device after the peer
+     * accepts (confirmed via harness reproduction, `doc/TODO.md`'s 2026-08-14 "Bug Findings"),
+     * leaving the sender's `Account` with no local conversation object to send into even though
+     * the daemon is confirmed to be delivering real swarm traffic for it. `Conversation.Mode
+     * .Syncing` is a placeholder state — if `ConversationReady` does fire later, its existing
+     * `account.getByUri(...) ?: account.newSwarm(...)` guard treats this as already-present and
+     * just proceeds, no special-casing needed there.
+     */
     internal fun onContactAdded(accountId: String, uri: String, confirmed: Boolean) {
         scope.launch {
+            accountsMap[accountId]?.let { account ->
+                val details = daemonBridge.getContactDetails(accountId, uri)
+                val contact = account.getContactFromCache(Uri.fromString(uri))
+                details[CONTACT_CONVERSATION_ID]?.takeIf { it.isNotEmpty() }?.let { conversationId ->
+                    contact.setConversationUri(Uri(Uri.SWARM_SCHEME, conversationId))
+                }
+                val conversationUri = contact.conversationUri.value
+                if (conversationUri.isSwarm && account.getByUri(conversationUri) == null) {
+                    val conversation = account.newSwarm(conversationUri.rawRingId, Conversation.Mode.Syncing)
+                    conversation.addContact(contact, MemberRole.MEMBER)
+                    // newSwarm() alone only indexes into the swarm-id map; conversationStarted()
+                    // is what actually adds it to the URI-keyed map that getByUri()/getByContact()
+                    // (and so ConversationFacade.startConversation()) search — see
+                    // ConversationFacade.onConversationReady() for the identical two-step pattern.
+                    account.conversationStarted(conversation)
+                }
+            }
             _accountEvents.emit(AccountEvent.ContactAdded(accountId, uri, confirmed))
         }
     }
@@ -1318,6 +1349,9 @@ class AccountService(
         const val ACCOUNT_SCHEME_PASSWORD = "password"
         const val ACCOUNT_SCHEME_KEY = "key"
         const val MIME_GEOLOCATION = "application/geo"
+
+        /** Key into [DaemonBridgeApi.getContactDetails]'s result map for the contact's swarm conversation id. */
+        private const val CONTACT_CONVERSATION_ID = "conversationId"
     }
 }
 

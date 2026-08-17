@@ -93,8 +93,16 @@ object SendMessageScenario : Scenario {
             }
 
             // 4. Establish the contact relationship (same handshake as two-device-contact).
-            establishContact(ctx, "B", bId, bUri, "A", aId, aUri)
+            val conversationId = establishContact(ctx, "B", bId, bUri, "A", aId, aUri).conversationId
             ctx.log("contact confirmed on both devices — swarm conversation established")
+
+            // Gate B's send on B's own confirmation that it has actually processed A's join
+            // commit — sending immediately after ContactAdded(confirmed=true) raced B's own
+            // swarm channel to A not being fully live yet (2026-08-17: B's message got its own
+            // echo but never reached A, twice, consistently — see doc/end2endTesting.md's A-join
+            // precondition writeup).
+            awaitMemberJoined(ctx, "B", bId, conversationId, aUri, timeoutMillis = 30_000)
+            ctx.log("B confirmed it has processed A's join — safe to send")
 
             // 5. B → A: the core proof. A observes a message whose author is B, not its own echo.
             val stamp = System.currentTimeMillis()

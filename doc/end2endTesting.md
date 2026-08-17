@@ -401,15 +401,21 @@ send on `awaitMemberJoined(ctx, "B", ...)`, and *that* run — plus two more fre
 without the gate — kept failing at an even earlier step (contact confirmation itself never
 completing on B). Root cause turned out to be a third, unrelated thing entirely: an SELinux
 relabel race triggered by reinstalling the harness APK before every run, stalling the daemon's
-swarm git writes on device B (see `doc/TODO.md`'s "Infra Finding (2026-08-17)"). Once that was
-worked around (`-x :android-app:installHarnessDebug`), a fresh handshake + 3-message round trip
-completed cleanly in ~14s — **with the `awaitMemberJoined` gate still in place**, so this run does
-not distinguish whether the gate itself was load-bearing or just along for the ride. The A-join
-race described above is still real (confirmed via daemon source) but remains **unproven** to
-cause an actual observed failure — every concrete failure chased today traced back to one of the
-other two causes instead. `awaitMemberJoined` stays in `DefaultOneOnOneConversationScenario` as a
-defensive gate (cheap, and correct per the daemon-source finding) but is not validated as fixing
-anything on its own.
+swarm git writes on device B (see `doc/TODO.md`'s "Infra Finding (2026-08-17)"). At that point the
+gate itself was unproven — every concrete failure chased that day traced back to one of the other
+two causes instead.
+
+**Third update, same day — the race is real, confirmed on `send-message`'s B→A direction**: fixing
+the separate, unrelated "sender never gets a locally-resolvable conversation" bug (see
+`doc/TODO.md`'s 2026-08-14/2026-08-17 entry) exposed this race directly. Once the sender (B) could
+resolve and send into its own conversation at all, sending *immediately* after
+`ContactAdded(confirmed=true)` still failed silently — B got its own echo (proving the daemon
+accepted the send locally) but the peer (A) never received it. Gating the send on
+`awaitMemberJoined(ctx, "B", ...)` closed this reliably, confirmed with two clean full-round-trip
+passes. So: the A-join race is real, and this **is** the confirmed mechanism — just observed from
+the sender's own side (its swarm channel to the peer isn't live yet) rather than the peer's side
+this investigation originally suspected. `awaitMemberJoined` is now load-bearing in both
+`SendMessageScenario` and `DefaultOneOnOneConversationScenario`.
 
 ## Shared contact-handshake helper
 
