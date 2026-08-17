@@ -209,9 +209,9 @@
   This is a real, non-harness-specific fix: any real UI code that subscribes to `accountEvents`
   shortly after a cold launch with an existing account was exposed to the identical gap.
 
-## Infra Finding (2026-08-17) — reinstall-triggered SELinux relabel race stalls swarm git writes
+## Infra Fix (2026-08-17) — reinstall-triggered SELinux relabel race stalls swarm git writes
 
-- [ ] **Reinstalling the harness APK before a run (`installHarnessDebug`, done by the `e2e`
+- [x] **Reinstalling the harness APK before a run (`installHarnessDebug`, done by the `e2e`
   Gradle task on every invocation) can race the SELinux `restorecon` pass it triggers, causing
   the daemon's swarm conversation git writes to stall silently on whichever device loses the
   race** — this, not any Kotlin/daemon logic bug, was the actual cause of the message-delivery
@@ -228,12 +228,16 @@
   **Confirmed by experiment**: rerunning the identical scenario with `-x
   :android-app:installHarnessDebug` (skip the reinstall — APK already present, unchanged) — same
   devices, same code — passed cleanly and fast (full handshake + 3-message round trip in ~14s,
-  vs. 60–120s timeouts on every prior attempt that reinstalled first). Not yet turned into a
-  permanent fix (would mean conditionally skipping/delaying the install step, or adding a settle
-  wait after `startApp` before the scenario proceeds) — flagging here since it explains several
-  of today's "reproducible" failures were actually a self-inflicted harness artifact, not real
-  app/daemon bugs. Device-specific: unconfirmed whether the Pixel 7a (role A) is equally exposed,
-  or whether this is particular to the Pixel 2's storage/SELinux timing.
+  vs. 60–120s timeouts on every prior attempt that reinstalled first). Explains several of
+  2026-08-17's "reproducible" failures were actually a self-inflicted harness artifact, not real
+  app/daemon bugs. **Fix** (`Main.kt`): a fixed `delay(INSTALL_SETTLE_MS)` (3s) at the very start
+  of the run, before any device/app interaction — gives `restorecon` time to finish regardless of
+  whether the caller happens to skip the reinstall. **Validated on hardware**: three consecutive
+  fresh-build `default-one-on-one-conversation` runs, each *with* the full `installHarnessDebug`
+  reinstall (no `-x` workaround), all passed cleanly (full handshake + 3-message round trip each
+  time). Device-specific note still open: unconfirmed whether the Pixel 7a (role A) was ever
+  equally exposed, or whether this was particular to the Pixel 2's storage/SELinux timing — every
+  observed instance of the stall was on device B (the Pixel 2).
 
 - [ ] **Desktop DaemonBridge** — All 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.
 - [ ] **Web/JS platform** — Entire daemon bridge is REST stubs with `// TODO: Call REST API`. Explicitly experimental per CLAUDE.md; candidate for removal if REST bridge server is not developed.

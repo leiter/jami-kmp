@@ -16,6 +16,7 @@
  */
 package net.jami.e2e
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import net.jami.e2e.memory.MemoryStore
 import java.io.File
@@ -26,6 +27,14 @@ import kotlin.system.exitProcess
 
 const val HARNESS_PORT = 8080
 private const val CONNECT_TIMEOUT_MS = 60_000L
+
+/**
+ * Settle window after `installHarnessDebug` before touching the app/daemon at all — see the
+ * `delay(INSTALL_SETTLE_MS)` call site in [main] for why. 3s comfortably covers the recursive
+ * restorecon this Pixel 2/Android 11 lab device needed in the confirming experiment
+ * (2026-08-17); bump this if a future device still exhibits the stalled-git-write symptom.
+ */
+private const val INSTALL_SETTLE_MS = 3_000L
 
 /**
  * Entry point for the e2e test harness runner (the "brain").
@@ -86,6 +95,19 @@ fun main(args: Array<String>) {
     val memory = MemoryStore()
 
     val verdict = runBlocking {
+        // Settle window after installHarnessDebug (the Gradle task dependency that already ran
+        // before this process started): a fresh install triggers installd to run a recursive
+        // SELinux restorecon over the app's private data dir ("Detected label change ... running
+        // recursive restorecon" in logcat). If the daemon starts writing the swarm conversation
+        // git repo (libgit2 lock files via link()) before that relabel finishes, the writes are
+        // silently SELinux-denied and the conversation stalls mid-bootstrap forever — no error
+        // surfaces anywhere in the Kotlin/daemon layers, it just looks like a hung handshake or a
+        // message that never arrives. Confirmed via direct experiment 2026-08-17 (doc/TODO.md,
+        // "Infra Finding"): skipping the reinstall entirely turned a reliably-hanging run into a
+        // clean pass. This fixed delay is the permanent fix — works even on a first-time install,
+        // unlike the `-x installHarnessDebug` workaround used to diagnose it.
+        delay(INSTALL_SETTLE_MS)
+
         // Precondition: the standard jami-kmp app and jami-android-client must not be running —
         // both drive a real daemon against the real DHT, and left running they're a source of
         // resource contention and crosstalk with the harness's own daemon session on the same
