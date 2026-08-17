@@ -76,7 +76,40 @@ class AccountService(
     val currentAccount: StateFlow<Account?> = _currentAccount.asStateFlow()
 
     private val _accountEvents = MutableSharedFlow<AccountEvent>()
-    val accountEvents: SharedFlow<AccountEvent> = _accountEvents.asSharedFlow()
+
+    /**
+     * A collector that attaches after an account has already reached its current registration
+     * state would otherwise miss that transition forever: [_accountEvents] has no replay, and
+     * the daemon can carry an already-provisioned account through `UNREGISTERED`→`TRYING`→
+     * `REGISTERED` within milliseconds of daemon startup — often before any UI/service
+     * subscriber has attached (confirmed via harness hardware testing, 2026-08-17, restoring a
+     * fixture with an existing account: the daemon logged a full registration burst inside the
+     * same ~300ms as daemon init, well before `HarnessAgent`'s listener launched, and the
+     * transition was silently lost).
+     *
+     * On subscription, replay each known account's **current** registration state (read from
+     * [_accounts], which [onRegistrationStateChanged] always updates synchronously before
+     * emitting) as a synthetic [AccountEvent.RegistrationStateChanged] — closing that race for
+     * every collector, harness or real UI. Deliberately narrow: only this one state-representable
+     * event type is backfilled, not the whole event stream — replaying one-shot events (contact
+     * requests, name-registration results, …) to a late subscriber would be actively wrong.
+     */
+    val accountEvents: Flow<AccountEvent> = _accountEvents.asSharedFlow()
+        .onSubscription {
+            for (account in _accounts.value) {
+                val state = account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATUS.key]
+                if (!state.isNullOrEmpty()) {
+                    emit(
+                        AccountEvent.RegistrationStateChanged(
+                            account.accountId,
+                            state,
+                            account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATE_CODE.key]?.toIntOrNull() ?: 0,
+                            account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATE_DESC.key] ?: "",
+                        )
+                    )
+                }
+            }
+        }
 
     private val _incomingMessages = MutableSharedFlow<IncomingMessage>()
     val incomingMessages: SharedFlow<IncomingMessage> = _incomingMessages.asSharedFlow()

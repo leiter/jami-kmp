@@ -30,8 +30,8 @@ private const val CONNECT_TIMEOUT_MS = 60_000L
 /**
  * Entry point for the e2e test harness runner (the "brain").
  *
- * Args: `<scenarioId> [devicesCsv] [keepAccounts] [accountState] [username]`, `--list`, or
- * `--list-account-states`.
+ * Args: `<scenarioId> [devicesCsv] [keepAccounts] [accountState] [username] [conversationId]`,
+ * `--list`, or `--list-account-states`.
  * Exit code: 0 = pass, 1 = fail, 2 = usage error.
  */
 fun main(args: Array<String>) {
@@ -50,6 +50,7 @@ fun main(args: Array<String>) {
         keepAccounts = args.getOrNull(2)?.toBoolean() ?: false,
         accountState = args.getOrNull(3)?.takeIf { it.isNotBlank() },
         username = args.getOrNull(4)?.takeIf { it.isNotBlank() },
+        conversationId = args.getOrNull(5)?.takeIf { it.isNotBlank() },
     )
     val scenario = ScenarioRegistry.scenarios[scenarioId] ?: run {
         System.err.println("Unknown scenario '$scenarioId'. Available:")
@@ -74,6 +75,7 @@ fun main(args: Array<String>) {
     if (runConfig.keepAccounts) println("keepAccounts=true — teardown sweeps will be skipped")
     if (runConfig.accountState != null) println("accountState='${runConfig.accountState}'")
     if (runConfig.username != null) println("username='${runConfig.username}'")
+    if (runConfig.conversationId != null) println("conversationId='${runConfig.conversationId}'")
 
     val controllers = serials.take(scenario.requiredRoles).map { DeviceController(it) }
 
@@ -153,18 +155,29 @@ private fun printScenarios() {
 
 /** `--list-account-states`: dump named conversation-pair fixtures for `-PaccountState=<label>`. */
 private fun printAccountStates() {
-    val pairs = MemoryStore().allConversationPairs()
-    if (pairs.isEmpty()) {
+    val memory = MemoryStore()
+    val pairs = memory.allConversationPairs()
+    val repos = memory.allConversationRepos()
+    if (pairs.isEmpty() && repos.isEmpty()) {
         println("No named account states yet. Create one with:")
         println("  ./gradlew :e2e-runner:e2e -Pscenario=default-one-on-one-conversation " +
             "-Pdevices=<a>,<b> -PaccountState=<name>")
         return
     }
-    println("Named account states (-PaccountState=<label>):")
-    println("  %-30s %-18s %-18s %-40s %s".format("label", "A", "B", "conversationId", "messages"))
-    pairs.sortedBy { it.label }.forEach { p ->
-        val a = if (p.nameA.isBlank()) "(unnamed)" else p.nameA
-        val b = if (p.nameB.isBlank()) "(unnamed)" else p.nameB
-        println("  %-30s %-18s %-18s %-40s %d".format(p.label, a, b, p.conversationId, p.messageCount))
+    if (pairs.isNotEmpty()) {
+        println("Named account states (-PaccountState=<label>), whole-app-tar pairs:")
+        println("  %-30s %-18s %-18s %-40s %s".format("label", "A", "B", "conversationId", "messages"))
+        pairs.sortedBy { it.label }.forEach { p ->
+            val a = if (p.nameA.isBlank()) "(unnamed)" else p.nameA
+            val b = if (p.nameB.isBlank()) "(unnamed)" else p.nameB
+            println("  %-30s %-18s %-18s %-40s %d".format(p.label, a, b, p.conversationId, p.messageCount))
+        }
+    }
+    if (repos.isNotEmpty()) {
+        println("Standalone conversation-repo fixtures:")
+        println("  %-30s %-18s %-40s".format("label", "accountId", "conversationId"))
+        repos.sortedBy { it.label }.forEach { r ->
+            println("  %-30s %-18s %-40s".format(r.label, r.accountId.take(16), r.conversationId))
+        }
     }
 }

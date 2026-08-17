@@ -21,6 +21,7 @@ import net.jami.e2e.protocol.AcceptContactRequest
 import net.jami.e2e.protocol.AccountRemoved
 import net.jami.e2e.protocol.AccountsSnapshot
 import net.jami.e2e.protocol.ContactAdded
+import net.jami.e2e.protocol.ConversationMemberEvent
 import net.jami.e2e.protocol.GetAccounts
 import net.jami.e2e.protocol.IncomingContactRequest
 import net.jami.e2e.protocol.RemoveAccount
@@ -134,3 +135,31 @@ suspend fun establishContact(
     )
     return acceptAndConfirmContact(ctx, accepterRole, accepterId, initiatorRole, initiatorId, incoming)
 }
+
+/**
+ * Awaits the real, peer-visible join confirmation (action=1) for [memberUri] in
+ * [conversationId], as observed on [role]'s own device — i.e. proof that *this* device's daemon
+ * has actually pulled and processed the member's join commit, not merely that the member
+ * committed it locally.
+ *
+ * This is the non-racy alternative to trusting `ContactAdded(confirmed=true)`/
+ * `ConversationReady` alone: both of those fire on the *accepter's own* device as soon as it
+ * commits its own join locally — before any peer has necessarily seen it (confirmed via daemon
+ * source this session, see doc/end2endTesting.md's A-join precondition writeup). To confirm the
+ * *other* side has caught up, call this with `role` = the peer's role, not the joiner's.
+ */
+suspend fun awaitMemberJoined(
+    ctx: ScenarioContext,
+    role: String,
+    accountId: String,
+    conversationId: String,
+    memberUri: String,
+    timeoutMillis: Long = 30_000,
+): ConversationMemberEvent =
+    ctx.await(role, timeoutMillis) {
+        it is ConversationMemberEvent &&
+            it.accountId == accountId &&
+            it.conversationId == conversationId &&
+            it.memberUri.equals(memberUri, ignoreCase = true) &&
+            it.action == 1
+    } as ConversationMemberEvent

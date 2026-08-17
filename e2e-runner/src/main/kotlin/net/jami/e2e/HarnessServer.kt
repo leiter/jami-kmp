@@ -474,4 +474,47 @@ class ScenarioContextImpl(
         ledger.record("rewind", "role=$role conversation=$conversationId rewound $reverted commit(s), relaunched")
         return reverted
     }
+
+    override suspend fun captureConversationRepoAsset(
+        role: String,
+        accountId: String,
+        conversationId: String,
+        label: String,
+    ): net.jami.e2e.memory.ConversationRepositoryAsset? {
+        val ctrl = controllers[role] ?: run { ledger.record("repo", "no controller for role '$role'"); return null }
+        send(role, net.jami.e2e.protocol.GetAccountUri(accountId))
+        val fingerprint = (await(role, 10_000) {
+            it is net.jami.e2e.protocol.AccountUri && it.accountId == accountId
+        } as net.jami.e2e.protocol.AccountUri).uri
+        val local = java.io.File(runDir, "repo-$label-$role.tar")
+        if (!ctrl.pullConversationRepo(accountId, conversationId, local)) {
+            ledger.record("repo", "capture aborted: pull failed for '$label' role=$role")
+            return null
+        }
+        val asset = memory.addConversationRepo(label, accountId, conversationId, fingerprint, local)
+        ledger.record("repo", "captured conversation-repo '$label' (account=$accountId conversation=$conversationId)")
+        return asset
+    }
+
+    override suspend fun installConversationRepoAsset(
+        asset: net.jami.e2e.memory.ConversationRepositoryAsset,
+        role: String,
+        accountId: String,
+        conversationId: String,
+    ): Boolean {
+        val ctrl = controllers[role] ?: run { ledger.record("repo", "no controller for role '$role'"); return false }
+        ctrl.forceStopSelf()
+        if (!ctrl.pushConversationRepo(accountId, conversationId, memory.repoBlobFile(asset))) {
+            ledger.record("repo", "install FAILED role=$role for '${asset.label}'")
+            return false
+        }
+        try {
+            restartRole(role, ctrl)
+        } catch (e: Exception) {
+            ledger.record("repo", "role=$role did not reconnect after restore: ${e.message}")
+            return false
+        }
+        ledger.record("repo", "installed conversation-repo '${asset.label}' on role=$role")
+        return true
+    }
 }

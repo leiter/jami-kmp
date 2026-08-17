@@ -351,6 +351,27 @@ data class MessageReceived(
 ) : DomainEvent
 
 /**
+ * A member's role changed in a conversation's swarm git repo, as seen by *this* device — i.e.
+ * once this device's daemon has actually pulled and processed the commit, not merely once the
+ * member authored it locally. This is the non-racy join-confirmation signal: `ContactAdded
+ * (confirmed=true)` and the accepter's own `ConversationReady` both fire as soon as the accepter
+ * commits its own join locally, before any peer has necessarily seen it — [action]==1 observed
+ * on the *peer's* device is the real proof the peer's daemon has caught up.
+ *
+ * [action] mirrors the daemon's `ConversationMemberEvent` signal
+ * (`jami-daemon/src/jamidht/conversation.cpp:424-433`): `0`=add(invited), `1`=join, `2`=remove,
+ * `3`=ban, `4`=unban.
+ */
+@Serializable
+@SerialName("conversationMemberEvent")
+data class ConversationMemberEvent(
+    val accountId: String,
+    val conversationId: String,
+    val memberUri: String,
+    val action: Int,
+) : DomainEvent
+
+/**
  * Set this account's display name and (optionally) avatar via the real
  * `AccountService.updateProfile` path — the same call the profile-edit UI uses. [avatarBase64],
  * when non-empty, is the raw image bytes base64-encoded (flag=1: base64 payload, not a file

@@ -86,6 +86,29 @@ private data class ConversationPairIndex(
 )
 
 /**
+ * A persisted **single-conversation** fixture: just one conversation's raw on-disk swarm git
+ * repo, captured independently of the whole-app-tar [ConversationPairAsset]. For scenarios that
+ * want to repeatedly start from one pristine, already-synced repo (e.g. rewind/resync
+ * experiments) without re-running a full account/contact/message setup each time. [accountId]/
+ * [conversationId] record where it was captured *from*; restoring it onto a different live
+ * account/conversation is a legitimate use — see [ScenarioContext.installConversationRepoAsset].
+ */
+@Serializable
+data class ConversationRepositoryAsset(
+    val label: String,
+    val accountId: String,
+    val conversationId: String,
+    val fingerprint: String,
+    val archive: String,
+    val createdUtc: String,
+)
+
+@Serializable
+private data class ConversationRepositoryIndex(
+    val repos: List<ConversationRepositoryAsset> = emptyList(),
+)
+
+/**
  * Host-side persistent registry of reusable test assets, under `harness-memory/fixtures/`
  * (git-ignored — archives contain private keys). `index.json` is the source of truth; the
  * per-account descriptor filenames merely **hint** the state for at-a-glance scanning and
@@ -98,9 +121,12 @@ class MemoryStore(root: File = File("harness-memory")) {
     private val indexFile = File(fixturesDir, "index.json")
     private val pairsDir = File(fixturesDir, "conversation-pairs")
     private val pairsIndexFile = File(pairsDir, "index.json")
+    private val reposDir = File(fixturesDir, "conversation-repos")
+    private val reposIndexFile = File(reposDir, "index.json")
 
     private var index: RegistryIndex = load()
     private var pairIndex: ConversationPairIndex = loadPairs()
+    private var repoIndex: ConversationRepositoryIndex = loadRepos()
 
     /** Absolute path of an asset's archive blob (identity-keyed, stable). */
     fun blobFile(asset: AccountAsset): File = File(blobsDir, asset.archive)
@@ -259,6 +285,53 @@ class MemoryStore(root: File = File("harness-memory")) {
     private fun persistPairs() {
         pairsDir.mkdirs()
         pairsIndexFile.writeText(HarnessJson.encodeToString(pairIndex))
+    }
+
+    /** Blob file for a single-conversation-repo fixture. */
+    fun repoBlobFile(asset: ConversationRepositoryAsset): File = File(File(reposDir, asset.label), asset.archive)
+
+    fun allConversationRepos(): List<ConversationRepositoryAsset> = repoIndex.repos
+
+    /** By [label] if given, else the first available. `null` is the cue to build one. */
+    fun claimConversationRepo(label: String? = null): ConversationRepositoryAsset? =
+        if (label != null) repoIndex.repos.firstOrNull { it.label == label }
+        else repoIndex.repos.firstOrNull()
+
+    /**
+     * Record a freshly-captured single-conversation-repo fixture: copy [archiveSource] into
+     * `conversation-repos/<label>/`, index it, and persist. Replaces any existing entry with
+     * the same [label].
+     */
+    fun addConversationRepo(
+        label: String,
+        accountId: String,
+        conversationId: String,
+        fingerprint: String,
+        archiveSource: File,
+    ): ConversationRepositoryAsset {
+        val dir = File(reposDir, label).apply { mkdirs() }
+        val archive = "repo.tar"
+        archiveSource.copyTo(File(dir, archive), overwrite = true)
+        val asset = ConversationRepositoryAsset(
+            label = label,
+            accountId = accountId,
+            conversationId = conversationId,
+            fingerprint = fingerprint,
+            archive = archive,
+            createdUtc = Instant.now().toString(),
+        )
+        repoIndex = repoIndex.copy(repos = repoIndex.repos.filter { it.label != label } + asset)
+        persistRepos()
+        return asset
+    }
+
+    private fun loadRepos(): ConversationRepositoryIndex =
+        if (reposIndexFile.exists()) HarnessJson.decodeFromString(reposIndexFile.readText())
+        else ConversationRepositoryIndex()
+
+    private fun persistRepos() {
+        reposDir.mkdirs()
+        reposIndexFile.writeText(HarnessJson.encodeToString(repoIndex))
     }
 
     private fun load(): RegistryIndex =

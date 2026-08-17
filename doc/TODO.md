@@ -179,6 +179,36 @@
 - Commits: `cdaa9ad` (this fix), on branch `daemon-from-source-reconcile`.
 - **Not done**: no retry for failed *file transfers* (see "Retry failed file transfer" under Chat — Missing Features, a separate pre-existing gap); `deleteMessage`/`editMessage`/`sendReaction` still assume a resolved (non-`pending-`) ID, which is fine today since the UI can't target a bubble still in SENDING/FAILED state, but would need handling if those actions are ever exposed on unconfirmed bubbles.
 
+## Bug Fixes (2026-08-17) — registration-state race dropped for pre-loaded accounts
+
+- [x] **`AccountService.accountEvents` (a `MutableSharedFlow` with no replay) silently dropped
+  `RegistrationStateChanged` for any account that was already provisioned at daemon startup** —
+  root cause of the "A→B send produced no `MessageReceived` within 60s" finding below. The
+  daemon can carry an already-loaded account through `UNREGISTERED`→`TRYING`→`REGISTERED`
+  within ~300ms of daemon init (confirmed via device logcat: full registration burst — identity
+  loaded, DHT connected, identity announcement succeeded, buddy online — inside one 300ms window
+  at cold start), often before any UI/service subscriber (harness or real app) has attached its
+  collector. The event fired and was gone; nobody was listening yet. Reproduced twice,
+  identically, restoring the `contact-confirmed-no-messages-1` fixture
+  (`e2e-runner/src/main/kotlin/net/jami/e2e/HarnessServer.kt`'s `installConversationPairAsset`
+  timed out both times waiting for B's `REGISTERED`, despite the daemon having actually
+  registered it). **Fix** (`AccountService.kt:78-107`): `accountEvents` now backfills each
+  known account's *current* registration state (read from `_accounts`, which
+  `onRegistrationStateChanged` already updates synchronously before emitting) to every new
+  collector via `.onSubscription { ... }`, before continuing to relay the live stream.
+  Deliberately narrow — only this one state-representable event type is backfilled, not the
+  whole `AccountEvent` stream, since replaying one-shot events (contact requests,
+  name-registration results, …) to a late subscriber would be wrong. Public type changed from
+  `SharedFlow<AccountEvent>` to `Flow<AccountEvent>` (all 15 consumers just `.collect`/`.filter`,
+  no `SharedFlow`-specific API used — compile-verified across `shared`, `android-app`,
+  `e2e-runner`). **Validated on hardware 2026-08-17**: same restore that failed twice before now
+  shows `RegistrationStateChanged(state=REGISTERED)` firing immediately on connect for both
+  roles, and the follow-on `send-reply-roundtrip` scenario (new, see `doc/end2endTesting.md`)
+  confirmed real bidirectional messaging (A→B and B→A) against the previously-stuck fixture —
+  the original "message never arrives" symptom was entirely this race, not a messaging bug.
+  This is a real, non-harness-specific fix: any real UI code that subscribes to `accountEvents`
+  shortly after a cold launch with an existing account was exposed to the identical gap.
+
 ## Known Gaps (Lower Priority)
 
 - [ ] **Desktop DaemonBridge** — All 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.

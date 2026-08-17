@@ -36,6 +36,7 @@ import net.jami.e2e.protocol.AccountAdded
 import net.jami.e2e.protocol.AccountRemoved
 import net.jami.e2e.protocol.CommandFrame
 import net.jami.e2e.protocol.ContactAdded
+import net.jami.e2e.protocol.ConversationMemberEvent
 import net.jami.e2e.protocol.DomainEvent
 import net.jami.e2e.protocol.Envelope
 import net.jami.e2e.protocol.HarnessJson
@@ -95,6 +96,7 @@ class HarnessAgent(private val scope: CoroutineScope, private val requestedRole:
                         scope.launch { observeNameRegistration(accountService, ::emit) },
                         scope.launch { observeContacts(accountService, ::emit) },
                         scope.launch { observeMessages(conversationFacade, ::emit) },
+                        scope.launch { observeMembership(conversationFacade, ::emit) },
                         scope.launch { observeProfile(accountService, ::emit) },
                     )
                     try {
@@ -188,6 +190,23 @@ class HarnessAgent(private val scope: CoroutineScope, private val requestedRole:
             if (ev is ConversationEvent.MessageReceived && ev.message.type == "text/plain") {
                 val msg = ev.message
                 emit(MessageReceived(ev.accountId, ev.conversationId, msg.author, msg.textContent))
+            }
+        }
+    }
+
+    /**
+     * Peer-visible conversation membership changes (join/leave/ban/unban) — see
+     * [ConversationMemberEvent] for why this, not [ContactAdded]/`ConversationReady`, is the
+     * non-racy signal a scenario should await to confirm a member's join is actually visible to
+     * this device's daemon.
+     */
+    private suspend fun observeMembership(
+        conversationFacade: ConversationFacade,
+        emit: suspend (DomainEvent) -> Unit,
+    ) {
+        conversationFacade.conversationEvents.collect { ev ->
+            if (ev is ConversationEvent.MemberEvent) {
+                emit(ConversationMemberEvent(ev.accountId, ev.conversationId, ev.memberUri, ev.action))
             }
         }
     }

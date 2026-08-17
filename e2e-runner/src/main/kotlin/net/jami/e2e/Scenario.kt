@@ -18,6 +18,7 @@ package net.jami.e2e
 
 import net.jami.e2e.memory.AccountAsset
 import net.jami.e2e.memory.ConversationPairAsset
+import net.jami.e2e.memory.ConversationRepositoryAsset
 import net.jami.e2e.memory.MemoryStore
 import net.jami.e2e.protocol.DomainEvent
 import net.jami.e2e.protocol.Directive
@@ -28,6 +29,7 @@ import net.jami.e2e.scenarios.AccountEnableDisableScenario
 import net.jami.e2e.scenarios.AccountReuseScenario
 import net.jami.e2e.scenarios.BuildConversationFixtureScenario
 import net.jami.e2e.scenarios.CaptureAccountScenario
+import net.jami.e2e.scenarios.CaptureLivePairScenario
 import net.jami.e2e.scenarios.ChangePasswordScenario
 import net.jami.e2e.scenarios.ChatConversationGitRewindResyncScenario
 import net.jami.e2e.scenarios.DefaultOneOnOneConversationScenario
@@ -41,6 +43,7 @@ import net.jami.e2e.scenarios.RegisterNameOnAccountScenario
 import net.jami.e2e.scenarios.RegisterNameTakenScenario
 import net.jami.e2e.scenarios.SeedPoolScenario
 import net.jami.e2e.scenarios.SendMessageScenario
+import net.jami.e2e.scenarios.SendReplyRoundtripScenario
 import net.jami.e2e.scenarios.TwoDeviceContactScenario
 import java.nio.file.Path
 
@@ -64,6 +67,13 @@ data class RunConfig(
     val accountState: String? = null,
     /** Custom username for a scenario that registers a caller-given name (`-Pusername=<name>`). */
     val username: String? = null,
+    /**
+     * A caller-known conversationId for a scenario that captures/inspects a specific already-
+     * established conversation rather than establishing a fresh one (`-PconversationId=<id>`) —
+     * e.g. `capture-live-pair`, rescuing a live pair left behind by a run that failed after the
+     * handshake but before its own capture step.
+     */
+    val conversationId: String? = null,
 )
 
 /**
@@ -191,6 +201,35 @@ interface ScenarioContext {
         conversationId: String,
         commitsBack: Int,
     ): Int
+
+    /**
+     * Capture just **one conversation's** raw on-disk swarm git repo — independent of the
+     * whole-app-tar [captureConversationPairAsset] — and record it under [label] in the
+     * registry. For scenarios that want a repeatable, pristine starting point for a single
+     * conversation (e.g. rewind/resync experiments) without re-running the whole account/
+     * contact/message setup each time. Returns the stored asset, or null on failure.
+     */
+    suspend fun captureConversationRepoAsset(
+        role: String,
+        accountId: String,
+        conversationId: String,
+        label: String,
+    ): ConversationRepositoryAsset?
+
+    /**
+     * Replace [role]'s on-disk copy of [conversationId] (under [accountId]) with [asset]'s
+     * captured repo, then relaunch the app under the same role. [accountId]/[conversationId]
+     * are given explicitly (rather than taken from [asset]) since restoring onto a different
+     * live account/conversation than the one it was captured from is a legitimate use. Returns
+     * true once the device is confirmed back up. Non-consuming — [asset]'s stored archive is
+     * never mutated.
+     */
+    suspend fun installConversationRepoAsset(
+        asset: ConversationRepositoryAsset,
+        role: String,
+        accountId: String,
+        conversationId: String,
+    ): Boolean
 }
 
 /** A host-side, device-agnostic test definition. */
@@ -207,6 +246,7 @@ object ScenarioRegistry {
             PingScenario,
             SeedPoolScenario,
             CaptureAccountScenario,
+            CaptureLivePairScenario,
             RegisterNameOnAccountScenario,
             AccountCreationScenario,
             AccountCreationBareScenario,
@@ -222,6 +262,7 @@ object ScenarioRegistry {
             ImportNoPasswordScenario,
             TwoDeviceContactScenario,
             SendMessageScenario,
+            SendReplyRoundtripScenario,
             BuildConversationFixtureScenario,
             ChatConversationGitRewindResyncScenario,
             DefaultOneOnOneConversationScenario,

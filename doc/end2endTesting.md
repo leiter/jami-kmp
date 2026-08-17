@@ -318,6 +318,36 @@ daemon logs, a second scenario run against the same still-registered accounts).
   `capture-account -PkeepAccounts=true` run confirmed the account was still loaded
   (`AccountsSnapshot(ids=[3bc0819760e29d83])`) and captured it into the pool.
 
+- **`capture-live-pair`** (2 roles) — the two-device companion to `capture-account`: rescues
+  whatever pair is **already live** on both devices (confirmed contact, established conversation)
+  into the fixture pool, without establishing anything itself. For when
+  `default-one-on-one-conversation` fails *after* the handshake but *before* its own capture
+  step — real state is still sitting on both devices, this is how it gets named instead of being
+  silently lost to the next run's `ensureNoAccounts`. Requires `-PaccountState=<label>` and
+  `-PconversationId=<id>` (no daemon query exists to discover the id automatically — the caller
+  supplies what it already knows from the failed run's own timeline). Purely additive, no
+  teardown of its own. **Validated on hardware 2026-08-17**: `default-one-on-one-conversation`
+  hit the message-delivery race (A sent, B never received `MessageReceived` within 60s — see
+  below) and left both devices live with a confirmed contact + real swarm conversation but zero
+  messages; `capture-live-pair -PaccountState=contact-confirmed-no-messages-1
+  -PconversationId=f176aa279e3b42a99e8cb6669fb62cd0e1c3046b` captured all three fixture kinds
+  from that exact state in 4s. **This fixture's actual content is: two accounts, confirmed
+  contact, one real swarm conversation, zero text messages.** Anyone restoring it should not
+  expect a chat transcript.
+- **Standalone conversation-repo fixtures** — a third, narrower asset type
+  (`ConversationRepositoryAsset`, `harness-memory/fixtures/conversation-repos/<label>/repo.tar`),
+  captured alongside the whole-tar pair whenever `default-one-on-one-conversation` runs with
+  `-PaccountState=<label>` and builds fresh: `ctx.captureAsset` (portable `account.gz` per role)
+  and `ctx.captureConversationRepoAsset` (that role's raw on-disk swarm git repo for the
+  conversation just established, labeled `<label>-A`/`<label>-B`) both run in addition to the
+  existing `captureConversationPairAsset`. Restore via `ctx.installConversationRepoAsset(asset,
+  role, accountId, conversationId)` — force-stops the app, replaces just that one conversation's
+  on-disk repo (`DeviceController.pullConversationRepo`/`pushConversationRepo`, the same
+  primitives `rewindConversation` uses), relaunches. Point: a scenario that only needs "one
+  pristine, already-synced conversation to repeatedly rewind" doesn't need a full account/app
+  restore each time — it can restore just the repo onto an account that's already live.
+  `e2eListAccountStates` lists these alongside the whole-tar pairs.
+
 ```
 # Build + save a new named state
 ./gradlew :e2e-runner:e2e -Pscenario=default-one-on-one-conversation \
@@ -330,6 +360,43 @@ daemon logs, a second scenario run against the same still-registered accounts).
 ./gradlew :e2e-runner:e2e -Pscenario=default-one-on-one-conversation \
   -Pdevices=<a>,<b> -PaccountState=two-contacts-with-history -PkeepAccounts=true
 ```
+
+## The A-join precondition race and `ConversationMemberEvent`
+
+Every scenario that "establishes a conversation" (`establishContact` and everything built on it)
+currently trusts `ContactAdded(confirmed=true)` — and, for the accepter, its own
+`ConversationReady` — as proof the conversation is ready to use. Daemon-source research
+(`jami-daemon/src/jamidht/conversation.cpp`/`conversationrepository.cpp`) found this is racy:
+
+- The accepter's `join()` (`conversationrepository.cpp:3658`) is a single **local** git commit —
+  it moves the accepter into `members/`, updates the in-memory cache, and fires
+  `ConversationReady` (`conversation_module.cpp:825`) essentially immediately.
+- The signal that means **the peer has actually seen and processed that join commit** —
+  `ConversationMemberEvent` with `action=1` — only fires once the peer's daemon pulls the commit
+  over the git channel and runs `announce()` on it (`conversation.cpp:407-445`). That is
+  asynchronous and not guaranteed to have happened yet when `ContactAdded(confirmed=true)`/
+  `ConversationReady` fire.
+- Action codes (`conversation.cpp:424-433`): `0`=add(invited), `1`=join, `2`=remove, `3`=ban,
+  `4`=unban.
+
+So a scenario that sends messages right after `ContactAdded(confirmed=true)` may be racing ahead
+of the peer's own view of the conversation. `ConversationMemberEvent` is now surfaced end-to-end
+(`ConversationFacade.ConversationEvent.MemberEvent` → `Wire.kt`'s `ConversationMemberEvent`
+`DomainEvent` → `HarnessAgent.observeMembership`), and `ScenarioSupport.awaitMemberJoined(ctx,
+role, accountId, conversationId, memberUri)` awaits it — call it with `role` = the *peer's* role
+to confirm the peer's daemon has actually caught up, not the joiner's own device.
+
+Not yet wired into `establishContact` or any scenario's flow — this only makes the signal and
+helper available. Whether/where to hard-require it (per the `enforce*` methodology above) is the
+actual A-join precondition investigation, still open.
+
+**Update, 2026-08-17**: the leading suspect for a real message-delivery failure found this same
+day (`send-reply-roundtrip` against a settled fixture, see below) turned out to be a *different*
+race entirely — `AccountService.accountEvents` dropping `RegistrationStateChanged` for
+already-provisioned accounts (fixed, see `doc/TODO.md`'s "Bug Fixes (2026-08-17)"), not the
+A-join race this section describes. The A-join race is still real and still undemonstrated to
+cause an actual failure — `awaitMemberJoined` remains available for whoever picks that
+investigation back up.
 
 ## Shared contact-handshake helper
 
@@ -425,6 +492,8 @@ merged timeline, exit code = verdict.
 |---|---|---|
 | `ping` | 1 | round-trip Report/Command (M0) |
 | `capture-account` | 1 | registers whatever account is already loaded on device[A] into the fixture pool (export + pull, no removal) — the single-account companion to `-PkeepAccounts=true`, see "`-PkeepAccounts` and `-PaccountState`". Purely additive, no teardown of its own. Validated on hardware 2026-08-16. |
+| `capture-live-pair` | 2 | rescues an already-live pair (confirmed contact + established conversation) into the fixture pool, e.g. after `default-one-on-one-conversation` fails past the handshake but before its own capture step. Requires `-PaccountState=<label>` and `-PconversationId=<id>`. Purely additive, no teardown of its own. Validated on hardware 2026-08-17. |
+| `send-reply-roundtrip` | 2 | restores a named fixture (`-PaccountState=<label>`, must already exist) and tests real bidirectional messaging (A→B then B→A) against that **already-settled** conversation — deliberately isolates messaging from handshake/join timing, unlike `send-message`/`default-one-on-one-conversation` which both send immediately after their own fresh handshake. Non-consuming, `-PkeepAccounts=true` skippable teardown. **Validated on hardware 2026-08-17**: found and helped root-cause the `AccountService.accountEvents` registration-race bug (see `doc/TODO.md`), then passed cleanly (both directions) once that was fixed. |
 | `account-creation-bare` | 1 | bare account, no username (M1) |
 | `account-creation-username` | 1 | reuse-first name registration → `REGISTERED` + `NameRegistrationEnded state=0` (M2, consuming) |
 | `register-name-taken` | 1 | registering an already-burned name is rejected (`state=3`) |

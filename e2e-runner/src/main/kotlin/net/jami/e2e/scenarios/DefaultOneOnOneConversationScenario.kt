@@ -144,6 +144,23 @@ object DefaultOneOnOneConversationScenario : Scenario {
             } else {
                 ctx.log("saved this state as '$label' — future runs with -PaccountState=$label restore it directly")
             }
+
+            // Also capture each role as a portable account archive and a standalone
+            // conversation-repo fixture — complementary to the whole-tar pair above, for
+            // scenarios that only need one of those pieces (e.g. repeated rewind experiments
+            // starting from one pristine repo, without a full account/app restore).
+            if (ctx.captureAsset("A", aId, registeredName = null, password = "") == null) {
+                ctx.log("WARNING: failed to capture account archive for A under '$label'")
+            }
+            if (ctx.captureAsset("B", bId, registeredName = null, password = "") == null) {
+                ctx.log("WARNING: failed to capture account archive for B under '$label'")
+            }
+            if (ctx.captureConversationRepoAsset("A", aId, conversationId, "$label-A") == null) {
+                ctx.log("WARNING: failed to capture conversation-repo fixture for A under '$label-A'")
+            }
+            if (ctx.captureConversationRepoAsset("B", bId, conversationId, "$label-B") == null) {
+                ctx.log("WARNING: failed to capture conversation-repo fixture for B under '$label-B'")
+            }
         }
 
         return Verdict(

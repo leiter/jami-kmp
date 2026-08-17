@@ -1121,6 +1121,7 @@ class ConversationFacade(
             } catch (e: Exception) {
                 Log.e(TAG, "onConversationMemberEvent: failed to refresh members", e)
             }
+            _conversationEvents.emit(ConversationEvent.MemberEvent(accountId, conversationId, memberId, event))
         }
     }
 
@@ -1607,6 +1608,20 @@ sealed class ConversationEvent {
         val accountId: String,
         val conversationId: String,
         val metadata: Map<String, String>
+    ) : ConversationEvent()
+
+    /**
+     * A member's role changed in the conversation's swarm git repo (join/leave/ban/unban), as
+     * seen by *this* device — i.e. once this device's daemon has pulled and processed the
+     * commit, not merely once the member authored it locally. [action] mirrors the daemon's
+     * `ConversationMemberEvent` signal: 0=add(invited), 1=join, 2=remove, 3=ban, 4=unban
+     * (`jami-daemon/src/jamidht/conversation.cpp`).
+     */
+    data class MemberEvent(
+        val accountId: String,
+        val conversationId: String,
+        val memberUri: String,
+        val action: Int,
     ) : ConversationEvent()
 
     data class MessageReceived(
