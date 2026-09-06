@@ -1081,6 +1081,28 @@ class AccountService(
     ) {
         scope.launch {
             accountsMap[accountId]?.let { account ->
+                val oldState = account.registrationState
+                val newState = Account.RegistrationState.fromString(state)
+
+                // First transition out of INITIALIZING: the archive is decrypted and the daemon has
+                // its real config now. Re-hydrate details / credentials / devices / volatile details
+                // so the model doesn't keep carrying the pre-registration snapshot (mirrors
+                // libjamiclient AccountService.registrationStateChanged).
+                if (oldState == Account.RegistrationState.INITIALIZING &&
+                    newState != Account.RegistrationState.INITIALIZING
+                ) {
+                    runCatching {
+                        account.details.putAll(daemonBridge.getAccountDetails(accountId))
+                        account.credentials.clear()
+                        account.credentials.addAll(
+                            daemonBridge.getCredentials(accountId).map { AccountCredentials.fromMap(it) }
+                        )
+                        account.devices.clear()
+                        account.devices.putAll(daemonBridge.getKnownRingDevices(accountId))
+                        account.volatileDetails.putAll(daemonBridge.getVolatileAccountDetails(accountId))
+                    }.onFailure { Log.w(TAG, "onRegistrationStateChanged: re-hydrate failed for $accountId", it) }
+                }
+
                 account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATUS.key] = state
                 account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATE_CODE.key] = code.toString()
                 account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATE_DESC.key] = detail

@@ -16,7 +16,13 @@
  */
 package net.jami.services
 
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -96,14 +102,64 @@ class ConversationFacade(
     // Track last sync timestamp per account
     private val lastSyncTimestamps = mutableMapOf<String, Long>()
 
+    // ---- Per-account load coordination (plan phase 2: gate + single-flight) ----
+    // libjamiclient gates its one-shot loadAccount() on
+    //   registrationStateObservable.filter { it != UNLOADED && it != INITIALIZING }.firstElement()
+    // so the smartlist is only built once the daemon has left INITIALIZING (archive decrypted,
+    // conversation git repos enumerated). jami-kmp previously fired loadSmartlist from four
+    // unsynchronised triggers, some while the daemon was still INITIALIZING -> getConversations()
+    // came back empty/partial and the conversation was never indexed (F1), and two triggers could
+    // run conversationStarted() for the same id concurrently.
+    private val loadCoordLock = SynchronizedObject()
+    private val loadMutexes = mutableMapOf<String, Mutex>()
+    private val loadGates = mutableMapOf<String, CompletableDeferred<Unit>>()
+
+    private fun loadMutexFor(accountId: String): Mutex =
+        synchronized(loadCoordLock) { loadMutexes.getOrPut(accountId) { Mutex() } }
+
+    private fun loadGateFor(accountId: String): CompletableDeferred<Unit> =
+        synchronized(loadCoordLock) { loadGates.getOrPut(accountId) { CompletableDeferred() } }
+
+    /** Open the load gate once the daemon reports the account has left INITIALIZING. Idempotent. */
+    private fun markAccountLoaded(accountId: String) {
+        val gate = loadGateFor(accountId)
+        if (!gate.isCompleted) gate.complete(Unit)
+    }
+
+    /**
+     * Suspend until the account has left INITIALIZING at least once, capped by
+     * [ACCOUNT_LOAD_GATE_TIMEOUT_MS] so a wedged daemon can't hang the send path forever.
+     */
+    private suspend fun awaitAccountLoaded(accountId: String) {
+        if (loadGateFor(accountId).isCompleted) return
+        val opened = withTimeoutOrNull(ACCOUNT_LOAD_GATE_TIMEOUT_MS) {
+            loadGateFor(accountId).await(); true
+        }
+        if (opened == null) {
+            Log.w(TAG, "awaitAccountLoaded($accountId): gate timed out after " +
+                "${ACCOUNT_LOAD_GATE_TIMEOUT_MS}ms, proceeding anyway")
+        }
+    }
+
     init {
-        // Subscribe to account changes
+        // Subscribe to account changes. The first smartlist load is deferred until the load gate
+        // opens (daemon left INITIALIZING) so we don't read an empty getConversations() (F1);
+        // subsequent re-selections of an already-loaded account fall through immediately.
         scope.launch {
             accountService.currentAccount.collect { account ->
-                if (account != null) {
-                    loadSmartlist(account)
-                }
                 _currentAccount.value = account
+                if (account != null) {
+                    // If the account is already past INITIALIZING when it is selected (e.g. it was
+                    // loaded before this facade was constructed, or it is an offline SIP account),
+                    // no RegistrationStateChanged will arrive to open the gate — open it here.
+                    if (account.registrationState != net.jami.model.Account.RegistrationState.INITIALIZING) {
+                        markAccountLoaded(account.accountId)
+                    }
+                    scope.launch {
+                        awaitAccountLoaded(account.accountId)
+                        loadSmartlist(account)
+                    }
+                }
             }
         }
 
@@ -149,13 +205,19 @@ class ConversationFacade(
             }
         }
 
-        // When the account becomes REGISTERED: reload the smartlist (peers may have pushed
-        // conversations that weren't in the local git repos yet) then retry any unresolved
-        // registered-name lookups.
+        // Registration-state transitions drive two things:
+        //  - the load gate: the first state that is not INITIALIZING means the daemon has finished
+        //    decrypting the archive and enumerating conversation git repos, so it is now safe to
+        //    build the smartlist (mirrors libjamiclient's firstElement() gate).
+        //  - on REGISTERED: reload the smartlist (peers may have pushed conversations that weren't
+        //    in the local git repos yet) then retry any unresolved registered-name lookups.
         scope.launch {
             accountService.accountEvents.collect { event ->
                 if (event is AccountEvent.RegistrationStateChanged) {
                     val account = accountService.getAccount(event.accountId) ?: return@collect
+                    if (account.registrationState != net.jami.model.Account.RegistrationState.INITIALIZING) {
+                        markAccountLoaded(event.accountId)
+                    }
                     if (!account.isRegistered) return@collect
                     loadSmartlist(account)
                     for (conversation in account.getConversations()) {
@@ -212,6 +274,13 @@ class ConversationFacade(
     suspend fun getAccountWithSmartlist(accountId: String): Account {
         val account = accountService.getAccount(accountId)
             ?: throw IllegalArgumentException("Account not found: $accountId")
+        // Wait for the daemon to finish loading the account before reading getConversations() on
+        // the send path — otherwise a send issued right after import/link resolves against an
+        // empty conversation set and fails permanently (F1).
+        if (account.registrationState != net.jami.model.Account.RegistrationState.INITIALIZING) {
+            markAccountLoaded(accountId)
+        }
+        awaitAccountLoaded(accountId)
         loadSmartlist(account)
         return account
     }
@@ -616,8 +685,16 @@ class ConversationFacade(
 
     /**
      * Load the smartlist (recent conversations) for an account.
+     *
+     * Single-flight per account: the four triggers (account selected, AccountsChanged, REGISTERED,
+     * send path) coalesce on a per-account [Mutex] instead of racing [Account.conversationStarted]
+     * for the same conversation ids.
      */
     private suspend fun loadSmartlist(account: Account) {
+        loadMutexFor(account.accountId).withLock { loadSmartlistLocked(account) }
+    }
+
+    private suspend fun loadSmartlistLocked(account: Account) {
         val startTime = currentTimeMillis()
         _syncState.value = SyncState.Syncing(account.accountId, startTime)
 
@@ -672,6 +749,20 @@ class ConversationFacade(
                     }
 
                     account.conversationStarted(conversation)
+
+                    // Prime the last messages so smartlist previews and `lastEvent` are populated
+                    // without opening the conversation (libjamiclient calls loadMore(conv, 8) during
+                    // loadAccount). Fire-and-forget: a stuck daemon callback must not stall the whole
+                    // smartlist load, so this is not awaited inline. loadMore() no-ops for Syncing.
+                    if (!isSyncing) {
+                        scope.launch {
+                            try {
+                                accountService.loadMore(conversation, SMARTLIST_PREVIEW_COUNT)
+                            } catch (e: Exception) {
+                                Log.w(TAG, "loadSmartlist: preview prime failed for $convId", e)
+                            }
+                        }
+                    }
 
                     // Subscribe to presence and resolve registered names for each contact
                     for (contact in conversation.contacts) {
@@ -1550,6 +1641,13 @@ class ConversationFacade(
 
     companion object {
         private const val TAG = "ConversationFacade"
+
+        /** Cap on how long the send path / first smartlist load waits for the daemon to leave
+         *  INITIALIZING before proceeding regardless. */
+        private const val ACCOUNT_LOAD_GATE_TIMEOUT_MS = 15_000L
+
+        /** Messages primed per conversation during loadSmartlist (matches libjamiclient). */
+        private const val SMARTLIST_PREVIEW_COUNT = 8
     }
 }
 
