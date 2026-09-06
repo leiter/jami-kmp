@@ -163,7 +163,7 @@ Ordered by stability impact. Each phase is independently shippable.
 |---|---|
 | Phase 1 — network-change signal | ✅ landed (`bcf74c3`) — Android callback + daemon forward + Phase 1b markers |
 | Phase 2 — gate & single-flight account load | ✅ core landed — load gate, per-account single-flight `Mutex`, `INITIALIZING→ready` re-hydration, `loadMore(conv, 8)` preview priming. **Deferred:** moving conversation-request loading into `loadSmartlist` / repointing `ConversationsViewModel` + `PendingRequestsViewModel` at the model — `Account` has no request store yet and the two ViewModels currently work; low stated impact, tracked as a follow-up. |
-| Phase 3 — per-conversation ordered callbacks | ⏳ pending |
+| Phase 3 — per-conversation ordered callbacks | ✅ landed — keyed `(accountId, conversationId)` FIFO channels + per-key consumer + `Removed` teardown/generation in `DaemonCallbacksImpl`. **Deferred:** the `DaemonBridge.android.kt` SWIG-conversion barrier (defense-in-depth; libjami already serialises callback delivery and a lock across full vector conversion would re-serialise what the keying just parallelised). |
 | Phase 4 — self-heal + resilient send | ⏳ pending |
 | Phase 5 — real sync observability | ⏳ pending |
 
