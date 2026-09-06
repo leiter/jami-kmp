@@ -144,6 +144,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
         return isInitialized
     }
 
+    override fun connectivityChanged() {
+        // TODO: POST /daemon/connectivity-changed (no-op for the REST stub bridge)
+    }
+
     // ==================== Account Operations ====================
 
     override fun addAccount(details: Map<String, String>): String {

@@ -7,6 +7,8 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.AudioManager.OnAudioFocusChangeListener
 import android.media.projection.MediaProjection
+import android.net.ConnectivityManager
+import android.net.Network
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
@@ -33,6 +35,7 @@ import net.jami.utils.Log
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.lang.ref.WeakReference
+import java.util.concurrent.Executors
 
 actual class HardwareService(private val context: Context) : KoinComponent, OnAudioFocusChangeListener {
 
@@ -531,7 +534,56 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
         }
     }
 
-    actual fun connectivityChanged(isConnected: Boolean) { _connectivityState.value = isConnected }
+    // ==================== Network connectivity ====================
+
+    // Serialises the JNI connectivityChanged() call off the main thread, mirroring the
+    // reference client's dedicated daemon executor (libjamiclient HardwareService.kt:122).
+    private val connectivityExecutor = Executors.newSingleThreadExecutor()
+
+    private val connectivityManager: ConnectivityManager? by lazy {
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+    }
+
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            Log.i(TAG, "Network onAvailable: $network")
+            connectivityChanged(true)
+        }
+
+        override fun onLost(network: Network) {
+            // The default network may still exist (e.g. Wi-Fi dropped, cellular remains).
+            val stillConnected = connectivityManager?.activeNetwork != null
+            Log.i(TAG, "Network onLost: $network (stillConnected=$stillConnected)")
+            connectivityChanged(stillConnected)
+        }
+
+        override fun onUnavailable() {
+            Log.i(TAG, "Network onUnavailable")
+            connectivityChanged(false)
+        }
+    }
+
+    init {
+        try {
+            connectivityManager?.registerDefaultNetworkCallback(networkCallback)
+        } catch (e: Exception) {
+            Log.e(TAG, "Can't register default network callback", e)
+        }
+    }
+
+    actual fun connectivityChanged(isConnected: Boolean) {
+        Log.i(TAG, "connectivityChanged($isConnected)")
+        _connectivityState.value = isConnected
+        // Always signal the daemon so it re-evaluates transports on interface switches too,
+        // not only on connected<->disconnected transitions.
+        connectivityExecutor.execute {
+            try {
+                daemonBridge.connectivityChanged()
+            } catch (e: Throwable) {
+                Log.e(TAG, "daemonBridge.connectivityChanged() failed", e)
+            }
+        }
+    }
 
     actual val isLogging: Boolean get() = logging
 

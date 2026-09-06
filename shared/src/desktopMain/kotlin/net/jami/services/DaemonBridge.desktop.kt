@@ -87,6 +87,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun isRunning(): Boolean = isInitialized
 
+    override fun connectivityChanged() {
+        Log.d(TAG, "connectivityChanged called (stub)")
+    }
+
     // ==================== Account Operations (Stubs) ====================
 
     override fun addAccount(details: Map<String, String>): String {

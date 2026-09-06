@@ -268,7 +268,13 @@ actual class HardwareService : KoinComponent {
         if (screenCaptureSession == null) isScreenSharing = false
     }
 
-    actual fun connectivityChanged(isConnected: Boolean) { _connectivityState.value = isConnected }
+    actual fun connectivityChanged(isConnected: Boolean) {
+        _connectivityState.value = isConnected
+        // Forward to the daemon so it re-evaluates transports (currently a no-op until
+        // JamiBridge exposes connectivityChanged; an NWPathMonitor still needs wiring to
+        // actually call this on iOS). See DaemonBridge.ios.kt.
+        daemonBridge.connectivityChanged()
+    }
 
     actual val isLogging: Boolean get() = logging
 

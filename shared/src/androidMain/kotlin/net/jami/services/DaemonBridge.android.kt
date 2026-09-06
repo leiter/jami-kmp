@@ -158,6 +158,12 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
 
     override fun isRunning(): Boolean = isInitialized
 
+    override fun connectivityChanged() {
+        if (!isInitialized) return
+        Log.d(TAG, "connectivityChanged() -> daemon")
+        JamiService.connectivityChanged()
+    }
+
     // ==================== Account Operations ====================
 
     override fun addAccount(details: Map<String, String>): String {

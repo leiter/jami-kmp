@@ -16,6 +16,17 @@ interface DaemonBridgeApi {
     fun stop()
     fun isRunning(): Boolean
 
+    /**
+     * Tell the daemon that the host's network environment has changed (interface up/down,
+     * Wi-Fi <-> cellular switch, VPN toggle). The daemon re-evaluates its transports:
+     * DHT nodes, ICE/TURN allocations and swarm sync sockets are dropped and rebuilt
+     * against the new interface instead of waiting for their own slow internal timeouts.
+     *
+     * Mirrors `JamiService.connectivityChanged()` in the reference client. Platforms with
+     * no live daemon (Desktop/Web stubs) treat this as a no-op.
+     */
+    fun connectivityChanged()
+
     // ==================== Account Operations ====================
     fun addAccount(details: Map<String, String>): String
     fun removeAccount(accountId: String)
@@ -483,6 +494,7 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun start(): Boolean { running = true; return true }
     override fun stop() { running = false }
     override fun isRunning(): Boolean = running
+    override fun connectivityChanged() {}
 
     override fun addAccount(details: Map<String, String>): String = addAccountResult
     override fun removeAccount(accountId: String) {}

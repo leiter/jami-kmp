@@ -91,6 +91,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun isRunning(): Boolean = bridge.isDaemonRunning()
 
+    override fun connectivityChanged() {
+        // Not exposed by JamiBridge yet (see iOS bridge for the same gap).
+        Log.d(TAG, "connectivityChanged() - not yet exposed via JamiBridge")
+    }
+
     // ==================== Account Operations ====================
 
     override fun addAccount(details: Map<String, String>): String {

@@ -386,24 +386,46 @@ class AccountService(
         daemonBridge.sendRegister(accountId, enabled)
     }
 
+    // Account ids explicitly deactivated via setAccountActive(id, false), tracked synchronously so
+    // it stays authoritative regardless of coroutine ordering or a stale isActive read. A future
+    // background proxy-deactivation/restore path must consult this before reactivating an account,
+    // so a battery-saving deactivation cannot resurrect one the user turned off on purpose.
+    // In-memory only — the in-process daemon resets every account to active on (re)load, so
+    // persisting ids would only produce stale state. Ported from libjamiclient AccountService.kt.
+    private val explicitlyDeactivatedAccounts = mutableSetOf<String>()
+
+    /** Account ids the user has explicitly deactivated via [setAccountActive]. */
+    val deactivatedAccounts: Set<String> get() = explicitlyDeactivatedAccounts.toSet()
+
     /**
      * Activate or deactivate an account.
      */
     fun setAccountActive(accountId: String, active: Boolean) {
+        // Record the explicit intent before the (possibly async) daemon call.
+        if (active) explicitlyDeactivatedAccounts.remove(accountId)
+        else explicitlyDeactivatedAccounts.add(accountId)
         daemonBridge.setAccountActive(accountId, active)
     }
 
     /**
      * Activate or deactivate all accounts.
+     *
+     * Proxy-enabled accounts are kept active regardless of [active] — they rely on the proxy for
+     * connectivity. A bulk reactivation (network restored, foreground return) is treated as an
+     * explicit "everything on" and clears the per-account deactivation markers; a bulk
+     * deactivation marks every non-proxy account so a later background restore can tell these
+     * apart from user-driven ones.
      */
     fun setAccountsActive(active: Boolean) {
-        for (account in accountsMap.values) {
-            // If proxy is enabled, account is considered always active
-            if (account.isDhtProxyEnabled) {
-                daemonBridge.setAccountActive(account.accountId, true)
-            } else {
-                daemonBridge.setAccountActive(account.accountId, active)
+        if (active) {
+            explicitlyDeactivatedAccounts.clear()
+        } else {
+            for (account in accountsMap.values) {
+                if (!account.isDhtProxyEnabled) explicitlyDeactivatedAccounts.add(account.accountId)
             }
+        }
+        for (account in accountsMap.values) {
+            daemonBridge.setAccountActive(account.accountId, active || account.isDhtProxyEnabled)
         }
     }
 

@@ -91,6 +91,13 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun isRunning(): Boolean = bridge.isDaemonRunning()
 
+    override fun connectivityChanged() {
+        // JamiBridgeWrapper exposes no connectivity-changed entry point yet. libjami's
+        // `connectivityChanged()` (configurationmanager_interface.h) needs to be surfaced on
+        // the Obj-C++ wrapper and libJamiBridge.a rebuilt before this can forward to the daemon.
+        Log.d(TAG, "connectivityChanged() - not yet exposed via JamiBridge")
+    }
+
     // ==================== Account Operations ====================
 
     override fun addAccount(details: Map<String, String>): String {
