@@ -873,6 +873,7 @@ class ConversationFacade(
     /**
      * Get search results for conversations.
      */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     fun getSearchResults(
         query: Flow<String>,
         currentAccount: Flow<Account> = currentAccountFlow.filterNotNull()
@@ -897,6 +898,7 @@ class ConversationFacade(
     /**
      * Get full conversation list with optional search.
      */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     fun getFullConversationList(
         currentAccount: Flow<Account>,
         query: Flow<String>,
@@ -1075,6 +1077,60 @@ class ConversationFacade(
     // ==================== Daemon Callback Handlers ====================
 
     /**
+     * Return the swarm [Conversation] for [conversationId], building and indexing it in place if it
+     * isn't known locally yet.
+     *
+     * Phases 2-3 gate and order the normal load path, but a restore edge or a missed
+     * `conversationReady` can still leave real daemon traffic (a message, a member join, a swarm
+     * load, a file event) pointing at an id `getSwarm()` returns null for. Previously every such
+     * handler did `?: return` and the traffic was dropped with nothing to rebuild the conversation
+     * (the F1/F4 "silent no-op" shape). This self-heals from the daemon's own data instead.
+     */
+    private suspend fun ensureSwarm(account: Account, conversationId: String): Conversation {
+        account.getSwarm(conversationId)?.let { return it }
+        Log.w(TAG, "ensureSwarm: rebuilding unknown conversation $conversationId for ${account.accountId}")
+
+        val info = try {
+            daemonBridge.getConversationInfo(account.accountId, conversationId)
+        } catch (e: Exception) {
+            Log.w(TAG, "ensureSwarm: getConversationInfo failed for $conversationId", e)
+            emptyMap()
+        }
+        val isSyncing = info["syncing"] == "true"
+        val realMode = when (info["mode"]) {
+            "0" -> Conversation.Mode.OneToOne
+            "1" -> Conversation.Mode.AdminInvitesOnly
+            "2" -> Conversation.Mode.InvitesOnly
+            "3" -> Conversation.Mode.Public
+            else -> Conversation.Mode.OneToOne
+        }
+        val mode = if (isSyncing) Conversation.Mode.Syncing else realMode
+        val conversation = account.newSwarm(conversationId, mode)
+        conversation.setMode(mode)
+        if (isSyncing) conversation.requestMode = realMode
+
+        try {
+            for (member in daemonBridge.getConversationMembers(account.accountId, conversationId)) {
+                val memberUri = member["uri"] ?: continue
+                val parsed = Uri.fromString(memberUri)
+                if (conversation.findContact(parsed) == null) {
+                    val contact = account.getContactFromCache(parsed)
+                    conversation.addContact(contact, MemberRole.fromString(member["role"] ?: ""))
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "ensureSwarm: member load failed for $conversationId", e)
+        }
+
+        val title = info["title"]
+        if (!title.isNullOrEmpty()) conversation.setProfile(Profile(title, null))
+
+        account.conversationStarted(conversation)
+        _conversationEvents.emit(ConversationEvent.ConversationReady(account.accountId, conversationId))
+        return conversation
+    }
+
+    /**
      * Called when a conversation is ready to use.
      */
     internal fun onConversationReady(accountId: String, conversationId: String) {
@@ -1208,9 +1264,11 @@ class ConversationFacade(
         Log.d(TAG, "onConversationMemberEvent: $conversationId member=$memberId event=$event")
 
         val account = accountService.getAccount(accountId) ?: return
-        val conversation = account.getSwarm(conversationId) ?: return
 
         scope.launch {
+            // Self-heal: a member event (e.g. the peer's join into a just-created 1:1 swarm) can
+            // arrive before we've indexed the conversation — build it instead of dropping the event.
+            val conversation = ensureSwarm(account, conversationId)
             try {
                 val members = daemonBridge.getConversationMembers(accountId, conversationId)
                 // Rebuild contact list from daemon member data
@@ -1238,7 +1296,9 @@ class ConversationFacade(
     internal suspend fun onMessageReceived(accountId: String, conversationId: String, message: net.jami.model.SwarmMessage) {
         Log.d(TAG, "onMessageReceived: $conversationId msgId=${message.id}")
         val account = accountService.getAccount(accountId)
-        val conversation = account?.getSwarm(conversationId)
+        // Self-heal: rebuild the conversation if the daemon delivered a message for an id we
+        // haven't indexed yet, instead of dropping it.
+        val conversation = account?.let { ensureSwarm(it, conversationId) }
         var isIncoming = false
         if (account != null && conversation != null) {
             val interaction = swarmMessageToInteraction(account, conversation, message)
@@ -1283,7 +1343,9 @@ class ConversationFacade(
         Log.d(TAG, "onSwarmLoaded: $conversationId messages=${messages.size}")
 
         val account = accountService.getAccount(accountId)
-        val conversation = account?.getSwarm(conversationId)
+        // Self-heal: a swarm-load result for an unknown id means we missed the conversation on the
+        // normal path — rebuild it rather than discarding the loaded history.
+        val conversation = account?.let { ensureSwarm(it, conversationId) }
 
         if (account != null && conversation != null) {
             for (message in messages) {
@@ -1576,7 +1638,8 @@ class ConversationFacade(
         scope.launch {
             // Update the transfer status in the conversation model
             val account = accountService.getAccount(accountId)
-            val conversation = account?.getSwarm(conversationId)
+            // Self-heal: rebuild the conversation if a file event arrives for an unknown id.
+            val conversation = account?.let { ensureSwarm(it, conversationId) }
             if (conversation != null) {
                 // If the stored interaction is a plain Interaction (not DataTransfer), promote it.
                 val transfer: DataTransfer? = when (val msg = conversation.getMessage(interactionId)) {

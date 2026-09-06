@@ -78,6 +78,7 @@ import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Person
@@ -827,6 +828,7 @@ private fun ChatBubble(
                             DeliveryStatus.DELIVERED -> Icons.Default.DoneAll to timeColor
                             DeliveryStatus.SENDING   -> Icons.Default.Done    to timeColor
                             DeliveryStatus.FAILED    -> Icons.Default.Warning to JamiTheme.colors.error
+                            DeliveryStatus.WAITING_TO_SYNC -> Icons.Default.Schedule to timeColor
                         }
                         Row(
                             modifier = Modifier.align(Alignment.BottomEnd),

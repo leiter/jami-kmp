@@ -43,6 +43,7 @@ import net.jami.model.CallHistory
 import net.jami.model.Contact
 import net.jami.model.ContactEvent
 import net.jami.model.ContactLocation
+import net.jami.model.Conversation
 import net.jami.model.DataTransfer
 import net.jami.model.Interaction
 import net.jami.model.Uri
@@ -101,9 +102,11 @@ data class MessageItem(
 /**
  * Aggregated delivery/read state for an outgoing message bubble.
  * SENDING = not yet confirmed, DELIVERED = remote received, READ = remote displayed,
- * FAILED = no daemon echo arrived within the send timeout.
+ * FAILED = no daemon echo arrived within the send timeout,
+ * WAITING_TO_SYNC = target 1:1 swarm is still bootstrapping; the message is held in memory and
+ * flushed automatically once the conversation goes live (ConversationReady / peer join).
  */
-enum class DeliveryStatus { SENDING, DELIVERED, READ, FAILED }
+enum class DeliveryStatus { SENDING, DELIVERED, READ, FAILED, WAITING_TO_SYNC }
 
 /**
  * A grouped emoji reaction: one entry per distinct emoji with an aggregated count.
@@ -219,6 +222,13 @@ class ChatViewModel(
                     }
                     is ConversationEvent.ReactionRemoved -> {
                         if (event.conversationId == convId) rebuildMessageReactions(event.messageId)
+                    }
+                    is ConversationEvent.ConversationReady -> {
+                        if (event.conversationId == convId) flushPendingSyncSends()
+                    }
+                    is ConversationEvent.MemberEvent -> {
+                        // action == 1 -> a member joined; the 1:1 swarm now has a live peer.
+                        if (event.conversationId == convId && event.action == 1) flushPendingSyncSends()
                     }
                     else -> { /* Handled elsewhere */ }
                 }
@@ -397,6 +407,15 @@ class ChatViewModel(
      */
     private fun sendOptimistic(accountId: String, conversationUri: Uri, text: String) {
         val optimisticId = "pending-${Clock.System.now().toEpochMilliseconds()}"
+
+        // If the target 1:1 swarm is still bootstrapping, a send now is committed locally but
+        // never pushed (Bootstrap with 0 device(s) / no sync connection). Hold the message in the
+        // bubble as WAITING_TO_SYNC and flush it from flushPendingSyncSends() once the daemon
+        // reports the conversation ready or the peer joins — instead of firing into the void and
+        // only surfacing FAILED after the 20 s watchdog.
+        val syncing = conversationFacade.getConversation(accountId, conversationUri)
+            ?.mode == Conversation.Mode.Syncing
+
         val optimisticItem = MessageItem(
             id = optimisticId,
             text = text,
@@ -404,10 +423,23 @@ class ChatViewModel(
             timestamp = Clock.System.now().toEpochMilliseconds(),
             isOutgoing = true,
             type = MessageType.Text,
-            deliveryStatus = DeliveryStatus.SENDING,
+            deliveryStatus = if (syncing) DeliveryStatus.WAITING_TO_SYNC else DeliveryStatus.SENDING,
         )
         _state.update { it.copy(messages = it.messages + optimisticItem) }
 
+        if (syncing) {
+            Log.i("ChatViewModel", "conversation $conversationUri is syncing; holding message $optimisticId until it goes live")
+            return
+        }
+
+        dispatchSend(accountId, conversationUri, optimisticId, text)
+    }
+
+    /**
+     * Fire the actual daemon send for an already-inserted optimistic bubble and arm the
+     * no-echo -> FAILED watchdog. Shared by the immediate-send path and the deferred sync flush.
+     */
+    private fun dispatchSend(accountId: String, conversationUri: Uri, optimisticId: String, text: String) {
         scope.launch {
             accountService.sendConversationMessage(accountId, conversationUri, text)
         }
@@ -420,10 +452,37 @@ class ChatViewModel(
             _state.update { current ->
                 val idx = current.messages.indexOfFirst { it.id == optimisticId }
                 if (idx < 0) return@update current
+                if (current.messages[idx].deliveryStatus != DeliveryStatus.SENDING) return@update current
                 val messages = current.messages.toMutableList()
                 messages[idx] = messages[idx].copy(deliveryStatus = DeliveryStatus.FAILED)
                 current.copy(messages = messages)
             }
+        }
+    }
+
+    /**
+     * Flush every message currently held as [DeliveryStatus.WAITING_TO_SYNC] for the active
+     * conversation: mark each SENDING and dispatch it. Called when the conversation transitions to
+     * live (ConversationReady, or a peer join via ConversationMemberEvent action=1).
+     */
+    private fun flushPendingSyncSends() {
+        val accountId = currentAccountId ?: return
+        val conversationId = currentConversationId ?: return
+        val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+
+        val waiting = _state.value.messages.filter { it.deliveryStatus == DeliveryStatus.WAITING_TO_SYNC }
+        if (waiting.isEmpty()) return
+        Log.i("ChatViewModel", "conversation $conversationId now live; flushing ${waiting.size} held message(s)")
+
+        _state.update { current ->
+            current.copy(messages = current.messages.map {
+                if (it.deliveryStatus == DeliveryStatus.WAITING_TO_SYNC)
+                    it.copy(deliveryStatus = DeliveryStatus.SENDING)
+                else it
+            })
+        }
+        for (msg in waiting) {
+            dispatchSend(accountId, conversationUri, msg.id, msg.text)
         }
     }
 
