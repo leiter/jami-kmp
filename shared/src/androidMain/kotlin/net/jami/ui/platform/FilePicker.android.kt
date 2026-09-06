@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import net.jami.utils.PendingActivityResultTracker
 import java.io.File
 
 // Resolves the picked document's real display name (e.g. "photo.png") via the
@@ -41,6 +42,9 @@ actual fun FilePickerEffect(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
+        // Clear first, unconditionally — this fires for a cancel too, and must never leave the
+        // biometric-lock swap deferred forever. See PendingActivityResultTracker's kdoc.
+        PendingActivityResultTracker.end()
         if (uri == null) {
             onFilePicked(null)
             return@rememberLauncherForActivityResult
@@ -66,6 +70,9 @@ actual fun FilePickerEffect(
 
     LaunchedEffect(show) {
         if (show) {
+            // Marked *before* launch so JamiNavigation's biometric-lock swap can't dispose this
+            // composable — and this launcher with it — before OpenDocument's result arrives.
+            PendingActivityResultTracker.begin()
             launcher.launch(mimeTypes.toTypedArray())
         }
     }

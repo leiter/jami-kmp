@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import net.jami.utils.Log
+import net.jami.utils.PendingActivityResultTracker
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -45,6 +46,8 @@ actual fun ImageCaptureEffect(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
+        // Clear first, unconditionally — see PendingActivityResultTracker's kdoc.
+        PendingActivityResultTracker.end()
         if (success && currentPhotoPath.value != null) {
             // Image was captured successfully
             onImageCaptured(currentPhotoPath.value)
@@ -57,6 +60,7 @@ actual fun ImageCaptureEffect(
 
     LaunchedEffect(show) {
         if (show) {
+            var began = false
             try {
                 // Create temp file for the photo
                 val photoFile = createImageFile(context)
@@ -65,9 +69,14 @@ actual fun ImageCaptureEffect(
                 // Create content URI using FileProvider
                 val photoUri = getUriForFile(context, photoFile)
 
-                // Launch camera
+                // Marked *before* launch so JamiNavigation's biometric-lock swap can't dispose
+                // this composable — and this launcher with it — before the camera result
+                // arrives. Launch camera.
+                began = true
+                PendingActivityResultTracker.begin()
                 launcher.launch(photoUri)
             } catch (e: Exception) {
+                if (began) PendingActivityResultTracker.end()
                 Log.e("ImageCapture", "Failed to create image file: ${e.message}")
                 onImageCaptured(null)
                 currentPhotoPath.value = null

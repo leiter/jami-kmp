@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import net.jami.utils.PendingActivityResultTracker
 
 @Composable
 actual fun RingtoneLauncherEffect(
@@ -17,6 +18,8 @@ actual fun RingtoneLauncherEffect(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
+        // Clear first, unconditionally — see PendingActivityResultTracker's kdoc.
+        PendingActivityResultTracker.end()
         if (result.resultCode == Activity.RESULT_OK) {
             @Suppress("DEPRECATION")
             val uri = result.data?.getParcelableExtra<android.net.Uri>(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
@@ -37,6 +40,9 @@ actual fun RingtoneLauncherEffect(
                     )
                 }
             }
+            // Marked *before* launch so JamiNavigation's biometric-lock swap can't dispose this
+            // composable — and this launcher with it — before the picker result arrives.
+            PendingActivityResultTracker.begin()
             launcher.launch(intent)
         }
     }
