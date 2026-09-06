@@ -46,7 +46,9 @@ class HarnessAgentService : Service() {
         if (!started) {
             started = true
             val role = intent?.getStringExtra("role")
-            scope.launch { HarnessAgent(scope, role).run() }
+            // -PdaemonMonitor=true on the runner → JamiService.monitor(true) for this session.
+            val daemonMonitor = intent?.getBooleanExtra("daemonMonitor", false) ?: false
+            scope.launch { HarnessAgent(scope, role, daemonMonitor).run() }
         }
         return START_STICKY
     }

@@ -30,7 +30,8 @@ kotlin {
 tasks.register<JavaExec>("e2e") {
     group = "verification"
     description = "Run an end-to-end device scenario (-Pscenario=<id> [-Pdevices=a,b] " +
-        "[-PkeepAccounts=true] [-PaccountState=<label>] [-Pusername=<name>] [-PconversationId=<id>])"
+        "[-PkeepAccounts=true] [-PaccountState=<label>] [-Pusername=<name>] [-PconversationId=<id>] " +
+        "[-PdaemonMonitor=true])"
     dependsOn(":android-app:installHarnessDebug")
     classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("net.jami.e2e.MainKt")
@@ -42,7 +43,8 @@ tasks.register<JavaExec>("e2e") {
         val accountState = project.findProperty("accountState") as String? ?: ""
         val username = project.findProperty("username") as String? ?: ""
         val conversationId = project.findProperty("conversationId") as String? ?: ""
-        args = listOf(scenario, devices, keepAccounts, accountState, username, conversationId)
+        val daemonMonitor = project.findProperty("daemonMonitor") as String? ?: "false"
+        args = listOf(scenario, devices, keepAccounts, accountState, username, conversationId, daemonMonitor)
     }
 }
 

@@ -248,6 +248,31 @@
   equally exposed, or whether this was particular to the Pixel 2's storage/SELinux timing — every
   observed instance of the stall was on device B (the Pixel 2).
 
+## Infra TODO (2026-09-05) — harden the "no competing daemon during a harness run" precondition
+
+- [ ] **Ensure the standard jami-kmp build and jami-android-client are fully deactivated before
+  every harness run.** Both embed a real libjami daemon; if either is alive on the same physical
+  device while the harness drives its own daemon, they contend for the DHT, local UDP ports and
+  the TURN/proxy connections — a plausible contributor to the intermittent
+  `IncomingContactRequest`-never-arrives / handshake-timeout flakiness seen on 2026-09-05 (known-good
+  `send-message` failed ~4/6, `two-device-contact` 1/4, while `ping` passed).
+  - Mechanism **already exists**: `DeviceController.stopCompetingApps()` (`COMPETING_APP_IDS =
+    ["net.jami.android", "cx.ring"]`), invoked once per run at `Main.kt:115` after
+    `INSTALL_SETTLE_MS`, before `startApp()`. Verified 2026-09-05: on both lab devices
+    `net.jami.android` and `cx.ring` were `stopped=true` / not in `ps` after a run.
+  - Gaps to close:
+    - `COMPETING_APP_IDS` misses the reference client's **debug build id** `cx.ring.debug`
+      (AGP `applicationIdSuffix`), used when jami-android-client is built from source for comparison.
+      Also consider historical ids (`com.savoirfairelinux.ring`).
+    - `am force-stop` is a one-shot kill — nothing re-checks that a Telecom `ConnectionService`,
+      `START_STICKY` service, or WorkManager job hasn't relaunched the competing daemon by the time
+      the scenario's DHT work starts. Consider a re-assert (or a `ps`/`dumpsys` guard that fails the
+      run loudly) just before the first cross-device step.
+    - Not covered by this precondition: harness state **left behind by a timed-out run** — a stale
+      account on a device poisons the next scenario (`device[A] resolved URI '…' does not match
+      installed asset …`, seen 3× consecutively on 2026-09-05). Needs a robust pre-run
+      `pm clear net.jami.android.harness` / account-wipe, separate from `stopCompetingApps()`.
+
 - [ ] **Desktop DaemonBridge** — All 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.
 - [ ] **Web/JS platform** — Entire daemon bridge is REST stubs with `// TODO: Call REST API`. Explicitly experimental per CLAUDE.md; candidate for removal if REST bridge server is not developed.
 - [ ] **Desktop/Web VideoSurface** — `VideoSurface.desktop.kt` and `.js.kt` show placeholder text. No viable path without daemon bridge working first.

@@ -628,16 +628,30 @@ class ConversationFacade(
             for (convId in conversationIds) {
                 try {
                     val info = daemonBridge.getConversationInfo(account.accountId, convId)
-                    val mode = when (info["mode"]) {
+                    // The daemon reports `syncing=true` while the conversation's git repo is still
+                    // being cloned from a peer. Until that finishes the real mode isn't known and
+                    // the conversation has no usable sync connection, so surface it as Syncing
+                    // (mirrors libjamiclient AccountService.loadAccount) instead of defaulting to
+                    // OneToOne and presenting a not-yet-bootstrapped conversation as ready.
+                    val isSyncing = info["syncing"] == "true"
+                    val realMode = when (info["mode"]) {
                         "0" -> Conversation.Mode.OneToOne
                         "1" -> Conversation.Mode.AdminInvitesOnly
                         "2" -> Conversation.Mode.InvitesOnly
                         "3" -> Conversation.Mode.Public
                         else -> Conversation.Mode.OneToOne
                     }
+                    val mode = if (isSyncing) Conversation.Mode.Syncing else realMode
                     val conversation = account.getSwarm(convId)
                         ?: account.newSwarm(convId, mode)
                     conversation.setMode(mode)
+                    if (isSyncing) {
+                        conversation.requestMode = realMode
+                        val created = (info["created"]?.toLongOrNull() ?: 0L) * 1000L
+                        if (conversation.lastEvent == null && created > 0L) {
+                            conversation.lastEvent = ContactEvent(created)
+                        }
+                    }
 
                     // Load members
                     val members = daemonBridge.getConversationMembers(account.accountId, convId)

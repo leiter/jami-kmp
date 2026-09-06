@@ -33,8 +33,15 @@ const val AGENT_SERVICE = "net.jami.android.harness.HarnessAgentService"
  */
 val COMPETING_APP_IDS = listOf("net.jami.android", "cx.ring")
 
-/** Thin wrapper over `adb`/`am` to install/reverse/launch on one device. */
-class DeviceController(val serial: String) {
+/**
+ * Thin wrapper over `adb`/`am` to install/reverse/launch on one device.
+ *
+ * [daemonMonitor] (from `-PdaemonMonitor=true`) is forwarded to every [startAgent] call as an
+ * intent extra, so the on-device agent turns on the daemon's continuous connection/ICE/TURN
+ * state dump (`JamiService.monitor(true)`). Default off — that trace floods logcat and evicts
+ * useful history from the ring buffer, so it's opt-in for when a run is actually being debugged.
+ */
+class DeviceController(val serial: String, private val daemonMonitor: Boolean = false) {
 
     fun adbReverse(port: Int) = adb("-s", serial, "reverse", "tcp:$port", "tcp:$port")
 
@@ -52,6 +59,7 @@ class DeviceController(val serial: String) {
     fun startAgent(role: String? = null) {
         val args = mutableListOf("-s", serial, "shell", "am", "start-foreground-service", "-n", "$HARNESS_APP_ID/$AGENT_SERVICE")
         if (role != null) args += listOf("--es", "role", role)
+        if (daemonMonitor) args += listOf("--ez", "daemonMonitor", "true")
         adb(*args.toTypedArray())
     }
 

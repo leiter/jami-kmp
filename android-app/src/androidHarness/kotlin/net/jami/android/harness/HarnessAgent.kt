@@ -60,7 +60,18 @@ import org.koin.core.Koin
  *
  * Thin by design: it holds no scenario knowledge — the host runner is the brain.
  */
-class HarnessAgent(private val scope: CoroutineScope, private val requestedRole: String? = null) {
+class HarnessAgent(
+    private val scope: CoroutineScope,
+    private val requestedRole: String? = null,
+    /**
+     * When true (`-PdaemonMonitor=true` on the runner), enable the daemon's continuous
+     * connection/ICE/TURN state dump into logcat for this session — the same call the
+     * reference client makes behind its "enable logs" setting. Off by default: the trace is
+     * verbose enough to evict useful lines from logcat's ring buffer, so it's opt-in for when
+     * a run is being debugged.
+     */
+    private val daemonMonitor: Boolean = false,
+) {
 
     companion object {
         private const val TAG = "HarnessAgent"
@@ -73,6 +84,19 @@ class HarnessAgent(private val scope: CoroutineScope, private val requestedRole:
         // Start order is irrelevant: wait until the app has initialized Koin.
         while (JamiKoinHolder.koin == null) delay(50)
         val koin: Koin = JamiKoinHolder.koin!!
+
+        // Opt-in (-PdaemonMonitor=true): stream the daemon's connection/ICE/TURN state into
+        // logcat for the whole session — invaluable for diagnosing NAT-traversal / swarm-channel
+        // failures, too noisy to leave on by default.
+        if (daemonMonitor) {
+            try {
+                net.jami.daemon.JamiService.monitor(true)
+                Log.i(TAG, "daemonMonitor=true: JamiService.monitor(true) enabled")
+            } catch (e: Throwable) {
+                Log.w(TAG, "daemonMonitor: JamiService.monitor(true) failed: ${e.message}")
+            }
+        }
+
         val accountService = koin.get<AccountService>()
         val conversationFacade = koin.get<ConversationFacade>()
         val handler = CommandHandler(koin)

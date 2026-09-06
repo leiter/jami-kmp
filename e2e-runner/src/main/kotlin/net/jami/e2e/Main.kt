@@ -39,7 +39,7 @@ private const val INSTALL_SETTLE_MS = 3_000L
 /**
  * Entry point for the e2e test harness runner (the "brain").
  *
- * Args: `<scenarioId> [devicesCsv] [keepAccounts] [accountState] [username] [conversationId]`,
+ * Args: `<scenarioId> [devicesCsv] [keepAccounts] [accountState] [username] [conversationId] [daemonMonitor]`,
  * `--list`, or `--list-account-states`.
  * Exit code: 0 = pass, 1 = fail, 2 = usage error.
  */
@@ -60,6 +60,7 @@ fun main(args: Array<String>) {
         accountState = args.getOrNull(3)?.takeIf { it.isNotBlank() },
         username = args.getOrNull(4)?.takeIf { it.isNotBlank() },
         conversationId = args.getOrNull(5)?.takeIf { it.isNotBlank() },
+        daemonMonitor = args.getOrNull(6)?.toBoolean() ?: false,
     )
     val scenario = ScenarioRegistry.scenarios[scenarioId] ?: run {
         System.err.println("Unknown scenario '$scenarioId'. Available:")
@@ -85,8 +86,10 @@ fun main(args: Array<String>) {
     if (runConfig.accountState != null) println("accountState='${runConfig.accountState}'")
     if (runConfig.username != null) println("username='${runConfig.username}'")
     if (runConfig.conversationId != null) println("conversationId='${runConfig.conversationId}'")
+    if (runConfig.daemonMonitor) println("daemonMonitor=true — daemon ICE/TURN trace on (verbose)")
 
-    val controllers = serials.take(scenario.requiredRoles).map { DeviceController(it) }
+    val controllers = serials.take(scenario.requiredRoles)
+        .map { DeviceController(it, daemonMonitor = runConfig.daemonMonitor) }
 
     val stamp = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"))
     val runDir = File("harness-memory/runs/${stamp}__$scenarioId").apply { mkdirs() }

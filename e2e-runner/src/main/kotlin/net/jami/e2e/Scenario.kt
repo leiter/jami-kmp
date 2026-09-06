@@ -74,6 +74,14 @@ data class RunConfig(
      * handshake but before its own capture step.
      */
     val conversationId: String? = null,
+    /**
+     * Turn on the daemon's continuous connection/ICE/TURN state dump into logcat on every
+     * device for the whole run (`-PdaemonMonitor=true` → `JamiService.monitor(true)`). Default
+     * off: the trace is verbose enough to evict useful lines from logcat's ring buffer, so it's
+     * opt-in for when a run is being debugged (e.g. investigating NAT-traversal / swarm-channel
+     * failures).
+     */
+    val daemonMonitor: Boolean = false,
 )
 
 /**
