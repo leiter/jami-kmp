@@ -164,8 +164,14 @@ Ordered by stability impact. Each phase is independently shippable.
 | Phase 1 — network-change signal | ✅ landed (`bcf74c3`) — Android callback + daemon forward + Phase 1b markers |
 | Phase 2 — gate & single-flight account load | ✅ core landed — load gate, per-account single-flight `Mutex`, `INITIALIZING→ready` re-hydration, `loadMore(conv, 8)` preview priming. **Deferred:** moving conversation-request loading into `loadSmartlist` / repointing `ConversationsViewModel` + `PendingRequestsViewModel` at the model — `Account` has no request store yet and the two ViewModels currently work; low stated impact, tracked as a follow-up. |
 | Phase 3 — per-conversation ordered callbacks | ✅ landed — keyed `(accountId, conversationId)` FIFO channels + per-key consumer + `Removed` teardown/generation in `DaemonCallbacksImpl`. **Deferred:** the `DaemonBridge.android.kt` SWIG-conversion barrier (defense-in-depth; libjami already serialises callback delivery and a lock across full vector conversion would re-serialise what the keying just parallelised). |
-| Phase 4 — self-heal + resilient send | ⏳ pending |
+| Phase 4 — self-heal + resilient send | 🟡 2 of 3 landed — `ConversationFacade.ensureSwarm()` self-heal on all four unknown-id handlers; `ChatViewModel` `WAITING_TO_SYNC` hold + `flushPendingSyncSends()` auto-flush on `ConversationReady` / peer-join. **Deferred:** the durable outbox (below) — a schema migration on a shipping DB that needs on-device verification and 5-platform DI wiring; low marginal value until Phases 1-4 are hardware-verified. |
 | Phase 5 — real sync observability | ⏳ pending |
+
+**Phase 4 durable-outbox follow-up (scoped):**
+- `shared/src/commonMain/sqldelight/net/jami/database/Outbox.sq`: `CREATE TABLE outbox_message(id INTEGER PK AUTOINCREMENT, account_id TEXT, conversation_id TEXT, body TEXT, reply_to TEXT, created_at INTEGER)` + `insert` / `selectByConversation` / `selectAll` / `deleteById` / `deleteByBody`.
+- `shared/src/commonMain/sqldelight/net/jami/database/1.sqm`: same `CREATE TABLE` (SQLDelight derives `Schema.version = 2`; `verifyMigrations=true` will check fresh-schema == empty+`1.sqm`). Regenerate `2.db` via `./gradlew generateCommonMainJamiDatabaseSchema`. Bump `DatabaseSchema.VERSION` to 2. The 5 `DatabaseDriverFactory` actuals already pass `JamiDatabase.Schema`, so `AndroidSqliteDriver` / `NativeSqliteDriver` / `JdbcSqliteDriver` run the migration automatically — no per-platform code change expected, but confirm each.
+- New `services/SendQueueService.kt`; register in all 5 `PlatformModule.*.kt` alongside `SqlDelightHistoryService` (they own the per-platform `JamiDatabase`).
+- Write on a send with no daemon echo (hook where `ChatViewModel.dispatchSend` arms the watchdog, or in `ConversationFacade.sendTextMessage`); replay on `ConversationEvent.ConversationReady` and once at app start (an `AppViewModel`/init seam); delete the row on the matching `onMessageReceived` echo (match on account+conv+body, same heuristic as `ChatViewModel.appendMessage` reconciliation at `:829`).
 
 ### Phase 1 — Signal the daemon on every network change
 
