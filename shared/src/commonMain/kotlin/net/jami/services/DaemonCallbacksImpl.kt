@@ -16,6 +16,8 @@
  */
 package net.jami.services
 
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -43,9 +45,94 @@ class DaemonCallbacksImpl(
 
     // ==================== Event Channels ====================
     // We use Channels to ensure every event is delivered exactly once and in order.
-
-    private val conversationTasks = Channel<ConversationTask>(Channel.UNLIMITED)
+    //
+    // Conversation events are keyed by (accountId, conversationId): each conversation gets its own
+    // FIFO channel + consumer coroutine, so a slow SwarmLoaded for conversation A no longer
+    // head-of-line-blocks a MessageReceived for conversation B, while ordering *within* a
+    // conversation is still guaranteed. A Removed event tears its key down after processing; the
+    // next event for that key starts a fresh generation. Mirrors libjamiclient's
+    // ConversationCallbackDispatcher (per-(account,conversation) concatMap + generation routes).
     private val accountTasks = Channel<AccountTask>(Channel.UNLIMITED)
+
+    private data class ConversationKey(val accountId: String, val conversationId: String)
+
+    private inner class ConversationRoute(val generation: Long) {
+        val channel = Channel<ConversationTask>(Channel.UNLIMITED)
+        var closing = false
+    }
+
+    private val routingLock = SynchronizedObject()
+    private val routes = HashMap<ConversationKey, ConversationRoute>()
+    private var nextGeneration = 0L
+
+    private fun ConversationTask.conversationKey(): ConversationKey = when (this) {
+        is ConversationTask.SwarmLoaded -> ConversationKey(accountId, conversationId)
+        is ConversationTask.MessageReceived -> ConversationKey(accountId, conversationId)
+        is ConversationTask.MessageUpdated -> ConversationKey(accountId, conversationId)
+        is ConversationTask.DataTransfer -> ConversationKey(accountId, conversationId)
+        is ConversationTask.Ready -> ConversationKey(accountId, conversationId)
+        is ConversationTask.Removed -> ConversationKey(accountId, conversationId)
+        is ConversationTask.RequestReceived -> ConversationKey(accountId, conversationId)
+        is ConversationTask.MemberEvent -> ConversationKey(accountId, conversationId)
+    }
+
+    /** Route a conversation event onto its per-conversation FIFO channel, spawning the consumer
+     *  (a fresh generation) on first use for that key. */
+    private fun enqueueConversationTask(task: ConversationTask) {
+        val key = task.conversationKey()
+        val route = synchronized(routingLock) {
+            routes.getOrPut(key) {
+                ConversationRoute(nextGeneration++).also { startConversationConsumer(key, it) }
+            }
+        }
+        if (route.channel.trySend(task).isFailure) {
+            Log.w(TAG, "Dropped ${task::class.simpleName} for $key (route closed)")
+        }
+    }
+
+    private fun startConversationConsumer(key: ConversationKey, route: ConversationRoute) {
+        scope.launch {
+            for (task in route.channel) {
+                try {
+                    processConversationTask(task)
+                } catch (e: Exception) {
+                    Log.e(TAG, "conversation task ${task::class.simpleName} failed for $key", e)
+                }
+                if (task is ConversationTask.Removed && !route.closing) {
+                    // Drain-then-close: everything queued before Removed has run; drop this key so a
+                    // later event for the same conversation starts a new generation.
+                    route.closing = true
+                    synchronized(routingLock) { if (routes[key] === route) routes.remove(key) }
+                    route.channel.close()
+                }
+            }
+        }
+    }
+
+    private suspend fun processConversationTask(task: ConversationTask) {
+        when (task) {
+            is ConversationTask.SwarmLoaded -> {
+                // 1. Populate the UI model (Wait for completion)
+                conversationFacade.onSwarmLoaded(task.id, task.accountId, task.conversationId, task.messages)
+                // 2. Resolve loading tasks and update cursor
+                accountService.resolveSwarmLoaded(task.id, task.accountId, task.conversationId, task.messages)
+            }
+            is ConversationTask.MessageReceived ->
+                conversationFacade.onMessageReceived(task.accountId, task.conversationId, task.message)
+            is ConversationTask.MessageUpdated ->
+                conversationFacade.onMessageUpdated(task.accountId, task.conversationId, task.message)
+            is ConversationTask.DataTransfer ->
+                conversationFacade.onDataTransferEvent(task.accountId, task.conversationId, task.interactionId, task.fileId, task.eventCode)
+            is ConversationTask.Ready ->
+                conversationFacade.onConversationReady(task.accountId, task.conversationId)
+            is ConversationTask.Removed ->
+                conversationFacade.onConversationRemoved(task.accountId, task.conversationId)
+            is ConversationTask.RequestReceived ->
+                conversationFacade.onConversationRequestReceived(task.accountId, task.conversationId, task.metadata)
+            is ConversationTask.MemberEvent ->
+                conversationFacade.onConversationMemberEvent(task.accountId, task.conversationId, task.memberId, task.event)
+        }
+    }
 
     sealed class ConversationTask {
         data class SwarmLoaded(val id: Long, val accountId: String, val conversationId: String, val messages: List<SwarmMessage>) : ConversationTask()
@@ -65,44 +152,8 @@ class DaemonCallbacksImpl(
     }
 
     init {
-        // Conversation Event Processor (Sequential)
-        scope.launch {
-            for (task in conversationTasks) {
-                try {
-                    when (task) {
-                        is ConversationTask.SwarmLoaded -> {
-                            // 1. Populate the UI model (Wait for completion)
-                            conversationFacade.onSwarmLoaded(task.id, task.accountId, task.conversationId, task.messages)
-                            // 2. Resolve loading tasks and update cursor
-                            accountService.resolveSwarmLoaded(task.id, task.accountId, task.conversationId, task.messages)
-                        }
-                        is ConversationTask.MessageReceived -> {
-                            conversationFacade.onMessageReceived(task.accountId, task.conversationId, task.message)
-                        }
-                        is ConversationTask.MessageUpdated -> {
-                            conversationFacade.onMessageUpdated(task.accountId, task.conversationId, task.message)
-                        }
-                        is ConversationTask.DataTransfer -> {
-                            conversationFacade.onDataTransferEvent(task.accountId, task.conversationId, task.interactionId, task.fileId, task.eventCode)
-                        }
-                        is ConversationTask.Ready -> {
-                            conversationFacade.onConversationReady(task.accountId, task.conversationId)
-                        }
-                        is ConversationTask.Removed -> {
-                            conversationFacade.onConversationRemoved(task.accountId, task.conversationId)
-                        }
-                        is ConversationTask.RequestReceived -> {
-                            conversationFacade.onConversationRequestReceived(task.accountId, task.conversationId, task.metadata)
-                        }
-                        is ConversationTask.MemberEvent -> {
-                            conversationFacade.onConversationMemberEvent(task.accountId, task.conversationId, task.memberId, task.event)
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error in conversation event processor: ${e.message}")
-                }
-            }
-        }
+        // Conversation events are processed per-conversation by startConversationConsumer(),
+        // spawned lazily in enqueueConversationTask().
 
         // Account Event Processor
         scope.launch {
@@ -211,15 +262,15 @@ class DaemonCallbacksImpl(
     // ==================== Conversation Callbacks ====================
 
     override fun onConversationReady(accountId: String, conversationId: String) {
-        conversationTasks.trySend(ConversationTask.Ready(accountId, conversationId))
+        enqueueConversationTask(ConversationTask.Ready(accountId, conversationId))
     }
 
     override fun onConversationRemoved(accountId: String, conversationId: String) {
-        conversationTasks.trySend(ConversationTask.Removed(accountId, conversationId))
+        enqueueConversationTask(ConversationTask.Removed(accountId, conversationId))
     }
 
     override fun onConversationRequestReceived(accountId: String, conversationId: String, metadata: Map<String, String>) {
-        conversationTasks.trySend(ConversationTask.RequestReceived(accountId, conversationId, metadata))
+        enqueueConversationTask(ConversationTask.RequestReceived(accountId, conversationId, metadata))
     }
 
     override fun onConversationRequestDeclined(accountId: String, conversationId: String) {
@@ -227,15 +278,15 @@ class DaemonCallbacksImpl(
     }
 
     override fun onConversationMemberEvent(accountId: String, conversationId: String, memberId: String, event: Int) {
-        conversationTasks.trySend(ConversationTask.MemberEvent(accountId, conversationId, memberId, event))
+        enqueueConversationTask(ConversationTask.MemberEvent(accountId, conversationId, memberId, event))
     }
 
     override fun onMessageReceived(accountId: String, conversationId: String, message: SwarmMessage) {
-        conversationTasks.trySend(ConversationTask.MessageReceived(accountId, conversationId, message))
+        enqueueConversationTask(ConversationTask.MessageReceived(accountId, conversationId, message))
     }
 
     override fun onMessageUpdated(accountId: String, conversationId: String, message: SwarmMessage) {
-        conversationTasks.trySend(ConversationTask.MessageUpdated(accountId, conversationId, message))
+        enqueueConversationTask(ConversationTask.MessageUpdated(accountId, conversationId, message))
     }
 
     override fun onMessagesFound(messageId: Int, accountId: String, conversationId: String, messages: List<Map<String, String>>) {
@@ -243,7 +294,7 @@ class DaemonCallbacksImpl(
     }
 
     override fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<SwarmMessage>) {
-        conversationTasks.trySend(ConversationTask.SwarmLoaded(id, accountId, conversationId, messages))
+        enqueueConversationTask(ConversationTask.SwarmLoaded(id, accountId, conversationId, messages))
     }
 
     override fun onConversationProfileUpdated(accountId: String, conversationId: String, profile: Map<String, String>) {
@@ -321,6 +372,6 @@ class DaemonCallbacksImpl(
     // ==================== Data Transfer Callbacks ====================
 
     override fun onDataTransferEvent(accountId: String, conversationId: String, interactionId: String, fileId: String, eventCode: Int) {
-        conversationTasks.trySend(ConversationTask.DataTransfer(accountId, conversationId, interactionId, fileId, eventCode))
+        enqueueConversationTask(ConversationTask.DataTransfer(accountId, conversationId, interactionId, fileId, eventCode))
     }
 }
