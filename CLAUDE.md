@@ -56,9 +56,9 @@ jami-kmp/
 │       │   ├── domain/       # Use cases
 │       │   ├── ui/
 │       │   │   ├── JamiApp.kt           # Root Compose entry point (all platforms)
-│       │   │   ├── navigation/          # Screen (23 routes), JamiNavigation
-│       │   │   ├── screens/             # 25 screens
-│       │   │   ├── viewmodel/           # 17 ViewModels
+│       │   │   ├── navigation/          # Screen (30 routes), JamiNavigation
+│       │   │   ├── screens/             # 31 screen files
+│       │   │   ├── viewmodel/           # 18 ViewModels
 │       │   │   ├── components/          # Reusable components
 │       │   │   │   ├── actions/         # JamiButton, JamiIconButton, JamiFilterChip
 │       │   │   │   ├── content/         # JamiAvatar, JamiBadge, JamiToggle, JamiSectionTitle
@@ -68,7 +68,7 @@ jami-kmp/
 │       │   │   │   └── notification/    # JamiAlertDialog
 │       │   │   └── theme/               # JamiTheme, JamiColors, JamiTypography, ThemeTokens
 │       │   └── utils/        # Log, FileUtils, QRCodeUtils, HashUtils, StringUtils, …
-│       ├── commonTest/       # 55 test files (ViewModel + model + service + utility tests)
+│       ├── commonTest/       # 52 test files (ViewModel + model + service + utility tests)
 │       ├── androidMain/      # JNI bridge, Android services, SharedPreferences, JNI libs
 │       ├── iosMain/          # C interop bridge, Foundation/AVFoundation services
 │       ├── macosMain/        # C interop bridge, macOS AppKit services
@@ -83,7 +83,7 @@ jami-kmp/
 
 | Concern | Approach |
 |---------|----------|
-| DI | Koin 4.0 — `jamiModule` (common) + `platformModule` (expect/actual) |
+| DI | Koin 4.1 — `jamiModule` (common) + `platformModule` (expect/actual) |
 | State | `StateFlow` / `SharedFlow` + Kotlin coroutines (no RxJava, no LiveData) |
 | Navigation | Jetpack Navigation Compose — type-safe `Screen` sealed class, 3 graphs: Loading / Onboarding / Main |
 | UI | Material 3 with `JamiTheme` composition locals (colors, typography, tokens) |
@@ -92,8 +92,9 @@ jami-kmp/
 
 ### Key Tech Versions
 
-- Kotlin 2.1.20 · Compose Multiplatform 1.9.0 · Koin 4.0.0
+- Kotlin 2.1.20 · Compose Multiplatform 1.9.0 · Koin 4.1.0
 - Navigation Compose 2.9.1 · SQLDelight 2.0.2 · Coroutines 1.10.1
+- Android Gradle Plugin 8.7.3
 - Android min/compile/target SDK: 24 / 36 / 36 · JVM target 17
 
 ---
@@ -145,6 +146,7 @@ All major mobile features are implemented, including CallKit (iOS) and Telecom A
 - **OsmMapView (Desktop/macOS)** — no viable JVM or AppKit map library in scope; shows coordinate text instead of a map.
 - **Desktop DaemonBridge** — all 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.
 - **Web/JS platform** — entire daemon bridge is REST stubs. Explicitly experimental; candidate for removal if a REST bridge server is not developed.
+- **Sending into a not-yet-live 1:1 swarm** (post-2026-08-08 finding) — the first message sent into a 1:1 conversation that is still bootstrapping can be silently dropped: on restore/cold-load, and when sent within ~2–3 s of `ContactAdded(confirmed=true)`. `loadSmartlist` now ports the reference's `info["syncing"]` → `Mode.Syncing` handling, but a send gate and hardware verification are still outstanding. See `doc/stabilization-findings-2026-09-04.md` (F1/F4) and `doc/TODO.md`.
 
 ---
 

@@ -82,7 +82,7 @@ run, poisoning the next run.
 | account-enable-disable | 1 | 1 | ✅ | DHT leave/rejoin clean |
 | account-reuse | 1 | 1 | ✅ | export/import preserves identity |
 | name-lookup | 1 | 1 | ✅ | positive + NotFound both correct |
-| register-name-taken | 1 | 1 | ✅ | rejection state=2 |
+| register-name-taken | 1 | 1 | ✅ | rejection (non-zero state) — `state=3` per `doc/end2endTesting.md` and prior 2026-07-01 hardware runs; the "state=2" first logged here is believed to be a transcription slip (2 is the `name-lookup` NotFound code) |
 | register-name-on-account | 1 | 2 | ⚠️ usage | needs `-Pusername` + a prior keepAccounts run (by design) — F3 |
 | change-password | 1 | 1 | ✅ | change/remove/add + archive re-encrypt all verified |
 | device-rename | 1 | 1 | ✅ | rename + restore, read back from daemon registry |
@@ -139,6 +139,13 @@ Worth checking whether one fix (gate/queue sends until the conversation is confi
 pending state) closes both.
 
 ### Code trace (for whoever picks this up)
+
+> **Line-number note (added 2026-09-06):** the `info["syncing"]` → `Mode.Syncing` port was
+> subsequently applied to `ConversationFacade.loadSmartlist` (~lines 636–648), shifting everything
+> below it down by ~14 lines. Current (post-port) locations: `findConversation()` `:926`,
+> `loadSmartlist()` `:620`, `onConversationReady()` `:989` (emits `ConversationReady` at `:1038`).
+> The `:912` / `:~617` / `:975` / `:1024` refs below are pre-port.
+
 - `ConversationFacade.sendTextMessage()` (`ConversationFacade.kt:290`) for a swarm conversation does
   **only** `accountService.sendConversationMessage(accountId, conversation.uri, text, replyTo)` and returns —
   **no optimistic local interaction is inserted** (unlike the legacy branch). `ChatViewModel.sendMessage()`

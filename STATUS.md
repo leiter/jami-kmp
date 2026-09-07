@@ -1,6 +1,6 @@
 # Jami KMP - Implementation Status
 
-**Last Updated:** 2026-08-08
+**Last Updated:** 2026-08-08 (structural counts + messaging caveat reconciled 2026-09-06)
 **Version:** In Development
 **Primary Platforms:** Android, iOS
 
@@ -9,7 +9,7 @@
 ## ✅ Fully Implemented & Working
 
 ### UI / Navigation
-- 25 screens with type-safe navigation (23 routes)
+- 31 screen files with type-safe navigation (30 routes)
 - Loading, Onboarding, and Main navigation graphs
 - Material 3 design with JamiTheme (semantic + component token layers)
 - Reusable UI components (buttons, inputs, avatars, dialogs, etc.)
@@ -36,7 +36,7 @@
 
 ### Conversation Features
 - Conversation list sorted by last activity
-- Message sending and receiving (text, emoji)
+- Message sending and receiving (text, emoji) — fresh-handshake path solid; **known issue:** the first send into a still-bootstrapping 1:1 swarm (restore/cold-load, or a send within ~2–3 s of contact confirmation) can be silently dropped — see `doc/stabilization-findings-2026-09-04.md` (F1/F4)
 - Message drafts with auto-save
 - Chat bubbles with sender names
 - File sending and download
@@ -91,7 +91,7 @@
 - Connectivity change handling; sync restart on network recovery
 
 ### Testing
-- 55 test files across commonTest, desktopTest, androidUnitTest
+- 60 test files (52 in commonTest; remainder in androidInstrumentedTest / desktopTest / iosTest / macosTest / androidUnitTest)
 - ViewModel tests, model tests, service integration tests, utility tests
 - `runTest` + `advanceUntilIdle` pattern throughout
 - `TestFixtures.kt` with stub `DaemonBridgeApi` for isolated ViewModel testing
@@ -149,7 +149,7 @@
 - FCM push client integration
 - Notification system complete with settings enforcement
 - Background sync operational
-- 55 passing tests
+- 60 test files (see Testing section above)
 
 ### iOS
 **Status:** 🟡 Good — core features working, platform integrations incomplete
