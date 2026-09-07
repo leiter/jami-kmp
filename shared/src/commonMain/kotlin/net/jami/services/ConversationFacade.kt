@@ -789,16 +789,30 @@ class ConversationFacade(
                 .sortedByDescending { it.lastEvent?.timestamp ?: 0L }
             _conversationList.value = ConversationList(conversations = conversations)
 
-            // Update sync state to complete
+            // Update sync state. A conversation the daemon still reports as `syncing=true` has its
+            // git repo cloning / is not bootstrapped and has no usable sync connection yet — the
+            // app-side load loop finishing does NOT mean that conversation is live. Surface that as
+            // Bootstrapping rather than a misleading Complete.
             val endTime = currentTimeMillis()
             lastSyncTimestamps[account.accountId] = endTime
-            _syncState.value = SyncState.Complete(
-                accountId = account.accountId,
-                completedAt = endTime,
-                conversationCount = conversations.size
-            )
+            val stillSyncing = conversations.count { it.mode == Conversation.Mode.Syncing }
+            _syncState.value = if (stillSyncing > 0) {
+                SyncState.Bootstrapping(
+                    accountId = account.accountId,
+                    updatedAt = endTime,
+                    conversationCount = conversations.size,
+                    bootstrappingCount = stillSyncing
+                )
+            } else {
+                SyncState.Complete(
+                    accountId = account.accountId,
+                    completedAt = endTime,
+                    conversationCount = conversations.size
+                )
+            }
 
-            Log.d(TAG, "Sync completed for ${account.accountId}: ${conversations.size} conversations in ${endTime - startTime}ms")
+            Log.d(TAG, "Sync loop done for ${account.accountId}: ${conversations.size} conversations " +
+                "($stillSyncing still bootstrapping) in ${endTime - startTime}ms")
         } catch (e: Exception) {
             val endTime = currentTimeMillis()
             _syncState.value = SyncState.Error(
@@ -848,6 +862,43 @@ class ConversationFacade(
      */
     fun getLastSyncTimestamp(accountId: String): Long? {
         return lastSyncTimestamps[accountId]
+    }
+
+    /**
+     * Snapshot the swarm-sync health of every conversation on [accountId], for the in-app debug
+     * panel. Reads the daemon's current `getConversationInfo` / `getConversationMembers` plus the
+     * locally loaded history — there is no daemon signal for per-conversation active-device counts,
+     * so `activePeerCount` is the count of non-self members the daemon still lists with a role and
+     * `bootstrapping` is `mode == Syncing` (the daemon's own "repo still cloning / not
+     * bootstrapped" flag).
+     */
+    suspend fun snapshotConversationSyncInfo(accountId: String): List<ConversationSyncInfo> {
+        val account = accountService.getAccount(accountId) ?: return emptyList()
+        return account.getConversations().map { conversation ->
+            val convId = conversation.uri.rawRingId
+            val members = try {
+                daemonBridge.getConversationMembers(accountId, convId)
+            } catch (e: Exception) {
+                Log.w(TAG, "snapshotConversationSyncInfo: getConversationMembers failed for $convId", e)
+                emptyList()
+            }
+            val nonSelf = members.count { m ->
+                val uri = m["uri"]
+                uri != null && uri != account.username && !uri.endsWith(account.username)
+            }
+            val history = conversation.getSortedHistory()
+            ConversationSyncInfo(
+                conversationId = convId,
+                uri = conversation.uri.uri,
+                mode = conversation.mode,
+                requestMode = conversation.requestMode,
+                memberCount = members.size,
+                activePeerCount = nonSelf,
+                messageCount = history.size,
+                lastCommitId = history.lastOrNull { it.messageId != null }?.messageId,
+                bootstrapping = conversation.mode == Conversation.Mode.Syncing
+            )
+        }
     }
 
     // ==================== Profile/Contact Operations ====================
@@ -1873,6 +1924,23 @@ sealed class ConversationEvent {
 }
 
 /**
+ * Per-conversation swarm-sync health, for the in-app debug panel (plan phase 5).
+ */
+data class ConversationSyncInfo(
+    val conversationId: String,
+    val uri: String,
+    val mode: Conversation.Mode,
+    val requestMode: Conversation.Mode?,
+    val memberCount: Int,
+    /** Non-self members the daemon still lists with a role (best available "active peers" proxy). */
+    val activePeerCount: Int,
+    val messageCount: Int,
+    val lastCommitId: String?,
+    /** Daemon reports the conversation's git repo as still cloning / not bootstrapped. */
+    val bootstrapping: Boolean,
+)
+
+/**
  * Sync state for conversation synchronization.
  * Used to provide UI feedback about sync operations.
  */
@@ -1890,6 +1958,20 @@ sealed class SyncState {
     data class Syncing(
         val accountId: String,
         val startedAt: Long
+    ) : SyncState()
+
+    /**
+     * The app-side load loop has finished, but at least one conversation is still
+     * `Mode.Syncing` — its swarm git repo is cloning / not bootstrapped and it has no usable
+     * sync connection yet. Distinct from [Complete] so the UI/tests don't treat a
+     * not-yet-live conversation as fully synced.
+     * @param bootstrappingCount conversations still in `Mode.Syncing`
+     */
+    data class Bootstrapping(
+        val accountId: String,
+        val updatedAt: Long,
+        val conversationCount: Int,
+        val bootstrappingCount: Int
     ) : SyncState()
 
     /**

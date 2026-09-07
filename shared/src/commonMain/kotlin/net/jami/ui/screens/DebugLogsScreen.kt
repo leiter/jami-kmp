@@ -18,10 +18,13 @@ package net.jami.ui.screens
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
@@ -44,6 +47,8 @@ import androidx.compose.ui.text.font.FontFamily
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import net.jami.di.getViewModel
+import net.jami.services.ConversationSyncInfo
+import net.jami.services.SyncState
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.DebugLogsViewModel
 import net.jami.utils.shareText
@@ -117,17 +122,70 @@ fun DebugLogsScreen(
             if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
-                Text(
-                    text = state.logs.ifEmpty { stringResource(Res.string.debug_logs_empty) },
-                    style = JamiTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                    color = JamiTheme.colors.onSurface,
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .horizontalScroll(rememberScrollState())
                         .padding(JamiTheme.spacing.m),
-                )
+                ) {
+                    // Per-conversation swarm-sync panel (plan phase 5): makes the
+                    // "Bootstrap with 0 device(s)" / not-yet-live state visible in-app.
+                    val mono = JamiTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
+                    Text(
+                        text = "sync: " + syncStateLabel(state.syncState),
+                        style = mono,
+                        color = JamiTheme.colors.onSurface,
+                    )
+                    if (state.conversations.isEmpty()) {
+                        Text(
+                            text = "  (no conversations)",
+                            style = mono,
+                            color = JamiTheme.colors.onSurfaceVariant,
+                        )
+                    } else {
+                        state.conversations.forEach { info ->
+                            Text(
+                                text = conversationSyncLine(info),
+                                style = mono,
+                                color = if (info.bootstrapping) JamiTheme.colors.error
+                                        else JamiTheme.colors.onSurface,
+                            )
+                        }
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = JamiTheme.spacing.s),
+                    )
+                    Text(
+                        text = state.logs.ifEmpty { stringResource(Res.string.debug_logs_empty) },
+                        style = mono,
+                        color = JamiTheme.colors.onSurface,
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    )
+                }
             }
         }
     }
+}
+
+private fun syncStateLabel(s: SyncState): String = when (s) {
+    is SyncState.Idle -> "idle"
+    is SyncState.Syncing -> "syncing (loading…)"
+    is SyncState.Bootstrapping ->
+        "bootstrapping (${s.bootstrappingCount}/${s.conversationCount} not yet live)"
+    is SyncState.Complete -> "complete (${s.conversationCount} conversations)"
+    is SyncState.Error -> "error: ${s.error}"
+}
+
+private fun conversationSyncLine(i: ConversationSyncInfo): String = buildString {
+    append(i.conversationId.take(12))
+    append(" · ")
+    append(i.mode.name)
+    i.requestMode?.let { append(" (→${it.name})") }
+    append(" · members ").append(i.memberCount)
+    append(" · peers ").append(i.activePeerCount)
+    append(" · msgs ").append(i.messageCount)
+    i.lastCommitId?.let { append(" · last ").append(it.take(8)) }
+    if (i.bootstrapping) append(" · BOOTSTRAPPING")
 }
