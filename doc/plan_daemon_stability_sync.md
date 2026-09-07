@@ -164,7 +164,7 @@ Ordered by stability impact. Each phase is independently shippable.
 | Phase 1 — network-change signal | ✅ landed (`bcf74c3`) — Android callback + daemon forward + Phase 1b markers |
 | Phase 2 — gate & single-flight account load | ✅ core landed — load gate, per-account single-flight `Mutex`, `INITIALIZING→ready` re-hydration, `loadMore(conv, 8)` preview priming. **Deferred:** moving conversation-request loading into `loadSmartlist` / repointing `ConversationsViewModel` + `PendingRequestsViewModel` at the model — `Account` has no request store yet and the two ViewModels currently work; low stated impact, tracked as a follow-up. |
 | Phase 3 — per-conversation ordered callbacks | ✅ landed — keyed `(accountId, conversationId)` FIFO channels + per-key consumer + `Removed` teardown/generation in `DaemonCallbacksImpl`. **Deferred:** the `DaemonBridge.android.kt` SWIG-conversion barrier (defense-in-depth; libjami already serialises callback delivery and a lock across full vector conversion would re-serialise what the keying just parallelised). |
-| Phase 4 — self-heal + resilient send | 🟡 2 of 3 landed — `ConversationFacade.ensureSwarm()` self-heal on all four unknown-id handlers; `ChatViewModel` `WAITING_TO_SYNC` hold + `flushPendingSyncSends()` auto-flush on `ConversationReady` / peer-join. **Deferred:** the durable outbox (below) — a schema migration on a shipping DB that needs on-device verification and 5-platform DI wiring; low marginal value until Phases 1-4 are hardware-verified. |
+| Phase 4 — self-heal + resilient send | 🟡 2 of 3 landed — `ConversationFacade.ensureSwarm()` self-heal on all four unknown-id handlers; `ChatViewModel` `WAITING_TO_SYNC` hold + `flushPendingSyncSends()` auto-flush on `ConversationReady` / peer-join. **F4 still reproduces at the daemon level** (2026-09-07 session 2, `send-before-member-join` 2/2): a message committed into a 0-peer-device swarm is never delivered even after the swarm bootstraps seconds later, so the `WAITING_TO_SYNC` hold is load-bearing and the durable outbox (below) is no longer "low marginal value". Still **deferred** (schema migration on a shipping DB + 5-platform DI wiring) but now the critical-path item; also needs a real-app UI test to confirm the hold prevents the drop end-to-end. |
 | Phase 5 — real sync observability | 🟡 landed within the available signal — `SyncState.Bootstrapping` (loop finished but ≥1 conversation still `Mode.Syncing`) replaces a misleading `Complete`; `ConversationFacade.snapshotConversationSyncInfo()` + a per-conversation panel in `DebugLogsScreen` (mode, requestMode, member/peer counts, msg count, last commit id, BOOTSTRAPPING flag). **Not done:** true per-conversation *active-device* counts — the daemon's `Refreshing tracked members: n/m active (x/y devices)` has no bridge signal; `activePeerCount` is the non-self member count as a proxy. A real count needs a new JNI/C-interop method. |
 
 ### Hardware verification attempt — 2026-09-07 (Pixel 7a + Pixel 2, same WiFi)
@@ -211,6 +211,34 @@ initiator-side events stall). F4 (send within ~2-3 s of a *fresh* confirmation) 
 exercised because a fresh confirmation could not be reached reliably. Re-run the handshake
 scenarios when the bus is healthy (gate: `send-message` back to 3/3) before calling F4 fixed;
 F1 needs no further verification.
+
+### Hardware verification — 2026-09-07 (session 2, Pixel 7a + Pixel 2, same WiFi)
+
+Bus recovery: `send-message` was 0/3 on first attempts (handshake stalls, matching the 09-05→07
+degradation). An **airplane-mode cycle on both devices** (radios off ~8 s, then force-stop the
+harness app) cleared the stale DHT routing table — `send-message` went **3/3** immediately after.
+So the "unreliable bus" is a stale-DHT-state condition, not a permanent property of this pair;
+the airplane cycle is the reset.
+
+**F4 is now exercised directly** by a new scenario, `send-before-member-join` — `send-message`
+with the `awaitMemberJoined` gate removed: A (accepter) sends a real message 3 ms after
+`ContactAdded(confirmed=true)`, then the scenario waits up to 90 s for B to receive it. (The two
+gated scenarios never exercised F4 — the gate *is* the workaround.)
+
+Result: **F4 REPRODUCED, 2/2** (a 3rd run failed earlier, on the handshake — not an F4 point).
+Both repros: A sends at +3 ms; `ConversationMemberEvent(action=1)` fires on B ~2.5–3.5 s later
+(so the swarm *does* bootstrap shortly after); the pre-member-join message is **never delivered**
+within 90 s. The daemon does **not** flush a message committed into a 1:1 swarm that had 0 peer
+devices at commit time, even once the swarm comes up seconds later.
+
+Implication: the reference-parity assumption behind the Phase-4 approach — "send unconditionally
+incl. `Mode.Syncing`, the daemon delivers once bootstrapped" — **does not hold on this daemon
+build** for a message that predates the first `action=1`. The app-side mitigation (`ChatViewModel`
+`WAITING_TO_SYNC` hold + `flushPendingSyncSends()`) is therefore load-bearing, not belt-and-braces
+— but the harness sends via `AccountService.sendConversationMessage` directly and cannot exercise
+that hold. `send-before-member-join` is the daemon-level regression test and the acceptance test
+for the durable-outbox work below; a real-app UI test is still needed to confirm the
+`WAITING_TO_SYNC` hold actually prevents the drop end-to-end.
 
 **Phase 4 durable-outbox follow-up (scoped):**
 - `shared/src/commonMain/sqldelight/net/jami/database/Outbox.sq`: `CREATE TABLE outbox_message(id INTEGER PK AUTOINCREMENT, account_id TEXT, conversation_id TEXT, body TEXT, reply_to TEXT, created_at INTEGER)` + `insert` / `selectByConversation` / `selectAll` / `deleteById` / `deleteByBody`.

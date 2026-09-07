@@ -42,6 +42,7 @@ import net.jami.e2e.scenarios.PingScenario
 import net.jami.e2e.scenarios.RegisterNameOnAccountScenario
 import net.jami.e2e.scenarios.RegisterNameTakenScenario
 import net.jami.e2e.scenarios.SeedPoolScenario
+import net.jami.e2e.scenarios.SendBeforeMemberJoinScenario
 import net.jami.e2e.scenarios.SendMessageScenario
 import net.jami.e2e.scenarios.SendReplyRoundtripScenario
 import net.jami.e2e.scenarios.TwoDeviceContactScenario
@@ -279,6 +280,7 @@ object ScenarioRegistry {
             ImportNoPasswordScenario,
             TwoDeviceContactScenario,
             SendMessageScenario,
+            SendBeforeMemberJoinScenario,
             SendReplyRoundtripScenario,
             BuildConversationFixtureScenario,
             ChatConversationGitRewindResyncScenario,
