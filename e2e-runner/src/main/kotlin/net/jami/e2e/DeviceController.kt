@@ -160,8 +160,10 @@ class DeviceController(val serial: String, private val daemonMonitor: Boolean = 
             val bytes = p.inputStream.readBytes()
             val err = p.errorStream.bufferedReader().readText()
             val code = p.waitFor()
-            if (code != 0 || bytes.isEmpty()) {
-                System.err.println("[adb] snapshotAppData exit=$code on $serial: ${err.trim()}")
+            if (code != 0 || bytes.isEmpty() || !looksLikeTarStream(bytes)) {
+                System.err.println(
+                    "[adb] snapshotAppData exit=$code on $serial: ${(err + firstLine(bytes)).trim()}",
+                )
                 false
             } else {
                 local.writeBytes(bytes)
@@ -215,8 +217,13 @@ class DeviceController(val serial: String, private val daemonMonitor: Boolean = 
             val bytes = p.inputStream.readBytes()
             val err = p.errorStream.bufferedReader().readText()
             val code = p.waitFor()
-            if (code != 0 || bytes.isEmpty()) {
-                System.err.println("[adb] pullConversationRepo exit=$code on $serial ($path): ${err.trim()}")
+            if (code != 0 || bytes.isEmpty() || !looksLikeTarStream(bytes)) {
+                // toybox `tar` under `run-as` prints "tar: <path>: No such file or directory" to
+                // *stdout* and still exits 0, so a missing repo used to be written out verbatim as
+                // a ~1 KB junk "fixture". Reject anything that isn't a real tar stream.
+                System.err.println(
+                    "[adb] pullConversationRepo exit=$code on $serial ($path): ${(err + firstLine(bytes)).trim()}",
+                )
                 false
             } else {
                 local.writeBytes(bytes)
@@ -271,6 +278,25 @@ class DeviceController(val serial: String, private val daemonMonitor: Boolean = 
             adbExit("-s", serial, "shell", "am", "force-stop", pkg)
         }
     }
+
+    /**
+     * Heuristic: does [bytes] look like the start of a real `tar` stream rather than an adb /
+     * `run-as` / toybox-`tar` error that leaked to stdout? A POSIX ustar header carries the
+     * magic `ustar` at offset 257; a legitimate archive of an app data dir is also always far
+     * larger than any error line. Anything shorter than one tar block, or that begins with a
+     * known error prefix, is treated as a failed pull.
+     */
+    private fun looksLikeTarStream(bytes: ByteArray): Boolean {
+        if (bytes.size < 512) return false
+        val head = String(bytes, 0, minOf(bytes.size, 64), Charsets.US_ASCII)
+        if (head.startsWith("tar:") || head.startsWith("run-as:") || head.startsWith("/system/bin/sh")) return false
+        val ustar = String(bytes, 257, 5, Charsets.US_ASCII)
+        return ustar == "ustar"
+    }
+
+    /** First line of [bytes] as ASCII, for surfacing an error that landed on stdout. */
+    private fun firstLine(bytes: ByteArray): String =
+        String(bytes, 0, minOf(bytes.size, 200), Charsets.US_ASCII).substringBefore('\n')
 
     private fun adb(vararg args: String) {
         adbExit(*args)

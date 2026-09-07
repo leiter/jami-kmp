@@ -39,7 +39,7 @@ private const val INSTALL_SETTLE_MS = 3_000L
 /**
  * Entry point for the e2e test harness runner (the "brain").
  *
- * Args: `<scenarioId> [devicesCsv] [keepAccounts] [accountState] [username] [conversationId] [daemonMonitor]`,
+ * Args: `<scenarioId> [devicesCsv] [keepAccounts] [accountState] [username] [conversationId] [daemonMonitor] [freshStart]`,
  * `--list`, or `--list-account-states`.
  * Exit code: 0 = pass, 1 = fail, 2 = usage error.
  */
@@ -61,6 +61,7 @@ fun main(args: Array<String>) {
         username = args.getOrNull(4)?.takeIf { it.isNotBlank() },
         conversationId = args.getOrNull(5)?.takeIf { it.isNotBlank() },
         daemonMonitor = args.getOrNull(6)?.toBoolean() ?: false,
+        freshStart = args.getOrNull(7)?.toBoolean() ?: false,
     )
     val scenario = ScenarioRegistry.scenarios[scenarioId] ?: run {
         System.err.println("Unknown scenario '$scenarioId'. Available:")
@@ -87,6 +88,7 @@ fun main(args: Array<String>) {
     if (runConfig.username != null) println("username='${runConfig.username}'")
     if (runConfig.conversationId != null) println("conversationId='${runConfig.conversationId}'")
     if (runConfig.daemonMonitor) println("daemonMonitor=true — daemon ICE/TURN trace on (verbose)")
+    if (runConfig.freshStart) println("freshStart=true — wiping harness-app data on every device before launch")
 
     val controllers = serials.take(scenario.requiredRoles)
         .map { DeviceController(it, daemonMonitor = runConfig.daemonMonitor) }
@@ -110,6 +112,16 @@ fun main(args: Array<String>) {
         // clean pass. This fixed delay is the permanent fix — works even on a first-time install,
         // unlike the `-x installHarnessDebug` workaround used to diagnose it.
         delay(INSTALL_SETTLE_MS)
+
+        // Optional hard reset (-PfreshStart=true): a run that timed out mid-scenario can leave an
+        // account stranded on a device; since the harness diffs the accounts flow from connect
+        // time, that account is invisible in the next timeline while still skewing the daemon, and
+        // its lingering registration makes the next `ensureNoAccounts` precondition fail fast.
+        // `pm clear` also relabels the data dir, so give restorecon the same settle window.
+        if (runConfig.freshStart) {
+            controllers.forEach { it.clearAppData() }
+            delay(INSTALL_SETTLE_MS)
+        }
 
         // Precondition: the standard jami-kmp app and jami-android-client must not be running —
         // both drive a real daemon against the real DHT, and left running they're a source of

@@ -82,6 +82,15 @@ data class RunConfig(
      * failures).
      */
     val daemonMonitor: Boolean = false,
+    /**
+     * Wipe every device's harness-app data (`pm clear`) before the app is launched
+     * (`-PfreshStart=true`). A run that times out mid-scenario can strand an account on a
+     * device; because the harness diffs the accounts flow from its value at connect time, that
+     * stranded account is invisible in the next run's timeline while still skewing the daemon,
+     * and its lingering registration makes the next `ensureNoAccounts` precondition fail fast.
+     * Off by default — it destroys any hand-set state a `-PkeepAccounts` chain left behind.
+     */
+    val freshStart: Boolean = false,
 )
 
 /**

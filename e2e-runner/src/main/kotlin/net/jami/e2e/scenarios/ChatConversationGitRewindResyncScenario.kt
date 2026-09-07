@@ -99,13 +99,17 @@ object ChatConversationGitRewindResyncScenario : Scenario {
             val conversationId = establishContact(ctx, "B", bId, bUri, "A", aId, aUri).conversationId
             ctx.log("contact confirmed — swarm conversation '$conversationId' established")
 
-            // Gate A's first send on A's own confirmation that it has processed B's join commit.
+            // Gate the first send on B's confirmation that it has processed A's join commit.
             // Sending straight after ContactAdded(confirmed=true) races the swarm — that event
             // fires locally before any peer is reachably joined (same F4 race the send-message
             // and default-one-on-one scenarios already gate; see doc/end2endTesting.md's A-join
-            // precondition writeup).
-            awaitMemberJoined(ctx, "A", aId, conversationId, bUri, timeoutMillis = 30_000)
-            ctx.log("A confirmed it has processed B's join — safe to send")
+            // precondition writeup). ConversationMemberEvent(action=1) reliably fires only on the
+            // side observing the *other* party appear via swarm sync — that is B (the request
+            // initiator) seeing A (the accepter), the same direction send-message and
+            // default-one-on-one gate; the reverse (A seeing B) does not fire, since A wrote B
+            // into the repo itself on accept.
+            awaitMemberJoined(ctx, "B", bId, conversationId, aUri, timeoutMillis = 30_000)
+            ctx.log("B confirmed it has processed A's join — swarm is live, safe to send")
 
             // A sends MESSAGES_TO_SEND real messages (the reliable direction — see class doc);
             // B confirms each as a real commit before moving on, so we know exactly what exists

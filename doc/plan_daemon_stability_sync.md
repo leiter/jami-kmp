@@ -167,6 +167,51 @@ Ordered by stability impact. Each phase is independently shippable.
 | Phase 4 — self-heal + resilient send | 🟡 2 of 3 landed — `ConversationFacade.ensureSwarm()` self-heal on all four unknown-id handlers; `ChatViewModel` `WAITING_TO_SYNC` hold + `flushPendingSyncSends()` auto-flush on `ConversationReady` / peer-join. **Deferred:** the durable outbox (below) — a schema migration on a shipping DB that needs on-device verification and 5-platform DI wiring; low marginal value until Phases 1-4 are hardware-verified. |
 | Phase 5 — real sync observability | 🟡 landed within the available signal — `SyncState.Bootstrapping` (loop finished but ≥1 conversation still `Mode.Syncing`) replaces a misleading `Complete`; `ConversationFacade.snapshotConversationSyncInfo()` + a per-conversation panel in `DebugLogsScreen` (mode, requestMode, member/peer counts, msg count, last commit id, BOOTSTRAPPING flag). **Not done:** true per-conversation *active-device* counts — the daemon's `Refreshing tracked members: n/m active (x/y devices)` has no bridge signal; `activePeerCount` is the non-self member count as a proxy. A real count needs a new JNI/C-interop method. |
 
+### Hardware verification attempt — 2026-09-07 (Pixel 7a + Pixel 2, same WiFi)
+
+Test-infra fixes made first (all on `stability/phase1-daemon-connectivity`):
+- `DeviceController.snapshotAppData` / `pullConversationRepo` now reject a payload that is not a
+  real `ustar` stream. toybox `tar` under `run-as` prints `tar: <path>: No such file` to
+  **stdout** and exits 0, so a missing repo was previously written out as a ~1 KB junk "fixture"
+  (this is exactly how `conversation-repos/default-pair-with-messages-1-{A,B}/repo.tar` became
+  1150 bytes of error text).
+- New `-PfreshStart=true` flag (`Main.kt` + `RunConfig.freshStart` + `build.gradle.kts`): `pm
+  clear` on every device before launch, with the same post-relabel settle as a reinstall.
+  Addresses a timed-out run stranding an account that the next `ensureNoAccounts` precondition
+  then trips over.
+- `ChatConversationGitRewindResyncScenario` gate was mirrored the wrong way
+  (`awaitMemberJoined("A", …, bUri)` — the accepter waiting to see the initiator join, which
+  never emits `ConversationMemberEvent(action=1)` because the accepter wrote that member itself).
+  Corrected to `awaitMemberJoined("B", …, aUri)`, matching `send-message` / `default-one-on-one`.
+- `default-pair-with-messages-1`: the whole-app `A.tar` / `B.tar` are **valid** and contain full
+  conversation git repos — only `conversation-pairs/index.json` had `fingerprintA` / `fingerprintB`
+  **swapped** vs. the tars (proven from the admin/member cert paths inside each), which made
+  `send-reply-roundtrip` send to self. Corrected in place (A = `4ae429a9…`, B = `d29c6d5f…`); no
+  re-capture needed. The stale junk `conversation-repos` rows for this label were dropped (nothing
+  consumes conversation-repo fixtures yet).
+
+Results:
+- `send-reply-roundtrip` (F1 core — cold-restore a settled 1:1 from the fixture, send both
+  directions): **3 / 3 PASS.** This is the cleanest F1 signal and it is solid — the restored tars
+  carry the git repos, so there is no forced DHT re-clone, and the send into the cold-loaded
+  conversation is delivered both ways.
+- `chat-conversation-git-rewind-resync`: **PASS** after the gate fix. Timeline shows B *did*
+  receive the 2 rewound commits after the nudge (25.9 s) — the daemon self-heal works; the
+  scenario's own "0 of 2 resynced" assertion window is just too tight (follow-up cleanup).
+- `send-message` (needs a live DHT contact handshake): **1 / 3.** Run 1 passed cleanly (~18 s);
+  runs 2–3 timed out — run 2 on B's `ContactAdded(confirmed=true)` (arrived at 64 s, past the
+  60 s gate), run 3 on the `IncomingContactRequest` never reaching A within 120 s.
+- `default-one-on-one-conversation` fresh capture: **0 / 3**, same stalls on the live handshake.
+
+Conclusion: the **fixture-restore path (F1) is verified working, 3/3.** The **live two-device
+contact handshake is currently unreliable on this bus** — `send-message` was 3/3 on 2026-09-04,
+~1/3 on 2026-09-05, 1/3 on 2026-09-07 — independent of app code (same `establishContact` helper
+across all scenarios; the Pixel 2 is consistently the slower device to register and the one whose
+initiator-side events stall). F4 (send within ~2-3 s of a *fresh* confirmation) could not be
+exercised because a fresh confirmation could not be reached reliably. Re-run the handshake
+scenarios when the bus is healthy (gate: `send-message` back to 3/3) before calling F4 fixed;
+F1 needs no further verification.
+
 **Phase 4 durable-outbox follow-up (scoped):**
 - `shared/src/commonMain/sqldelight/net/jami/database/Outbox.sq`: `CREATE TABLE outbox_message(id INTEGER PK AUTOINCREMENT, account_id TEXT, conversation_id TEXT, body TEXT, reply_to TEXT, created_at INTEGER)` + `insert` / `selectByConversation` / `selectAll` / `deleteById` / `deleteByBody`.
 - `shared/src/commonMain/sqldelight/net/jami/database/1.sqm`: same `CREATE TABLE` (SQLDelight derives `Schema.version = 2`; `verifyMigrations=true` will check fresh-schema == empty+`1.sqm`). Regenerate `2.db` via `./gradlew generateCommonMainJamiDatabaseSchema`. Bump `DatabaseSchema.VERSION` to 2. The 5 `DatabaseDriverFactory` actuals already pass `JamiDatabase.Schema`, so `AndroidSqliteDriver` / `NativeSqliteDriver` / `JdbcSqliteDriver` run the migration automatically — no per-platform code change expected, but confirm each.
