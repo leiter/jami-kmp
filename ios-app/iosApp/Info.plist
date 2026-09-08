@@ -26,6 +26,8 @@
 	<string>Jami uses your camera for video calls and to send photos.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Jami uses your contacts to help you find people to connect with.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Jami uses Face ID to unlock your account without typing your password.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Jami uses your location to share it with contacts during a conversation.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
