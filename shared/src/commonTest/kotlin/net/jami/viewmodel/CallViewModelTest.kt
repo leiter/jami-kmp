@@ -30,8 +30,14 @@ import kotlin.test.assertTrue
 import net.jami.services.StubDeviceRuntimeService
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
+import kotlin.test.BeforeTest
+import net.jami.ensurePlatformTestKoin
 
 class CallViewModelTest {
+
+    /** iOS's HardwareService resolves its dependencies from Koin; desktop's does not. */
+    @BeforeTest
+    fun startPlatformKoin() = ensurePlatformTestKoin()
 
     private fun makeVm(stub: StubDaemonBridge, scope: kotlinx.coroutines.CoroutineScope): Triple<CallViewModel, net.jami.services.CallService, net.jami.services.AccountService> {
         val accountService = makeAccountService(stub, scope)

@@ -118,6 +118,12 @@ class PendingRequestsViewModel(
             } catch (e: Exception) {
                 Log.e(TAG, "load: error", e)
                 _state.value = _state.value.copy(isLoading = false)
+            } finally {
+                // Cleared here rather than on each path: the `?: return@launch` above exits
+                // the coroutine without unwinding to the catch block, which left isLoading
+                // stuck true whenever there was no current account — a spinner that never
+                // stopped. Covers the success path too.
+                _state.value = _state.value.copy(isLoading = false)
             }
         }
     }

@@ -122,7 +122,12 @@ class ConversationsViewModelTest {
     fun conversationsAreSortedByTimestampDescending() = runTest {
         val stub = StubDaemonBridge()
         val services = makeTestServiceStack(stub, this)
-        val account = prepareAccountInService(stub, services.accountService)
+        prepareAccountInService(stub, services.accountService)
+        advanceUntilIdle()
+        // Re-fetch from the service rather than using prepareAccountInService's return value:
+        // it falls back to constructing a detached Account when loadAccounts() has not
+        // settled yet, and conversations added to that orphan are invisible to the ViewModel.
+        val account = services.accountService.getAccount(TEST_ACCOUNT_ID)!!
 
         // Create conversations with different timestamps
         val conv1 = account.newSwarm("conv1", net.jami.model.Conversation.Mode.OneToOne)
@@ -142,11 +147,21 @@ class ConversationsViewModelTest {
         msg3.timestamp = 2000L
         conv3.addElement(msg3)
 
+        // addElement only appends to history; it does not set lastEvent, and lastEvent is
+        // what ConversationItem.timestamp reads. Without this all three sort as timestamp 0
+        // and keep insertion order, so the test proved nothing about sorting.
+        conv1.lastEvent = msg1
+        conv2.lastEvent = msg2
+        conv3.lastEvent = msg3
+
         account.conversationStarted(conv1)
         account.conversationStarted(conv2)
         account.conversationStarted(conv3)
 
         val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), services.contactService, VCardService(StubDeviceRuntimeService()), viewModelScope())
+        // Load explicitly rather than relying on the init-time currentAccount observer, as
+        // the other tests in this class do.
+        vm.loadConversations()
         advanceUntilIdle()
 
         // Verify conversations are sorted by timestamp descending (most recent first)

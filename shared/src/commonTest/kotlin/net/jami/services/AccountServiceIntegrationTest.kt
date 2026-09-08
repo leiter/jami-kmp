@@ -35,13 +35,23 @@ import kotlin.test.assertTrue
  */
 class AccountServiceIntegrationTest {
 
+    /**
+     * A scope sharing the test scheduler but with its own Job.
+     *
+     * These previously used CoroutineScope(SupervisorJob()), which runs on real dispatchers:
+     * advanceUntilIdle() does not wait for it, so assertions raced the service's coroutines
+     * and failed intermittently depending on timing and test order.
+     */
+    private fun kotlinx.coroutines.test.TestScope.testServiceScope(): kotlinx.coroutines.CoroutineScope =
+        kotlinx.coroutines.CoroutineScope(coroutineContext + kotlinx.coroutines.SupervisorJob())
+
     @Test
     fun loadAccountsPopulatesStateFlow() = runTest {
         val stub = StubDaemonBridge()
         stub.accountIds = listOf("acc1", "acc2")
         stub.accountDetails["acc1"] = mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI)
         stub.accountDetails["acc2"] = mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_SIP)
-        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
+        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), testServiceScope())
 
         service.loadAccounts()
 
@@ -56,7 +66,7 @@ class AccountServiceIntegrationTest {
         stub.accountIds = listOf("acc1", "acc2")
         stub.accountDetails["acc1"] = mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI)
         stub.accountDetails["acc2"] = mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI)
-        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
+        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), testServiceScope())
 
         assertNull(service.currentAccount.value)
         service.loadAccounts()
@@ -67,7 +77,7 @@ class AccountServiceIntegrationTest {
     @Test
     fun loadAccountsWithEmptyListKeepsCurrentAccountNull() = runTest {
         val stub = StubDaemonBridge()
-        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
+        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), testServiceScope())
 
         service.loadAccounts()
 
@@ -79,7 +89,7 @@ class AccountServiceIntegrationTest {
     fun createJamiAccountCallsDaemonBridge() = runTest {
         val stub = StubDaemonBridge()
         stub.addAccountResult = "new_acc"
-        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
+        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), testServiceScope())
 
         val result = service.createJamiAccount(displayName = "Alice")
 
@@ -92,7 +102,7 @@ class AccountServiceIntegrationTest {
         stub.accountIds = listOf("acc1", "acc2")
         stub.accountDetails["acc1"] = mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI)
         stub.accountDetails["acc2"] = mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI)
-        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
+        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), testServiceScope())
         service.loadAccounts()
         assertEquals(2, service.accounts.value.size)
 
@@ -108,7 +118,7 @@ class AccountServiceIntegrationTest {
         stub.accountIds = listOf("acc1", "acc2")
         stub.accountDetails["acc1"] = mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI)
         stub.accountDetails["acc2"] = mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI)
-        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
+        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), testServiceScope())
         service.loadAccounts()
         assertEquals("acc1", service.currentAccount.value?.accountId)
 
@@ -122,7 +132,7 @@ class AccountServiceIntegrationTest {
         val stub = StubDaemonBridge()
         stub.accountIds = listOf("acc1")
         stub.accountDetails["acc1"] = mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI)
-        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
+        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), testServiceScope())
         service.loadAccounts()
 
         var receivedEvent: AccountEvent? = null
@@ -137,7 +147,7 @@ class AccountServiceIntegrationTest {
     @Test
     fun getAccountReturnsNullForUnknownId() = runTest {
         val stub = StubDaemonBridge()
-        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
+        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), testServiceScope())
 
         assertNull(service.getAccount("nonexistent"))
     }
@@ -147,7 +157,7 @@ class AccountServiceIntegrationTest {
         val stub = StubDaemonBridge()
         stub.accountIds = listOf("acc1")
         stub.accountDetails["acc1"] = mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI)
-        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
+        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), testServiceScope())
         service.loadAccounts()
 
         assertTrue(service.hasJamiAccount())
@@ -159,7 +169,7 @@ class AccountServiceIntegrationTest {
         val stub = StubDaemonBridge()
         stub.accountIds = listOf("sip1")
         stub.accountDetails["sip1"] = mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_SIP)
-        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
+        val service = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), testServiceScope())
         service.loadAccounts()
 
         assertTrue(service.hasSipAccount())

@@ -332,6 +332,16 @@ class ConversationsViewModel(
                     accounts = accountItems,
                 )
             } catch (e: Exception) {
+                // Was swallowed silently, which showed an empty conversation list with no
+                // indication anything had gone wrong — the hardest kind of failure to
+                // diagnose from a user report.
+                Log.e(TAG, "loadConversations failed", e)
+                _state.value = _state.value.copy(isLoading = false)
+            } finally {
+                // Cleared here rather than on each path: the `?: return@launch` above exits
+                // the coroutine without unwinding to the catch block, which left isLoading
+                // stuck true whenever there was no current account — a spinner that never
+                // stopped. Covers the success path too.
                 _state.value = _state.value.copy(isLoading = false)
             }
         }

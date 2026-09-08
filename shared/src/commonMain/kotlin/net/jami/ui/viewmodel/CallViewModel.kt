@@ -390,11 +390,12 @@ class CallViewModel(
     }
 
     fun toggleSpeaker() {
+        // Without a conference there is nothing to switch, and updating the state anyway
+        // desynced it from the hardware permanently: the next toggle re-read
+        // isSpeakerphoneOn() (still false) and set "on" again, so it never flipped back.
+        val conf = currentConference ?: return
         val newState = !hardwareService.isSpeakerphoneOn()
-        val conf = currentConference
-        if (conf != null) {
-            hardwareService.toggleSpeakerphone(conf, newState)
-        }
+        hardwareService.toggleSpeakerphone(conf, newState)
         _state.value = _state.value.copy(isSpeakerOn = newState)
     }
 

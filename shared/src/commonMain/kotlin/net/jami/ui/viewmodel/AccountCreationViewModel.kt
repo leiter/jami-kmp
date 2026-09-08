@@ -222,6 +222,13 @@ class AccountCreationViewModel(
                 )
                 createdAccountId = accountId
                 Log.d(TAG, "addAccount returned accountId='$accountId' — navigating to profile setup")
+                // The chosen username is registered on the name server by AccountService once the
+                // new account reaches the REGISTERED state (createJamiAccount recorded it as a
+                // pending registration). The daemon cannot register a name before the account's
+                // manager is initialised, so it cannot be done synchronously here.
+                if (current.username.isNotEmpty()) {
+                    _state.value = _state.value.copy(isRegistering = true)
+                }
                 // Navigate immediately, like the official client; account initializes in background
                 _state.value = _state.value.copy(isLoading = false, isCreated = true)
             } catch (e: Exception) {

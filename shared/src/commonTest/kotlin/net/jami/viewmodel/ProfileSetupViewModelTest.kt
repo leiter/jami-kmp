@@ -100,8 +100,10 @@ class ProfileSetupViewModelTest {
         vm.setDisplayName("Alice")
         vm.saveProfile()
         advanceUntilIdle()
-        // currentAccount is null, so saveProfile early-returns — no crash
-        assertFalse(vm.state.value.isSaved)
+        // With no account there is nothing to save, and saveProfile deliberately marks the
+        // step complete so onboarding can move on — isSaved drives navigation in
+        // ProfileSetupScreen, and leaving it false would strand the user on this screen.
+        assertTrue(vm.state.value.isSaved)
     }
 
     @Test

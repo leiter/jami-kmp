@@ -26,8 +26,31 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import net.jami.services.StubDeviceRuntimeService
+import kotlin.test.BeforeTest
+import net.jami.ui.platform.LocalPrefs
+import net.jami.ui.platform.LocalPrefKeys
 
 class AppSettingsViewModelTest {
+
+    /**
+     * Resets the device-local preferences these tests read and write.
+     *
+     * AppSettingsViewModel reads LocalPrefs, which is real persistent storage on every
+     * platform (java.util.prefs on desktop, NSUserDefaults on iOS). Without this the toggle
+     * tests below leave their values behind, so a later run sees them as the "initial"
+     * state and initialStateDefaultsAreCorrect fails depending on what ran before.
+     *
+     * Worth noting: running this suite therefore writes to the developer's real app
+     * preferences. Making LocalPrefs injectable would be the proper fix.
+     */
+    @BeforeTest
+    fun resetLocalPrefs() {
+        LocalPrefs.setBoolean(LocalPrefKeys.SCREENSHOT_BLOCKING, false)
+        LocalPrefs.setBoolean(LocalPrefKeys.START_ON_BOOT, false)
+        LocalPrefs.setBoolean(LocalPrefKeys.RUN_IN_BACKGROUND, false)
+        LocalPrefs.setBoolean(LocalPrefKeys.PLACE_SYSTEM_CALLS, false)
+        LocalPrefs.setBoolean(LocalPrefKeys.SYSTEM_CONTACTS_SYNC, false)
+    }
 
     private fun makeVm(runTest: kotlinx.coroutines.test.TestScope): AppSettingsViewModel {
         val stub = StubDaemonBridge()

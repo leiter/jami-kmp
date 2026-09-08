@@ -45,6 +45,10 @@ class AppViewModelTest {
         // accountIds defaults to empty list
         val accountService = makeAccountService(stub, this)
         val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
+        // AppViewModel deliberately waits for the daemon to report accounts ready before
+        // leaving Loading — it prevents the Welcome screen flashing before HasAccounts on a
+        // cold start. loadAccounts() alone does not signal that; loadAccountsFromDaemon does.
+        accountService.loadAccountsFromDaemon(isConnected = true)
         advanceUntilIdle()
         assertIs<AppState.NoAccounts>(vm.appState.value)
     }
@@ -58,6 +62,10 @@ class AppViewModelTest {
         )
         val accountService = makeAccountService(stub, this)
         val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
+        // AppViewModel deliberately waits for the daemon to report accounts ready before
+        // leaving Loading — it prevents the Welcome screen flashing before HasAccounts on a
+        // cold start. loadAccounts() alone does not signal that; loadAccountsFromDaemon does.
+        accountService.loadAccountsFromDaemon(isConnected = true)
         advanceUntilIdle()
         assertIs<AppState.HasAccounts>(vm.appState.value)
     }
@@ -72,6 +80,10 @@ class AppViewModelTest {
         )
         val accountService = makeAccountService(stub, this)
         val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
+        // AppViewModel deliberately waits for the daemon to report accounts ready before
+        // leaving Loading — it prevents the Welcome screen flashing before HasAccounts on a
+        // cold start. loadAccounts() alone does not signal that; loadAccountsFromDaemon does.
+        accountService.loadAccountsFromDaemon(isConnected = true)
         advanceUntilIdle()
         val state = vm.appState.value
         assertIs<AppState.HasAccounts>(state)
@@ -88,6 +100,10 @@ class AppViewModelTest {
         }
         val accountService = makeAccountService(stub, this)
         val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
+        // AppViewModel deliberately waits for the daemon to report accounts ready before
+        // leaving Loading — it prevents the Welcome screen flashing before HasAccounts on a
+        // cold start. loadAccounts() alone does not signal that; loadAccountsFromDaemon does.
+        accountService.loadAccountsFromDaemon(isConnected = true)
         advanceUntilIdle()
         assertIs<AppState.HasAccounts>(vm.appState.value)
     }

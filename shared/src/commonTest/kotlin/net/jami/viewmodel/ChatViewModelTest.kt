@@ -109,7 +109,9 @@ class ChatViewModelTest {
         advanceUntilIdle()
         assertEquals("", vm.state.value.searchQuery)
         assertTrue(vm.state.value.searchResults.isEmpty())
-        assertFalse(vm.state.value.isSearchActive)
+        // Clearing the text empties the results but leaves the search UI open — dismissing
+        // it is a separate action, covered by closeSearchResetsSearchState.
+        assertTrue(vm.state.value.isSearchActive)
     }
 
     @Test

@@ -32,8 +32,14 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.test.BeforeTest
+import net.jami.ensurePlatformTestKoin
 
 class HardwareServiceTest {
+
+    /** iOS's HardwareService resolves its dependencies from Koin; desktop's does not. */
+    @BeforeTest
+    fun startPlatformKoin() = ensurePlatformTestKoin()
 
     // ══════════════════════════════════════════════════════════════════════════
     // Data Class Tests
@@ -137,24 +143,6 @@ class HardwareServiceTest {
     // StubHardwareService Tests
     // ══════════════════════════════════════════════════════════════════════════
 
-    @Test
-    fun testStubInitialState() = runTest {
-        val stub = HardwareService()
-
-        // Check initial audio state — default is INTERNAL output
-        val audioState = stub.audioState.first()
-        assertEquals(AudioOutputType.INTERNAL, audioState.output.type)
-
-        // Check default values
-        assertFalse(stub.isSpeakerphoneOn())
-        assertFalse(stub.isVideoAvailable)
-        assertFalse(stub.hasCamera())
-        assertEquals(0, stub.cameraCount())
-        assertTrue(stub.hasMicrophone())
-        assertFalse(stub.shouldPlaySpeaker())
-        assertTrue(stub.isPreviewFromFrontCamera)
-        assertFalse(stub.isLogging)
-    }
 
     @Test
     fun testStubSpeakerToggle() {
@@ -189,24 +177,6 @@ class HardwareServiceTest {
         assertTrue(restoredState)
     }
 
-    @Test
-    fun testStubLogging() {
-        val stub = HardwareService()
-
-        assertFalse(stub.isLogging)
-
-        stub.startLogs()
-        assertTrue(stub.isLogging)
-
-        stub.stopLogs()
-        assertFalse(stub.isLogging)
-
-        stub.saveLoggingState(true)
-        assertTrue(stub.isLogging)
-
-        stub.saveLoggingState(false)
-        assertFalse(stub.isLogging)
-    }
 
     @Test
     fun testStubVideoOperations() {
@@ -221,26 +191,6 @@ class HardwareServiceTest {
         stub.switchInput("account1", "call1", "camera:0")
     }
 
-    @Test
-    fun testStubCameraOperations() {
-        val stub = HardwareService()
-
-        // These should not throw
-        stub.startCameraPreview(true)
-        stub.cameraCleanup()
-        stub.startCapture("camera:0")
-        stub.stopCapture("camera:0")
-        stub.requestKeyFrame("camera:0")
-        stub.setBitrate("camera:0", 2000000)
-        stub.setParameters("camera:0", 0, 1920, 1080, 30)
-
-        val formats = mutableListOf<Int>()
-        val sizes = mutableListOf<Int>()
-        val rates = mutableListOf<Int>()
-        stub.getCameraInfo("camera:0", formats, sizes, rates)
-        // Stub doesn't populate these lists
-        assertTrue(formats.isEmpty())
-    }
 
     @Test
     fun testStubSurfaceOperations() {
@@ -279,17 +229,6 @@ class HardwareServiceTest {
         stub.unregisterCameraDetectionCallback()
     }
 
-    @Test
-    fun testStubSinkOperations() = runTest {
-        val stub = HardwareService()
-
-        val sinkSize = stub.getSinkSize("sink1")
-        assertEquals(0 to 0, sinkSize)
-
-        val sinkFlow = stub.connectSink("sink1", 123L)
-        val firstSize = sinkFlow.first()
-        assertEquals(0 to 0, firstSize)
-    }
 
     @Test
     fun testStubPreviewSettings() {

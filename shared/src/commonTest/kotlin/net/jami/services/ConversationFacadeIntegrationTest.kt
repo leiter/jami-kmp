@@ -39,6 +39,16 @@ import kotlin.test.assertFailsWith
 class ConversationFacadeIntegrationTest {
 
     /**
+     * A scope sharing the test scheduler but with its own Job.
+     *
+     * These previously used CoroutineScope(SupervisorJob()), which runs on real dispatchers:
+     * advanceUntilIdle() does not wait for it, so assertions raced the service's coroutines
+     * and failed intermittently depending on timing and test order.
+     */
+    private fun kotlinx.coroutines.test.TestScope.testServiceScope(): kotlinx.coroutines.CoroutineScope =
+        kotlinx.coroutines.CoroutineScope(coroutineContext + kotlinx.coroutines.SupervisorJob())
+
+    /**
      * Creates a scope that inherits the test scheduler but won't cause
      * UncompletedCoroutinesError from ConversationFacade's init collectors.
      */
@@ -49,7 +59,7 @@ class ConversationFacadeIntegrationTest {
         stub: StubDaemonBridge,
         scope: kotlinx.coroutines.test.TestScope
     ): Triple<AccountService, ContactService, ConversationFacade> {
-        val accountService = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
+        val accountService = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), scope.testServiceScope())
         val callService = CallService(stub, accountService, net.jami.repository.SettingsRepository(stub, scope), scope)
         val contactService = ContactService(scope, accountService, stub, VCardService(StubDeviceRuntimeService()))
         val facadeScope = scope.facadeScope()
