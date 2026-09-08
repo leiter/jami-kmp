@@ -1,0 +1,11 @@
+# iOS simulator libraries — every entry here is a machine-specific symlink and
+# none of it belongs in git.
+#
+# Most point into a sibling jami-client-ios checkout's xcframework/ build output;
+# libJamiBridge_iossim.a points back at the real, tracked copy in ../lib/. So
+# unlike ../lib/.gitignore, there is no exception to make here — do not add one.
+#
+# Regenerate with: python3 scripts/make_sim_links.py
+# See ../JamiBridge/README.md for the full setup.
+*
+!.gitignore
