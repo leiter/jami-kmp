@@ -38,16 +38,15 @@ xcfw_root = Path(
 # linked here; lib-sim/ just needs a link to it alongside the daemon libraries.
 BRIDGE_LIB = CINTEROP / 'lib' / 'libJamiBridge_iossim.a'
 
-LIBS = [
-    'libargon2', 'libavcodec', 'libavdevice', 'libavfilter', 'libavformat', 'libavutil',
-    'libcrypto', 'libdhtnet', 'libfmt', 'libgit2', 'libgmp', 'libgnutls', 'libhogweed',
-    'libhttp_parser', 'libixml', 'libjami-core', 'libjsoncpp', 'libllhttp', 'libnatpmp',
-    'libnettle', 'libopendht', 'libopus', 'libpj', 'libpjlib-util', 'libpjmedia-audiodev',
-    'libpjmedia-codec', 'libpjmedia-videodev', 'libpjmedia', 'libpjnath', 'libpjsip-simple',
-    'libpjsip-ua', 'libpjsip', 'libpjsua', 'libpjsua2', 'libsecp256k1', 'libsimdutf',
-    'libspeex', 'libspeexdsp', 'libsrtp', 'libssl', 'libswresample', 'libswscale', 'libtls',
-    'libupnp', 'libvpx', 'libx264', 'libyaml-cpp', 'libyuv',
-]
+# The library set and the slice name are both discovered from the xcframework
+# directory rather than hardcoded. Both have changed under us before:
+#   - http_parser was dropped upstream in favour of llhttp
+#   - the simulator slice is named ios-arm64-simulator when only arm64 is built,
+#     but ios-arm64_x86_64-simulator when compile-ios.sh --platform=all builds both
+# A hardcoded list silently mismatches after a daemon update; discovery does not.
+def is_arm64_simulator_slice(name: str) -> bool:
+    """Match ios-arm64-simulator and ios-arm64_x86_64-simulator, not ios-x86_64-simulator."""
+    return 'simulator' in name and 'arm64' in name
 
 
 def link(src: Path, dst: Path) -> None:
@@ -69,14 +68,25 @@ def main() -> int:
     print(f'xcframework: {xcfw_root}')
     print(f'target:      {SIM_LIB}')
 
-    ok, missing = 0, []
-    for lib in LIBS:
-        src = xcfw_root / f'{lib}.xcframework' / 'ios-arm64-simulator' / f'{lib}.framework' / lib
+    ok, no_slice = 0, []
+    frameworks = sorted(xcfw_root.glob('*.xcframework'))
+    if not frameworks:
+        print(f'error: no .xcframework bundles under {xcfw_root}', file=sys.stderr)
+        return 1
+
+    for fw in frameworks:
+        name = fw.name[: -len('.xcframework')]
+        slice_dir = next((d for d in sorted(fw.iterdir())
+                          if d.is_dir() and is_arm64_simulator_slice(d.name)), None)
+        if slice_dir is None:
+            no_slice.append(name)
+            continue
+        src = slice_dir / f'{name}.framework' / name
         if not src.exists():
-            missing.append(lib)
+            no_slice.append(name)
             continue
         # The .def file and build-jamibridge.sh both expect the shorter name.
-        dst_name = 'libjami.a' if lib == 'libjami-core' else f'{lib}.a'
+        dst_name = 'libjami.a' if name == 'libjami-core' else f'{name}.a'
         link(src, SIM_LIB / dst_name)
         ok += 1
 
@@ -84,13 +94,17 @@ def main() -> int:
         link(BRIDGE_LIB, SIM_LIB / BRIDGE_LIB.name)
         ok += 1
     else:
-        missing.append(BRIDGE_LIB.name)
+        print(f'error: {BRIDGE_LIB} not found — build it with '
+              'shared/src/nativeInterop/cinterop/JamiBridge/build-jamibridge.sh',
+              file=sys.stderr)
+        return 1
 
     print(f'Created {ok} symlinks')
-    if missing:
-        print('MISSING:', ', '.join(missing))
-        return 1
-    print('All libs found')
+    if no_slice:
+        # Not fatal: some libraries legitimately have no arm64-simulator slice
+        # (libvpx does not support the arm64 simulator, so ffmpeg is configured
+        # with --disable-libvpx there and nothing references its symbols).
+        print(f'No arm64-simulator slice ({len(no_slice)}):', ', '.join(no_slice))
     return 0
 
 
