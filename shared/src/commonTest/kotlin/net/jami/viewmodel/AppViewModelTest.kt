@@ -26,6 +26,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import net.jami.services.BiometricService
 
 class AppViewModelTest {
 
@@ -34,7 +35,7 @@ class AppViewModelTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
         // Do NOT advance — state should still be Loading before coroutines run
-        val vm = AppViewModel(accountService, viewModelScope())
+        val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
         assertIs<AppState.Loading>(vm.appState.value)
     }
 
@@ -43,7 +44,7 @@ class AppViewModelTest {
         val stub = StubDaemonBridge()
         // accountIds defaults to empty list
         val accountService = makeAccountService(stub, this)
-        val vm = AppViewModel(accountService, viewModelScope())
+        val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
         advanceUntilIdle()
         assertIs<AppState.NoAccounts>(vm.appState.value)
     }
@@ -56,7 +57,7 @@ class AppViewModelTest {
             ConfigKey.ACCOUNT_TYPE.key to "RING"
         )
         val accountService = makeAccountService(stub, this)
-        val vm = AppViewModel(accountService, viewModelScope())
+        val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
         advanceUntilIdle()
         assertIs<AppState.HasAccounts>(vm.appState.value)
     }
@@ -70,7 +71,7 @@ class AppViewModelTest {
             ConfigKey.ACCOUNT_REGISTRATION_STATUS.key to "REGISTERED"
         )
         val accountService = makeAccountService(stub, this)
-        val vm = AppViewModel(accountService, viewModelScope())
+        val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
         advanceUntilIdle()
         val state = vm.appState.value
         assertIs<AppState.HasAccounts>(state)
@@ -86,7 +87,7 @@ class AppViewModelTest {
             stub.accountDetails[id] = mapOf(ConfigKey.ACCOUNT_TYPE.key to "RING")
         }
         val accountService = makeAccountService(stub, this)
-        val vm = AppViewModel(accountService, viewModelScope())
+        val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
         advanceUntilIdle()
         assertIs<AppState.HasAccounts>(vm.appState.value)
     }
@@ -95,7 +96,7 @@ class AppViewModelTest {
     fun onClearedDoesNotThrow() = runTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
-        val vm = AppViewModel(accountService, disposableScope())
+        val vm = AppViewModel(accountService, BiometricService(), disposableScope())
         vm.onCleared()
     }
 }

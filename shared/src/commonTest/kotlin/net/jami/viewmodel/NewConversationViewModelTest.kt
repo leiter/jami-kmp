@@ -39,7 +39,10 @@ class NewConversationViewModelTest {
         val contactService = makeContactService(stub, accountService, scope)
         val callService = makeCallService(stub, accountService, scope = scope)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, scope)
-        return NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), scope)
+        // The ViewModel's own collectors must not be children of the TestScope either, or
+        // runTest waits on them and fails with UncompletedCoroutinesError after a minute.
+        val vmScope = scope.viewModelScope()
+        return NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), vmScope)
     }
 
     @Test

@@ -31,6 +31,7 @@ import net.jami.services.expect.HardwareService
 import net.jami.services.StubHistoryService
 import net.jami.services.StubNotificationService
 import net.jami.services.StubPreferencesService
+import net.jami.services.VCardService
 
 // ==================== Disposable scope for onCleared tests ====================
 
@@ -57,6 +58,19 @@ const val TEST_ACCOUNT_ID = "acc_test_001"
 // ==================== Service factory functions ====================
 
 /**
+ * Isolates a service's coroutines from the enclosing TestScope.
+ *
+ * Services launch long-lived flow collectors. If they run as children of the TestScope,
+ * runTest waits for them and every test fails with UncompletedCoroutinesError after a
+ * one-minute timeout. Inheriting the coroutineContext keeps the test scheduler — so
+ * advanceUntilIdle still drives them — while the fresh SupervisorJob detaches them from
+ * the test's own Job. makeAccountService already did this; the rest did not.
+ */
+private fun CoroutineScope.isolated(): CoroutineScope =
+    CoroutineScope(coroutineContext + SupervisorJob())
+
+
+/**
  * Creates an AccountService wired to the given stub and scope.
  * Uses a child SupervisorJob but inherits the test's dispatcher so advanceUntilIdle works.
  */
@@ -67,8 +81,7 @@ fun makeAccountService(
     // Use a child SupervisorJob so the service's infinite flow collectors don't
     // leave uncompleted coroutines in the enclosing TestScope.
     // But inherit the test's coroutine context so advanceUntilIdle() works.
-    val serviceScope = CoroutineScope(scope.coroutineContext + SupervisorJob())
-    return AccountService(stub, HardwareService(), StubDeviceRuntimeService(), serviceScope)
+    return AccountService(stub, HardwareService(), StubDeviceRuntimeService(), scope.isolated())
 }
 
 /**
@@ -79,7 +92,7 @@ fun makeCallService(
     accountService: AccountService,
     settingsRepository: SettingsRepository = SettingsRepository(stub, CoroutineScope(SupervisorJob())),
     scope: CoroutineScope
-): CallService = CallService(stub, accountService, settingsRepository, scope)
+): CallService = CallService(stub, accountService, settingsRepository, scope.isolated())
 
 /**
  * Creates a ContactService wired to the given stub, account service, and scope.
@@ -88,7 +101,7 @@ fun makeContactService(
     stub: StubDaemonBridge = StubDaemonBridge(),
     accountService: AccountService,
     scope: CoroutineScope
-): ContactService = ContactService(scope, accountService, stub)
+): ContactService = ContactService(scope.isolated(), accountService, stub, VCardService(StubDeviceRuntimeService()))
 
 /**
  * Creates a SettingsRepository wired to the given stub and scope.
@@ -96,7 +109,7 @@ fun makeContactService(
 fun makeSettingsRepository(
     stub: StubDaemonBridge = StubDaemonBridge(),
     scope: CoroutineScope
-): SettingsRepository = SettingsRepository(stub, scope)
+): SettingsRepository = SettingsRepository(stub, scope.isolated())
 
 /**
  * Creates a ConversationFacade using all stub service implementations.
@@ -119,7 +132,7 @@ fun makeConversationFacade(
     preferencesService = StubPreferencesService(),
     daemonBridge = stub,
     settingsRepository = SettingsRepository(stub, scope),
-    scope = scope
+    scope = scope.isolated()
 )
 
 // ==================== Convenience: full service stack from one stub ====================
@@ -141,6 +154,11 @@ fun makeTestServiceStack(
     stub: StubDaemonBridge = StubDaemonBridge(),
     scope: CoroutineScope
 ): TestServiceStack {
+    // The services launch long-lived collectors. Handing them the TestScope directly makes
+    // runTest wait on those collectors and fail every test with UncompletedCoroutinesError
+    // after a one-minute timeout. This keeps the test scheduler — so advanceUntilIdle still
+    // drives them — but gives them their own Job so runTest does not await them. Same
+    // reasoning as viewModelScope() above.
     val accountService = makeAccountService(stub, scope)
     val callService = makeCallService(stub, accountService, scope = scope)
     val contactService = makeContactService(stub, accountService, scope)

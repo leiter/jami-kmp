@@ -27,6 +27,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import net.jami.services.StubDeviceRuntimeService
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 
 class CallViewModelTest {
 
@@ -34,8 +37,23 @@ class CallViewModelTest {
         val accountService = makeAccountService(stub, scope)
         val contactService = makeContactService(stub, accountService, scope)
         val callService = makeCallService(stub, accountService, scope = scope)
-        val vm = CallViewModel(callService, accountService, contactService, HardwareService(), scope)
+        val vm = CallViewModel(callService, accountService, contactService, HardwareService(), StubDeviceRuntimeService(), scope)
         return Triple(vm, callService, accountService)
+    }
+
+    /**
+     * Advances a bounded amount instead of [advanceUntilIdle].
+     *
+     * Once a call reaches CURRENT, CallViewModel starts a duration timer and video-loss
+     * detection, both of which are `while (isActive) { ...; delay(n) }` loops. Those are
+     * correct in production but never let advanceUntilIdle finish: on virtual time there is
+     * always another scheduled task, so the scheduler spins forever — including in
+     * runTest's own end-of-test cleanup, which is why bounding mid-test is not enough and
+     * the tests below also call vm.onCleared() to cancel the timers before finishing.
+     */
+    private fun kotlinx.coroutines.test.TestScope.settle() {
+        advanceTimeBy(100)
+        runCurrent()
     }
 
     @Test
@@ -109,11 +127,12 @@ class CallViewModelTest {
         // Simulate daemon callback: incoming call → CURRENT
         callService.onIncomingCall(TEST_ACCOUNT_ID, "call_001", "jami:peer", emptyList())
         callService.onCallStateChanged(TEST_ACCOUNT_ID, "call_001", "CURRENT", 0)
-        advanceUntilIdle()
+        settle()
         vm.initIncoming("call_001")
-        advanceUntilIdle()
+        settle()
         assertEquals("CURRENT", vm.state.value.callStatus)
         assertIs<CallMode.OnGoing>(vm.state.value.callMode)
+        vm.onCleared() // cancel duration/video-loss timers before runTest cleanup
     }
 
     @Test
@@ -124,13 +143,14 @@ class CallViewModelTest {
         prepareAccountInService(stub, accountService)
         callService.onIncomingCall(TEST_ACCOUNT_ID, "call_001", "jami:peer", emptyList())
         callService.onCallStateChanged(TEST_ACCOUNT_ID, "call_001", "CURRENT", 0)
-        advanceUntilIdle()
+        settle()
         vm.initIncoming("call_001")
-        advanceUntilIdle()
+        settle()
         callService.onCallStateChanged(TEST_ACCOUNT_ID, "call_001", "OVER", 0)
-        advanceUntilIdle()
+        settle()
         assertEquals("OVER", vm.state.value.callStatus)
         assertIs<CallMode.Ended>(vm.state.value.callMode)
+        vm.onCleared() // cancel duration/video-loss timers before runTest cleanup
     }
 
     @Test
@@ -146,6 +166,7 @@ class CallViewModelTest {
         advanceUntilIdle()
         val endedMode = vm.state.value.callMode
         assertIs<CallMode.Ended>(endedMode)
+        vm.onCleared() // cancel duration/video-loss timers before runTest cleanup
     }
 
     @Test

@@ -27,6 +27,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 
 /**
  * Integration tests for CallService using StubDaemonBridge.
@@ -34,12 +36,24 @@ import kotlin.test.assertTrue
  */
 class CallServiceIntegrationTest {
 
+    /**
+     * A scope that inherits the test scheduler — so advanceUntilIdle still drives it — but
+     * carries its own Job, so runTest does not wait on the services' long-lived collectors.
+     *
+     * Passing the TestScope directly made every test in this class fail with
+     * UncompletedCoroutinesError after a 1-minute wait. Mirrors the same helper in
+     * ConversationFacadeIntegrationTest.
+     */
+    private fun kotlinx.coroutines.test.TestScope.serviceScope(): CoroutineScope =
+        CoroutineScope(coroutineContext + SupervisorJob())
+
     private fun makeServices(
         stub: StubDaemonBridge,
         scope: kotlinx.coroutines.test.TestScope
     ): Pair<AccountService, CallService> {
-        val accountService = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), scope)
-        val callService = CallService(stub, accountService, net.jami.repository.SettingsRepository(stub, scope), scope)
+        val serviceScope = scope.serviceScope()
+        val accountService = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), serviceScope)
+        val callService = CallService(stub, accountService, net.jami.repository.SettingsRepository(stub, serviceScope), serviceScope)
         return accountService to callService
     }
 

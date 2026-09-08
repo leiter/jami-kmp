@@ -29,6 +29,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import net.jami.services.VCardService
+import kotlin.test.assertFailsWith
 
 /**
  * Integration tests for ConversationFacade using StubDaemonBridge.
@@ -49,7 +51,7 @@ class ConversationFacadeIntegrationTest {
     ): Triple<AccountService, ContactService, ConversationFacade> {
         val accountService = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
         val callService = CallService(stub, accountService, net.jami.repository.SettingsRepository(stub, scope), scope)
-        val contactService = ContactService(scope, accountService, stub)
+        val contactService = ContactService(scope, accountService, stub, VCardService(StubDeviceRuntimeService()))
         val facadeScope = scope.facadeScope()
         val facade = ConversationFacade(
             historyService = StubHistoryService(),
@@ -85,17 +87,21 @@ class ConversationFacadeIntegrationTest {
     }
 
     @Test
-    fun startConversationWithContactCreatesConversation() = runTest {
+    fun startConversationThrowsWhenConversationDoesNotExist() = runTest {
+        // ConversationFacade.startConversation is a lookup, not a creator: it resolves an
+        // existing conversation and throws otherwise. Creation goes through
+        // AccountService.startConversation first — see ConversationFacade's own two call
+        // sites. This previously asserted it created one and set an unused stub result.
         val stub = StubDaemonBridge()
         stub.accountIds = listOf("acc1")
         stub.accountDetails["acc1"] = mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI)
-        stub.startConversationResult = "conv_001"
         val (accountService, _, facade) = makeFacade(stub, this)
         accountService.loadAccounts()
         advanceUntilIdle()
 
-        val conversation = facade.startConversation("acc1", Uri.fromId("peer123"))
-        assertNotNull(conversation)
+        assertFailsWith<IllegalStateException> {
+            facade.startConversation("acc1", Uri.fromId("peer123"))
+        }
     }
 
     @Test

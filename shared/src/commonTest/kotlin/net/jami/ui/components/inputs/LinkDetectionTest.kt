@@ -89,7 +89,7 @@ class LinkDetectionTest {
 
     @Test
     fun plainText_noSpansAdded() {
-        val result = LinkVisualTransformation().filter(AnnotatedString("just plain text"))
+        val result = LinkVisualTransformation(LINK_COLOR).filter(AnnotatedString("just plain text"))
         assertTrue(result.text.spanStyles.isEmpty())
     }
 
@@ -98,7 +98,7 @@ class LinkDetectionTest {
         val prefix = "visit "
         val url = "https://jami.net"
         val text = "$prefix$url for info"
-        val result = LinkVisualTransformation().filter(AnnotatedString(text))
+        val result = LinkVisualTransformation(LINK_COLOR).filter(AnnotatedString(text))
 
         assertEquals(1, result.text.spanStyles.size)
         val span = result.text.spanStyles[0]
@@ -110,7 +110,7 @@ class LinkDetectionTest {
 
     @Test
     fun sameInput_cachedResultReturnedByIdentity() {
-        val transformation = LinkVisualTransformation()
+        val transformation = LinkVisualTransformation(LINK_COLOR)
         val input = AnnotatedString("https://example.com")
         val first = transformation.filter(input)
         val second = transformation.filter(input)
@@ -119,7 +119,7 @@ class LinkDetectionTest {
 
     @Test
     fun inputTextChanges_cacheInvalidated() {
-        val transformation = LinkVisualTransformation()
+        val transformation = LinkVisualTransformation(LINK_COLOR)
         val withUrl = transformation.filter(AnnotatedString("https://example.com"))
         val withoutUrl = transformation.filter(AnnotatedString("plain text"))
         assertTrue(withUrl.text.spanStyles.isNotEmpty())
@@ -128,7 +128,7 @@ class LinkDetectionTest {
 
     @Test
     fun offsetMappingIsIdentity_originalToTransformed() {
-        val transformation = LinkVisualTransformation()
+        val transformation = LinkVisualTransformation(LINK_COLOR)
         val result = transformation.filter(AnnotatedString("check https://jami.net ok"))
         // Identity mapping: every offset maps to itself
         for (i in 0..25) {
@@ -137,3 +137,6 @@ class LinkDetectionTest {
         }
     }
 }
+
+/** The tests assert the span colour, so this must match what the UI passes: pure blue. */
+private val LINK_COLOR = Color.Blue

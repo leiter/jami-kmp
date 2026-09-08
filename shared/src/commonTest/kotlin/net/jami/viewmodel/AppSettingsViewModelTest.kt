@@ -25,13 +25,17 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import net.jami.services.StubDeviceRuntimeService
 
 class AppSettingsViewModelTest {
 
     private fun makeVm(runTest: kotlinx.coroutines.test.TestScope): AppSettingsViewModel {
         val stub = StubDaemonBridge()
-        val repo = makeSettingsRepository(stub, runTest.viewModelScope())
-        return AppSettingsViewModel(repo, runTest.viewModelScope())
+        val scope = runTest.viewModelScope()
+        val repo = makeSettingsRepository(stub, scope)
+        val accountService = makeAccountService(stub, scope)
+        val contactService = makeContactService(stub, accountService, scope)
+        return AppSettingsViewModel(repo, accountService, contactService, scope)
     }
 
     // ==================== Initial state ====================
@@ -318,8 +322,11 @@ class AppSettingsViewModelTest {
     @Test
     fun onClearedDoesNotThrow() = runTest {
         val stub = StubDaemonBridge()
-        val repo = makeSettingsRepository(stub, this)
-        val vm = AppSettingsViewModel(repo, disposableScope())
+        val scope = disposableScope()
+        val repo = makeSettingsRepository(stub, scope)
+        val accountService = makeAccountService(stub, scope)
+        val contactService = makeContactService(stub, accountService, scope)
+        val vm = AppSettingsViewModel(repo, accountService, contactService, scope)
         vm.onCleared()
     }
 }

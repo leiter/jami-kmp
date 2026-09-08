@@ -27,6 +27,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import net.jami.ui.viewmodel.AccountCreationError
 
 class AccountCreationViewModelTest {
 
@@ -98,7 +99,7 @@ class AccountCreationViewModelTest {
         advanceUntilIdle()
         // No mismatch error — some other state may be set
         val error = vm.state.value.error
-        assertTrue(error == null || !error.contains("match", ignoreCase = true))
+        assertTrue(error != AccountCreationError.PASSWORDS_DONT_MATCH)
     }
 
     @Test

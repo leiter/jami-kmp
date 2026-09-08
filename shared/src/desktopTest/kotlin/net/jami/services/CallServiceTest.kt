@@ -9,12 +9,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import net.jami.services.expect.HardwareService
 
 class CallServiceTest {
 
     private fun createTestCallService(): CallService {
         val daemonBridge = StubDaemonBridge()
-        val hardwareService = StubHardwareService()
+        val hardwareService = HardwareService()
         val deviceRuntimeService = StubDeviceRuntimeService()
         val scope = CoroutineScope(Dispatchers.Default)
         val accountService = AccountService(daemonBridge, hardwareService, deviceRuntimeService, scope)

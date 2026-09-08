@@ -26,6 +26,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import net.jami.services.VCardService
 
 /**
  * Integration tests for ContactService using StubDaemonBridge.
@@ -38,7 +39,7 @@ class ContactServiceIntegrationTest {
         scope: kotlinx.coroutines.test.TestScope
     ): Pair<AccountService, ContactService> {
         val accountService = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob()))
-        val contactService = ContactService(scope, accountService, stub)
+        val contactService = ContactService(scope, accountService, stub, VCardService(StubDeviceRuntimeService()))
         return accountService to contactService
     }
 

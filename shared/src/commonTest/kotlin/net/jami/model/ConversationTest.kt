@@ -377,7 +377,11 @@ class ConversationTest {
             mode = Conversation.Mode.Syncing
         )
         assertTrue(conversation.isSyncing)
-        assertFalse(conversation.isSwarm)
+        // Two different properties named isSwarm: Conversation.isSwarm is derived from the
+        // URI scheme (so a swarm: URI is a swarm even while syncing), while Mode.isSwarm
+        // describes the mode. This asserted the former while meaning the latter.
+        assertTrue(conversation.isSwarm)
+        assertFalse(conversation.mode.isSwarm)
     }
 
     @Test
