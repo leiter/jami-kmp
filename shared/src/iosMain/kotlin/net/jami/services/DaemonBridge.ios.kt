@@ -1031,12 +1031,31 @@ private fun JBSwarmMessage.toKotlinSwarmMessage(): SwarmMessage {
         }
     }
 
+    // Reactions arrive as an array of daemon reaction maps, each carrying at least
+    // "body" (the emoji) and "author" (the reacting peer's URI). ConversationFacade
+    // consumes this as emoji -> list of author URIs (see the flatMap over
+    // `message.reactions` in ConversationFacade.addReactions), so group it that way.
+    //
+    // NOTE: SwigTypeConverters.toKotlinSwarmMessage on Android builds this map as
+    // reactionId -> list of emoji instead, which does not match that consumer — history
+    // reactions there resolve a contact from the emoji string. That looks like a real
+    // Android bug; it is deliberately not copied here.
+    val reactionsMap = mutableMapOf<String, MutableList<String>>()
+    (this.reactions as? List<*>)?.forEach { entry ->
+        val reaction = entry as? Map<*, *> ?: return@forEach
+        val emoji = reaction["body"] as? String ?: return@forEach
+        val author = reaction["author"] as? String ?: return@forEach
+        reactionsMap.getOrPut(emoji) { mutableListOf() }.add(author)
+    }
+
     return SwarmMessage(
         id = this.messageId ?: "",
         type = this.type ?: "",
         linearizedParent = this.replyTo ?: "",
         body = bodyMap,
-        reactions = emptyMap(),
+        reactions = reactionsMap,
+        // JBSwarmMessage exposes no `editions` property, so edit history cannot be
+        // recovered here yet; it needs a JamiBridgeWrapper change.
         editions = emptyList(),
         status = statusMap
     )

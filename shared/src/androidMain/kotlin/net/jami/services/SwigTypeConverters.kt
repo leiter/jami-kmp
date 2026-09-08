@@ -119,14 +119,22 @@ fun List<MediaAttribute>.toSwigVectMap(): VectMap {
  * Convert SWIG SwarmMessage to Kotlin SwarmMessage.
  */
 fun SwigSwarmMessage.toKotlinSwarmMessage(): SwarmMessage {
-    // Convert reactions VectMap to Map<String, List<String>>
-    val reactionsMap = mutableMapOf<String, List<String>>()
+    // Reactions arrive as daemon message maps carrying at least "body" (the emoji) and
+    // "author" (the reacting peer's URI). ConversationFacade consumes this as
+    // emoji -> list of author URIs — see the flatMap over `message.reactions` in
+    // ConversationFacade.addReactions, which builds each Interaction with `body = emoji`
+    // and resolves the contact from `Uri.fromString(authorUri)`.
+    //
+    // This previously keyed the map by the reaction's own message id with emoji as the
+    // values, which does not match that consumer: history reactions rendered with the
+    // reaction id as their body and tried to resolve a contact from an emoji string.
+    val reactionsMap = mutableMapOf<String, MutableList<String>>()
     reactions?.let { rxns ->
         for (i in 0 until rxns.size) {
             val reactionMap = rxns[i].toNative()
-            val msgId = reactionMap["id"] ?: continue
             val emoji = reactionMap["body"] ?: continue
-            reactionsMap[msgId] = (reactionsMap[msgId] ?: emptyList()) + emoji
+            val author = reactionMap["author"] ?: continue
+            reactionsMap.getOrPut(emoji) { mutableListOf() }.add(author)
         }
     }
 
