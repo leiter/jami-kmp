@@ -1,115 +1,226 @@
 # iOS Implementation Gap — jami-kmp
 
-Audited: 2026-06-15. Updated: 2026-06-15 after gap-fixing sprint.
+Audited: 2026-06-15. Re-audited and rewritten: 2026-09-08.
 Compares `shared/src/iosMain/` against `shared/src/androidMain/` as the reference.
+
+The 2026-06-15 revision of this file declared almost everything "Done". That was optimistic:
+it counted an `actual` existing as an `actual` working. Many compiled fine and did nothing.
+This revision distinguishes **implemented**, **stubbed**, and **blocked**, and records what
+has and has not been verified.
 
 Effort scale: **S** = 1–2 days · **M** = 3–5 days · **L** = 1+ weeks
 
 ---
 
-## Status after gap-fixing sprint (2026-06-15)
+## 1. Completed 2026-09-08
 
-The following previously-listed gaps have been **resolved**:
+Verified by compilation and `linkDebugFrameworkIosSimulatorArm64` only — see §4.
 
-| Area | Methods fixed |
-|------|--------------|
-| Device management | `getKnownRingDevices`, `revokeDevice`, `addDevice`, `confirmAddDevice`, `cancelAddDevice`, `provideAccountAuthentication`, `setDeviceName` |
-| Account management | `getAccountTemplate`, `changeAccountPassword`, `setAccountsOrder` |
-| Credentials | `getCredentials`, `setCredentials` |
-| Messaging | `sendAccountTextMessage`, `sendTextMessage`, `cancelMessage`, `searchUser` |
-| Conversation preferences | `getConversationPreferences`, `setConversationPreferences` |
-| Search & history | `searchConversation`, `loadSwarmUntil` |
-| Audio | `playDtmf`, `muteCapture`, `isCaptureMuted`, `muteRingtone` |
-| Call ops | `transfer`, `attendedTransfer`, `getCallDetails` |
-| Conference | `hangUpConference`, `joinParticipant`, `addParticipant`, `addMainParticipant`, `detachParticipant`, `getParticipantList`, `getConferenceDetails`, `setConferenceLayout`, `muteParticipantAudio`, `unmuteParticipantAudio` |
-| Video device | `addVideoDevice`, `removeVideoDevice`, `setDefaultDevice`, `setDeviceOrientation`, `applySettings`, `switchVideoInput` |
-| Codec ops | `getCodecList`, `getActiveCodecList`, `setActiveCodecList`, `getCodecDetails` |
-| Media change | `requestMediaChange`, `answerMediaChangeRequest` |
-| Camera capture | `ImageCaptureEffect` — wired to `UIImagePickerController` via bridge |
-| Permissions | `hasCameraPermission`, `hasMicrophonePermission` — real AVFoundation checks |
-| Permissions | `hasContactsPermission` — `CNContactStore.authorizationStatusForEntityType` |
-| Permissions | `hasLocationPermission` — `CLLocationManager.authorizationStatus()` |
-| Permissions | `hasNotificationsPermission` — cached async probe via `UNUserNotificationCenter` |
-| Log capture | `captureRecentLogs` — reads native log file written by bridge |
+### Defects
 
----
+| Item | Was | Now |
+|------|-----|-----|
+| `NSFaceIDUsageDescription` | Absent from `Info.plist`; iOS **terminates the process** on the first Face ID evaluation | Present |
+| `BiometricService.ios.kt` | Account password stored **plaintext** in `NSUserDefaults` (`jami_biometric_<accountId>`), despite the KDoc claiming Keychain | Keychain generic-password item, `SecAccessControl(.biometryCurrentSet)` + `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`; authenticated `LAContext` passed via `kSecUseAuthenticationContext` so there is one prompt, not two. Legacy plaintext values migrated on first read, then deleted |
 
-## 1. Remaining Gaps
+`isEnabled()` deliberately reads a plain marker rather than probing the Keychain — a
+biometry-guarded item cannot be read without prompting, and asking "is this on?" must not prompt.
 
-### 1.1 Video Rendering Pipeline (Architectural — L effort each)
+### Notification actions
 
-The Android video pipeline is built on `ANativeWindow` / shared memory, which has no direct iOS equivalent. Full iOS video call rendering requires a Metal/CALayer implementation.
+Every action button was inert, for three independent reasons — all fixed:
 
-| Method | iOS status | Root cause |
-|--------|-----------|-----------|
-| `acquireNativeWindow()` | Returns `0L` stub | Android `ANativeWindow` concept; no iOS equivalent |
-| `releaseNativeWindow()` | No-op stub | Same |
-| `setNativeWindowGeometry()` | No-op stub | Same |
-| `registerVideoCallback()` | Returns `false` stub | Requires `libjami::SinkTarget` with C++ function-pointer callbacks receiving `VideoFrame*`; not bridgeable via simple cinterop |
-| `unregisterVideoCallback()` | No-op stub | Same |
-| `captureVideoFrame()` | No-op stub | Requires writing raw `ByteArray` into `libjami::VideoFrame` via `getNewFrame`/`publishFrame`; complex interop |
-| `captureVideoPacket()` | No-op stub | Hardware-encoded H.264 packet delivery; requires AVFoundation capture pipeline integration |
+1. The Kotlin `IOSNotificationDelegate` was never installed; `AppDelegate.swift` registered an
+   empty Swift stub. Now installed via `IOSApplicationHelper.setupNotificationDelegate()`, held
+   with a strong reference (the `UNUserNotificationCenter.delegate` property is weak). The Swift
+   stub and its pbxproj entries are deleted.
+2. Call notifications wrote `confId`, but the delegate reads `accountId` / `callId` and returns
+   early without them — so Answer and Decline could never have worked. Now writes both.
+3. `ACTION_ACCEPT` / `ACTION_REQUEST_DECLINE` were registered with no handler. Added, together
+   with a real send for Reply and a real `readMessages` for Mark-read.
 
-**What this means:** Remote video in calls does not render, and local camera is not sent to the daemon. Audio-only calls work fine.
+Action titles and notification text now resolve through `Res.string.*`, reusing the keys
+`AndroidNotificationService` already uses. One new key added: `notif_send_reply`.
 
-**Path to fix:** Implement a Metal/CALayer `SinkTarget` in ObjC++ that receives `VideoFrame` data and renders via a Metal texture. Register it per call using `libjami::registerSinkTarget`. Wire camera frames from `AVCaptureSession` into `getNewFrame`/`publishFrame`. This is a complete multi-week feature.
+### Preferences
 
----
+`PreferencesService` was bound to `StubPreferencesService` — an in-memory map documented "for
+testing" — on iOS, desktop, macOS **and** JS. Conversation mutes, per-account auto-accept size,
+notification toggles, ringtone path and theme were lost on every relaunch, and the notification
+toggles were hardcoded `true`.
 
-### 1.2 Push Notifications (Architectural — L effort)
+`AndroidPreferencesService` moved to `commonMain` as `SettingsPreferencesService`, bound from all
+five platform modules. It depends only on the `Settings` wrapper, which has a real `actual` on
+every target. `StubPreferencesService` is retained for tests.
 
-APNs push token delivery and processing are not wired. These methods are no-ops:
+### Platform stubs
 
-| Method | Note |
-|--------|------|
-| `setPushNotificationToken()` | No JamiBridge binding; requires APNs token delivery to daemon |
-| `setPushNotificationConfig()` | No JamiBridge binding |
-| `pushNotificationReceived()` | No JamiBridge binding; payload not processed |
-
-**What this means:** Calls and messages only arrive when the daemon is running in the foreground. Background wake-up via push is not functional.
-
-**This is a known gap in CLAUDE.md** — it also affects Android (FCM). Both platforms require push notification integration at the libjami level.
+| Item | Fix |
+|------|-----|
+| `platformGetLastModified` returned `0L` | `stat`/`st_mtimespec`, in epoch **milliseconds** to match `File.lastModified()` on the JVM targets |
+| `scaleImageBytes` returned its input | UIImage redraw at `scale = 1.0`, JPEG 0.85; returns input unchanged if it already fits or decoding fails |
+| `extractVideoThumbnail` returned `null` | `AVAssetImageGenerator` at t=1s (frame 0 is black in many recordings) |
+| `VideoPlayerView` drew a static placeholder | `AVPlayerViewController` in a `UIKitViewController` — native transport controls, autoplay, release on dispose, matching the Android ExoPlayer behaviour |
+| `changeCamera()` always returned `null` | Returned before its `scope.launch` had run. Now derives the target camera id synchronously from the device list and launches the hardware switch behind it |
+| `getCameraInfo()` hardcoded capabilities | Real `AVCaptureDevice.formats` enumeration via a new `IOSCameraService.getCameraCapabilities`; old list kept as fallback |
+| History reactions dropped | `JBSwarmMessage.reactions` **was** already populated by the bridge and discarded in conversion. Now marshalled |
 
 ---
 
-### 1.3 Background Sync
+## 2. Remaining — needs the Objective-C bridge
 
-iOS enforces a ~30-second background task limit. The daemon cannot be kept alive indefinitely as on Android. No `BGTaskScheduler` integration exists — periodic background sync does not happen.
+`JamiBridgeWrapper.{h,mm}` + a `build-jamibridge.sh` rebuild. Grouped because they share that cost.
 
-This is a platform limitation / architectural decision, not a simple bridging fix.
+### 2.1 Missing daemon callbacks (the largest remaining gap — M)
+
+`DaemonCallbacks` declares **46** methods. The `JamiBridgeDelegate` protocol declares **31**.
+Android fires 41; iOS fires 30. These are wired end-to-end in Kotlin and simply never receive
+their events:
+
+| Callback | Broken on iOS |
+|----------|---------------|
+| `onDataTransferEvent` | **File transfers never report progress or completion** |
+| `onUserSearchEnded` | **User-directory search is dead** — the query fires, results never arrive |
+| `onMessagesFound` | **In-conversation search is dead** |
+| `onAccountMessageStatusChanged` | No sent/delivered/read receipts |
+| `onVolatileAccountDetailsChanged` | Registration and device-online state never refresh |
+| `onAddDeviceStateChanged` | Device linking / QR pairing shows no progress |
+| `onDeviceRevocationEnded` | Revoke-device UI never completes |
+| `onMigrationEnded` | Account migration never completes |
+| `onIncomingAccountMessage` | Non-swarm / SIP text messages dropped |
+| `onConversationPreferencesUpdated` | Pref changes from other devices ignored |
+| `onConversationRequestDeclined` | Declined requests not removed from the list |
+| `onActiveCallsChanged` | Group-call "join ongoing call" banner never appears |
+| `onAccountProfileReceived` | Own profile/avatar updates not received |
+
+Plus `onConferenceInfoUpdated`, which **is** received at `DaemonBridge.ios.kt:878` and discarded
+(`// Not directly mapped to DaemonCallbacks`) — the participant grid never updates. And there are
+**no `VideoSignal` handlers registered at all**, so `HardwareService.decodingStarted/Stopped` are
+never invoked.
+
+Each is ~10 lines against 30 existing templates; `onMessageReceived` and `onKnownDevicesChanged`
+cover both marshalling shapes. **No commonMain change** — the Kotlin methods already exist.
+
+### 2.2 Small passthroughs, absent from the header (S)
+
+`setNoiseSuppression`, `setEchoCancellation`, `disableParticipantVideo`, `enableParticipantVideo`,
+and swarm-message `editions` (no such property on `JBSwarmMessage`).
+
+`setPushNotificationToken` / `setPushNotificationConfig` / `pushNotificationReceived` are declared
+by the daemon (`headers/configurationmanager_interface.h:252-266`) but not exposed. The three
+passthroughs are cheap; **working push additionally needs PushKit and a push proxy** — ship the
+passthroughs, not the feature.
 
 ---
 
-## 2. Platform Services
+## 3. Remaining — no bridge needed
 
-### 2.1 `IOSDeviceRuntimeService` — Permission Checks
+### 3.1 App bundle capabilities (S) — pure `Info.plist` / entitlements / pbxproj
 
-All permission methods now query the real platform APIs:
+The Xcode project has **no entitlements file and no capabilities at all**.
 
-| Method | API used | Notes |
-|--------|----------|-------|
-| `hasCameraPermission()` | `AVCaptureDevice.authorizationStatus` | Synchronous |
-| `hasMicrophonePermission()` | `AVCaptureDevice.authorizationStatus` | Synchronous |
-| `hasContactsPermission()` | `CNContactStore.authorizationStatusForEntityType` | Synchronous |
-| `hasLocationPermission()` | `CLLocationManager.authorizationStatus()` | Synchronous |
-| `hasNotificationsPermission()` | `UNUserNotificationCenter.getNotificationSettings` | Async; cached at init, defaults `true` until probe completes |
+- **`UIBackgroundModes`** absent — add `voip`, `audio`, `remote-notification`, `fetch`,
+  `processing`. Without `audio`, an active call's `AVAudioSession` is torn down on backgrounding,
+  so CallKit and the notification work in §1 are **partly inert until this lands**.
+- **`CFBundleLocalizations`** — 95 locale folders ship in `composeResources`; the bundle declares
+  none. Suspected effect: the app runs in English regardless of device language. *This is inferred,
+  not observed — confirm before acting.*
+- `NSPhotoLibraryAddUsageDescription`, `BGTaskSchedulerPermittedIdentifiers`,
+  `ITSAppUsesNonExemptEncryption = false`, entitlements with `aps-environment` + App Group.
+- `CXProviderConfiguration.localizedName` is unset, so the system call UI shows a blank app name.
+- `AppDelegate.swift` has no scene-phase handling.
+
+### 3.2 Audio routing and connectivity (M)
+
+- **Bluetooth and wired headsets cannot carry call audio.** `activateAudioSession()` passes
+  `options = 0u`; without `AllowBluetooth`/`AllowBluetoothA2DP` iOS will not route to a headset.
+  The output list is hardcoded `[INTERNAL, SPEAKERS]` and `bluetoothEvents` never emits. The bridge
+  already exposes `getAudioOutputDevices`/`setAudioOutputDevice`, unused.
+- **Nothing monitors connectivity on *any* platform.** `connectivityChanged()` is never called
+  anywhere, so `_connectivityState` is permanently `true` and the daemon is never told the network
+  dropped or returned — despite `AccountService` and `ConversationFacade` collecting that flow to
+  drive `setAccountsActive()`. iOS fix is `NWPathMonitor`; Android needs the same treatment.
+
+### 3.3 Screenshot blocking (M) — held back deliberately
+
+`WindowSecure.ios.kt` is `{}`; the toggle in `AppSettingsScreen.kt:196` does nothing on iOS.
+The secure-`UITextField` technique has to wrap Compose's hosting view and there is a real chance it
+compiles, links and silently fails. Not attempted, because it cannot be verified with the testing
+available.
 
 ---
 
-## 3. Summary
+## 4. Verification status — read this before trusting §1
 
-| Category | Status |
-|----------|--------|
-| Messaging & reactions | **Done** |
-| Conference controls | **Done** |
-| Account & SIP credentials | **Done** |
-| Device management / linking | **Done** |
-| Codec management | **Done** |
-| Call transfer | **Done** |
-| Camera capture (photo send) | **Done** |
-| Search & history | **Done** |
-| Log capture | **Done** |
-| Video call rendering | **Remaining** — architectural, multi-week |
-| Push notifications | **Remaining** — architectural, affects both platforms |
-| Background sync | **Remaining** — iOS platform limitation |
-| Contacts/notification/location permissions | **Done** |
+Two standing constraints: **no physical-device testing** (peer-to-peer fails behind NAT here), and
+**no tests simulating two communicating jami-kmp instances**.
+
+Everything in §1 was verified by `compileKotlinIosSimulatorArm64` +
+`linkDebugFrameworkIosSimulatorArm64` **only**. No test has executed against any of it, because:
+
+> **The test suite does not compile on a clean tree.** ~35 pre-existing errors across 11 files:
+> production constructors gained parameters (`vCardService`, `contactService`, `biometricService`,
+> `deviceRuntimeService`, `audioRecorderService`), `linkColor` was added, `StubHardwareService` was
+> removed. This blocks every `:shared:*Test` task. `IOSNotificationDelegateTest` is separately
+> broken — it reads `IOSNotificationDelegate.KEY_*` as companion members, but they are top-level
+> constants.
+
+Highest-risk unverified items: the **Keychain rewrite** (Keychain calls cannot run in a test binary
+without entitlements anyway) and the **reactions marshalling**.
+
+To make §2.1 verifiable without peers: `StubDaemonBridge.init(callbacks)`
+(`DaemonBridge.kt:480`) currently discards its callbacks. Have it retain them, and each new
+callback gets a test that fires it and asserts the service reacts.
+
+---
+
+## 5. Out of scope — architectural
+
+- **Video rendering, both directions.** `acquireNativeWindow` returns `0L`, `registerVideoCallback`
+  returns `false`, `captureVideoFrame`/`captureVideoPacket` empty. `IOSCameraService` copies every
+  NV12 frame into a fresh `ByteArray` and hands it to the empty TODO — **outgoing video is
+  captured, copied and discarded every frame**; an early return would stop burning battery until
+  the pipeline lands. `VideoSurface.ios.kt` creates an `AVSampleBufferDisplayLayer` nothing ever
+  enqueues into. Needs a `libjami::SinkTarget` in ObjC++ feeding a Metal texture. Multi-week.
+- **Encoder controls** — `setParameters`, `requestKeyFrame`, `setBitrate`,
+  `updatePreviewVideoSurface`. Deliberately left as no-ops: they feed the dead capture path above
+  and would be correct-but-inert until video works.
+- **Screen sharing** — needs ReplayKit; nothing exists.
+- **Picture-in-Picture** — `configurePipController` takes an `AVPlayerLayer` while the video
+  surface uses `AVSampleBufferDisplayLayer`, and nothing calls it, so `enterPipMode()` returns
+  `false` unconditionally. Only meaningful once video rendering exists.
+- **Background sync beyond ~30s** — iOS platform limit.
+- **`RingtoneLauncher.ios.kt`** — returns `null` deliberately; iOS has no system ringtone picker.
+  Correct as-is.
+
+---
+
+## 6. Cross-platform bugs found while doing this work
+
+Both were found while implementing the iOS work; both are now **fixed**.
+
+1. **Android mis-mapped history reactions.** `SwigTypeConverters.toKotlinSwarmMessage` built
+   `reactionId -> [emoji]`, while `ConversationFacade.kt:1331` consumes `emoji -> [authorUri]`
+   — so Android rendered each history reaction with the reaction id as its body and tried to
+   resolve a contact by parsing an emoji as a URI. Now builds `emoji -> [author]`, matching the
+   consumer and the iOS implementation. Live `onReactionAdded/Removed` were never affected, which
+   is why this survived: new reactions looked right, reloaded ones did not.
+2. **`BiometricService.macos.kt` never worked, and never compiled.** Its query builder did
+   `setValue(value, forKey = key.toString())` on the `CFStringRef` constants, producing keys like
+   `CPointer(raw=0x…)` — every call would have returned `errSecParam`. It also failed to compile
+   (22 errors: Core Foundation types never imported, `OSStatus`/`noErr` compared across `Int`/`UInt`).
+   Rewritten against the working iOS implementation, keeping the richer `checkAvailability` that
+   distinguishes NOT_ENROLLED from NO_HARDWARE via `LAError` codes. No migration path is needed
+   because nothing was ever successfully stored.
+
+   **Still unverified:** the macOS target does not compile — 95 remaining errors, none of them in
+   this file (83 in `MacOSHardwareService.kt`, 6 in `PlatformModule.macos.kt`, 4 in
+   `PermissionRequester.macos.kt`, 2 in `DaemonBridge.macos.kt`). Fixing those is separate work.
+
+   Since the iOS and macOS implementations are now substantively identical Darwin code, the right
+   follow-up is a shared `appleMain` source set holding one copy. Not done here: moving source
+   sets while the target cannot compile is unverifiable.
+
+`:shared:compileKotlinDesktop` was also broken on a clean tree — five `DaemonBridgeApi` members had
+no override in `DaemonBridge.desktop.kt`. Fixed in passing, with no-op stubs matching that file's
+existing pattern, because it blocked all desktop verification.
