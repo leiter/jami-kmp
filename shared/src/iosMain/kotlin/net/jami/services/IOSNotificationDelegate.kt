@@ -3,6 +3,7 @@ package net.jami.services
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import net.jami.model.Uri
 import net.jami.utils.Log
 import org.koin.mp.KoinPlatformTools
 import platform.UserNotifications.UNNotification
@@ -20,6 +21,12 @@ import platform.darwin.NSObject
 class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProtocol {
 
     private val callService: CallService by lazy {
+        KoinPlatformTools.defaultContext().get().get()
+    }
+    private val conversationFacade: ConversationFacade by lazy {
+        KoinPlatformTools.defaultContext().get().get()
+    }
+    private val accountService: AccountService by lazy {
         KoinPlatformTools.defaultContext().get().get()
     }
     private val scope = CoroutineScope(Dispatchers.Default)
@@ -66,16 +73,44 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
                     ACTION_REPLY_MESSAGE -> {
                         val text = (didReceiveNotificationResponse as? UNTextInputNotificationResponse)
                             ?.userText?.takeIf { it.isNotBlank() }
-                        if (conversationId != null && text != null) {
-                            Log.d(TAG, "Reply to $conversationId: $text")
-                            // Push reply not yet integrated — push notifications are a known gap
+                        val uri = conversationId?.let { Uri.fromString(it) }
+                        val conversation = uri?.let { accountService.getAccount(accountId)?.getByUri(it) }
+                        if (conversation != null && uri != null && text != null) {
+                            Log.d(TAG, "Reply to $conversationId")
+                            conversationFacade.sendTextMessage(conversation, uri, text)
                             center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
+                        } else {
+                            Log.w(TAG, "Reply action could not resolve conversation $conversationId")
                         }
                     }
                     ACTION_MARK_READ -> {
                         if (conversationId != null) {
                             Log.d(TAG, "Mark read: $conversationId")
+                            conversationFacade.readMessages(accountId, Uri.fromString(conversationId))
                             center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
+                        }
+                    }
+                    ACTION_ACCEPT -> {
+                        // The trust-request notification carries a conversation URI only when the
+                        // account has exactly one pending request; otherwise there is nothing
+                        // unambiguous to act on and the tap should just open the app.
+                        val conversation = conversationId
+                            ?.let { accountService.getAccount(accountId)?.getByUri(Uri.fromString(it)) }
+                        if (conversation != null) {
+                            Log.d(TAG, "Accepting trust request: $conversationId")
+                            conversationFacade.acceptRequest(conversation)
+                            center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
+                        } else {
+                            Log.w(TAG, "Accept action without a resolvable conversation — opening app")
+                        }
+                    }
+                    ACTION_REQUEST_DECLINE -> {
+                        if (conversationId != null) {
+                            Log.d(TAG, "Declining trust request: $conversationId")
+                            conversationFacade.discardRequest(accountId, Uri.fromString(conversationId))
+                            center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
+                        } else {
+                            Log.w(TAG, "Decline action without a resolvable conversation")
                         }
                     }
                     UNNotificationDefaultActionIdentifier ->
@@ -97,6 +132,9 @@ const val ACTION_ANSWER_CALL = "ANSWER_CALL"
 const val ACTION_DECLINE_CALL = "DECLINE_CALL"
 const val ACTION_REPLY_MESSAGE = "REPLY_MESSAGE"
 const val ACTION_MARK_READ = "MARK_READ"
+const val ACTION_ACCEPT = "ACCEPT_ACTION"
+const val ACTION_REQUEST_DECLINE = "REQUEST_DECLINE_ACTION"
 const val KEY_ACCOUNT_ID = "accountId"
 const val KEY_CONVERSATION_ID = "conversationId"
 const val KEY_CALL_ID = "callId"
+const val KEY_CONFERENCE_ID = "conferenceId"

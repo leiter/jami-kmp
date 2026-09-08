@@ -16,7 +16,11 @@
  */
 package net.jami.services
 
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import kotlinx.coroutines.runBlocking
 import net.jami.model.*
+import org.jetbrains.compose.resources.getString
 import net.jami.repository.SettingsRepository
 import net.jami.utils.Log
 import platform.Foundation.NSUUID
@@ -79,12 +83,12 @@ class IOSNotificationService(
         // Call category with answer/decline actions
         val answerAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_ANSWER_CALL,
-            title = "Answer",
+            title = runBlocking { getString(Res.string.action_call_accept) },
             options = UNNotificationActionOptionForeground
         )
         val declineAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_DECLINE_CALL,
-            title = "Decline",
+            title = runBlocking { getString(Res.string.action_call_decline) },
             options = UNNotificationActionOptionDestructive
         )
         val callCategory = UNNotificationCategory.categoryWithIdentifier(
@@ -97,14 +101,14 @@ class IOSNotificationService(
         // Message category with reply and mark as read actions
         val replyAction = UNTextInputNotificationAction.actionWithIdentifier(
             identifier = ACTION_REPLY_MESSAGE,
-            title = "Reply",
+            title = runBlocking { getString(Res.string.notif_reply) },
             options = UNNotificationActionOptionNone,
-            textInputButtonTitle = "Send",
-            textInputPlaceholder = "Type a message..."
+            textInputButtonTitle = runBlocking { getString(Res.string.notif_send_reply) },
+            textInputPlaceholder = runBlocking { getString(Res.string.write_a_message) }
         )
         val markReadAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_MARK_READ,
-            title = "Mark as Read",
+            title = runBlocking { getString(Res.string.notif_mark_as_read) },
             options = 0u
         )
         val messageCategory = UNNotificationCategory.categoryWithIdentifier(
@@ -117,12 +121,12 @@ class IOSNotificationService(
         // Request category with accept/decline actions
         val acceptAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_ACCEPT,
-            title = "Accept",
+            title = runBlocking { getString(Res.string.accept) },
             options = UNNotificationActionOptionNone
         )
         val requestDeclineAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_REQUEST_DECLINE,
-            title = "Decline",
+            title = runBlocking { getString(Res.string.decline) },
             options = UNNotificationActionOptionDestructive
         )
         val requestCategory = UNNotificationCategory.categoryWithIdentifier(
@@ -150,8 +154,7 @@ class IOSNotificationService(
         currentCallNotificationId = identifier
 
         val content = UNMutableNotificationContent().apply {
-            setTitle("Jami Call")
-            setBody("Ongoing call")
+            setTitle(runBlocking { getString(Res.string.notif_current_call) })
             setCategoryIdentifier(CATEGORY_CALL)
             // Apply sound based on settings
             if (notificationGuard.shouldVibrate()) {
@@ -217,9 +220,12 @@ class IOSNotificationService(
         // For RINGING calls, CallKit already shows the native incoming-call UI.
         // Skip the UNNotification to avoid a duplicate banner.
         if (state == Call.CallStatus.RINGING) return
-        val title = when (state) {
-            Call.CallStatus.CURRENT, Call.CallStatus.HOLD -> "Ongoing Call"
-            else -> "Call"
+        val title = runBlocking {
+            when (state) {
+                Call.CallStatus.CURRENT, Call.CallStatus.HOLD ->
+                    getString(Res.string.notif_current_call_title, conference.getDisplayName())
+                else -> getString(Res.string.notif_current_call)
+            }
         }
 
         val content = UNMutableNotificationContent().apply {
@@ -230,7 +236,11 @@ class IOSNotificationService(
             if (notificationGuard.shouldVibrate()) {
                 setSound(UNNotificationSound.defaultSound())
             }
-            setUserInfo(mapOf("confId" to conference.id))
+            setUserInfo(buildMap<Any?, Any?> {
+                put(KEY_ACCOUNT_ID, conference.accountId)
+                put(KEY_CONFERENCE_ID, conference.id)
+                conference.firstCall?.daemonId?.let { put(KEY_CALL_ID, it) }
+            })
         }
 
         val request = UNNotificationRequest.requestWithIdentifier(
@@ -267,8 +277,8 @@ class IOSNotificationService(
         val identifier = "missed_${call.getDaemonIdString()}"
 
         val content = UNMutableNotificationContent().apply {
-            setTitle("Missed Call")
-            setBody("From ${call.getDisplayName()}")
+            setTitle(runBlocking { getString(Res.string.notif_missed_incoming_call) })
+            setBody(call.getDisplayName())
             setSound(UNNotificationSound.defaultSound())
         }
 
@@ -297,8 +307,8 @@ class IOSNotificationService(
         }
 
         val content = UNMutableNotificationContent().apply {
-            setTitle("Group Call")
-            setBody("Ongoing group call in ${conversation.getDisplayName()}")
+            setTitle(runBlocking { getString(Res.string.notif_inprogress_group_call) })
+            setBody(conversation.getDisplayName())
             setCategoryIdentifier(CATEGORY_CALL)
             setSound(UNNotificationSound.defaultSound())
         }
@@ -393,14 +403,17 @@ class IOSNotificationService(
         val identifier = "request_${account.accountId}"
 
         val content = UNMutableNotificationContent().apply {
-            setTitle("New Contact Request")
-            setBody("You have a new contact request")
+            setTitle(runBlocking { getString(Res.string.new_invitation_request_title) })
+            setBody(account.displayUsername)
             setCategoryIdentifier(CATEGORY_REQUEST)
             // Apply sound based on settings
             if (notificationGuard.shouldVibrate()) {
                 setSound(UNNotificationSound.defaultSound())
             }
-            setUserInfo(mapOf("accountId" to account.accountId))
+            setUserInfo(buildMap<Any?, Any?> {
+                put(KEY_ACCOUNT_ID, account.accountId)
+                account.getPending().singleOrNull()?.let { put(KEY_CONVERSATION_ID, it.uri.uri) }
+            })
         }
 
         val request = UNNotificationRequest.requestWithIdentifier(
@@ -501,8 +514,7 @@ class IOSNotificationService(
         val identifier = "location_${contact.uri.uri}"
 
         val content = UNMutableNotificationContent().apply {
-            setTitle("Location Sharing")
-            setBody("Sharing location with ${contact.displayName}")
+            setTitle(runBlocking { getString(Res.string.notif_location_title, contact.displayName.orEmpty()) })
             setSound(null)
         }
 
@@ -576,7 +588,5 @@ class IOSNotificationService(
         const val CATEGORY_MESSAGE = "JAMI_MESSAGE"
         const val CATEGORY_REQUEST = "JAMI_REQUEST"
 
-        const val ACTION_ACCEPT = "ACCEPT_ACTION"
-        const val ACTION_REQUEST_DECLINE = "REQUEST_DECLINE_ACTION"
     }
 }

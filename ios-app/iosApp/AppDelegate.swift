@@ -59,8 +59,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // 3. Register for remote notifications (token delivery handled by daemon when push is wired)
         application.registerForRemoteNotifications()
 
-        // 4. Set notification delegate so foreground notifications are delivered
-        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+        // 4. Install the Kotlin notification delegate (IOSNotificationDelegate). It both
+        // presents banners in the foreground and dispatches the Answer / Decline / Reply /
+        // Mark-read / Accept / Decline-request action buttons, which the previous Swift
+        // stub delegate silently dropped. Must run after doInitKoin(), since the delegate
+        // resolves its services from Koin.
+        IOSApplicationHelperKt.setupNotificationDelegate()
 
         return true
     }

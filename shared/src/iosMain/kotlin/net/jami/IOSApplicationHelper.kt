@@ -22,10 +22,12 @@ import kotlinx.coroutines.launch
 import net.jami.services.AccountService
 import net.jami.services.DaemonBridgeApi
 import net.jami.services.DaemonCallbacks
+import net.jami.services.IOSNotificationDelegate
 import net.jami.services.expect.HardwareService
 import net.jami.utils.Log
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import platform.UserNotifications.UNUserNotificationCenter
 
 // iOS equivalent of JamiApplication.onCreate() / onTerminate() on Android.
 // Called from Swift AppDelegate after initKoin().
@@ -54,6 +56,21 @@ private object JamiLifecycle : KoinComponent {
         }
     }
 
+    /**
+     * Strong reference to the notification delegate.
+     *
+     * `UNUserNotificationCenter.delegate` is a weak property, so without holding it here the
+     * delegate would be collected immediately and every notification action would silently
+     * stop working.
+     */
+    private var notificationDelegate: IOSNotificationDelegate? = null
+
+    fun setupNotificationDelegate() {
+        val delegate = notificationDelegate ?: IOSNotificationDelegate().also { notificationDelegate = it }
+        UNUserNotificationCenter.currentNotificationCenter().setDelegate(delegate)
+        Log.d(TAG, "Notification delegate installed")
+    }
+
     fun stop() {
         try {
             daemonBridge.stop()
@@ -66,4 +83,12 @@ private object JamiLifecycle : KoinComponent {
 }
 
 fun startJami() = JamiLifecycle.start()
+
+/**
+ * Installs the Kotlin [IOSNotificationDelegate] as the UNUserNotificationCenter delegate.
+ *
+ * Must be called from the Swift AppDelegate after `doInitKoin()`, since the delegate
+ * resolves CallService / ConversationFacade / AccountService from Koin on first use.
+ */
+fun setupNotificationDelegate() = JamiLifecycle.setupNotificationDelegate()
 fun stopJami() = JamiLifecycle.stop()
