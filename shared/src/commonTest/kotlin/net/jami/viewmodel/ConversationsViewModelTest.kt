@@ -150,6 +150,13 @@ class ConversationsViewModelTest {
         // addElement only appends to history; it does not set lastEvent, and lastEvent is
         // what ConversationItem.timestamp reads. Without this all three sort as timestamp 0
         // and keep insertion order, so the test proved nothing about sorting.
+        // Marked incoming deliberately. getLastEventSummary prefixes outgoing messages with
+        // a localized "You:" via Compose's suspending getString, which never completes under
+        // runTest — buildConversationItems then hangs and the list stays empty.
+        msg1.isIncoming = true
+        msg2.isIncoming = true
+        msg3.isIncoming = true
+
         conv1.lastEvent = msg1
         conv2.lastEvent = msg2
         conv3.lastEvent = msg3
