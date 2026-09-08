@@ -1158,6 +1158,7 @@ static JBCallState toCallState(const std::string& state) {
                           toCppString(displayName),
                           avatarPath ? toCppString(avatarPath) : "",
                           toCppString(fileType),
+                          "",  // botOwner — added upstream; empty for a normal user profile
                           0);  // flags
 }
 

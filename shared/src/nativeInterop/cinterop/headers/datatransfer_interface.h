@@ -24,9 +24,7 @@
 
 #include <string>
 #include <map>
-#include <vector>
 #include <memory>
-#include <bitset>
 
 namespace libjami {
 
@@ -35,7 +33,7 @@ namespace libjami {
 
 using DataTransferId = uint64_t;
 
-enum class LIBJAMI_PUBLIC DataTransferEventCode : uint32_t {
+enum class LIBJAMI_PUBLIC DataTransferEventCode : uint8_t {
     invalid = 0,
     created,
     unsupported,
@@ -50,7 +48,7 @@ enum class LIBJAMI_PUBLIC DataTransferEventCode : uint32_t {
     timeout_expired,
 };
 
-enum class LIBJAMI_PUBLIC DataTransferError : uint32_t {
+enum class LIBJAMI_PUBLIC DataTransferError : uint8_t {
     success = 0,
     unknown,
     io,
@@ -58,7 +56,7 @@ enum class LIBJAMI_PUBLIC DataTransferError : uint32_t {
 };
 
 /// Bit definition for DataTransferInfo.flags field
-enum class LIBJAMI_PUBLIC DataTransferFlags {
+enum class LIBJAMI_PUBLIC DataTransferFlags : uint8_t {
     direction = 0, ///< 0: outgoing, 1: incoming
 };
 
@@ -137,9 +135,9 @@ LIBJAMI_PUBLIC bool downloadFile(const std::string& accountId,
 /// \return DataTransferError::invalid_argument if id is unknown.
 /// \note unknown \a id results to a no-op call.
 ///
-DataTransferError cancelDataTransfer(const std::string& accountId,
-                                     const std::string& conversationId,
-                                     const std::string& fileId) noexcept LIBJAMI_PUBLIC;
+LIBJAMI_PUBLIC DataTransferError cancelDataTransfer(const std::string& accountId,
+                                                    const std::string& conversationId,
+                                                    const std::string& fileId) noexcept;
 
 /// Return the amount of sent/received bytes of an existing data transfer.
 ///

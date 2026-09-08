@@ -25,7 +25,6 @@
 #include <cstdint>
 
 #include "jami.h"
-#include "security_const.h"
 
 #ifdef __APPLE__
 #include <TargetConditionals.h>
@@ -54,6 +53,10 @@ LIBJAMI_PUBLIC std::string addAccount(const std::map<std::string, std::string>& 
 LIBJAMI_PUBLIC void monitor(bool continuous);
 LIBJAMI_PUBLIC std::vector<std::map<std::string, std::string>> getConnectionList(const std::string& accountId,
                                                                                  const std::string& conversationId);
+LIBJAMI_PUBLIC std::vector<std::map<std::string, std::string>> getConversationConnectivity(
+    const std::string& accountId, const std::string& conversationId);
+LIBJAMI_PUBLIC std::vector<std::map<std::string, std::string>> getConversationTrackedMembers(
+    const std::string& accountId, const std::string& conversationId);
 LIBJAMI_PUBLIC std::vector<std::map<std::string, std::string>> getChannelList(const std::string& accountId,
                                                                               const std::string& connectionId);
 
@@ -102,6 +105,7 @@ LIBJAMI_PUBLIC void updateProfile(const std::string& accountId,
                                   const std::string& displayName,
                                   const std::string& avatar,
                                   const std::string& fileType,
+                                  const std::string& botOwner,
                                   int32_t flag);
 LIBJAMI_PUBLIC int getMessageStatus(uint64_t id);
 LIBJAMI_PUBLIC int getMessageStatus(const std::string& accountId, uint64_t id);
@@ -126,7 +130,6 @@ LIBJAMI_PUBLIC std::vector<std::string> getAudioPluginList();
 LIBJAMI_PUBLIC void setAudioPlugin(const std::string& audioPlugin);
 LIBJAMI_PUBLIC std::vector<std::string> getAudioOutputDeviceList();
 LIBJAMI_PUBLIC void setAudioOutputDevice(int32_t index);
-LIBJAMI_PUBLIC void startAudio();
 LIBJAMI_PUBLIC void setAudioInputDevice(int32_t index);
 LIBJAMI_PUBLIC void setAudioRingtoneDevice(int32_t index);
 LIBJAMI_PUBLIC std::vector<std::string> getAudioInputDeviceList();
@@ -166,6 +169,8 @@ LIBJAMI_PUBLIC bool getRecordPreview();
 LIBJAMI_PUBLIC void setRecordPreview(bool rec);
 LIBJAMI_PUBLIC int getRecordQuality();
 LIBJAMI_PUBLIC void setRecordQuality(int quality);
+LIBJAMI_PUBLIC std::string getConferenceResolution();
+LIBJAMI_PUBLIC void setConferenceResolution(const std::string& resolution);
 
 LIBJAMI_PUBLIC void setHistoryLimit(int32_t days);
 LIBJAMI_PUBLIC int32_t getHistoryLimit();
@@ -439,8 +444,8 @@ struct LIBJAMI_PUBLIC ConfigurationSignal
     {
         constexpr static const char* name = "IncomingTrustRequest";
         using cb_type = void(const std::string& /*account_id*/,
-                             const std::string& /*from*/,
                              const std::string& /*conversationId*/,
+                             const std::string& /*from*/,
                              const std::vector<uint8_t>& payload,
                              time_t received);
     };
@@ -454,24 +459,6 @@ struct LIBJAMI_PUBLIC ConfigurationSignal
         constexpr static const char* name = "ContactRemoved";
         using cb_type = void(const std::string& /*account_id*/, const std::string& /*uri*/, bool banned);
     };
-
-    // Pure trust signals for sequential trust-conversation flow
-    struct LIBJAMI_PUBLIC PureTrustRequestReceived
-    {
-        constexpr static const char* name = "PureTrustRequestReceived";
-        using cb_type = void(const std::string& /*account_id*/,
-                             const std::string& /*from*/,
-                             const std::vector<uint8_t>& /*payload*/,
-                             time_t /*received*/);
-    };
-    struct LIBJAMI_PUBLIC TrustStateChanged
-    {
-        constexpr static const char* name = "TrustStateChanged";
-        using cb_type = void(const std::string& /*account_id*/,
-                             const std::string& /*contact_uri*/,
-                             int /*trustState*/);  // 0=none, 1=pending, 2=requested, 3=trusted
-    };
-
     // struct LIBJAMI_PUBLIC ExportToPeer
     // {
     //     constexpr static const char* name = "ExportToPeer";

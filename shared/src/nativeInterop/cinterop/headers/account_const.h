@@ -17,11 +17,14 @@
 #ifndef LIBJAMI_ACCOUNT_H
 #define LIBJAMI_ACCOUNT_H
 
-#include "def.h"
-
 // Defined in windows.h
+#include <cstdint>
 #ifdef ERROR
 #undef ERROR
+#endif
+// Defined in nb30.h (Windows NetBIOS header)
+#ifdef REGISTERED
+#undef REGISTERED
 #endif
 
 namespace libjami {
@@ -58,7 +61,7 @@ constexpr static const char INITIALIZING[] = "INITIALIZING";
 
 } // namespace States
 
-enum class MessageStates : int {
+enum class MessageStates : uint8_t {
     UNKNOWN = 0,
     SENDING,
     SENT,
@@ -140,6 +143,8 @@ constexpr static const char DEVICE_NAME[] = "Account.deviceName";
 constexpr static const char PROXY_ENABLED[] = "Account.proxyEnabled";
 constexpr static const char PROXY_LIST_ENABLED[] = "Account.proxyListEnabled";
 constexpr static const char PROXY_SERVER[] = "Account.proxyServer";
+constexpr static const char DHT_PROXY_SERVER_ENABLED[] = "Account.dhtProxyServerEnabled";
+constexpr static const char DHT_PROXY_SERVER_PORT[] = "Account.dhtProxyServerPort";
 constexpr static const char PROXY_PUSH_TOKEN[] = "Account.proxyPushToken";
 constexpr static const char KEEP_ALIVE_ENABLED[] = "Account.keepAliveEnabled";
 constexpr static const char DHT_PEER_DISCOVERY[] = "Account.peerDiscovery";
