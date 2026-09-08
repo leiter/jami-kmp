@@ -295,10 +295,11 @@
 The iOS host app had never been compiled on a Mac until now. It builds, launches and stays up;
 these are what the run surfaced.
 
-- [ ] **Welcome-screen button clips long labels** — the third button's German text
-  ("Verbindung von einem anderen Gerät aus herstellen") is cut off at the button bounds on an
-  iPhone 17 Pro with the simulator set to `de-DE`. Fix in the button component, not that call
-  site — every long locale is exposed.
+- [x] **Welcome-screen button clips long labels** — Fixed in `JamiButton`, which pinned all three
+  style variants to a fixed `height(minTouchTarget)`, so any wrapped label was clipped. Now
+  `heightIn(min = ...)`, and the label is `weight(1f, fill = false)` + `TextAlign.Center` so it
+  wraps instead of pushing a leading icon out. Verified in the simulator at `de-DE`.
+  `JamiSearchField` keeps its fixed height deliberately — it is single-line.
 - [ ] **Script the device-side native symlinks.** `lib/` is hand-made and drifts silently when the
   daemon's dependency set changes; three of the five first-build failures were exactly this
   (`http_parser` dropped, `vpx` absent on the simulator, `yrs` added). `scripts/make_sim_links.py`

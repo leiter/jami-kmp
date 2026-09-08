@@ -20,7 +20,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
 import net.jami.ui.theme.JamiTheme
 
 /**
@@ -78,7 +79,7 @@ fun JamiButton(
         JamiButtonStyle.Primary -> {
             Button(
                 onClick = onClick,
-                modifier = modifier.height(JamiTheme.sizes.minTouchTarget),
+                modifier = modifier.heightIn(min = JamiTheme.sizes.minTouchTarget),
                 enabled = effectiveEnabled,
                 shape = shape,
                 colors = ButtonDefaults.buttonColors(
@@ -105,7 +106,7 @@ fun JamiButton(
         JamiButtonStyle.Secondary -> {
             OutlinedButton(
                 onClick = onClick,
-                modifier = modifier.height(JamiTheme.sizes.minTouchTarget),
+                modifier = modifier.heightIn(min = JamiTheme.sizes.minTouchTarget),
                 enabled = effectiveEnabled,
                 shape = shape,
                 border = BorderStroke(
@@ -135,7 +136,7 @@ fun JamiButton(
         JamiButtonStyle.Destructive -> {
             Button(
                 onClick = onClick,
-                modifier = modifier.height(JamiTheme.sizes.minTouchTarget),
+                modifier = modifier.heightIn(min = JamiTheme.sizes.minTouchTarget),
                 enabled = effectiveEnabled,
                 shape = shape,
                 colors = ButtonDefaults.buttonColors(
@@ -186,9 +187,13 @@ private fun ButtonContent(
                 )
                 Spacer(Modifier.width(JamiTheme.spacing.s))
             }
+            // weight(fill = false) keeps a long label from pushing the icon out of the
+            // button; it wraps instead, and the button grows to fit (see heightIn above).
             Text(
                 text = text,
+                modifier = Modifier.weight(1f, fill = false),
                 style = JamiTheme.typography.labelLarge,
+                textAlign = TextAlign.Center,
             )
         }
     }
