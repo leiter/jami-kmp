@@ -17,6 +17,67 @@ Since Kotlin/Native cinterop only supports C and Objective-C (not C++), we need 
 - `JamiBridgeWrapper.mm` - Objective-C++ implementation (links to libjami)
 - `NativeFileLogger.h/m` - Optional file logging utility
 
+## Native library setup — required before any iOS build
+
+**A fresh clone cannot build the iOS targets.** Most of the native libraries this module
+links against are machine-specific symlinks that are deliberately not committed, and nothing
+in the Gradle build creates them. Kotlin/Native compiles fine and then fails at *link* time
+with missing symbols.
+
+### What is committed, and what is not
+
+| Path | Tracked? | What it is |
+|------|----------|------------|
+| `lib/libJamiBridge_ios.a` | **Yes** | The compiled ObjC++ wrapper, arm64 device |
+| `lib/libJamiBridge_iossim.a` | **Yes** | The compiled ObjC++ wrapper, arm64 simulator |
+| `lib/*.a` (everything else) | No | Symlinks into `jami-client-ios/DEPS/arm64-iPhoneOS/lib/` — device libjami and its ~48 dependencies |
+| `lib-sim/` (all of it) | No | Symlinks into `jami-client-ios/xcframework/*/ios-arm64-simulator/` — the simulator equivalents |
+
+`lib/.gitignore` excludes `*.a` with an exception for the two bridge libraries. `lib-sim/`
+is untracked in its entirety.
+
+The two committed `.a` files are build outputs kept in git so that a normal Kotlin change
+does not require a working ObjC++ toolchain. They are rebuilt by `build-jamibridge.sh`
+(below) whenever `JamiBridgeWrapper.mm` or `.h` changes — that rebuild **overwrites tracked
+binaries**, so commit unrelated work first.
+
+### Recreating the symlinks
+
+Both sets point at a sibling checkout of **`jami-client-ios`**, which must exist and must
+already have been built (its `DEPS/` and `xcframework/` directories are build products, not
+checked-in sources).
+
+**Simulator** — `scripts/make_sim_links.py` regenerates `lib-sim/`:
+
+```bash
+python3 scripts/make_sim_links.py
+# Created 49 symlinks
+# All libs found
+```
+
+It reports any library it could not find, which is the quickest way to tell whether the
+`jami-client-ios` xcframework build is complete.
+
+> **Caveat:** the script hardcodes two absolute paths — the `jami-client-ios` xcframework
+> root and this repository's location. Both assume `/Users/Marco/Projects/`. Anyone working
+> from a different checkout must edit `xcfw_root` and `sim_lib` at the top of the file.
+
+**Device** — there is **no** equivalent script. The symlinks in `lib/` were created by hand
+and point into `jami-client-ios/DEPS/arm64-iPhoneOS/lib/`. Recreating them means linking each
+`.a` from that directory into `lib/`, plus `libjami-core.a` as `lib/libjami.a` (the `.def`
+and the build script both expect the shorter name). Worth scripting the next time someone
+has to do it.
+
+### Symptom when this is missing
+
+`:shared:compileKotlinIosSimulatorArm64` succeeds and
+`:shared:linkDebugFrameworkIosSimulatorArm64` fails with undefined symbols from libjami or
+its dependencies. Per the workspace playbook, link failures are the ones a JVM build never
+catches — if the link step fails on a clean machine, check these symlinks before suspecting
+the Kotlin code.
+
+---
+
 ## Building JamiBridge Static Library
 
 ### Prerequisites

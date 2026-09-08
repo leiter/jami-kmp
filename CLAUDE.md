@@ -160,3 +160,23 @@ The `DaemonBridge` expect class (100+ methods) is the gateway to `libjami`:
 | Web/JS | WebSocket / HTTP | REST stubs (experimental) |
 
 When adding a new daemon capability, add the method to `DaemonBridge` and implement it in at minimum the Android and iOS source sets. Other platforms are best-effort.
+
+### Building the iOS/macOS targets — read before a fresh checkout
+
+**A fresh clone cannot link the iOS targets.** The native libraries under
+`shared/src/nativeInterop/cinterop/lib/` (device) and `lib-sim/` (simulator) are
+machine-specific symlinks into a sibling **`jami-client-ios`** checkout and are deliberately
+not committed. Nothing in the Gradle build creates them, so Kotlin compiles cleanly and then
+fails at *link* time with undefined libjami symbols.
+
+- Simulator symlinks: `python3 scripts/make_sim_links.py` — but it hardcodes absolute paths
+  under `/Users/Marco/Projects/`, so edit `xcfw_root` and `sim_lib` on any other machine.
+- Device symlinks: no script exists; they were created by hand into
+  `jami-client-ios/DEPS/arm64-iPhoneOS/lib/`.
+- The only committed binaries are `lib/libJamiBridge_ios.a` and `lib/libJamiBridge_iossim.a`,
+  the compiled ObjC++ wrapper. Rebuilding them with
+  `shared/src/nativeInterop/cinterop/JamiBridge/build-jamibridge.sh` **overwrites tracked
+  files** — commit unrelated work first.
+
+Full detail, including the symptom when it is missing:
+`shared/src/nativeInterop/cinterop/JamiBridge/README.md`.
