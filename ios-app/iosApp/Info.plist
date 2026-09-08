@@ -131,10 +131,6 @@
 		<string>remote-notification</string>
 		<string>voip</string>
 	</array>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>net.jami.iosapp.sync</string>
-	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
@@ -155,6 +151,17 @@
 	<string>Jami accesses your photo library so you can send images in conversations.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<!-- Required for PKPushRegistry: without it the VoIP push type is rejected at
+		     registration and no incoming call ever wakes the app. -->
+		<string>voip</string>
+		<!-- Silent APNs pushes carrying messages/sync, handled in
+		     didReceiveRemoteNotification:fetchCompletionHandler:. -->
+		<string>remote-notification</string>
+		<!-- The daemon keeps audio flowing once a call is answered from the background. -->
+		<string>audio</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

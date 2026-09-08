@@ -26,6 +26,7 @@ import net.jami.daemon.ConversationCallback
 import net.jami.daemon.DataTransferCallback
 import net.jami.daemon.IntegerMap
 import net.jami.daemon.JamiService
+import net.jami.daemon.NetworkServiceCallback
 import net.jami.daemon.PresenceCallback
 import net.jami.daemon.StringMap
 import net.jami.daemon.StringVect
@@ -65,6 +66,7 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
     private var videoCallback: VideoCallback? = null
     private var dataTransferCallback: DataTransferCallback? = null
     private var conversationCallback: ConversationCallback? = null
+    private var networkServiceCallback: NetworkServiceCallback? = null
 
     companion object {
         private const val TAG = "DaemonBridge"
@@ -109,6 +111,7 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
             videoCallback = createVideoCallback()
             dataTransferCallback = createDataTransferCallback(callbacks)
             conversationCallback = createConversationCallback(callbacks)
+            networkServiceCallback = createNetworkServiceCallback()
 
             // Initialize daemon with all callbacks
             JamiService.init(
@@ -117,7 +120,8 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
                 presenceCallback,
                 dataTransferCallback,
                 videoCallback,
-                conversationCallback
+                conversationCallback,
+                networkServiceCallback
             )
 
             isInitialized = true
@@ -153,6 +157,12 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
     }
 
     override fun isRunning(): Boolean = isInitialized
+
+    override fun connectivityChanged() {
+        if (!isInitialized) return
+        Log.d(TAG, "connectivityChanged() -> daemon")
+        JamiService.connectivityChanged()
+    }
 
     // ==================== Account Operations ====================
 
@@ -248,8 +258,8 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
 
     // ==================== Profile ====================
 
-    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
-        JamiService.updateProfile(accountId, displayName, avatar, fileType, flag)
+    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int) {
+        JamiService.updateProfile(accountId, displayName, avatar, fileType, botOwner, flag)
     }
 
     // ==================== Call Operations ====================
@@ -279,7 +289,7 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
     }
 
     override fun unhold(accountId: String, callId: String) {
-        JamiService.unhold(accountId, callId)
+        JamiService.resume(accountId, callId)
     }
 
     override fun resume(accountId: String, callId: String): Boolean {
@@ -330,13 +340,21 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         return JamiService.getCallDetails(accountId, callId).toNative()
     }
 
+    override fun toggleRecording(accountId: String, callId: String): Boolean {
+        return JamiService.toggleRecording(accountId, callId)
+    }
+
+    override fun getIsRecording(accountId: String, callId: String): Boolean {
+        return JamiService.getIsRecording(accountId, callId)
+    }
+
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {
         return JamiService.holdConference(accountId, confId)
     }
 
     override fun unholdConference(accountId: String, confId: String): Boolean {
-        return JamiService.unholdConference(accountId, confId)
+        return JamiService.resumeConference(accountId, confId)
     }
 
     override fun resumeConference(accountId: String, confId: String): Boolean {
@@ -523,10 +541,6 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
 
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
         JamiService.setIsComposing(accountId, uri, isComposing)
-    }
-
-    override fun cancelMessage(accountId: String, messageId: Long): Boolean {
-        return JamiService.cancelMessage(accountId, messageId)
     }
 
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {
@@ -817,6 +831,11 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
             callbacks.onMediaChangeRequested(accountId, callId, mediaList.toNative())
         }
 
+        override fun recordingStateChanged(callId: String, code: Int) {
+            // code: 0 = stopped, non-zero = recording
+            callbacks.onRecordingStateChanged(callId, code != 0)
+        }
+
         override fun conferenceCreated(accountId: String, conversationId: String, confId: String) {
             callbacks.onConferenceCreated(accountId, conversationId, confId)
         }
@@ -838,6 +857,10 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         override fun newBuddyNotification(accountId: String, buddyUri: String, status: Int, lineStatus: String) {
             callbacks.onNewBuddyNotification(accountId, buddyUri, status, lineStatus)
         }
+    }
+
+    private fun createNetworkServiceCallback() = object : NetworkServiceCallback() {
+        // No-op: jami-kmp does not use the peer-service-discovery/tunnel API yet.
     }
 
     private fun createVideoCallback() = object : VideoCallback() {

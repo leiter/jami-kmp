@@ -1,6 +1,7 @@
 # iOS Implementation Gap — jami-kmp
 
-Audited: 2026-06-15. Re-audited and rewritten: 2026-09-08.
+Audited: 2026-06-15. Re-audited and rewritten: 2026-09-08, then reconciled with the
+daemon-stability and push work merged from main.
 Compares `shared/src/iosMain/` against `shared/src/androidMain/` as the reference.
 
 The 2026-06-15 revision of this file declared almost everything "Done". That was optimistic:
@@ -108,8 +109,15 @@ cover both marshalling shapes. **No commonMain change** — the Kotlin methods a
 `SwarmMessage` always had the field, `JBSwarmMessage` simply had no property for it.
 
 `setPushNotificationToken` / `Topic` / `Config` and `pushNotificationReceived` are real
-passthroughs now. **Groundwork only** — working push additionally needs PushKit registration
-in the app and a push proxy server.
+passthroughs now, and the client side around them landed separately on main (2026-07-27):
+`IOSPushServiceManager`, `IOSPushHelper.kt`, the APNs and PushKit delegates in `AppDelegate`,
+and a synchronous placeholder call reported to CallKit on VoIP wake, which the real daemon
+call then adopts.
+
+**Still blocked on infrastructure, both platforms:** the push is sent by the DHT proxy, not
+the peer, and the public proxy carries only SFL's FCM credentials. It needs a self-hosted
+`dhtnode --proxyserver` with this app's own APNs/FCM credentials — see
+`doc/push-notifications.md`.
 
 **Not a gap after all:** `disableParticipantVideo` and `enableParticipantVideo` are empty on
 Android too, and the daemon exposes no matching API — only the deprecated `muteParticipant`

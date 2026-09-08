@@ -5,10 +5,10 @@ import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -16,34 +16,41 @@ import net.jami.android.service.CallActionReceiver
 import net.jami.android.service.JamiDaemonService
 import net.jami.services.AccountService
 import net.jami.services.AndroidPictureInPictureManager
+import net.jami.services.BiometricService
 import net.jami.services.CallService
 import net.jami.services.NotificationService
 import net.jami.services.SyncManager
 import net.jami.services.expect.HardwareService
 import net.jami.ui.JamiApp
+import net.jami.ui.navigation.DeepLinkState
 import net.jami.ui.navigation.ShareState
 import net.jami.utils.Log
 import org.koin.android.ext.android.inject
 import java.io.File
 
-class MainActivity : ComponentActivity() {
+// FragmentActivity (not just ComponentActivity) because BiometricPrompt only accepts a
+// FragmentActivity or Fragment host; see BiometricService.android.kt's attachActivity().
+class MainActivity : FragmentActivity() {
 
     private val syncManager: SyncManager by inject()
     private val accountService: AccountService by inject()
     private val callService: CallService by inject()
     private val hardwareService: HardwareService by inject()
     private val pipManager: AndroidPictureInPictureManager by inject()
+    private val biometricService: BiometricService by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         pipManager.attachActivity(this)
+        biometricService.attachActivity(this)
         ContextCompat.startForegroundService(this, Intent(this, JamiDaemonService::class.java))
         setContent {
             JamiApp()
         }
         handleCallIntent(intent)
         handleShareIntent(intent)
+        handleDeepLinkIntent(intent)
         lifecycleScope.launch {
             hardwareService.screenShareRequest.collect {
                 requestScreenSharePermission()
@@ -55,11 +62,13 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         handleCallIntent(intent)
         handleShareIntent(intent)
+        handleDeepLinkIntent(intent)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         pipManager.detachActivity()
+        biometricService.detachActivity()
     }
 
     override fun onUserLeaveHint() {
@@ -185,6 +194,24 @@ class MainActivity : ComponentActivity() {
         }
 
         ShareState.signalSharePicker()
+    }
+
+    /**
+     * Handles ACTION_VIEW / ACTION_DIAL for the ring:, jami:, sip:, tel: URI schemes
+     * (see AndroidManifest.xml intent-filter). Mirrors jami-android-client's
+     * HomeFragment.handleIntent(): pre-fills the search box with the bare identifier
+     * rather than placing a call directly, since the target of an externally-supplied
+     * link is not trusted enough to auto-dial.
+     */
+    private fun handleDeepLinkIntent(intent: Intent?) {
+        if (intent?.action != Intent.ACTION_VIEW && intent?.action != Intent.ACTION_DIAL) return
+        val data = intent.data ?: return
+        // Strip the URI scheme (e.g. "jami:1234abcd" -> "1234abcd", "ring://1234abcd" ->
+        // "1234abcd", "sip:alice@example.com" -> "alice@example.com") down to the bare
+        // identifier that NewConversationViewModel.search() expects.
+        val query = data.schemeSpecificPart?.removePrefix("//")?.takeIf { it.isNotBlank() } ?: return
+        Log.d(TAG, "Deep link received: scheme=${data.scheme} query=$query")
+        DeepLinkState.request(query)
     }
 
     private fun copyUriToCache(uri: Uri, mimeType: String): String? {

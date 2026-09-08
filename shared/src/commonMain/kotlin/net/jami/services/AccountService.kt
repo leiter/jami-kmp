@@ -45,6 +45,7 @@ import net.jami.model.ContactLocation
 import net.jami.model.ContactLocationEntry
 import net.jami.model.Conversation
 import net.jami.model.Interaction
+import net.jami.model.MemberRole
 import net.jami.model.SwarmMessage
 import net.jami.model.TrustRequest
 import net.jami.model.Uri
@@ -76,7 +77,40 @@ class AccountService(
     val currentAccount: StateFlow<Account?> = _currentAccount.asStateFlow()
 
     private val _accountEvents = MutableSharedFlow<AccountEvent>()
-    val accountEvents: SharedFlow<AccountEvent> = _accountEvents.asSharedFlow()
+
+    /**
+     * A collector that attaches after an account has already reached its current registration
+     * state would otherwise miss that transition forever: [_accountEvents] has no replay, and
+     * the daemon can carry an already-provisioned account through `UNREGISTERED`→`TRYING`→
+     * `REGISTERED` within milliseconds of daemon startup — often before any UI/service
+     * subscriber has attached (confirmed via harness hardware testing, 2026-08-17, restoring a
+     * fixture with an existing account: the daemon logged a full registration burst inside the
+     * same ~300ms as daemon init, well before `HarnessAgent`'s listener launched, and the
+     * transition was silently lost).
+     *
+     * On subscription, replay each known account's **current** registration state (read from
+     * [_accounts], which [onRegistrationStateChanged] always updates synchronously before
+     * emitting) as a synthetic [AccountEvent.RegistrationStateChanged] — closing that race for
+     * every collector, harness or real UI. Deliberately narrow: only this one state-representable
+     * event type is backfilled, not the whole event stream — replaying one-shot events (contact
+     * requests, name-registration results, …) to a late subscriber would be actively wrong.
+     */
+    val accountEvents: Flow<AccountEvent> = _accountEvents.asSharedFlow()
+        .onSubscription {
+            for (account in _accounts.value) {
+                val state = account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATUS.key]
+                if (!state.isNullOrEmpty()) {
+                    emit(
+                        AccountEvent.RegistrationStateChanged(
+                            account.accountId,
+                            state,
+                            account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATE_CODE.key]?.toIntOrNull() ?: 0,
+                            account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATE_DESC.key] ?: "",
+                        )
+                    )
+                }
+            }
+        }
 
     private val _incomingMessages = MutableSharedFlow<IncomingMessage>()
     val incomingMessages: SharedFlow<IncomingMessage> = _incomingMessages.asSharedFlow()
@@ -352,24 +386,46 @@ class AccountService(
         daemonBridge.sendRegister(accountId, enabled)
     }
 
+    // Account ids explicitly deactivated via setAccountActive(id, false), tracked synchronously so
+    // it stays authoritative regardless of coroutine ordering or a stale isActive read. A future
+    // background proxy-deactivation/restore path must consult this before reactivating an account,
+    // so a battery-saving deactivation cannot resurrect one the user turned off on purpose.
+    // In-memory only — the in-process daemon resets every account to active on (re)load, so
+    // persisting ids would only produce stale state. Ported from libjamiclient AccountService.kt.
+    private val explicitlyDeactivatedAccounts = mutableSetOf<String>()
+
+    /** Account ids the user has explicitly deactivated via [setAccountActive]. */
+    val deactivatedAccounts: Set<String> get() = explicitlyDeactivatedAccounts.toSet()
+
     /**
      * Activate or deactivate an account.
      */
     fun setAccountActive(accountId: String, active: Boolean) {
+        // Record the explicit intent before the (possibly async) daemon call.
+        if (active) explicitlyDeactivatedAccounts.remove(accountId)
+        else explicitlyDeactivatedAccounts.add(accountId)
         daemonBridge.setAccountActive(accountId, active)
     }
 
     /**
      * Activate or deactivate all accounts.
+     *
+     * Proxy-enabled accounts are kept active regardless of [active] — they rely on the proxy for
+     * connectivity. A bulk reactivation (network restored, foreground return) is treated as an
+     * explicit "everything on" and clears the per-account deactivation markers; a bulk
+     * deactivation marks every non-proxy account so a later background restore can tell these
+     * apart from user-driven ones.
      */
     fun setAccountsActive(active: Boolean) {
-        for (account in accountsMap.values) {
-            // If proxy is enabled, account is considered always active
-            if (account.isDhtProxyEnabled) {
-                daemonBridge.setAccountActive(account.accountId, true)
-            } else {
-                daemonBridge.setAccountActive(account.accountId, active)
+        if (active) {
+            explicitlyDeactivatedAccounts.clear()
+        } else {
+            for (account in accountsMap.values) {
+                if (!account.isDhtProxyEnabled) explicitlyDeactivatedAccounts.add(account.accountId)
             }
+        }
+        for (account in accountsMap.values) {
+            daemonBridge.setAccountActive(account.accountId, active || account.isDhtProxyEnabled)
         }
     }
 
@@ -470,7 +526,7 @@ class AccountService(
      * @param flag 0 = path, 1 = base64, 2 = clear avatar
      */
     fun updateProfile(accountId: String, displayName: String, avatar: String = "", fileType: String = "", flag: Int = 0) {
-        daemonBridge.updateProfile(accountId, displayName, avatar, fileType, flag)
+        daemonBridge.updateProfile(accountId, displayName, avatar, fileType, botOwner = "", flag)
     }
 
     // ==================== Export/Import ====================
@@ -1025,6 +1081,28 @@ class AccountService(
     ) {
         scope.launch {
             accountsMap[accountId]?.let { account ->
+                val oldState = account.registrationState
+                val newState = Account.RegistrationState.fromString(state)
+
+                // First transition out of INITIALIZING: the archive is decrypted and the daemon has
+                // its real config now. Re-hydrate details / credentials / devices / volatile details
+                // so the model doesn't keep carrying the pre-registration snapshot (mirrors
+                // libjamiclient AccountService.registrationStateChanged).
+                if (oldState == Account.RegistrationState.INITIALIZING &&
+                    newState != Account.RegistrationState.INITIALIZING
+                ) {
+                    runCatching {
+                        account.details.putAll(daemonBridge.getAccountDetails(accountId))
+                        account.credentials.clear()
+                        account.credentials.addAll(
+                            daemonBridge.getCredentials(accountId).map { AccountCredentials.fromMap(it) }
+                        )
+                        account.devices.clear()
+                        account.devices.putAll(daemonBridge.getKnownRingDevices(accountId))
+                        account.volatileDetails.putAll(daemonBridge.getVolatileAccountDetails(accountId))
+                    }.onFailure { Log.w(TAG, "onRegistrationStateChanged: re-hydrate failed for $accountId", it) }
+                }
+
                 account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATUS.key] = state
                 account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATE_CODE.key] = code.toString()
                 account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATE_DESC.key] = detail
@@ -1141,8 +1219,38 @@ class AccountService(
         }
     }
 
+    /**
+     * Proactively registers the 1:1 swarm conversation locally the moment a contact is
+     * confirmed, instead of relying solely on `ConversationReady` firing afterward. Ports
+     * `jami-android-client`'s `AccountService.contactAdded()` — the reference implementation
+     * never depends on `ConversationReady` for this case either. Needed because, in this port,
+     * `ConversationReady` doesn't reliably fire on the *sender's* own device after the peer
+     * accepts (confirmed via harness reproduction, `doc/TODO.md`'s 2026-08-14 "Bug Findings"),
+     * leaving the sender's `Account` with no local conversation object to send into even though
+     * the daemon is confirmed to be delivering real swarm traffic for it. `Conversation.Mode
+     * .Syncing` is a placeholder state — if `ConversationReady` does fire later, its existing
+     * `account.getByUri(...) ?: account.newSwarm(...)` guard treats this as already-present and
+     * just proceeds, no special-casing needed there.
+     */
     internal fun onContactAdded(accountId: String, uri: String, confirmed: Boolean) {
         scope.launch {
+            accountsMap[accountId]?.let { account ->
+                val details = daemonBridge.getContactDetails(accountId, uri)
+                val contact = account.getContactFromCache(Uri.fromString(uri))
+                details[CONTACT_CONVERSATION_ID]?.takeIf { it.isNotEmpty() }?.let { conversationId ->
+                    contact.setConversationUri(Uri(Uri.SWARM_SCHEME, conversationId))
+                }
+                val conversationUri = contact.conversationUri.value
+                if (conversationUri.isSwarm && account.getByUri(conversationUri) == null) {
+                    val conversation = account.newSwarm(conversationUri.rawRingId, Conversation.Mode.Syncing)
+                    conversation.addContact(contact, MemberRole.MEMBER)
+                    // newSwarm() alone only indexes into the swarm-id map; conversationStarted()
+                    // is what actually adds it to the URI-keyed map that getByUri()/getByContact()
+                    // (and so ConversationFacade.startConversation()) search — see
+                    // ConversationFacade.onConversationReady() for the identical two-step pattern.
+                    account.conversationStarted(conversation)
+                }
+            }
             _accountEvents.emit(AccountEvent.ContactAdded(accountId, uri, confirmed))
         }
     }
@@ -1285,6 +1393,9 @@ class AccountService(
         const val ACCOUNT_SCHEME_PASSWORD = "password"
         const val ACCOUNT_SCHEME_KEY = "key"
         const val MIME_GEOLOCATION = "application/geo"
+
+        /** Key into [DaemonBridgeApi.getContactDetails]'s result map for the contact's swarm conversation id. */
+        private const val CONTACT_CONVERSATION_ID = "conversationId"
     }
 }
 

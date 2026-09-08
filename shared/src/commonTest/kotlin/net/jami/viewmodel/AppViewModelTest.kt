@@ -19,6 +19,7 @@ package net.jami.viewmodel
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.model.ConfigKey
+import net.jami.services.BiometricService
 import net.jami.services.StubDaemonBridge
 import net.jami.ui.viewmodel.AppState
 import net.jami.ui.viewmodel.AppViewModel
@@ -26,7 +27,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
-import net.jami.services.BiometricService
 
 class AppViewModelTest {
 

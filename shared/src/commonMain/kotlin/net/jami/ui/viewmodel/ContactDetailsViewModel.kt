@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.jami.model.Contact
 import net.jami.model.Conversation
+import net.jami.model.MemberRole
+import net.jami.model.Profile
 import net.jami.model.Uri
 import net.jami.services.AccountService
 import net.jami.services.ContactEvent
@@ -52,6 +54,12 @@ data class ContactDetailsState(
     val isSwarm: Boolean = false,
     val isAdmin: Boolean = false,
     val memberUris: List<String> = emptyList(),
+    /** Per-member role (admin/member/invited/…), keyed by member URI. Swarm groups only. */
+    val memberRoles: Map<String, MemberRole> = emptyMap(),
+    /** Group title, editable by admins. Empty for 1:1 conversations. */
+    val groupTitle: String = "",
+    /** Group avatar, editable by admins. Falls back to [avatarBytes] when unset. */
+    val groupAvatarBytes: ByteArray? = null,
 )
 
 /**
@@ -149,6 +157,8 @@ class ContactDetailsViewModel(
                 val memberUris = if (isSwarm) {
                     conversation!!.roles.keys.toList()
                 } else emptyList()
+                val memberRoles = if (isSwarm) conversation!!.roles.toMap() else emptyMap()
+                val groupProfile = if (isSwarm) conversation!!.profileFlow.value else Profile.EMPTY_PROFILE
 
                 _state.value = ContactDetailsState(
                     displayName = profile.displayName ?: contact.displayUsername,
@@ -163,6 +173,9 @@ class ContactDetailsViewModel(
                     isSwarm = isSwarm,
                     isAdmin = isAdmin,
                     memberUris = memberUris,
+                    memberRoles = memberRoles,
+                    groupTitle = groupProfile.displayName ?: "",
+                    groupAvatarBytes = groupProfile.avatar,
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)
@@ -240,6 +253,26 @@ class ContactDetailsViewModel(
         val swarmId = _state.value.swarmId.takeIf { it.isNotEmpty() } ?: return
         conversationFacade.removeConversationMember(accountId, swarmId, memberUri)
         _state.value = _state.value.copy(memberUris = _state.value.memberUris.filter { it != memberUri })
+    }
+
+    /**
+     * Rename a swarm group (admin only — the daemon rejects this call otherwise).
+     */
+    fun updateGroupTitle(title: String) {
+        val accountId = currentAccountId ?: return
+        val swarmId = _state.value.swarmId.takeIf { it.isNotEmpty() } ?: return
+        conversationFacade.updateConversationTitle(accountId, swarmId, title)
+        _state.value = _state.value.copy(groupTitle = title)
+    }
+
+    /**
+     * Update a swarm group's avatar (admin only — the daemon rejects this call otherwise).
+     */
+    fun updateGroupAvatar(avatarBytes: ByteArray?) {
+        val accountId = currentAccountId ?: return
+        val swarmId = _state.value.swarmId.takeIf { it.isNotEmpty() } ?: return
+        conversationFacade.updateConversationAvatar(accountId, swarmId, avatarBytes)
+        _state.value = _state.value.copy(groupAvatarBytes = avatarBytes)
     }
 
     /**

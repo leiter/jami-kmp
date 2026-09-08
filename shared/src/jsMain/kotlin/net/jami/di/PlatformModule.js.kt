@@ -20,6 +20,7 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 import net.jami.services.*
 import net.jami.services.expect.AudioRecorderService
+import net.jami.services.expect.SystemContactsService
 
 /**
  * Web (Kotlin/JS) platform module providing browser-specific service implementations.
@@ -102,5 +103,9 @@ actual val platformModule: Module = module {
 
     single {
         BiometricService()
+    }
+
+    single {
+        SystemContactsService()
     }
 }

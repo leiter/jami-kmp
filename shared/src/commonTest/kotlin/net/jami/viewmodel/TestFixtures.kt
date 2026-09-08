@@ -24,6 +24,7 @@ import net.jami.repository.SettingsRepository
 import net.jami.services.AccountService
 import net.jami.services.CallService
 import net.jami.services.ContactService
+import net.jami.services.VCardService
 import net.jami.services.ConversationFacade
 import net.jami.services.StubDaemonBridge
 import net.jami.services.StubDeviceRuntimeService
@@ -31,7 +32,6 @@ import net.jami.services.expect.HardwareService
 import net.jami.services.StubHistoryService
 import net.jami.services.StubNotificationService
 import net.jami.services.StubPreferencesService
-import net.jami.services.VCardService
 
 // ==================== Disposable scope for onCleared tests ====================
 
@@ -147,7 +147,8 @@ data class TestServiceStack(
     val callService: CallService,
     val contactService: ContactService,
     val conversationFacade: ConversationFacade,
-    val settingsRepository: SettingsRepository
+    val settingsRepository: SettingsRepository,
+    val vCardService: VCardService
 )
 
 fun makeTestServiceStack(
@@ -164,7 +165,8 @@ fun makeTestServiceStack(
     val contactService = makeContactService(stub, accountService, scope)
     val conversationFacade = makeConversationFacade(stub, accountService, callService, contactService, scope)
     val settingsRepository = makeSettingsRepository(stub, scope)
-    return TestServiceStack(stub, accountService, callService, contactService, conversationFacade, settingsRepository)
+    val vCardService = VCardService(StubDeviceRuntimeService())
+    return TestServiceStack(stub, accountService, callService, contactService, conversationFacade, settingsRepository, vCardService)
 }
 
 // ==================== Convenience: pre-loaded test account ====================

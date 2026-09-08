@@ -107,6 +107,16 @@ val jamiModule = module {
     }
 
     /**
+     * Enriches Jami contacts with system address-book data (opt-in "sync system contacts").
+     */
+    single {
+        SystemContactsSyncService(
+            contactService = get(),
+            systemContactsService = get()
+        )
+    }
+
+    /**
      * Conversation and messaging service.
      */
     single {
@@ -192,21 +202,21 @@ val jamiModule = module {
 
     // ==================== ViewModels ====================
 
-    viewModelFactory { ConversationsViewModel(get(), get(), get(), get(), get()) }
+    viewModelFactory { ConversationsViewModel(get(), get(), get(), get(), get(), get()) }
     viewModelFactory { ChatViewModel(get(), get(), get(), get(), get()) }
     viewModelFactory { AccountCreationViewModel(get()) }
     viewModelFactory { ImportAccountViewModel(get()) }
     viewModelFactory { LinkDeviceImportViewModel(get()) }
     viewModelFactory { AccountSettingsViewModel(get(), get(), get(), get()) }
     viewModelFactory { AccountSubSettingsViewModel(get(), get()) }
-    viewModelFactory { AppSettingsViewModel(get(), get(), get()) }
+    viewModelFactory { AppSettingsViewModel(get(), get(), get(), get()) }
     viewModelFactory { PendingRequestsViewModel(get(), get()) }
     viewModelFactory { CallViewModel(get(), get(), get(), get(), get()) }
     viewModelFactory { ContactsViewModel(get(), get()) }
     viewModelFactory { ContactDetailsViewModel(get(), get(), get(), get()) }
     viewModelFactory { NewConversationViewModel(get(), get(), get(), get()) }
     viewModelFactory { AboutViewModel() }
-    viewModelFactory { DebugLogsViewModel() }
+    viewModelFactory { DebugLogsViewModel(get(), get()) }
     viewModelFactory { AppViewModel(get(), get()) }
     viewModelFactory { ProfileSetupViewModel(get()) }
     viewModelFactory { LocationSharingViewModel(get(), get()) }

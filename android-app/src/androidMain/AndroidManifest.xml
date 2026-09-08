@@ -26,6 +26,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <!-- Auto-start after device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -103,12 +104,44 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
-        <!-- Persistent daemon service: keeps the process alive for incoming calls and messages -->
+        <!-- Persistent daemon service: keeps the process alive for incoming calls and messages.
+             specialUse is used so the service can be started from BootReceiver on Android 15+,
+             where dataSync foreground services are blocked from BOOT_COMPLETED. Play review of
+             the subtype is covered by doc/play-console-special-use-justification.md.
+             The attribute must list every type startForeground() can pass: the framework requires
+             the runtime type to be a *subset* of it, and JamiDaemonService only has specialUse
+             available on API 34+ — below that it passes dataSync, which crashed the process with
+             IllegalArgumentException while this attribute was specialUse alone. -->
         <service
             android:name=".service.JamiDaemonService"
             android:exported="false"
-            android:foregroundServiceType="dataSync|remoteMessaging"
-            android:stopWithTask="false" />
+            android:foregroundServiceType="specialUse|dataSync|remoteMessaging"
+            android:stopWithTask="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="jami_daemon" />
+        </service>
+
+        <!-- Firebase Cloud Messaging receiver. Only ever reached when a google-services.json was
+             present at build time; without one FirebaseApp never initialises and no push arrives.
+             stopWithTask=false so a swiped-away task still receives call pushes. -->
+        <service
+            android:name=".push.JamiFirebaseMessagingService"
+            android:exported="false"
+            android:stopWithTask="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Short-lived foreground service covering the daemon's reconnect window after a
+             high-priority call push. remoteMessaging is the type that describes this exactly;
+             dataSync is also declared because API 29–33 has no remoteMessaging constant and the
+             runtime type must be a subset of what is declared here. -->
+        <service
+            android:name=".service.PushForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="remoteMessaging|dataSync" />
 
         <!-- Boot receiver: starts JamiDaemonService after device reboot -->
         <receiver

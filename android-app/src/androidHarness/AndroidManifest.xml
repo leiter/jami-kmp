@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  harness flavor manifest overlay (merged into the main manifest).
+  Adds the out-of-band on-device agent service and permits cleartext to localhost
+  (the coordination WebSocket is ws://127.0.0.1, reached via `adb reverse`).
+  Debug/test only — never shipped in the `standard` flavor.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application android:usesCleartextTraffic="true">
+
+        <!-- E2E harness agent: connects to the host runner and controls app state. -->
+        <service
+            android:name="net.jami.android.harness.HarnessAgentService"
+            android:exported="true"
+            android:foregroundServiceType="dataSync" />
+
+    </application>
+
+</manifest>

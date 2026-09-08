@@ -35,10 +35,16 @@
     <string name="content_desc_answer_video_call">Answer with video</string>
     <string name="content_desc_decline_call">Decline call</string>
     <string name="content_desc_dialpad">Open dialpad</string>
+    <string name="content_desc_start_screen_share">Start screen share</string>
+    <string name="content_desc_stop_screen_share">Stop screen share</string>
     <string name="content_desc_transfer">Transfer call</string>
+    <string name="content_desc_start_recording">Start recording</string>
+    <string name="content_desc_stop_recording">Stop recording</string>
     <string name="content_desc_peer_avatar">Caller avatar</string>
     <string name="content_desc_attach_file">Attach file</string>
     <string name="content_desc_take_photo">Take photo</string>
     <string name="content_desc_send_message">Send message</string>
     <string name="content_desc_send_thumbs_up">Send thumbs up</string>
+    <string name="content_desc_media_thumbnail">Shared media thumbnail</string>
+    <string name="content_desc_video_thumbnail">Shared video thumbnail</string>
 </resources>

@@ -78,6 +78,7 @@ import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Person
@@ -180,6 +181,7 @@ fun ChatScreen(
     onShareLocation: () -> Unit = {},
     onImageClick: (filePath: String) -> Unit = {},
     onVideoClick: (filePath: String, fileName: String) -> Unit = { _, _ -> },
+    onGalleryClick: () -> Unit = {},
 ) {
     val viewModel = getViewModel<ChatViewModel>()
     val state by viewModel.state.collectAsState()
@@ -434,6 +436,14 @@ fun ChatScreen(
                                     },
                                 )
                                 DropdownMenuItem(
+                                    text = { Text(stringResource(Res.string.action_view_shared_media)) },
+                                    leadingIcon = { Icon(Icons.Default.Photo, contentDescription = null) },
+                                    onClick = {
+                                        overflowMenuExpanded = false
+                                        onGalleryClick()
+                                    },
+                                )
+                                DropdownMenuItem(
                                     text = { Text(stringResource(Res.string.conversation_action_history_clear)) },
                                     leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
                                     onClick = {
@@ -512,6 +522,7 @@ fun ChatScreen(
                                     viewModel.updateInput(originalText)
                                 },
                                 onReact = { emoji -> viewModel.sendReaction(message.id, emoji) },
+                                onRetry = { viewModel.retryMessage(message.id) },
                             )
                         }
                     }
@@ -723,6 +734,7 @@ private fun ChatBubble(
     onDelete: () -> Unit = {},
     onEdit: (String) -> Unit = {},
     onReact: (String) -> Unit = {},
+    onRetry: () -> Unit = {},
 ) {
     val isOutgoing = message.isOutgoing
     val alignment = if (isOutgoing) Alignment.CenterEnd else Alignment.CenterStart
@@ -782,7 +794,9 @@ private fun ChatBubble(
                         else Modifier
                     )
                     .combinedClickable(
-                        onClick = {},
+                        onClick = {
+                            if (message.deliveryStatus == DeliveryStatus.FAILED) onRetry()
+                        },
                         onLongClick = { showMenu = true },
                     ),
                 shape = bubbleShape,
@@ -813,6 +827,8 @@ private fun ChatBubble(
                             DeliveryStatus.READ      -> Icons.Default.DoneAll to JamiTheme.colors.primary
                             DeliveryStatus.DELIVERED -> Icons.Default.DoneAll to timeColor
                             DeliveryStatus.SENDING   -> Icons.Default.Done    to timeColor
+                            DeliveryStatus.FAILED    -> Icons.Default.Warning to JamiTheme.colors.error
+                            DeliveryStatus.WAITING_TO_SYNC -> Icons.Default.Schedule to timeColor
                         }
                         Row(
                             modifier = Modifier.align(Alignment.BottomEnd),

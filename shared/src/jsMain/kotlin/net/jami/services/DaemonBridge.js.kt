@@ -144,6 +144,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
         return isInitialized
     }
 
+    override fun connectivityChanged() {
+        // TODO: POST /daemon/connectivity-changed (no-op for the REST stub bridge)
+    }
+
     // ==================== Account Operations ====================
 
     override fun addAccount(details: Map<String, String>): String {
@@ -234,7 +238,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Profile ====================
 
-    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
+    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int) {
         // TODO: PUT /accounts/{accountId}/profile
     }
 
@@ -283,6 +287,8 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun transfer(accountId: String, callId: String, to: String): Boolean = false
     override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean = false
     override fun getCallDetails(accountId: String, callId: String): Map<String, String> = emptyMap()
+    override fun toggleRecording(accountId: String, callId: String): Boolean = false
+    override fun getIsRecording(accountId: String, callId: String): Boolean = false
 
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {
@@ -479,10 +485,6 @@ actual class DaemonBridge() : DaemonBridgeApi {
         // TODO: PUT /accounts/{accountId}/conversations/{uri}/composing
     }
 
-    override fun cancelMessage(accountId: String, messageId: Long): Boolean {
-        // TODO: DELETE /accounts/{accountId}/messages/{messageId}
-        return false
-    }
 
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {
         // TODO: POST /accounts/{accountId}/conversations/{conversationId}/message with mime type map

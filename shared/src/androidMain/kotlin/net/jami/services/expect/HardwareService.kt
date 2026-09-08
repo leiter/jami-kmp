@@ -7,6 +7,8 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.AudioManager.OnAudioFocusChangeListener
 import android.media.projection.MediaProjection
+import android.net.ConnectivityManager
+import android.net.Network
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
@@ -26,12 +28,14 @@ import net.jami.model.Call
 import net.jami.model.Call.CallStatus
 import net.jami.model.Conference
 import net.jami.model.VideoDevices
+import net.jami.repository.SettingsRepository
 import net.jami.services.CameraService
 import net.jami.services.DaemonBridge
 import net.jami.utils.Log
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.lang.ref.WeakReference
+import java.util.concurrent.Executors
 
 actual class HardwareService(private val context: Context) : KoinComponent, OnAudioFocusChangeListener {
 
@@ -46,6 +50,7 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val daemonBridge: DaemonBridge by inject()
     private val cameraService: CameraService by inject()
+    private val settingsRepository: SettingsRepository by inject()
     private var currentFocusRequest: AudioFocusRequest? = null
     private var mShouldSpeakerphone = false
     private val mHasSpeakerPhone: Boolean by lazy { hasSpeakerphone() }
@@ -281,6 +286,12 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     ) {
         videoParams.isCapturing = true
         val safeSurface = previewSurface ?: return
+        // Conferences and extension-provided media are always software-encoded by the daemon
+        // (matches jami-android's HardwareServiceImpl.startCapture/startCameraPreview), on top
+        // of the user's own hardware-acceleration preference.
+        val conf = mCameraPreviewCall.get()
+        val hwAccel = settingsRepository.callSettings.value.hardwareAcceleration &&
+            (conf == null || !conf.isConference)
         uiHandler.post {
             cameraService.openCamera(
                 videoParams,
@@ -294,7 +305,7 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
                         stopCapture(videoParams.id)
                     }
                 },
-                hwAccel = true,
+                hwAccel = hwAccel,
                 resolution = 0,
                 bitrate = 0,
                 codecStart = codecStart,
@@ -523,7 +534,56 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
         }
     }
 
-    actual fun connectivityChanged(isConnected: Boolean) { _connectivityState.value = isConnected }
+    // ==================== Network connectivity ====================
+
+    // Serialises the JNI connectivityChanged() call off the main thread, mirroring the
+    // reference client's dedicated daemon executor (libjamiclient HardwareService.kt:122).
+    private val connectivityExecutor = Executors.newSingleThreadExecutor()
+
+    private val connectivityManager: ConnectivityManager? by lazy {
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+    }
+
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            Log.i(TAG, "Network onAvailable: $network")
+            connectivityChanged(true)
+        }
+
+        override fun onLost(network: Network) {
+            // The default network may still exist (e.g. Wi-Fi dropped, cellular remains).
+            val stillConnected = connectivityManager?.activeNetwork != null
+            Log.i(TAG, "Network onLost: $network (stillConnected=$stillConnected)")
+            connectivityChanged(stillConnected)
+        }
+
+        override fun onUnavailable() {
+            Log.i(TAG, "Network onUnavailable")
+            connectivityChanged(false)
+        }
+    }
+
+    init {
+        try {
+            connectivityManager?.registerDefaultNetworkCallback(networkCallback)
+        } catch (e: Exception) {
+            Log.e(TAG, "Can't register default network callback", e)
+        }
+    }
+
+    actual fun connectivityChanged(isConnected: Boolean) {
+        Log.i(TAG, "connectivityChanged($isConnected)")
+        _connectivityState.value = isConnected
+        // Always signal the daemon so it re-evaluates transports on interface switches too,
+        // not only on connected<->disconnected transitions.
+        connectivityExecutor.execute {
+            try {
+                daemonBridge.connectivityChanged()
+            } catch (e: Throwable) {
+                Log.e(TAG, "daemonBridge.connectivityChanged() failed", e)
+            }
+        }
+    }
 
     actual val isLogging: Boolean get() = logging
 

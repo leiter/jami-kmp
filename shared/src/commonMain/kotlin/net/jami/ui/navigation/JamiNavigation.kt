@@ -289,6 +289,17 @@ private fun MainNavigation(needsMigration: Boolean) {
         }
     }
 
+    // Navigate to Search, pre-filled, when a deep link (ring:/jami:/sip:/tel:) arrives.
+    val navigateToSearch by DeepLinkState.navigateToSearch.collectAsState()
+    LaunchedEffect(navigateToSearch) {
+        if (navigateToSearch) {
+            DeepLinkState.consumeNavSignal()
+            navController.navigate(Screen.Search.route) {
+                launchSingleTop = true
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route,
@@ -404,6 +415,33 @@ private fun MainNavigation(needsMigration: Boolean) {
                         Screen.LocationSharing.createRoute(conversationId)
                     )
                 },
+                onImageClick = { filePath ->
+                    MediaNavigationState.filePath = filePath
+                    MediaNavigationState.fileName = ""
+                    navController.navigate(Screen.MediaViewer.route)
+                },
+                onVideoClick = { filePath, fileName ->
+                    MediaNavigationState.filePath = filePath
+                    MediaNavigationState.fileName = fileName
+                    navController.navigate(Screen.VideoPlayer.route)
+                },
+                onGalleryClick = {
+                    navController.navigate(Screen.MediaGallery.createRoute(conversationId))
+                },
+            )
+        }
+
+        composable(
+            route = Screen.MediaGallery.ROUTE,
+            arguments = listOf(
+                navArgument("conversationId") { type = NavType.StringType },
+            ),
+        ) { backStackEntry ->
+            val conversationId = backStackEntry.extractArg("conversationId")
+            if (conversationId.isEmpty()) return@composable
+            MediaGalleryScreen(
+                conversationId = conversationId,
+                onBack = { navController.popBackStack() },
                 onImageClick = { filePath ->
                     MediaNavigationState.filePath = filePath
                     MediaNavigationState.fileName = ""

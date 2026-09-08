@@ -47,6 +47,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import net.jami.ui.platform.AppPermission
+import net.jami.ui.platform.PermissionRequesterEffect
 import net.jami.ui.platform.RingtoneLauncherEffect
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
@@ -93,6 +95,16 @@ fun AppSettingsScreen(
             if (uri != null) viewModel.updateRingtone(uri)
         },
     )
+
+    // Enabling "Sync system contacts" needs READ_CONTACTS; it may not have been granted
+    // during onboarding (e.g. account created via link/import, not the fresh-account wizard).
+    // Request it here instead of assuming it was already handled, so the toggle doesn't
+    // silently no-op — see doc/TODO.md "Sync system contacts" bug writeup.
+    var requestContactsPermission by remember { mutableStateOf(false) }
+    PermissionRequesterEffect(AppPermission.Contacts, requestContactsPermission) { granted ->
+        requestContactsPermission = false
+        if (granted) viewModel.toggleSystemContactsSync()
+    }
 
     Scaffold(
         topBar = {
@@ -490,7 +502,15 @@ fun AppSettingsScreen(
                 label = stringResource(Res.string.pref_syncContacts_title),
                 description = stringResource(Res.string.pref_syncContacts_summary),
                 checked = state.isSystemContactsSync,
-                onCheckedChange = { viewModel.toggleSystemContactsSync() },
+                onCheckedChange = { checked ->
+                    if (checked) {
+                        // Turning on: request permission first, toggle only once granted.
+                        requestContactsPermission = true
+                    } else {
+                        // Turning off never needs the permission.
+                        viewModel.toggleSystemContactsSync()
+                    }
+                },
             )
 
             HorizontalDivider()

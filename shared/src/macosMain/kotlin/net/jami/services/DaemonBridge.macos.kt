@@ -91,6 +91,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun isRunning(): Boolean = bridge.isDaemonRunning()
 
+    override fun connectivityChanged() {
+        // Not exposed by JamiBridge yet (see iOS bridge for the same gap).
+        Log.d(TAG, "connectivityChanged() - not yet exposed via JamiBridge")
+    }
+
     // ==================== Account Operations ====================
 
     override fun addAccount(details: Map<String, String>): String {
@@ -174,7 +179,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Profile ====================
 
-    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
+    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int) {
         bridge.updateProfile(accountId, displayName = displayName, avatarPath = avatar.takeIf { it.isNotEmpty() })
     }
 
@@ -220,6 +225,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
 
     override fun restartAudioLayer() {}
+
+    // Recording: stub until the native JamiBridgeWrapper exposes the recording API
+    // (see doc/plan_call_recording.md "iOS / macOS follow-up").
+    override fun toggleRecording(accountId: String, callId: String): Boolean = false
+    override fun getIsRecording(accountId: String, callId: String): Boolean = false
 
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {
@@ -434,10 +444,6 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
         bridge.setIsComposing(accountId, conversationId = uri, isComposing = isComposing)
-    }
-
-    override fun cancelMessage(accountId: String, messageId: Long): Boolean {
-        return false
     }
 
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {

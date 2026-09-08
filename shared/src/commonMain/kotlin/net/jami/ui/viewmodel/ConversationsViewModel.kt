@@ -35,6 +35,7 @@ import net.jami.model.DataTransfer
 import net.jami.model.Interaction
 import net.jami.model.TextMessage
 import net.jami.model.Uri
+import net.jami.repository.SettingsRepository
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.services.ContactEvent
@@ -78,6 +79,8 @@ data class ConversationItem(
     /** False when the last interaction has not been read yet — drives bold styling. */
     val isRead: Boolean,
     val isGroup: Boolean = false,
+    val isMuted: Boolean = false,
+    val isPinned: Boolean = false,
 )
 
 /**
@@ -108,6 +111,7 @@ class ConversationsViewModel(
     private val deviceRuntimeService: DeviceRuntimeService,
     private val contactService: ContactService,
     private val vCardService: VCardService,
+    private val settingsRepository: SettingsRepository,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) : ViewModel() {
     companion object {
@@ -433,6 +437,42 @@ class ConversationsViewModel(
     }
 
     /**
+     * Toggle the muted state of a conversation. Muting suppresses notifications via
+     * NotificationGuard / SettingsRepository.isConversationMuted.
+     */
+    fun toggleConversationMute(conversationId: String) {
+        if (settingsRepository.isConversationMuted(conversationId)) {
+            settingsRepository.unmuteConversation(conversationId)
+        } else {
+            settingsRepository.muteConversation(conversationId)
+        }
+        loadConversations()
+    }
+
+    /**
+     * Toggle the pinned state of a conversation. Pinned conversations float to the top
+     * of the list (see buildConversationItems sorting).
+     */
+    fun toggleConversationPin(conversationId: String) {
+        val pinned = settingsRepository.getConversationSettings(conversationId).pinned
+        settingsRepository.pinConversation(conversationId, !pinned)
+        loadConversations()
+    }
+
+    /**
+     * Block a conversation: removes the underlying contact (and the swarm) so no further
+     * messages or calls are received from it.
+     */
+    fun blockConversation(conversationId: String) {
+        scope.launch {
+            val accountId = accountService.currentAccount.value?.accountId ?: return@launch
+            val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+            conversationFacade.blockConversation(accountId, conversationUri)
+            loadConversations()
+        }
+    }
+
+    /**
      * Build conversation item list from the current account.
      */
     private suspend fun buildConversationItems(accountId: String, query: String): List<ConversationItem> {
@@ -472,8 +512,11 @@ class ConversationsViewModel(
                 vCardService.loadPeerAvatar(accountId, c.uri.rawRingId)
             }
 
+            val convId = conversation.uri.rawRingId
+            val convSettings = settingsRepository.getConversationSettings(convId)
+
             ConversationItem(
-                id = conversation.uri.rawRingId,
+                id = convId,
                 contactId = contact?.uri?.rawRingId,
                 displayName = displayName,
                 lastMessage = lastMessage,
@@ -483,11 +526,14 @@ class ConversationsViewModel(
                 isOnline = contact?.isOnline == true,
                 isRead = isRead,
                 isGroup = isGroup,
+                isMuted = settingsRepository.isConversationMuted(convId),
+                isPinned = convSettings.pinned,
             )
         }
-            // Sort by timestamp descending (most recent first)
-            // Note: ConversationFacade also sorts, but we keep this as defensive measure
-            .sortedByDescending { it.timestamp }
+            // Pinned conversations float to the top; within each group, most recent first.
+            // Note: ConversationFacade also sorts by timestamp, but we keep this as the
+            // authoritative ordering for the list (pin-awareness lives only here).
+            .sortedWith(compareByDescending<ConversationItem> { it.isPinned }.thenByDescending { it.timestamp })
     }
 
     /**

@@ -16,6 +16,17 @@ interface DaemonBridgeApi {
     fun stop()
     fun isRunning(): Boolean
 
+    /**
+     * Tell the daemon that the host's network environment has changed (interface up/down,
+     * Wi-Fi <-> cellular switch, VPN toggle). The daemon re-evaluates its transports:
+     * DHT nodes, ICE/TURN allocations and swarm sync sockets are dropped and rebuilt
+     * against the new interface instead of waiting for their own slow internal timeouts.
+     *
+     * Mirrors `JamiService.connectivityChanged()` in the reference client. Platforms with
+     * no live daemon (Desktop/Web stubs) treat this as a no-op.
+     */
+    fun connectivityChanged()
+
     // ==================== Account Operations ====================
     fun addAccount(details: Map<String, String>): String
     fun removeAccount(accountId: String)
@@ -48,7 +59,7 @@ interface DaemonBridgeApi {
     fun provideAccountAuthentication(accountId: String, password: String, scheme: String): Boolean
 
     // ==================== Profile ====================
-    fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int)
+    fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int)
 
     // ==================== Call Operations ====================
     fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String
@@ -70,6 +81,8 @@ interface DaemonBridgeApi {
     fun transfer(accountId: String, callId: String, to: String): Boolean
     fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean
     fun getCallDetails(accountId: String, callId: String): Map<String, String>
+    fun toggleRecording(accountId: String, callId: String): Boolean
+    fun getIsRecording(accountId: String, callId: String): Boolean
 
     // ==================== Conference Operations ====================
     fun holdConference(accountId: String, confId: String): Boolean
@@ -128,7 +141,6 @@ interface DaemonBridgeApi {
     // ==================== Messaging ====================
     fun sendTextMessage(accountId: String, callIdOrUri: String, message: String)
     fun setIsComposing(accountId: String, uri: String, isComposing: Boolean)
-    fun cancelMessage(accountId: String, messageId: Long): Boolean
 
     /**
      * Send a message with multiple mime types to a conversation.
@@ -400,6 +412,7 @@ interface DaemonCallbacks {
     fun onMediaChangeRequested(accountId: String, callId: String, mediaList: List<Map<String, String>>)
     fun onAudioMuted(callId: String, muted: Boolean)
     fun onVideoMuted(callId: String, muted: Boolean)
+    fun onRecordingStateChanged(callId: String, recording: Boolean)
     fun onMediaNegotiationStatus(callId: String, event: String, mediaList: List<Map<String, String>>)
     fun onConferenceCreated(accountId: String, conversationId: String, confId: String)
     fun onConferenceChanged(accountId: String, confId: String, state: String)
@@ -481,6 +494,7 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun start(): Boolean { running = true; return true }
     override fun stop() { running = false }
     override fun isRunning(): Boolean = running
+    override fun connectivityChanged() {}
 
     override fun addAccount(details: Map<String, String>): String = addAccountResult
     override fun removeAccount(accountId: String) {}
@@ -506,7 +520,7 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun cancelAddDevice(accountId: String, opId: Long): Boolean = true
     override fun provideAccountAuthentication(accountId: String, password: String, scheme: String): Boolean = true
 
-    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {}
+    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int) {}
 
     override fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String = placeCallResult
     override fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {}
@@ -526,6 +540,8 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun transfer(accountId: String, callId: String, to: String): Boolean = true
     override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean = true
     override fun getCallDetails(accountId: String, callId: String): Map<String, String> = emptyMap()
+    override fun toggleRecording(accountId: String, callId: String): Boolean = false
+    override fun getIsRecording(accountId: String, callId: String): Boolean = false
 
     override fun holdConference(accountId: String, confId: String): Boolean = true
     override fun unholdConference(accountId: String, confId: String): Boolean = true
@@ -582,7 +598,6 @@ class StubDaemonBridge : DaemonBridgeApi {
 
     override fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {}
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {}
-    override fun cancelMessage(accountId: String, messageId: Long): Boolean = true
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {}
 
     override fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {}

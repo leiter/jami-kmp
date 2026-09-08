@@ -8,14 +8,14 @@ Items confirmed as already implemented are listed at the bottom for reference.
 ## P1 — Core / Blocking
 
 ### Push notifications (FCM + APNs)
-- Android: integrate Firebase Cloud Messaging; register device token with Jami server; handle `RemoteMessage` in a `FirebaseMessagingService` subclass; wake the daemon on push arrival.
-- iOS: integrate APNs via `UNUserNotificationCenter`; handle VoIP pushes with `PKPushRegistry` for call wakeup.
-- Both platforms: pass token to `DaemonBridge.setPushNotificationConfig()`.
+- ~~Android: integrate Firebase Cloud Messaging; register device token with Jami server; handle `RemoteMessage` in a `FirebaseMessagingService` subclass; wake the daemon on push arrival.~~ ✓ DONE (2026-07-27) — `net.jami.android.push.{PushServiceManager, JamiFirebaseMessagingService}` + `PushForegroundService`. Firebase is opt-in at build time (plugin applied only when `google-services.json` is present).
+- ~~iOS: integrate APNs via `UNUserNotificationCenter`; handle VoIP pushes with `PKPushRegistry` for call wakeup.~~ ✓ DONE (2026-07-27) — `IOSPushServiceManager` + `IOSPushHelper.kt` + `AppDelegate` APNs/PushKit delegates + `CallKitManager.reportIncomingCallFromPush`. **Uncompiled** — needs a macOS build.
+- ~~Both platforms: pass token to `DaemonBridge.setPushNotificationConfig()`.~~ ✓ DONE both platforms.
+- **Still blocked on infrastructure**: the push is sent by the DHT proxy, not the peer, and the public proxy only holds SFL's FCM credentials. Needs a self-hosted `dhtnode --proxyserver` with your own Firebase server key. See `doc/push-notifications.md`.
 - **Reference**: `jami-client-android` `JamiFirebaseMessagingService.kt`
 
-### CallKit (iOS)
-- Implement `CXProvider` / `CXCallController` integration so incoming Jami calls use the native iOS call UI.
-- Wire `CXProviderDelegate` callbacks (answer, end, hold) to `CallService`.
+### ~~CallKit (iOS)~~ ✓ DONE (2026-06-13)
+`CallKitManager` (iosMain) implements `CXProviderDelegateProtocol` and observes `callService.callUpdates`: incoming RINGING calls are reported via `CXProvider` (lock-screen call sheet, wakes device from background); `CXAnswerCallAction`/`CXEndCallAction` wired to `callService.accept()`/`refuse()`.
 - **Reference**: `jami-client-ios` `CallKitAdapter`
 
 ---
@@ -36,11 +36,8 @@ verify server/client + require client cert + negotiation timeout.
 ### ~~Audio/video codec selection UI~~ DONE
 Already implemented in `AccountMediaSettingsScreen` with enable/disable toggles and up/down reorder arrows for both audio and video codecs. Backed by `AccountSubSettingsViewModel.setCodecEnabled()` / `moveCodec()` → `pushActiveCodecList()` → daemon.
 
-### System contacts sync UI
-- Permissions (`READ_CONTACTS`, `WRITE_CONTACTS`) are now declared and requested at onboarding.
-- Need: a "Sync phone contacts" toggle in `AppSettingsScreen` or `AccountSettingsScreen`.
-- On enable: call `ContactService.loadContacts(accountId)` which reads the phone book via `DeviceRuntimeService.loadContactsData()`.
-- Optionally write discovered Jami usernames back to the phone book (`WRITE_CONTACTS`).
+### ~~System contacts sync UI~~ ✓ DONE (2026-08-07)
+`AppSettingsScreen` "Sync system contacts" toggle now actually does something — was previously a no-op that only persisted a preference. `SystemContactsService` (expect/actual) ports `jami-android-client`'s `ContactServiceImpl.findContactBySipNumberFromSystem()`/`findContactByNumberFromSystem()` (`ContactsContract` lookup by SIP/IM address, `PhoneLookup` fallback). `SystemContactsSyncService` (commonMain) drives it from `AppSettingsViewModel.toggleSystemContactsSync()`, merging matches via `Contact.setSystemContactInfo()`/`addNumber()`.
 
 ### ~~Ringtone picker~~ ✓ DONE (2026-06-13)
 `RingtoneLauncherEffect` expect/actual added (Android: `RingtoneManager.ACTION_RINGTONE_PICKER`; other platforms: no-op).
@@ -51,11 +48,14 @@ Already implemented in `AccountMediaSettingsScreen` with enable/disable toggles 
 
 ## P3 — Medium Priority
 
-### Telecom API / ConnectionService (Android)
-- Register a `ConnectionService` so Jami calls appear in the system call log and are routable through Bluetooth/car audio.
-- Wire `Connection.onAnswer()`, `onDisconnect()`, `onHold()` to `CallService`.
-- Declare `MANAGE_OWN_CALLS` permission (already in reference manifest; confirm in kmp manifest).
+### ~~Telecom API / ConnectionService (Android)~~ ✓ DONE (2026-06-13)
+`JamiTelecomManager` registers a self-managed `PhoneAccount` at startup and observes `callUpdates` to call `TelecomManager.addNewIncomingCall()` for each incoming RINGING call. `JamiConnectionService` (manifest-declared with `BIND_TELECOM_CONNECTION_SERVICE`) creates a `JamiConnection` per call, forwarding `onAnswer`/`onReject`/`onHold`/`onUnhold`/`onCallAudioStateChanged` to `CallService`; daemon state changes (CURRENT/HOLD/OVER) drive `setActive`/`setOnHold`/`setDisconnected`+`destroy`. `MANAGE_OWN_CALLS` permission declared.
 - **Reference**: `JamiConnectionService.kt` in `jami-client-android`
+
+### Guard against re-importing an account that is already present (settings import)
+- On a settings-screen account import, compare the jamiId (RingID fingerprint) of the archive being loaded against the jamiId of every account already present on the device. If any match, **abort the import** before adding the account and inform the user that this account is already set up on this device (rather than silently creating a duplicate / letting the daemon add a second row for the same identity).
+- Where: `ImportAccountViewModel.importAccount()` — resolve the incoming archive's jamiId and check it against the existing accounts' jamiIds prior to `createJamiAccount(archivePath = …)`; surface a clear "account already exists on this device" message in `ImportAccountState.error`.
+- Edge case only — the onboarding import path can't reach it (it runs with zero accounts loaded), so it needs handling but not an automated test. Identified while building the E2E harness import scenarios (2026-07-01).
 
 ### ~~Conversation categories / filtering~~ ✓ DONE (2026-06-13)
 `ConversationFilter` enum (ALL / UNREAD / GROUPS) added to `ConversationsViewModel`.
@@ -73,7 +73,13 @@ Echo cancellation → `DaemonBridge.setEchoCancellation()` → `JamiService.setA
 Applied on load in `SettingsRepository.loadSettings()` and on every toggle.
 Screenshot blocking → `WindowSecureEffect` expect/actual called from `JamiApp.kt`; Android adds/clears `FLAG_SECURE` reactively via `AppSettingsViewModel.state`.
 
-### Ringtone — apply to notification channel (Android)
+### ~~Ringtone — apply to notification channel (Android)~~ ✓ DONE (verified 2026-06-26)
+`AndroidNotificationService.refreshCallsChannel(ringtoneUri)` deletes and recreates `CHANNEL_CALLS`
+with the new `AudioAttributes`-wrapped (`USAGE_NOTIFICATION_RINGTONE`) URI, guarded by a
+`LAST_APPLIED_RINGTONE` `LocalPrefs` value so the channel is only churned when the setting
+actually changes. Invoked before showing call notifications with the current
+`callSettings.ringtone`. Implements exactly the approach described below.
+
 - `CallSettings.ringtone` is persisted and displayed in `AppSettingsScreen`, but the `jami_calls` notification channel is created once at app startup and its sound is set by the OS thereafter.
 - On Android O+ (API 26), channel sound can only be configured at channel creation time; the OS ignores `setSound()` on an already-created channel.
 - To apply a user-chosen ringtone: delete `jami_calls` (channel ID `"jami_calls_v2"`) and recreate it with the new `AudioAttributes`-wrapped URI before showing the next call notification.

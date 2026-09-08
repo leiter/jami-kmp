@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Harness flavor only: a vivid amber launcher background so the E2E test build is
+  unmistakable next to a white-background production install. The adaptive-icon
+  foreground (the Jami logo) is unchanged. Overrides the main res value of the
+  same name (#FFFFFF) for the `harness` flavor.
+-->
+<resources>
+    <color name="ic_launcher_background">#FFAB00</color>
+</resources>

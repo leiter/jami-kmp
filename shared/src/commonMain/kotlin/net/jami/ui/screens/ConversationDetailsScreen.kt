@@ -18,6 +18,7 @@ package net.jami.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,8 +38,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Share
@@ -87,20 +90,22 @@ import androidx.compose.ui.unit.dp
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextButton
 import net.jami.di.getViewModel
+import net.jami.model.MemberRole
 import net.jami.ui.components.actions.JamiIconButton
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
+import net.jami.ui.platform.FilePickerEffect
 import net.jami.ui.theme.JamiTheme
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import net.jami.ui.viewmodel.ContactDetailsViewModel
+import net.jami.utils.FileUtils
 import net.jami.utils.QRCodeColors
 import net.jami.utils.QRCodeUtils
 import net.jami.utils.shareText
@@ -135,6 +140,9 @@ fun ConversationDetailsScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     var showQrSheet by remember { mutableStateOf(false) }
     var qrBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    var showGroupTitleDialog by remember { mutableStateOf(false) }
+    var showGroupAvatarPicker by remember { mutableStateOf(false) }
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
     val shareSubject = stringResource(Res.string.share_contact_subject)
     val shareBody = stringResource(
         Res.string.share_contact_body,
@@ -149,6 +157,49 @@ fun ConversationDetailsScreen(
 
     LaunchedEffect(conversationId) {
         viewModel.loadContact(conversationId)
+    }
+
+    // Group avatar picker — admins only, mirrors AccountSettingsScreen's own-profile avatar flow
+    FilePickerEffect(show = showGroupAvatarPicker, mimeTypes = listOf("image/*")) { path ->
+        showGroupAvatarPicker = false
+        if (path != null) {
+            coroutineScope.launch(Dispatchers.Default) {
+                val bytes = FileUtils.readBytes(path)
+                withContext(Dispatchers.Main) { viewModel.updateGroupAvatar(bytes) }
+            }
+        }
+    }
+
+    if (showGroupTitleDialog) {
+        var titleInput by remember(state.groupTitle) { mutableStateOf(state.groupTitle) }
+        AlertDialog(
+            onDismissRequest = { showGroupTitleDialog = false },
+            title = { Text(stringResource(Res.string.dialogtitle_title)) },
+            text = {
+                OutlinedTextField(
+                    value = titleInput,
+                    onValueChange = { titleInput = it },
+                    label = { Text(stringResource(Res.string.dialog_hint_title)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        viewModel.updateGroupTitle(titleInput.trim())
+                        showGroupTitleDialog = false
+                    }),
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.updateGroupTitle(titleInput.trim())
+                    showGroupTitleDialog = false
+                }) { Text(stringResource(Res.string.rename_btn)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showGroupTitleDialog = false }) {
+                    Text(stringResource(Res.string.action_cancel))
+                }
+            },
+        )
     }
 
     // Generate QR code bitmap in background when sheet opens
@@ -218,24 +269,64 @@ fun ConversationDetailsScreen(
         ) {
             Spacer(Modifier.height(JamiTheme.spacing.l))
 
-            // Avatar
-            JamiAvatar(
-                displayName = state.displayName.ifEmpty { "?" },
-                avatarBytes = state.avatarBytes,
-                size = AvatarSize.XLarge,
-            )
+            val canEditGroup = state.isSwarm && state.isAdmin
+            val headerAvatarBytes = if (state.isSwarm) state.groupAvatarBytes else state.avatarBytes
+            val headerName = if (state.isSwarm) state.groupTitle.ifEmpty { state.displayName } else state.displayName
+
+            // Avatar — tappable for group admins to change the group photo
+            Box(contentAlignment = Alignment.BottomEnd) {
+                JamiAvatar(
+                    displayName = headerName.ifEmpty { "?" },
+                    avatarBytes = headerAvatarBytes,
+                    size = AvatarSize.XLarge,
+                    modifier = if (canEditGroup) {
+                        Modifier.clickable { showGroupAvatarPicker = true }
+                    } else Modifier,
+                )
+                if (canEditGroup) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .background(JamiTheme.colors.primary, RoundedCornerShape(50))
+                            .clickable { showGroupAvatarPicker = true },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = stringResource(Res.string.content_desc_profile_photo),
+                            tint = JamiTheme.colors.onPrimary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
+            }
 
             Spacer(Modifier.height(JamiTheme.spacing.m))
 
-            // Display name
-            Text(
-                text = state.displayName.ifEmpty { "Unknown" },
-                style = JamiTheme.typography.titleLarge,
-                color = JamiTheme.colors.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = JamiTheme.spacing.xl),
-            )
+            // Display name — tappable for group admins to rename the group
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(horizontal = JamiTheme.spacing.xl)
+                    .let { if (canEditGroup) it.clickable { showGroupTitleDialog = true } else it },
+            ) {
+                Text(
+                    text = headerName.ifEmpty { "Unknown" },
+                    style = JamiTheme.typography.titleLarge,
+                    color = JamiTheme.colors.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (canEditGroup) {
+                    Spacer(Modifier.width(JamiTheme.spacing.xs))
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(Res.string.dialogtitle_title),
+                        tint = JamiTheme.colors.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+            }
 
             // Registered username (secondary line below name)
             if (state.username.isNotEmpty()) {
@@ -507,6 +598,7 @@ private fun DetailsTabContent(
             Spacer(Modifier.height(JamiTheme.spacing.m))
             GroupMemberSection(
                 memberUris = state.memberUris,
+                memberRoles = state.memberRoles,
                 isAdmin = state.isAdmin,
                 onLeave = onLeaveConversation,
                 onAdd = onAddMember,
@@ -565,6 +657,7 @@ private fun DetailsTabContent(
 @Composable
 private fun GroupMemberSection(
     memberUris: List<String>,
+    memberRoles: Map<String, MemberRole> = emptyMap(),
     isAdmin: Boolean,
     onLeave: () -> Unit,
     onAdd: (String) -> Unit,
@@ -613,6 +706,23 @@ private fun GroupMemberSection(
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     )
+                    if (memberRoles[uri] == MemberRole.ADMIN) {
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    JamiTheme.colors.primary.copy(alpha = 0.15f),
+                                    RoundedCornerShape(50),
+                                )
+                                .padding(horizontal = JamiTheme.spacing.s, vertical = 2.dp),
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.group_admin),
+                                style = JamiTheme.typography.labelSmall,
+                                color = JamiTheme.colors.primary,
+                            )
+                        }
+                        Spacer(Modifier.width(JamiTheme.spacing.xs))
+                    }
                     if (isAdmin) {
                         TextButton(onClick = { showRemoveUri = uri }) {
                             Text(

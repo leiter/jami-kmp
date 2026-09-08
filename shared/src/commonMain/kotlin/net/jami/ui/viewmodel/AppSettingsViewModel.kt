@@ -34,6 +34,8 @@ import net.jami.model.settings.Theme
 import net.jami.repository.SettingsRepository
 import net.jami.services.AccountService
 import net.jami.services.ContactService
+import net.jami.services.PushConfigNotifier
+import net.jami.services.SystemContactsSyncService
 import net.jami.ui.platform.LocalPrefKeys
 import net.jami.ui.platform.LocalPrefs
 
@@ -105,6 +107,7 @@ class AppSettingsViewModel(
     private val settingsRepository: SettingsRepository,
     private val accountService: AccountService,
     private val contactService: ContactService,
+    private val systemContactsSyncService: SystemContactsSyncService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) : ViewModel() {
     private val scope = scope
@@ -355,6 +358,10 @@ class AppSettingsViewModel(
             scope.launch {
                 val accountId = accountService.currentAccount.value?.accountId ?: return@launch
                 contactService.loadContacts(accountId)
+                // AppSettingsScreen requests READ_CONTACTS before calling this (the toggle is
+                // only flipped on if granted); syncForAccount() also checks hasPermission()
+                // itself as a safety net.
+                systemContactsSyncService.syncForAccount(accountId)
             }
         }
     }
@@ -364,6 +371,8 @@ class AppSettingsViewModel(
     fun setConnectivityMode(mode: ConnectivityMode) {
         _state.update { it.copy(connectivityMode = mode) }
         LocalPrefs.setInt(LocalPrefKeys.CONNECTIVITY_MODE, mode.ordinal)
+        // Arms or clears the platform push registration for the newly selected mode.
+        PushConfigNotifier.notifyConfigChanged()
     }
 
     // ==================== Notification Visibility ====================

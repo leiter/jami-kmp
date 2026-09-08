@@ -17,8 +17,10 @@
 package net.jami.viewmodel
 
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import net.jami.services.StubDaemonBridge
+import net.jami.services.StubDeviceRuntimeService
 import net.jami.services.expect.HardwareService
 import net.jami.ui.viewmodel.CallMode
 import net.jami.ui.viewmodel.CallViewModel
@@ -27,9 +29,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
-import net.jami.services.StubDeviceRuntimeService
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.runCurrent
 import kotlin.test.BeforeTest
 import net.jami.ensurePlatformTestKoin
 
@@ -135,10 +135,14 @@ class CallViewModelTest {
         callService.onCallStateChanged(TEST_ACCOUNT_ID, "call_001", "CURRENT", 0)
         settle()
         vm.initIncoming("call_001")
-        settle()
+        // Not advanceUntilIdle(): the CURRENT status starts an infinite per-second
+        // duration-timer coroutine, which would make advanceUntilIdle() hang forever.
+        runCurrent()
         assertEquals("CURRENT", vm.state.value.callStatus)
         assertIs<CallMode.OnGoing>(vm.state.value.callMode)
-        vm.onCleared() // cancel duration/video-loss timers before runTest cleanup
+        // The CURRENT status left an infinite per-second duration-timer coroutine running;
+        // cancel it so runTest's own implicit final advanceUntilIdle() doesn't hang.
+        vm.onCleared()
     }
 
     @Test
@@ -151,7 +155,9 @@ class CallViewModelTest {
         callService.onCallStateChanged(TEST_ACCOUNT_ID, "call_001", "CURRENT", 0)
         settle()
         vm.initIncoming("call_001")
-        settle()
+        // Not advanceUntilIdle(): the CURRENT status starts an infinite per-second
+        // duration-timer coroutine, which would make advanceUntilIdle() hang forever.
+        runCurrent()
         callService.onCallStateChanged(TEST_ACCOUNT_ID, "call_001", "OVER", 0)
         settle()
         assertEquals("OVER", vm.state.value.callStatus)

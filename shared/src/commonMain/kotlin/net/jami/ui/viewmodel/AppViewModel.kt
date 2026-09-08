@@ -33,6 +33,7 @@ import net.jami.services.AccountService
 import net.jami.services.BiometricResult
 import net.jami.services.BiometricService
 import net.jami.utils.Log
+import net.jami.utils.PendingActivityResultTracker
 
 sealed class AppState {
     data object Loading : AppState()
@@ -57,7 +58,31 @@ class AppViewModel(
     // instead of switching to HasAccounts. Cleared when the wizard completes.
     private var onboardingInProgress = false
 
+    // Set once the very first Loading -> HasAccounts transition has been evaluated for a
+    // biometric lock. Without this, a freshly created process (e.g. after force-stop, or the
+    // OS killing the app in the background) would start with _isLocked = false and never
+    // re-derive it from the account's biometric setting, bypassing the lock entirely.
+    private var initialLockCheckDone = false
+
+    // Set when lockIfNeeded() wants to lock but a system Activity result (file picker, camera
+    // capture, ringtone picker, …) is still in flight — applying the lock immediately would
+    // dispose the launching composable (and its rememberLauncherForActivityResult) before the
+    // result arrives, silently dropping it. See PendingActivityResultTracker's kdoc.
+    private var lockPending = false
+
     init {
+        // Apply a deferred lock the moment the in-flight Activity result clears, whether it
+        // resolved or was cancelled — never left pending indefinitely.
+        scope.launch {
+            PendingActivityResultTracker.hasPending.collect { pending ->
+                if (!pending && lockPending) {
+                    lockPending = false
+                    Log.d(TAG, "deferred lockIfNeeded: pending activity result cleared, locking now")
+                    _isLocked.value = true
+                }
+            }
+        }
+
         Log.d(TAG, "AppViewModel created, waiting for daemon accounts ready signal")
         scope.launch {
             // Wait for the daemon to fire accountsChanged at least once before
@@ -81,6 +106,20 @@ class AppViewModel(
                 }
                 Log.d(TAG, "accounts=${accountList.size} onboarding=$onboardingInProgress " +
                         "$current -> $next")
+
+                // On the first transition into HasAccounts after process start, re-derive the
+                // lock state from the account's biometric setting instead of trusting the
+                // in-memory default (false) — see initialLockCheckDone kdoc.
+                if (!initialLockCheckDone && next is AppState.HasAccounts) {
+                    initialLockCheckDone = true
+                    val accountId = accountService.currentAccount.value?.accountId
+                        ?: accountList.firstOrNull()?.accountId
+                    if (accountId != null && biometricService.isEnabled(accountId)) {
+                        Log.d(TAG, "initial lock check: locking app on startup")
+                        _isLocked.value = true
+                    }
+                }
+
                 _appState.value = next
             }
         }
@@ -129,13 +168,24 @@ class AppViewModel(
     /**
      * Lock the app if the current account has biometric authentication enabled.
      * Called when the app goes to background (ON_STOP lifecycle event).
+     *
+     * If a system Activity result is currently in flight (file picker, camera capture, ringtone
+     * picker, …) — which is exactly what ON_STOP fires for, the instant that Activity comes to
+     * the foreground — locking immediately would swap out the launching composable before its
+     * result arrives, silently dropping it (see PendingActivityResultTracker's kdoc). Defer in
+     * that case; the init block above applies the lock as soon as the result clears.
      */
     fun lockIfNeeded() {
         scope.launch {
             val account = accountService.currentAccount.value ?: return@launch
             if (biometricService.isEnabled(account.accountId)) {
-                Log.d(TAG, "lockIfNeeded: locking app")
-                _isLocked.value = true
+                if (PendingActivityResultTracker.hasPending.value) {
+                    Log.d(TAG, "lockIfNeeded: activity result pending, deferring lock")
+                    lockPending = true
+                } else {
+                    Log.d(TAG, "lockIfNeeded: locking app")
+                    _isLocked.value = true
+                }
             }
         }
     }

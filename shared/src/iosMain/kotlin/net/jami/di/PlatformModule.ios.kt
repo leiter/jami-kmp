@@ -23,6 +23,7 @@ import net.jami.database.JamiDatabase
 import net.jami.services.*
 import net.jami.services.expect.AudioRecorderService
 import net.jami.services.expect.HardwareService
+import net.jami.services.expect.SystemContactsService
 
 /**
  * iOS platform module providing iOS-specific service implementations.
@@ -144,6 +145,10 @@ actual val platformModule: Module get() = try {
      */
     single<BiometricService> {
         BiometricService()
+    }
+
+    single<SystemContactsService> {
+        SystemContactsService()
     }
 
     /**

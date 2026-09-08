@@ -363,6 +363,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_action_select_peer_number">Select a number</string>
     <string name="conversation_action_block_this">Block contact</string>
     <string name="conversation_action_unblock_this">Unblock contact</string>
+    <string name="conversation_action_pin">Pin</string>
+    <string name="conversation_action_unpin">Unpin</string>
     <string name="conversation_action_go_to_call">Return to call</string>
     <string name="conversation_action_incoming_call">Incoming call</string>
     <string name="conversation_action_latest">Jump to latest</string>
@@ -773,6 +775,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="placeholder_search_contacts">Search contacts or Jami ID…</string>
     <string name="toggle_create_group">Create group conversation</string>
     <string name="placeholder_search">Search or add</string>
+
+    <!-- Media gallery -->
+    <string name="action_view_shared_media">Shared media</string>
+    <string name="screen_title_media_gallery">Shared media</string>
+    <string name="media_gallery_empty">No shared media yet</string>
 
     <!-- QR Code -->
     <string name="screen_title_qr_scan">Scan QR Code</string>

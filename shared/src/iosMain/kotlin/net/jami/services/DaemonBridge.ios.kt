@@ -93,6 +93,13 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun isRunning(): Boolean = bridge.isDaemonRunning()
 
+    override fun connectivityChanged() {
+        // JamiBridgeWrapper exposes no connectivity-changed entry point yet. libjami's
+        // `connectivityChanged()` (configurationmanager_interface.h) needs to be surfaced on
+        // the Obj-C++ wrapper and libJamiBridge.a rebuilt before this can forward to the daemon.
+        Log.d(TAG, "connectivityChanged() - not yet exposed via JamiBridge")
+    }
+
     // ==================== Account Operations ====================
 
     override fun addAccount(details: Map<String, String>): String {
@@ -182,7 +189,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Profile ====================
 
-    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, flag: Int) {
+    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int) {
         bridge.updateProfile(accountId, displayName = displayName, avatarPath = avatar.takeIf { it.isNotEmpty() })
     }
 
@@ -240,6 +247,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.attendedTransfer(accountId, callId = transferId, targetId = targetId)
     override fun getCallDetails(accountId: String, callId: String): Map<String, String> =
         bridge.getCallDetails(accountId, callId = callId)?.toKotlinMap() ?: emptyMap()
+    // Recording: JamiBridgeWrapper exposes no recording API yet. Stub until the native
+    // ObjC++ bridge gains toggleRecording/getIsRecording + a RecordingStateChanged delegate
+    // and libJamiBridge.a is rebuilt (see doc/plan_call_recording.md "iOS / macOS follow-up").
+    override fun toggleRecording(accountId: String, callId: String): Boolean = false
+    override fun getIsRecording(accountId: String, callId: String): Boolean = false
 
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {
@@ -500,9 +512,6 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
         bridge.setIsComposing(accountId, conversationId = uri, isComposing = isComposing)
     }
-
-    override fun cancelMessage(accountId: String, messageId: Long): Boolean =
-        bridge.cancelMessage(accountId, messageId = messageId.toULong())
 
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {
         bridge.sendAccountTextMessage(accountId, conversationId = conversationId, messages = messages.toNSDictionary(), flag = flag)

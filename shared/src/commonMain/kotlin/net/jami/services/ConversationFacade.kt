@@ -16,7 +16,13 @@
  */
 package net.jami.services
 
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -96,14 +102,64 @@ class ConversationFacade(
     // Track last sync timestamp per account
     private val lastSyncTimestamps = mutableMapOf<String, Long>()
 
+    // ---- Per-account load coordination (plan phase 2: gate + single-flight) ----
+    // libjamiclient gates its one-shot loadAccount() on
+    //   registrationStateObservable.filter { it != UNLOADED && it != INITIALIZING }.firstElement()
+    // so the smartlist is only built once the daemon has left INITIALIZING (archive decrypted,
+    // conversation git repos enumerated). jami-kmp previously fired loadSmartlist from four
+    // unsynchronised triggers, some while the daemon was still INITIALIZING -> getConversations()
+    // came back empty/partial and the conversation was never indexed (F1), and two triggers could
+    // run conversationStarted() for the same id concurrently.
+    private val loadCoordLock = SynchronizedObject()
+    private val loadMutexes = mutableMapOf<String, Mutex>()
+    private val loadGates = mutableMapOf<String, CompletableDeferred<Unit>>()
+
+    private fun loadMutexFor(accountId: String): Mutex =
+        synchronized(loadCoordLock) { loadMutexes.getOrPut(accountId) { Mutex() } }
+
+    private fun loadGateFor(accountId: String): CompletableDeferred<Unit> =
+        synchronized(loadCoordLock) { loadGates.getOrPut(accountId) { CompletableDeferred() } }
+
+    /** Open the load gate once the daemon reports the account has left INITIALIZING. Idempotent. */
+    private fun markAccountLoaded(accountId: String) {
+        val gate = loadGateFor(accountId)
+        if (!gate.isCompleted) gate.complete(Unit)
+    }
+
+    /**
+     * Suspend until the account has left INITIALIZING at least once, capped by
+     * [ACCOUNT_LOAD_GATE_TIMEOUT_MS] so a wedged daemon can't hang the send path forever.
+     */
+    private suspend fun awaitAccountLoaded(accountId: String) {
+        if (loadGateFor(accountId).isCompleted) return
+        val opened = withTimeoutOrNull(ACCOUNT_LOAD_GATE_TIMEOUT_MS) {
+            loadGateFor(accountId).await(); true
+        }
+        if (opened == null) {
+            Log.w(TAG, "awaitAccountLoaded($accountId): gate timed out after " +
+                "${ACCOUNT_LOAD_GATE_TIMEOUT_MS}ms, proceeding anyway")
+        }
+    }
+
     init {
-        // Subscribe to account changes
+        // Subscribe to account changes. The first smartlist load is deferred until the load gate
+        // opens (daemon left INITIALIZING) so we don't read an empty getConversations() (F1);
+        // subsequent re-selections of an already-loaded account fall through immediately.
         scope.launch {
             accountService.currentAccount.collect { account ->
-                if (account != null) {
-                    loadSmartlist(account)
-                }
                 _currentAccount.value = account
+                if (account != null) {
+                    // If the account is already past INITIALIZING when it is selected (e.g. it was
+                    // loaded before this facade was constructed, or it is an offline SIP account),
+                    // no RegistrationStateChanged will arrive to open the gate — open it here.
+                    if (account.registrationState != net.jami.model.Account.RegistrationState.INITIALIZING) {
+                        markAccountLoaded(account.accountId)
+                    }
+                    scope.launch {
+                        awaitAccountLoaded(account.accountId)
+                        loadSmartlist(account)
+                    }
+                }
             }
         }
 
@@ -149,13 +205,19 @@ class ConversationFacade(
             }
         }
 
-        // When the account becomes REGISTERED: reload the smartlist (peers may have pushed
-        // conversations that weren't in the local git repos yet) then retry any unresolved
-        // registered-name lookups.
+        // Registration-state transitions drive two things:
+        //  - the load gate: the first state that is not INITIALIZING means the daemon has finished
+        //    decrypting the archive and enumerating conversation git repos, so it is now safe to
+        //    build the smartlist (mirrors libjamiclient's firstElement() gate).
+        //  - on REGISTERED: reload the smartlist (peers may have pushed conversations that weren't
+        //    in the local git repos yet) then retry any unresolved registered-name lookups.
         scope.launch {
             accountService.accountEvents.collect { event ->
                 if (event is AccountEvent.RegistrationStateChanged) {
                     val account = accountService.getAccount(event.accountId) ?: return@collect
+                    if (account.registrationState != net.jami.model.Account.RegistrationState.INITIALIZING) {
+                        markAccountLoaded(event.accountId)
+                    }
                     if (!account.isRegistered) return@collect
                     loadSmartlist(account)
                     for (conversation in account.getConversations()) {
@@ -212,6 +274,13 @@ class ConversationFacade(
     suspend fun getAccountWithSmartlist(accountId: String): Account {
         val account = accountService.getAccount(accountId)
             ?: throw IllegalArgumentException("Account not found: $accountId")
+        // Wait for the daemon to finish loading the account before reading getConversations() on
+        // the send path — otherwise a send issued right after import/link resolves against an
+        // empty conversation set and fails permanently (F1).
+        if (account.registrationState != net.jami.model.Account.RegistrationState.INITIALIZING) {
+            markAccountLoaded(accountId)
+        }
+        awaitAccountLoaded(accountId)
         loadSmartlist(account)
         return account
     }
@@ -428,20 +497,6 @@ class ConversationFacade(
         }
     }
 
-    /**
-     * Cancel a pending message.
-     */
-    suspend fun cancelMessage(conversation: Conversation, message: Interaction) {
-        val accountId = message.account ?: return
-        if (conversation.isSwarm) return
-
-        try {
-            callService.cancelMessage(accountId, message.id.toLong())
-            conversation.removeInteraction(message)
-        } catch (e: Exception) {
-            Log.e(TAG, "Can't cancel message sending", e)
-        }
-    }
 
     /**
      * Cancel a file transfer.
@@ -630,8 +685,16 @@ class ConversationFacade(
 
     /**
      * Load the smartlist (recent conversations) for an account.
+     *
+     * Single-flight per account: the four triggers (account selected, AccountsChanged, REGISTERED,
+     * send path) coalesce on a per-account [Mutex] instead of racing [Account.conversationStarted]
+     * for the same conversation ids.
      */
     private suspend fun loadSmartlist(account: Account) {
+        loadMutexFor(account.accountId).withLock { loadSmartlistLocked(account) }
+    }
+
+    private suspend fun loadSmartlistLocked(account: Account) {
         val startTime = currentTimeMillis()
         _syncState.value = SyncState.Syncing(account.accountId, startTime)
 
@@ -642,16 +705,30 @@ class ConversationFacade(
             for (convId in conversationIds) {
                 try {
                     val info = daemonBridge.getConversationInfo(account.accountId, convId)
-                    val mode = when (info["mode"]) {
+                    // The daemon reports `syncing=true` while the conversation's git repo is still
+                    // being cloned from a peer. Until that finishes the real mode isn't known and
+                    // the conversation has no usable sync connection, so surface it as Syncing
+                    // (mirrors libjamiclient AccountService.loadAccount) instead of defaulting to
+                    // OneToOne and presenting a not-yet-bootstrapped conversation as ready.
+                    val isSyncing = info["syncing"] == "true"
+                    val realMode = when (info["mode"]) {
                         "0" -> Conversation.Mode.OneToOne
                         "1" -> Conversation.Mode.AdminInvitesOnly
                         "2" -> Conversation.Mode.InvitesOnly
                         "3" -> Conversation.Mode.Public
                         else -> Conversation.Mode.OneToOne
                     }
+                    val mode = if (isSyncing) Conversation.Mode.Syncing else realMode
                     val conversation = account.getSwarm(convId)
                         ?: account.newSwarm(convId, mode)
                     conversation.setMode(mode)
+                    if (isSyncing) {
+                        conversation.requestMode = realMode
+                        val created = (info["created"]?.toLongOrNull() ?: 0L) * 1000L
+                        if (conversation.lastEvent == null && created > 0L) {
+                            conversation.lastEvent = ContactEvent(created)
+                        }
+                    }
 
                     // Load members
                     val members = daemonBridge.getConversationMembers(account.accountId, convId)
@@ -672,6 +749,20 @@ class ConversationFacade(
                     }
 
                     account.conversationStarted(conversation)
+
+                    // Prime the last messages so smartlist previews and `lastEvent` are populated
+                    // without opening the conversation (libjamiclient calls loadMore(conv, 8) during
+                    // loadAccount). Fire-and-forget: a stuck daemon callback must not stall the whole
+                    // smartlist load, so this is not awaited inline. loadMore() no-ops for Syncing.
+                    if (!isSyncing) {
+                        scope.launch {
+                            try {
+                                accountService.loadMore(conversation, SMARTLIST_PREVIEW_COUNT)
+                            } catch (e: Exception) {
+                                Log.w(TAG, "loadSmartlist: preview prime failed for $convId", e)
+                            }
+                        }
+                    }
 
                     // Subscribe to presence and resolve registered names for each contact
                     for (contact in conversation.contacts) {
@@ -698,16 +789,30 @@ class ConversationFacade(
                 .sortedByDescending { it.lastEvent?.timestamp ?: 0L }
             _conversationList.value = ConversationList(conversations = conversations)
 
-            // Update sync state to complete
+            // Update sync state. A conversation the daemon still reports as `syncing=true` has its
+            // git repo cloning / is not bootstrapped and has no usable sync connection yet — the
+            // app-side load loop finishing does NOT mean that conversation is live. Surface that as
+            // Bootstrapping rather than a misleading Complete.
             val endTime = currentTimeMillis()
             lastSyncTimestamps[account.accountId] = endTime
-            _syncState.value = SyncState.Complete(
-                accountId = account.accountId,
-                completedAt = endTime,
-                conversationCount = conversations.size
-            )
+            val stillSyncing = conversations.count { it.mode == Conversation.Mode.Syncing }
+            _syncState.value = if (stillSyncing > 0) {
+                SyncState.Bootstrapping(
+                    accountId = account.accountId,
+                    updatedAt = endTime,
+                    conversationCount = conversations.size,
+                    bootstrappingCount = stillSyncing
+                )
+            } else {
+                SyncState.Complete(
+                    accountId = account.accountId,
+                    completedAt = endTime,
+                    conversationCount = conversations.size
+                )
+            }
 
-            Log.d(TAG, "Sync completed for ${account.accountId}: ${conversations.size} conversations in ${endTime - startTime}ms")
+            Log.d(TAG, "Sync loop done for ${account.accountId}: ${conversations.size} conversations " +
+                "($stillSyncing still bootstrapping) in ${endTime - startTime}ms")
         } catch (e: Exception) {
             val endTime = currentTimeMillis()
             _syncState.value = SyncState.Error(
@@ -759,6 +864,43 @@ class ConversationFacade(
         return lastSyncTimestamps[accountId]
     }
 
+    /**
+     * Snapshot the swarm-sync health of every conversation on [accountId], for the in-app debug
+     * panel. Reads the daemon's current `getConversationInfo` / `getConversationMembers` plus the
+     * locally loaded history — there is no daemon signal for per-conversation active-device counts,
+     * so `activePeerCount` is the count of non-self members the daemon still lists with a role and
+     * `bootstrapping` is `mode == Syncing` (the daemon's own "repo still cloning / not
+     * bootstrapped" flag).
+     */
+    suspend fun snapshotConversationSyncInfo(accountId: String): List<ConversationSyncInfo> {
+        val account = accountService.getAccount(accountId) ?: return emptyList()
+        return account.getConversations().map { conversation ->
+            val convId = conversation.uri.rawRingId
+            val members = try {
+                daemonBridge.getConversationMembers(accountId, convId)
+            } catch (e: Exception) {
+                Log.w(TAG, "snapshotConversationSyncInfo: getConversationMembers failed for $convId", e)
+                emptyList()
+            }
+            val nonSelf = members.count { m ->
+                val uri = m["uri"]
+                uri != null && uri != account.username && !uri.endsWith(account.username)
+            }
+            val history = conversation.getSortedHistory()
+            ConversationSyncInfo(
+                conversationId = convId,
+                uri = conversation.uri.uri,
+                mode = conversation.mode,
+                requestMode = conversation.requestMode,
+                memberCount = members.size,
+                activePeerCount = nonSelf,
+                messageCount = history.size,
+                lastCommitId = history.lastOrNull { it.messageId != null }?.messageId,
+                bootstrapping = conversation.mode == Conversation.Mode.Syncing
+            )
+        }
+    }
+
     // ==================== Profile/Contact Operations ====================
 
     /**
@@ -782,6 +924,7 @@ class ConversationFacade(
     /**
      * Get search results for conversations.
      */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     fun getSearchResults(
         query: Flow<String>,
         currentAccount: Flow<Account> = currentAccountFlow.filterNotNull()
@@ -806,6 +949,7 @@ class ConversationFacade(
     /**
      * Get full conversation list with optional search.
      */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     fun getFullConversationList(
         currentAccount: Flow<Account>,
         query: Flow<String>,
@@ -984,6 +1128,60 @@ class ConversationFacade(
     // ==================== Daemon Callback Handlers ====================
 
     /**
+     * Return the swarm [Conversation] for [conversationId], building and indexing it in place if it
+     * isn't known locally yet.
+     *
+     * Phases 2-3 gate and order the normal load path, but a restore edge or a missed
+     * `conversationReady` can still leave real daemon traffic (a message, a member join, a swarm
+     * load, a file event) pointing at an id `getSwarm()` returns null for. Previously every such
+     * handler did `?: return` and the traffic was dropped with nothing to rebuild the conversation
+     * (the F1/F4 "silent no-op" shape). This self-heals from the daemon's own data instead.
+     */
+    private suspend fun ensureSwarm(account: Account, conversationId: String): Conversation {
+        account.getSwarm(conversationId)?.let { return it }
+        Log.w(TAG, "ensureSwarm: rebuilding unknown conversation $conversationId for ${account.accountId}")
+
+        val info = try {
+            daemonBridge.getConversationInfo(account.accountId, conversationId)
+        } catch (e: Exception) {
+            Log.w(TAG, "ensureSwarm: getConversationInfo failed for $conversationId", e)
+            emptyMap()
+        }
+        val isSyncing = info["syncing"] == "true"
+        val realMode = when (info["mode"]) {
+            "0" -> Conversation.Mode.OneToOne
+            "1" -> Conversation.Mode.AdminInvitesOnly
+            "2" -> Conversation.Mode.InvitesOnly
+            "3" -> Conversation.Mode.Public
+            else -> Conversation.Mode.OneToOne
+        }
+        val mode = if (isSyncing) Conversation.Mode.Syncing else realMode
+        val conversation = account.newSwarm(conversationId, mode)
+        conversation.setMode(mode)
+        if (isSyncing) conversation.requestMode = realMode
+
+        try {
+            for (member in daemonBridge.getConversationMembers(account.accountId, conversationId)) {
+                val memberUri = member["uri"] ?: continue
+                val parsed = Uri.fromString(memberUri)
+                if (conversation.findContact(parsed) == null) {
+                    val contact = account.getContactFromCache(parsed)
+                    conversation.addContact(contact, MemberRole.fromString(member["role"] ?: ""))
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "ensureSwarm: member load failed for $conversationId", e)
+        }
+
+        val title = info["title"]
+        if (!title.isNullOrEmpty()) conversation.setProfile(Profile(title, null))
+
+        account.conversationStarted(conversation)
+        _conversationEvents.emit(ConversationEvent.ConversationReady(account.accountId, conversationId))
+        return conversation
+    }
+
+    /**
      * Called when a conversation is ready to use.
      */
     internal fun onConversationReady(accountId: String, conversationId: String) {
@@ -1117,9 +1315,11 @@ class ConversationFacade(
         Log.d(TAG, "onConversationMemberEvent: $conversationId member=$memberId event=$event")
 
         val account = accountService.getAccount(accountId) ?: return
-        val conversation = account.getSwarm(conversationId) ?: return
 
         scope.launch {
+            // Self-heal: a member event (e.g. the peer's join into a just-created 1:1 swarm) can
+            // arrive before we've indexed the conversation — build it instead of dropping the event.
+            val conversation = ensureSwarm(account, conversationId)
             try {
                 val members = daemonBridge.getConversationMembers(accountId, conversationId)
                 // Rebuild contact list from daemon member data
@@ -1135,6 +1335,7 @@ class ConversationFacade(
             } catch (e: Exception) {
                 Log.e(TAG, "onConversationMemberEvent: failed to refresh members", e)
             }
+            _conversationEvents.emit(ConversationEvent.MemberEvent(accountId, conversationId, memberId, event))
         }
     }
 
@@ -1146,7 +1347,9 @@ class ConversationFacade(
     internal suspend fun onMessageReceived(accountId: String, conversationId: String, message: net.jami.model.SwarmMessage) {
         Log.d(TAG, "onMessageReceived: $conversationId msgId=${message.id}")
         val account = accountService.getAccount(accountId)
-        val conversation = account?.getSwarm(conversationId)
+        // Self-heal: rebuild the conversation if the daemon delivered a message for an id we
+        // haven't indexed yet, instead of dropping it.
+        val conversation = account?.let { ensureSwarm(it, conversationId) }
         var isIncoming = false
         if (account != null && conversation != null) {
             val interaction = swarmMessageToInteraction(account, conversation, message)
@@ -1191,7 +1394,9 @@ class ConversationFacade(
         Log.d(TAG, "onSwarmLoaded: $conversationId messages=${messages.size}")
 
         val account = accountService.getAccount(accountId)
-        val conversation = account?.getSwarm(conversationId)
+        // Self-heal: a swarm-load result for an unknown id means we missed the conversation on the
+        // normal path — rebuild it rather than discarding the loaded history.
+        val conversation = account?.let { ensureSwarm(it, conversationId) }
 
         if (account != null && conversation != null) {
             for (message in messages) {
@@ -1322,7 +1527,13 @@ class ConversationFacade(
         interaction.contact = contact
         interaction.account = account.accountId
         interaction.reactToId = message.body["react-to"]?.ifEmpty { null }
+        // `body["edit"]` points at the *target* message id on the separate
+        // "application/edited-message" event, not at whether this message itself was edited.
+        // The actual per-message edit history lives in `message.editions` (mirrors the live
+        // MessageUpdated-event fix in ChatViewModel.updateMessage()) — without this, messages
+        // loaded from history/resync always report isEdited = false even when edited.
         interaction.edit = message.body["edit"]?.ifEmpty { null }
+            ?: message.id.takeIf { message.editions.isNotEmpty() }
         interaction.setSwarmInfo(conversation.uri.rawRingId, message.id, message.linearizedParent.ifEmpty { null })
         interaction.statusMap = message.status.mapValues { Interaction.MessageStates.fromInt(it.value) }
 
@@ -1355,8 +1566,36 @@ class ConversationFacade(
         val conversation = account.getSwarm(conversationId) ?: return
 
         val title = profile["title"] ?: ""
-        val description = profile["description"] ?: ""
-        conversation.setProfile(Profile(title, null))
+        val description = profile["description"]
+        // Only the changed fields are guaranteed to be present in the update map — decode a new
+        // avatar when sent, otherwise keep the one already cached rather than wiping it to null.
+        @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+        val avatar = profile["avatar"]?.let {
+            try {
+                kotlin.io.encoding.Base64.decode(it)
+            } catch (e: Exception) {
+                null
+            }
+        } ?: conversation.profileFlow.value.avatar
+        conversation.setProfile(Profile(title, avatar, description))
+    }
+
+    /**
+     * Update a swarm group's display title (admin only, enforced at the daemon layer).
+     */
+    fun updateConversationTitle(accountId: String, conversationId: String, title: String) {
+        daemonBridge.updateConversationInfo(accountId, conversationId, mapOf("title" to title))
+    }
+
+    /**
+     * Update a swarm group's avatar (admin only, enforced at the daemon layer).
+     *
+     * @param avatarBytes Raw image bytes, or null to clear the avatar.
+     */
+    @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+    fun updateConversationAvatar(accountId: String, conversationId: String, avatarBytes: ByteArray?) {
+        val base64 = avatarBytes?.let { kotlin.io.encoding.Base64.encode(it) } ?: ""
+        daemonBridge.updateConversationInfo(accountId, conversationId, mapOf("avatar" to base64))
     }
 
     /**
@@ -1450,7 +1689,8 @@ class ConversationFacade(
         scope.launch {
             // Update the transfer status in the conversation model
             val account = accountService.getAccount(accountId)
-            val conversation = account?.getSwarm(conversationId)
+            // Self-heal: rebuild the conversation if a file event arrives for an unknown id.
+            val conversation = account?.let { ensureSwarm(it, conversationId) }
             if (conversation != null) {
                 // If the stored interaction is a plain Interaction (not DataTransfer), promote it.
                 val transfer: DataTransfer? = when (val msg = conversation.getMessage(interactionId)) {
@@ -1515,6 +1755,13 @@ class ConversationFacade(
 
     companion object {
         private const val TAG = "ConversationFacade"
+
+        /** Cap on how long the send path / first smartlist load waits for the daemon to leave
+         *  INITIALIZING before proceeding regardless. */
+        private const val ACCOUNT_LOAD_GATE_TIMEOUT_MS = 15_000L
+
+        /** Messages primed per conversation during loadSmartlist (matches libjamiclient). */
+        private const val SMARTLIST_PREVIEW_COUNT = 8
     }
 }
 
@@ -1587,6 +1834,20 @@ sealed class ConversationEvent {
         val accountId: String,
         val conversationId: String,
         val metadata: Map<String, String>
+    ) : ConversationEvent()
+
+    /**
+     * A member's role changed in the conversation's swarm git repo (join/leave/ban/unban), as
+     * seen by *this* device — i.e. once this device's daemon has pulled and processed the
+     * commit, not merely once the member authored it locally. [action] mirrors the daemon's
+     * `ConversationMemberEvent` signal: 0=add(invited), 1=join, 2=remove, 3=ban, 4=unban
+     * (`jami-daemon/src/jamidht/conversation.cpp`).
+     */
+    data class MemberEvent(
+        val accountId: String,
+        val conversationId: String,
+        val memberUri: String,
+        val action: Int,
     ) : ConversationEvent()
 
     data class MessageReceived(
@@ -1663,6 +1924,23 @@ sealed class ConversationEvent {
 }
 
 /**
+ * Per-conversation swarm-sync health, for the in-app debug panel (plan phase 5).
+ */
+data class ConversationSyncInfo(
+    val conversationId: String,
+    val uri: String,
+    val mode: Conversation.Mode,
+    val requestMode: Conversation.Mode?,
+    val memberCount: Int,
+    /** Non-self members the daemon still lists with a role (best available "active peers" proxy). */
+    val activePeerCount: Int,
+    val messageCount: Int,
+    val lastCommitId: String?,
+    /** Daemon reports the conversation's git repo as still cloning / not bootstrapped. */
+    val bootstrapping: Boolean,
+)
+
+/**
  * Sync state for conversation synchronization.
  * Used to provide UI feedback about sync operations.
  */
@@ -1680,6 +1958,20 @@ sealed class SyncState {
     data class Syncing(
         val accountId: String,
         val startedAt: Long
+    ) : SyncState()
+
+    /**
+     * The app-side load loop has finished, but at least one conversation is still
+     * `Mode.Syncing` — its swarm git repo is cloning / not bootstrapped and it has no usable
+     * sync connection yet. Distinct from [Complete] so the UI/tests don't treat a
+     * not-yet-live conversation as fully synced.
+     * @param bootstrappingCount conversations still in `Mode.Syncing`
+     */
+    data class Bootstrapping(
+        val accountId: String,
+        val updatedAt: Long,
+        val conversationCount: Int,
+        val bootstrappingCount: Int
     ) : SyncState()
 
     /**

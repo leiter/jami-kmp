@@ -37,6 +37,8 @@ import net.jami.model.Uri
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import net.jami.services.AccountService
 import net.jami.services.CallService
 import net.jami.services.ContactService
@@ -88,6 +90,7 @@ data class CallState(
     val duration: Long = 0L,
     val isAudioMuted: Boolean = false,
     val isVideoMuted: Boolean = false,
+    val isRecording: Boolean = false,
     val isSpeakerOn: Boolean = false,
     val hasMicPermission: Boolean = true,
     val hasCamPermission: Boolean = true,
@@ -334,6 +337,15 @@ class CallViewModel(
         _state.value = _state.value.copy(isAudioMuted = newMuteState)
     }
 
+    fun toggleRecording() {
+        val callId = currentCallId ?: return
+        val accountId = currentAccountId ?: return
+        callService.toggleRecording(accountId, callId)
+        // Optimistic flip for responsiveness; corrected by the daemon's
+        // onRecordingStateChanged signal mapped in the call-updates collector.
+        _state.value = _state.value.copy(isRecording = !_state.value.isRecording)
+    }
+
     fun hasCameraPermission(): Boolean = deviceRuntimeService.hasCameraPermission()
     fun hasMicrophonePermission(): Boolean = deviceRuntimeService.hasMicrophonePermission()
 
@@ -484,6 +496,12 @@ class CallViewModel(
      * Start screen sharing. On Android this requests MediaProjection permission first;
      * the actual switchInput is deferred until the permission is granted and
      * hardwareService.screenShareReady fires.
+     *
+     * If the platform permission prompt is denied (or otherwise never resolves —
+     * e.g. the user backgrounds the picker), [hardwareService.screenShareReady] never
+     * emits. Without a bound this would wait forever with isScreenSharing stuck false
+     * and no way to retry. [SCREEN_SHARE_PERMISSION_TIMEOUT_MS] bounds the wait so the
+     * pending state always clears.
      */
     fun startScreenShare() {
         val accountId = currentAccountId ?: return
@@ -493,17 +511,23 @@ class CallViewModel(
 
         screenShareReadyJob?.cancel()
         screenShareReadyJob = scope.launch {
-            hardwareService.screenShareReady.collect {
-                val a = pendingScreenShareAccountId ?: return@collect
-                val c = pendingScreenShareCallId ?: return@collect
+            val ready = withTimeoutOrNull(SCREEN_SHARE_PERMISSION_TIMEOUT_MS) {
+                hardwareService.screenShareReady.first()
+            }
+            if (ready == null) {
+                Log.w(TAG, "startScreenShare: permission not granted within timeout, giving up")
                 pendingScreenShareAccountId = null
                 pendingScreenShareCallId = null
-                callService.replaceVideoMedia(a, c, "camera://desktop")
-                // Force startCapture in case the daemon does not call it back after renegotiation
-                hardwareService.startCapture("camera://desktop")
-                _state.value = _state.value.copy(isScreenSharing = true)
-                screenShareReadyJob?.cancel()
+                return@launch
             }
+            val a = pendingScreenShareAccountId ?: return@launch
+            val c = pendingScreenShareCallId ?: return@launch
+            pendingScreenShareAccountId = null
+            pendingScreenShareCallId = null
+            callService.replaceVideoMedia(a, c, "camera://desktop")
+            // Force startCapture in case the daemon does not call it back after renegotiation
+            hardwareService.startCapture("camera://desktop")
+            _state.value = _state.value.copy(isScreenSharing = true)
         }
         hardwareService.requestScreenSharePermission()
     }
@@ -713,6 +737,7 @@ class CallViewModel(
             peerUri = call.peerUri.uri,
             isAudioMuted = call.isAudioMuted,
             isVideoMuted = call.isVideoMuted,
+            isRecording = call.isRecording,
             isIncoming = call.isIncoming,
             isOnHold = isHold,
             hangupReason = call.hangupReason,
@@ -835,5 +860,8 @@ class CallViewModel(
 
     companion object {
         private const val TAG = "CallViewModel"
+
+        /** Bounds how long startScreenShare() waits for the platform permission prompt. */
+        private const val SCREEN_SHARE_PERMISSION_TIMEOUT_MS = 30_000L
     }
 }

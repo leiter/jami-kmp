@@ -20,3 +20,6 @@ web-app/build/
 # Xcode user-specific files
 *.xcuserstate
 xcuserdata/
+
+# Firebase credentials — build-time opt-in for push (see doc/push-notifications.md)
+google-services.json
