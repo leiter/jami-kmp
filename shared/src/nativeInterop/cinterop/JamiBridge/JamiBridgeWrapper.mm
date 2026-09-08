@@ -156,6 +156,15 @@ static std::map<std::string, std::string> toCppMap(NSDictionary<NSString*, NSStr
 }
 
 // std::vector<string> -> NSArray
+static NSArray<NSDictionary<NSString*, NSString*>*>* toNSArrayOfDictionaries(
+        const std::vector<std::map<std::string, std::string>>& vec) {
+    NSMutableArray *array = [NSMutableArray arrayWithCapacity:vec.size()];
+    for (const auto& map : vec) {
+        [array addObject:toNSDictionary(map)];
+    }
+    return array;
+}
+
 static NSArray<NSString*>* toNSArray(const std::vector<std::string>& vec) {
     NSMutableArray *arr = [NSMutableArray arrayWithCapacity:vec.size()];
     for (const auto& str : vec) {
@@ -190,6 +199,7 @@ static JBSwarmMessage* toJBSwarmMessage(const SwarmMessage& msg) {
     jbMsg.type = toNSString(msg.type);
     jbMsg.author = toNSString(msg.body.count("author") ? msg.body.at("author") : "");
     jbMsg.body = toNSDictionary(msg.body);
+    jbMsg.editions = toNSArrayOfDictionaries(msg.editions);
     jbMsg.status = toNSNumberDictionary(msg.status);
     jbMsg.timestamp = 0; // Will be set from body if available
     jbMsg.replyTo = nil;
@@ -997,6 +1007,207 @@ static JBCallState toCallState(const std::string& state) {
         }));
 #endif // iOS/Android callbacks
 
+
+    // =========================================================================
+    // Signals the daemon emits that were previously never forwarded to Kotlin.
+    // DaemonCallbacks already declared every one of these; only this bridge hop
+    // was missing, so the features below silently did nothing on iOS.
+    // =========================================================================
+
+    handlers.insert(exportable_callback<ConfigurationSignal::VolatileDetailsChanged>(
+        [weakSelf](const std::string& accountId, const std::map<std::string, std::string>& details) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSDictionary *detailsNS = toNSDictionary(details);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onVolatileAccountDetailsChanged:details:)]) {
+                    [strongSelf.delegate onVolatileAccountDetailsChanged:accountIdNS details:detailsNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::AccountProfileReceived>(
+        [weakSelf](const std::string& accountId, const std::string& displayName, const std::string& userPhoto) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *displayNameNS = toNSString(displayName);
+            NSString *userPhotoNS = toNSString(userPhoto);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onAccountProfileReceived:displayName:userPhoto:)]) {
+                    [strongSelf.delegate onAccountProfileReceived:accountIdNS displayName:displayNameNS userPhoto:userPhotoNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::DeviceRevocationEnded>(
+        [weakSelf](const std::string& accountId, const std::string& device, int status) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *deviceNS = toNSString(device);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onDeviceRevocationEnded:deviceId:state:)]) {
+                    [strongSelf.delegate onDeviceRevocationEnded:accountIdNS deviceId:deviceNS state:status];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::AddDeviceStateChanged>(
+        [weakSelf](const std::string& accountId, uint32_t opId, int state, const std::map<std::string, std::string>& details) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSDictionary *detailsNS = toNSDictionary(details);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onAddDeviceStateChanged:opId:state:details:)]) {
+                    [strongSelf.delegate onAddDeviceStateChanged:accountIdNS opId:opId state:state details:detailsNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::MigrationEnded>(
+        [weakSelf](const std::string& accountId, const std::string& state) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *stateNS = toNSString(state);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onMigrationEnded:state:)]) {
+                    [strongSelf.delegate onMigrationEnded:accountIdNS state:stateNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::IncomingAccountMessage>(
+        [weakSelf](const std::string& accountId, const std::string& from, const std::string& messageId, const std::map<std::string, std::string>& payloads) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *fromNS = toNSString(from);
+            NSString *messageIdNS = toNSString(messageId);
+            NSDictionary *payloadsNS = toNSDictionary(payloads);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onIncomingAccountMessage:from:messageId:payloads:)]) {
+                    [strongSelf.delegate onIncomingAccountMessage:accountIdNS from:fromNS messageId:messageIdNS payloads:payloadsNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::AccountMessageStatusChanged>(
+        [weakSelf](const std::string& accountId, const std::string& conversationId, const std::string& peer, const std::string& messageId, int state) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *conversationIdNS = toNSString(conversationId);
+            NSString *peerNS = toNSString(peer);
+            NSString *messageIdNS = toNSString(messageId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onAccountMessageStatusChanged:conversationId:peer:messageId:state:)]) {
+                    [strongSelf.delegate onAccountMessageStatusChanged:accountIdNS conversationId:conversationIdNS peer:peerNS messageId:messageIdNS state:state];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<DataTransferSignal::DataTransferEvent>(
+        [weakSelf](const std::string& accountId, const std::string& conversationId, const std::string& interactionId, const std::string& fileId, int eventCode) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *conversationIdNS = toNSString(conversationId);
+            NSString *interactionIdNS = toNSString(interactionId);
+            NSString *fileIdNS = toNSString(fileId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onDataTransferEvent:conversationId:interactionId:fileId:eventCode:)]) {
+                    [strongSelf.delegate onDataTransferEvent:accountIdNS conversationId:conversationIdNS interactionId:interactionIdNS fileId:fileIdNS eventCode:eventCode];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::UserSearchEnded>(
+        [weakSelf](const std::string& accountId, int state, const std::string& query, const std::vector<std::map<std::string, std::string>>& results) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *queryNS = toNSString(query);
+            NSArray *resultsNS = toNSArrayOfDictionaries(results);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onUserSearchEnded:state:query:results:)]) {
+                    [strongSelf.delegate onUserSearchEnded:accountIdNS state:state query:queryNS results:resultsNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConversationSignal::MessagesFound>(
+        [weakSelf](uint32_t requestId, const std::string& accountId, const std::string& conversationId, std::vector<std::map<std::string, std::string>> messages) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *conversationIdNS = toNSString(conversationId);
+            NSArray *messagesNS = toNSArrayOfDictionaries(messages);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onMessagesFound:accountId:conversationId:messages:)]) {
+                    [strongSelf.delegate onMessagesFound:requestId accountId:accountIdNS conversationId:conversationIdNS messages:messagesNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConversationSignal::ConversationPreferencesUpdated>(
+        [weakSelf](const std::string& accountId, const std::string& conversationId, std::map<std::string, std::string> preferences) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *conversationIdNS = toNSString(conversationId);
+            NSDictionary *preferencesNS = toNSDictionary(preferences);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onConversationPreferencesUpdated:conversationId:preferences:)]) {
+                    [strongSelf.delegate onConversationPreferencesUpdated:accountIdNS conversationId:conversationIdNS preferences:preferencesNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConversationSignal::ConversationRequestDeclined>(
+        [weakSelf](const std::string& accountId, const std::string& conversationId) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *conversationIdNS = toNSString(conversationId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onConversationRequestDeclined:conversationId:)]) {
+                    [strongSelf.delegate onConversationRequestDeclined:accountIdNS conversationId:conversationIdNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::ActiveCallsChanged>(
+        [weakSelf](const std::string& accountId, const std::string& conversationId, const std::vector<std::map<std::string, std::string>>& activeCalls) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *conversationIdNS = toNSString(conversationId);
+            NSArray *activeCallsNS = toNSArrayOfDictionaries(activeCalls);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onActiveCallsChanged:conversationId:activeCalls:)]) {
+                    [strongSelf.delegate onActiveCallsChanged:accountIdNS conversationId:conversationIdNS activeCalls:activeCallsNS];
+                }
+            });
+        }));
+
+    // Video sink lifecycle. Prerequisites for the rendering pipeline: nothing
+    // renders from these yet, but without them Kotlin is never told a remote
+    // video stream exists.
+    handlers.insert(exportable_callback<VideoSignal::DecodingStarted>(
+        [weakSelf](const std::string& sinkId, const std::string& shmPath, int width, int height, bool isMixer) {
+            NSString *sinkIdNS = toNSString(sinkId);
+            NSString *shmPathNS = toNSString(shmPath);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onDecodingStarted:shmPath:width:height:isMixer:)]) {
+                    [strongSelf.delegate onDecodingStarted:sinkIdNS shmPath:shmPathNS width:width height:height isMixer:isMixer];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<VideoSignal::DecodingStopped>(
+        [weakSelf](const std::string& sinkId, const std::string& shmPath, bool isMixer) {
+            NSString *sinkIdNS = toNSString(sinkId);
+            NSString *shmPathNS = toNSString(shmPath);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onDecodingStopped:shmPath:isMixer:)]) {
+                    [strongSelf.delegate onDecodingStopped:sinkIdNS shmPath:shmPathNS isMixer:isMixer];
+                }
+            });
+        }));
+
     libjami::registerSignalHandlers(handlers);
     FILE_LOG_I("JamiBridge", @"Signal handlers registered successfully");
 }
@@ -1653,6 +1864,38 @@ static JBCallState toCallState(const std::string& state) {
 
 - (BOOL)isCaptureMuted {
     return libjami::isCaptureMuted();
+}
+
+- (void)setNoiseSuppression:(BOOL)enabled {
+    libjami::setNoiseSuppressState(enabled ? "enabled" : "disabled");
+}
+
+- (void)setEchoCancellation:(BOOL)enabled {
+    libjami::setEchoCancellationState(enabled ? "enabled" : "disabled");
+}
+
+- (void)setPushNotificationToken:(NSString *)token {
+    libjami::setPushNotificationToken(toCppString(token));
+}
+
+- (void)setPushNotificationTopic:(NSString *)topic {
+    libjami::setPushNotificationTopic(toCppString(topic));
+}
+
+- (void)setPushNotificationConfig:(NSDictionary<NSString *, NSString *> *)config {
+    std::map<std::string, std::string> cfg;
+    for (NSString *key in config) {
+        cfg[toCppString(key)] = toCppString(config[key]);
+    }
+    libjami::setPushNotificationConfig(cfg);
+}
+
+- (void)pushNotificationReceived:(NSString *)from data:(NSDictionary<NSString *, NSString *> *)data {
+    std::map<std::string, std::string> payload;
+    for (NSString *key in data) {
+        payload[toCppString(key)] = toCppString(data[key]);
+    }
+    libjami::pushNotificationReceived(toCppString(from), payload);
 }
 
 - (void)muteRingtone:(BOOL)muted {

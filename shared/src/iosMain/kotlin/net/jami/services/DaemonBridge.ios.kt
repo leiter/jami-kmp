@@ -24,6 +24,8 @@ import net.jami.model.MediaAttribute
 import net.jami.model.SwarmMessage
 import net.jami.utils.Log
 import platform.Foundation.*
+import net.jami.services.expect.HardwareService
+import org.koin.mp.KoinPlatformTools
 import platform.darwin.NSObject
 
 /**
@@ -230,8 +232,8 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun muteCapture(mute: Boolean) { bridge.muteCapture(mute) }
     override fun isCaptureMuted(): Boolean = bridge.isCaptureMuted()
     override fun restartAudioLayer() { Log.d(TAG, "restartAudioLayer") }
-    override fun setNoiseSuppression(enabled: Boolean) {}
-    override fun setEchoCancellation(enabled: Boolean) {}
+    override fun setNoiseSuppression(enabled: Boolean) { bridge.setNoiseSuppression(enabled) }
+    override fun setEchoCancellation(enabled: Boolean) { bridge.setEchoCancellation(enabled) }
     override fun transfer(accountId: String, callId: String, to: String): Boolean =
         bridge.transfer(accountId, callId = callId, to = to)
     override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean =
@@ -569,16 +571,18 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Push Notifications ====================
 
+    // These hand the token/payload to the daemon. End-to-end push additionally needs
+    // PushKit registration in the app and a push proxy server, neither of which exists yet.
     override fun setPushNotificationToken(token: String) {
-        // Not exposed in current JamiBridge header
+        bridge.setPushNotificationToken(token)
     }
 
     override fun setPushNotificationConfig(config: Map<String, String>) {
-        // Not exposed
+        bridge.setPushNotificationConfig(config.toNSDictionary())
     }
 
     override fun pushNotificationReceived(from: String, data: Map<String, String>) {
-        // Not exposed
+        bridge.pushNotificationReceived(from, data.toNSDictionary())
     }
 
     // ==================== Video Device Management ====================
@@ -677,6 +681,12 @@ private fun Any?.toKotlinMap(): Map<String, String> {
 }
 
 @Suppress("UNCHECKED_CAST")
+private fun Any?.toKotlinMapList(): List<Map<String, String>> {
+    val array = this as? List<*> ?: return emptyList()
+    return array.map { it.toKotlinMap() }
+}
+
+@Suppress("UNCHECKED_CAST")
 private fun Any?.toKotlinList(): List<String> {
     val array = this as? List<*> ?: return emptyList()
     return array.mapNotNull { it as? String }
@@ -721,6 +731,16 @@ private fun List<Long>.toNSNumberList(): List<*> = this
 private class JamiBridgeDelegateImpl(
     private val callbacks: DaemonCallbacks
 ) : NSObject(), JamiBridgeDelegateProtocol {
+
+    /**
+     * Resolved lazily rather than injected, because DaemonCallbacks has no decoding
+     * callbacks — Android routes VideoSignal through SWIG's VideoCallback instead, so
+     * there is no common seam to use. Resolving at first signal (not at construction)
+     * keeps this clear of Koin start-up ordering.
+     */
+    private val hardwareService: HardwareService by lazy {
+        KoinPlatformTools.defaultContext().get().get()
+    }
 
     // Account Events
     override fun onAccountsChanged() {
@@ -795,8 +815,131 @@ private class JamiBridgeDelegateImpl(
         callbacks.onKnownDevicesChanged(accountId, devicesMap)
     }
 
-    // addDevice events not yet exposed in JamiBridgeProtocol — no-op stub
-    // When the C bridge exposes onAddDeviceStateChanged, add the override here.
+    override fun onAddDeviceStateChanged(
+        accountId: String,
+        opId: UInt,
+        state: Int,
+        details: Map<Any?, *>,
+    ) {
+        callbacks.onAddDeviceStateChanged(accountId, opId.toLong(), state, details.toKotlinMap())
+    }
+
+    override fun onVolatileAccountDetailsChanged(accountId: String, details: Map<Any?, *>) {
+        callbacks.onVolatileAccountDetailsChanged(accountId, details.toKotlinMap())
+    }
+
+    override fun onAccountProfileReceived(accountId: String, displayName: String, userPhoto: String) {
+        callbacks.onAccountProfileReceived(accountId, displayName, userPhoto)
+    }
+
+    override fun onDeviceRevocationEnded(accountId: String, deviceId: String, state: Int) {
+        callbacks.onDeviceRevocationEnded(accountId, deviceId, state)
+    }
+
+    override fun onMigrationEnded(accountId: String, state: String) {
+        callbacks.onMigrationEnded(accountId, state)
+    }
+
+    override fun onIncomingAccountMessage(
+        accountId: String,
+        from: String,
+        messageId: String,
+        payloads: Map<Any?, *>,
+    ) {
+        // DaemonCallbacks takes callId for the SIP case, which this signal does not carry.
+        callbacks.onIncomingAccountMessage(
+            accountId = accountId,
+            messageId = messageId.ifEmpty { null },
+            callId = null,
+            from = from,
+            messages = payloads.toKotlinMap(),
+        )
+    }
+
+    override fun onAccountMessageStatusChanged(
+        accountId: String,
+        conversationId: String,
+        peer: String,
+        messageId: String,
+        state: Int,
+    ) {
+        // Note the argument order: the daemon emits (conversationId, peer, messageId) while
+        // DaemonCallbacks declares (conversationId, messageId, contactId).
+        callbacks.onAccountMessageStatusChanged(
+            accountId = accountId,
+            conversationId = conversationId,
+            messageId = messageId,
+            contactId = peer,
+            status = state,
+        )
+    }
+
+    override fun onDataTransferEvent(
+        accountId: String,
+        conversationId: String,
+        interactionId: String,
+        fileId: String,
+        eventCode: Int,
+    ) {
+        callbacks.onDataTransferEvent(accountId, conversationId, interactionId, fileId, eventCode)
+    }
+
+    override fun onUserSearchEnded(
+        accountId: String,
+        state: Int,
+        query: String,
+        results: List<*>,
+    ) {
+        callbacks.onUserSearchEnded(accountId, state, query, results.toKotlinMapList())
+    }
+
+    override fun onMessagesFound(
+        requestId: UInt,
+        accountId: String,
+        conversationId: String,
+        messages: List<*>,
+    ) {
+        callbacks.onMessagesFound(
+            messageId = requestId.toInt(),
+            accountId = accountId,
+            conversationId = conversationId,
+            messages = messages.toKotlinMapList(),
+        )
+    }
+
+    override fun onConversationPreferencesUpdated(
+        accountId: String,
+        conversationId: String,
+        preferences: Map<Any?, *>,
+    ) {
+        callbacks.onConversationPreferencesUpdated(accountId, conversationId, preferences.toKotlinMap())
+    }
+
+    override fun onConversationRequestDeclined(accountId: String, conversationId: String) {
+        callbacks.onConversationRequestDeclined(accountId, conversationId)
+    }
+
+    override fun onActiveCallsChanged(
+        accountId: String,
+        conversationId: String,
+        activeCalls: List<*>,
+    ) {
+        callbacks.onActiveCallsChanged(accountId, conversationId, activeCalls.toKotlinMapList())
+    }
+
+    override fun onDecodingStarted(
+        sinkId: String,
+        shmPath: String,
+        width: Int,
+        height: Int,
+        isMixer: Boolean,
+    ) {
+        hardwareService.decodingStarted(sinkId, shmPath, width, height, isMixer)
+    }
+
+    override fun onDecodingStopped(sinkId: String, shmPath: String, isMixer: Boolean) {
+        hardwareService.decodingStopped(sinkId, shmPath, isMixer)
+    }
 
     // Call Events
     override fun onIncomingCall(
@@ -875,7 +1018,9 @@ private class JamiBridgeDelegateImpl(
     }
 
     override fun onConferenceInfoUpdated(conferenceId: String, participantInfos: List<*>) {
-        // Not directly mapped to DaemonCallbacks
+        // This signal was already being received here and then dropped, which is why the
+        // conference participant grid and active-speaker indicator never updated.
+        callbacks.onConferenceInfoUpdated(conferenceId, participantInfos.toKotlinMapList())
     }
 
     // Conversation Events
@@ -1054,9 +1199,7 @@ private fun JBSwarmMessage.toKotlinSwarmMessage(): SwarmMessage {
         linearizedParent = this.replyTo ?: "",
         body = bodyMap,
         reactions = reactionsMap,
-        // JBSwarmMessage exposes no `editions` property, so edit history cannot be
-        // recovered here yet; it needs a JamiBridgeWrapper change.
-        editions = emptyList(),
+        editions = this.editions.toKotlinMapList(),
         status = statusMap
     )
 }

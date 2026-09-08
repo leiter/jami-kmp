@@ -122,6 +122,7 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 @property (nonatomic, copy) NSString *author;
 @property (nonatomic, strong) NSDictionary<NSString *, NSString *> *body;
 @property (nonatomic, strong) NSArray<NSDictionary<NSString *, NSString *> *> *reactions;
+@property (nonatomic, strong) NSArray<NSDictionary<NSString *, NSString *> *> *editions;
 @property (nonatomic, assign) int64_t timestamp;
 @property (nonatomic, copy, nullable) NSString *replyTo;
 @property (nonatomic, strong) NSDictionary<NSString *, NSNumber *> *status;
@@ -235,6 +236,97 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (void)onConversationProfileUpdated:(NSString *)accountId
                       conversationId:(NSString *)conversationId
                              profile:(NSDictionary<NSString *, NSString *> *)profile;
+
+// =============================================================================
+// Account state (added: these signals were subscribed by the daemon but never
+// surfaced to Kotlin, so the corresponding DaemonCallbacks methods never fired)
+// =============================================================================
+
+- (void)onVolatileAccountDetailsChanged:(NSString *)accountId
+                                details:(NSDictionary<NSString *, NSString *> *)details;
+
+- (void)onAccountProfileReceived:(NSString *)accountId
+                     displayName:(NSString *)displayName
+                       userPhoto:(NSString *)userPhoto;
+
+- (void)onDeviceRevocationEnded:(NSString *)accountId
+                       deviceId:(NSString *)deviceId
+                          state:(int)state;
+
+- (void)onAddDeviceStateChanged:(NSString *)accountId
+                           opId:(uint32_t)opId
+                          state:(int)state
+                        details:(NSDictionary<NSString *, NSString *> *)details;
+
+- (void)onMigrationEnded:(NSString *)accountId state:(NSString *)state;
+
+// =============================================================================
+// Messaging
+// =============================================================================
+
+- (void)onIncomingAccountMessage:(NSString *)accountId
+                            from:(NSString *)from
+                       messageId:(NSString *)messageId
+                        payloads:(NSDictionary<NSString *, NSString *> *)payloads;
+
+- (void)onAccountMessageStatusChanged:(NSString *)accountId
+                       conversationId:(NSString *)conversationId
+                                 peer:(NSString *)peer
+                            messageId:(NSString *)messageId
+                                state:(int)state;
+
+- (void)onDataTransferEvent:(NSString *)accountId
+             conversationId:(NSString *)conversationId
+              interactionId:(NSString *)interactionId
+                     fileId:(NSString *)fileId
+                  eventCode:(int)eventCode;
+
+// =============================================================================
+// Search
+// =============================================================================
+
+- (void)onUserSearchEnded:(NSString *)accountId
+                    state:(int)state
+                    query:(NSString *)query
+                  results:(NSArray<NSDictionary<NSString *, NSString *> *> *)results;
+
+- (void)onMessagesFound:(uint32_t)requestId
+              accountId:(NSString *)accountId
+         conversationId:(NSString *)conversationId
+               messages:(NSArray<NSDictionary<NSString *, NSString *> *> *)messages;
+
+// =============================================================================
+// Conversation
+// =============================================================================
+
+- (void)onConversationPreferencesUpdated:(NSString *)accountId
+                          conversationId:(NSString *)conversationId
+                             preferences:(NSDictionary<NSString *, NSString *> *)preferences;
+
+- (void)onConversationRequestDeclined:(NSString *)accountId
+                       conversationId:(NSString *)conversationId;
+
+- (void)onActiveCallsChanged:(NSString *)accountId
+              conversationId:(NSString *)conversationId
+                 activeCalls:(NSArray<NSDictionary<NSString *, NSString *> *> *)activeCalls;
+
+// =============================================================================
+// Video sinks
+//
+// Prerequisites for the video rendering pipeline. The daemon announces a sink
+// here; nothing renders from it yet, but without these the Kotlin side is never
+// told a remote video stream exists.
+// =============================================================================
+
+- (void)onDecodingStarted:(NSString *)sinkId
+                  shmPath:(NSString *)shmPath
+                    width:(int)width
+                   height:(int)height
+                  isMixer:(BOOL)isMixer;
+
+- (void)onDecodingStopped:(NSString *)sinkId
+                  shmPath:(NSString *)shmPath
+                  isMixer:(BOOL)isMixer;
 
 - (void)onReactionAdded:(NSString *)accountId
          conversationId:(NSString *)conversationId
@@ -507,6 +599,17 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (BOOL)isCaptureMuted;
 
 - (void)muteRingtone:(BOOL)muted;
+
+// Audio processing
+- (void)setNoiseSuppression:(BOOL)enabled;
+- (void)setEchoCancellation:(BOOL)enabled;
+
+// Push notifications. These only hand the token/payload to the daemon; end-to-end push
+// additionally needs PushKit on the app side and a push proxy server.
+- (void)setPushNotificationToken:(NSString *)token;
+- (void)setPushNotificationTopic:(NSString *)topic;
+- (void)setPushNotificationConfig:(NSDictionary<NSString *, NSString *> *)config;
+- (void)pushNotificationReceived:(NSString *)from data:(NSDictionary<NSString *, NSString *> *)data;
 
 - (BOOL)requestMediaChange:(NSString *)accountId
                     callId:(NSString *)callId
