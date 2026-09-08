@@ -108,7 +108,10 @@ class CallKitManager(
     private val callToAccount = mutableMapOf<String, String>()
 
     init {
-        val config = CXProviderConfiguration().apply {
+        // localizedName is shown on the lock screen and in the system call UI; the
+        // no-argument initialiser leaves it blank, so the incoming-call screen had no
+        // app name on it.
+        val config = CXProviderConfiguration(localizedName = "Jami").apply {
             supportsVideo = true
             maximumCallsPerCallGroup = 1u
             supportedHandleTypes = setOf(CXHandleTypeGeneric)

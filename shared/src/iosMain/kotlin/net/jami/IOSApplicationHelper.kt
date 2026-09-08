@@ -23,6 +23,7 @@ import net.jami.services.AccountService
 import net.jami.services.DaemonBridgeApi
 import net.jami.services.DaemonCallbacks
 import net.jami.services.IOSNotificationDelegate
+import net.jami.services.SyncManager
 import net.jami.services.expect.HardwareService
 import net.jami.utils.Log
 import org.koin.core.component.KoinComponent
@@ -36,6 +37,7 @@ private object JamiLifecycle : KoinComponent {
     private val daemonCallbacks: DaemonCallbacks by inject()
     private val accountService: AccountService by inject()
     private val hardwareService: HardwareService by inject()
+    private val syncManager: SyncManager by inject()
 
     fun start() {
         try {
@@ -71,6 +73,35 @@ private object JamiLifecycle : KoinComponent {
         Log.d(TAG, "Notification delegate installed")
     }
 
+    /**
+     * Called when the app leaves the foreground.
+     *
+     * Requests the extra execution window iOS allows (~30s) so the daemon can finish
+     * in-flight work rather than being suspended mid-operation. This is as far as the
+     * platform permits without a registered BGTask.
+     */
+    fun enterBackground() {
+        try {
+            syncManager.startBackgroundSync()
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception entering background: $e")
+        }
+    }
+
+    /**
+     * Called when the app returns to the foreground: ends the background window and
+     * tells the daemon connectivity is available again, so accounts re-register
+     * promptly instead of waiting for their own timers.
+     */
+    fun enterForeground() {
+        try {
+            syncManager.stopBackgroundSync()
+            hardwareService.connectivityChanged(true)
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception entering foreground: $e")
+        }
+    }
+
     fun stop() {
         try {
             daemonBridge.stop()
@@ -92,3 +123,9 @@ fun startJami() = JamiLifecycle.start()
  */
 fun setupNotificationDelegate() = JamiLifecycle.setupNotificationDelegate()
 fun stopJami() = JamiLifecycle.stop()
+
+/** Called from the Swift AppDelegate when the app backgrounds. */
+fun jamiDidEnterBackground() = JamiLifecycle.enterBackground()
+
+/** Called from the Swift AppDelegate when the app returns to the foreground. */
+fun jamiWillEnterForeground() = JamiLifecycle.enterForeground()

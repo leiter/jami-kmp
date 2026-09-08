@@ -20,6 +20,121 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ace</string>
+		<string>ar</string>
+		<string>ar-EG</string>
+		<string>ast-ES</string>
+		<string>az</string>
+		<string>az-IR</string>
+		<string>be</string>
+		<string>be-BY</string>
+		<string>bg</string>
+		<string>bg-BG</string>
+		<string>bn</string>
+		<string>ca</string>
+		<string>cmn</string>
+		<string>cs-CZ</string>
+		<string>da</string>
+		<string>de</string>
+		<string>de-DE</string>
+		<string>el</string>
+		<string>en</string>
+		<string>eo</string>
+		<string>es</string>
+		<string>es-AR</string>
+		<string>es-CO</string>
+		<string>es-MX</string>
+		<string>et</string>
+		<string>eu</string>
+		<string>fa</string>
+		<string>fa-IR</string>
+		<string>fi</string>
+		<string>fr</string>
+		<string>fr-BE</string>
+		<string>fr-CA</string>
+		<string>fr-CH</string>
+		<string>fr-FR</string>
+		<string>ga</string>
+		<string>gl</string>
+		<string>gu</string>
+		<string>hak</string>
+		<string>he</string>
+		<string>hi</string>
+		<string>hi-IN</string>
+		<string>hr</string>
+		<string>hr-HR</string>
+		<string>hu</string>
+		<string>hy</string>
+		<string>id</string>
+		<string>ig</string>
+		<string>it</string>
+		<string>it-IT</string>
+		<string>ja</string>
+		<string>kab</string>
+		<string>kbd</string>
+		<string>kk</string>
+		<string>kn</string>
+		<string>ko</string>
+		<string>ko-KR</string>
+		<string>lt</string>
+		<string>ml</string>
+		<string>mn-MN</string>
+		<string>mr</string>
+		<string>ms</string>
+		<string>nan</string>
+		<string>nb</string>
+		<string>ne</string>
+		<string>nl</string>
+		<string>nn</string>
+		<string>oc</string>
+		<string>pa</string>
+		<string>pl</string>
+		<string>pl-PL</string>
+		<string>pt</string>
+		<string>pt-BR</string>
+		<string>pt-PT</string>
+		<string>ro</string>
+		<string>ro-RO</string>
+		<string>ru</string>
+		<string>ru-RU</string>
+		<string>si</string>
+		<string>sk</string>
+		<string>sk-SK</string>
+		<string>sl</string>
+		<string>sq-AL</string>
+		<string>sr</string>
+		<string>sv</string>
+		<string>sw</string>
+		<string>ta</string>
+		<string>te</string>
+		<string>th</string>
+		<string>tr</string>
+		<string>tt</string>
+		<string>uk</string>
+		<string>vi</string>
+		<string>zh</string>
+		<string>zh-CN</string>
+		<string>zh-HK</string>
+		<string>zh-TW</string>
+	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>fetch</string>
+		<string>processing</string>
+		<string>remote-notification</string>
+		<string>voip</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>net.jami.iosapp.sync</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
@@ -34,6 +149,8 @@
 	<string>Jami uses your location to share it with contacts during a conversation.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Jami uses your microphone for audio and video calls.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Jami saves photos and videos you receive to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Jami accesses your photo library so you can send images in conversations.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>

@@ -69,6 +69,16 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         return true
     }
 
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        // Requests the ~30s execution window iOS allows so the daemon can finish
+        // in-flight work instead of being suspended mid-operation.
+        IOSApplicationHelperKt.jamiDidEnterBackground()
+    }
+
+    func applicationWillEnterForeground(_ application: UIApplication) {
+        IOSApplicationHelperKt.jamiWillEnterForeground()
+    }
+
     func applicationWillTerminate(_ application: UIApplication) {
         IOSApplicationHelperKt.stopJami()
     }
