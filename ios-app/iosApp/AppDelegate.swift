@@ -62,7 +62,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
         // 3. Wire the push policy layer (reads the connectivity-mode setting, applies tokens to
         // the daemon). Must run before any token can arrive.
-        IOSPushHelperKt.initPush()
+        IOSPushHelperKt.setupPush()
 
         // 4. Register for standard remote notifications — carries message and sync pushes.
         // The token lands in didRegisterForRemoteNotificationsWithDeviceToken below.

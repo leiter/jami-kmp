@@ -27,8 +27,14 @@ import net.jami.services.PushConfigNotifier
  * testable Kotlin and stays comparable with the Android side.
  */
 
-/** Call once from `didFinishLaunchingWithOptions`, after `doInitKoin()`. */
-fun initPush() {
+/**
+ * Call once from `didFinishLaunchingWithOptions`, after `doInitKoin()`.
+ *
+ * Named setupPush, not initPush: Kotlin/Native exports an `init*` function to Swift as
+ * `doInit*`, so `initPush()` was unreachable as written — the Swift call site did not
+ * compile. Matches setupKoin / setupNotificationDelegate elsewhere in this module.
+ */
+fun setupPush() {
     // Re-apply whenever the user changes the connectivity mode in app settings.
     PushConfigNotifier.onConfigChanged = { IOSPushServiceManager.applyCurrentMode() }
     IOSPushServiceManager.applyCurrentMode()
