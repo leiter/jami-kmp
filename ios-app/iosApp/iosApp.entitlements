@@ -2,11 +2,19 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Required for APNs and PushKit. "development" targets the APNs sandbox; release builds
-	     for TestFlight/App Store need "production" (Xcode's Push Notifications capability
-	     normally manages this, and the App ID must have Push Notifications enabled in the
-	     developer portal). See doc/push-notifications.md. -->
+	<!-- Required for APNs and PushKit.
+
+	     Resolved from the APS_ENVIRONMENT build setting rather than hardcoded:
+	     Debug builds need "development" (the APNs sandbox) while a Release
+	     archive must be signed with "production" to match a distribution
+	     provisioning profile. Hardcoding either one breaks the other half,
+	     and with CODE_SIGN_STYLE = Manual nothing rewrites it for us — the
+	     archive simply fails entitlement validation at codesign time.
+
+	     The App ID must have Push Notifications enabled in the developer
+	     portal for the profile to carry aps-environment at all.
+	     See doc/push-notifications.md. -->
 	<key>aps-environment</key>
-	<string>development</string>
+	<string>$(APS_ENVIRONMENT)</string>
 </dict>
 </plist>

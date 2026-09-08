@@ -23,3 +23,13 @@ xcuserdata/
 
 # Firebase credentials — build-time opt-in for push (see doc/push-notifications.md)
 google-services.json
+
+# Fastlane
+# The .p8 is an App Store Connect private key: it authenticates uploads as this
+# team and must never be committed. Keep it in ~/.appstoreconnect/private_keys.
+**/fastlane/*.p8
+# Generated per run, not source.
+**/fastlane/report.xml
+**/fastlane/README.md
+**/fastlane/Preview.html
+**/fastlane/test_output/

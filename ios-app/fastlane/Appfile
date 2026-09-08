@@ -1,0 +1,10 @@
+app_identifier("net.jami.iosapp")
+team_id("K4K982LMZ9")
+
+# App Store Connect team id. Same as the developer portal team here, but the two
+# are distinct concepts and can differ on other accounts.
+itc_team_id("K4K982LMZ9")
+
+# No apple_id() on purpose: every lane authenticates with an App Store Connect
+# API key (see asc_key_path in the Fastfile), which needs no Apple ID and no
+# app-specific password, and does not break under 2FA.

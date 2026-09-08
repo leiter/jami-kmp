@@ -1,0 +1,187 @@
+require "xcodeproj"
+
+default_platform(:ios)
+
+platform :ios do
+  XCODEPROJ   = "iosApp.xcodeproj"
+  SCHEME      = "iosApp"
+  CONFIG      = "Release"
+  BUNDLE_ID   = "net.jami.iosapp"
+  PROFILE     = "Jami-KMP-test"
+  TEAM_ID     = "K4K982LMZ9"
+
+  # The team's shared App Store Connect key. Override per-machine with env vars
+  # rather than editing this file.
+  ASC_KEY_ID    = ENV["ASC_KEY_ID"]    || "M4S9AWXXL7"
+  ASC_ISSUER_ID = ENV["ASC_ISSUER_ID"] || "e3c717d8-00fc-4ff7-8a05-65f96d2b1562"
+
+  # ── Auth ────────────────────────────────────────────────────────────────────
+
+  # The .p8 is a private key and must never be committed. ~/.appstoreconnect is
+  # where Apple's own tools look, so it comes first; the path next to this file
+  # stays last so CI can materialise the key from a secret without editing here.
+  def asc_key_path
+    candidates = [
+      ENV["ASC_KEY_PATH"],
+      File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ASC_KEY_ID}.p8"),
+      File.expand_path("AuthKey_#{ASC_KEY_ID}.p8", __dir__)
+    ].compact
+
+    path = candidates.find { |p| File.exist?(p) }
+    if path.nil?
+      UI.user_error!("App Store Connect API key AuthKey_#{ASC_KEY_ID}.p8 not found. Looked in:\n" \
+                     "#{candidates.map { |p| "  - #{p}" }.join("\n")}\n" \
+                     "Download it from App Store Connect > Users and Access > Integrations, " \
+                     "or set ASC_KEY_PATH.")
+    end
+    path
+  end
+
+  def api_key
+    app_store_connect_api_key(
+      key_id: ASC_KEY_ID,
+      issuer_id: ASC_ISSUER_ID,
+      key_filepath: asc_key_path,
+      in_house: false
+    )
+  end
+
+  # ── Version helpers ─────────────────────────────────────────────────────────
+
+  # Info.plist holds $(CURRENT_PROJECT_VERSION) and $(MARKETING_VERSION), so the
+  # build settings are the single source of truth. Deliberately NOT using
+  # increment_build_number: it drives agvtool, which rewrites those Info.plist
+  # references back into literals and recreates the two-sources-of-truth problem
+  # this project does not currently have.
+  def each_build_setting(key)
+    project = Xcodeproj::Project.open(File.expand_path("../#{XCODEPROJ}", __dir__))
+    project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings[key] = yield(config.build_settings[key])
+      end
+    end
+    project.save
+  end
+
+  def read_build_setting(key)
+    project = Xcodeproj::Project.open(File.expand_path("../#{XCODEPROJ}", __dir__))
+    project.targets.first.build_configurations.first.build_settings[key]
+  end
+
+  # ── Preflight ───────────────────────────────────────────────────────────────
+
+  desc "Verify the App Store Connect API key resolves and authenticates"
+  lane :check_api_key do
+    UI.message("Using key #{ASC_KEY_ID} from #{asc_key_path}")
+    build = latest_testflight_build_number(api_key: api_key, app_identifier: BUNDLE_ID)
+    UI.success("Authenticated. Latest TestFlight build for #{BUNDLE_ID}: #{build}")
+  end
+
+  # Signing failures surface deep inside a 15-minute archive, which is an
+  # expensive way to learn that an entitlement does not match a profile. This
+  # lane answers the same question in about a second.
+  desc "Check the Release entitlements against the provisioning profile"
+  lane :check_signing do
+    profile = Dir[File.expand_path("~/Library/Developer/Xcode/UserData/Provisioning Profiles/*.mobileprovision")]
+              .map  { |p| [p, `security cms -D -i "#{p}" 2>/dev/null`] }
+              .find { |_, xml| xml.include?("<string>#{PROFILE}</string>") }
+
+    UI.user_error!("Provisioning profile '#{PROFILE}' is not installed. Open Xcode > Settings > " \
+                   "Accounts > Download Manual Profiles, or install it from the developer portal.") if profile.nil?
+
+    plist = Plist.parse_xml(profile[1])
+    # ExpirationDate parses as a DateTime, which will not compare against a Time.
+    expiry = plist["ExpirationDate"]&.to_time
+    UI.user_error!("Profile '#{PROFILE}' expired on #{expiry}.") if expiry && expiry < Time.now
+    UI.message("Profile '#{PROFILE}' valid until #{expiry}")
+
+    profile_aps = plist.dig("Entitlements", "aps-environment")
+
+    # APS_ENVIRONMENT is per-configuration in the pbxproj and the entitlements
+    # file references it as $(APS_ENVIRONMENT); resolve it the same way xcodebuild will.
+    settings = sh("xcodebuild -project ../#{XCODEPROJ} -scheme #{SCHEME} -configuration #{CONFIG} " \
+                  "-destination 'generic/platform=iOS' -showBuildSettings 2>/dev/null",
+                  log: false)
+    build_aps = settings[/^\s+APS_ENVIRONMENT = (.+)$/, 1]&.strip
+
+    UI.message("aps-environment: build settings = #{build_aps.inspect}, profile = #{profile_aps.inspect}")
+    if build_aps != profile_aps
+      UI.user_error!("aps-environment mismatch: the #{CONFIG} build signs with #{build_aps.inspect} " \
+                     "but '#{PROFILE}' grants #{profile_aps.inspect}. codesign will reject the archive.")
+    end
+
+    UI.success("Signing configuration is consistent.")
+  end
+
+  # ── Build ───────────────────────────────────────────────────────────────────
+
+  desc "Increment the build number (CURRENT_PROJECT_VERSION)"
+  lane :bump_build do
+    each_build_setting("CURRENT_PROJECT_VERSION") { |v| (v.to_i + 1).to_s }
+    UI.success("Build number is now #{read_build_setting('CURRENT_PROJECT_VERSION')}")
+  end
+
+  desc "Set the marketing version, e.g. fastlane set_version version:1.1.0"
+  lane :set_version do |options|
+    version = options[:version]
+    UI.user_error!("Pass a version: fastlane set_version version:1.1.0") if version.nil?
+    each_build_setting("MARKETING_VERSION") { |_| version }
+    UI.success("Marketing version is now #{version}")
+  end
+
+  desc "Archive and export a signed IPA"
+  lane :build do
+    check_signing
+
+    # Gradle's incremental cache can otherwise embed a JamiShared.framework built
+    # from an older commit; the Xcode script phase runs
+    # embedAndSignAppleFrameworkForXcode, so cleaning is all that is needed here.
+    UI.message("Cleaning the shared module so the framework is rebuilt from source...")
+    sh("cd ../.. && ./gradlew :shared:clean")
+
+    bump_build
+
+    build_app(
+      project: XCODEPROJ,
+      scheme: SCHEME,
+      configuration: CONFIG,
+      destination: "generic/platform=iOS",
+      export_method: "app-store",
+      output_directory: "../build/ios-export",
+      export_options: {
+        provisioningProfiles: { BUNDLE_ID => PROFILE },
+        signingStyle: "manual",
+        # "Apple Distribution", not the pre-2021 "iPhone Distribution" spelling.
+        signingCertificate: "Apple Distribution",
+        teamID: TEAM_ID,
+        uploadSymbols: true
+      }
+    )
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    build
+    upload_to_testflight(
+      api_key: api_key,
+      app_identifier: BUNDLE_ID,
+      skip_waiting_for_build_processing: true
+    )
+    UI.success("Uploaded build #{read_build_setting('CURRENT_PROJECT_VERSION')} to TestFlight.")
+  end
+
+  desc "Build and upload to App Store Connect (does not submit for review)"
+  lane :deploy do
+    build
+    upload_to_app_store(
+      api_key: api_key,
+      app_identifier: BUNDLE_ID,
+      submit_for_review: false,
+      automatic_release: false,
+      skip_metadata: true,
+      skip_screenshots: true,
+      force: true
+    )
+    UI.success("Uploaded build #{read_build_setting('CURRENT_PROJECT_VERSION')} to App Store Connect.")
+  end
+end
