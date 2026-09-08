@@ -71,7 +71,11 @@ import platform.AVFoundation.AVMediaTypeVideo
 import platform.AVFoundation.authorizationStatusForMediaType
 import platform.AVFoundation.position
 import platform.AVFoundation.requestAccessForMediaType
+import platform.AVFoundation.AVCaptureDeviceFormat
+import platform.AVFoundation.AVFrameRateRange
+import platform.CoreMedia.CMFormatDescriptionRef
 import platform.CoreMedia.CMSampleBufferGetImageBuffer
+import platform.CoreMedia.CMVideoFormatDescriptionGetDimensions
 import platform.CoreMedia.CMSampleBufferRef
 import platform.CoreVideo.CVPixelBufferGetHeight
 import platform.CoreVideo.CVPixelBufferGetWidth
@@ -186,6 +190,47 @@ class IOSCameraService(
         }
         result.currentId = currentCamera?.uniqueID ?: frontCamera?.uniqueID
         return result
+    }
+
+    /**
+     * Reports the capture capabilities of [camId] as reported by AVFoundation.
+     *
+     * Mirrors the Android CameraService contract: [sizes] is a flat width,height,width,height…
+     * list and [rates] holds the supported maximum frame rates. [formats] carries a single 0,
+     * since the daemon only ever consumes NV12 from the iOS capture path.
+     *
+     * Returns false when the camera is unknown, leaving the caller to fall back.
+     */
+    fun getCameraCapabilities(
+        camId: String,
+        sizes: MutableList<Int>,
+        rates: MutableList<Int>,
+    ): Boolean {
+        val device = listOfNotNull(frontCamera, backCamera).firstOrNull { it.uniqueID == camId }
+            ?: return false
+
+        val seenSizes = mutableSetOf<Pair<Int, Int>>()
+        val seenRates = mutableSetOf<Int>()
+        device.formats.forEach { entry ->
+            val format = entry as? AVCaptureDeviceFormat ?: return@forEach
+            val description = format.formatDescription as CMFormatDescriptionRef?
+            CMVideoFormatDescriptionGetDimensions(description).useContents {
+                if (width > 0 && height > 0) seenSizes.add(width to height)
+            }
+            format.videoSupportedFrameRateRanges.forEach { rangeEntry ->
+                val range = rangeEntry as? AVFrameRateRange ?: return@forEach
+                seenRates.add(range.maxFrameRate.toInt())
+            }
+        }
+        if (seenSizes.isEmpty()) return false
+
+        // Largest first, matching the daemon's preference for the highest usable resolution.
+        seenSizes.sortedByDescending { it.first.toLong() * it.second }.forEach { (w, h) ->
+            sizes.add(w)
+            sizes.add(h)
+        }
+        seenRates.sortedDescending().forEach { rates.add(it) }
+        return true
     }
 
     // ══════════════════════════════════════════════════════════════════════════

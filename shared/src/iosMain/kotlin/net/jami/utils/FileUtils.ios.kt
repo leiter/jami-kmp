@@ -164,8 +164,27 @@ internal actual fun platformWriteBytes(path: String, data: ByteArray): Boolean {
 
 internal actual fun platformPathSeparator(): String = "/"
 
-// Android-first stub: returns 0L; cache freshness not checked on iOS.
-internal actual fun platformGetLastModified(path: String): Long = 0L
+/**
+ * Last-modified time in epoch milliseconds, matching `java.io.File.lastModified()` on the
+ * JVM targets. Returns 0L when the file does not exist, as the other platforms do.
+ */
+@OptIn(ExperimentalForeignApi::class, UnsafeNumber::class)
+internal actual fun platformGetLastModified(path: String): Long {
+    return try {
+        memScoped {
+            val statBuf = alloc<stat>()
+            if (stat(path, statBuf.ptr) == 0) {
+                statBuf.st_mtimespec.tv_sec.toLong() * 1000L +
+                    statBuf.st_mtimespec.tv_nsec.toLong() / 1_000_000L
+            } else {
+                0L
+            }
+        }
+    } catch (e: Exception) {
+        Log.e("FileUtils", "Failed to read last-modified time: ${e.message}")
+        0L
+    }
+}
 
 // Extension functions for NSData <-> ByteArray conversion
 @OptIn(ExperimentalForeignApi::class)

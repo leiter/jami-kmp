@@ -163,8 +163,13 @@ actual class HardwareService : KoinComponent {
 
     actual fun getCameraInfo(camId: String, formats: MutableList<Int>, sizes: MutableList<Int>, rates: MutableList<Int>) {
         formats.add(0)
-        sizes.addAll(listOf(1280, 720, 1920, 1080, 640, 480))
-        rates.addAll(listOf(30, 60, 24))
+        if (!cameraService.getCameraCapabilities(camId, sizes, rates)) {
+            // Unknown camera (or no formats reported) — fall back to the resolutions every
+            // iOS capture device supports rather than reporting none.
+            Log.w(tag, "No capture formats for camera $camId; using defaults")
+            sizes.addAll(listOf(1920, 1080, 1280, 720, 640, 480))
+            rates.addAll(listOf(60, 30, 24))
+        }
     }
 
     actual fun setParameters(camId: String, format: Int, width: Int, height: Int, rate: Int) {}
@@ -216,10 +221,29 @@ actual class HardwareService : KoinComponent {
     actual fun addFullScreenPreviewSurface(holder: Any) { addPreviewVideoSurface(holder, null) }
     actual fun removeFullScreenPreviewSurface() { removePreviewVideoSurface() }
 
+    /**
+     * Returns the camera being switched to.
+     *
+     * [IOSCameraService.switchCamera] is suspend (it reconfigures the AVCaptureSession off the
+     * main thread), but this expect is not, so the target id is derived synchronously from the
+     * device list and the hardware switch is launched behind it. The previous implementation
+     * read a `var` assigned inside `scope.launch` and so always returned null before the
+     * coroutine had run.
+     */
     actual fun changeCamera(setDefaultCamera: Boolean): String? {
-        var result: String? = null
-        scope.launch { result = cameraService.switchCamera() }
-        return result
+        val devices = cameraService.getVideoDevices()
+        val front = devices.cameraFront
+        val back = devices.cameraBack
+        val target = if (setDefaultCamera) {
+            front ?: back
+        } else {
+            // Toggle to the other camera, falling back to whatever exists.
+            if (devices.currentId == front) back ?: front else front ?: back
+        } ?: return null
+
+        if (target == devices.currentId) return target
+        scope.launch { cameraService.switchCamera() }
+        return target
     }
 
     actual fun setPreviewSettings() {}
