@@ -150,12 +150,22 @@ The Xcode project has **no entitlements file and no capabilities at all**.
   dropped or returned — despite `AccountService` and `ConversationFacade` collecting that flow to
   drive `setAccountsActive()`. iOS fix is `NWPathMonitor`; Android needs the same treatment.
 
-### 3.3 Screenshot blocking (M) — held back deliberately
+### 3.3 Screenshot blocking — **partially done**
 
-`WindowSecure.ios.kt` is `{}`; the toggle in `AppSettingsScreen.kt:196` does nothing on iOS.
-The secure-`UITextField` technique has to wrap Compose's hosting view and there is a real chance it
-compiles, links and silently fails. Not attempted, because it cannot be verified with the testing
-available.
+`WindowSecure.ios.kt` was `{}`, so the toggle in `AppSettingsScreen.kt:196` did nothing on iOS.
+It now covers the window opaquely while `UIScreen.isCaptured` is true (screen recording and
+mirroring) and while the app is inactive (the app-switcher snapshot). All public API.
+
+**Screenshots are still not blocked**, and cannot be through public API. The usual workaround
+reparents the app's layer inside the private `_UITextLayoutCanvasView` of a secure
+`UITextField`; applied to Compose's hosting window it risks blanking the entire UI if the
+internals differ, which is not a trade worth making without a device to verify on.
+
+So iOS is **weaker than Android here**, where `FLAG_SECURE` blocks screenshots too. The shared
+string `pref_block_record_title` ("Block screenshot and recording") is accurate on Android and
+overstates iOS. It was left alone deliberately: it mirrors the jami-android-client key and
+already has translations in 95 locales, so rewording it would break translation sync and
+understate the Android behaviour. Worth revisiting with a platform-specific summary string.
 
 ---
 
