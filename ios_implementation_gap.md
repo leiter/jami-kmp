@@ -101,15 +101,24 @@ never invoked.
 Each is ~10 lines against 30 existing templates; `onMessageReceived` and `onKnownDevicesChanged`
 cover both marshalling shapes. **No commonMain change** — the Kotlin methods already exist.
 
-### 2.2 Small passthroughs, absent from the header (S)
+### 2.2 Small passthroughs — **done**
 
-`setNoiseSuppression`, `setEchoCancellation`, `disableParticipantVideo`, `enableParticipantVideo`,
-and swarm-message `editions` (no such property on `JBSwarmMessage`).
+`setNoiseSuppression` and `setEchoCancellation` now call `setNoiseSuppressState` /
+`setEchoCancellationState`. Swarm-message `editions` now cross the bridge; the daemon's
+`SwarmMessage` always had the field, `JBSwarmMessage` simply had no property for it.
 
-`setPushNotificationToken` / `setPushNotificationConfig` / `pushNotificationReceived` are declared
-by the daemon (`headers/configurationmanager_interface.h:252-266`) but not exposed. The three
-passthroughs are cheap; **working push additionally needs PushKit and a push proxy** — ship the
-passthroughs, not the feature.
+`setPushNotificationToken` / `Topic` / `Config` and `pushNotificationReceived` are real
+passthroughs now. **Groundwork only** — working push additionally needs PushKit registration
+in the app and a push proxy server.
+
+**Not a gap after all:** `disableParticipantVideo` and `enableParticipantVideo` are empty on
+Android too, and the daemon exposes no matching API — only the deprecated `muteParticipant`
+and `muteStream`, which need a `deviceId` and `streamId` unavailable at that call site.
+Platform parity, left alone on both.
+
+**Note:** Android implements `setEchoCancellation` via `setAgcState`, which is automatic gain
+control, not echo cancellation. iOS uses `setEchoCancellationState`. Android looks wrong here;
+untouched.
 
 ---
 
