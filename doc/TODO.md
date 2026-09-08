@@ -289,3 +289,25 @@
 - [ ] Verify platform builds: `./gradlew :shared:compileKotlinDesktop :shared:compileDebugKotlinAndroid`
 - [ ] Fix any failing tests from the `viewModelScope()` migration (replaced `backgroundScope` to fix `UncompletedCoroutinesError`)
 - [ ] **Pre-existing broken test**: `AppSettingsViewModelTest.kt` calls `AppSettingsViewModel(repo, scope)` with 2 args, but the constructor requires 3 mandatory params (`settingsRepository`, `accountService`, `contactService`) plus an optional `scope` — was already not compiling against `commonTest` before the 2026-08-07 system-contacts-sync change added a 4th (`systemContactsSyncService`). Needs the test's call sites updated.
+
+## iOS — after the first simulator run (2026-09-08)
+
+The iOS host app had never been compiled on a Mac until now. It builds, launches and stays up;
+these are what the run surfaced.
+
+- [ ] **Welcome-screen button clips long labels** — the third button's German text
+  ("Verbindung von einem anderen Gerät aus herstellen") is cut off at the button bounds on an
+  iPhone 17 Pro with the simulator set to `de-DE`. Fix in the button component, not that call
+  site — every long locale is exposed.
+- [ ] **Script the device-side native symlinks.** `lib/` is hand-made and drifts silently when the
+  daemon's dependency set changes; three of the five first-build failures were exactly this
+  (`http_parser` dropped, `vpx` absent on the simulator, `yrs` added). `scripts/make_sim_links.py`
+  already does the simulator side by discovery.
+- [ ] **Let `StubDaemonBridge` retain its callbacks.** `init(callbacks)` discards them, so none of
+  the 15 daemon callbacks added to the iOS bridge can be tested without a live peer. Retaining
+  them makes each one testable single-app, on JVM and iOS both.
+- [ ] **Connectivity monitoring on Android** — `connectivityChanged()` is now fed by `NWPathMonitor`
+  on iOS. Android, desktop, macOS and JS still never call it, so the daemon is never told the
+  network dropped. Android's `ConnectivityManager.NetworkCallback` is the equivalent.
+- [ ] **Shared `appleMain` source set** — the iOS and macOS Darwin implementations are now
+  substantively identical, and macOS does not compile (~95 errors). One copy would fix both.

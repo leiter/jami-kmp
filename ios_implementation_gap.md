@@ -1,7 +1,8 @@
 # iOS Implementation Gap — jami-kmp
 
 Audited: 2026-06-15. Re-audited and rewritten: 2026-09-08, then reconciled with the
-daemon-stability and push work merged from main.
+daemon-stability and push work merged from main, then updated again the same day once the
+app had actually been **built and run in the simulator** for the first time.
 Compares `shared/src/iosMain/` against `shared/src/androidMain/` as the reference.
 
 The 2026-06-15 revision of this file declared almost everything "Done". That was optimistic:
@@ -14,8 +15,6 @@ Effort scale: **S** = 1–2 days · **M** = 3–5 days · **L** = 1+ weeks
 ---
 
 ## 1. Completed 2026-09-08
-
-Verified by compilation and `linkDebugFrameworkIosSimulatorArm64` only — see §4.
 
 ### Defects
 
@@ -68,39 +67,46 @@ every target. `StubPreferencesService` is retained for tests.
 
 ---
 
-## 2. Remaining — needs the Objective-C bridge
+## 2. The Objective-C bridge — **done**
 
-`JamiBridgeWrapper.{h,mm}` + a `build-jamibridge.sh` rebuild. Grouped because they share that cost.
+`JamiBridgeWrapper.{h,mm}` + a `build-jamibridge.sh` rebuild. Grouped because they shared that cost.
 
-### 2.1 Missing daemon callbacks (the largest remaining gap — M)
+### 2.1 Missing daemon callbacks — **done**
 
-`DaemonCallbacks` declares **46** methods. The `JamiBridgeDelegate` protocol declares **31**.
-Android fires 41; iOS fires 30. These are wired end-to-end in Kotlin and simply never receive
-their events:
+This was the largest gap in the audit. `DaemonCallbacks` declares **46** methods; the
+`JamiBridgeDelegate` protocol declared **31**, and iOS fired only **30**. Fifteen signals were
+added to the wrapper (**34 → 49 `exportable_callback` registrations**) and forwarded from
+`DaemonBridge.ios.kt` (**30 → 44 callbacks**). Each of these was wired end-to-end in Kotlin and
+had simply never received its events:
 
-| Callback | Broken on iOS |
-|----------|---------------|
-| `onDataTransferEvent` | **File transfers never report progress or completion** |
-| `onUserSearchEnded` | **User-directory search is dead** — the query fires, results never arrive |
-| `onMessagesFound` | **In-conversation search is dead** |
+| Callback | Had been broken on iOS |
+|----------|------------------------|
+| `onDataTransferEvent` | File transfers never reported progress or completion |
+| `onUserSearchEnded` | User-directory search was dead — the query fired, results never arrived |
+| `onMessagesFound` | In-conversation search was dead |
 | `onAccountMessageStatusChanged` | No sent/delivered/read receipts |
-| `onVolatileAccountDetailsChanged` | Registration and device-online state never refresh |
-| `onAddDeviceStateChanged` | Device linking / QR pairing shows no progress |
-| `onDeviceRevocationEnded` | Revoke-device UI never completes |
-| `onMigrationEnded` | Account migration never completes |
+| `onVolatileAccountDetailsChanged` | Registration and device-online state never refreshed |
+| `onAddDeviceStateChanged` | Device linking / QR pairing showed no progress |
+| `onDeviceRevocationEnded` | Revoke-device UI never completed |
+| `onMigrationEnded` | Account migration never completed |
 | `onIncomingAccountMessage` | Non-swarm / SIP text messages dropped |
 | `onConversationPreferencesUpdated` | Pref changes from other devices ignored |
 | `onConversationRequestDeclined` | Declined requests not removed from the list |
-| `onActiveCallsChanged` | Group-call "join ongoing call" banner never appears |
+| `onActiveCallsChanged` | Group-call "join ongoing call" banner never appeared |
 | `onAccountProfileReceived` | Own profile/avatar updates not received |
 
-Plus `onConferenceInfoUpdated`, which **is** received at `DaemonBridge.ios.kt:878` and discarded
-(`// Not directly mapped to DaemonCallbacks`) — the participant grid never updates. And there are
-**no `VideoSignal` handlers registered at all**, so `HardwareService.decodingStarted/Stopped` are
-never invoked.
+`onConferenceInfoUpdated` was already *received* and then discarded
+(`// Not directly mapped to DaemonCallbacks`); it is now forwarded, so the participant grid
+updates. `VideoSignal::DecodingStarted`/`DecodingStopped` had **no handler registered at all** and
+now do, reaching `HardwareService.decodingStarted/Stopped` — a prerequisite for video rendering,
+which is still out of scope (§5).
 
-Each is ~10 lines against 30 existing templates; `onMessageReceived` and `onKnownDevicesChanged`
-cover both marshalling shapes. **No commonMain change** — the Kotlin methods already exist.
+No commonMain change was needed; the Kotlin methods already existed.
+
+**Header ABI note:** refreshing the libjami headers against the pinned daemon revealed four enum
+underlying-type changes and a new `botOwner` parameter on `updateProfile`. Silent ABI drift of
+this kind is invisible to the Kotlin compiler — it surfaces as wrong values at runtime, so the
+headers must be refreshed whenever the daemon submodule moves.
 
 ### 2.2 Small passthroughs — **done**
 
@@ -130,33 +136,39 @@ untouched.
 
 ---
 
-## 3. Remaining — no bridge needed
+## 3. Host app and platform services
 
-### 3.1 App bundle capabilities (S) — pure `Info.plist` / entitlements / pbxproj
+### 3.1 App bundle capabilities — **done**
 
-The Xcode project has **no entitlements file and no capabilities at all**.
+The Xcode project had **no entitlements file and no capabilities at all**. Now:
 
-- **`UIBackgroundModes`** absent — add `voip`, `audio`, `remote-notification`, `fetch`,
-  `processing`. Without `audio`, an active call's `AVAudioSession` is torn down on backgrounding,
-  so CallKit and the notification work in §1 are **partly inert until this lands**.
-- **`CFBundleLocalizations`** — 95 locale folders ship in `composeResources`; the bundle declares
-  none. Suspected effect: the app runs in English regardless of device language. *This is inferred,
-  not observed — confirm before acting.*
+- **`UIBackgroundModes`** — `voip`, `audio`, `remote-notification`, `fetch`, `processing`. Without
+  `audio` an active call's `AVAudioSession` is torn down on backgrounding, which would have left
+  CallKit and the notification work in §1 partly inert.
+- **`CFBundleLocalizations`** — 96 entries, matching the locale folders shipped in
+  `composeResources`. The earlier revision of this file suspected that, with no declared
+  localizations, "the app runs in English regardless of device language" and flagged the claim as
+  inferred. **That was never confirmed and should not be repeated as fact:** the first simulator
+  run (locale `de-DE`) rendered the UI in German. Whether the plist key was what fixed it cannot
+  be attributed without a comparison build against the old bundle.
 - `NSPhotoLibraryAddUsageDescription`, `BGTaskSchedulerPermittedIdentifiers`,
-  `ITSAppUsesNonExemptEncryption = false`, entitlements with `aps-environment` + App Group.
-- `CXProviderConfiguration.localizedName` is unset, so the system call UI shows a blank app name.
-- `AppDelegate.swift` has no scene-phase handling.
+  `ITSAppUsesNonExemptEncryption = false`, and an `iosApp.entitlements` with `aps-environment`
+  + App Group.
+- `CXProviderConfiguration.localizedName` is set, so the system call UI names the app.
+- `AppDelegate.swift` has scene-phase handling.
 
-### 3.2 Audio routing and connectivity (M)
+### 3.2 Audio routing and connectivity — **done**
 
-- **Bluetooth and wired headsets cannot carry call audio.** `activateAudioSession()` passes
-  `options = 0u`; without `AllowBluetooth`/`AllowBluetoothA2DP` iOS will not route to a headset.
-  The output list is hardcoded `[INTERNAL, SPEAKERS]` and `bluetoothEvents` never emits. The bridge
-  already exposes `getAudioOutputDevices`/`setAudioOutputDevice`, unused.
-- **Nothing monitors connectivity on *any* platform.** `connectivityChanged()` is never called
-  anywhere, so `_connectivityState` is permanently `true` and the daemon is never told the network
-  dropped or returned — despite `AccountService` and `ConversationFacade` collecting that flow to
-  drive `setAccountsActive()`. iOS fix is `NWPathMonitor`; Android needs the same treatment.
+- **Bluetooth and wired headsets** — `activateAudioSession()` passed `options = 0u`, so iOS would
+  not route call audio to a headset. It now passes `AllowBluetooth`/`AllowBluetoothA2DP`, builds
+  the real output list from `AVAudioSession.availableInputs`/`currentRoute` instead of a hardcoded
+  `[INTERNAL, SPEAKERS]`, and observes `AVAudioSessionRouteChangeNotification` to update
+  `_audioState` and emit `bluetoothEvents`. **Unverified** — route changes are not simulable (§4).
+- **Connectivity monitoring** — `connectivityChanged()` was never called *anywhere in the repo*, so
+  `_connectivityState` was permanently `true` and the daemon was never told the network dropped or
+  returned, despite `AccountService` and `ConversationFacade` collecting that flow to drive
+  `setAccountsActive()`. iOS now feeds it from `NWPathMonitor`. **Android, desktop, macOS and JS
+  still do not** — the same fix is owed on each, and Android's is the one that matters.
 
 ### 3.3 Screenshot blocking — **partially done**
 
@@ -177,27 +189,61 @@ understate the Android behaviour. Worth revisiting with a platform-specific summ
 
 ---
 
-## 4. Verification status — read this before trusting §1
+## 4. Verification status — read this before trusting §1–§3
 
 Two standing constraints: **no physical-device testing** (peer-to-peer fails behind NAT here), and
 **no tests simulating two communicating jami-kmp instances**.
 
-Everything in §1 was verified by `compileKotlinIosSimulatorArm64` +
-`linkDebugFrameworkIosSimulatorArm64` **only**. No test has executed against any of it, because:
+**The test suite now compiles and passes.** It did not when this file was first rewritten: ~35
+errors across 11 files, from production constructors gaining parameters (`vCardService`,
+`contactService`, `biometricService`, `deviceRuntimeService`, `audioRecorderService`), a new
+`linkColor`, and a removed `StubHardwareService`. All repaired. Last full run: **617/617
+`:shared:desktopTest`** and **602/602 `:shared:iosSimulatorArm64Test`** green.
 
-> **The test suite does not compile on a clean tree.** ~35 pre-existing errors across 11 files:
-> production constructors gained parameters (`vCardService`, `contactService`, `biometricService`,
-> `deviceRuntimeService`, `audioRecorderService`), `linkColor` was added, `StubHardwareService` was
-> removed. This blocks every `:shared:*Test` task. `IOSNotificationDelegateTest` is separately
-> broken — it reads `IOSNotificationDelegate.KEY_*` as companion members, but they are top-level
-> constants.
+Three test-infrastructure fixes worth not re-learning:
 
-Highest-risk unverified items: the **Keychain rewrite** (Keychain calls cannot run in a test binary
-without entitlements anyway) and the **reactions marshalling**.
+- Services handed a raw `TestScope` leaked coroutines and failed `runTest` with
+  `UncompletedCoroutinesError`. Fixed once, in the `TestFixtures.kt` factories, via an `isolated()`
+  helper rather than per-test.
+- `CallViewModel`'s duration timer is a `while (isActive) { delay(…) }` loop, so `advanceUntilIdle`
+  never returns. Bound the advance and call `onCleared()`.
+- A test whose `buildConversationItems` appeared to "return nothing" was in fact **hanging** on
+  Compose's `getString(Res.string.you_txt_prefix)`, which outgoing messages resolve. Marking the
+  fixtures `isIncoming = true` avoids the resource lookup.
 
-To make §2.1 verifiable without peers: `StubDaemonBridge.init(callbacks)`
-(`DaemonBridge.kt:480`) currently discards its callbacks. Have it retain them, and each new
-callback gets a test that fires it and asserts the service reacts.
+**The app has now been built and run in the iOS Simulator** (iPhone 17 Pro). It launches, Koin
+starts, `libjami::init()` succeeds, signal handlers register, and the Welcome screen renders. See
+§4.1 for what that first build cost.
+
+Still unverified, and unverifiable under the constraints above: the **Keychain rewrite** (Keychain
+calls need entitlements a test binary does not have), the **reactions marshalling** against a real
+peer, **Bluetooth and wired-headset routing**, **call audio surviving backgrounding**, and
+**screen-recording blocking**. These ship on code review.
+
+To make the §2.1 callbacks verifiable without peers: `StubDaemonBridge.init(callbacks)`
+(`DaemonBridge.kt:480`) still discards its callbacks. Have it retain them, and each callback gets
+a test that fires it and asserts the service reacts. **Not yet done.**
+
+### 4.1 Defects found on the first Mac build
+
+The iOS host app had never been compiled on a Mac. Five defects blocked it — none of which either
+test suite or `linkDebugFrameworkIosSimulatorArm64` could have caught, because they live in the
+Swift host and the Xcode link line, not in Kotlin:
+
+1. `@Volatile` used with no import — Kotlin/Native needs `kotlin.concurrent.Volatile`.
+2. `IOSPushHelper.initPush()` was **unreachable from Swift**: Kotlin/Native exports `init*` as
+   `doInit*`. Renamed to `setupPush()`, which is the workspace playbook's standing rule.
+3. `-lhttp_parser` still on the link line after the daemon dropped it upstream for llhttp.
+4. `-lvpx` linked for the **simulator**, which has no arm64 slice by design (ffmpeg is configured
+   `--disable-libvpx` there).
+5. `-lyrs` (Y-CRDT, a newer daemon dependency) not linked at all, **and** `libyrs.a` missing from
+   `lib/`. `lib-sim/` had it only because `scripts/make_sim_links.py` was rewritten to *discover*
+   libraries from the xcframework rather than use a fixed list.
+
+Items 3–5 are all the same failure: **the device symlinks in `lib/` are hand-made and drift
+silently when the daemon's dependency set changes.** See
+`shared/src/nativeInterop/cinterop/JamiBridge/README.md`. Scripting the device side the way the
+simulator side is scripted would close this off.
 
 ---
 
@@ -251,3 +297,18 @@ Both were found while implementing the iOS work; both are now **fixed**.
 `:shared:compileKotlinDesktop` was also broken on a clean tree — five `DaemonBridgeApi` members had
 no override in `DaemonBridge.desktop.kt`. Fixed in passing, with no-op stubs matching that file's
 existing pattern, because it blocked all desktop verification.
+
+---
+
+## 7. Open UI defect from the first simulator run
+
+**A button label overflows in German.** On the Welcome screen the third button,
+"Verbindung von einem anderen Gerät aus herstellen", is clipped — the second line's descenders are
+cut off by the button bounds. Observed at the default iPhone 17 Pro size with the simulator set to
+`de-DE`. It is the first screen a German user sees, and the same risk applies to every other long
+locale, so the fix belongs in the button component rather than in that one call site.
+
+Not a defect: `E/IOSPushServiceManager: Remote notification registration failed: no valid
+aps-environment entitlement` in the simulator log. That is an artifact of building with
+`CODE_SIGNING_ALLOWED=NO`, which strips entitlements; the entitlements file itself is present
+(§3.1).

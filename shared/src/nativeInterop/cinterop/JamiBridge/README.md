@@ -58,15 +58,35 @@ python3 scripts/make_sim_links.py
 It reports any library it could not find, which is the quickest way to tell whether the
 `jami-client-ios` xcframework build is complete.
 
-> **Caveat:** the script hardcodes two absolute paths — the `jami-client-ios` xcframework
-> root and this repository's location. Both assume `/Users/Marco/Projects/`. Anyone working
-> from a different checkout must edit `xcfw_root` and `sim_lib` at the top of the file.
+The script no longer hardcodes paths: it derives them from its own location, and
+`JAMI_CLIENT_IOS` / `JAMI_XCFRAMEWORK` override the defaults. It also **discovers** the
+library set and the simulator slice name from the xcframework directory instead of using a
+fixed list — both have changed underneath us before (see the drift note below).
 
 **Device** — there is **no** equivalent script. The symlinks in `lib/` were created by hand
 and point into `jami-client-ios/DEPS/arm64-iPhoneOS/lib/`. Recreating them means linking each
 `.a` from that directory into `lib/`, plus `libjami-core.a` as `lib/libjami.a` (the `.def`
 and the build script both expect the shorter name). Worth scripting the next time someone
 has to do it.
+
+### Dependency drift — the failure this actually causes
+
+The daemon's dependency set changes, and a hand-made `lib/` does not. All three of these bit
+on the first Mac build of the iOS host app (2026-09-08), each as an Xcode link error rather
+than anything Gradle or the test suites could catch:
+
+- **`http_parser` was dropped upstream** in favour of llhttp — `-lhttp_parser` stayed on the
+  link line in `project.pbxproj` and had to be removed from all three blocks.
+- **`vpx` has no arm64-simulator slice** — ffmpeg is configured `--disable-libvpx` there, so
+  `-lvpx` must be absent from the *simulator* link line while remaining on the device one.
+- **`yrs` (Y-CRDT) was added** — it was missing from both the link line and `lib/`. `lib-sim/`
+  had picked it up automatically only because the script discovers rather than enumerates.
+
+When the daemon submodule moves, diff `jami-client-ios/DEPS/arm64-iPhoneOS/lib/*.a` against
+`lib/*.a` and the `OTHER_LDFLAGS` in `ios-app/iosApp.xcodeproj/project.pbxproj`. Refresh the
+libjami headers at the same time: that same update changed four enum underlying types and
+added a `botOwner` parameter to `updateProfile`, which is silent ABI drift the Kotlin
+compiler cannot see.
 
 ### Symptom when this is missing
 

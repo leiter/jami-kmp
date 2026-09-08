@@ -136,11 +136,13 @@ All user-visible strings live in `shared/src/commonMain/composeResources/`. The 
 
 ---
 
-## Known Gaps (as of 2026-08-08)
+## Known Gaps (as of 2026-09-08)
 
 All major mobile features are implemented, including CallKit (iOS) and Telecom API/ConnectionService (Android). The only remaining gaps are:
 
-- **Push notifications** — Android (FCM) and iOS (APNs + PushKit) client integration are both done (2026-07-27, see `doc/push-notifications.md`). Delivery still needs a push-capable DHT proxy holding the FCM/APNs credentials for this app, so calls and messages currently still rely on the daemon running. The iOS half is uncompiled — Apple targets are skipped on a Linux host.
+- **Push notifications** — Android (FCM) and iOS (APNs + PushKit) client integration are both done (2026-07-27, see `doc/push-notifications.md`). Delivery still needs a push-capable DHT proxy holding the FCM/APNs credentials for this app, so calls and messages currently still rely on the daemon running. The iOS half now compiles and runs (it was written on a Linux host, where Apple targets are skipped, and needed three fixes on first Mac build — see `ios_implementation_gap.md` §4.1).
+- **Connectivity monitoring outside iOS** — `connectivityChanged()` is fed by `NWPathMonitor` on iOS only. Android, desktop, macOS and JS never call it, so `_connectivityState` stays permanently `true` there and the daemon is never told the network dropped or returned. Android needs `ConnectivityManager.NetworkCallback`.
+- **macOS target does not compile** — ~95 errors, mostly in `MacOSHardwareService.kt`. Since the iOS and macOS Darwin implementations are now substantively identical, the right fix is a shared `appleMain` source set.
 - **iOS remote video rendering** — no Metal/CALayer `SinkTarget` implementation yet; audio-only calls work fine. See `ios_implementation_gap.md`.
 - **Chat plugins** — Jami plugin system not ported to KMP. Menu item shows a "not yet supported" snackbar.
 - **OsmMapView (Desktop/macOS)** — no viable JVM or AppKit map library in scope; shows coordinate text instead of a map.
@@ -172,10 +174,14 @@ machine-specific symlinks into a sibling **`jami-client-ios`** checkout and are 
 not committed. Nothing in the Gradle build creates them, so Kotlin compiles cleanly and then
 fails at *link* time with undefined libjami symbols.
 
-- Simulator symlinks: `python3 scripts/make_sim_links.py` — but it hardcodes absolute paths
-  under `/Users/Marco/Projects/`, so edit `xcfw_root` and `sim_lib` on any other machine.
+- Simulator symlinks: `python3 scripts/make_sim_links.py`. Paths are derived from the script's
+  own location; `JAMI_CLIENT_IOS` / `JAMI_XCFRAMEWORK` override them. It discovers the library
+  set from the xcframework rather than enumerating it.
 - Device symlinks: no script exists; they were created by hand into
-  `jami-client-ios/DEPS/arm64-iPhoneOS/lib/`.
+  `jami-client-ios/DEPS/arm64-iPhoneOS/lib/`. **This drifts.** When the daemon submodule moves,
+  its dependency set changes and the hand-made `lib/` plus the `OTHER_LDFLAGS` in
+  `project.pbxproj` go stale — a link error, never a compile error. See the drift section in
+  `shared/src/nativeInterop/cinterop/JamiBridge/README.md`.
 - The only committed binaries are `lib/libJamiBridge_ios.a` and `lib/libJamiBridge_iossim.a`,
   the compiled ObjC++ wrapper. Rebuilding them with
   `shared/src/nativeInterop/cinterop/JamiBridge/build-jamibridge.sh` **overwrites tracked
