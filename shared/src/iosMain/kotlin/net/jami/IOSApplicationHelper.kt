@@ -44,6 +44,9 @@ private object JamiLifecycle : KoinComponent {
             if (daemonBridge.init(daemonCallbacks)) {
                 if (daemonBridge.start()) {
                     accountService.loadAccountsFromDaemon(isConnected = true)
+                    // Feeds real network state into connectivityChanged, which
+                    // AccountService collects to drive setAccountsActive().
+                    hardwareService.startConnectivityMonitoring()
                     CoroutineScope(Dispatchers.Default).launch {
                         hardwareService.initVideo()
                     }
