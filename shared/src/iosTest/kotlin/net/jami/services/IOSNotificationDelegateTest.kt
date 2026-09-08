@@ -1,144 +1,157 @@
 package net.jami.services
 
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.unmockkAll
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
-import net.jami.model.Uri
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
-import org.koin.test.KoinTest
-import org.koin.test.inject
-import platform.UserNotifications.UNMutableNotificationContent
-import platform.UserNotifications.UNNotification
-import platform.UserNotifications.UNNotificationRequest
-import platform.UserNotifications.UNNotificationResponse
-import platform.UserNotifications.UNTextInputNotificationResponse
+import kotlinx.coroutines.test.runTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
-@ExperimentalCoroutinesApi
-class IOSNotificationDelegateTest : KoinTest {
+/**
+ * Tests the notification action mapping.
+ *
+ * The previous version of this file used MockK and JUnit, neither of which has a
+ * Kotlin/Native target, so it could never compile for iOS — the whole iosTest source set
+ * was unbuildable because of it. It also verified methods that no longer exist
+ * (callService.acceptCall, conversationFacade.markConversationAsRead).
+ *
+ * The mapping is now exercised through [dispatchNotificationAction] with a hand-built
+ * [NotificationActions] recorder, which needs no UNNotificationResponse — that class has no
+ * public initialiser and cannot be constructed in a test at all.
+ */
+class IOSNotificationDelegateTest {
 
-    private val callService: CallService by inject()
-    private val conversationFacade: ConversationFacade by inject()
-
-    private val delegate = IOSNotificationDelegate()
-    private val testDispatcher = StandardTestDispatcher()
-
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(testDispatcher)
-        startKoin {
-            modules(module {
-                single { mockk<CallService>(relaxed = true) }
-                single { mockk<ConversationFacade>(relaxed = true) }
-            })
+    /** Records what the dispatch asked for, so tests can assert on it. */
+    private class RecordingActions : NotificationActions {
+        val calls = mutableListOf<String>()
+        override suspend fun answerCall(accountId: String, callId: String) {
+            calls += "answerCall($accountId,$callId)"
+        }
+        override suspend fun declineCall(accountId: String, callId: String) {
+            calls += "declineCall($accountId,$callId)"
+        }
+        override suspend fun reply(accountId: String, conversationId: String, text: String) {
+            calls += "reply($accountId,$conversationId,$text)"
+        }
+        override suspend fun markRead(accountId: String, conversationId: String) {
+            calls += "markRead($accountId,$conversationId)"
+        }
+        override suspend fun acceptRequest(accountId: String, conversationId: String) {
+            calls += "acceptRequest($accountId,$conversationId)"
+        }
+        override suspend fun declineRequest(accountId: String, conversationId: String) {
+            calls += "declineRequest($accountId,$conversationId)"
         }
     }
 
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-        stopKoin()
-        unmockkAll()
-    }
+    private suspend fun dispatch(
+        action: String,
+        accountId: String? = ACCOUNT,
+        callId: String? = null,
+        conversationId: String? = null,
+        replyText: String? = null,
+        actions: NotificationActions,
+    ) = dispatchNotificationAction(action, accountId, callId, conversationId, replyText, actions)
 
-    private fun mockResponse(
-        actionIdentifier: String,
-        userInfo: Map<Any?, Any?>,
-        isTextInput: Boolean = false,
-        userText: String? = null
-    ): UNNotificationResponse {
-        val content = mockk<UNMutableNotificationContent>()
-        every { content.userInfo } returns userInfo
+    @Test
+    fun answerCallAcceptsTheCall() = runTest {
+        val actions = RecordingActions()
+        val dismiss = dispatch(ACTION_ANSWER_CALL, callId = CALL, actions = actions)
 
-        val request = mockk<UNNotificationRequest>()
-        every { request.content } returns content
-        every { request.identifier } returns "test_notif_id"
-
-        val notification = mockk<UNNotification>()
-        every { notification.request } returns request
-
-        val response = if (isTextInput) {
-            mockk<UNTextInputNotificationResponse>()
-        } else {
-            mockk<UNNotificationResponse>()
-        }
-        every { response.actionIdentifier } returns actionIdentifier
-        every { response.notification } returns notification
-        if (isTextInput && response is UNTextInputNotificationResponse) {
-            every { response.userText } returns (userText ?: "")
-        }
-
-        return response
+        assertEquals(listOf("answerCall($ACCOUNT,$CALL)"), actions.calls)
+        // The call UI takes over, so the notification is left to the system.
+        assertFalse(dismiss)
     }
 
     @Test
-    fun `didReceive with answer call action calls acceptCall`() {
-        val userInfo = mapOf(
-            IOSNotificationDelegate.KEY_ACCOUNT_ID to "test_account",
-            IOSNotificationDelegate.KEY_CALL_ID to "test_call_id"
-        )
-        val response = mockResponse(IOSNotificationDelegate.ACTION_ANSWER_CALL, userInfo)
+    fun declineCallRefusesAndDismisses() = runTest {
+        val actions = RecordingActions()
+        val dismiss = dispatch(ACTION_DECLINE_CALL, callId = CALL, actions = actions)
 
-        delegate.userNotificationCenter(mockk(), response) {}
-        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(listOf("declineCall($ACCOUNT,$CALL)"), actions.calls)
+        assertTrue(dismiss)
+    }
 
-        coVerify { callService.acceptCall("test_call_id") }
+    /**
+     * The regression this guards: call notifications used to write a "confId" key while the
+     * delegate read accountId/callId, so Answer and Decline could never fire.
+     */
+    @Test
+    fun callActionsDoNothingWithoutAccountAndCallId() = runTest {
+        val actions = RecordingActions()
+        dispatch(ACTION_ANSWER_CALL, accountId = null, callId = CALL, actions = actions)
+        dispatch(ACTION_ANSWER_CALL, callId = null, actions = actions)
+        dispatch(ACTION_DECLINE_CALL, accountId = null, callId = CALL, actions = actions)
+
+        assertTrue(actions.calls.isEmpty(), "expected no action, got ${actions.calls}")
     }
 
     @Test
-    fun `didReceive with decline call action calls hangupCall`() {
-        val userInfo = mapOf(
-            IOSNotificationDelegate.KEY_ACCOUNT_ID to "test_account",
-            IOSNotificationDelegate.KEY_CALL_ID to "test_call_id"
+    fun replySendsTheText() = runTest {
+        val actions = RecordingActions()
+        val dismiss = dispatch(
+            ACTION_REPLY_MESSAGE, conversationId = CONVERSATION, replyText = "Hello there",
+            actions = actions,
         )
-        val response = mockResponse(IOSNotificationDelegate.ACTION_DECLINE_CALL, userInfo)
 
-        delegate.userNotificationCenter(mockk(), response) {}
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        coVerify { callService.hangupCall("test_call_id") }
+        assertEquals(listOf("reply($ACCOUNT,$CONVERSATION,Hello there)"), actions.calls)
+        assertTrue(dismiss)
     }
 
     @Test
-    fun `didReceive with mark read action calls markConversationAsRead`() {
-        val userInfo = mapOf(
-            IOSNotificationDelegate.KEY_ACCOUNT_ID to "test_account",
-            IOSNotificationDelegate.KEY_CONVERSATION_ID to "test_conv_uri"
-        )
-        val response = mockResponse(IOSNotificationDelegate.ACTION_MARK_READ, userInfo)
+    fun replyIgnoresBlankText() = runTest {
+        val actions = RecordingActions()
+        dispatch(ACTION_REPLY_MESSAGE, conversationId = CONVERSATION, replyText = "   ", actions = actions)
+        dispatch(ACTION_REPLY_MESSAGE, conversationId = CONVERSATION, replyText = null, actions = actions)
 
-        delegate.userNotificationCenter(mockk(), response) {}
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        coVerify { conversationFacade.markConversationAsRead("test_account", Uri("test_conv_uri")) }
+        assertTrue(actions.calls.isEmpty(), "expected no send, got ${actions.calls}")
     }
 
     @Test
-    fun `didReceive with reply action calls sendMessage`() {
-        val userInfo = mapOf(
-            IOSNotificationDelegate.KEY_ACCOUNT_ID to "test_account",
-            IOSNotificationDelegate.KEY_CONVERSATION_ID to "test_conv_uri"
-        )
-        val response = mockResponse(
-            IOSNotificationDelegate.ACTION_REPLY_MESSAGE,
-            userInfo,
-            isTextInput = true,
-            userText = "Hello there"
-        )
+    fun markReadMarksTheConversation() = runTest {
+        val actions = RecordingActions()
+        val dismiss = dispatch(ACTION_MARK_READ, conversationId = CONVERSATION, actions = actions)
 
-        delegate.userNotificationCenter(mockk(), response) {}
-        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(listOf("markRead($ACCOUNT,$CONVERSATION)"), actions.calls)
+        assertTrue(dismiss)
+    }
 
-        coVerify { conversationFacade.sendMessage("test_account", "test_conv_uri", "Hello there") }
+    @Test
+    fun trustRequestActionsAreHandled() = runTest {
+        val accept = RecordingActions()
+        assertTrue(dispatch(ACTION_ACCEPT, conversationId = CONVERSATION, actions = accept))
+        assertEquals(listOf("acceptRequest($ACCOUNT,$CONVERSATION)"), accept.calls)
+
+        val decline = RecordingActions()
+        assertTrue(dispatch(ACTION_REQUEST_DECLINE, conversationId = CONVERSATION, actions = decline))
+        assertEquals(listOf("declineRequest($ACCOUNT,$CONVERSATION)"), decline.calls)
+    }
+
+    /**
+     * A trust-request notification only carries a conversation when the account has exactly
+     * one pending request; with several there is nothing unambiguous to act on, so the tap
+     * must fall through and open the app rather than guessing.
+     */
+    @Test
+    fun acceptWithoutAConversationOpensTheAppInstead() = runTest {
+        val actions = RecordingActions()
+        val dismiss = dispatch(ACTION_ACCEPT, conversationId = null, actions = actions)
+
+        assertTrue(actions.calls.isEmpty())
+        assertFalse(dismiss)
+    }
+
+    @Test
+    fun unknownActionIsIgnored() = runTest {
+        val actions = RecordingActions()
+        val dismiss = dispatch("SOME_UNKNOWN_ACTION", conversationId = CONVERSATION, actions = actions)
+
+        assertTrue(actions.calls.isEmpty())
+        assertFalse(dismiss)
+    }
+
+    private companion object {
+        const val ACCOUNT = "test_account"
+        const val CALL = "test_call_id"
+        const val CONVERSATION = "test_conv_uri"
     }
 }

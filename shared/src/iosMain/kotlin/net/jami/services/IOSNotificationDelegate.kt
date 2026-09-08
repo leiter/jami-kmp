@@ -50,81 +50,154 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
     ) {
         val request = didReceiveNotificationResponse.notification.request
         val userInfo = request.content.userInfo
-        val accountId = userInfo[KEY_ACCOUNT_ID] as? String
-        val callId = userInfo[KEY_CALL_ID] as? String
-        val conversationId = userInfo[KEY_CONVERSATION_ID] as? String
+        val actionIdentifier = didReceiveNotificationResponse.actionIdentifier
+        val replyText = (didReceiveNotificationResponse as? UNTextInputNotificationResponse)?.userText
 
-        if (accountId != null) {
-            scope.launch {
-                when (didReceiveNotificationResponse.actionIdentifier) {
-                    ACTION_ANSWER_CALL -> {
-                        if (callId != null) {
-                            Log.d(TAG, "Answering call: $callId")
-                            callService.accept(accountId, callId, hasVideo = false)
-                        }
-                    }
-                    ACTION_DECLINE_CALL -> {
-                        if (callId != null) {
-                            Log.d(TAG, "Declining call: $callId")
-                            callService.refuse(accountId, callId)
-                            center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
-                        }
-                    }
-                    ACTION_REPLY_MESSAGE -> {
-                        val text = (didReceiveNotificationResponse as? UNTextInputNotificationResponse)
-                            ?.userText?.takeIf { it.isNotBlank() }
-                        val uri = conversationId?.let { Uri.fromString(it) }
-                        val conversation = uri?.let { accountService.getAccount(accountId)?.getByUri(it) }
-                        if (conversation != null && uri != null && text != null) {
-                            Log.d(TAG, "Reply to $conversationId")
-                            conversationFacade.sendTextMessage(conversation, uri, text)
-                            center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
-                        } else {
-                            Log.w(TAG, "Reply action could not resolve conversation $conversationId")
-                        }
-                    }
-                    ACTION_MARK_READ -> {
-                        if (conversationId != null) {
-                            Log.d(TAG, "Mark read: $conversationId")
-                            conversationFacade.readMessages(accountId, Uri.fromString(conversationId))
-                            center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
-                        }
-                    }
-                    ACTION_ACCEPT -> {
-                        // The trust-request notification carries a conversation URI only when the
-                        // account has exactly one pending request; otherwise there is nothing
-                        // unambiguous to act on and the tap should just open the app.
-                        val conversation = conversationId
-                            ?.let { accountService.getAccount(accountId)?.getByUri(Uri.fromString(it)) }
-                        if (conversation != null) {
-                            Log.d(TAG, "Accepting trust request: $conversationId")
-                            conversationFacade.acceptRequest(conversation)
-                            center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
-                        } else {
-                            Log.w(TAG, "Accept action without a resolvable conversation — opening app")
-                        }
-                    }
-                    ACTION_REQUEST_DECLINE -> {
-                        if (conversationId != null) {
-                            Log.d(TAG, "Declining trust request: $conversationId")
-                            conversationFacade.discardRequest(accountId, Uri.fromString(conversationId))
-                            center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
-                        } else {
-                            Log.w(TAG, "Decline action without a resolvable conversation")
-                        }
-                    }
-                    UNNotificationDefaultActionIdentifier ->
-                        Log.d(TAG, "Notification tapped — callId=$callId conversationId=$conversationId")
-                    UNNotificationDismissActionIdentifier ->
-                        Log.d(TAG, "Notification dismissed")
-                    else ->
-                        Log.w(TAG, "Unhandled action: ${didReceiveNotificationResponse.actionIdentifier}")
-                }
+        // Only the extraction from Objective-C happens here; the action mapping lives in
+        // dispatchNotificationAction so it can be tested without a UNNotificationResponse.
+        scope.launch {
+            val dismiss = dispatchNotificationAction(
+                actionIdentifier = actionIdentifier,
+                accountId = userInfo[KEY_ACCOUNT_ID] as? String,
+                callId = userInfo[KEY_CALL_ID] as? String,
+                conversationId = userInfo[KEY_CONVERSATION_ID] as? String,
+                replyText = replyText,
+                actions = serviceActions,
+            )
+            if (dismiss) {
+                center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
             }
         }
         withCompletionHandler()
     }
 
+    /** Binds the dispatch to the real services. */
+    private val serviceActions = object : NotificationActions {
+        override suspend fun answerCall(accountId: String, callId: String) {
+            Log.d(TAG, "Answering call: $callId")
+            callService.accept(accountId, callId, hasVideo = false)
+        }
+
+        override suspend fun declineCall(accountId: String, callId: String) {
+            Log.d(TAG, "Declining call: $callId")
+            callService.refuse(accountId, callId)
+        }
+
+        override suspend fun reply(accountId: String, conversationId: String, text: String) {
+            val uri = Uri.fromString(conversationId)
+            val conversation = accountService.getAccount(accountId)?.getByUri(uri)
+            if (conversation == null) {
+                Log.w(TAG, "Reply could not resolve conversation $conversationId")
+                return
+            }
+            Log.d(TAG, "Reply to $conversationId")
+            conversationFacade.sendTextMessage(conversation, uri, text)
+        }
+
+        override suspend fun markRead(accountId: String, conversationId: String) {
+            Log.d(TAG, "Mark read: $conversationId")
+            conversationFacade.readMessages(accountId, Uri.fromString(conversationId))
+        }
+
+        override suspend fun acceptRequest(accountId: String, conversationId: String) {
+            val conversation = accountService.getAccount(accountId)
+                ?.getByUri(Uri.fromString(conversationId))
+            if (conversation == null) {
+                Log.w(TAG, "Accept could not resolve conversation $conversationId")
+                return
+            }
+            Log.d(TAG, "Accepting trust request: $conversationId")
+            conversationFacade.acceptRequest(conversation)
+        }
+
+        override suspend fun declineRequest(accountId: String, conversationId: String) {
+            Log.d(TAG, "Declining trust request: $conversationId")
+            conversationFacade.discardRequest(accountId, Uri.fromString(conversationId))
+        }
+    }
+
+}
+
+/**
+ * The side effects a notification action can perform.
+ *
+ * Extracted so [dispatchNotificationAction] can be exercised without constructing a
+ * UNNotificationResponse, which has no public initialiser and cannot be built in a test.
+ * The action/key mapping is the part worth testing — a mismatch between the keys written
+ * into a notification's userInfo and the keys read back here silently disabled every
+ * action button once before.
+ */
+internal interface NotificationActions {
+    suspend fun answerCall(accountId: String, callId: String)
+    suspend fun declineCall(accountId: String, callId: String)
+    suspend fun reply(accountId: String, conversationId: String, text: String)
+    suspend fun markRead(accountId: String, conversationId: String)
+    suspend fun acceptRequest(accountId: String, conversationId: String)
+    suspend fun declineRequest(accountId: String, conversationId: String)
+}
+
+/**
+ * Maps a notification action to its effect.
+ *
+ * @return true when the notification should be dismissed afterwards.
+ */
+internal suspend fun dispatchNotificationAction(
+    actionIdentifier: String,
+    accountId: String?,
+    callId: String?,
+    conversationId: String?,
+    replyText: String?,
+    actions: NotificationActions,
+): Boolean {
+    // Every action is account-scoped; without an accountId there is nothing to act on.
+    if (accountId == null) {
+        Log.w(TAG, "Notification action $actionIdentifier without an accountId — ignoring")
+        return false
+    }
+    return when (actionIdentifier) {
+        ACTION_ANSWER_CALL -> {
+            if (callId == null) return false
+            actions.answerCall(accountId, callId)
+            false // the call UI takes over; leave the notification to the system
+        }
+        ACTION_DECLINE_CALL -> {
+            if (callId == null) return false
+            actions.declineCall(accountId, callId)
+            true
+        }
+        ACTION_REPLY_MESSAGE -> {
+            val text = replyText?.takeIf { it.isNotBlank() } ?: return false
+            if (conversationId == null) return false
+            actions.reply(accountId, conversationId, text)
+            true
+        }
+        ACTION_MARK_READ -> {
+            if (conversationId == null) return false
+            actions.markRead(accountId, conversationId)
+            true
+        }
+        ACTION_ACCEPT -> {
+            if (conversationId == null) {
+                // The trust-request notification only carries a conversation when the account
+                // has exactly one pending request; otherwise the tap should just open the app.
+                Log.w(TAG, "Accept without a resolvable conversation — opening app")
+                return false
+            }
+            actions.acceptRequest(accountId, conversationId)
+            true
+        }
+        ACTION_REQUEST_DECLINE -> {
+            if (conversationId == null) return false
+            actions.declineRequest(accountId, conversationId)
+            true
+        }
+        UNNotificationDefaultActionIdentifier -> false
+        UNNotificationDismissActionIdentifier -> false
+        else -> {
+            Log.w(TAG, "Unhandled action: $actionIdentifier")
+            false
+        }
+    }
 }
 
 private const val TAG = "IOSNotificationDelegate"
