@@ -164,11 +164,19 @@ The Xcode project had **no entitlements file and no capabilities at all**. Now:
   the real output list from `AVAudioSession.availableInputs`/`currentRoute` instead of a hardcoded
   `[INTERNAL, SPEAKERS]`, and observes `AVAudioSessionRouteChangeNotification` to update
   `_audioState` and emit `bluetoothEvents`. **Unverified** — route changes are not simulable (§4).
-- **Connectivity monitoring** — `connectivityChanged()` was never called *anywhere in the repo*, so
-  `_connectivityState` was permanently `true` and the daemon was never told the network dropped or
-  returned, despite `AccountService` and `ConversationFacade` collecting that flow to drive
-  `setAccountsActive()`. iOS now feeds it from `NWPathMonitor`. **Android, desktop, macOS and JS
-  still do not** — the same fix is owed on each, and Android's is the one that matters.
+- **Connectivity monitoring — half-wired, and the remaining half is a real gap.** iOS now feeds
+  `HardwareService.connectivityChanged()` from `NWPathMonitor`, so `_connectivityState` is honest
+  and the `setAccountsActive()` path that `AccountService` and `ConversationFacade` drive off it
+  works. **But `DaemonBridge.ios.kt.connectivityChanged()` is still a log line** — the daemon's own
+  `connectivityChanged()` (`configurationmanager_interface.h`) has no entry point in
+  `JamiBridgeWrapper.h`, so libjami is never told to re-resolve its connections after a network
+  change. One wrapper passthrough plus a rebuild closes it.
+
+  **Android is fully wired** and always was on this branch —
+  `ConnectivityManager.NetworkCallback` → `connectivityChanged` → `JamiService.connectivityChanged()`
+  over JNI, on a dedicated single-thread executor mirroring the reference client. An earlier
+  revision of this file claimed nothing called `connectivityChanged()` on any platform; that was
+  true of the pre-merge tree and is wrong now. Desktop, macOS and JS remain stubs.
 
 ### 3.3 Screenshot blocking — **partially done**
 

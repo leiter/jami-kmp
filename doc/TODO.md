@@ -307,8 +307,11 @@ these are what the run surfaced.
 - [ ] **Let `StubDaemonBridge` retain its callbacks.** `init(callbacks)` discards them, so none of
   the 15 daemon callbacks added to the iOS bridge can be tested without a live peer. Retaining
   them makes each one testable single-app, on JVM and iOS both.
-- [ ] **Connectivity monitoring on Android** — `connectivityChanged()` is now fed by `NWPathMonitor`
-  on iOS. Android, desktop, macOS and JS still never call it, so the daemon is never told the
-  network dropped. Android's `ConnectivityManager.NetworkCallback` is the equivalent.
+- [ ] **iOS connectivity never reaches the daemon** — `NWPathMonitor` feeds
+  `HardwareService.connectivityChanged()` correctly, but `DaemonBridge.ios.kt` cannot forward it:
+  `JamiBridgeWrapper.h` has no `connectivityChanged` entry point, so libjami never re-resolves its
+  connections after a network change. One wrapper passthrough + `build-jamibridge.sh` rebuild.
+  (Android is already fully wired via `ConnectivityManager.NetworkCallback` → JNI; an earlier note
+  here claiming otherwise was wrong.)
 - [ ] **Shared `appleMain` source set** — the iOS and macOS Darwin implementations are now
   substantively identical, and macOS does not compile (~95 errors). One copy would fix both.
