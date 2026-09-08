@@ -83,7 +83,7 @@ actual val platformModule: Module = module {
      * Preferences service for conversation/app preferences.
      */
     single<PreferencesService> {
-        StubPreferencesService()
+        SettingsPreferencesService(get())
     }
 
     /**
