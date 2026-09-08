@@ -115,10 +115,32 @@ platform :ios do
 
   # ── Build ───────────────────────────────────────────────────────────────────
 
-  desc "Increment the build number (CURRENT_PROJECT_VERSION)"
+  # Incrementing the local number alone is not enough. The pbxproj is only one
+  # of the places a build can be uploaded from, so it drifts behind whatever
+  # App Store Connect has already seen -- it was sitting at 24 while TestFlight
+  # already held 26, which would have produced an upload ASC rejects outright.
+  # Ask ASC what it has and go one past the higher of the two.
+  desc "Increment the build number past both the local value and TestFlight's"
   lane :bump_build do
-    each_build_setting("CURRENT_PROJECT_VERSION") { |v| (v.to_i + 1).to_s }
-    UI.success("Build number is now #{read_build_setting('CURRENT_PROJECT_VERSION')}")
+    local = read_build_setting("CURRENT_PROJECT_VERSION").to_i
+
+    remote = begin
+      latest_testflight_build_number(
+        api_key: api_key,
+        app_identifier: BUNDLE_ID,
+        version: read_build_setting("MARKETING_VERSION")
+      ).to_i
+    rescue StandardError => e
+      # A brand-new app, or an offline machine. Falling back to the local value
+      # is right: better a build that might collide than no build at all.
+      UI.important("Could not read the latest TestFlight build (#{e.message}); using the local number.")
+      0
+    end
+
+    next_build = [local, remote].max + 1
+    UI.message("Build numbers — local: #{local}, TestFlight: #{remote} → #{next_build}")
+    each_build_setting("CURRENT_PROJECT_VERSION") { |_| next_build.to_s }
+    UI.success("Build number is now #{next_build}")
   end
 
   desc "Set the marketing version, e.g. fastlane set_version version:1.1.0"
@@ -162,9 +184,23 @@ platform :ios do
   desc "Build and upload to TestFlight"
   lane :beta do
     build
+    upload
+  end
+
+  # Split out of :beta so an IPA that already exists can be shipped without a
+  # fresh archive. Re-running :build would spend ~15 minutes rebuilding an
+  # identical binary and burn a build number doing it.
+  desc "Upload an already-built IPA to TestFlight (fastlane upload [ipa:path])"
+  lane :upload do |options|
+    ipa = options[:ipa] || Dir[File.expand_path("../../build/ios-export/*.ipa", __dir__)]
+                           .max_by { |f| File.mtime(f) }
+    UI.user_error!("No IPA found. Run `fastlane build` first, or pass ipa:<path>.") if ipa.nil?
+    UI.message("Uploading #{ipa} (#{(File.size(ipa) / 1024.0 / 1024).round(1)} MB)")
+
     upload_to_testflight(
       api_key: api_key,
       app_identifier: BUNDLE_ID,
+      ipa: ipa,
       skip_waiting_for_build_processing: true
     )
     UI.success("Uploaded build #{read_build_setting('CURRENT_PROJECT_VERSION')} to TestFlight.")

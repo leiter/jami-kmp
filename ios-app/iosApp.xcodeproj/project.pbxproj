@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CACE71F2CACE71F2CACE71F2 /* cacert.pem in Resources */ = {isa = PBXBuildFile; fileRef = CACE71F1CACE71F1CACE71F1 /* cacert.pem */; };
 		D1D2D3D4D5D6D7D8D9D0DDDA /* JamiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCA /* JamiApp.swift */; };
 		D1D2D3D4D5D6D7D8D9D0DDDB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCB /* AppDelegate.swift */; };
 		D1D2D3D4D5D6D7D8D9D0DDDC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCC /* ContentView.swift */; };
 		D1D2D3D4D5D6D7D8D9D0DDDD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCD /* Assets.xcassets */; };
-		CACE71F2CACE71F2CACE71F2 /* cacert.pem in Resources */ = {isa = PBXBuildFile; fileRef = CACE71F1CACE71F1CACE71F1 /* cacert.pem */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -284,14 +284,14 @@
 		F1F2F3F4F5F6F7F8F9F0FFFC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APS_ENVIRONMENT = development;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				APS_ENVIRONMENT = development;
 				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_REQUIRED = NO;
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -326,45 +326,128 @@
 				);
 				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
 					"$(inherited)",
-					"-framework", JamiShared,
+					"-framework",
+					JamiShared,
 					"-lJamiBridge_ios",
 					"-ljami",
-					"-lssl", "-lcrypto", "-ltls",
-					"-lgnutls", "-lnettle", "-lhogweed", "-lgmp",
-					"-lopendht", "-ldhtnet",
-					"-ljsoncpp", "-lllhttp", "-lfmt", "-lsimdutf", "-lyrs",
-					"-lpjsip", "-lpjsip-simple", "-lpjsip-ua", "-lpjsua", "-lpjsua2",
-					"-lpjmedia", "-lpjmedia-audiodev", "-lpjmedia-codec", "-lpjmedia-videodev",
-					"-lpjnath", "-lpjlib-util", "-lpj",
-					"-lspeex", "-lspeexdsp", "-lopus", "-lvpx", "-lx264",
-					"-lsrtp", "-lavcodec", "-lavdevice", "-lavfilter", "-lavformat",
-					"-lavutil", "-lswresample", "-lswscale",
-					"-lixml", "-lnatpmp", "-lupnp",
-					"-lsecp256k1", "-lyaml-cpp", "-lyuv", "-largon2", "-lgit2",
-					"-lsqlite3", "-liconv", "-lc++", "-lz", "-lresolv",
-					"-framework", VideoToolbox,
-					"-framework", AudioToolbox,
+					"-lssl",
+					"-lcrypto",
+					"-ltls",
+					"-lgnutls",
+					"-lnettle",
+					"-lhogweed",
+					"-lgmp",
+					"-lopendht",
+					"-ldhtnet",
+					"-ljsoncpp",
+					"-lllhttp",
+					"-lfmt",
+					"-lsimdutf",
+					"-lyrs",
+					"-lpjsip",
+					"-lpjsip-simple",
+					"-lpjsip-ua",
+					"-lpjsua",
+					"-lpjsua2",
+					"-lpjmedia",
+					"-lpjmedia-audiodev",
+					"-lpjmedia-codec",
+					"-lpjmedia-videodev",
+					"-lpjnath",
+					"-lpjlib-util",
+					"-lpj",
+					"-lspeex",
+					"-lspeexdsp",
+					"-lopus",
+					"-lvpx",
+					"-lx264",
+					"-lsrtp",
+					"-lavcodec",
+					"-lavdevice",
+					"-lavfilter",
+					"-lavformat",
+					"-lavutil",
+					"-lswresample",
+					"-lswscale",
+					"-lixml",
+					"-lnatpmp",
+					"-lupnp",
+					"-lsecp256k1",
+					"-lyaml-cpp",
+					"-lyuv",
+					"-largon2",
+					"-lgit2",
+					"-lsqlite3",
+					"-liconv",
+					"-lc++",
+					"-lz",
+					"-lresolv",
+					"-framework",
+					VideoToolbox,
+					"-framework",
+					AudioToolbox,
 				);
 				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = (
 					"$(inherited)",
-					"-framework", JamiShared,
+					"-framework",
+					JamiShared,
 					"-lJamiBridge_iossim",
 					"-ljami",
-					"-lssl", "-lcrypto", "-ltls",
-					"-lgnutls", "-lnettle", "-lhogweed", "-lgmp",
-					"-lopendht", "-ldhtnet",
-					"-ljsoncpp", "-lllhttp", "-lfmt", "-lsimdutf", "-lyrs",
-					"-lpjsip", "-lpjsip-simple", "-lpjsip-ua", "-lpjsua", "-lpjsua2",
-					"-lpjmedia", "-lpjmedia-audiodev", "-lpjmedia-codec", "-lpjmedia-videodev",
-					"-lpjnath", "-lpjlib-util", "-lpj",
-					"-lspeex", "-lspeexdsp", "-lopus", "-lx264",
-					"-lsrtp", "-lavcodec", "-lavdevice", "-lavfilter", "-lavformat",
-					"-lavutil", "-lswresample", "-lswscale",
-					"-lixml", "-lnatpmp", "-lupnp",
-					"-lsecp256k1", "-lyaml-cpp", "-lyuv", "-largon2", "-lgit2",
-					"-lsqlite3", "-liconv", "-lc++", "-lz", "-lresolv",
-					"-framework", VideoToolbox,
-					"-framework", AudioToolbox,
+					"-lssl",
+					"-lcrypto",
+					"-ltls",
+					"-lgnutls",
+					"-lnettle",
+					"-lhogweed",
+					"-lgmp",
+					"-lopendht",
+					"-ldhtnet",
+					"-ljsoncpp",
+					"-lllhttp",
+					"-lfmt",
+					"-lsimdutf",
+					"-lyrs",
+					"-lpjsip",
+					"-lpjsip-simple",
+					"-lpjsip-ua",
+					"-lpjsua",
+					"-lpjsua2",
+					"-lpjmedia",
+					"-lpjmedia-audiodev",
+					"-lpjmedia-codec",
+					"-lpjmedia-videodev",
+					"-lpjnath",
+					"-lpjlib-util",
+					"-lpj",
+					"-lspeex",
+					"-lspeexdsp",
+					"-lopus",
+					"-lx264",
+					"-lsrtp",
+					"-lavcodec",
+					"-lavdevice",
+					"-lavfilter",
+					"-lavformat",
+					"-lavutil",
+					"-lswresample",
+					"-lswscale",
+					"-lixml",
+					"-lnatpmp",
+					"-lupnp",
+					"-lsecp256k1",
+					"-lyaml-cpp",
+					"-lyuv",
+					"-largon2",
+					"-lgit2",
+					"-lsqlite3",
+					"-liconv",
+					"-lc++",
+					"-lz",
+					"-lresolv",
+					"-framework",
+					VideoToolbox,
+					"-framework",
+					AudioToolbox,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.jami.iosapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -378,15 +461,15 @@
 		F1F2F3F4F5F6F7F8F9F0FFFD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				APS_ENVIRONMENT = development;
 				"APS_ENVIRONMENT[sdk=iphoneos*]" = production;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = K4K982LMZ9;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -418,24 +501,66 @@
 				);
 				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
 					"$(inherited)",
-					"-framework", JamiShared,
+					"-framework",
+					JamiShared,
 					"-lJamiBridge_ios",
 					"-ljami",
-					"-lssl", "-lcrypto", "-ltls",
-					"-lgnutls", "-lnettle", "-lhogweed", "-lgmp",
-					"-lopendht", "-ldhtnet",
-					"-ljsoncpp", "-lllhttp", "-lfmt", "-lsimdutf", "-lyrs",
-					"-lpjsip", "-lpjsip-simple", "-lpjsip-ua", "-lpjsua", "-lpjsua2",
-					"-lpjmedia", "-lpjmedia-audiodev", "-lpjmedia-codec", "-lpjmedia-videodev",
-					"-lpjnath", "-lpjlib-util", "-lpj",
-					"-lspeex", "-lspeexdsp", "-lopus", "-lvpx", "-lx264",
-					"-lsrtp", "-lavcodec", "-lavdevice", "-lavfilter", "-lavformat",
-					"-lavutil", "-lswresample", "-lswscale",
-					"-lixml", "-lnatpmp", "-lupnp",
-					"-lsecp256k1", "-lyaml-cpp", "-lyuv", "-largon2", "-lgit2",
-					"-lsqlite3", "-liconv", "-lc++", "-lz", "-lresolv",
-					"-framework", VideoToolbox,
-					"-framework", AudioToolbox,
+					"-lssl",
+					"-lcrypto",
+					"-ltls",
+					"-lgnutls",
+					"-lnettle",
+					"-lhogweed",
+					"-lgmp",
+					"-lopendht",
+					"-ldhtnet",
+					"-ljsoncpp",
+					"-lllhttp",
+					"-lfmt",
+					"-lsimdutf",
+					"-lyrs",
+					"-lpjsip",
+					"-lpjsip-simple",
+					"-lpjsip-ua",
+					"-lpjsua",
+					"-lpjsua2",
+					"-lpjmedia",
+					"-lpjmedia-audiodev",
+					"-lpjmedia-codec",
+					"-lpjmedia-videodev",
+					"-lpjnath",
+					"-lpjlib-util",
+					"-lpj",
+					"-lspeex",
+					"-lspeexdsp",
+					"-lopus",
+					"-lvpx",
+					"-lx264",
+					"-lsrtp",
+					"-lavcodec",
+					"-lavdevice",
+					"-lavfilter",
+					"-lavformat",
+					"-lavutil",
+					"-lswresample",
+					"-lswscale",
+					"-lixml",
+					"-lnatpmp",
+					"-lupnp",
+					"-lsecp256k1",
+					"-lyaml-cpp",
+					"-lyuv",
+					"-largon2",
+					"-lgit2",
+					"-lsqlite3",
+					"-liconv",
+					"-lc++",
+					"-lz",
+					"-lresolv",
+					"-framework",
+					VideoToolbox,
+					"-framework",
+					AudioToolbox,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.jami.iosapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
