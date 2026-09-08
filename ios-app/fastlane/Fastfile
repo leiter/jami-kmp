@@ -1,4 +1,6 @@
 require "xcodeproj"
+require "tmpdir"
+require "shellwords"
 
 default_platform(:ios)
 
@@ -163,6 +165,10 @@ platform :ios do
 
     bump_build
 
+    # A previous run's IPA in this directory is indistinguishable from a fresh
+    # one once a build fails partway; clear it so nothing stale can be picked up.
+    FileUtils.rm_rf(File.expand_path("../../build/ios-export", __dir__))
+
     build_app(
       project: XCODEPROJ,
       scheme: SCHEME,
@@ -195,6 +201,34 @@ platform :ios do
     ipa = options[:ipa] || Dir[File.expand_path("../../build/ios-export/*.ipa", __dir__)]
                            .max_by { |f| File.mtime(f) }
     UI.user_error!("No IPA found. Run `fastlane build` first, or pass ipa:<path>.") if ipa.nil?
+
+    # "Newest IPA in the export directory" is not the same as "the IPA we just
+    # built" -- the directory survives across runs, and a failed or interrupted
+    # build leaves the previous one sitting there looking perfectly valid. Read
+    # the version out of the binary itself and refuse anything that is not the
+    # build this checkout currently describes. Shipping a stale binary to
+    # testers is not undoable.
+    expected_build   = read_build_setting("CURRENT_PROJECT_VERSION").to_s
+    expected_version = read_build_setting("MARKETING_VERSION").to_s
+
+    Dir.mktmpdir do |tmp|
+      sh("unzip -oq #{ipa.shellescape} 'Payload/*.app/Info.plist' -d #{tmp.shellescape}", log: false)
+      plist_path = Dir["#{tmp}/Payload/*.app/Info.plist"].first
+      UI.user_error!("Could not read Info.plist from #{ipa}") if plist_path.nil?
+
+      actual_build   = `/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' #{plist_path.shellescape}`.strip
+      actual_version = `/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' #{plist_path.shellescape}`.strip
+
+      if actual_build != expected_build || actual_version != expected_version
+        UI.user_error!("#{ipa}\n" \
+                       "  contains #{actual_version} (#{actual_build}), " \
+                       "but this checkout describes #{expected_version} (#{expected_build}).\n" \
+                       "  Built #{File.mtime(ipa)}. Refusing to upload a binary that is not the " \
+                       "current build -- run `fastlane build` first, or pass ipa:<path> deliberately.")
+      end
+      UI.success("IPA is #{actual_version} (#{actual_build}), matching this checkout.")
+    end
+
     UI.message("Uploading #{ipa} (#{(File.size(ipa) / 1024.0 / 1024).round(1)} MB)")
 
     upload_to_testflight(
