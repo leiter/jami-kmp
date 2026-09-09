@@ -182,6 +182,14 @@ fails at *link* time with undefined libjami symbols.
   its dependency set changes and the hand-made `lib/` plus the `OTHER_LDFLAGS` in
   `project.pbxproj` go stale — a link error, never a compile error. See the drift section in
   `shared/src/nativeInterop/cinterop/JamiBridge/README.md`.
+- **Release archives need ~6 GB of Gradle daemon heap**, and `org.gradle.jvmargs` is the only
+  setting that controls it — the Kotlin/Native compile runs *inside* the Gradle daemon here, so
+  `kotlin.native.jvmArgs` and `kotlin.daemon.jvm.options` are inert for it. Too little heap dies
+  in `DevirtualizationAnalysis`, a Release-only LTO pass, which is why Debug and simulator builds
+  never show the problem. On an 8 GB machine put the override in `~/.gradle/gradle.properties`
+  (it wins over the project's) rather than the repo. Full detail, including why `./gradlew --stop`
+  cannot be trusted and how to tell a dead build from a slow one:
+  `ios-app/fastlane/RELEASING.md`.
 - The only committed binaries are `lib/libJamiBridge_ios.a` and `lib/libJamiBridge_iossim.a`,
   the compiled ObjC++ wrapper. Rebuilding them with
   `shared/src/nativeInterop/cinterop/JamiBridge/build-jamibridge.sh` **overwrites tracked
