@@ -23,6 +23,11 @@ are reasoned from code structure, not observed.
 >   `NotificationExtensionHandler.kt`; localized fallback notification). The Xcode target,
 >   libjami linkage, and the `TODO(nse-daemon)` headless-decrypt path still require a Mac —
 >   see the extension `README.md`. Sections 2.1 / 3 below describe the pre-change state.
+> - **Video pipeline (item 4)**: the dead per-frame NV12 `ByteArray` copy in `IOSCameraService`
+>   (which fed the `captureVideoFrame` no-op ~30×/s during every call) has been removed. The
+>   pipeline itself is still not functional — a full implementation plan for outgoing capture,
+>   incoming render, and PiP is in `doc/ios-video-pipeline.md`. It needs a macOS rebuild of
+>   `libJamiBridge_ios.a` and vendored FFmpeg headers, so §2.4 below still stands.
 
 ---
 
@@ -122,7 +127,7 @@ extension yield to a running app. Nothing in jami-kmp reads or writes a group co
 | Incoming frame sink | `VideoAdapterDelegate` / `DecodingAdapterDelegate` → renderer views, `CVImageBuffer` | `onDecodingStarted/Stopped` now forwarded, but `acquireNativeWindow` returns `0L`, `registerVideoCallback` returns `false` — nothing renders |
 | Remote render surface | frame-extractor → UIView | `VideoSurface.ios.kt` creates an `AVSampleBufferDisplayLayer` that nothing ever enqueues into |
 | Outgoing capture | `VideoService` / `VideoInputsManager` AVCapture → daemon | `IOSCameraService` captures NV12, copies each frame into a fresh `ByteArray`, hands it to `captureVideoFrame` which is `// TODO: Implement via JamiBridge cinterop` — **captured, copied, discarded every frame** (also wastes battery; an early return would at least stop that) |
-| Encoder controls | wired | `requestKeyFrame`, `setBitrate`, `setParameters` are `{}` no-ops |
+| Encoder controls | wired | `requestKeyFrame` / `setBitrate` are `{}` — **correct on iOS**: `VideoSignal::RequestKeyFrame` / `SetBitrate` are `#ifdef __ANDROID__` in `videomanager_interface.h`; the daemon's VideoToolbox encoder self-manages. Parity, not a gap. `setParameters` is served from AVFoundation. |
 | Picture-in-Picture | `PictureInPictureManager.swift`, real | `configurePipController` expects an `AVPlayerLayer` while the surface is `AVSampleBufferDisplayLayer`; nothing calls it; `enterPipMode()` returns `false` unconditionally |
 
 Audio calls work. Video calls connect but show no remote image and send no image. This is the
@@ -240,10 +245,10 @@ Static-read observations. Each needs simulator/device confirmation.
    `onAccountMessageStatusChanged` (receipts), `onUserSearchEnded` / `onMessagesFound`
    (search). Treat as "implemented, unproven".
 
-3. **`captureVideoFrame` TODO with a live producer.** `IOSCameraService` is already pushing
-   NV12 frames (with a per-frame `ByteArray` allocation) into a no-op. Until §2.4 lands, add an
-   early return in the capture callback so the camera isn't run and copied for nothing during
-   every video call.
+3. **`captureVideoFrame` TODO with a live producer.** ~~`IOSCameraService` is already pushing
+   NV12 frames (with a per-frame `ByteArray` allocation) into a no-op.~~ **Fixed 2026-09-10** —
+   the per-frame lock+copy was removed; capture/preview/dimension tracking stay. Forwarding
+   frames to the daemon is planned in `doc/ios-video-pipeline.md` §2 (needs the bridge rebuilt).
 
 4. **`onVoipPushReceived` payload key assumptions.** `IOSPushServiceManager.onVoipPushReceived`
    reads `payload["peerId"]`, `["displayName"]`, `["hasVideo"]`. The actual PushKit payload
