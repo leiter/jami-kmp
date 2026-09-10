@@ -9,6 +9,26 @@
 not compile on this Linux host, so nothing below is runtime-verified. Items marked *inferred*
 are reasoned from code structure, not observed.
 
+> **State on `main` (cherry-picked 2026-10-31).** This analysis and `doc/ios-video-pipeline.md`
+> were written on `feat/ios-app-group-and-notification-extension` and brought to `main` on
+> 2026-10-31, together with the video-copy fix (`8baaf0f`). The rest of that branch was **not**
+> brought over, so on `main`:
+> - **Video pipeline (item 4)**: the per-frame NV12 `ByteArray` copy in `IOSCameraService`, which
+>   fed the `captureVideoFrame` no-op ~30×/s during every call, is removed. The pipeline itself
+>   is still not functional; the plan is in `doc/ios-video-pipeline.md`. §2.4 below still stands.
+> - **App Group: not on `main`.** `iosApp.entitlements` holds only `aps-environment`. The App
+>   Group, the shared-container daemon path and the Notification Service Extension scaffold
+>   remain on the branch (`5971f3c`), which is 106 commits behind `main`.
+> - **Bundle defects: still present on `main`.** `Info.plist` declares `UIBackgroundModes`
+>   twice; the first copy lists `fetch` and `processing`, for which no `BGTaskScheduler` handler
+>   is registered. `5971f3c` collapses them to one key.
+> - **`aps-environment`** already reads `$(APS_ENVIRONMENT)` on `main` (`043fdfb`, 2026-09-08).
+> - **The "stale" verdict on `ios_implementation_gap.md` in §0 is itself dated:** that file was
+>   reconciled against the code on 2026-10-26 and 2026-10-31 and is current again. Read §0 as
+>   history.
+>
+> Everything below is the 2026-09-10 static reading and has not been re-verified line by line.
+
 ---
 
 ## 0. Relationship to the existing gap doc
@@ -107,7 +127,7 @@ extension yield to a running app. Nothing in jami-kmp reads or writes a group co
 | Incoming frame sink | `VideoAdapterDelegate` / `DecodingAdapterDelegate` → renderer views, `CVImageBuffer` | `onDecodingStarted/Stopped` now forwarded, but `acquireNativeWindow` returns `0L`, `registerVideoCallback` returns `false` — nothing renders |
 | Remote render surface | frame-extractor → UIView | `VideoSurface.ios.kt` creates an `AVSampleBufferDisplayLayer` that nothing ever enqueues into |
 | Outgoing capture | `VideoService` / `VideoInputsManager` AVCapture → daemon | `IOSCameraService` captures NV12, copies each frame into a fresh `ByteArray`, hands it to `captureVideoFrame` which is `// TODO: Implement via JamiBridge cinterop` — **captured, copied, discarded every frame** (also wastes battery; an early return would at least stop that) |
-| Encoder controls | wired | `requestKeyFrame`, `setBitrate`, `setParameters` are `{}` no-ops |
+| Encoder controls | wired | `requestKeyFrame` / `setBitrate` are `{}` — **correct on iOS**: `VideoSignal::RequestKeyFrame` / `SetBitrate` are `#ifdef __ANDROID__` in `videomanager_interface.h`; the daemon's VideoToolbox encoder self-manages. Parity, not a gap. `setParameters` is served from AVFoundation. |
 | Picture-in-Picture | `PictureInPictureManager.swift`, real | `configurePipController` expects an `AVPlayerLayer` while the surface is `AVSampleBufferDisplayLayer`; nothing calls it; `enterPipMode()` returns `false` unconditionally |
 
 Audio calls work. Video calls connect but show no remote image and send no image. This is the
@@ -225,10 +245,10 @@ Static-read observations. Each needs simulator/device confirmation.
    `onAccountMessageStatusChanged` (receipts), `onUserSearchEnded` / `onMessagesFound`
    (search). Treat as "implemented, unproven".
 
-3. **`captureVideoFrame` TODO with a live producer.** `IOSCameraService` is already pushing
-   NV12 frames (with a per-frame `ByteArray` allocation) into a no-op. Until §2.4 lands, add an
-   early return in the capture callback so the camera isn't run and copied for nothing during
-   every video call.
+3. **`captureVideoFrame` TODO with a live producer.** ~~`IOSCameraService` is already pushing
+   NV12 frames (with a per-frame `ByteArray` allocation) into a no-op.~~ **Fixed 2026-09-10** —
+   the per-frame lock+copy was removed; capture/preview/dimension tracking stay. Forwarding
+   frames to the daemon is planned in `doc/ios-video-pipeline.md` §2 (needs the bridge rebuilt).
 
 4. **`onVoipPushReceived` payload key assumptions.** `IOSPushServiceManager.onVoipPushReceived`
    reads `payload["peerId"]`, `["displayName"]`, `["hasVideo"]`. The actual PushKit payload

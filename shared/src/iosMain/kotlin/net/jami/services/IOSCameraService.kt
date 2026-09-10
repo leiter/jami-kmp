@@ -16,11 +16,8 @@
  */
 package net.jami.services
 
-import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCAction
-import kotlinx.cinterop.get
-import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.useContents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -549,37 +546,20 @@ class IOSCameraService(
                 currentParams = params.copy(width = width, height = height)
             }
 
-            // Extract frame data and pass to daemon
-            try {
-                val pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) ?: return
+            // Outgoing frames are NOT forwarded to the daemon yet.
+            //
+            // The previous implementation locked the pixel buffer and copied the whole NV12
+            // plane into a fresh Kotlin ByteArray on every callback (~30/s for the entire
+            // duration of every video call), then handed it to
+            // DaemonBridge.ios.kt#captureVideoFrame — which is an empty stub. That was pure
+            // CPU/allocator/battery cost for no effect, so the copy has been removed.
+            //
+            // The real outgoing path is zero-copy: hand the CVImageBufferRef straight to
+            // libjami via getNewFrame()/publishFrame() through a new JamiBridge selector.
+            // It requires rebuilding libJamiBridge_ios.a on macOS and vendoring the FFmpeg
+            // libavutil headers. Full design + steps: doc/ios-video-pipeline.md (§ Outgoing).
 
-                // Lock base address to access raw pixel data
-                platform.CoreVideo.CVPixelBufferLockBaseAddress(pixelBuffer, 0u.toULong())
-
-                val baseAddress = platform.CoreVideo.CVPixelBufferGetBaseAddress(pixelBuffer)
-                if (baseAddress != null) {
-                    val bytesPerRow = platform.CoreVideo.CVPixelBufferGetBytesPerRow(pixelBuffer).toInt()
-                    val frameSize = bytesPerRow * height * 3 / 2  // NV12: 1.5 bytes per pixel
-
-                    // Extract frame data from native memory using typed pointer
-                    val typedPtr = baseAddress.reinterpret<ByteVar>()
-                    val frameData = ByteArray(frameSize) { typedPtr[it] }
-
-                    // Forward NV12 frame to daemon
-                    daemonBridge.captureVideoFrame(
-                        uri = "camera://${params.cameraId}",
-                        data = frameData,
-                        rotation = deviceOrientation
-                    )
-                }
-
-                // Unlock base address
-                platform.CoreVideo.CVPixelBufferUnlockBaseAddress(pixelBuffer, 0u.toULong())
-            } catch (e: Exception) {
-                Log.w(tag, "Failed to forward frame to daemon: ${e.message}")
-            }
-
-            // Emit frame event for UI
+            // Emit frame event for UI (drives the local-preview size / "camera live" state).
             scope.launch {
                 _frameEvents.emit(FrameEvent(params.cameraId, width, height))
             }
