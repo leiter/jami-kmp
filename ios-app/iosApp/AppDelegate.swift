@@ -83,6 +83,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // doInitKoin(), since the delegate resolves its services from Koin.
         IOSApplicationHelperKt.setupNotificationDelegate()
 
+        // 7. Answer the notification service extension's "are you alive?" Darwin ping. While the
+        // app runs it holds the live daemon, so the extension must defer to it instead of
+        // spinning up a second libjami. See ios-app/jamiNotificationExtension/README.md.
+        self.installAppActiveResponder()
+        self.drainPendingExtensionNotifications()
+
         return true
     }
 
@@ -94,6 +100,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
     func applicationWillEnterForeground(_ application: UIApplication) {
         IOSApplicationHelperKt.jamiWillEnterForeground()
+        // Anything the extension stashed while we were suspended.
+        self.drainPendingExtensionNotifications()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
@@ -107,6 +115,44 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             result[String(describing: key)] = String(describing: value)
         }
         return result
+    }
+}
+
+// MARK: - Notification service extension handshake
+
+extension AppDelegate {
+
+    /// Posts DARWIN_APP_ACTIVE_RESPONSE whenever the extension asks DARWIN_QUERY_APP_ACTIVE.
+    func installAppActiveResponder() {
+        let center = CFNotificationCenterGetDarwinNotifyCenter()
+        let query = NotificationExtensionHandlerKt.darwinQueryAppActive() as CFString
+        CFNotificationCenterAddObserver(
+            center,
+            Unmanaged.passUnretained(self).toOpaque(),
+            { _, _, _, _, _ in
+                let response = NotificationExtensionHandlerKt.darwinAppActiveResponse() as CFString
+                CFNotificationCenterPostNotification(
+                    CFNotificationCenterGetDarwinNotifyCenter(),
+                    CFNotificationName(response), nil, nil, true
+                )
+            },
+            query, nil, .deliverImmediately
+        )
+    }
+
+    /// Feeds any payloads the extension stashed in the shared App Group defaults into the live
+    /// daemon, then clears them.
+    func drainPendingExtensionNotifications() {
+        let suite = NotificationExtensionHandlerKt.appGroupIdentifier()
+        let key = NotificationExtensionHandlerKt.pendingNotificationsKey()
+        guard let defaults = UserDefaults(suiteName: suite),
+              let pending = defaults.array(forKey: key) as? [[String: String]],
+              !pending.isEmpty else { return }
+        NSLog("JAMI_PUSH draining \(pending.count) pending extension payload(s)")
+        for payload in pending {
+            IOSPushHelperKt.onPushReceived(payload: payload)
+        }
+        defaults.removeObject(forKey: key)
     }
 }
 

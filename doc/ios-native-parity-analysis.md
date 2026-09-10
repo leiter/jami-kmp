@@ -9,6 +9,21 @@
 not compile on this Linux host, so nothing below is runtime-verified. Items marked *inferred*
 are reasoned from code structure, not observed.
 
+> **Update 2026-09-10 — items 1, 3, 5 partially addressed on branch
+> `feat/ios-app-group-and-notification-extension`:**
+> - **App Group** `group.net.jami.kmp` declared in `iosApp.entitlements`; the daemon working
+>   directory now resolves to the shared container (`net.jami.IOSConstants`,
+>   `DaemonBridge.ios.kt`) with legacy-path migration and a fallback. Needs the group
+>   registered on the App ID.
+> - **Bundle defects fixed**: duplicate `UIBackgroundModes` collapsed to one key; `fetch` /
+>   `processing` dropped (no `BGTaskScheduler` handler existed); `aps-environment` moved to the
+>   `$(APS_ENVIRONMENT)` build variable (`development` Debug / `production` Release).
+> - **Notification Service Extension scaffolded** under `ios-app/jamiNotificationExtension/`
+>   (Swift lifecycle + app-active Darwin handshake, answered in `AppDelegate`; shared logic in
+>   `NotificationExtensionHandler.kt`; localized fallback notification). The Xcode target,
+>   libjami linkage, and the `TODO(nse-daemon)` headless-decrypt path still require a Mac —
+>   see the extension `README.md`. Sections 2.1 / 3 below describe the pre-change state.
+
 ---
 
 ## 0. Relationship to the existing gap doc

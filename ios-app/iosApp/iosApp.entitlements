@@ -2,11 +2,21 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Required for APNs and PushKit. "development" targets the APNs sandbox; release builds
-	     for TestFlight/App Store need "production" (Xcode's Push Notifications capability
-	     normally manages this, and the App ID must have Push Notifications enabled in the
-	     developer portal). See doc/push-notifications.md. -->
+	<!-- APNs / PushKit. Driven by the APS_ENVIRONMENT build setting: "development" for Debug
+	     (APNs sandbox), "production" for Release (TestFlight / App Store). A hardcoded
+	     "development" here silently breaks push on distribution builds. The App ID must also
+	     have the Push Notifications capability enabled in the developer portal.
+	     See doc/push-notifications.md. -->
 	<key>aps-environment</key>
-	<string>development</string>
+	<string>$(APS_ENVIRONMENT)</string>
+
+	<!-- Shared container for the libjami working directory, so the notification service
+	     extension and share extension operate on the same accounts / config / swarm DBs as
+	     the app. Must match net.jami.IOSConstants.APP_GROUP_IDENTIFIER and be registered on
+	     the App ID (App Groups capability) in the developer portal. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.net.jami.kmp</string>
+	</array>
 </dict>
 </plist>

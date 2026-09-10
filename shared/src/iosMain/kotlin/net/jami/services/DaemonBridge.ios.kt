@@ -50,7 +50,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
         delegateImpl = JamiBridgeDelegateImpl(callbacks)
         bridge.delegate = delegateImpl
 
-        // Get data path from app support directory
+        val fileManager = NSFileManager.defaultManager
+
+        // Per-app-sandbox path used before the App Group was introduced. Still the fallback
+        // when the group container is unavailable (missing entitlement / provisioning).
         val paths = NSSearchPathForDirectoriesInDomains(
             NSApplicationSupportDirectory,
             NSUserDomainMask,
@@ -58,11 +61,31 @@ actual class DaemonBridge() : DaemonBridgeApi {
         )
         @Suppress("UNCHECKED_CAST")
         val pathsList = paths as? List<String> ?: return false
-        val appSupportPath = pathsList.firstOrNull() ?: return false
-        val dataPath = "$appSupportPath/jami"
+        val legacyDataPath = (pathsList.firstOrNull() ?: return false) + "/jami"
+
+        // Prefer the App Group container so the notification / share extensions see the same
+        // accounts, config and swarm databases as the app. See net.jami.IOSConstants.
+        val groupDataPath = net.jami.IOSConstants.appGroupDataPath()
+        val dataPath = groupDataPath ?: legacyDataPath
+
+        if (groupDataPath == null) {
+            Log.w(TAG, "App Group container unavailable — falling back to per-app data path")
+        } else if (!fileManager.fileExistsAtPath(groupDataPath) &&
+            fileManager.fileExistsAtPath(legacyDataPath)
+        ) {
+            // One-time migration: move an existing sandbox working directory into the shared
+            // container so pre-App-Group installs keep their accounts.
+            Log.i(TAG, "Migrating legacy data directory into the App Group container")
+            fileManager.createDirectoryAtPath(
+                groupDataPath.substringBeforeLast('/'),
+                withIntermediateDirectories = true, attributes = null, error = null
+            )
+            if (!fileManager.moveItemAtPath(legacyDataPath, toPath = groupDataPath, error = null)) {
+                Log.e(TAG, "Legacy data migration failed — continuing with the App Group path")
+            }
+        }
 
         // Create directory if needed
-        val fileManager = NSFileManager.defaultManager
         if (!fileManager.fileExistsAtPath(dataPath)) {
             fileManager.createDirectoryAtPath(
                 dataPath,

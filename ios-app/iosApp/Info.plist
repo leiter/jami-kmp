@@ -123,14 +123,6 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>audio</string>
-		<string>fetch</string>
-		<string>processing</string>
-		<string>remote-notification</string>
-		<string>voip</string>
-	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
@@ -151,6 +143,11 @@
 	<string>Jami accesses your photo library so you can send images in conversations.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- Single UIBackgroundModes key (there were previously two in this dict, which is
+	     malformed). "fetch" and "processing" were dropped: nothing registers a BGTaskScheduler
+	     handler or declares BGTaskSchedulerPermittedIdentifiers, so they were dead entries and
+	     an App Review flag. Background message/sync delivery is the notification service
+	     extension's job — see ios-app/jamiNotificationExtension. -->
 	<key>UIBackgroundModes</key>
 	<array>
 		<!-- Required for PKPushRegistry: without it the VoIP push type is rejected at

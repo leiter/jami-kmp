@@ -242,6 +242,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_location_multi_title">Sharing location with %1$d contacts</string>
     <string name="notif_location_remaining">%1$d minutes remaining</string>
     <string name="notif_location_action_stop">Stop sharing location</string>
+    <!-- Generic fallbacks used by the iOS notification service extension when the push could
+         not be decrypted within its time budget. -->
+    <string name="notif_generic_title">Jami</string>
+    <string name="notif_new_message">New message</string>
+    <string name="notif_new_file">New file received</string>
     <string name="location_share_action_start">Start sharing</string>
     <string name="location_share_action_stop">Stop sharing</string>
     <string name="location_share_about_title">Map information</string>

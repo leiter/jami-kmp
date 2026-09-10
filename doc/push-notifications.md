@@ -93,14 +93,24 @@ ID directly — the proxy just has to be configured with it.
 Also outstanding on iOS:
 
 - **the code is uncompiled** (see status above);
-- the **Push Notifications capability** must be enabled on the App ID in the developer portal,
-  and `aps-environment` in `iosApp.entitlements` flipped from `development` to `production` for
-  TestFlight/App Store builds;
+- the **Push Notifications capability** must be enabled on the App ID in the developer portal.
+  `aps-environment` is now driven by the `APS_ENVIRONMENT` build setting (`development` for
+  Debug, `production` for Release) via `$(APS_ENVIRONMENT)` in `iosApp.entitlements`, so
+  distribution builds no longer ship the sandbox value — but the App ID capability still has to
+  be enabled;
 - `iosApp.entitlements` is referenced by `CODE_SIGN_ENTITLEMENTS` but is not in the Xcode file
   navigator — signing works, but adding it to the project would make it visible;
-- there is **no Notification Service Extension**, so a message push cannot be decrypted and
-  displayed while the app is suspended — only VoIP/call wake-up works. The upstream iOS client
-  has `jamiNotificationExtension` for this.
+- **Notification Service Extension: scaffolded, not built.** `ios-app/jamiNotificationExtension/`
+  now holds the Swift lifecycle, the app-active Darwin handshake (answered in `AppDelegate`),
+  payload classification and a localized fallback notification; the shared logic is in
+  `shared/src/iosMain/.../services/NotificationExtensionHandler.kt`. Still required, on a Mac:
+  adding the Xcode target, linking libjami into it, and implementing the `TODO(nse-daemon)`
+  headless-decrypt path. Until then a suspended-app message push still shows nothing (or, once
+  the target is wired, a generic "New message"). See the extension's `README.md`.
+- **App Group.** `group.net.jami.kmp` is declared in `iosApp.entitlements` and the daemon
+  working directory now resolves to the shared container (`net.jami.IOSConstants` /
+  `DaemonBridge.ios.kt`, with a one-time migration from the old per-app path and a fallback
+  when the container is unavailable). The group must be registered on the App ID.
 
 **4. Which token the daemon gets (iOS).** The daemon holds one token, but iOS has two:
 the APNs token (messages/sync) and the PushKit VoIP token (the only channel allowed to wake a
