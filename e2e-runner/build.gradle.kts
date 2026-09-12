@@ -18,7 +18,17 @@ application {
 }
 
 kotlin {
-    jvmToolchain(17)
+    // 17 bytecode, not jvmToolchain(17): a toolchain needs a JDK 17 *installation*, which
+    // this machine does not have (only Android Studio's JBR 21), and no foojay resolver is
+    // configured to fetch one. Matches shared/ and android-app/, which set compatibility only.
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 // ==================== End-to-end harness tasks ====================
