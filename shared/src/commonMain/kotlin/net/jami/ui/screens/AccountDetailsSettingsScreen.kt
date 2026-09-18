@@ -68,9 +68,10 @@ import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import kotlinx.coroutines.launch
 import net.jami.di.getViewModel
+import net.jami.ui.platform.FileSaveResult
+import net.jami.ui.platform.FileSaverEffect
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.AccountSettingsViewModel
-import net.jami.utils.shareFile
 import org.jetbrains.compose.resources.stringResource
 
 private const val PASSWORD_MIN_LENGTH = 6
@@ -100,6 +101,8 @@ fun AccountDetailsSettingsScreen(
 
     var showChangePasswordDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
+    // Temp archive written by the daemon, waiting for the user to pick a save location.
+    var pendingExportPath by remember { mutableStateOf<String?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showBiometricSetupDialog by remember { mutableStateOf(false) }
     var showDisableBiometricDialog by remember { mutableStateOf(false) }
@@ -139,16 +142,28 @@ fun AccountDetailsSettingsScreen(
             onExport = { password ->
                 showExportDialog = false
                 val exportPath = viewModel.exportAccount(password)
-                coroutineScope.launch {
-                    if (exportPath != null) {
-                        snackbarHostState.showSnackbar(exportSuccessMsg)
-                        shareFile(exportPath)
-                    } else {
-                        snackbarHostState.showSnackbar(exportErrorMsg)
-                    }
+                if (exportPath != null) {
+                    // Success is only reported once the archive is saved where the user chose.
+                    pendingExportPath = exportPath
+                } else {
+                    coroutineScope.launch { snackbarHostState.showSnackbar(exportErrorMsg) }
                 }
             },
         )
+    }
+
+    FileSaverEffect(
+        sourcePath = pendingExportPath,
+        mimeType = "application/gzip",
+    ) { result ->
+        pendingExportPath = null
+        coroutineScope.launch {
+            when (result) {
+                FileSaveResult.SAVED -> snackbarHostState.showSnackbar(exportSuccessMsg)
+                FileSaveResult.FAILED -> snackbarHostState.showSnackbar(exportErrorMsg)
+                FileSaveResult.CANCELLED -> Unit
+            }
+        }
     }
 
     if (showDeleteDialog) {

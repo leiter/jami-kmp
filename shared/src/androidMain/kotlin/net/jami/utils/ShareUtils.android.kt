@@ -38,8 +38,23 @@ actual fun shareText(subject: String, body: String) {
 
 actual fun shareFile(path: String) {
     val context: Context = KoinPlatform.getKoin().get()
-    val file = File(path)
-    if (!file.exists()) return
+    val source = File(path)
+    if (!source.exists()) return
+    // FileProvider only exposes cache/share/ (res/xml/file_paths.xml); getUriForFile() throws
+    // IllegalArgumentException for anything else — e.g. the account export, which is written
+    // to the root of cacheDir. Move (not copy) the file there so no stray duplicate of a
+    // sensitive file like the account archive is left behind.
+    val shareDir = File(context.cacheDir, "share").apply { mkdirs() }
+    val file = if (source.parentFile?.canonicalPath == shareDir.canonicalPath) {
+        source
+    } else {
+        File(shareDir, source.name).also { target ->
+            if (!source.renameTo(target)) {
+                source.copyTo(target, overwrite = true)
+                source.delete()
+            }
+        }
+    }
     val authority = "${context.packageName}.fileprovider"
     val uri = FileProvider.getUriForFile(context, authority, file)
     val intent = Intent(Intent.ACTION_SEND).apply {

@@ -30,6 +30,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import net.jami.model.Account
 import net.jami.model.ConfigKey
 import net.jami.repository.SettingsRepository
 import net.jami.services.AccountEvent
@@ -388,9 +392,9 @@ class AccountSettingsViewModel(
      */
     fun exportAccount(password: String): String? {
         val account = accountService.currentAccount.value ?: return null
-        val timestamp = net.jami.utils.currentTimeMillis()
         val dir = deviceRuntimeService?.getTempPath() ?: "/tmp"
-        val path = "$dir/jami_export_${timestamp}.gz"
+        // The file name doubles as the prefilled name in the "Save as" dialog.
+        val path = "$dir/${exportFileName(account)}"
         val success = accountService.exportToFile(
             accountId = account.accountId,
             path = path,
@@ -399,6 +403,27 @@ class AccountSettingsViewModel(
         )
         return if (success) path else null
     }
+
+    /**
+     * Human-friendly archive name: the registered username, else the profile display name,
+     * else "jami_account" — followed by the local date, e.g. "alice_2026-09-18.gz".
+     */
+    private fun exportFileName(account: Account): String {
+        val baseName = listOf(account.registeredName, account.displayName)
+            .map { sanitizeFileName(it) }
+            .firstOrNull { it.isNotEmpty() }
+            ?: "jami_account"
+        val date = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        return "${baseName}_$date.gz"
+    }
+
+    /** Replaces characters that are invalid in file names on common file systems. */
+    private fun sanitizeFileName(name: String): String =
+        name.map { if (it in "\\/:*?\"<>|" || it.isISOControl()) '_' else it }
+            .joinToString("")
+            .trim()
+            .trim('.')
+            .take(64)
 
     /**
      * Change (or set/clear) the account archive password.
