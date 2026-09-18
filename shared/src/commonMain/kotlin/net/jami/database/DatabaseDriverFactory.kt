@@ -41,6 +41,6 @@ expect class DatabaseDriverFactory {
  * Database schema version and migration support.
  */
 object DatabaseSchema {
-    const val VERSION = 1
+    const val VERSION = 2
     const val DATABASE_NAME = "jami"
 }

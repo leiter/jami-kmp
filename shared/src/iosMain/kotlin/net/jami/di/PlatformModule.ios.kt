@@ -125,6 +125,11 @@ actual val platformModule: Module get() = try {
         SqlDelightHistoryService(get())
     }
 
+    /** Durable outbox backing SendQueueService. */
+    single<net.jami.services.OutboxStore> {
+        net.jami.services.SqlDelightOutboxStore(get())
+    }
+
     /**
      * Preferences service for conversation/app preferences.
      */

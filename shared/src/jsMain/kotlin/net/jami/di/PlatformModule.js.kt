@@ -80,6 +80,11 @@ actual val platformModule: Module = module {
         StubHistoryService()
     }
 
+    /** Durable outbox backing SendQueueService. */
+    single<net.jami.services.OutboxStore> {
+        net.jami.services.InMemoryOutboxStore()
+    }
+
     /**
      * Preferences service for conversation/app preferences.
      */

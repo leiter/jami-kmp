@@ -1,0 +1,11 @@
+-- v1 -> v2: durable outbox (see net/jami/database/Outbox.sq).
+CREATE TABLE outbox_message (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    account_id TEXT NOT NULL,
+    conversation_id TEXT NOT NULL,
+    body TEXT NOT NULL,
+    reply_to TEXT,
+    created_at INTEGER NOT NULL
+);
+
+CREATE INDEX outbox_conversation_idx ON outbox_message(account_id, conversation_id);

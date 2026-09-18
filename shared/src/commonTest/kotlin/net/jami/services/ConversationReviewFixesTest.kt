@@ -289,7 +289,8 @@ class ConversationReviewFixesTest {
         val vmScope = viewModelScope()
         val vm = ChatViewModel(
             stack.conversationFacade, stack.accountService, StubDeviceRuntimeService(),
-            DraftRepository(stack.stub, vmScope), testAudioRecorderService(), vmScope,
+            DraftRepository(stack.stub, vmScope), testAudioRecorderService(),
+            net.jami.viewmodel.makeSendQueue(stack.stub, stack.accountService, stack.conversationFacade, this), vmScope,
         )
         val history = listOf(
             textMessage(

@@ -38,11 +38,15 @@ private object JamiLifecycle : KoinComponent {
     private val accountService: AccountService by inject()
     private val hardwareService: HardwareService by inject()
     private val syncManager: SyncManager by inject()
+    private val sendQueue: net.jami.services.SendQueueService by inject()
 
     fun start() {
         try {
             if (daemonBridge.init(daemonCallbacks)) {
                 if (daemonBridge.start()) {
+                    // Listen before accounts load, so held messages are sent after the first
+                    // smartlist load (durable outbox, SendQueueService).
+                    sendQueue.start()
                     accountService.loadAccountsFromDaemon(isConnected = true)
                     // Feeds real network state into connectivityChanged, which
                     // AccountService collects to drive setAccountsActive().

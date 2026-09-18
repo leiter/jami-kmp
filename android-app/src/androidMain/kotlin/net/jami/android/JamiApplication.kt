@@ -21,6 +21,7 @@ class JamiApplication : Application(), KoinComponent {
     private val daemonCallbacks: DaemonCallbacks by inject()
     private val accountService: AccountService by inject()
     private val hardwareService: HardwareService by inject()
+    private val sendQueue: net.jami.services.SendQueueService by inject()
 
     override fun onCreate() {
         super.onCreate()
@@ -46,6 +47,9 @@ class JamiApplication : Application(), KoinComponent {
                 val startResult = daemonBridge.start()
                 if (startResult) {
                     Log.i(TAG, "Jami daemon started successfully")
+                    // Listen before accounts load, so messages held in the durable outbox are sent
+                    // once the first smartlist load finds their conversation live.
+                    sendQueue.start()
                     // Explicitly load accounts now — accountsChanged may not fire on a fresh
                     // install (no accounts) or may fire asynchronously after JamiService.init()
                     // returns. This guarantees daemonAccountsReady is set so AppViewModel can

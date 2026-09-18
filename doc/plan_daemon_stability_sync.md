@@ -164,7 +164,7 @@ Ordered by stability impact. Each phase is independently shippable.
 | Phase 1 — network-change signal | ✅ landed (`bcf74c3`) — Android callback + daemon forward + Phase 1b markers |
 | Phase 2 — gate & single-flight account load | ✅ core landed — load gate, per-account single-flight `Mutex`, `INITIALIZING→ready` re-hydration, `loadMore(conv, 8)` preview priming. **Deferred:** moving conversation-request loading into `loadSmartlist` / repointing `ConversationsViewModel` + `PendingRequestsViewModel` at the model — `Account` has no request store yet and the two ViewModels currently work; low stated impact, tracked as a follow-up. |
 | Phase 3 — per-conversation ordered callbacks | ✅ landed — keyed `(accountId, conversationId)` FIFO channels + per-key consumer + `Removed` teardown/generation in `DaemonCallbacksImpl`. **Deferred:** the `DaemonBridge.android.kt` SWIG-conversion barrier (defense-in-depth; libjami already serialises callback delivery and a lock across full vector conversion would re-serialise what the keying just parallelised). |
-| Phase 4 — self-heal + resilient send | 🟡 2 of 3 landed — `ConversationFacade.ensureSwarm()` self-heal on all four unknown-id handlers; `ChatViewModel` `WAITING_TO_SYNC` hold + `flushPendingSyncSends()` auto-flush on `ConversationReady` / peer-join. **F4 still reproduces at the daemon level** (2026-09-07 session 2, `send-before-member-join` 2/2): a message committed into a 0-peer-device swarm is never delivered even after the swarm bootstraps seconds later, so the `WAITING_TO_SYNC` hold is load-bearing and the durable outbox (below) is no longer "low marginal value". Still **deferred** (schema migration on a shipping DB + 5-platform DI wiring) but now the critical-path item; also needs a real-app UI test to confirm the hold prevents the drop end-to-end. |
+| Phase 4 — self-heal + resilient send | 🟡 3 of 3 landed (durable outbox 2026-09-18, device verification pending) — was: 2 of 3 landed — `ConversationFacade.ensureSwarm()` self-heal on all four unknown-id handlers; `ChatViewModel` `WAITING_TO_SYNC` hold + `flushPendingSyncSends()` auto-flush on `ConversationReady` / peer-join. **F4 still reproduces at the daemon level** (2026-09-07 session 2, `send-before-member-join` 2/2): a message committed into a 0-peer-device swarm is never delivered even after the swarm bootstraps seconds later, so the `WAITING_TO_SYNC` hold is load-bearing and the durable outbox (below) is no longer "low marginal value". Still **deferred** (schema migration on a shipping DB + 5-platform DI wiring) but now the critical-path item; also needs a real-app UI test to confirm the hold prevents the drop end-to-end. |
 | Phase 5 — real sync observability | 🟡 landed within the available signal — `SyncState.Bootstrapping` (loop finished but ≥1 conversation still `Mode.Syncing`) replaces a misleading `Complete`; `ConversationFacade.snapshotConversationSyncInfo()` + a per-conversation panel in `DebugLogsScreen` (mode, requestMode, member/peer counts, msg count, last commit id, BOOTSTRAPPING flag). **Not done:** true per-conversation *active-device* counts — the daemon's `Refreshing tracked members: n/m active (x/y devices)` has no bridge signal; `activePeerCount` is the non-self member count as a proxy. A real count needs a new JNI/C-interop method. |
 
 ### Hardware verification attempt — 2026-09-07 (Pixel 7a + Pixel 2, same WiFi)
@@ -240,7 +240,30 @@ that hold. `send-before-member-join` is the daemon-level regression test and the
 for the durable-outbox work below; a real-app UI test is still needed to confirm the
 `WAITING_TO_SYNC` hold actually prevents the drop end-to-end.
 
-**Phase 4 durable-outbox follow-up (scoped):**
+**Phase 4 durable outbox — implemented 2026-09-18** (the scoped plan below, with two changes):
+- **Hold criterion widened.** The in-memory hold only covered `Mode.Syncing`. For F4 the sender
+  usually created the 1:1 itself, so it is already `OneToOne` while the peer is still only
+  `invited` — the exact "0 peer devices at commit time" case. `SendQueueService.shouldHold()` now
+  holds while the swarm is syncing *or* a 1:1 peer's daemon role is `invited` (read from
+  `getConversationMembers` each time, so never stale).
+- **Only never-sent messages are stored.** A held message is not handed to the daemon at all, and
+  its row is deleted the moment it is; so a replay can never duplicate a message the daemon
+  already committed. (The plan's "persist on no echo, drop on echo" would have replayed sends the
+  daemon may have committed.)
+- Pieces: `Outbox.sq` + `migrations/1.sqm` (schema v2, `verifyCommonMainJamiDatabaseMigration`
+  passes, `databases/2.db` generated); `OutboxStore` (SQLDelight on Android/iOS/macOS/desktop,
+  in-memory on web); `SendQueueService` started in `JamiApplication` / `IOSApplicationHelper`
+  before accounts load, flushing on `ConversationReady`, member event `action=1` and every
+  `ConversationsLoaded` (so also at app start). `ChatViewModel` holds via the service, shows
+  `outbox-<id>` bubbles as WAITING_TO_SYNC (restored when a chat is reopened after a restart),
+  flips them to SENDING when dispatched, and reconciles them with the daemon echo; its own
+  in-memory `flushPendingSyncSends()` is gone (the service replaces it).
+- Tests: `SendQueueServiceTest` (common, 9) + `SqlDelightOutboxStoreTest` (desktop).
+- **Still open:** end-to-end confirmation on devices. `send-before-member-join` sends through
+  `AccountService.sendConversationMessage` directly and bypasses the outbox; a UI-driven run (send
+  from the chat right after the contact confirms) is needed to confirm the message now arrives.
+
+**Phase 4 durable-outbox follow-up (scoped, original plan):**
 - `shared/src/commonMain/sqldelight/net/jami/database/Outbox.sq`: `CREATE TABLE outbox_message(id INTEGER PK AUTOINCREMENT, account_id TEXT, conversation_id TEXT, body TEXT, reply_to TEXT, created_at INTEGER)` + `insert` / `selectByConversation` / `selectAll` / `deleteById` / `deleteByBody`.
 - `shared/src/commonMain/sqldelight/net/jami/database/1.sqm`: same `CREATE TABLE` (SQLDelight derives `Schema.version = 2`; `verifyMigrations=true` will check fresh-schema == empty+`1.sqm`). Regenerate `2.db` via `./gradlew generateCommonMainJamiDatabaseSchema`. Bump `DatabaseSchema.VERSION` to 2. The 5 `DatabaseDriverFactory` actuals already pass `JamiDatabase.Schema`, so `AndroidSqliteDriver` / `NativeSqliteDriver` / `JdbcSqliteDriver` run the migration automatically — no per-platform code change expected, but confirm each.
 - New `services/SendQueueService.kt`; register in all 5 `PlatformModule.*.kt` alongside `SqlDelightHistoryService` (they own the per-platform `JamiDatabase`).

@@ -137,6 +137,20 @@ fun makeConversationFacade(
     scope = scope.isolated()
 )
 
+/**
+ * Creates a SendQueueService (durable outbox) backed by an in-memory store and started, so it
+ * reacts to the facade's conversation events like in the app.
+ */
+fun makeSendQueue(
+    stub: StubDaemonBridge,
+    accountService: AccountService,
+    conversationFacade: ConversationFacade,
+    scope: CoroutineScope,
+    store: net.jami.services.OutboxStore = net.jami.services.InMemoryOutboxStore(),
+): net.jami.services.SendQueueService =
+    net.jami.services.SendQueueService(store, accountService, conversationFacade, stub, scope.isolated())
+        .also { it.start() }
+
 // ==================== Convenience: full service stack from one stub ====================
 
 /**

@@ -135,6 +135,20 @@ val jamiModule = module {
         )
     }
 
+    /**
+     * Durable outbox for messages sent before a conversation can deliver them (Phase 4 / F4).
+     * Started explicitly at app start (JamiApplication / IOSApplicationHelper).
+     */
+    single {
+        SendQueueService(
+            store = get(),
+            accountService = get(),
+            conversationFacade = get(),
+            daemonBridge = get(),
+            scope = get()
+        )
+    }
+
     // ==================== Daemon Callbacks ====================
 
     /**
@@ -203,7 +217,7 @@ val jamiModule = module {
     // ==================== ViewModels ====================
 
     viewModelFactory { ConversationsViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModelFactory { ChatViewModel(get(), get(), get(), get(), get()) }
+    viewModelFactory { ChatViewModel(get(), get(), get(), get(), get(), get()) }
     viewModelFactory { AccountCreationViewModel(get()) }
     viewModelFactory { ImportAccountViewModel(get()) }
     viewModelFactory { LinkDeviceImportViewModel(get()) }

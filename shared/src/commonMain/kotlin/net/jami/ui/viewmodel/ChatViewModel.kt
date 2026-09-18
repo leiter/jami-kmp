@@ -172,6 +172,7 @@ class ChatViewModel(
     private val deviceRuntimeService: DeviceRuntimeService,
     private val draftRepository: DraftRepository,
     private val audioRecorderService: AudioRecorderService,
+    private val sendQueue: net.jami.services.SendQueueService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) : ViewModel() {
     private val scope = scope
@@ -186,6 +187,21 @@ class ChatViewModel(
     private var profileJob: kotlinx.coroutines.Job? = null
 
     init {
+        // A held message was handed to the daemon by SendQueueService (the conversation went
+        // live): show its bubble as "sending" and arm the no-echo watchdog.
+        scope.launch {
+            sendQueue.dispatched.collect { entry ->
+                if (entry.conversationId != currentConversationId) return@collect
+                val bubbleId = outboxBubbleId(entry.id)
+                _state.update { current ->
+                    current.copy(messages = current.messages.map {
+                        if (it.id == bubbleId) it.copy(deliveryStatus = DeliveryStatus.SENDING) else it
+                    })
+                }
+                armSendWatchdog(bubbleId)
+            }
+        }
+
         // Observe incoming message events for the active conversation
         scope.launch {
             conversationFacade.conversationEvents.collect { event ->
@@ -244,13 +260,6 @@ class ChatViewModel(
                     }
                     is ConversationEvent.ReactionRemoved -> {
                         if (event.conversationId == convId) rebuildMessageReactions(event.messageId)
-                    }
-                    is ConversationEvent.ConversationReady -> {
-                        if (event.conversationId == convId) flushPendingSyncSends()
-                    }
-                    is ConversationEvent.MemberEvent -> {
-                        // action == 1 -> a member joined; the 1:1 swarm now has a live peer.
-                        if (event.conversationId == convId && event.action == 1) flushPendingSyncSends()
                     }
                     else -> { /* Handled elsewhere */ }
                 }
@@ -459,13 +468,22 @@ class ChatViewModel(
     private fun sendOptimistic(accountId: String, conversationUri: Uri, text: String) {
         val optimisticId = "pending-${Clock.System.now().toEpochMilliseconds()}"
 
-        // If the target 1:1 swarm is still bootstrapping, a send now is committed locally but
-        // never pushed (Bootstrap with 0 device(s) / no sync connection). Hold the message in the
-        // bubble as WAITING_TO_SYNC and flush it from flushPendingSyncSends() once the daemon
-        // reports the conversation ready or the peer joins — instead of firing into the void and
-        // only surfacing FAILED after the 20 s watchdog.
-        val syncing = conversationFacade.getConversation(accountId, conversationUri)
-            ?.mode == Conversation.Mode.Syncing
+        // A message committed while the swarm has no peer device (still syncing, or a 1:1 whose
+        // peer has not joined) is never delivered by libjami (finding F4). Hold it in the durable
+        // outbox instead; SendQueueService sends it once the conversation is live, even after an
+        // app restart, and the bubble shows WAITING_TO_SYNC meanwhile.
+        if (sendQueue.shouldHold(accountId, conversationUri)) {
+            scope.launch {
+                val entry = sendQueue.enqueue(accountId, conversationUri.rawRingId, text)
+                _state.update { current ->
+                    val id = outboxBubbleId(entry.id)
+                    // enqueue() may already have sent it (conversation went live meanwhile).
+                    if (current.messages.any { it.id == id }) current
+                    else current.copy(messages = current.messages + heldBubble(entry))
+                }
+            }
+            return
+        }
 
         val optimisticItem = MessageItem(
             id = optimisticId,
@@ -474,17 +492,24 @@ class ChatViewModel(
             timestamp = Clock.System.now().toEpochMilliseconds(),
             isOutgoing = true,
             type = MessageType.Text,
-            deliveryStatus = if (syncing) DeliveryStatus.WAITING_TO_SYNC else DeliveryStatus.SENDING,
+            deliveryStatus = DeliveryStatus.SENDING,
         )
         _state.update { it.copy(messages = it.messages + optimisticItem) }
 
-        if (syncing) {
-            Log.i("ChatViewModel", "conversation $conversationUri is syncing; holding message $optimisticId until it goes live")
-            return
-        }
-
         dispatchSend(accountId, conversationUri, optimisticId, text)
     }
+
+    private fun outboxBubbleId(entryId: Long) = "outbox-$entryId"
+
+    private fun heldBubble(entry: net.jami.services.OutboxEntry) = MessageItem(
+        id = outboxBubbleId(entry.id),
+        text = entry.body,
+        author = "",
+        timestamp = entry.createdAt,
+        isOutgoing = true,
+        type = MessageType.Text,
+        deliveryStatus = DeliveryStatus.WAITING_TO_SYNC,
+    )
 
     /**
      * Fire the actual daemon send for an already-inserted optimistic bubble and arm the
@@ -494,7 +519,10 @@ class ChatViewModel(
         scope.launch {
             accountService.sendConversationMessage(accountId, conversationUri, text)
         }
+        armSendWatchdog(optimisticId)
+    }
 
+    private fun armSendWatchdog(optimisticId: String) {
         // If the daemon never echoes this message back (network drop, rejected commit, …),
         // flip the still-pending bubble to FAILED instead of leaving it stuck on "sending"
         // forever. Reconciliation in appendMessage() cancels this by removing the item first.
@@ -508,32 +536,6 @@ class ChatViewModel(
                 messages[idx] = messages[idx].copy(deliveryStatus = DeliveryStatus.FAILED)
                 current.copy(messages = messages)
             }
-        }
-    }
-
-    /**
-     * Flush every message currently held as [DeliveryStatus.WAITING_TO_SYNC] for the active
-     * conversation: mark each SENDING and dispatch it. Called when the conversation transitions to
-     * live (ConversationReady, or a peer join via ConversationMemberEvent action=1).
-     */
-    private fun flushPendingSyncSends() {
-        val accountId = currentAccountId ?: return
-        val conversationId = currentConversationId ?: return
-        val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
-
-        val waiting = _state.value.messages.filter { it.deliveryStatus == DeliveryStatus.WAITING_TO_SYNC }
-        if (waiting.isEmpty()) return
-        Log.i("ChatViewModel", "conversation $conversationId now live; flushing ${waiting.size} held message(s)")
-
-        _state.update { current ->
-            current.copy(messages = current.messages.map {
-                if (it.deliveryStatus == DeliveryStatus.WAITING_TO_SYNC)
-                    it.copy(deliveryStatus = DeliveryStatus.SENDING)
-                else it
-            })
-        }
-        for (msg in waiting) {
-            dispatchSend(accountId, conversationUri, msg.id, msg.text)
         }
     }
 
@@ -830,7 +832,11 @@ class ChatViewModel(
                 interactionToMessageItem(interaction)
             }
             val withSeparators = injectDateSeparators(items)
-            _state.value = _state.value.copy(messages = withSeparators, isLoading = false)
+            // Keep not-yet-echoed sends visible across history rebuilds: in-flight optimistic
+            // bubbles, and messages still held in the durable outbox (restored after a restart).
+            val inFlight = _state.value.messages.filter { it.id.startsWith("pending-") }
+            val held = sendQueue.queued(accountId, conversationId).map { heldBubble(it) }
+            _state.value = _state.value.copy(messages = withSeparators + inFlight + held, isLoading = false)
         } else {
             _state.value = _state.value.copy(isLoading = false)
         }
@@ -976,7 +982,7 @@ class ChatViewModel(
         // identical text twice in a row doesn't collapse both pending bubbles on the first echo.
         val withoutOptimistic = if (isOutgoing) {
             val matchIndex = current.indexOfFirst {
-                it.id.startsWith("pending-") && it.text == msg.textContent
+                (it.id.startsWith("pending-") || it.id.startsWith("outbox-")) && it.text == msg.textContent
             }
             if (matchIndex >= 0) current.toMutableList().apply { removeAt(matchIndex) } else current
         } else {
