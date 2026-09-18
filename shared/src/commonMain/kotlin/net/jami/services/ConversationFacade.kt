@@ -447,9 +447,24 @@ class ConversationFacade(
                 conversation.uri.rawRingId,
                 fileName
             )
-            net.jami.utils.FileUtils.copyFile(filePath, destPath)
+            // Like libjamiclient's moveFile: the picker/camera/recorder hand us a copy the app made
+            // in its own cache/temp dir, so move it instead of leaving a duplicate behind. Anything
+            // else (e.g. a user's original file picked on desktop) is copied, never moved.
+            val moved = isAppScratchFile(filePath) && net.jami.utils.FileUtils.moveFile(filePath, destPath)
+            if (!moved && !net.jami.utils.FileUtils.copyFile(filePath, destPath)) {
+                Log.e(TAG, "sendFile: unable to store $filePath in the conversation, not sending")
+                return
+            }
             accountService.sendFile(conversation.accountId, conversation.uri.rawRingId, destPath, fileName)
         }
+    }
+
+    /** True when [path] is inside the app's own cache or temp directory (safe to move away). */
+    private fun isAppScratchFile(path: String): Boolean {
+        if ("/../" in path) return false
+        return listOf(deviceRuntimeService.getCachePath(), deviceRuntimeService.getTempPath())
+            .filter { it.isNotEmpty() }
+            .any { dir -> path.startsWith(dir.trimEnd('/') + "/") }
     }
 
     /**
