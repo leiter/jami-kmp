@@ -489,6 +489,15 @@ class StubDaemonBridge : DaemonBridgeApi {
     var lookupNameResults: MutableMap<String, Int> = mutableMapOf()
     // Callback for when lookupName is called - set this to accountService.onRegisteredNameFound in tests
     var onLookupNameCallback: ((accountId: String, state: Int, address: String, name: String, query: String) -> Unit)? = null
+    /** fileId -> what fileTransferInfo() reports. */
+    var fileTransferInfos: MutableMap<String, FileTransferInfo> = mutableMapOf()
+
+    /** Recorded sendMessage() calls (edits/deletes use flag 1, reactions flag 2). */
+    data class SentMessage(val accountId: String, val conversationId: String, val message: String, val replyTo: String, val flag: Int)
+    val sentMessages: MutableList<SentMessage> = mutableListOf()
+
+    /** Recorded downloadFile() calls as (conversationId, interactionId, fileId). */
+    val downloadedFiles: MutableList<Triple<String, String, String>> = mutableListOf()
 
     override fun init(callbacks: DaemonCallbacks): Boolean = true
     override fun start(): Boolean { running = true; return true }
@@ -558,7 +567,9 @@ class StubDaemonBridge : DaemonBridgeApi {
 
     override fun getConversations(accountId: String): List<String> = conversations[accountId] ?: emptyList()
     override fun startConversation(accountId: String): String = startConversationResult
-    override fun sendMessage(accountId: String, conversationId: String, message: String, replyTo: String, flag: Int) {}
+    override fun sendMessage(accountId: String, conversationId: String, message: String, replyTo: String, flag: Int) {
+        sentMessages.add(SentMessage(accountId, conversationId, message, replyTo, flag))
+    }
     override fun loadConversation(accountId: String, conversationId: String, fromMessage: String, size: Int) {}
     override fun getConversationMembers(accountId: String, conversationId: String): List<Map<String, String>> = conversationMembers[conversationId] ?: emptyList()
     override fun getConversationInfo(accountId: String, conversationId: String): Map<String, String> = conversationInfo[conversationId] ?: emptyMap()
@@ -601,9 +612,12 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {}
 
     override fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {}
-    override fun downloadFile(accountId: String, conversationId: String, interactionId: String, fileId: String, path: String) {}
+    override fun downloadFile(accountId: String, conversationId: String, interactionId: String, fileId: String, path: String) {
+        downloadedFiles.add(Triple(conversationId, interactionId, fileId))
+    }
     override fun cancelDataTransfer(accountId: String, conversationId: String, fileId: String) {}
-    override fun fileTransferInfo(accountId: String, conversationId: String, fileId: String): FileTransferInfo? = null
+    override fun fileTransferInfo(accountId: String, conversationId: String, fileId: String): FileTransferInfo? =
+        fileTransferInfos[fileId]
 
     override fun getCodecList(): List<Long> = codecs
     override fun getActiveCodecList(accountId: String): List<Long> = codecs
