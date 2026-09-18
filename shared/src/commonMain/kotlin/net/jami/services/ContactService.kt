@@ -274,6 +274,13 @@ class ContactService(
                     // Invalidate the VCardService disk + memory cache so the next
                     // buildConversationItems() call picks up the new vcf from disk.
                     vCardService.invalidatePeer(accountId, uri.rawRingId)
+                    // The daemon also fires ProfileReceived with our *own* URI after a local
+                    // updateProfile() (it rewrote profile.vcf) — drop the cached own avatar too,
+                    // or the home top bar / account sheet keep the old picture until restart.
+                    val account = accountService.getAccount(accountId)
+                    if (account != null && Uri.fromString(account.username).rawRingId == uri.rawRingId) {
+                        vCardService.invalidateLocal(accountId)
+                    }
                     _contactEvents.emit(ContactEvent.ProfileUpdated(accountId, uri, profile))
                 }
             }

@@ -227,6 +227,9 @@ class ConversationsViewModel(
         scope.launch {
             accountService.accountEvents.collect { event ->
                 if (event is AccountEvent.ProfileReceived) {
+                    // AccountService just rewrote profile.vcf; drop the cached copy so the reload
+                    // below (top bar + account sheet) reads the new one.
+                    vCardService.invalidateLocal(event.accountId)
                     if (event.photo.isNotEmpty()) {
                         val avatarBytes = decodeProfilePhoto(event.photo)
                         if (avatarBytes != null) {
@@ -347,7 +350,9 @@ class ConversationsViewModel(
                     isLoading = false,
                     pendingRequests = pendingCount,
                     pendingRequestItems = cachedRequests,
-                    currentAccountAvatarBytes = accountAvatarBytes ?: _state.value.currentAccountAvatarBytes,
+                    // Not `?: previous`: null is a real state (avatar removed, or an account
+                    // without one), and keeping the previous bytes showed a stale/foreign picture.
+                    currentAccountAvatarBytes = accountAvatarBytes,
                     isAccountOnline = account.isRegistered,
                     accounts = accountItems,
                 )
