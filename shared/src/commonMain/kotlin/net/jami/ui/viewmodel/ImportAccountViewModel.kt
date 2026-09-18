@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
+import net.jami.utils.ScratchFiles
 
 /**
  * State for the account import screen.
@@ -84,6 +85,12 @@ class ImportAccountViewModel(
      * @param path Absolute path to the .gz archive.
      */
     fun setArchivePath(path: String) {
+        // Picking another file replaces the previous one: drop the previous picker copy (it may be
+        // an account archive with private keys). Only app cache/temp copies are ever deleted.
+        val previous = _state.value.archivePath
+        if (importedAccountId == null && previous.isNotEmpty() && previous != path) {
+            ScratchFiles.deleteIfScratch(previous)
+        }
         _state.value = _state.value.copy(archivePath = path, error = null)
     }
 
@@ -119,10 +126,15 @@ class ImportAccountViewModel(
                     archivePath = current.archivePath
                 )
                 importedAccountId = accountId.ifEmpty { null }
+                // The picker's copy of the archive holds the private keys: delete it as soon as the
+                // daemon has loaded it (AccountService outlives this screen).
+                importedAccountId?.let { accountService.deleteImportArchiveWhenLoaded(it, current.archivePath) }
+                    ?: ScratchFiles.deleteIfScratch(current.archivePath)
                 // The account may already be present if the daemon added it synchronously.
                 handleAccountsChanged()
                 // Otherwise, completion is tracked via AccountsChanged / registration events.
             } catch (e: Exception) {
+                if (importedAccountId == null) ScratchFiles.deleteIfScratch(current.archivePath)
                 _state.value = _state.value.copy(
                     isLoading = false,
                     error = e.message ?: "Import failed"
@@ -199,6 +211,9 @@ class ImportAccountViewModel(
      * Cancel the coroutine scope when this ViewModel is no longer needed.
      */
     public override fun onCleared() {
+        // Left the screen without importing: the picked archive copy is no longer needed.
+        // (After an import, AccountService deletes it once the daemon has loaded it.)
+        if (importedAccountId == null) ScratchFiles.deleteIfScratch(_state.value.archivePath)
         scope.cancel()
     }
 }

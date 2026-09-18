@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.double
@@ -259,6 +260,33 @@ class AccountService(
     }
 
     // ==================== Account Creation ====================
+
+    /**
+     * Delete the picker's copy of an imported account archive once the daemon no longer needs it.
+     * The archive holds the account's private keys, so it must not linger in the app cache — but
+     * the daemon reads and decrypts it asynchronously after addAccount(), so it is only deleted
+     * once [accountId] has left INITIALIZING (archive loaded), or has been removed again (failed
+     * import), or after [IMPORT_ARCHIVE_CLEANUP_TIMEOUT_MS]. Runs on the service scope so it
+     * survives the import screen closing. Paths outside the app cache/temp dirs are never touched.
+     */
+    fun deleteImportArchiveWhenLoaded(accountId: String, archivePath: String) {
+        if (!net.jami.utils.ScratchFiles.isScratch(archivePath, deviceRuntimeService)) return
+        scope.launch {
+            val alreadyLoaded = getAccount(accountId)?.registrationState?.let {
+                it != Account.RegistrationState.INITIALIZING
+            } == true
+            if (!alreadyLoaded) {
+                withTimeoutOrNull(IMPORT_ARCHIVE_CLEANUP_TIMEOUT_MS) {
+                    accountEvents.first { event ->
+                        (event is AccountEvent.RegistrationStateChanged &&
+                            event.accountId == accountId && event.state != "INITIALIZING") ||
+                            (event is AccountEvent.AccountsChanged && getAccount(accountId) == null)
+                    }
+                }
+            }
+            net.jami.utils.ScratchFiles.deleteIfScratch(archivePath, deviceRuntimeService)
+        }
+    }
 
     /**
      * Get the default template for an account type.
@@ -1389,6 +1417,9 @@ class AccountService(
 
     companion object {
         private const val TAG = "AccountService"
+
+        /** Upper bound on waiting for an imported archive to be loaded before deleting it. */
+        private const val IMPORT_ARCHIVE_CLEANUP_TIMEOUT_MS = 120_000L
         const val ACCOUNT_SCHEME_NONE = ""
         const val ACCOUNT_SCHEME_PASSWORD = "password"
         const val ACCOUNT_SCHEME_KEY = "key"

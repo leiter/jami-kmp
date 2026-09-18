@@ -290,6 +290,8 @@ fun AccountSettingsScreen(
         if (path != null) {
             coroutineScope.launch(Dispatchers.Default) {
                 val bytes = FileUtils.readBytes(path)
+                // The picker's copy is no longer needed once read (desktop originals are kept).
+                net.jami.utils.ScratchFiles.deleteIfScratch(path)
                 withContext(Dispatchers.Main) { viewModel.updateAvatar(bytes) }
             }
         }

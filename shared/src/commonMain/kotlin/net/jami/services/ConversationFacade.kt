@@ -460,12 +460,8 @@ class ConversationFacade(
     }
 
     /** True when [path] is inside the app's own cache or temp directory (safe to move away). */
-    private fun isAppScratchFile(path: String): Boolean {
-        if ("/../" in path) return false
-        return listOf(deviceRuntimeService.getCachePath(), deviceRuntimeService.getTempPath())
-            .filter { it.isNotEmpty() }
-            .any { dir -> path.startsWith(dir.trimEnd('/') + "/") }
-    }
+    private fun isAppScratchFile(path: String): Boolean =
+        net.jami.utils.ScratchFiles.isScratch(path, deviceRuntimeService)
 
     /**
      * Delete a conversation file.
