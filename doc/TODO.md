@@ -281,6 +281,18 @@
 - [ ] **OsmMapView — macOS** — Stub retained: no stable `NSView` embedding API in Compose Multiplatform for macOS targets. Shows location coordinates as text.
 - [ ] **OsmMapView — Desktop** — Stub retained; no viable JVM map library in scope.
 
+## Open Decisions
+
+- [ ] **Add presence unsubscribe on background like the official app** *(open decision, 2026-09-18)* —
+  jami-client-ios unsubscribes presence for all contacts in `sceneDidEnterBackground`
+  (`presenceService.subscribeBuddies(..., subscribe: false)`, `AppDelegate.swift:340`) and
+  re-subscribes in `sceneWillEnterForeground`. jami-kmp keeps presence subscriptions while in the
+  background (`IOSApplicationHelper.enterBackground()` only starts the ~30 s `SyncManager` window).
+  To decide: adopt it on iOS only (the app is suspended there anyway), or on Android too — where
+  `JamiDaemonService` may keep the process alive and presence would stay useful. Note the daemon
+  reference-counts `subscribeBuddy`, so each unsubscribe must pair with an earlier subscribe
+  (see ConversationFacade review #8).
+
 ## Testing
 
 - [ ] Run ViewModel tests: `./gradlew :shared:desktopTest --tests "net.jami.viewmodel.*"`
