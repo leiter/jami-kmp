@@ -708,6 +708,23 @@ class ChatViewModel(
     }
 
     /**
+     * All versions of an edited message, newest first, as (timestamp ms, text) — for the
+     * "Message history" action. Empty when the message was never edited.
+     */
+    fun getEditHistory(messageId: String): List<Pair<Long, String>> {
+        val accountId = currentAccountId ?: return emptyList()
+        val conversationId = currentConversationId ?: return emptyList()
+        val interaction = conversationFacade
+            .getConversation(accountId, Uri(Uri.SWARM_SCHEME, conversationId))
+            ?.getMessage(messageId) ?: return emptyList()
+        val versions = interaction.history
+            .mapNotNull { v -> v.body?.let { v.timestamp to it } }
+            .distinctBy { it.second }
+            .sortedByDescending { it.first }
+        return if (versions.size > 1) versions else emptyList()
+    }
+
+    /**
      * Edit a message by its ID.
      */
     fun editMessage(messageId: String, newText: String) {

@@ -1675,6 +1675,17 @@ class ConversationFacade(
         interaction.edit = message.body["edit"]?.ifEmpty { null }
             ?: message.id.takeIf { message.editions.isNotEmpty() }
         interaction.setSwarmInfo(conversation.uri.rawRingId, message.id, message.linearizedParent.ifEmpty { null })
+        // Previous versions of an edited message (libjamiclient getInteractionFromSwarmMessage
+        // addEdits) — shown by the "Message history" action.
+        if (message.editions.isNotEmpty()) {
+            interaction.addEdits(message.editions.mapNotNull { edition ->
+                val editBody = edition["body"] ?: return@mapNotNull null
+                Interaction(account.accountId).apply {
+                    body = editBody
+                    this.timestamp = (edition["timestamp"]?.toLongOrNull() ?: 0L) * 1000L
+                }
+            })
+        }
         interaction.statusMap = message.status.mapValues { Interaction.MessageStates.fromInt(it.value) }
 
         // Populate reactions from the history snapshot provided by the daemon. Prefer the full

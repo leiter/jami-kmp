@@ -96,19 +96,18 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
 - [ ] **Replies** — the daemon's `reply-to` is read into `TextMessage.replyToId` but never shown.
   Reference: quoted original above the reply (tap scrolls to it; loads it via `loadSwarmUntil` if not
   in history yet) and a **Reply** action in the long-press popup (`startReplyTo`).
-- [ ] **Clickable links and Markdown** — reference renders message text with Markwon (formatting,
-  autolinked URLs). KMP shows plain text; only the link-preview card is clickable.
+- [ ] **Markdown** — reference renders message text with Markwon (bold, italics, code, …); KMP
+  shows plain text. *Clickable links done 2026-09-18:* http(s) URLs in bubbles are `LinkAnnotation`s.
 - [ ] **Read markers** — reference shows peers' avatars at the last message each has read
   (`Conversation.lastDisplayedMessages`) and a status icon only on the last sent message
   (`lastSent`). KMP shows a tick on every outgoing message and no read avatars.
   `Conversation.updateSwarmInteraction` already records `lastDisplayedMessages` / `lastSent`.
 - [ ] **Full emoji picker for reactions** — reference has a "more" button opening a full emoji
   picker; KMP offers 6 fixed emojis.
-- [ ] **Share text** — reference's long-press Share also works for text messages (`shareText`).
-  `shareText()` exists in `net.jami.utils`; only the menu item is missing.
-- [ ] **Edit history** — reference shows the history of an edited message
-  (`convActionHistory`, visible when `history.size > 1`); KMP only shows "(edited)".
-  `updateSwarmMessage` keeps the edits in `Interaction.history`.
+- [x] **Share text** — Done 2026-09-18: "Share" in the text message long-press menu (`shareText`).
+- [x] **Edit history** — Done 2026-09-18: "Message history" in the long-press menu of edited
+  messages opens a dialog with every version, newest first. `swarmMessageToInteraction` now keeps
+  `SwarmMessage.editions` as `Interaction.history` (libjamiclient `addEdits`).
 
 ## Home Screen — Missing Features
 

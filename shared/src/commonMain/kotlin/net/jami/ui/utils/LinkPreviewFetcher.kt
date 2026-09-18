@@ -31,6 +31,9 @@ data class LinkPreview(
 private val URL_REGEX = Regex("""https?://[^\s<>"')\]]+""")
 
 /** Returns distinct URLs found in [text], up to [limit]. */
+/** Character ranges of the http(s) URLs in [text] (used to make them clickable in chat bubbles). */
+fun findUrlRanges(text: String): List<IntRange> = URL_REGEX.findAll(text).map { it.range }.toList()
+
 fun extractUrls(text: String, limit: Int = 1): List<String> =
     URL_REGEX.findAll(text).map { it.value }.distinct().take(limit).toList()
 

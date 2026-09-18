@@ -92,11 +92,13 @@ import net.jami.ui.utils.toImageBitmap
 import net.jami.utils.FileUtils
 import net.jami.utils.openFile
 import net.jami.utils.shareFile
+import net.jami.utils.shareText
 import net.jami.utils.Log
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -144,6 +146,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
@@ -553,6 +559,7 @@ fun ChatScreen(
                                 },
                                 onReact = { emoji -> viewModel.sendReaction(message.id, emoji) },
                                 onRemoveReaction = { emoji -> viewModel.removeReaction(message.id, emoji) },
+                                loadEditHistory = { viewModel.getEditHistory(message.id) },
                                 onRetry = { viewModel.retryMessage(message.id) },
                             )
                         }
@@ -766,9 +773,11 @@ private fun ChatBubble(
     onEdit: (String) -> Unit = {},
     onReact: (String) -> Unit = {},
     onRemoveReaction: (String) -> Unit = {},
+    loadEditHistory: () -> List<Pair<Long, String>> = { emptyList() },
     onRetry: () -> Unit = {},
 ) {
     val isOutgoing = message.isOutgoing
+    var editHistory by remember { mutableStateOf<List<Pair<Long, String>>?>(null) }
     val alignment = if (isOutgoing) Alignment.CenterEnd else Alignment.CenterStart
     val bubbleColor = if (isOutgoing) JamiTheme.colors.messageSent
     else JamiTheme.colors.messageReceived
@@ -845,7 +854,21 @@ private fun ChatBubble(
                     // text line always has room for the overlay next to it.
                     Text(
                         text = buildAnnotatedString {
-                            append(message.text)
+                            // http(s) URLs are clickable (jami-android-client autolinks message text).
+                            val text = message.text
+                            var last = 0
+                            for (range in net.jami.ui.utils.findUrlRanges(text)) {
+                                append(text.substring(last, range.first))
+                                val url = text.substring(range.first, range.last + 1)
+                                withLink(
+                                    LinkAnnotation.Url(
+                                        url,
+                                        TextLinkStyles(SpanStyle(textDecoration = TextDecoration.Underline)),
+                                    )
+                                ) { append(url) }
+                                last = range.last + 1
+                            }
+                            append(text.substring(last))
                             withStyle(SpanStyle(color = Color.Transparent, fontSize = timeFontSize)) {
                                 if (isOutgoing) append("  $timeText  ") else append("  $timeText")
                             }
@@ -909,6 +932,22 @@ private fun ChatBubble(
                         showMenu = false
                     },
                 )
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.share_label)) },
+                    onClick = {
+                        showMenu = false
+                        shareText("", message.text)
+                    },
+                )
+                if (message.isEdited) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(Res.string.menu_message_history)) },
+                        onClick = {
+                            showMenu = false
+                            editHistory = loadEditHistory()
+                        },
+                    )
+                }
                 if (isOutgoing) {
                     DropdownMenuItem(
                         text = { Text(stringResource(Res.string.menu_item_edit)) },
@@ -950,6 +989,34 @@ private fun ChatBubble(
                     }
                 }
             }
+        }
+
+        // "Message history": every version of an edited message, newest first.
+        editHistory?.let { versions ->
+            AlertDialog(
+                onDismissRequest = { editHistory = null },
+                title = { Text(stringResource(Res.string.menu_message_history)) },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s)) {
+                        if (versions.isEmpty()) {
+                            Text(message.text, style = JamiTheme.typography.bodyMedium)
+                        }
+                        versions.forEach { (time, body) ->
+                            Column {
+                                Text(
+                                    text = formatMessageTime(time),
+                                    style = JamiTheme.typography.labelSmall,
+                                    color = JamiTheme.colors.onSurfaceVariant,
+                                )
+                                Text(text = body, style = JamiTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { editHistory = null }) { Text(stringResource(Res.string.notif_dismiss)) }
+                },
+            )
         }
 
         // Reaction chip attached to the bubble's bottom edge (jami-android-client reaction_chip)
