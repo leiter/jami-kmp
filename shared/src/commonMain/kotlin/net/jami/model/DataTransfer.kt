@@ -153,6 +153,13 @@ class DataTransfer : Interaction {
     val isError: Boolean
         get() = transferStatus.isError
 
+    /**
+     * Whether a daemon event may move this transfer to [status]: once finished, failed or removed
+     * it stays there (late or duplicate events must not regress it). Same rule as libjamiclient.
+     */
+    fun canTransitionTo(status: TransferStatus): Boolean =
+        status == transferStatus || (!transferStatus.isOver && transferStatus != TransferStatus.FILE_REMOVED)
+
     fun canAutoAccept(maxSize: Int): Boolean {
         return maxSize == UNLIMITED_SIZE || totalSize <= maxSize
     }

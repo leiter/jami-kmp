@@ -224,6 +224,21 @@ class ChatViewModel(
                     is ConversationEvent.MessageStatusChanged -> {
                         if (event.conversationId == convId) updateDeliveryStatus(event)
                     }
+                    is ConversationEvent.DataTransferProgress -> {
+                        if (event.conversationId == convId) {
+                            // Targeted update: only this message's progress, no full rebuild.
+                            _state.update { current ->
+                                val idx = current.messages.indexOfFirst { it.id == event.interactionId }
+                                if (idx < 0) return@update current
+                                current.copy(messages = current.messages.toMutableList().also {
+                                    it[idx] = it[idx].copy(
+                                        bytesProgress = event.bytesProgress,
+                                        totalSize = if (event.totalSize > 0L) event.totalSize else it[idx].totalSize,
+                                    )
+                                })
+                            }
+                        }
+                    }
                     is ConversationEvent.ReactionAdded -> {
                         if (event.conversationId == convId) rebuildMessageReactions(event.messageId)
                     }

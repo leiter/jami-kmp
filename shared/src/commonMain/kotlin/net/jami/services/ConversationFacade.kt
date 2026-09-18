@@ -534,6 +534,11 @@ class ConversationFacade(
      */
     fun acceptFileTransfer(conversation: Conversation, interactionId: String, fileId: String) {
         val transfer = conversation.getMessage(interactionId) as? DataTransfer
+        // An explicit (re)download after a failure starts a new transfer: reset the status so the
+        // transition guard in onDataTransferEvent accepts its events again.
+        if (transfer != null && transfer.transferStatus.isError) {
+            transfer.transferStatus = Interaction.TransferStatus.FILE_AVAILABLE
+        }
         val displayName = transfer?.displayName?.takeIf { it.isNotEmpty() } ?: fileId
         val destPath = deviceRuntimeService.getNewConversationPath(
             conversation.accountId,
@@ -1832,6 +1837,13 @@ class ConversationFacade(
                 val newStatus = Interaction.TransferStatus.fromIntFile(eventCode)
                     .takeIf { it != Interaction.TransferStatus.INVALID }
 
+                if (transfer != null && newStatus != null && !transfer.canTransitionTo(newStatus)) {
+                    // Transition guard (libjamiclient dataTransferEvent): ignore late/duplicate
+                    // events that would regress a finished/failed/removed transfer.
+                    Log.d(TAG, "onDataTransferEvent: ignoring ${transfer.transferStatus} -> $newStatus for $fileId")
+                    return@launch
+                }
+
                 if (transfer != null && newStatus != null) {
                     transfer.transferStatus = newStatus
                     // Ensure fileId is always stored so the UI download button works
@@ -1857,6 +1869,15 @@ class ConversationFacade(
                         }
                     }
                     conversation.updateInteraction(transfer)
+
+                    // The daemon sends no progress events while a transfer runs, so poll it like
+                    // libjamiclient's DataTransferRefreshTask; stop once it is no longer ongoing.
+                    val refreshKey = "$accountId:$conversationId:$fileId"
+                    if (newStatus == Interaction.TransferStatus.TRANSFER_ONGOING) {
+                        startProgressRefresh(refreshKey, accountId, conversationId, transfer.messageId ?: interactionId, fileId, transfer)
+                    } else {
+                        synchronized(loadCoordLock) { progressRefreshJobs.remove(refreshKey) }?.cancel()
+                    }
                 } else if (transfer == null && newStatus == Interaction.TransferStatus.TRANSFER_AWAITING_HOST) {
                     // Race condition: message not yet in conversation model but daemon already
                     // signalled AWAITING_HOST. Attempt auto-accept using size from fileTransferInfo.
@@ -1874,12 +1895,64 @@ class ConversationFacade(
         }
     }
 
+    private val progressRefreshJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
+
+    /**
+     * Re-read the transfer's progress every [DATA_TRANSFER_REFRESH_PERIOD_MS] while it is ongoing
+     * and publish it as [ConversationEvent.DataTransferProgress] (a targeted update, not a full chat
+     * rebuild). Ends by itself when the status leaves TRANSFER_ONGOING.
+     */
+    private fun startProgressRefresh(
+        key: String,
+        accountId: String,
+        conversationId: String,
+        interactionId: String,
+        fileId: String,
+        transfer: DataTransfer,
+    ) {
+        synchronized(loadCoordLock) {
+            if (progressRefreshJobs[key]?.isActive == true) return
+            progressRefreshJobs[key] = scope.launch {
+                try {
+                    while (transfer.transferStatus == Interaction.TransferStatus.TRANSFER_ONGOING) {
+                        kotlinx.coroutines.delay(DATA_TRANSFER_REFRESH_PERIOD_MS)
+                        if (transfer.transferStatus != Interaction.TransferStatus.TRANSFER_ONGOING) break
+                        val info = try {
+                            accountService.fileTransferInfo(accountId, conversationId, fileId)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "progress refresh: fileTransferInfo failed for $fileId", e)
+                            null
+                        } ?: continue
+                        if (info.totalSize > 0L) transfer.totalSize = info.totalSize
+                        if (info.bytesProgress == transfer.bytesProgress) continue
+                        transfer.bytesProgress = info.bytesProgress
+                        _conversationEvents.emit(
+                            ConversationEvent.DataTransferProgress(
+                                accountId, conversationId, interactionId, fileId,
+                                transfer.bytesProgress, transfer.totalSize,
+                            )
+                        )
+                    }
+                } finally {
+                    synchronized(loadCoordLock) {
+                        if (progressRefreshJobs[key] === kotlinx.coroutines.currentCoroutineContext()[kotlinx.coroutines.Job]) {
+                            progressRefreshJobs.remove(key)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     companion object {
         private const val TAG = "ConversationFacade"
 
         /** Cap on how long the send path / first smartlist load waits for the daemon to leave
          *  INITIALIZING before proceeding regardless. */
         private const val ACCOUNT_LOAD_GATE_TIMEOUT_MS = 15_000L
+
+        /** Progress polling interval for ongoing transfers (libjamiclient DATA_TRANSFER_REFRESH_PERIOD). */
+        private const val DATA_TRANSFER_REFRESH_PERIOD_MS = 500L
 
         /** Messages primed per conversation during loadSmartlist (matches libjamiclient). */
         private const val SMARTLIST_PREVIEW_COUNT = 8
@@ -2042,6 +2115,16 @@ sealed class ConversationEvent {
     data class MessagesRead(
         val accountId: String,
         val conversationId: String,
+    ) : ConversationEvent()
+
+    /** Periodic progress of an ongoing transfer (no daemon event exists for this). */
+    data class DataTransferProgress(
+        val accountId: String,
+        val conversationId: String,
+        val interactionId: String,
+        val fileId: String,
+        val bytesProgress: Long,
+        val totalSize: Long,
     ) : ConversationEvent()
 
     /** A full smartlist (re)load for [accountId] finished; list screens should re-read. */
