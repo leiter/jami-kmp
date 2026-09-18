@@ -174,6 +174,40 @@ class ContactService(
         }
     }
 
+    // ==================== Daemon Contact Callbacks ====================
+
+    /**
+     * Daemon `contactAdded` signal. Keeps the contact cache in sync with contacts the daemon
+     * adds on its own — most importantly when an account is imported from an archive: the
+     * archive is decrypted asynchronously, so the initial [loadContacts] (run as soon as the
+     * account appears) reads an empty list, and the restored contacts only arrive afterwards
+     * through this signal (`ContactList::setContacts`).
+     */
+    fun onContactAdded(accountId: String, uri: String, confirmed: Boolean) {
+        val contact = getContactFromCache(accountId, Uri.fromString(uri))
+        contact.status = if (confirmed) Contact.Status.CONFIRMED else Contact.Status.REQUEST_SENT
+        scope.launch {
+            _contactEvents.emit(ContactEvent.ContactAdded(accountId, contact))
+        }
+    }
+
+    /**
+     * Daemon `contactRemoved` signal. A banned contact stays known to the daemon (and is listed
+     * as blocked), so it is kept in the cache as [Contact.Status.BLOCKED] instead of dropped.
+     */
+    fun onContactRemoved(accountId: String, uri: String, banned: Boolean) {
+        val parsed = Uri.fromString(uri)
+        val contact = findContactInCache(accountId, parsed) ?: return
+        if (banned) {
+            contact.status = Contact.Status.BLOCKED
+        } else {
+            contactCache[accountId]?.remove(parsed.uri)
+        }
+        scope.launch {
+            _contactEvents.emit(ContactEvent.ContactRemoved(accountId, contact, banned))
+        }
+    }
+
     // ==================== Presence ====================
 
     /**

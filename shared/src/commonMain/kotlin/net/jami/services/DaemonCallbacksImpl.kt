@@ -326,11 +326,17 @@ class DaemonCallbacksImpl(
     // ==================== Contact Callbacks ====================
 
     override fun onContactAdded(accountId: String, uri: String, confirmed: Boolean) {
-        scope.launch { accountService.onContactAdded(accountId, uri, confirmed) }
+        scope.launch {
+            contactService.onContactAdded(accountId, uri, confirmed)
+            accountService.onContactAdded(accountId, uri, confirmed)
+        }
     }
 
     override fun onContactRemoved(accountId: String, uri: String, banned: Boolean) {
-        scope.launch { accountService.onContactRemoved(accountId, uri, banned) }
+        scope.launch {
+            contactService.onContactRemoved(accountId, uri, banned)
+            accountService.onContactRemoved(accountId, uri, banned)
+        }
     }
 
     override fun onIncomingTrustRequest(accountId: String, conversationId: String, from: String, payload: ByteArray, receiveTime: Long) {
