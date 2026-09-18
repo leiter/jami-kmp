@@ -117,6 +117,8 @@ data class ReactionGroup(
     val count: Int,
     val isMine: Boolean,
     val reactionIds: List<String> = emptyList(),
+    /** Message ids of the current user's own reactions with this emoji (used to remove them). */
+    val myReactionIds: List<String> = emptyList(),
 )
 
 /**
@@ -1107,6 +1109,28 @@ class ChatViewModel(
         }
     }
 
+    /**
+     * Remove the current user's own [emoji] reaction(s) from a message. Like jami-android-client
+     * (ConversationPresenter.removeReaction) a reaction is removed by editing its reaction message
+     * to an empty body; the daemon then fires ReactionRemoved, which updates the model and chip.
+     */
+    fun removeReaction(messageId: String, emoji: String) {
+        val accountId = currentAccountId ?: return
+        val conversationId = currentConversationId ?: return
+        val group = _state.value.messages.firstOrNull { it.id == messageId }
+            ?.reactions?.firstOrNull { it.emoji == emoji } ?: return
+        if (group.myReactionIds.isEmpty()) {
+            Log.w(TAG, "removeReaction: no own reaction id for $emoji on $messageId")
+            return
+        }
+        scope.launch {
+            val uri = net.jami.model.Uri(net.jami.model.Uri.SWARM_SCHEME, conversationId)
+            group.myReactionIds.forEach { reactionId ->
+                accountService.deleteConversationMessage(accountId, uri, reactionId)
+            }
+        }
+    }
+
     private fun rebuildMessageReactions(messageId: String) {
         val accountId = currentAccountId ?: return
         val conversationId = currentConversationId ?: return
@@ -1176,6 +1200,7 @@ class ChatViewModel(
                     count = list.size,
                     isMine = list.any { !it.isIncoming },
                     reactionIds = list.mapNotNull { it.messageId },
+                    myReactionIds = list.filter { !it.isIncoming }.mapNotNull { it.messageId },
                 )
             }
 

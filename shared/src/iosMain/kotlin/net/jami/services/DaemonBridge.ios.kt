@@ -1206,8 +1206,12 @@ private fun JBSwarmMessage.toKotlinSwarmMessage(): SwarmMessage {
     // reactions there resolve a contact from the emoji string. That looks like a real
     // Android bug; it is deliberately not copied here.
     val reactionsMap = mutableMapOf<String, MutableList<String>>()
+    val reactionEntries = mutableListOf<Map<String, String>>()
     (this.reactions as? List<*>)?.forEach { entry ->
         val reaction = entry as? Map<*, *> ?: return@forEach
+        reactionEntries.add(
+            reaction.entries.mapNotNull { (k, v) -> (k as? String)?.let { key -> (v as? String)?.let { key to it } } }.toMap()
+        )
         val emoji = reaction["body"] as? String ?: return@forEach
         val author = reaction["author"] as? String ?: return@forEach
         reactionsMap.getOrPut(emoji) { mutableListOf() }.add(author)
@@ -1219,6 +1223,7 @@ private fun JBSwarmMessage.toKotlinSwarmMessage(): SwarmMessage {
         linearizedParent = this.replyTo ?: "",
         body = bodyMap,
         reactions = reactionsMap,
+        reactionEntries = reactionEntries,
         editions = this.editions.toKotlinMapList(),
         status = statusMap
     )

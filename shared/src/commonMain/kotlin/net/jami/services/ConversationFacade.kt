@@ -1641,8 +1641,23 @@ class ConversationFacade(
         interaction.setSwarmInfo(conversation.uri.rawRingId, message.id, message.linearizedParent.ifEmpty { null })
         interaction.statusMap = message.status.mapValues { Interaction.MessageStates.fromInt(it.value) }
 
-        // Populate reactions from the history snapshot provided by the daemon
-        if (message.reactions.isNotEmpty()) {
+        // Populate reactions from the history snapshot provided by the daemon. Prefer the full
+        // entries: they carry each reaction's message id, needed to remove one later.
+        if (message.reactionEntries.isNotEmpty()) {
+            val reactionInteractions = message.reactionEntries.mapNotNull { entry ->
+                val emoji = entry["body"]?.ifEmpty { null } ?: return@mapNotNull null
+                val authorUri = net.jami.model.Uri.fromString(entry["author"] ?: "")
+                val reactionContact = conversation.findContact(authorUri)
+                    ?: account.getContactFromCache(authorUri)
+                Interaction().apply {
+                    body = emoji
+                    this.contact = reactionContact
+                    isIncoming = !reactionContact.isUser
+                    entry["id"]?.ifEmpty { null }?.let { setSwarmInfo(conversation.uri.rawRingId, it, null) }
+                }
+            }
+            interaction.addReactions(reactionInteractions)
+        } else if (message.reactions.isNotEmpty()) {
             val reactionInteractions = message.reactions.flatMap { (emoji, authors) ->
                 authors.mapNotNull { authorUri ->
                     val reactionContact = conversation.findContact(net.jami.model.Uri.fromString(authorUri))

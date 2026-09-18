@@ -13,6 +13,12 @@ data class SwarmMessage(
     val linearizedParent: String,
     val body: Map<String, String>,
     val reactions: Map<String, List<String>> = emptyMap(),
+    /**
+     * The daemon's reaction messages as-is ("id", "body" = emoji, "author", …). Unlike
+     * [reactions] they keep each reaction's own message id, which is needed to remove one
+     * (editConversationMessage with an empty body, as jami-android-client does).
+     */
+    val reactionEntries: List<Map<String, String>> = emptyList(),
     val editions: List<Map<String, String>> = emptyList(),
     val status: Map<String, Int> = emptyMap()
 ) {

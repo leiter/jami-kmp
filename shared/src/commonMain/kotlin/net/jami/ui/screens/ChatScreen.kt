@@ -84,6 +84,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.jami.ui.utils.extractVideoThumbnail
@@ -522,6 +523,7 @@ fun ChatScreen(
                                     viewModel.updateInput(originalText)
                                 },
                                 onReact = { emoji -> viewModel.sendReaction(message.id, emoji) },
+                                onRemoveReaction = { emoji -> viewModel.removeReaction(message.id, emoji) },
                                 onRetry = { viewModel.retryMessage(message.id) },
                             )
                         }
@@ -734,6 +736,7 @@ private fun ChatBubble(
     onDelete: () -> Unit = {},
     onEdit: (String) -> Unit = {},
     onReact: (String) -> Unit = {},
+    onRemoveReaction: (String) -> Unit = {},
     onRetry: () -> Unit = {},
 ) {
     val isOutgoing = message.isOutgoing
@@ -858,49 +861,6 @@ private fun ChatBubble(
                 }
             }
 
-            // "(edited)" label — shown beneath the bubble when this message has been edited
-            if (message.isEdited) {
-                Text(
-                    text = stringResource(Res.string.edited_message_label),
-                    style = JamiTheme.typography.labelSmall,
-                    color = JamiTheme.colors.onSurfaceVariant,
-                    textAlign = if (isOutgoing) TextAlign.End else TextAlign.Start,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 2.dp),
-                )
-            }
-
-            // Link preview card — shown below the bubble when the message contains a URL
-            // and the user has link previews enabled
-            if (showLinkPreviews && message.type == net.jami.ui.viewmodel.MessageType.Text
-                && message.text.isNotEmpty()) {
-                val urls = remember(message.text) {
-                    net.jami.ui.utils.extractUrls(message.text)
-                }
-                val firstUrl = urls.firstOrNull()
-                if (firstUrl != null) {
-                    var linkPreview by remember(firstUrl) { mutableStateOf<net.jami.ui.utils.LinkPreview?>(null) }
-                    var previewLoading by remember(firstUrl) { mutableStateOf(true) }
-
-                    LaunchedEffect(firstUrl) {
-                        linkPreview = net.jami.ui.utils.fetchLinkPreview(firstUrl)
-                        previewLoading = false
-                    }
-
-                    if (!previewLoading && linkPreview != null) {
-                        LinkPreviewCard(
-                            preview = linkPreview!!,
-                            bubbleColor = bubbleColor,
-                            textColor = textColor,
-                            modifier = Modifier
-                                .padding(top = JamiTheme.spacing.xxs)
-                                .then(if (isOutgoing) Modifier else Modifier),
-                        )
-                    }
-                }
-            }
-
             // Context menu (long-press)
             DropdownMenu(
                 expanded = showMenu,
@@ -963,16 +923,59 @@ private fun ChatBubble(
             }
         }
 
-        // Reaction pills below the bubble
+        // Reaction chip attached to the bubble's bottom edge (jami-android-client reaction_chip)
         if (message.reactions.isNotEmpty()) {
-            Row(
-                modifier = Modifier.padding(top = 3.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                message.reactions.forEach { reaction ->
-                    ReactionPill(
-                        reaction = reaction,
-                        onClick = { onReact(reaction.emoji) },
+            ReactionChip(
+                reactions = message.reactions,
+                outlineColor = bubbleColor,
+                onReact = onReact,
+                onRemoveReaction = onRemoveReaction,
+                modifier = Modifier.padding(
+                    start = if (isOutgoing) 0.dp else 8.dp,
+                    end = if (isOutgoing) 8.dp else 0.dp,
+                ),
+            )
+        }
+
+        // Below the bubble (previously inside its Box, so they were drawn over the bubble).
+        // "(edited)" label — shown beneath the bubble when this message has been edited
+        if (message.isEdited) {
+            Text(
+                text = stringResource(Res.string.edited_message_label),
+                style = JamiTheme.typography.labelSmall,
+                color = JamiTheme.colors.onSurfaceVariant,
+                textAlign = if (isOutgoing) TextAlign.End else TextAlign.Start,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 2.dp),
+            )
+        }
+
+        // Link preview card — shown below the bubble when the message contains a URL
+        // and the user has link previews enabled
+        if (showLinkPreviews && message.type == net.jami.ui.viewmodel.MessageType.Text
+            && message.text.isNotEmpty()) {
+            val urls = remember(message.text) {
+                net.jami.ui.utils.extractUrls(message.text)
+            }
+            val firstUrl = urls.firstOrNull()
+            if (firstUrl != null) {
+                var linkPreview by remember(firstUrl) { mutableStateOf<net.jami.ui.utils.LinkPreview?>(null) }
+                var previewLoading by remember(firstUrl) { mutableStateOf(true) }
+
+                LaunchedEffect(firstUrl) {
+                    linkPreview = net.jami.ui.utils.fetchLinkPreview(firstUrl)
+                    previewLoading = false
+                }
+
+                if (!previewLoading && linkPreview != null) {
+                    LinkPreviewCard(
+                        preview = linkPreview!!,
+                        bubbleColor = bubbleColor,
+                        textColor = textColor,
+                        modifier = Modifier
+                            .padding(top = JamiTheme.spacing.xxs)
+                            .then(if (isOutgoing) Modifier else Modifier),
                     )
                 }
             }
@@ -1829,29 +1832,70 @@ private fun LinkPreviewCard(
 }
 
 /**
- * A compact emoji + count chip shown below a message bubble.
- * Highlighted with a primary-colour border when the current user has reacted.
+ * All reactions of a message in one chip that overlaps the bottom edge of the bubble, like
+ * jami-android-client's `reaction_chip` (item_conv_msg_*.xml: marginTop -4dp, 8dp in from the
+ * bubble's start/end, background colour with a 2dp outline in the bubble colour, 5dp corners).
+ * Text follows ConversationAdapter.configureReactions: emojis by descending count, the count
+ * appended only when above 1 (e.g. "👍3😍").
+ *
+ * Tapping opens the individual reactions, your own highlighted: picking one of yours removes
+ * it (jami-android-client's reaction visualizer), picking another adds that emoji as yours.
  */
 @Composable
-private fun ReactionPill(reaction: ReactionGroup, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        color = if (reaction.isMine) JamiTheme.colors.primary.copy(alpha = 0.15f)
-                else JamiTheme.colors.surfaceVariant,
-        border = if (reaction.isMine) BorderStroke(1.dp, JamiTheme.colors.primary) else null,
+private fun ReactionChip(
+    reactions: List<ReactionGroup>,
+    outlineColor: Color,
+    onReact: (String) -> Unit,
+    onRemoveReaction: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val sorted = remember(reactions) { reactions.sortedByDescending { it.count } }
+    val label = remember(sorted) {
+        sorted.joinToString("") { if (it.count > 1) "${it.emoji}${it.count}" else it.emoji }
+    }
+    var expanded by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(5.dp)
+
+    Box(
+        modifier = modifier
+            // Overlap the bubble by 4dp without leaving a matching gap below (negative margin).
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                val overlap = 4.dp.roundToPx()
+                layout(placeable.width, (placeable.height - overlap).coerceAtLeast(0)) {
+                    placeable.place(0, -overlap)
+                }
+            },
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
+        Surface(
+            onClick = { expanded = true },
+            shape = shape,
+            color = JamiTheme.colors.surface,
+            border = BorderStroke(2.dp, outlineColor),
         ) {
-            Text(text = reaction.emoji, fontSize = 14.sp)
-            if (reaction.count > 1) {
-                Text(
-                    text = reaction.count.toString(),
-                    style = JamiTheme.typography.labelSmall,
-                    color = if (reaction.isMine) JamiTheme.colors.primary else JamiTheme.colors.onSurfaceVariant,
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                maxLines = 1,
+                color = JamiTheme.colors.onSurface,
+                modifier = Modifier.padding(5.dp),
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            sorted.forEach { reaction ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = if (reaction.count > 1) "${reaction.emoji}  ${reaction.count}" else reaction.emoji,
+                            color = if (reaction.isMine) JamiTheme.colors.primary else JamiTheme.colors.onSurface,
+                        )
+                    },
+                    onClick = {
+                        expanded = false
+                        // Like jami-android-client's reaction visualizer: your own reaction is
+                        // removed; someone else's is added as yours.
+                        if (reaction.isMine) onRemoveReaction(reaction.emoji) else onReact(reaction.emoji)
+                    },
                 )
             }
         }

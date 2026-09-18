@@ -129,9 +129,11 @@ fun SwigSwarmMessage.toKotlinSwarmMessage(): SwarmMessage {
     // values, which does not match that consumer: history reactions rendered with the
     // reaction id as their body and tried to resolve a contact from an emoji string.
     val reactionsMap = mutableMapOf<String, MutableList<String>>()
+    val reactionEntries = mutableListOf<Map<String, String>>()
     reactions?.let { rxns ->
         for (i in 0 until rxns.size) {
             val reactionMap = rxns[i].toNative()
+            reactionEntries.add(reactionMap)
             val emoji = reactionMap["body"] ?: continue
             val author = reactionMap["author"] ?: continue
             reactionsMap.getOrPut(emoji) { mutableListOf() }.add(author)
@@ -152,6 +154,7 @@ fun SwigSwarmMessage.toKotlinSwarmMessage(): SwarmMessage {
         linearizedParent = linearizedParent ?: "",
         body = body?.toNativeFromUtf8() ?: emptyMap(),
         reactions = reactionsMap,
+        reactionEntries = reactionEntries,
         editions = editions?.toNative() ?: emptyList(),
         status = statusMap
     )
