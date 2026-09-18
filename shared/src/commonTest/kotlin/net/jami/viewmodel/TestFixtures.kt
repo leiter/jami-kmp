@@ -16,6 +16,8 @@
  */
 package net.jami.viewmodel
 
+import net.jami.testHardwareService
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.TestScope
@@ -81,7 +83,7 @@ fun makeAccountService(
     // Use a child SupervisorJob so the service's infinite flow collectors don't
     // leave uncompleted coroutines in the enclosing TestScope.
     // But inherit the test's coroutine context so advanceUntilIdle() works.
-    return AccountService(stub, HardwareService(), StubDeviceRuntimeService(), scope.isolated())
+    return AccountService(stub, testHardwareService(), StubDeviceRuntimeService(), scope.isolated())
 }
 
 /**
@@ -127,7 +129,7 @@ fun makeConversationFacade(
     accountService = accountService,
     contactService = contactService,
     notificationService = StubNotificationService(),
-    hardwareService = HardwareService(),
+    hardwareService = testHardwareService(),
     deviceRuntimeService = StubDeviceRuntimeService(),
     preferencesService = StubPreferencesService(),
     daemonBridge = stub,

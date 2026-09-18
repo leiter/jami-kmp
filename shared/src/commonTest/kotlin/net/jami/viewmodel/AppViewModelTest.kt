@@ -16,6 +16,8 @@
  */
 package net.jami.viewmodel
 
+import net.jami.testBiometricService
+
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.model.ConfigKey
@@ -35,7 +37,7 @@ class AppViewModelTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
         // Do NOT advance — state should still be Loading before coroutines run
-        val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
+        val vm = AppViewModel(accountService, testBiometricService(), viewModelScope())
         assertIs<AppState.Loading>(vm.appState.value)
     }
 
@@ -44,7 +46,7 @@ class AppViewModelTest {
         val stub = StubDaemonBridge()
         // accountIds defaults to empty list
         val accountService = makeAccountService(stub, this)
-        val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
+        val vm = AppViewModel(accountService, testBiometricService(), viewModelScope())
         // AppViewModel deliberately waits for the daemon to report accounts ready before
         // leaving Loading — it prevents the Welcome screen flashing before HasAccounts on a
         // cold start. loadAccounts() alone does not signal that; loadAccountsFromDaemon does.
@@ -61,7 +63,7 @@ class AppViewModelTest {
             ConfigKey.ACCOUNT_TYPE.key to "RING"
         )
         val accountService = makeAccountService(stub, this)
-        val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
+        val vm = AppViewModel(accountService, testBiometricService(), viewModelScope())
         // AppViewModel deliberately waits for the daemon to report accounts ready before
         // leaving Loading — it prevents the Welcome screen flashing before HasAccounts on a
         // cold start. loadAccounts() alone does not signal that; loadAccountsFromDaemon does.
@@ -79,7 +81,7 @@ class AppViewModelTest {
             ConfigKey.ACCOUNT_REGISTRATION_STATUS.key to "REGISTERED"
         )
         val accountService = makeAccountService(stub, this)
-        val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
+        val vm = AppViewModel(accountService, testBiometricService(), viewModelScope())
         // AppViewModel deliberately waits for the daemon to report accounts ready before
         // leaving Loading — it prevents the Welcome screen flashing before HasAccounts on a
         // cold start. loadAccounts() alone does not signal that; loadAccountsFromDaemon does.
@@ -99,7 +101,7 @@ class AppViewModelTest {
             stub.accountDetails[id] = mapOf(ConfigKey.ACCOUNT_TYPE.key to "RING")
         }
         val accountService = makeAccountService(stub, this)
-        val vm = AppViewModel(accountService, BiometricService(), viewModelScope())
+        val vm = AppViewModel(accountService, testBiometricService(), viewModelScope())
         // AppViewModel deliberately waits for the daemon to report accounts ready before
         // leaving Loading — it prevents the Welcome screen flashing before HasAccounts on a
         // cold start. loadAccounts() alone does not signal that; loadAccountsFromDaemon does.
@@ -112,7 +114,7 @@ class AppViewModelTest {
     fun onClearedDoesNotThrow() = runTest {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
-        val vm = AppViewModel(accountService, BiometricService(), disposableScope())
+        val vm = AppViewModel(accountService, testBiometricService(), disposableScope())
         vm.onCleared()
     }
 }

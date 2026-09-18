@@ -16,6 +16,8 @@
  */
 package net.jami.services
 
+import net.jami.testHardwareService
+
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.model.AccountConfig
@@ -52,7 +54,7 @@ class CallServiceIntegrationTest {
         scope: kotlinx.coroutines.test.TestScope
     ): Pair<AccountService, CallService> {
         val serviceScope = scope.serviceScope()
-        val accountService = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), serviceScope)
+        val accountService = AccountService(stub, testHardwareService(), StubDeviceRuntimeService(), serviceScope)
         val callService = CallService(stub, accountService, net.jami.repository.SettingsRepository(stub, serviceScope), serviceScope)
         return accountService to callService
     }

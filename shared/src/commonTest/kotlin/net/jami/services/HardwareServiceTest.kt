@@ -16,6 +16,8 @@
  */
 package net.jami.services
 
+import net.jami.testHardwareService
+
 import net.jami.services.expect.AudioOutput
 import net.jami.services.expect.AudioOutputType
 import net.jami.services.expect.AudioState
@@ -146,7 +148,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubSpeakerToggle() {
-        val stub = HardwareService()
+        val stub = testHardwareService()
 
         assertFalse(stub.isSpeakerphoneOn())
 
@@ -160,7 +162,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubConnectivityChanged() = runTest {
-        val stub = HardwareService()
+        val stub = testHardwareService()
 
         // Initial state should be connected (true)
         val initialState = stub.connectivityState.first()
@@ -180,7 +182,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubVideoOperations() {
-        val stub = HardwareService()
+        val stub = testHardwareService()
 
         // These should not throw
         assertFalse(stub.hasInput("test"))
@@ -194,7 +196,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubSurfaceOperations() {
-        val stub = HardwareService()
+        val stub = testHardwareService()
 
         // These should not throw
         stub.addVideoSurface("sink1", Any())
@@ -209,7 +211,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubMediaHandler() {
-        val stub = HardwareService()
+        val stub = testHardwareService()
 
         // These should not throw
         stub.startMediaHandler("handler1")
@@ -220,7 +222,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubAudioOperations() {
-        val stub = HardwareService()
+        val stub = testHardwareService()
 
         stub.updateAudioState(null, createDummyCall(), true, false)
         stub.closeAudioState()
@@ -232,7 +234,7 @@ class HardwareServiceTest {
 
     @Test
     fun testStubPreviewSettings() {
-        val stub = HardwareService()
+        val stub = testHardwareService()
 
         stub.setPreviewSettings()
         stub.setPreviewSettings(mapOf("camera:0" to mapOf("width" to "1920")))

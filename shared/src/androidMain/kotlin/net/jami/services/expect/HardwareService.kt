@@ -46,8 +46,10 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     private val _connectivityState = MutableStateFlow(true)
     private val _maxResolutions = MutableStateFlow<Pair<Int?, Int?>>(null to null)
 
-    private val audioManager: AudioManager =
+    // Lazy: nothing touches the Context at construction (lets JVM unit tests build one).
+    private val audioManager: AudioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    }
     private val daemonBridge: DaemonBridge by inject()
     private val cameraService: CameraService by inject()
     private val settingsRepository: SettingsRepository by inject()

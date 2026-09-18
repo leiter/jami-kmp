@@ -16,6 +16,8 @@
  */
 package net.jami.viewmodel
 
+import net.jami.testAudioRecorderService
+
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.services.StubDaemonBridge
@@ -40,7 +42,7 @@ class ChatViewModelTest {
         // The ViewModel's own collectors must not be children of the TestScope either, or
         // runTest waits on them and fails with UncompletedCoroutinesError after a minute.
         val vmScope = scope.viewModelScope()
-        return ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, vmScope), AudioRecorderService(), vmScope)
+        return ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, vmScope), testAudioRecorderService(), vmScope)
     }
 
     @Test
@@ -89,7 +91,7 @@ class ChatViewModelTest {
         val contactService = makeContactService(stub, accountService, this)
         val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, viewModelScope()), AudioRecorderService(), viewModelScope())
+        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, viewModelScope()), testAudioRecorderService(), viewModelScope())
         vm.updateInput("Hello")
         // Load a conversation first so currentAccountId/conversationId are set
         vm.loadConversation("conv_001")
@@ -178,7 +180,7 @@ class ChatViewModelTest {
         val contactService = makeContactService(stub, accountService, this)
         val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, disposableScope()), AudioRecorderService(), disposableScope())
+        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, disposableScope()), testAudioRecorderService(), disposableScope())
         vm.onCleared()
     }
 }

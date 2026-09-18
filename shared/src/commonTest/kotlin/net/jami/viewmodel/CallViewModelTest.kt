@@ -16,6 +16,8 @@
  */
 package net.jami.viewmodel
 
+import net.jami.testHardwareService
+
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -43,7 +45,7 @@ class CallViewModelTest {
         val accountService = makeAccountService(stub, scope)
         val contactService = makeContactService(stub, accountService, scope)
         val callService = makeCallService(stub, accountService, scope = scope)
-        val vm = CallViewModel(callService, accountService, contactService, HardwareService(), StubDeviceRuntimeService(), scope)
+        val vm = CallViewModel(callService, accountService, contactService, testHardwareService(), StubDeviceRuntimeService(), scope)
         return Triple(vm, callService, accountService)
     }
 

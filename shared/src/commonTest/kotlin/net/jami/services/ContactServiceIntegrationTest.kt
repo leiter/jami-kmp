@@ -16,6 +16,8 @@
  */
 package net.jami.services
 
+import net.jami.testHardwareService
+
 import kotlinx.coroutines.test.runTest
 import net.jami.model.AccountConfig
 import net.jami.model.ConfigKey
@@ -48,7 +50,7 @@ class ContactServiceIntegrationTest {
         stub: StubDaemonBridge,
         scope: kotlinx.coroutines.test.TestScope
     ): Pair<AccountService, ContactService> {
-        val accountService = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), scope.testServiceScope())
+        val accountService = AccountService(stub, testHardwareService(), StubDeviceRuntimeService(), scope.testServiceScope())
         val contactService = ContactService(scope, accountService, stub, VCardService(StubDeviceRuntimeService()))
         return accountService to contactService
     }

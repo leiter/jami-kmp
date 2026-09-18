@@ -314,6 +314,19 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
 
 ## Testing
 
+- [x] **Unit tests compile and pass on both JVM targets (2026-09-18)** — `:shared:desktopTest` 617/617,
+  `:shared:testDebugUnitTest` 530/530. The Android unit-test build failed with 35 × "No value passed
+  for parameter 'context'": common tests constructed Android actuals (`HardwareService`,
+  `SystemContactsService`, `BiometricService`, `AudioRecorderService`) without a Context. They now
+  use per-platform `test*()` helpers (`commonTest/.../TestHardwareService.kt`,
+  `TestPlatformServices.kt`) that pass a placeholder Context on Android
+  (`unitTests.isReturnDefaultValues = true`); Android's `HardwareService` reads its AudioManager
+  lazily. Four classes (`HardwareServiceTest`, `AppSettingsViewModelTest`, `AppViewModelTest`,
+  `CallViewModelTest`) need an Android runtime there (Koin-backed LocalPrefs, AudioManager,
+  MediaProjection) and are excluded from the Android unit-test task only — they run on desktop.
+- [ ] **Robolectric for the Android unit tests** — would let the four excluded classes run against the
+  Android actuals too.
+
 - [ ] Run ViewModel tests: `./gradlew :shared:desktopTest --tests "net.jami.viewmodel.*"`
 - [ ] Run integration tests: `./gradlew :shared:desktopTest --tests "net.jami.services.*IntegrationTest"`
 - [ ] Run full test suite: `./gradlew :shared:desktopTest`

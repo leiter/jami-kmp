@@ -213,6 +213,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // JVM unit tests run against android.jar stubs: return defaults instead of throwing, so
+    // common tests can construct Android service actuals (e.g. HardwareService's placeholder Context).
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+
     // Include SWIG-generated Java sources and native libraries
     sourceSets {
         getByName("main") {
@@ -227,6 +233,19 @@ android {
         abortOnError = false
         ignoreWarnings = true
         quiet = true
+    }
+}
+
+// Android JVM unit tests run the common tests against the Android actuals, but without an Android
+// runtime (no Robolectric): these classes exercise Android platform services that need Koin-backed
+// SharedPreferences (LocalPrefs), AudioManager or MediaProjection and cannot run there. They run on
+// the desktop target (`:shared:desktopTest`), where those services are plain implementations.
+tasks.withType<Test>().matching { it.name.endsWith("UnitTest") }.configureEach {
+    filter {
+        excludeTestsMatching("net.jami.services.HardwareServiceTest")
+        excludeTestsMatching("net.jami.viewmodel.AppSettingsViewModelTest")
+        excludeTestsMatching("net.jami.viewmodel.AppViewModelTest")
+        excludeTestsMatching("net.jami.viewmodel.CallViewModelTest")
     }
 }
 

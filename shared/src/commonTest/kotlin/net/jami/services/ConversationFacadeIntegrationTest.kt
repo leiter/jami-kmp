@@ -16,6 +16,8 @@
  */
 package net.jami.services
 
+import net.jami.testHardwareService
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -59,7 +61,7 @@ class ConversationFacadeIntegrationTest {
         stub: StubDaemonBridge,
         scope: kotlinx.coroutines.test.TestScope
     ): Triple<AccountService, ContactService, ConversationFacade> {
-        val accountService = AccountService(stub, net.jami.services.expect.HardwareService(), StubDeviceRuntimeService(), scope.testServiceScope())
+        val accountService = AccountService(stub, testHardwareService(), StubDeviceRuntimeService(), scope.testServiceScope())
         val callService = CallService(stub, accountService, net.jami.repository.SettingsRepository(stub, scope), scope)
         val contactService = ContactService(scope, accountService, stub, VCardService(StubDeviceRuntimeService()))
         val facadeScope = scope.facadeScope()
@@ -69,7 +71,7 @@ class ConversationFacadeIntegrationTest {
             accountService = accountService,
             contactService = contactService,
             notificationService = StubNotificationService(),
-            hardwareService = net.jami.services.expect.HardwareService(),
+            hardwareService = testHardwareService(),
             deviceRuntimeService = StubDeviceRuntimeService(),
             preferencesService = StubPreferencesService(),
             daemonBridge = stub,

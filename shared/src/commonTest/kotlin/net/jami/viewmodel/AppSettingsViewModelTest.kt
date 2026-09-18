@@ -16,6 +16,8 @@
  */
 package net.jami.viewmodel
 
+import net.jami.testSystemContactsService
+
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.model.settings.ConversationSort
@@ -60,7 +62,7 @@ class AppSettingsViewModelTest {
         val repo = makeSettingsRepository(stub, scope)
         val accountService = makeAccountService(stub, scope)
         val contactService = makeContactService(stub, accountService, scope)
-        val syncService = SystemContactsSyncService(contactService, SystemContactsService())
+        val syncService = SystemContactsSyncService(contactService, testSystemContactsService())
         return AppSettingsViewModel(repo, accountService, contactService, syncService, scope)
     }
 
@@ -351,7 +353,7 @@ class AppSettingsViewModelTest {
         val repo = makeSettingsRepository(stub, this)
         val accountService = makeAccountService(stub, this)
         val contactService = makeContactService(stub, accountService, this)
-        val syncService = SystemContactsSyncService(contactService, SystemContactsService())
+        val syncService = SystemContactsSyncService(contactService, testSystemContactsService())
         val vm = AppSettingsViewModel(repo, accountService, contactService, syncService, disposableScope())
         vm.onCleared()
     }
