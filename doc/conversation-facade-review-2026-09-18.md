@@ -62,20 +62,29 @@ and a BLOCKED member stays listed with that role.
 
 ## Medium
 
-### 6. ⬜ Read receipts off also means no read sync between your own devices
+### 6. ✅ Read receipts off also means no read sync between your own devices
 With `privacySettings.readReceipts` off, `readMessages` skips `setMessageDisplayed` entirely. The
 reference always calls it and lets the daemon decide whether to send a receipt to the peer, based
 on the account's read-receipt setting. Consider setting that daemon account setting instead, and
 always calling `setMessageDisplayed`.
 
-### 7. ⬜ Message updates, status changes and typing are not applied to the conversation model
+*Fix:* matches the reference. The facade always calls `setMessageDisplayed`, and the per-account
+`Account.sendReadReceipt` (Account → Messages) decides whether the peer gets a receipt. The extra
+app-wide toggle in App Settings → Privacy was removed from the screen. Its stored value
+(`privacySettings.readReceipts`) and the view-model toggle are left in place, unused.
+
+### 7. ✅ Message updates, status changes and typing are not applied to the conversation model
 `onMessageUpdated`, `onAccountMessageStatusChanged` and `onComposingStatusChanged` only emit
 events. The reference also updates the model: `conversation.updateSwarmMessage`,
 `updateSwarmInteraction` and `account.composingStatusChanged`. `ChatViewModel` patches its own
 UI state, but the model stays stale. List previews and a re-opened chat can therefore show text
 from before an edit and old sent/read ticks.
 
-### 8. ⬜ `loadSmartlist` re-runs far more often than the reference
+*Fix:* ported `Conversation.updateSwarmMessage` and `updateSwarmInteraction` from the reference.
+`onMessageUpdated` and `onAccountMessageStatusChanged` now apply the change to the model before
+emitting their event. `onComposingStatusChanged` calls `conversation.composingStatusChanged`.
+
+### 8. ✅ `loadSmartlist` re-runs far more often than the reference
 The reference loads once per account and caches the result (`account.historyLoader`). jami-kmp
 reloads fully:
 - on account selection;
@@ -93,12 +102,27 @@ Each reload:
 - re-primes `loadMore(8)` for every conversation;
 - never removes conversations the daemon no longer lists.
 
-### 9. ⬜ The conversation list screen isn't notified when a reload finishes
+*Fix:* the triggers stay (they pick up conversations pushed by peers), but the side effects now
+run once:
+- presence subscription once per contact;
+- `lookupAddress` once per unresolved contact (the `REGISTERED` handler still retries);
+- the `loadMore(8)` preview once per conversation, shared with `onConversationReady`.
+
+`getAccountWithSmartlist` loads only if the account hasn't been loaded yet, like the reference's
+cached `historyLoader`. Swarms the daemon no longer lists are removed, and `ConversationRemoved`
+is emitted for them. Syncing and Request entries are kept, because they can be local placeholders.
+
+### 9. ✅ The conversation list screen isn't notified when a reload finishes
 `ConversationsViewModel` pulls `account.getConversations()` in response to a few events.
 `loadSmartlist` publishes to `_conversationList`, which no screen reads, and emits no event when
 it's done. A reload triggered by `REGISTERED` or a network change doesn't reach the list, and the
 initial load races `AccountsChanged`. `ConversationEvent.MessagesRead` is emitted but
 `ConversationsViewModel` ignores it, so unread items stay bold.
+
+*Fix:* `loadSmartlist` emits a new `ConversationEvent.ConversationsLoaded` when it finishes.
+`ConversationsViewModel` reloads on it and on `MessagesRead`. New events emitted from inside
+`loadSmartlist` are launched rather than awaited. `_conversationEvents` is unbuffered, and
+`loadSmartlist` can run inside a subscriber on the send path, which would then wait on itself.
 
 ## Low — stubs, unused code, small differences
 

@@ -520,6 +520,48 @@ class Conversation(
         }
     }
 
+    /**
+     * Apply an updated swarm message (edit, deletion, reactions) to the message already in the
+     * model. Ported from libjamiclient `Conversation.updateSwarmMessage`.
+     */
+    suspend fun updateSwarmMessage(interaction: Interaction) {
+        val existing = interaction.messageId?.let { getMessage(it) } ?: return
+        interaction.parentId?.let { existing.updateParent(it) }
+        existing.replaceEdits(interaction.history)
+        existing.replaceReactions(interaction.reactions)
+        existing.body = interaction.body
+        interaction.edit?.let { existing.edit = it }
+        if (interaction is DataTransfer && interaction.fileId == "") {
+            (existing as? DataTransfer)?.fileId = interaction.fileId
+            existing.transferStatus = Interaction.TransferStatus.FILE_REMOVED
+        }
+        _updatedElements.emit(Pair(existing, ElementStatus.UPDATE))
+    }
+
+    /**
+     * Record a per-peer delivery status for a swarm message. Ported from libjamiclient
+     * `Conversation.updateSwarmInteraction`.
+     */
+    suspend fun updateSwarmInteraction(
+        messageId: String,
+        contactUri: Uri,
+        newStatus: Interaction.MessageStates,
+    ) {
+        val interaction = messages[messageId] ?: return
+        if (newStatus == Interaction.MessageStates.DISPLAYED) {
+            findContact(contactUri)?.let { contact ->
+                if (!contact.isUser) setLastMessageDisplayed(contactUri.host, messageId)
+            }
+        } else if (newStatus != Interaction.MessageStates.SENDING) {
+            interaction.status = Interaction.InteractionStatus.SENDING
+        }
+        if (newStatus == Interaction.MessageStates.SUCCESS) {
+            setLastMessageSent(messageId)
+        }
+        interaction.statusMap = interaction.statusMap + (contactUri.host to newStatus)
+        _updatedElements.emit(Pair(interaction, ElementStatus.UPDATE))
+    }
+
     suspend fun removeInteraction(interaction: Interaction) {
         val removed = if (isSwarm) {
             messages.remove(interaction.messageId)?.let {

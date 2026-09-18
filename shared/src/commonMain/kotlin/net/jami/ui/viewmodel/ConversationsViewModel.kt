@@ -149,7 +149,11 @@ class ConversationsViewModel(
                     is ConversationEvent.MessageStatusChanged,
                     is ConversationEvent.ConversationReady,
                     is ConversationEvent.ConversationRemoved,
-                    is ConversationEvent.ConversationRequestReceived -> {
+                    is ConversationEvent.ConversationRequestReceived,
+                    // Unread styling after a chat was read, and the end of a facade smartlist
+                    // reload (REGISTERED / reconnect) that no other event reports.
+                    is ConversationEvent.MessagesRead,
+                    is ConversationEvent.ConversationsLoaded -> {
                         loadConversations()
                     }
                     else -> { /* Other events don't require list refresh */ }

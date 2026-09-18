@@ -114,6 +114,23 @@ class ConversationFacade(
     private val loadMutexes = mutableMapOf<String, Mutex>()
     private val loadGates = mutableMapOf<String, CompletableDeferred<Unit>>()
 
+    // ---- loadSmartlist idempotence (review finding #8) ----
+    // loadSmartlist re-runs on many triggers (selection, AccountsChanged, REGISTERED, reconnect),
+    // unlike libjamiclient which loads once. These make the side effects run once per
+    // account/contact/conversation instead of on every run. Keys are "accountId:id".
+    private val smartlistLoaded = mutableSetOf<String>()      // accountIds loaded at least once
+    private val subscribedBuddies = mutableSetOf<String>()    // daemon refcounts subscribeBuddy
+    private val requestedLookups = mutableSetOf<String>()     // REGISTERED handler retries these
+    private val primedPreviews = mutableSetOf<String>()       // loadMore(8) already requested
+
+    /** Adds [key] to [set] under the coordination lock; true only the first time. */
+    private fun firstTime(set: MutableSet<String>, key: String): Boolean =
+        synchronized(loadCoordLock) { set.add(key) }
+
+    private fun forget(set: MutableSet<String>, key: String) {
+        synchronized(loadCoordLock) { set.remove(key) }
+    }
+
     private fun loadMutexFor(accountId: String): Mutex =
         synchronized(loadCoordLock) { loadMutexes.getOrPut(accountId) { Mutex() } }
 
@@ -281,7 +298,11 @@ class ConversationFacade(
             markAccountLoaded(accountId)
         }
         awaitAccountLoaded(accountId)
-        loadSmartlist(account)
+        // Like libjamiclient's cached historyLoader: the send/lookup paths only need the
+        // smartlist to have been loaded once; later refreshes come from the account triggers.
+        if (synchronized(loadCoordLock) { accountId !in smartlistLoaded }) {
+            loadSmartlist(account)
+        }
         return account
     }
 
@@ -309,7 +330,6 @@ class ConversationFacade(
 
     /**
      * Mark messages as read for a conversation.
-     * Sends read receipts only if enabled in privacy settings.
      */
     suspend fun readMessages(
         account: Account,
@@ -318,10 +338,10 @@ class ConversationFacade(
     ): String? {
         val lastMessage = readMessagesInternal(conversation) ?: return null
 
-        // Send read receipt only if enabled in privacy settings
-        if (settingsRepository.privacySettings.value.readReceipts) {
-            accountService.setMessageDisplayed(account.accountId, conversation.uri, lastMessage)
-        }
+        // Always mark as displayed, like libjamiclient: the daemon syncs the read state to our
+        // other devices and decides from the account's Account.sendReadReceipt setting whether
+        // the peer gets a read receipt.
+        accountService.setMessageDisplayed(account.accountId, conversation.uri, lastMessage)
 
         if (cancelNotification) {
             notificationService.cancelTextNotification(account.accountId, conversation.uri)
@@ -754,7 +774,7 @@ class ConversationFacade(
                     // without opening the conversation (libjamiclient calls loadMore(conv, 8) during
                     // loadAccount). Fire-and-forget: a stuck daemon callback must not stall the whole
                     // smartlist load, so this is not awaited inline. loadMore() no-ops for Syncing.
-                    if (!isSyncing) {
+                    if (!isSyncing && firstTime(primedPreviews, "${account.accountId}:$convId")) {
                         scope.launch {
                             try {
                                 accountService.loadMore(conversation, SMARTLIST_PREVIEW_COUNT)
@@ -767,14 +787,37 @@ class ConversationFacade(
                     // Subscribe to presence and resolve registered names for each contact
                     for (contact in conversation.contacts) {
                         if (!contact.isUser) {
-                            contactService.subscribeBuddy(account.accountId, contact.uri, true)
-                            if (contact.username.isNullOrEmpty()) {
+                            val contactKey = "${account.accountId}:${contact.uri.rawRingId}"
+                            if (firstTime(subscribedBuddies, contactKey)) {
+                                contactService.subscribeBuddy(account.accountId, contact.uri, true)
+                            }
+                            if (contact.username.isNullOrEmpty() && firstTime(requestedLookups, contactKey)) {
                                 accountService.lookupAddress(account.accountId, contact.uri.rawRingId)
                             }
                         }
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "loadSmartlist: failed to load conversation $convId", e)
+                }
+            }
+
+            // Drop swarms the daemon no longer lists (e.g. removed on another device while we were
+            // offline). Syncing/Request entries are skipped: those can be local placeholders
+            // (AccountService.onContactAdded, requests) the daemon doesn't list yet.
+            val listed = conversationIds.toSet()
+            val stale = account.getConversations().filter { c ->
+                c.isSwarm && c.uri.rawRingId !in listed &&
+                    c.mode != Conversation.Mode.Syncing && c.mode != Conversation.Mode.Request
+            }
+            for (c in stale) {
+                val convId = c.uri.rawRingId
+                Log.i(TAG, "loadSmartlist: removing $convId, no longer listed by the daemon")
+                account.removeSwarm(convId)
+                forget(primedPreviews, "${account.accountId}:$convId")
+                // Launched, not awaited: _conversationEvents is unbuffered and loadSmartlist can
+                // run from inside a subscriber (send path), which would then wait on itself.
+                scope.launch {
+                    _conversationEvents.emit(ConversationEvent.ConversationRemoved(account.accountId, convId))
                 }
             }
             } else {
@@ -788,6 +831,11 @@ class ConversationFacade(
             val conversations = account.getConversations()
                 .sortedByDescending { it.lastEvent?.timestamp ?: 0L }
             _conversationList.value = ConversationList(conversations = conversations)
+            synchronized(loadCoordLock) { smartlistLoaded.add(account.accountId) }
+            // Tell list screens the reload finished (review finding #9) — they pull
+            // account.getConversations() and otherwise miss REGISTERED/reconnect reloads.
+            // Launched for the same reason as ConversationRemoved above.
+            scope.launch { _conversationEvents.emit(ConversationEvent.ConversationsLoaded(account.accountId)) }
 
             // Update sync state. A conversation the daemon still reports as `syncing=true` has its
             // git repo cloning / is not bootstrapped and has no usable sync connection yet — the
@@ -1245,11 +1293,13 @@ class ConversationFacade(
         // calls loadMore(conversation, 8)). Fire-and-forget: loadMore() suspends until the
         // SwarmLoaded callback, which is delivered through this same per-conversation queue, so
         // awaiting it here would deadlock.
-        scope.launch {
-            try {
-                accountService.loadMore(conversation, SMARTLIST_PREVIEW_COUNT)
-            } catch (e: Exception) {
-                Log.w(TAG, "onConversationReady: preview prime failed for $conversationId", e)
+        if (firstTime(primedPreviews, "$accountId:$conversationId")) {
+            scope.launch {
+                try {
+                    accountService.loadMore(conversation, SMARTLIST_PREVIEW_COUNT)
+                } catch (e: Exception) {
+                    Log.w(TAG, "onConversationReady: preview prime failed for $conversationId", e)
+                }
             }
         }
 
@@ -1270,6 +1320,7 @@ class ConversationFacade(
 
         // Remove from swarm conversations
         account.removeSwarm(conversationId)
+        forget(primedPreviews, "$accountId:$conversationId")
         scope.launch {
             _conversationEvents.emit(ConversationEvent.ConversationRemoved(accountId, conversationId))
         }
@@ -1377,9 +1428,7 @@ class ConversationFacade(
             // tell the daemon too, so the peer gets the read receipt and our other devices see it
             // as read (libjamiclient parseNewMessage). Opening the chat covers the earlier ones.
             val messageId = interaction.messageId
-            if (isIncoming && interaction.isRead && messageId != null &&
-                settingsRepository.privacySettings.value.readReceipts
-            ) {
+            if (isIncoming && interaction.isRead && messageId != null) {
                 accountService.setMessageDisplayed(accountId, conversation.uri, messageId)
             }
         }
@@ -1413,6 +1462,17 @@ class ConversationFacade(
     internal fun onMessageUpdated(accountId: String, conversationId: String, message: net.jami.model.SwarmMessage) {
         Log.d(TAG, "onMessageUpdated: $conversationId msgId=${message.id}")
         scope.launch {
+            // Apply the edit/deletion to the model too (libjamiclient swarmMessageUpdatedNow), so
+            // list previews and a re-opened chat don't keep the pre-edit text.
+            val account = accountService.getAccount(accountId)
+            val conversation = account?.getSwarm(conversationId)
+            if (account != null && conversation != null) {
+                try {
+                    conversation.updateSwarmMessage(swarmMessageToInteraction(account, conversation, message))
+                } catch (e: Exception) {
+                    Log.w(TAG, "onMessageUpdated: failed to apply ${message.id}", e)
+                }
+            }
             _conversationEvents.emit(ConversationEvent.MessageUpdated(accountId, conversationId, message))
         }
     }
@@ -1710,6 +1770,10 @@ class ConversationFacade(
     internal fun onAccountMessageStatusChanged(accountId: String, conversationId: String, messageId: String, contactId: String, status: Int) {
         Log.d(TAG, "onAccountMessageStatusChanged: $messageId status=$status")
         scope.launch {
+            // Record the per-peer status in the model (libjamiclient accountMessageStatusChanged).
+            accountService.getAccount(accountId)?.getSwarm(conversationId)?.updateSwarmInteraction(
+                messageId, Uri.fromString(contactId), Interaction.MessageStates.fromInt(status)
+            )
             _conversationEvents.emit(ConversationEvent.MessageStatusChanged(accountId, conversationId, messageId, contactId, status))
         }
     }
@@ -1719,6 +1783,11 @@ class ConversationFacade(
      */
     internal fun onComposingStatusChanged(accountId: String, conversationId: String, contactUri: String, status: Int) {
         Log.d(TAG, "onComposingStatusChanged: $contactUri status=$status")
+        accountService.getAccount(accountId)?.getSwarm(conversationId)?.let { conversation ->
+            conversation.findContact(Uri.fromString(contactUri))?.let { contact ->
+                conversation.composingStatusChanged(contact, Conversation.ComposingStatus.fromBoolean(status == 1))
+            }
+        }
         scope.launch {
             _conversationEvents.emit(ConversationEvent.ComposingStatusChanged(accountId, conversationId, contactUri, status))
         }
@@ -1958,6 +2027,11 @@ sealed class ConversationEvent {
     data class MessagesRead(
         val accountId: String,
         val conversationId: String,
+    ) : ConversationEvent()
+
+    /** A full smartlist (re)load for [accountId] finished; list screens should re-read. */
+    data class ConversationsLoaded(
+        val accountId: String
     ) : ConversationEvent()
 
     data class MessagesFound(

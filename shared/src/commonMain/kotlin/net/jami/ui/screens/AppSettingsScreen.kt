@@ -184,12 +184,8 @@ fun AppSettingsScreen(
             // ==================== Privacy ====================
             JamiSectionTitle(title = stringResource(Res.string.pref_category_privacy))
 
-            JamiToggle(
-                label = stringResource(Res.string.pref_read_receipts),
-                description = stringResource(Res.string.pref_read_receipts_description),
-                checked = state.isReadReceipts,
-                onCheckedChange = { viewModel.toggleReadReceipts() },
-            )
+            // No app-wide read-receipts toggle: like jami-android-client, receipts are controlled
+            // per account by the daemon's Account.sendReadReceipt (Account → Messages).
             JamiToggle(
                 label = stringResource(Res.string.pref_typing_title),
                 description = stringResource(Res.string.pref_typing_summary),
