@@ -1183,8 +1183,15 @@ class ConversationFacade(
 
     /**
      * Called when a conversation is ready to use.
+     *
+     * Mirrors libjamiclient `AccountService.conversationReadyNow`: the mode, profile and members
+     * are loaded *before* [Account.conversationStarted], because that call is what links a 1:1
+     * swarm to its contact (`contact.setConversationUri`) and drops the contact-keyed placeholder —
+     * with no members yet, `conversation.contact` is null and the link silently never happens.
+     * Runs on the per-conversation task queue (DaemonCallbacksImpl), so later events for this
+     * conversation are applied after it is fully set up.
      */
-    internal fun onConversationReady(accountId: String, conversationId: String) {
+    internal suspend fun onConversationReady(accountId: String, conversationId: String) {
         Log.d(TAG, "onConversationReady: $conversationId")
 
         val account = accountService.getAccount(accountId) ?: run {
@@ -1192,53 +1199,62 @@ class ConversationFacade(
             return
         }
 
-        // Get or create the conversation
-        var conversation = account.getSwarm(conversationId)
-        if (conversation == null) {
-            // Create new swarm conversation with default mode
-            conversation = account.newSwarm(conversationId, Conversation.Mode.OneToOne)
+        val info = try {
+            daemonBridge.getConversationInfo(accountId, conversationId)
+        } catch (e: Exception) {
+            Log.e(TAG, "onConversationReady: failed to load conversation info", e)
+            emptyMap()
+        }
+        val mode = when (info["mode"]) {
+            "0" -> Conversation.Mode.OneToOne
+            "1" -> Conversation.Mode.AdminInvitesOnly
+            "2" -> Conversation.Mode.InvitesOnly
+            "3" -> Conversation.Mode.Public
+            else -> Conversation.Mode.OneToOne
         }
 
-        // Mark as started (adds to active conversations)
-        account.conversationStarted(conversation)
+        val existing = account.getSwarm(conversationId)
+        val conversation = existing ?: account.newSwarm(conversationId, mode)
+        // Only pass a mode to conversationStarted() when it actually changes (e.g. Request/Syncing
+        // -> OneToOne), as the reference does.
+        val newMode = if (existing != null && existing.mode != mode) mode else null
 
-        // Load conversation info and members from daemon
+        val title = info["title"]
+        if (!title.isNullOrEmpty()) {
+            conversation.setProfile(Profile(title, null))
+        }
+
+        // Members first, so conversation.contact is resolvable when conversationStarted() runs.
+        try {
+            for (member in daemonBridge.getConversationMembers(accountId, conversationId)) {
+                val memberUri = member["uri"] ?: continue
+                val memberUriParsed = Uri.fromString(memberUri)
+                if (conversation.findContact(memberUriParsed) == null) {
+                    val contact = account.getContactFromCache(memberUriParsed)
+                    val role = MemberRole.fromString(member["role"] ?: "")
+                    conversation.addContact(contact, role)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "onConversationReady: failed to load members", e)
+        }
+
+        account.conversationStarted(conversation, newMode)
+
+        // Prime the last messages so the smartlist preview and lastEvent are populated (reference
+        // calls loadMore(conversation, 8)). Fire-and-forget: loadMore() suspends until the
+        // SwarmLoaded callback, which is delivered through this same per-conversation queue, so
+        // awaiting it here would deadlock.
         scope.launch {
             try {
-                val info = daemonBridge.getConversationInfo(accountId, conversationId)
-                val mode = when (info["mode"]) {
-                    "0" -> Conversation.Mode.OneToOne
-                    "1" -> Conversation.Mode.AdminInvitesOnly
-                    "2" -> Conversation.Mode.InvitesOnly
-                    "3" -> Conversation.Mode.Public
-                    else -> Conversation.Mode.OneToOne
-                }
-                conversation.setMode(mode)
-
-                // Set title if available
-                val title = info["title"]
-                if (!title.isNullOrEmpty()) {
-                    conversation.setProfile(Profile(title, null))
-                }
-
-                // Load members
-                val members = daemonBridge.getConversationMembers(accountId, conversationId)
-                for (member in members) {
-                    val memberUri = member["uri"] ?: continue
-                    val memberUriParsed = Uri.fromString(memberUri)
-                    if (conversation.findContact(memberUriParsed) == null) {
-                        val contact = account.getContactFromCache(memberUriParsed)
-                        val role = MemberRole.fromString(member["role"] ?: "")
-                        conversation.addContact(contact, role)
-                    }
-                }
-
-                _conversationEvents.emit(ConversationEvent.ConversationReady(accountId, conversationId))
-                Log.d(TAG, "onConversationReady: loaded conversation $conversationId")
+                accountService.loadMore(conversation, SMARTLIST_PREVIEW_COUNT)
             } catch (e: Exception) {
-                Log.e(TAG, "onConversationReady: failed to load conversation info", e)
+                Log.w(TAG, "onConversationReady: preview prime failed for $conversationId", e)
             }
         }
+
+        _conversationEvents.emit(ConversationEvent.ConversationReady(accountId, conversationId))
+        Log.d(TAG, "onConversationReady: loaded conversation $conversationId")
     }
 
     /**
@@ -1355,11 +1371,32 @@ class ConversationFacade(
             val interaction = swarmMessageToInteraction(account, conversation, message)
             conversation.addSwarmElement(interaction, true)
             isIncoming = interaction.isIncoming
+            // A new swarm file message arrives as FILE_AVAILABLE; the daemon sends no transfer
+            // event until a download starts, so auto-accept here (libjamiclient routes new
+            // DataTransfers through handleDataTransferEvent for the same reason).
+            if (interaction is DataTransfer) autoAcceptIfAllowed(conversation, interaction)
         }
         _conversationEvents.emit(ConversationEvent.MessageReceived(accountId, conversationId, message))
 
         if (isIncoming) {
             notificationService.showTextNotification(conversation!!)
+        }
+    }
+
+    /**
+     * Download an incoming file right away when it is waiting for us and within the configured
+     * auto-accept size (mirrors libjamiclient ConversationFacade.handleDataTransferEvent).
+     */
+    private fun autoAcceptIfAllowed(conversation: Conversation, transfer: DataTransfer) {
+        if (!transfer.isIncoming) return
+        val status = transfer.transferStatus
+        if (status != Interaction.TransferStatus.FILE_AVAILABLE &&
+            status != Interaction.TransferStatus.TRANSFER_AWAITING_HOST) return
+        val messageId = transfer.messageId ?: return
+        val fileId = transfer.fileId?.takeIf { it.isNotEmpty() } ?: return
+        val maxSize = settingsRepository.fileTransferSettings.value.maxAutoAcceptSize
+        if (transfer.canAutoAccept(maxSize.toInt())) {
+            acceptFileTransfer(conversation, messageId, fileId)
         }
     }
 
@@ -1699,17 +1736,10 @@ class ConversationFacade(
                     else -> null
                 }
 
-                val newStatus = when (eventCode) {
-                    0 -> Interaction.TransferStatus.TRANSFER_CREATED
-                    1 -> Interaction.TransferStatus.TRANSFER_AWAITING_HOST
-                    2 -> Interaction.TransferStatus.TRANSFER_AWAITING_PEER
-                    3 -> Interaction.TransferStatus.TRANSFER_ONGOING
-                    4 -> Interaction.TransferStatus.TRANSFER_FINISHED
-                    5 -> Interaction.TransferStatus.TRANSFER_ERROR
-                    6 -> Interaction.TransferStatus.TRANSFER_UNJOINABLE_PEER
-                    7 -> Interaction.TransferStatus.TRANSFER_TIMEOUT_EXPIRED
-                    else -> null
-                }
+                // Raw libjami DataTransferEventCode (invalid=0, created=1, … ongoing=5,
+                // finished=6, …) — same mapping as libjamiclient's TransferStatus.fromIntFile.
+                val newStatus = Interaction.TransferStatus.fromIntFile(eventCode)
+                    .takeIf { it != Interaction.TransferStatus.INVALID }
 
                 if (transfer != null && newStatus != null) {
                     transfer.transferStatus = newStatus
