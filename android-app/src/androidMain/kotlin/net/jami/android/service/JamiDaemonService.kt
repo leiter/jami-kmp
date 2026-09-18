@@ -7,13 +7,16 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.content.ContextCompat
 import net.jami.android.MainActivity
 import net.jami.android.R
+import net.jami.ui.platform.LocalPrefKeys
 import net.jami.utils.Log
 
 /**
@@ -30,13 +33,48 @@ import net.jami.utils.Log
  * and SPECIAL_USE is the type that honestly describes this service: keeping the P2P daemon
  * reachable when there is no push infrastructure. See
  * `doc/play-console-special-use-justification.md`.
+ *
+ * Like jami-android-client's DRingService, it is only a *foreground* service (with the persistent
+ * notification) while App Settings → "Run in the background" ([LocalPrefKeys.RUN_IN_BACKGROUND])
+ * is on; otherwise it runs as a plain started service. The setting is watched, so toggling it
+ * shows or removes the notification immediately.
  */
 class JamiDaemonService : Service() {
 
+    private val prefs: SharedPreferences by lazy { getSharedPreferences(PREFS_NAME, MODE_PRIVATE) }
+
+    // Held in a field: SharedPreferences keeps listeners weakly.
+    private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == LocalPrefKeys.RUN_IN_BACKGROUND) applyForegroundState(mustStartForeground = false)
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        prefs.registerOnSharedPreferenceChangeListener(prefListener)
+    }
+
+    override fun onDestroy() {
+        prefs.unregisterOnSharedPreferenceChangeListener(prefListener)
+        super.onDestroy()
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "onStartCommand")
-        startForegroundWithNotification()
+        // A startForegroundService() start obliges startForeground() even if the setting was
+        // turned off in between; a sticky restart (null intent) carries no such obligation.
+        applyForegroundState(mustStartForeground = intent?.getBooleanExtra(EXTRA_FOREGROUND, false) == true)
         return START_STICKY
+    }
+
+    private fun applyForegroundState(mustStartForeground: Boolean) {
+        val enabled = isRunInBackgroundEnabled(this)
+        try {
+            if (enabled || mustStartForeground) startForegroundWithNotification()
+            if (!enabled) ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+        } catch (e: Exception) {
+            // e.g. ForegroundServiceStartNotAllowedException when re-applied from the background.
+            Log.e(TAG, "Unable to update foreground state (runInBackground=$enabled)", e)
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -79,6 +117,30 @@ class JamiDaemonService : Service() {
 
     companion object {
         private const val TAG = "JamiDaemonService"
+        private const val EXTRA_FOREGROUND = "net.jami.android.extra.FOREGROUND"
+
+        /** SharedPreferences file behind LocalPrefs on Android (net.jami.services.Settings). */
+        private const val PREFS_NAME = "jami_settings"
+
+        fun isRunInBackgroundEnabled(context: Context): Boolean =
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getBoolean(LocalPrefKeys.RUN_IN_BACKGROUND, LocalPrefKeys.RUN_IN_BACKGROUND_DEFAULT)
+
+        /**
+         * Start (or re-evaluate) the service: as a foreground service when "Run in the background"
+         * is on, as a plain service otherwise (only allowed while the app is in the foreground).
+         */
+        fun start(context: Context) {
+            val foreground = isRunInBackgroundEnabled(context)
+            val intent = Intent(context, JamiDaemonService::class.java)
+                .putExtra(EXTRA_FOREGROUND, foreground)
+            try {
+                if (foreground) ContextCompat.startForegroundService(context, intent)
+                else context.startService(intent)
+            } catch (e: IllegalStateException) {
+                Log.e(TAG, "Unable to start daemon service (foreground=$foreground)", e)
+            }
+        }
 
         /**
          * Create the background-service channel if it does not exist yet.

@@ -3,7 +3,6 @@ package net.jami.android.service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.core.content.ContextCompat
 import net.jami.ui.platform.LocalPrefs
 import net.jami.ui.platform.LocalPrefKeys
 import net.jami.utils.Log
@@ -30,12 +29,15 @@ class BootReceiver : BroadcastReceiver() {
             return
         }
 
-        Log.d(TAG, "Boot completed — starting daemon service")
-        try {
-            ContextCompat.startForegroundService(context, Intent(context, JamiDaemonService::class.java))
-        } catch (e: IllegalStateException) {
-            Log.e(TAG, "Error starting service on boot", e)
+        // Without "Run in the background" the service is not a foreground service, and a plain
+        // service cannot be started from a boot broadcast (and would be stopped within a minute).
+        if (!JamiDaemonService.isRunInBackgroundEnabled(context)) {
+            Log.d(TAG, "Run in background disabled — not starting the daemon service on boot")
+            return
         }
+
+        Log.d(TAG, "Boot completed — starting daemon service")
+        JamiDaemonService.start(context)
     }
 
     companion object {

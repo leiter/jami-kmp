@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +18,6 @@ import net.jami.services.AndroidPictureInPictureManager
 import net.jami.services.BiometricService
 import net.jami.services.CallService
 import net.jami.services.NotificationService
-import net.jami.services.SyncManager
 import net.jami.services.expect.HardwareService
 import net.jami.ui.JamiApp
 import net.jami.ui.navigation.DeepLinkState
@@ -32,7 +30,6 @@ import java.io.File
 // FragmentActivity or Fragment host; see BiometricService.android.kt's attachActivity().
 class MainActivity : FragmentActivity() {
 
-    private val syncManager: SyncManager by inject()
     private val accountService: AccountService by inject()
     private val callService: CallService by inject()
     private val hardwareService: HardwareService by inject()
@@ -44,7 +41,6 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         pipManager.attachActivity(this)
         biometricService.attachActivity(this)
-        ContextCompat.startForegroundService(this, Intent(this, JamiDaemonService::class.java))
         setContent {
             JamiApp()
         }
@@ -82,21 +78,14 @@ class MainActivity : FragmentActivity() {
         pipManager.onPipModeChanged(isInPipMode)
     }
 
-    override fun onStop() {
-        super.onStop()
-        val currentAccount = accountService.currentAccount.value
-        if (currentAccount != null) {
-            Log.d(TAG, "App backgrounded, starting background sync for account: ${currentAccount.accountId}")
-            syncManager.startBackgroundSyncWithTimeout(timeoutMs = 2 * 60 * 60 * 1000L)
-        }
-    }
-
     override fun onStart() {
         super.onStart()
-        if (syncManager.isBackgroundSyncActive) {
-            Log.d(TAG, "App foregrounded, stopping background sync")
-            syncManager.stopBackgroundSync()
-        }
+        // (Re)start the daemon service on every foregrounding, not only onCreate: in plain
+        // (non-foreground) mode Android stops it shortly after the app is backgrounded. It shows
+        // the persistent notification only while "Run in the background" is on.
+        // No separate background-sync service is started on onStop anymore: it duplicated this
+        // one's job and notification ("Jami Sync"), which jami-android-client doesn't do either.
+        JamiDaemonService.start(this)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

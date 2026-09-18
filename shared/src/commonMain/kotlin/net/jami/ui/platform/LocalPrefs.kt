@@ -45,6 +45,13 @@ object LocalPrefKeys {
     const val SCREENSHOT_BLOCKING = "local_screenshot_blocking"
     const val START_ON_BOOT = "local_start_on_boot"
     const val RUN_IN_BACKGROUND = "local_run_in_background"
+    /**
+     * Default for [RUN_IN_BACKGROUND]. jami-android-client defaults its equivalent
+     * (enablePermanentService) to off because push delivers calls and messages there; in this
+     * port push still needs a push-capable DHT proxy (see CLAUDE.md "Known Gaps"), so without
+     * the persistent service nothing would arrive in the background. Default on until then.
+     */
+    const val RUN_IN_BACKGROUND_DEFAULT = true
     const val CONNECTIVITY_MODE = "local_connectivity_mode"
     const val NOTIFICATION_VISIBILITY = "local_notification_visibility"
     const val VIDEO_BITRATE = "local_video_bitrate"

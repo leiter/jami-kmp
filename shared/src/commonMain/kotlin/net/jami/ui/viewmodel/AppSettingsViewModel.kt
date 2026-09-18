@@ -120,7 +120,9 @@ class AppSettingsViewModel(
         _state.update { it.copy(
             isScreenshotBlocking = LocalPrefs.getBoolean(LocalPrefKeys.SCREENSHOT_BLOCKING, false),
             isStartOnBoot = LocalPrefs.getBoolean(LocalPrefKeys.START_ON_BOOT, true),
-            isRunInBackground = LocalPrefs.getBoolean(LocalPrefKeys.RUN_IN_BACKGROUND, false),
+            isRunInBackground = LocalPrefs.getBoolean(
+                LocalPrefKeys.RUN_IN_BACKGROUND, LocalPrefKeys.RUN_IN_BACKGROUND_DEFAULT
+            ),
             isPlaceSystemCalls = LocalPrefs.getBoolean(LocalPrefKeys.PLACE_SYSTEM_CALLS, false),
             isSystemContactsSync = LocalPrefs.getBoolean(LocalPrefKeys.SYSTEM_CONTACTS_SYNC, false),
             connectivityMode = ConnectivityMode.entries.getOrElse(
