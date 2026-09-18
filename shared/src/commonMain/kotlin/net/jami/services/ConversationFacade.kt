@@ -1569,11 +1569,24 @@ class ConversationFacade(
             || message.body.containsKey("tid")
 
         val interaction: Interaction = when {
-            effectiveType == "initial" ->
-                ContactEvent(account.accountId, contact).setEvent(ContactEvent.Event.INVITED)
+            // Like libjamiclient getInteraction: the event is about the *invited* / *affected*
+            // member, not the commit author (e.g. the admin who added someone). "initial" is only
+            // shown in 1:1 conversations; in groups it is not a user-visible event.
+            effectiveType == "initial" -> {
+                val invited = message.body["invited"]?.ifEmpty { null }
+                if (conversation.mode == Conversation.Mode.OneToOne && invited != null) {
+                    val invitedUri = Uri.fromString(invited)
+                    val invitedContact = conversation.findContact(invitedUri) ?: account.getContactFromCache(invitedUri)
+                    ContactEvent(account.accountId, invitedContact).setEvent(ContactEvent.Event.INVITED)
+                } else {
+                    Interaction(account.accountId).also { it.timestamp = timestamp }
+                }
+            }
             effectiveType == "member" -> {
                 val action = message.body["action"] ?: ""
-                ContactEvent(account.accountId, contact).setEvent(ContactEvent.Event.fromConversationAction(action))
+                val memberUri = message.body["uri"]?.ifEmpty { null }?.let { Uri.fromString(it) }
+                val member = memberUri?.let { conversation.findContact(it) ?: account.getContactFromCache(it) } ?: contact
+                ContactEvent(account.accountId, member).setEvent(ContactEvent.Event.fromConversationAction(action))
             }
             effectiveType == "text/plain" || effectiveType == "application/edited-message" ->
                 TextMessage(
@@ -1650,7 +1663,8 @@ class ConversationFacade(
             else -> Interaction(account.accountId).also { it.timestamp = timestamp }
         }
 
-        interaction.contact = contact
+        // ContactEvents already carry the member they are about; everything else is the author's.
+        if (interaction !is ContactEvent) interaction.contact = contact
         interaction.account = account.accountId
         interaction.reactToId = message.body["react-to"]?.ifEmpty { null }
         // `body["edit"]` points at the *target* message id on the separate

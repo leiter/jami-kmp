@@ -1215,10 +1215,16 @@ class ChatViewModel(
     }
 
     private fun aggregateStatus(statusMap: Map<String, Interaction.MessageStates>): DeliveryStatus {
-        if (statusMap.isEmpty()) return DeliveryStatus.SENDING
+        // Only peers count: the map also holds our own URI, whose DISPLAYED state (we obviously
+        // read what we sent) would otherwise show every message as read. libjamiclient's
+        // ConversationAdapter filters out entries whose contact isUser the same way.
+        val ownId = currentAccountId?.let { accountService.getAccount(it) }
+            ?.username?.let { Uri.fromString(it).rawRingId }
+        val peers = if (ownId.isNullOrEmpty()) statusMap else statusMap.filterKeys { Uri.fromString(it).rawRingId != ownId }
+        if (peers.isEmpty()) return DeliveryStatus.SENDING
         return when {
-            statusMap.values.any { it == Interaction.MessageStates.DISPLAYED } -> DeliveryStatus.READ
-            statusMap.values.any { it == Interaction.MessageStates.SUCCESS }   -> DeliveryStatus.DELIVERED
+            peers.values.any { it == Interaction.MessageStates.DISPLAYED } -> DeliveryStatus.READ
+            peers.values.any { it == Interaction.MessageStates.SUCCESS }   -> DeliveryStatus.DELIVERED
             else -> DeliveryStatus.SENDING
         }
     }

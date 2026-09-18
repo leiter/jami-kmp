@@ -88,7 +88,27 @@
 - [x] **Full-screen image viewer** — `ui/screens/MediaViewerScreen.kt`.
 - [x] **Video message playback in chat** — `ui/components/video/VideoPlayerView.kt` + `ui/screens/VideoPlayerScreen.kt`, routed via `MediaNavigationState`.
 - [ ] **Retry failed file transfer** — Reference shows a retry button on failed transfers. Not present in KMP.
-- [ ] **Message long-press: share file** — Copy-to-clipboard is done (`clipboardManager.setText` in `ChatBubble` long-press menu). Share-file action (for received file transfers) is still missing.
+- [x] **Message long-press: share file** — Done 2026-09-18 (`c4d413f`): file/image messages have a long-press menu (Open / Save / Share / Delete file once complete, Delete on own messages), and the image viewer has Share/Save.
+
+Parity gaps found 2026-09-18 comparing chat interactions with jami-android-client
+(`ConversationAdapter`, `AccountService.getInteraction`):
+
+- [ ] **Replies** — the daemon's `reply-to` is read into `TextMessage.replyToId` but never shown.
+  Reference: quoted original above the reply (tap scrolls to it; loads it via `loadSwarmUntil` if not
+  in history yet) and a **Reply** action in the long-press popup (`startReplyTo`).
+- [ ] **Clickable links and Markdown** — reference renders message text with Markwon (formatting,
+  autolinked URLs). KMP shows plain text; only the link-preview card is clickable.
+- [ ] **Read markers** — reference shows peers' avatars at the last message each has read
+  (`Conversation.lastDisplayedMessages`) and a status icon only on the last sent message
+  (`lastSent`). KMP shows a tick on every outgoing message and no read avatars.
+  `Conversation.updateSwarmInteraction` already records `lastDisplayedMessages` / `lastSent`.
+- [ ] **Full emoji picker for reactions** — reference has a "more" button opening a full emoji
+  picker; KMP offers 6 fixed emojis.
+- [ ] **Share text** — reference's long-press Share also works for text messages (`shareText`).
+  `shareText()` exists in `net.jami.utils`; only the menu item is missing.
+- [ ] **Edit history** — reference shows the history of an edited message
+  (`convActionHistory`, visible when `history.size > 1`); KMP only shows "(edited)".
+  `updateSwarmMessage` keeps the edits in `Interaction.history`.
 
 ## Home Screen — Missing Features
 
