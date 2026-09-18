@@ -1373,6 +1373,20 @@ static JBCallState toCallState(const std::string& state) {
                           0);  // flags
 }
 
+- (void)updateProfile:(NSString *)accountId
+          displayName:(NSString *)displayName
+               avatar:(NSString *)avatar
+             fileType:(NSString *)fileType
+                 flag:(int)flag {
+    NSLog(@"[JamiBridge] updateProfile: %@ name: %@ fileType: %@ flag: %d", accountId, displayName, fileType, flag);
+    libjami::updateProfile(toCppString(accountId),
+                          toCppString(displayName),
+                          toCppString(avatar),
+                          toCppString(fileType),
+                          "",  // botOwner — empty for a normal user profile
+                          flag);
+}
+
 - (BOOL)registerName:(NSString *)accountId name:(NSString *)name password:(NSString *)password {
     NSLog(@"[JamiBridge] registerName: %@ name: %@", accountId, name);
     return libjami::registerName(toCppString(accountId), toCppString(name), "", toCppString(password));

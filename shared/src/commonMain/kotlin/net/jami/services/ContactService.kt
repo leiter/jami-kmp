@@ -264,9 +264,12 @@ class ContactService(
                     )
                     val cacheKey = "$accountId:${uri.uri}"
                     profileCache[cacheKey] = profile
-                    val contact = findContactInCache(accountId, uri)
-                    if (contact != null) {
-                        contact.loadedProfile = profile
+                    findContactInCache(accountId, uri)?.loadedProfile = profile
+                    // Also the Account's contact — the object Conversation.contact and the list
+                    // actually hold (libjamiclient profileReceived uses account.getContactFromCache).
+                    // Updating only this service's cache left the UI stale until restart.
+                    accountService.getAccount(accountId)?.getContactFromCache(uri)?.let { contact ->
+                        if (!contact.isUser) contact.loadedProfile = profile
                     }
                     // Invalidate the VCardService disk + memory cache so the next
                     // buildConversationItems() call picks up the new vcf from disk.

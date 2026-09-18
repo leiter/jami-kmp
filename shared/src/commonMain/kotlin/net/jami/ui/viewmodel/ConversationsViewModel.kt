@@ -209,6 +209,18 @@ class ConversationsViewModel(
             }
         }
 
+        // A contact's profile (name/avatar) arrived: ContactService has already invalidated the
+        // VCardService avatar cache, so a reload picks up the new vcf without an app restart.
+        scope.launch {
+            contactService.contactEvents.collect { event ->
+                if (event is ContactEvent.ProfileUpdated &&
+                    event.accountId == accountService.currentAccount.value?.accountId
+                ) {
+                    loadConversations()
+                }
+            }
+        }
+
         // Own account profile received from another device.
         // Fast path: decode base64 photo from the event payload.
         // Slow path: reload conversations (reads updated profile.vcf the daemon wrote to disk).

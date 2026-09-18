@@ -180,7 +180,18 @@ actual class DaemonBridge() : DaemonBridgeApi {
     // ==================== Profile ====================
 
     override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int) {
-        bridge.updateProfile(accountId, displayName = displayName, avatarPath = avatar.takeIf { it.isNotEmpty() })
+        // The path-only wrapper method forced flag 0, so base64 avatars (flag 1) were treated as a
+        // missing file and the daemon *removed* the photo, and clears (flag 2) were ignored. Use
+        // the full passthrough when the linked libJamiBridge has it; the committed prebuilt .a
+        // may predate it (rebuild with build-jamibridge.sh), hence the runtime check instead of
+        // crashing with an unrecognized selector.
+        if (bridge.respondsToSelector(NSSelectorFromString("updateProfile:displayName:avatar:fileType:flag:"))) {
+            bridge.updateProfile(accountId, displayName = displayName, avatar = avatar, fileType = fileType, flag = flag)
+        } else {
+            Log.w(TAG, "updateProfile: libJamiBridge predates the flag passthrough — avatar changes " +
+                "may not reach contacts until it is rebuilt")
+            bridge.updateProfile(accountId, displayName = displayName, avatarPath = avatar.takeIf { it.isNotEmpty() })
+        }
     }
 
     // ==================== Call Operations ====================

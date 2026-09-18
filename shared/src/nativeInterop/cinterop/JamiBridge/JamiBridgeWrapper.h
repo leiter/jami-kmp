@@ -411,6 +411,15 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
           displayName:(NSString *)displayName
            avatarPath:(nullable NSString *)avatarPath;
 
+/// Full libjami::updateProfile passthrough, matching the Android JNI call.
+/// flag: 0 = avatar is a file path, 1 = avatar is base64 image data, 2 = remove the avatar.
+/// fileType is the vCard PHOTO TYPE; empty means "leave the avatar unchanged".
+- (void)updateProfile:(NSString *)accountId
+          displayName:(NSString *)displayName
+               avatar:(NSString *)avatar
+             fileType:(NSString *)fileType
+                 flag:(int)flag;
+
 - (BOOL)registerName:(NSString *)accountId
                 name:(NSString *)name
             password:(NSString *)password;

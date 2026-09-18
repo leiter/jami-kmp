@@ -25,6 +25,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -180,6 +181,7 @@ class ChatViewModel(
     private var currentAccountId: String? = null
     private var searchJob: kotlinx.coroutines.Job? = null
     private var presenceJob: kotlinx.coroutines.Job? = null
+    private var profileJob: kotlinx.coroutines.Job? = null
 
     init {
         // Observe incoming message events for the active conversation
@@ -299,6 +301,7 @@ class ChatViewModel(
                 // Subscribe to presence updates for the contact
                 conversation?.contact?.let { contact ->
                     subscribeToPresenceUpdates(contact)
+                    subscribeToProfileUpdates(account.accountId, contact)
                 }
 
                 // Subscribe to location updates for this conversation
@@ -364,6 +367,28 @@ class ChatViewModel(
             contact.presenceStatus.collect { status ->
                 val isOnline = status != Contact.PresenceStatus.OFFLINE
                 _state.value = _state.value.copy(isContactOnline = isOnline)
+            }
+        }
+    }
+
+    /**
+     * Keep the chat header's name and avatar current when the peer's profile arrives while the
+     * chat is open (ContactService sets Contact.loadedProfile on daemon ProfileReceived) — like
+     * libjamiclient's observeContact, instead of only reading them once in loadConversation().
+     */
+    private fun subscribeToProfileUpdates(accountId: String, contact: Contact) {
+        profileJob?.cancel()
+        profileJob = scope.launch {
+            // Skip the current value: loadConversation() has just rendered it.
+            contact.profileFlow.drop(1).collect {
+                val avatarBytes = VCardUtils.loadPeerProfileFromDisk(
+                    filesDir = deviceRuntimeService.getDataPath(),
+                    accountId = accountId,
+                    peerUri = contact.uri.rawRingId
+                )
+                _state.update {
+                    it.copy(conversationTitle = contact.displayUsername, contactAvatarBytes = avatarBytes)
+                }
             }
         }
     }
