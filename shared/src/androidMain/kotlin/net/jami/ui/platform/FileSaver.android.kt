@@ -18,12 +18,14 @@ import java.io.File
 actual fun FileSaverEffect(
     sourcePath: String?,
     mimeType: String,
+    deleteSource: Boolean,
     onResult: (FileSaveResult) -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val currentSource by rememberUpdatedState(sourcePath)
     val currentOnResult by rememberUpdatedState(onResult)
+    val currentDeleteSource by rememberUpdatedState(deleteSource)
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument(mimeType)
     ) { uri ->
@@ -35,7 +37,7 @@ actual fun FileSaverEffect(
             return@rememberLauncherForActivityResult
         }
         if (uri == null) {
-            source.delete()
+            if (currentDeleteSource) source.delete()
             currentOnResult(FileSaveResult.CANCELLED)
             return@rememberLauncherForActivityResult
         }
@@ -49,7 +51,7 @@ actual fun FileSaverEffect(
                 } catch (e: Exception) {
                     false
                 } finally {
-                    source.delete()
+                    if (currentDeleteSource) source.delete()
                 }
             }
             currentOnResult(if (saved) FileSaveResult.SAVED else FileSaveResult.FAILED)

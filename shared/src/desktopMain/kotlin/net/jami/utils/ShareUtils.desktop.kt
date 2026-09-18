@@ -27,3 +27,12 @@ actual fun shareText(subject: String, body: String) {
 // On Desktop the exported file is written to a path the user can reach directly;
 // no share-sheet presentation is needed.
 actual fun shareFile(path: String) = Unit
+
+actual fun openFile(path: String): Boolean = try {
+    val desktop = java.awt.Desktop.getDesktop()
+    if (desktop.isSupported(java.awt.Desktop.Action.OPEN)) {
+        desktop.open(java.io.File(path)); true
+    } else false
+} catch (e: Exception) {
+    false
+}

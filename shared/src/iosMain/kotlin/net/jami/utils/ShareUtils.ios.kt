@@ -19,6 +19,7 @@ package net.jami.utils
 import platform.Foundation.NSURL
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
+import platform.UIKit.UIDocumentInteractionController
 
 actual fun shareText(subject: String, body: String) {
     val rootVc = UIApplication.sharedApplication.keyWindow?.rootViewController ?: return
@@ -34,4 +35,15 @@ actual fun shareFile(path: String) {
     val vc = UIActivityViewController(activityItems = listOf(fileUrl), applicationActivities = null)
     val presenter = rootVc.presentedViewController ?: rootVc
     presenter.presentViewController(vc, animated = true, completion = null)
+}
+
+// UIDocumentInteractionController must stay referenced while its menu is shown.
+private var documentController: UIDocumentInteractionController? = null
+
+actual fun openFile(path: String): Boolean {
+    val rootVc = UIApplication.sharedApplication.keyWindow?.rootViewController ?: return false
+    val presenter = rootVc.presentedViewController ?: rootVc
+    val controller = UIDocumentInteractionController.interactionControllerWithURL(NSURL.fileURLWithPath(path))
+    documentController = controller
+    return controller.presentOptionsMenuFromRect(presenter.view.bounds, inView = presenter.view, animated = true)
 }

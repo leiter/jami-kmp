@@ -90,6 +90,8 @@ import kotlinx.coroutines.withContext
 import net.jami.ui.utils.extractVideoThumbnail
 import net.jami.ui.utils.toImageBitmap
 import net.jami.utils.FileUtils
+import net.jami.utils.openFile
+import net.jami.utils.shareFile
 import net.jami.utils.Log
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -152,6 +154,8 @@ import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.PresenceStatus
 import net.jami.ui.platform.AppPermission
 import net.jami.ui.platform.FilePickerEffect
+import net.jami.ui.platform.FileSaveResult
+import net.jami.ui.platform.FileSaverEffect
 import net.jami.ui.platform.ImageCaptureEffect
 import net.jami.ui.platform.PermissionRequesterEffect
 import net.jami.ui.theme.JamiTheme
@@ -191,6 +195,26 @@ fun ChatScreen(
     val searchFocusRequester = remember { FocusRequester() }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+
+    // "Save file" from a file message's long-press menu: a copy goes where the user chooses,
+    // the conversation file itself stays (deleteSource = false).
+    var pendingSaveFile by remember { mutableStateOf<String?>(null) }
+    val fileSavedMsg = stringResource(Res.string.file_saved_successfully)
+    val genericErrorMsg = stringResource(Res.string.generic_error)
+    val openFileErrorMsg = stringResource(Res.string.conversation_open_file_error)
+    FileSaverEffect(sourcePath = pendingSaveFile, deleteSource = false) { result ->
+        pendingSaveFile = null
+        coroutineScope.launch {
+            when (result) {
+                FileSaveResult.SAVED -> snackbarHostState.showSnackbar(fileSavedMsg)
+                FileSaveResult.FAILED -> snackbarHostState.showSnackbar(genericErrorMsg)
+                FileSaveResult.CANCELLED -> Unit
+            }
+        }
+    }
+    val openConversationFile: (String) -> Unit = { path ->
+        if (!openFile(path)) coroutineScope.launch { snackbarHostState.showSnackbar(openFileErrorMsg) }
+    }
 
     // Link preview setting
     val settingsRepository: net.jami.repository.SettingsRepository = org.koin.compose.koinInject()
@@ -511,6 +535,11 @@ fun ChatScreen(
                                 onCancel = { viewModel.cancelTransfer(message.id, message.fileId ?: "") },
                                 onImageClick = onImageClick,
                                 onVideoClick = onVideoClick,
+                                onOpen = openConversationFile,
+                                onSave = { path -> pendingSaveFile = path },
+                                onShare = { path -> shareFile(path) },
+                                onDeleteFile = { viewModel.deleteLocalFile(message.id) },
+                                onDelete = { viewModel.deleteMessage(message.id) },
                             )
                             else -> ChatBubble(
                                 message = message,
@@ -1134,6 +1163,11 @@ private fun FileTransferMessage(
     onCancel: () -> Unit = {},
     onImageClick: (filePath: String) -> Unit = {},
     onVideoClick: (filePath: String, fileName: String) -> Unit = { _, _ -> },
+    onOpen: (filePath: String) -> Unit = {},
+    onSave: (filePath: String) -> Unit = {},
+    onShare: (filePath: String) -> Unit = {},
+    onDeleteFile: () -> Unit = {},
+    onDelete: () -> Unit = {},
 ) {
     // Asynchronously load image bytes for completed picture transfers
     var imageBitmap by remember(message.destinationPath) { mutableStateOf<ImageBitmap?>(null) }
@@ -1182,6 +1216,16 @@ private fun FileTransferMessage(
         (status == Interaction.TransferStatus.TRANSFER_AWAITING_HOST ||
          status == Interaction.TransferStatus.FILE_AVAILABLE)
 
+    // Long-press menu, as in jami-android-client: Open/Save/Share/Delete file once the transfer
+    // is complete (sent or received), Delete message on your own messages.
+    val completedPath = message.destinationPath
+        ?.takeIf { status == Interaction.TransferStatus.TRANSFER_FINISHED }
+    val hasMenu = completedPath != null || isOutgoing
+    var showMenu by remember { mutableStateOf(false) }
+    val openMenu = { if (hasMenu) showMenu = true }
+    // Tapping a finished file without an in-app preview opens it in another app (e.g. .mpeg).
+    val tapToOpen = completedPath != null && !message.isPicture && !message.isVideo
+
     val statusText = when (status) {
         Interaction.TransferStatus.TRANSFER_CREATED        -> "Initializing…"
         Interaction.TransferStatus.TRANSFER_AWAITING_PEER  -> "Waiting for peer…"
@@ -1207,8 +1251,15 @@ private fun FileTransferMessage(
             .padding(vertical = JamiTheme.spacing.xxs),
         contentAlignment = alignment,
     ) {
+        Box {
         Surface(
-            modifier = Modifier.widthIn(min = 160.dp, max = 280.dp),
+            modifier = Modifier
+                .widthIn(min = 160.dp, max = 280.dp)
+                .clip(bubbleShape)
+                .combinedClickable(
+                    onClick = { if (tapToOpen) completedPath?.let(onOpen) },
+                    onLongClick = openMenu,
+                ),
             color = bubbleColor,
             shape = bubbleShape,
         ) {
@@ -1264,9 +1315,10 @@ private fun FileTransferMessage(
                             .fillMaxWidth()
                             .heightIn(max = 200.dp)
                             .clip(RoundedCornerShape(JamiTheme.radius.s))
-                            .clickable {
-                                message.destinationPath?.let { onImageClick(it) }
-                            },
+                            .combinedClickable(
+                                onClick = { message.destinationPath?.let { onImageClick(it) } },
+                                onLongClick = openMenu,
+                            ),
                         contentScale = ContentScale.Crop,
                     )
                 }
@@ -1283,7 +1335,10 @@ private fun FileTransferMessage(
                             .heightIn(max = 200.dp)
                             .clip(RoundedCornerShape(JamiTheme.radius.s))
                             .background(Color.Black)
-                            .clickable { onVideoClick(message.destinationPath, message.text) },
+                            .combinedClickable(
+                                onClick = { onVideoClick(message.destinationPath, message.text) },
+                                onLongClick = openMenu,
+                            ),
                         contentAlignment = Alignment.Center,
                     ) {
                         if (videoThumbnail != null) {
@@ -1340,6 +1395,34 @@ private fun FileTransferMessage(
                     modifier = Modifier.align(Alignment.End),
                 )
             }
+        }
+
+        DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+            if (completedPath != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.menu_file_open)) },
+                    onClick = { showMenu = false; onOpen(completedPath) },
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.menu_file_save)) },
+                    onClick = { showMenu = false; onSave(completedPath) },
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.menu_file_share)) },
+                    onClick = { showMenu = false; onShare(completedPath) },
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.menu_file_delete)) },
+                    onClick = { showMenu = false; onDeleteFile() },
+                )
+            }
+            if (isOutgoing) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.menu_message_delete)) },
+                    onClick = { showMenu = false; onDelete() },
+                )
+            }
+        }
         }
     }
 }

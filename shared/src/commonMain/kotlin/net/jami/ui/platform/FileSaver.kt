@@ -13,11 +13,13 @@ enum class FileSaveResult { SAVED, CANCELLED, FAILED }
  * + moveToUri flow).
  *
  * The dialog opens whenever [sourcePath] becomes non-null; the file name of [sourcePath] is the
- * suggested name. The source file is deleted afterwards whatever the outcome, so a sensitive
- * temp file (the account archive holds the private keys) never lingers in the temp dir.
+ * suggested name. With [deleteSource] (the default) the source file is deleted afterwards whatever
+ * the outcome, so a sensitive temp file (the account archive holds the private keys) never lingers
+ * in the temp dir; pass false to save a copy of a file that must stay (e.g. a conversation file).
  *
  * @param sourcePath Absolute path of the file to save, or null when there is nothing to save.
  * @param mimeType MIME type of the file (used by pickers that filter/label by type).
+ * @param deleteSource Delete [sourcePath] after the dialog closes (true) or keep it (false).
  * @param onResult Called once per request with the outcome; the caller should reset
  *   [sourcePath] to null here.
  */
@@ -25,5 +27,6 @@ enum class FileSaveResult { SAVED, CANCELLED, FAILED }
 expect fun FileSaverEffect(
     sourcePath: String?,
     mimeType: String = "application/octet-stream",
+    deleteSource: Boolean = true,
     onResult: (FileSaveResult) -> Unit,
 )

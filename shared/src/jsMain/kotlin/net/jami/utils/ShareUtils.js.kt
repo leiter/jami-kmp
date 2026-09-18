@@ -23,3 +23,5 @@ actual fun shareText(subject: String, body: String) {
 actual fun shareFile(path: String) {
     // TODO: implement via navigator.share() / Blob download for Web
 }
+
+actual fun openFile(path: String): Boolean = false

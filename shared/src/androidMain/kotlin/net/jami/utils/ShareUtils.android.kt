@@ -17,7 +17,9 @@
 package net.jami.utils
 
 import android.content.Context
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
 import org.koin.mp.KoinPlatform
 import java.io.File
@@ -38,27 +40,10 @@ actual fun shareText(subject: String, body: String) {
 
 actual fun shareFile(path: String) {
     val context: Context = KoinPlatform.getKoin().get()
-    val source = File(path)
-    if (!source.exists()) return
-    // FileProvider only exposes cache/share/ (res/xml/file_paths.xml); getUriForFile() throws
-    // IllegalArgumentException for anything else — e.g. the account export, which is written
-    // to the root of cacheDir. Move (not copy) the file there so no stray duplicate of a
-    // sensitive file like the account archive is left behind.
-    val shareDir = File(context.cacheDir, "share").apply { mkdirs() }
-    val file = if (source.parentFile?.canonicalPath == shareDir.canonicalPath) {
-        source
-    } else {
-        File(shareDir, source.name).also { target ->
-            if (!source.renameTo(target)) {
-                source.copyTo(target, overwrite = true)
-                source.delete()
-            }
-        }
-    }
-    val authority = "${context.packageName}.fileprovider"
-    val uri = FileProvider.getUriForFile(context, authority, file)
+    val file = shareableFile(context, File(path)) ?: return
+    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "application/octet-stream"
+        type = mimeTypeOf(file)
         putExtra(Intent.EXTRA_STREAM, uri)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
@@ -67,4 +52,46 @@ actual fun shareFile(path: String) {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
     )
+}
+
+actual fun openFile(path: String): Boolean {
+    val context: Context = KoinPlatform.getKoin().get()
+    val file = shareableFile(context, File(path)) ?: return false
+    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, mimeTypeOf(file))
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    return try {
+        context.startActivity(intent)
+        true
+    } catch (e: ActivityNotFoundException) {
+        false
+    }
+}
+
+private fun mimeTypeOf(file: File): String =
+    MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension.lowercase())
+        ?: "application/octet-stream"
+
+/**
+ * A file the FileProvider can serve (res/xml/file_paths.xml: cache/share/ and the conversation
+ * files under files/conversations/). Conversation files are served in place — never moved, they
+ * belong to the conversation. Anything else in the app cache (e.g. the account export written to
+ * cacheDir) is moved into cache/share/ so no stray duplicate of a sensitive file is left behind;
+ * other files are copied there.
+ */
+private fun shareableFile(context: Context, source: File): File? {
+    if (!source.exists()) return null
+    val canonical = source.canonicalFile
+    val shareDir = File(context.cacheDir, "share").apply { mkdirs() }
+    val servedRoots = listOf(shareDir, File(context.filesDir, "conversations"))
+    if (servedRoots.any { canonical.path.startsWith(it.canonicalPath + File.separator) }) return canonical
+    return File(shareDir, source.name).also { target ->
+        val inCache = canonical.path.startsWith(context.cacheDir.canonicalPath + File.separator)
+        if (!(inCache && source.renameTo(target))) {
+            source.copyTo(target, overwrite = true)
+            if (inCache) source.delete()
+        }
+    }
 }

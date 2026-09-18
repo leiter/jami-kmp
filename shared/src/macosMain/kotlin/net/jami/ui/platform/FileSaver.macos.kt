@@ -13,6 +13,7 @@ import platform.Foundation.NSURL
 actual fun FileSaverEffect(
     sourcePath: String?,
     mimeType: String,
+    deleteSource: Boolean,
     onResult: (FileSaveResult) -> Unit,
 ) {
     LaunchedEffect(sourcePath) {
@@ -37,7 +38,7 @@ actual fun FileSaverEffect(
         } else {
             FileSaveResult.CANCELLED
         }
-        fileManager.removeItemAtURL(source, error = null)
+        if (deleteSource) fileManager.removeItemAtURL(source, error = null)
         onResult(result)
     }
 }

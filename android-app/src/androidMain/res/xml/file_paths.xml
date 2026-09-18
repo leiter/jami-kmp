@@ -2,4 +2,6 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Cache directory for temporary files (camera captures, etc.) -->
     <cache-path name="share" path="share/" />
+    <!-- Sent/received conversation files, shared and opened in place (read-only URI grants) -->
+    <files-path name="conversations" path="conversations/" />
 </paths>

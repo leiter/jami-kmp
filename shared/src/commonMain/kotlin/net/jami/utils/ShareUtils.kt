@@ -34,3 +34,11 @@ expect fun shareText(subject: String, body: String)
  * @param path Absolute path to the file to share.
  */
 expect fun shareFile(path: String)
+
+/**
+ * Open the file at [path] with an app of the user's choice (Android ACTION_VIEW, iOS document
+ * "open in" menu, macOS/Desktop default application) — jami-android-client's "Open file".
+ *
+ * @return false when no app can open it (the caller shows `conversation_open_file_error`).
+ */
+expect fun openFile(path: String): Boolean

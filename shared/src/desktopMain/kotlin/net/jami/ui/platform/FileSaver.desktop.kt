@@ -9,6 +9,7 @@ import javax.swing.JFileChooser
 actual fun FileSaverEffect(
     sourcePath: String?,
     mimeType: String,
+    deleteSource: Boolean,
     onResult: (FileSaveResult) -> Unit,
 ) {
     LaunchedEffect(sourcePath) {
@@ -26,7 +27,7 @@ actual fun FileSaverEffect(
         } else {
             FileSaveResult.CANCELLED
         }
-        source.delete()
+        if (deleteSource) source.delete()
         onResult(result)
     }
 }

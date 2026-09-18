@@ -34,6 +34,7 @@ private class SaveDelegate : NSObject(), UIDocumentPickerDelegateProtocol {
 actual fun FileSaverEffect(
     sourcePath: String?,
     mimeType: String,
+    deleteSource: Boolean,
     onResult: (FileSaveResult) -> Unit,
 ) {
     val delegate = remember { SaveDelegate() }
@@ -44,7 +45,7 @@ actual fun FileSaverEffect(
         val source = NSURL.fileURLWithPath(path)
         val rootVc = UIApplication.sharedApplication.keyWindow?.rootViewController
         if (rootVc == null) {
-            NSFileManager.defaultManager.removeItemAtURL(source, error = null)
+            if (deleteSource) NSFileManager.defaultManager.removeItemAtURL(source, error = null)
             currentOnResult(FileSaveResult.FAILED)
             return@LaunchedEffect
         }
@@ -52,7 +53,7 @@ actual fun FileSaverEffect(
             delegate.onDone = null
             // asCopy = true: the picker copied the file to the chosen location, so the temp
             // original can go either way.
-            NSFileManager.defaultManager.removeItemAtURL(source, error = null)
+            if (deleteSource) NSFileManager.defaultManager.removeItemAtURL(source, error = null)
             currentOnResult(if (picked) FileSaveResult.SAVED else FileSaveResult.CANCELLED)
         }
         // "Save to Files" — exports a copy of the temp file to a user-chosen location.

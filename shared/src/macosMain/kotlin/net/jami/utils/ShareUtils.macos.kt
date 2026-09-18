@@ -33,3 +33,6 @@ actual fun shareFile(path: String) {
     val service = services.firstOrNull() as? NSSharingService ?: return
     service.performWithItems(items)
 }
+
+actual fun openFile(path: String): Boolean =
+    platform.AppKit.NSWorkspace.sharedWorkspace.openURL(platform.Foundation.NSURL.fileURLWithPath(path))

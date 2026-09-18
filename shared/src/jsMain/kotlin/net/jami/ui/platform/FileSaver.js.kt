@@ -7,6 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 actual fun FileSaverEffect(
     sourcePath: String?,
     mimeType: String,
+    deleteSource: Boolean,
     onResult: (FileSaveResult) -> Unit,
 ) {
     // Web "Save as" requires a browser download integration

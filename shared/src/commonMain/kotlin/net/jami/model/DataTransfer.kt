@@ -180,8 +180,10 @@ class DataTransfer : Interaction {
         private val AUDIO_EXTENSIONS = setOf(
             "ogg", "mp3", "aac", "flac", "m4a"
         )
+        // Reference set (webm/mp4/mkv) plus common camera formats: iOS records .mov, older
+        // Android devices .3gp. Other video types (e.g. .mpeg) open in an external app instead.
         private val VIDEO_EXTENSIONS = setOf(
-            "webm", "mp4", "mkv"
+            "webm", "mp4", "mkv", "mov", "m4v", "3gp"
         )
         private const val UNLIMITED_SIZE = 256 * 1024 * 1024
     }

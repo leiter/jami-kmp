@@ -478,7 +478,8 @@ class ConversationFacade(
                 transfer.fileId ?: return
             )
         } else {
-            val path = deviceRuntimeService.getConversationPath(
+            // The daemon-reported path of the downloaded/sent file; storagePath is only a fallback.
+            val path = transfer.destinationPath ?: deviceRuntimeService.getConversationPath(
                 conversation.accountId,
                 conversation.uri.rawRingId,
                 transfer.storagePath
@@ -487,6 +488,7 @@ class ConversationFacade(
                 try {
                     deviceRuntimeService.deleteFile(path)
                     transfer.bytesProgress = 0
+                    transfer.destinationPath = null
                     transfer.transferStatus = Interaction.TransferStatus.FILE_AVAILABLE
                     conversation.updateInteraction(transfer)
                 } catch (e: Exception) {

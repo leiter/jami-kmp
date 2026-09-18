@@ -691,6 +691,23 @@ class ChatViewModel(
     }
 
     /**
+     * "Delete file": remove only the local copy of a transferred file; the message stays and the
+     * file can be downloaded again (jami-android-client deleteConversationFile).
+     */
+    fun deleteLocalFile(messageId: String) {
+        scope.launch {
+            val accountId = currentAccountId ?: return@launch
+            val conversationId = currentConversationId ?: return@launch
+            val conversation = conversationFacade.getConversation(
+                accountId, Uri(Uri.SWARM_SCHEME, conversationId)
+            ) ?: return@launch
+            val transfer = conversation.getMessage(messageId) as? net.jami.model.DataTransfer ?: return@launch
+            conversationFacade.deleteConversationFile(conversation, transfer)
+            loadMessagesFromHistory()
+        }
+    }
+
+    /**
      * Edit a message by its ID.
      */
     fun editMessage(messageId: String, newText: String) {
