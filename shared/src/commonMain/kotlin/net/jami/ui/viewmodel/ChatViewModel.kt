@@ -219,6 +219,9 @@ class ChatViewModel(
                             loadMessagesFromHistory()
                         }
                     }
+                    is ConversationEvent.MessageStatusChanged -> {
+                        if (event.conversationId == convId) updateDeliveryStatus(event)
+                    }
                     is ConversationEvent.ReactionAdded -> {
                         if (event.conversationId == convId) rebuildMessageReactions(event.messageId)
                     }
@@ -1118,6 +1121,41 @@ class ChatViewModel(
             msgs[idx] = msgs[idx].copy(reactions = newReactions)
             _state.value = _state.value.copy(messages = msgs)
         }
+    }
+
+    /**
+     * Live delivery ticks: apply a daemon message-status change to the open chat. Previously the
+     * status was only computed when the list was (re)built, so ticks lagged until a reload/restart.
+     * ConversationFacade records the change in the model's statusMap before emitting, so the full
+     * per-peer map is aggregated; the event's own status is the fallback if the message isn't in
+     * the model. Never downgrades (e.g. READ back to DELIVERED from a late SUCCESS).
+     */
+    private fun updateDeliveryStatus(event: ConversationEvent.MessageStatusChanged) {
+        val fromModel = conversationFacade
+            .getConversation(event.accountId, Uri(Uri.SWARM_SCHEME, event.conversationId))
+            ?.getMessage(event.messageId)
+            ?.statusMap
+            ?.let { aggregateStatus(it) }
+        val newStatus = fromModel ?: when (Interaction.MessageStates.fromInt(event.status)) {
+            Interaction.MessageStates.DISPLAYED -> DeliveryStatus.READ
+            Interaction.MessageStates.SUCCESS -> DeliveryStatus.DELIVERED
+            else -> return
+        }
+        _state.update { current ->
+            val idx = current.messages.indexOfFirst { it.id == event.messageId && it.isOutgoing }
+            if (idx < 0) return@update current
+            val old = current.messages[idx].deliveryStatus
+            if (deliveryRank(newStatus) <= deliveryRank(old)) return@update current
+            current.copy(messages = current.messages.toMutableList().also {
+                it[idx] = it[idx].copy(deliveryStatus = newStatus)
+            })
+        }
+    }
+
+    private fun deliveryRank(status: DeliveryStatus): Int = when (status) {
+        DeliveryStatus.WAITING_TO_SYNC, DeliveryStatus.FAILED, DeliveryStatus.SENDING -> 0
+        DeliveryStatus.DELIVERED -> 1
+        DeliveryStatus.READ -> 2
     }
 
     private fun aggregateStatus(statusMap: Map<String, Interaction.MessageStates>): DeliveryStatus {
