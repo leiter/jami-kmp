@@ -1326,6 +1326,10 @@ class ConversationFacade(
 
     /**
      * Called when a conversation member event occurs.
+     *
+     * Mirrors libjamiclient `conversationMemberEventNow`: the daemon's event code
+     * (Add=0, Join=1, Remove=2, Block=3, Unblock=4) sets the member's role, and Remove/Block go
+     * through [Conversation.removeContact] instead of leaving the member listed as before.
      */
     internal fun onConversationMemberEvent(accountId: String, conversationId: String, memberId: String, event: Int) {
         Log.d(TAG, "onConversationMemberEvent: $conversationId member=$memberId event=$event")
@@ -1336,20 +1340,14 @@ class ConversationFacade(
             // Self-heal: a member event (e.g. the peer's join into a just-created 1:1 swarm) can
             // arrive before we've indexed the conversation — build it instead of dropping the event.
             val conversation = ensureSwarm(account, conversationId)
-            try {
-                val members = daemonBridge.getConversationMembers(accountId, conversationId)
-                // Rebuild contact list from daemon member data
-                for (member in members) {
-                    val memberUri = member["uri"] ?: continue
-                    val memberUriParsed = Uri.fromString(memberUri)
-                    if (conversation.findContact(memberUriParsed) == null) {
-                        val contact = account.getContactFromCache(memberUriParsed)
-                        val role = MemberRole.fromString(member["role"] ?: "")
-                        conversation.addContact(contact, role)
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "onConversationMemberEvent: failed to refresh members", e)
+            val uri = Uri.fromString(memberId)
+            val contact = conversation.findContact(uri) ?: account.getContactFromCache(uri)
+            when (event) {
+                MEMBER_EVENT_ADD -> conversation.addContact(contact, MemberRole.INVITED)
+                MEMBER_EVENT_JOIN, MEMBER_EVENT_UNBLOCK -> conversation.addContact(contact, MemberRole.MEMBER)
+                MEMBER_EVENT_REMOVE -> conversation.removeContact(contact, MemberRole.LEFT)
+                MEMBER_EVENT_BLOCK -> conversation.removeContact(contact, MemberRole.BLOCKED)
+                else -> Log.w(TAG, "onConversationMemberEvent: unknown event $event")
             }
             _conversationEvents.emit(ConversationEvent.MemberEvent(accountId, conversationId, memberId, event))
         }
@@ -1375,6 +1373,15 @@ class ConversationFacade(
             // event until a download starts, so auto-accept here (libjamiclient routes new
             // DataTransfers through handleDataTransferEvent for the same reason).
             if (interaction is DataTransfer) autoAcceptIfAllowed(conversation, interaction)
+            // An incoming message landing in the open chat is marked read by addSwarmElement();
+            // tell the daemon too, so the peer gets the read receipt and our other devices see it
+            // as read (libjamiclient parseNewMessage). Opening the chat covers the earlier ones.
+            val messageId = interaction.messageId
+            if (isIncoming && interaction.isRead && messageId != null &&
+                settingsRepository.privacySettings.value.readReceipts
+            ) {
+                accountService.setMessageDisplayed(accountId, conversation.uri, messageId)
+            }
         }
         _conversationEvents.emit(ConversationEvent.MessageReceived(accountId, conversationId, message))
 
@@ -1792,6 +1799,13 @@ class ConversationFacade(
 
         /** Messages primed per conversation during loadSmartlist (matches libjamiclient). */
         private const val SMARTLIST_PREVIEW_COUNT = 8
+
+        // libjami ConversationMemberEvent codes (conversationMemberEvent signal).
+        private const val MEMBER_EVENT_ADD = 0
+        private const val MEMBER_EVENT_JOIN = 1
+        private const val MEMBER_EVENT_REMOVE = 2
+        private const val MEMBER_EVENT_BLOCK = 3
+        private const val MEMBER_EVENT_UNBLOCK = 4
     }
 }
 

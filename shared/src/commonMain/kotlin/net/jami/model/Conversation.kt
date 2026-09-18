@@ -255,16 +255,26 @@ class Conversation(
             else -> memberRole != MemberRole.BLOCKED && memberRole != MemberRole.LEFT
         }
 
-        if (allowContactAdding) {
+        // Re-adding a known member (e.g. a role change from a member event) only updates its role.
+        if (allowContactAdding && !contacts.contains(contact)) {
             contacts.add(contact)
         }
         _contactUpdates.value = contacts.toList()
     }
 
+    /**
+     * Mirrors libjamiclient: with no role the contact is simply removed; with a role, the role is
+     * recorded and only a group member who LEFT is dropped from the list (a BLOCKED member stays,
+     * shown with its role; 1:1 conversations always keep their peer).
+     */
     fun removeContact(contact: Contact, memberRole: MemberRole? = null) {
-        memberRole?.let { roles[contact.uri.uri] = it }
-        if (mode != Mode.OneToOne) {
+        if (memberRole == null) {
             contacts.remove(contact)
+        } else {
+            roles[contact.uri.uri] = memberRole
+            if (mode != Mode.OneToOne && memberRole == MemberRole.LEFT) {
+                contacts.remove(contact)
+            }
         }
         _contactUpdates.value = contacts.toList()
     }

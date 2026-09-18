@@ -39,18 +39,26 @@ to its contact (`contact.setConversationUri`) and drops the contact-keyed placeh
 mode"), then calls `conversationStarted(conversation, mode)`, and primes the preview with
 `loadMore(conversation, 8)`. jami-kmp did not load a preview for newly ready conversations.
 
-### 4. ⬜ No read receipt for messages that arrive while the chat is open
+### 4. ✅ No read receipt for messages that arrive while the chat is open
 `Conversation.addSwarmElement` marks the message as read when `isVisible`, but
 `setMessageDisplayed` is only called when the chat is opened (`ChatViewModel.kt` ~288). The
 reference `parseNewMessage` calls `setMessageDisplayed` for every incoming message that is
 already read. As a result, the peer never sees "read" and your own other devices keep the
 messages unread.
 
-### 5. ⬜ Member events only ever add members
+*Fix:* `onMessageReceived` calls `setMessageDisplayed` for an incoming message that is already
+read (the chat is open), gated on `readReceipts` like `readMessages` (see #6).
+
+### 5. ✅ Member events only ever add members
 `onConversationMemberEvent` re-adds any members that are missing. The reference maps each event to a role:
 Add/Join/Remove/Block/Unblock map to INVITED, MEMBER, LEFT and BLOCKED, and Remove and Block call
 `conversation.removeContact`. Members who left, were removed or were blocked stay listed with
 their old role.
+
+*Fix:* the handler maps the event codes to roles as the reference does.
+`Conversation.addContact` no longer duplicates an existing member (it only updates the role), and
+`Conversation.removeContact` now follows the reference: a group member is dropped only on LEFT,
+and a BLOCKED member stays listed with that role.
 
 ## Medium
 
