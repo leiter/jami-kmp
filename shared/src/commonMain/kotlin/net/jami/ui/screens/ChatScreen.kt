@@ -56,6 +56,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.foundation.Image
 import androidx.compose.ui.draw.clip
@@ -151,6 +152,17 @@ import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.composed
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.text.font.FontWeight
+import net.jami.ui.viewmodel.ReplyPreview
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -199,6 +211,7 @@ fun ChatScreen(
     val isRecordingAudio by viewModel.isRecordingAudio.collectAsState()
     val listState = rememberLazyListState()
     val searchFocusRequester = remember { FocusRequester() }
+    val inputFocusRequester = remember { FocusRequester() }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
@@ -230,6 +243,18 @@ fun ChatScreen(
     // Edit mode state — set when user taps "Edit" on a message
     var editingMessageId by remember { mutableStateOf<String?>(null) }
     var editingMessageText by remember { mutableStateOf("") }
+    // Reply and edit share the composer: starting one cancels the other.
+    val startReply: (String) -> Unit = { messageId ->
+        if (editingMessageId != null) {
+            editingMessageId = null
+            editingMessageText = ""
+            viewModel.updateInput("")
+        }
+        viewModel.startReply(messageId)
+    }
+    LaunchedEffect(state.replyingTo?.messageId) {
+        if (state.replyingTo != null) runCatching { inputFocusRequester.requestFocus() }
+    }
 
     // Camera permission and capture state
     var requestCameraPermission by remember { mutableStateOf(false) }
@@ -531,6 +556,8 @@ fun ChatScreen(
                         items = state.messages.reversed(),
                         key = { it.id },
                     ) { message ->
+                        val canReply = viewModel.isReplyable(message)
+                        Box(Modifier.swipeToReply(enabled = canReply) { startReply(message.id) }) {
                         when (message.type) {
                             MessageType.DateSeparator -> DateSeparatorItem(message.text)
                             MessageType.System        -> SystemMessage(message)
@@ -546,13 +573,17 @@ fun ChatScreen(
                                 onShare = { path -> shareFile(path) },
                                 onDeleteFile = { viewModel.deleteLocalFile(message.id) },
                                 onDelete = { viewModel.deleteMessage(message.id) },
+                                onReply = if (canReply) ({ startReply(message.id) }) else null,
                             )
                             else -> ChatBubble(
                                 message = message,
                                 isHighlighted = message.id == state.highlightedMessageId,
                                 showLinkPreviews = showLinkPreviews,
                                 onDelete = { viewModel.deleteMessage(message.id) },
+                                onReply = if (canReply) ({ startReply(message.id) }) else null,
+                                onReplyQuoteClick = { viewModel.scrollToMessage(it) },
                                 onEdit = { originalText ->
+                                    viewModel.cancelReply()
                                     editingMessageId = message.id
                                     editingMessageText = originalText
                                     viewModel.updateInput(originalText)
@@ -562,6 +593,7 @@ fun ChatScreen(
                                 loadEditHistory = { viewModel.getEditHistory(message.id) },
                                 onRetry = { viewModel.retryMessage(message.id) },
                             )
+                        }
                         }
                     }
 
@@ -622,6 +654,52 @@ fun ChatScreen(
                     }
                     Button(onClick = { viewModel.stopAudioRecording() }) {
                         Text("Send")
+                    }
+                }
+            }
+
+            // Reply bar — shown while composing a reply (jami-android-client replyGroup)
+            state.replyingTo?.let { reply ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.s),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Reply,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = JamiTheme.colors.primary,
+                    )
+                    Spacer(Modifier.width(JamiTheme.spacing.s))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(Res.string.in_reply_to) + " " +
+                                (reply.author ?: stringResource(Res.string.conversation_reply_you)),
+                            style = JamiTheme.typography.labelSmall,
+                            color = JamiTheme.colors.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = reply.text,
+                            style = JamiTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    IconButton(
+                        onClick = { viewModel.cancelReply() },
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(Res.string.menu_message_cancel_reply),
+                            modifier = Modifier.size(16.dp),
+                        )
                     }
                 }
             }
@@ -692,6 +770,7 @@ fun ChatScreen(
                 MessageInputBar(
                     value = state.inputText,
                     onValueChange = { viewModel.updateInput(it) },
+                    focusRequester = inputFocusRequester,
                     onSend = {
                         val editId = editingMessageId
                         if (editId != null) {
@@ -775,6 +854,9 @@ private fun ChatBubble(
     onRemoveReaction: (String) -> Unit = {},
     loadEditHistory: () -> List<Pair<Long, String>> = { emptyList() },
     onRetry: () -> Unit = {},
+    /** Null when the message cannot be replied to (e.g. a send that is still pending). */
+    onReply: (() -> Unit)? = null,
+    onReplyQuoteClick: (String) -> Unit = {},
 ) {
     val isOutgoing = message.isOutgoing
     var editHistory by remember { mutableStateOf<List<Pair<Long, String>>?>(null) }
@@ -843,12 +925,21 @@ private fun ChatBubble(
                 shape = bubbleShape,
                 color = bubbleColor,
             ) {
-                Box(
+                Column(
                     modifier = Modifier.padding(
                         horizontal = JamiTheme.spacing.m,
                         vertical = JamiTheme.spacing.s,
                     ),
                 ) {
+                message.replyTo?.let { reply ->
+                    ReplyQuote(
+                        reply = reply,
+                        textColor = textColor,
+                        onClick = { onReplyQuoteClick(reply.messageId) },
+                        modifier = Modifier.padding(bottom = JamiTheme.spacing.xs),
+                    )
+                }
+                Box {
                     // Message text with an invisible trailing spacer whose width
                     // matches the timestamp (+ checkmark for outgoing) so the last
                     // text line always has room for the overlay next to it.
@@ -911,6 +1002,7 @@ private fun ChatBubble(
                         )
                     }
                 }
+                }
             }
 
             // Context menu (long-press)
@@ -918,6 +1010,15 @@ private fun ChatBubble(
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false },
             ) {
+                if (onReply != null) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(Res.string.menu_message_reply)) },
+                        onClick = {
+                            showMenu = false
+                            onReply()
+                        },
+                    )
+                }
                 DropdownMenuItem(
                     text = { Text("React") },
                     onClick = {
@@ -1235,6 +1336,7 @@ private fun FileTransferMessage(
     onShare: (filePath: String) -> Unit = {},
     onDeleteFile: () -> Unit = {},
     onDelete: () -> Unit = {},
+    onReply: (() -> Unit)? = null,
 ) {
     // Asynchronously load image bytes for completed picture transfers
     var imageBitmap by remember(message.destinationPath) { mutableStateOf<ImageBitmap?>(null) }
@@ -1465,6 +1567,12 @@ private fun FileTransferMessage(
         }
 
         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+            if (onReply != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.menu_message_reply)) },
+                    onClick = { showMenu = false; onReply() },
+                )
+            }
             if (completedPath != null) {
                 DropdownMenuItem(
                     text = { Text(stringResource(Res.string.menu_file_open)) },
@@ -1511,6 +1619,7 @@ private fun MessageInputBar(
     onStartAudioRecording: () -> Unit = {},
     onVideoRecordingUnsupported: () -> Unit = {},
     onChatExtensionsUnsupported: () -> Unit = {},
+    focusRequester: FocusRequester = remember { FocusRequester() },
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -1669,7 +1778,8 @@ private fun MessageInputBar(
                     onValueChange = onValueChange,
                     modifier = Modifier
                         .weight(1f)
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 8.dp)
+                        .focusRequester(focusRequester),
                     textStyle = JamiTheme.typography.bodyLarge.copy(
                         color = JamiTheme.colors.onSurface,
                     ),
@@ -2050,4 +2160,88 @@ private fun ReactionChip(
             }
         }
     }
+}
+
+/**
+ * The quoted original inside a reply bubble: its author ("You" for own messages) and text.
+ * Tapping it scrolls to the original (jami-android-client configureReplyIndicator).
+ */
+@Composable
+private fun ReplyQuote(
+    reply: ReplyPreview,
+    textColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(JamiTheme.radius.xs)
+    Row(
+        modifier = modifier
+            .clip(shape)
+            .background(textColor.copy(alpha = 0.12f))
+            .clickable(enabled = reply.isLoaded, onClick = onClick)
+            .height(IntrinsicSize.Min),
+    ) {
+        Box(
+            Modifier
+                .width(3.dp)
+                .fillMaxHeight()
+                .background(JamiTheme.colors.accent)
+        )
+        Column(Modifier.padding(horizontal = JamiTheme.spacing.s, vertical = JamiTheme.spacing.xxs)) {
+            Text(
+                text = when {
+                    !reply.isLoaded -> stringResource(Res.string.in_reply_to)
+                    reply.author == null -> stringResource(Res.string.conversation_reply_you)
+                    else -> reply.author
+                },
+                style = JamiTheme.typography.labelSmall,
+                color = textColor,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (reply.text.isNotEmpty()) {
+                Text(
+                    text = reply.text,
+                    style = JamiTheme.typography.bodySmall,
+                    color = textColor.copy(alpha = 0.8f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Swipe a message towards the end to reply to it (jami-android-client MessageSwipeController).
+ * The row follows the finger up to [maxOffset] and springs back; releasing past [threshold]
+ * triggers [onReply]. Vertical drags stay with the list.
+ */
+private fun Modifier.swipeToReply(
+    enabled: Boolean,
+    threshold: androidx.compose.ui.unit.Dp = 56.dp,
+    maxOffset: androidx.compose.ui.unit.Dp = 80.dp,
+    onReply: () -> Unit,
+): Modifier = if (!enabled) this else composed {
+    val offset = remember { androidx.compose.animation.core.Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val thresholdPx = with(density) { threshold.toPx() }
+    val maxPx = with(density) { maxOffset.toPx() }
+    val currentOnReply by rememberUpdatedState(onReply)
+    this
+        .pointerInput(Unit) {
+            detectHorizontalDragGestures(
+                onDragEnd = {
+                    if (offset.value >= thresholdPx) currentOnReply()
+                    scope.launch { offset.animateTo(0f) }
+                },
+                onDragCancel = { scope.launch { offset.animateTo(0f) } },
+            ) { change, dragAmount ->
+                change.consume()
+                scope.launch { offset.snapTo((offset.value + dragAmount).coerceIn(0f, maxPx)) }
+            }
+        }
+        .offset { IntOffset(offset.value.roundToInt(), 0) }
 }

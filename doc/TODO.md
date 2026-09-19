@@ -93,9 +93,12 @@
 Parity gaps found 2026-09-18 comparing chat interactions with jami-android-client
 (`ConversationAdapter`, `AccountService.getInteraction`):
 
-- [ ] **Replies** — the daemon's `reply-to` is read into `TextMessage.replyToId` but never shown.
-  Reference: quoted original above the reply (tap scrolls to it; loads it via `loadSwarmUntil` if not
-  in history yet) and a **Reply** action in the long-press popup (`startReplyTo`).
+- [x] **Replies** (2026-09-19) — **Reply** in the text/file long-press menu and swipe-to-reply;
+  a reply bar above the composer (`ChatState.replyingTo`); the sent message carries `reply-to`
+  (also through the durable outbox); reply bubbles quote the original ("You" for own messages),
+  tap scrolls to it, and an original not in history yet is fetched once via `loadSwarmUntil`.
+  Tests: `ReplyTest`. Not done: the quote is not drawn on file-message bubbles that are replies,
+  and replying *with* a file (daemon `sendFile` replyTo) is not offered.
 - [ ] **Markdown** — reference renders message text with Markwon (bold, italics, code, …); KMP
   shows plain text. *Clickable links done 2026-09-18:* http(s) URLs in bubbles are `LinkAnnotation`s.
 - [ ] **Read markers** — reference shows peers' avatars at the last message each has read

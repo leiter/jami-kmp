@@ -98,6 +98,20 @@ data class MessageItem(
     val reactions: List<ReactionGroup> = emptyList(),
     val deliveryStatus: DeliveryStatus = DeliveryStatus.SENDING,
     val isEdited: Boolean = false,
+    /** The message this one replies to, quoted above the bubble; null when it is not a reply. */
+    val replyTo: ReplyPreview? = null,
+)
+
+/**
+ * A quoted original message: shown above a reply bubble and in the composer while replying.
+ */
+data class ReplyPreview(
+    val messageId: String,
+    /** Display name of the original's author; null when it is the user's own message ("You"). */
+    val author: String?,
+    val text: String,
+    /** False while the original is not in the loaded history yet; it is fetched in the background. */
+    val isLoaded: Boolean = true,
 )
 
 /**
@@ -158,6 +172,8 @@ data class ChatState(
     val peerUri: String = "",
     /** True for SIP/legacy conversations that do not support messaging. */
     val isLegacy: Boolean = false,
+    /** The message the next sent text replies to (composer reply bar); null when not replying. */
+    val replyingTo: ReplyPreview? = null,
 )
 
 /**
@@ -185,6 +201,8 @@ class ChatViewModel(
     private var searchJob: kotlinx.coroutines.Job? = null
     private var presenceJob: kotlinx.coroutines.Job? = null
     private var profileJob: kotlinx.coroutines.Job? = null
+    /** Replied-to message ids already requested from the daemon (see [replyPreview]). */
+    private val requestedReplyOriginals = mutableSetOf<String>()
 
     init {
         // A held message was handed to the daemon by SendQueueService (the conversation went
@@ -307,6 +325,7 @@ class ChatViewModel(
                     contactAvatarBytes = avatarBytes,
                     hasMoreHistory = true,
                     isLoadingMore = false,
+                    replyingTo = null,
                     peerUri = peerUri,
                     isLegacy = isLegacy,
                 )
@@ -432,15 +451,37 @@ class ChatViewModel(
 
         val textToSend = _state.value.inputText.trim()
         if (textToSend.isEmpty()) return
-        _state.update { it.copy(inputText = "") }
+        val replyTo = _state.value.replyingTo?.messageId
+        _state.update { it.copy(inputText = "", replyingTo = null) }
 
         // Stop the typing indicator on the recipient side immediately.
         conversationFacade.setIsComposing(accountId, conversationUri, false)
 
         scope.launch { draftRepository.clearDraft(conversationId) }
 
-        sendOptimistic(accountId, conversationUri, textToSend)
+        sendOptimistic(accountId, conversationUri, textToSend, replyTo)
     }
+
+    /**
+     * Start replying to [messageId]: the composer shows the quoted message and the next sent text
+     * carries it as `reply-to` (jami-android-client ConversationFragment.startReplyTo).
+     */
+    fun startReply(messageId: String) {
+        val item = _state.value.messages.firstOrNull { it.id == messageId } ?: return
+        if (!isReplyable(item)) return
+        _state.update {
+            it.copy(replyingTo = ReplyPreview(messageId, item.author.takeUnless { item.isOutgoing }, item.text))
+        }
+    }
+
+    fun cancelReply() {
+        _state.update { it.copy(replyingTo = null) }
+    }
+
+    /** Only committed text and file messages can be replied to (not pending sends or events). */
+    fun isReplyable(item: MessageItem): Boolean =
+        (item.type == MessageType.Text || item.type == MessageType.Transfer) &&
+            !item.id.startsWith("pending-") && !item.id.startsWith("outbox-")
 
     /**
      * Re-send a message that previously failed to get a daemon echo within [SEND_TIMEOUT_MS].
@@ -458,14 +499,14 @@ class ChatViewModel(
             current.copy(messages = current.messages.filterNot { it.id == messageId })
         }
 
-        sendOptimistic(accountId, conversationUri, failed.text)
+        sendOptimistic(accountId, conversationUri, failed.text, failed.replyTo?.messageId)
     }
 
     /**
      * Insert an optimistic "sending" bubble, dispatch the daemon send, and arm a timeout that
      * flips the bubble to FAILED if [ConversationEvent.MessageReceived] never echoes it back.
      */
-    private fun sendOptimistic(accountId: String, conversationUri: Uri, text: String) {
+    private fun sendOptimistic(accountId: String, conversationUri: Uri, text: String, replyTo: String? = null) {
         val optimisticId = "pending-${Clock.System.now().toEpochMilliseconds()}"
 
         // A message committed while the swarm has no peer device (still syncing, or a 1:1 whose
@@ -474,7 +515,7 @@ class ChatViewModel(
         // app restart, and the bubble shows WAITING_TO_SYNC meanwhile.
         if (sendQueue.shouldHold(accountId, conversationUri)) {
             scope.launch {
-                val entry = sendQueue.enqueue(accountId, conversationUri.rawRingId, text)
+                val entry = sendQueue.enqueue(accountId, conversationUri.rawRingId, text, replyTo)
                 _state.update { current ->
                     val id = outboxBubbleId(entry.id)
                     // enqueue() may already have sent it (conversation went live meanwhile).
@@ -493,10 +534,11 @@ class ChatViewModel(
             isOutgoing = true,
             type = MessageType.Text,
             deliveryStatus = DeliveryStatus.SENDING,
+            replyTo = replyTo?.let { replyPreview(it) },
         )
         _state.update { it.copy(messages = it.messages + optimisticItem) }
 
-        dispatchSend(accountId, conversationUri, optimisticId, text)
+        dispatchSend(accountId, conversationUri, optimisticId, text, replyTo)
     }
 
     private fun outboxBubbleId(entryId: Long) = "outbox-$entryId"
@@ -509,15 +551,18 @@ class ChatViewModel(
         isOutgoing = true,
         type = MessageType.Text,
         deliveryStatus = DeliveryStatus.WAITING_TO_SYNC,
+        replyTo = entry.replyTo?.let { replyPreview(it) },
     )
 
     /**
      * Fire the actual daemon send for an already-inserted optimistic bubble and arm the
      * no-echo -> FAILED watchdog. Shared by the immediate-send path and the deferred sync flush.
      */
-    private fun dispatchSend(accountId: String, conversationUri: Uri, optimisticId: String, text: String) {
+    private fun dispatchSend(
+        accountId: String, conversationUri: Uri, optimisticId: String, text: String, replyTo: String?,
+    ) {
         scope.launch {
-            accountService.sendConversationMessage(accountId, conversationUri, text)
+            accountService.sendConversationMessage(accountId, conversationUri, text, replyTo)
         }
         armSendWatchdog(optimisticId)
     }
@@ -860,6 +905,7 @@ class ChatViewModel(
                 reactions = groupReactions(interaction.reactions),
                 deliveryStatus = if (isOutgoing) aggregateStatus(interaction.statusMap) else DeliveryStatus.SENDING,
                 isEdited = interaction.edit != null,
+                replyTo = interaction.replyToId?.let { replyPreview(it) },
             )
             Interaction.InteractionType.CALL -> {
                 val call = interaction as? CallHistory
@@ -891,10 +937,42 @@ class ChatViewModel(
                     isAudio = transfer?.isAudio ?: false,
                     isVideo = transfer?.isVideo ?: false,
                     destinationPath = transfer?.destinationPath,
+                    replyTo = interaction.replyToId?.let { replyPreview(it) },
                 )
             }
             Interaction.InteractionType.INVALID -> null
         }
+    }
+
+    /**
+     * The quoted original of a reply. When it is not in the loaded history (an older message),
+     * the history is loaded up to it in the background — like libjamiclient's
+     * loadSwarmUntil(replyTo) — and the resulting SwarmLoaded rebuild fills the preview in.
+     */
+    private fun replyPreview(messageId: String): ReplyPreview {
+        val accountId = currentAccountId
+        val conversation = accountId?.let { acc ->
+            currentConversationId?.let { conversationFacade.getConversation(acc, Uri(Uri.SWARM_SCHEME, it)) }
+        }
+        val original = conversation?.getMessage(messageId)
+        if (original == null) {
+            if (conversation != null && requestedReplyOriginals.add(messageId)) {
+                scope.launch {
+                    try {
+                        accountService.loadUntil(conversation, until = messageId)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to load replied-to message $messageId: ${e.message}")
+                    }
+                }
+            }
+            return ReplyPreview(messageId, author = null, text = "", isLoaded = false)
+        }
+        val isOwn = original.author == null || original.contact?.isUser == true
+        return ReplyPreview(
+            messageId = messageId,
+            author = if (isOwn) null else original.contact?.displayUsername ?: original.author,
+            text = original.body ?: "",
+        )
     }
 
     /**
@@ -1022,7 +1100,8 @@ class ChatViewModel(
                 author = displayName,
                 timestamp = timestampMs,
                 isOutgoing = isOutgoing,
-                type = if (msg.isText) MessageType.Text else MessageType.System
+                type = if (msg.isText) MessageType.Text else MessageType.System,
+                replyTo = msg.replyTo.ifEmpty { null }?.let { replyPreview(it) },
             )
         }
         _state.value = _state.value.copy(messages = withoutOptimistic + item)

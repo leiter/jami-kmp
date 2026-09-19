@@ -1663,6 +1663,8 @@ class ConversationFacade(
         if (interaction !is ContactEvent) interaction.contact = contact
         interaction.account = account.accountId
         interaction.reactToId = message.body["react-to"]?.ifEmpty { null }
+        // Any message type may reply to another (libjamiclient AccountService sets it on all of them).
+        if (interaction.replyToId == null) interaction.replyToId = message.replyTo.ifEmpty { null }
         // `body["edit"]` points at the *target* message id on the separate
         // "application/edited-message" event, not at whether this message itself was edited.
         // The actual per-message edit history lives in `message.editions` (mirrors the live

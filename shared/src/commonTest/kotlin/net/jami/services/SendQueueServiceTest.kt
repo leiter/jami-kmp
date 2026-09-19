@@ -109,6 +109,15 @@ class SendQueueServiceTest {
     }
 
     @Test
+    fun heldReplyKeepsItsReplyTo() = runTest {
+        val env = setUp(peerRole = "invited")
+        env.queue.enqueue(ACC, CONV, "re", replyTo = "m1")
+        env.peerJoins()
+        advanceUntilIdle()
+        assertEquals("m1", env.sent.single().replyTo)
+    }
+
+    @Test
     fun heldMessagesAreSentInOrder() = runTest {
         val env = setUp(peerRole = "invited")
         env.queue.enqueue(ACC, CONV, "one")

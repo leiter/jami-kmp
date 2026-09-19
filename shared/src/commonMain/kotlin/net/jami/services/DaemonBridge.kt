@@ -626,7 +626,12 @@ class StubDaemonBridge : DaemonBridgeApi {
 
     private var nextTaskId: Long = 1L
     override fun searchConversation(accountId: String, conversationId: String, author: String, lastId: String, query: String, type: String, after: Long, before: Long, maxResult: Long, flag: Int): Long = nextTaskId++
-    override fun loadSwarmUntil(accountId: String, conversationId: String, fromMessage: String, toMessage: String): Long = nextTaskId++
+    /** toMessage of every loadSwarmUntil call, in order. */
+    val loadSwarmUntilRequests = mutableListOf<String>()
+    override fun loadSwarmUntil(accountId: String, conversationId: String, fromMessage: String, toMessage: String): Long {
+        loadSwarmUntilRequests.add(toMessage)
+        return nextTaskId++
+    }
 
     override fun setPushNotificationToken(token: String) {}
     override fun setPushNotificationConfig(config: Map<String, String>) {}
