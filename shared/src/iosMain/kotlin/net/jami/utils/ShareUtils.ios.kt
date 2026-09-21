@@ -16,6 +16,7 @@
  */
 package net.jami.utils
 
+import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSURL
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
@@ -40,6 +41,7 @@ actual fun shareFile(path: String) {
 // UIDocumentInteractionController must stay referenced while its menu is shown.
 private var documentController: UIDocumentInteractionController? = null
 
+@OptIn(ExperimentalForeignApi::class)
 actual fun openFile(path: String): Boolean {
     val rootVc = UIApplication.sharedApplication.keyWindow?.rootViewController ?: return false
     val presenter = rootVc.presentedViewController ?: rootVc
