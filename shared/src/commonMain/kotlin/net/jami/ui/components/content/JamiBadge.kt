@@ -27,7 +27,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.content_desc_unread_count
 import net.jami.ui.theme.JamiTheme
+import org.jetbrains.compose.resources.pluralStringResource
 
 /**
  * Badge display style.
@@ -54,11 +60,15 @@ fun JamiBadge(
 ) {
     if (count <= 0) return
 
+    // "3" or a bare dot says nothing on its own, so both styles carry the full count as a label.
+    val description = pluralStringResource(Res.plurals.content_desc_unread_count, count, count)
+
     when (style) {
         JamiBadgeStyle.Count -> {
             val displayText = if (count > 99) "99+" else count.toString()
             Box(
                 modifier = modifier
+                    .clearAndSetSemantics { contentDescription = description }
                     .defaultMinSize(minWidth = JamiTheme.sizes.badgeMinSize, minHeight = JamiTheme.sizes.badgeMinSize)
                     .clip(CircleShape)
                     .background(JamiTheme.colors.error)
@@ -77,6 +87,7 @@ fun JamiBadge(
         JamiBadgeStyle.Dot -> {
             Box(
                 modifier = modifier
+                    .semantics { contentDescription = description }
                     .size(JamiTheme.sizes.badgeDot)
                     .clip(CircleShape)
                     .background(JamiTheme.colors.error),

@@ -47,4 +47,22 @@
     <string name="content_desc_send_thumbs_up">Send thumbs up</string>
     <string name="content_desc_media_thumbnail">Shared media thumbnail</string>
     <string name="content_desc_video_thumbnail">Shared video thumbnail</string>
+
+    <!-- Message delivery status (announced with the message timestamp) -->
+    <string name="content_desc_message_sending">Sending</string>
+    <string name="content_desc_message_delivered">Delivered</string>
+    <string name="content_desc_message_read">Read</string>
+    <string name="content_desc_message_failed">Not sent</string>
+    <string name="content_desc_message_pending_sync">Waiting to sync</string>
+    <string name="content_desc_retry_send">Retry sending</string>
+    <string name="content_desc_cancel_edit">Cancel edit</string>
+
+    <!-- Presence and unread state -->
+    <string name="content_desc_presence_online">Online</string>
+    <string name="content_desc_presence_away">Away</string>
+    <string name="content_desc_presence_offline">Offline</string>
+    <plurals name="content_desc_unread_count">
+        <item quantity="one">%d unread message</item>
+        <item quantity="other">%d unread messages</item>
+    </plurals>
 </resources>

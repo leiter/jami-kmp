@@ -71,6 +71,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -179,12 +182,17 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // Current user avatar — tapping opens account picker
+                    val selectAccountDesc = stringResource(Res.string.searchbar_navigation_account)
                     Box(
-                        modifier = Modifier.clickable(
-                            onClick = { showAccountPicker = true },
-                            indication = null,
-                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                        )
+                        modifier = Modifier
+                            .clickable(
+                                onClick = { showAccountPicker = true },
+                                indication = null,
+                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                            )
+                            // Merge so the tappable node itself carries the avatar's label and
+                            // presence; on its own the clickable Box is an unnamed control.
+                            .semantics(mergeDescendants = true) { role = Role.Button }
                     ) {
                         JamiAvatar(
                             displayName = "Me",
@@ -193,6 +201,7 @@ fun HomeScreen(
                             showPresence = true,
                             presenceStatus = if (state.isAccountOnline) PresenceStatus.Online
                             else PresenceStatus.Offline,
+                            contentDescription = selectAccountDesc,
                         )
                     }
 

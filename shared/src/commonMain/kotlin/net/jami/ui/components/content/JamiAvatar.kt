@@ -31,11 +31,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.content_desc_presence_away
+import jami_kmp.shared.generated.resources.content_desc_presence_offline
+import jami_kmp.shared.generated.resources.content_desc_presence_online
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.utils.toImageBitmap
+import org.jetbrains.compose.resources.stringResource
 import kotlin.math.abs
 
 /**
@@ -63,6 +70,10 @@ enum class PresenceStatus {
  * @param size The avatar size preset.
  * @param showPresence Whether to show the presence indicator dot.
  * @param presenceStatus The current presence status.
+ * @param contentDescription Accessibility label for the avatar itself (for example the contact name,
+ *   or the action when the avatar is clickable). When [showPresence] is set, the presence status is
+ *   appended so the dot — which is otherwise colour-only — is announced too. Pass null when the
+ *   avatar is purely decorative next to a label that already names the same person.
  */
 @Composable
 fun JamiAvatar(
@@ -73,6 +84,7 @@ fun JamiAvatar(
     size: AvatarSize = AvatarSize.Medium,
     showPresence: Boolean = false,
     presenceStatus: PresenceStatus = PresenceStatus.Offline,
+    contentDescription: String? = null,
 ) {
     val avatarDp = when (size) {
         AvatarSize.Small -> JamiTheme.sizes.avatarSmall
@@ -97,7 +109,32 @@ fun JamiAvatar(
 
     val bitmap = remember(avatarBytes) { avatarBytes?.toImageBitmap() }
 
-    Box(modifier = modifier.size(avatarDp)) {
+    // The presence dot carries meaning through colour alone, so it is spoken as part of the
+    // avatar's label. Screen readers get one merged node instead of an unlabelled image.
+    val presenceDescription = if (showPresence) {
+        stringResource(
+            when (presenceStatus) {
+                PresenceStatus.Online -> Res.string.content_desc_presence_online
+                PresenceStatus.Away -> Res.string.content_desc_presence_away
+                PresenceStatus.Offline -> Res.string.content_desc_presence_offline
+            }
+        )
+    } else null
+    val semanticsLabel = listOfNotNull(contentDescription, presenceDescription)
+        .joinToString(", ")
+        .ifEmpty { null }
+
+    Box(
+        modifier = modifier
+            .size(avatarDp)
+            .then(
+                if (semanticsLabel != null) {
+                    Modifier.semantics(mergeDescendants = true) {
+                        this.contentDescription = semanticsLabel
+                    }
+                } else Modifier
+            )
+    ) {
         // Avatar circle
         if (bitmap != null) {
             Image(
@@ -118,10 +155,11 @@ fun JamiAvatar(
 
         // Presence indicator dot
         if (showPresence) {
+            // Away and Offline must not share a colour, or the two states are indistinguishable.
             val dotColor = when (presenceStatus) {
                 PresenceStatus.Online -> JamiTheme.colors.positive
                 PresenceStatus.Away -> JamiTheme.colors.warning
-                PresenceStatus.Offline -> JamiTheme.colors.warning
+                PresenceStatus.Offline -> JamiTheme.colors.onSurfaceVariant
             }
             Box(
                 modifier = Modifier

@@ -139,6 +139,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -744,7 +747,7 @@ fun ChatScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = null,
+                            contentDescription = stringResource(Res.string.content_desc_cancel_edit),
                             modifier = Modifier.size(16.dp),
                         )
                     }
@@ -878,6 +881,7 @@ private fun ChatBubble(
     val clipboardManager = LocalClipboardManager.current
     val timeText = formatMessageTime(message.timestamp)
     val timeFontSize = JamiTheme.typography.labelSmall.fontSize
+    val retrySendLabel = stringResource(Res.string.content_desc_retry_send)
 
     Column(
         modifier = Modifier
@@ -917,6 +921,10 @@ private fun ChatBubble(
                         else Modifier
                     )
                     .combinedClickable(
+                        // Tapping only does something on a failed send, so the label is only
+                        // offered then — otherwise the tap has no announceable meaning.
+                        onClickLabel = if (message.deliveryStatus == DeliveryStatus.FAILED)
+                            retrySendLabel else null,
                         onClick = {
                             if (message.deliveryStatus == DeliveryStatus.FAILED) onRetry()
                         },
@@ -966,6 +974,11 @@ private fun ChatBubble(
                         },
                         style = JamiTheme.typography.bodyMedium,
                         color = textColor,
+                        // The transparent trailing spacer is a layout device, but it is still in the
+                        // semantics tree — without this the timestamp is read here and again from the
+                        // visible overlay below. contentDescription (rather than clearAndSetSemantics)
+                        // keeps the link annotations reachable.
+                        modifier = Modifier.semantics { contentDescription = message.text },
                     )
                     // Timestamp (+ checkmark for outgoing) overlaid at bottom-right.
                     if (isOutgoing) {
@@ -976,6 +989,17 @@ private fun ChatBubble(
                             DeliveryStatus.FAILED    -> Icons.Default.Warning to JamiTheme.colors.error
                             DeliveryStatus.WAITING_TO_SYNC -> Icons.Default.Schedule to timeColor
                         }
+                        // The tick / warning / clock glyph is the only delivery cue in the bubble,
+                        // so it has to be spoken — otherwise sent and failed are indistinguishable.
+                        val statusDescription = stringResource(
+                            when (message.deliveryStatus) {
+                                DeliveryStatus.READ -> Res.string.content_desc_message_read
+                                DeliveryStatus.DELIVERED -> Res.string.content_desc_message_delivered
+                                DeliveryStatus.SENDING -> Res.string.content_desc_message_sending
+                                DeliveryStatus.FAILED -> Res.string.content_desc_message_failed
+                                DeliveryStatus.WAITING_TO_SYNC -> Res.string.content_desc_message_pending_sync
+                            }
+                        )
                         Row(
                             modifier = Modifier.align(Alignment.BottomEnd),
                             verticalAlignment = Alignment.CenterVertically,
@@ -988,7 +1012,7 @@ private fun ChatBubble(
                             )
                             Icon(
                                 imageVector = checkIcon,
-                                contentDescription = null,
+                                contentDescription = statusDescription,
                                 modifier = Modifier.size(12.dp),
                                 tint = checkTint,
                             )
@@ -1817,14 +1841,20 @@ private fun MessageInputBar(
                     }
                 } else {
                     // Thumbs up emoji button (visible when text is empty)
+                    // The label sits on the button: its only child is the emoji glyph, which a
+                    // screen reader would otherwise read out as the character's own name.
+                    val thumbsUpDesc = stringResource(Res.string.content_desc_send_thumbs_up)
                     IconButton(
                         onClick = onSendEmoji,
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier
+                            .size(40.dp)
+                            .semantics { contentDescription = thumbsUpDesc },
                     ) {
                         Text(
                             text = stringResource(Res.string.conversation_default_emoji),
                             fontSize = 18.sp,
                             lineHeight = 18.sp,
+                            modifier = Modifier.clearAndSetSemantics { },
                         )
                     }
                 }
