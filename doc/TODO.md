@@ -87,7 +87,15 @@
 - [ ] **@Mentions in group chat** — Reference client parses `@username` in message text and highlights them. No mention system in KMP's chat UI or viewmodel.
 - [x] **Full-screen image viewer** — `ui/screens/MediaViewerScreen.kt`.
 - [x] **Video message playback in chat** — `ui/components/video/VideoPlayerView.kt` + `ui/screens/VideoPlayerScreen.kt`, routed via `MediaNavigationState`.
-- [ ] **Retry failed file transfer** — Reference shows a retry button on failed transfers. Not present in KMP.
+- [x] **Retry failed file transfer** (2026-09-25) — Tap a failed outgoing transfer bubble
+  (`TransferStatus.isError`: `TRANSFER_ERROR`/`TRANSFER_UNJOINABLE_PEER`/`TRANSFER_CANCELED`/
+  `TRANSFER_TIMEOUT_EXPIRED`/`FAILURE`) to re-send, mirroring `ChatBubble`'s failed-text retry.
+  `ChatViewModel.retryFileTransfer()` re-dispatches `accountService.sendFile()` from the file's
+  existing `destinationPath` (already stored in the conversation cache by the first attempt, so
+  no re-copy needed). The original failed interaction is real swarm history (unlike a text
+  `pending-*` bubble) and stays visible; retry just adds a new transfer attempt. No daemon-level
+  `resendFile`/`retryDataTransfer` exists, and `jami-client-android` was checked and has no
+  equivalent retry feature either — re-sending is the only available mechanism on both.
 - [x] **Message long-press: share file** — Done 2026-09-18 (`c4d413f`): file/image messages have a long-press menu (Open / Save / Share / Delete file once complete, Delete on own messages), and the image viewer has Share/Save.
 
 Parity gaps found 2026-09-18 comparing chat interactions with jami-android-client

@@ -16,11 +16,19 @@
  */
 package net.jami.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.StartOffset
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -577,6 +585,7 @@ fun ChatScreen(
                                 onDeleteFile = { viewModel.deleteLocalFile(message.id) },
                                 onDelete = { viewModel.deleteMessage(message.id) },
                                 onReply = if (canReply) ({ startReply(message.id) }) else null,
+                                onRetry = { viewModel.retryFileTransfer(message.id) },
                             )
                             else -> ChatBubble(
                                 message = message,
@@ -618,17 +627,10 @@ fun ChatScreen(
                     }
                 }
 
-                // Typing indicator
+                // Typing indicator — an incoming-style bubble with three bouncing dots,
+                // matching jami-client-android's item_conv_composing.xml.
                 if (state.isContactTyping) {
-                    Text(
-                        text = stringResource(Res.string.conversation_typing),
-                        style = JamiTheme.typography.labelSmall,
-                        color = JamiTheme.colors.onSurfaceVariant,
-                        modifier = Modifier.padding(
-                            horizontal = JamiTheme.spacing.l,
-                            vertical = JamiTheme.spacing.xxs,
-                        ),
-                    )
+                    TypingIndicator()
                 }
             }
 
@@ -830,6 +832,66 @@ fun ChatScreen(
             } // end !isSearchActive && !isLegacy
         }
     }
+}
+
+/**
+ * "Contact is typing…" indicator: an incoming-style bubble with three dots bouncing in
+ * sequence, resampling jami-client-android's `item_conv_composing.xml` (grey rounded bubble,
+ * white dots, ~300ms per-dot up/down bounce staggered ~150ms apart).
+ */
+@Composable
+private fun TypingIndicator() {
+    val bubbleColor = JamiTheme.colors.messageReceived
+    val dotColor = JamiTheme.colors.onMessageReceived
+    val bubbleShape = RoundedCornerShape(
+        topStart = JamiTheme.radius.m,
+        topEnd = JamiTheme.radius.m,
+        bottomStart = JamiTheme.radius.xs,
+        bottomEnd = JamiTheme.radius.m,
+    )
+    val description = stringResource(Res.string.conversation_contact_is_typing)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 8.dp, end = 56.dp, top = JamiTheme.spacing.xxs, bottom = JamiTheme.spacing.xxs),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Surface(
+            color = bubbleColor,
+            shape = bubbleShape,
+            modifier = Modifier.semantics { contentDescription = description },
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = JamiTheme.spacing.m, vertical = JamiTheme.spacing.s),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                repeat(3) { index -> TypingDot(dotColor, index) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TypingDot(color: Color, index: Int) {
+    val transition = rememberInfiniteTransition(label = "typingDot")
+    val offsetY by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = -6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+            initialStartOffset = StartOffset(index * 150),
+        ),
+        label = "typingDotOffset",
+    )
+    Box(
+        modifier = Modifier
+            .size(6.dp)
+            .graphicsLayer { translationY = offsetY }
+            .background(color, CircleShape),
+    )
 }
 
 /**
@@ -1361,6 +1423,7 @@ private fun FileTransferMessage(
     onDeleteFile: () -> Unit = {},
     onDelete: () -> Unit = {},
     onReply: (() -> Unit)? = null,
+    onRetry: () -> Unit = {},
 ) {
     // Asynchronously load image bytes for completed picture transfers
     var imageBitmap by remember(message.destinationPath) { mutableStateOf<ImageBitmap?>(null) }
@@ -1418,6 +1481,8 @@ private fun FileTransferMessage(
     val openMenu = { if (hasMenu) showMenu = true }
     // Tapping a finished file without an in-app preview opens it in another app (e.g. .mpeg).
     val tapToOpen = completedPath != null && !message.isPicture && !message.isVideo
+    // Tapping a failed outgoing transfer re-sends it, mirroring ChatBubble's failed-text retry.
+    val tapToRetry = isError && isOutgoing && message.destinationPath != null
 
     val statusText = when (status) {
         Interaction.TransferStatus.TRANSFER_CREATED        -> "Initializing…"
@@ -1450,7 +1515,10 @@ private fun FileTransferMessage(
                 .widthIn(min = 160.dp, max = 280.dp)
                 .clip(bubbleShape)
                 .combinedClickable(
-                    onClick = { if (tapToOpen) completedPath?.let(onOpen) },
+                    onClick = {
+                        if (tapToRetry) onRetry()
+                        else if (tapToOpen) completedPath?.let(onOpen)
+                    },
                     onLongClick = openMenu,
                 ),
             color = bubbleColor,

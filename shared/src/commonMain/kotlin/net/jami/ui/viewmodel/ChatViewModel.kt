@@ -797,6 +797,25 @@ class ChatViewModel(
     }
 
     /**
+     * Re-send a file transfer that failed (error, unjoinable peer, timeout, …). The file is
+     * already stored in the conversation's local cache (see [ConversationFacade.sendFile]), so
+     * retry just re-dispatches the daemon send from that path rather than re-copying it. Unlike
+     * [retryMessage], the failed interaction is real swarm history and stays visible; this only
+     * adds a new transfer attempt.
+     */
+    fun retryFileTransfer(messageId: String) {
+        val failed = _state.value.messages.firstOrNull { it.id == messageId } ?: return
+        if (!failed.transferStatus.isError) return
+        val path = failed.destinationPath ?: return
+
+        scope.launch {
+            val accountId = currentAccountId ?: return@launch
+            val conversationId = currentConversationId ?: return@launch
+            accountService.sendFile(accountId, conversationId, path, failed.text)
+        }
+    }
+
+    /**
      * Cancel an ongoing or pending file transfer.
      */
     fun cancelTransfer(messageId: String, fileId: String) {
