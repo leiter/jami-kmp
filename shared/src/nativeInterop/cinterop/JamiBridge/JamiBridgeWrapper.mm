@@ -9,10 +9,13 @@
 #import "JamiBridgeWrapper.h"
 #import <TargetConditionals.h>
 
+// UTType is used by the file picker on both platforms (macOS 11+ / iOS 14+), so
+// UniformTypeIdentifiers is imported unconditionally.
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+
 // Platform-specific imports
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
-#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import <objc/runtime.h>
 #else
 #import <AppKit/AppKit.h>
@@ -305,6 +308,9 @@ static JBCallState toCallState(const std::string& state) {
 // JamiBridgeWrapper Implementation
 // =============================================================================
 
+// The picker delegates conform to UIKit protocols and exist on iOS only; the
+// macOS file picker is NSOpenPanel, which is modal and needs no delegate.
+#if TARGET_OS_IPHONE
 @interface JBDocumentPickerDelegate : NSObject <UIDocumentPickerDelegate>
 - (instancetype)initWithCompletion:(void (^)(NSString * _Nullable))completion;
 @end
@@ -312,6 +318,7 @@ static JBCallState toCallState(const std::string& state) {
 @interface JBImagePickerDelegate : NSObject <UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 - (instancetype)initWithCompletion:(void (^)(NSString * _Nullable))completion;
 @end
+#endif // TARGET_OS_IPHONE
 
 @interface JamiBridgeWrapper ()
 
@@ -2154,12 +2161,24 @@ static JBCallState toCallState(const std::string& state) {
     return libjami::switchInput(toCppString(accountId), toCppString(callId), toCppString(uri));
 }
 
+// libjami::addVideoDevice/removeVideoDevice exist only on Android and iOS —
+// videomanager_interface.h guards them with
+//   #if defined(__ANDROID__) || (defined(TARGET_OS_IOS) && TARGET_OS_IOS)
+// because on those platforms the *client* owns the camera and registers devices
+// with the daemon. On macOS the daemon enumerates capture devices itself, so
+// there is nothing to register. The ObjC methods are kept on every platform so
+// that the cinterop surface (and therefore the shared appleMain Kotlin) stays
+// identical; on macOS they are no-ops.
 - (void)addVideoDevice:(NSString *)node {
+#if defined(__ANDROID__) || (defined(TARGET_OS_IOS) && TARGET_OS_IOS)
     libjami::addVideoDevice(toCppString(node));
+#endif
 }
 
 - (void)removeVideoDevice:(NSString *)node {
+#if defined(__ANDROID__) || (defined(TARGET_OS_IOS) && TARGET_OS_IOS)
     libjami::removeVideoDevice(toCppString(node));
+#endif
 }
 
 // =============================================================================
@@ -2225,6 +2244,7 @@ static JBCallState toCallState(const std::string& state) {
 // File Picker
 // =========================================================================
 
+#if TARGET_OS_IPHONE
 - (void)presentDocumentPickerWithMimeTypes:(NSArray<NSString *> *)mimeTypes
                                 completion:(void (^)(NSString * _Nullable filePath))completion {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -2312,6 +2332,49 @@ static JBCallState toCallState(const std::string& state) {
     });
 }
 
+#else // macOS
+
+// macOS equivalent of the iOS document picker. NSOpenPanel is the native
+// picker: it is modal, hands back the chosen URL directly, and needs no view
+// controller to present from — so none of the UIWindowScene/rootViewController
+// lookup the iOS path requires applies here.
+- (void)presentDocumentPickerWithMimeTypes:(NSArray<NSString *> *)mimeTypes
+                                completion:(void (^)(NSString * _Nullable filePath))completion {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSOpenPanel *panel = [NSOpenPanel openPanel];
+        panel.canChooseFiles = YES;
+        panel.canChooseDirectories = NO;
+        panel.allowsMultipleSelection = NO;
+
+        if (mimeTypes.count > 0) {
+            NSMutableArray<UTType *> *contentTypes = [NSMutableArray array];
+            for (NSString *mime in mimeTypes) {
+                UTType *type = [UTType typeWithMIMEType:mime];
+                if (type) { [contentTypes addObject:type]; }
+            }
+            // Leave the panel unrestricted when no MIME type could be mapped,
+            // rather than silently allowing nothing to be selected.
+            if (contentTypes.count > 0) { panel.allowedContentTypes = contentTypes; }
+        }
+
+        if ([panel runModal] != NSModalResponseOK) {
+            completion(nil);
+            return;
+        }
+        completion(panel.URL.path);
+    });
+}
+
+// There is no UIImagePickerController on macOS: capturing a still from the
+// camera would mean driving an AVCaptureSession, the same gap that leaves macOS
+// without camera capture in HardwareService. Reported as unavailable rather than
+// silently never invoking the completion.
+- (void)presentImageCapture:(void (^)(NSString * _Nullable filePath))completion {
+    FILE_LOG_E("ImageCapture", @"Camera capture is not implemented on macOS");
+    dispatch_async(dispatch_get_main_queue(), ^{ completion(nil); });
+}
+
+#endif // TARGET_OS_IPHONE
 - (NSString *)captureRecentLogs:(int)maxLines {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsPath = paths.firstObject;
@@ -2353,6 +2416,7 @@ static JBCallState toCallState(const std::string& state) {
 // Document picker delegate helper
 // =========================================================================
 
+#if TARGET_OS_IPHONE
 @implementation JBDocumentPickerDelegate {
     void (^_completion)(NSString * _Nullable);
 }
@@ -2432,3 +2496,4 @@ didFinishPickingMediaWithInfo:(NSDictionary<UIImagePickerControllerInfoKey, id> 
 }
 
 @end
+#endif // TARGET_OS_IPHONE

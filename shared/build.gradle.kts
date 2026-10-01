@@ -14,6 +14,46 @@ val enableJamiBridgeCinterop = true
 val jamiBridgePath = "${projectDir}/src/nativeInterop/cinterop"
 val libjamiLibPath = "${projectDir}/src/nativeInterop/cinterop/lib"
 
+// macOS links against its own set of libraries. lib/ holds iOS-device arm64
+// slices, so pointing the macOS target at it produced "building for macOS but
+// linking against a file built for iOS" errors rather than a usable framework.
+// Populate this with scripts/make_macos_links.py.
+//
+// Per-architecture, because the daemon's contrib tree is built for one host
+// architecture at a time: an arm64 contrib build cannot satisfy macosX64. Only
+// lib-macos/ (arm64) is populated on an Apple-silicon machine, so macosX64
+// compiles but does not link — which is the honest outcome, and a clearer
+// failure than feeding ld libraries of the wrong architecture.
+val libjamiMacosLibPath = "${projectDir}/src/nativeInterop/cinterop/lib-macos"
+val libjamiMacosX64LibPath = "${projectDir}/src/nativeInterop/cinterop/lib-macos-x64"
+
+/**
+ * Derives the macOS `-l` flags from whatever is actually in lib-macos/.
+ *
+ * The iOS device side hardcodes its library list in two places (here and
+ * OTHER_LDFLAGS in project.pbxproj) and goes stale every time the daemon
+ * submodule moves and its contrib dependency set changes — a link error, never
+ * a compile error. Discovering the list avoids repeating that on macOS.
+ *
+ * libjami and the bridge wrapper come first: they are the archives that
+ * reference symbols in everything else, and ld resolves archives in order.
+ * Returns an empty string when lib-macos/ has not been populated, so that a
+ * checkout without the macOS libraries still configures (and fails at link
+ * time with a clear undefined-symbol error) instead of breaking the build for
+ * Android-only work.
+ */
+fun macosLinkerLibs(libPath: String): String {
+    val dir = file(libPath)
+    if (!dir.isDirectory) return ""
+    val names = dir.listFiles()
+        ?.filter { it.name.startsWith("lib") && it.name.endsWith(".a") }
+        ?.map { it.name.removePrefix("lib").removeSuffix(".a") }
+        ?.sorted()
+        ?: return ""
+    val first = listOf("jami", "JamiBridge_macos").filter { it in names }
+    return (first + (names - first.toSet())).joinToString(" ") { "-l$it" }
+}
+
 kotlin {
     // Android
     androidTarget {
@@ -62,15 +102,23 @@ kotlin {
     }
 
     // macOS
-    listOf(
-        macosX64(),
-        macosArm64()
-    ).forEach { macosTarget ->
+    val macosX64Target = macosX64()
+    val macosArm64Target = macosArm64()
+
+    listOf(macosX64Target, macosArm64Target).forEach { macosTarget ->
+        val macLibPath = when (macosTarget) {
+            macosArm64Target -> libjamiMacosLibPath
+            else -> libjamiMacosX64LibPath
+        }
         macosTarget.binaries.framework {
             baseName = "JamiShared"
             isStatic = true
             if (enableJamiBridgeCinterop) {
-                linkerOpts("-L$libjamiLibPath", "-lJamiBridge_macos", "-ljami", "-lc++")
+                linkerOpts(
+                    listOf("-L$macLibPath") +
+                        macosLinkerLibs(macLibPath).split(" ").filter { it.isNotEmpty() } +
+                        "-lc++"
+                )
             }
         }
         if (enableJamiBridgeCinterop) {
@@ -79,11 +127,14 @@ kotlin {
                     create("JamiBridge") {
                         defFile(project.file("src/nativeInterop/cinterop/JamiBridge.def"))
                         includeDirs(jamiBridgePath)
-                        extraOpts("-libraryPath", libjamiLibPath)
+                        extraOpts("-libraryPath", macLibPath)
                     }
                 }
                 kotlinOptions {
-                    freeCompilerArgs = listOf("-linker-options", "-L$libjamiLibPath -lJamiBridge_macos -ljami -lc++")
+                    freeCompilerArgs = listOf(
+                        "-linker-options",
+                        "-L$macLibPath ${macosLinkerLibs(macLibPath)} -lc++",
+                    )
                 }
             }
         }

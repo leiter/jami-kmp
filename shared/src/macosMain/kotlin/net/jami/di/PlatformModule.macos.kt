@@ -22,6 +22,7 @@ import net.jami.database.DatabaseDriverFactory
 import net.jami.database.JamiDatabase
 import net.jami.services.*
 import net.jami.services.expect.AudioRecorderService
+import net.jami.services.expect.HardwareService
 import net.jami.services.expect.SystemContactsService
 
 /**
@@ -74,12 +75,10 @@ actual val platformModule: Module = module {
     }
 
     /**
-     * macOS hardware service.
-     * Provides audio management via CoreAudio/AVFoundation.
+     * macOS hardware service. Camera enumeration and connectivity monitoring are real;
+     * capture and audio routing are not. See HardwareService in macosMain.
      */
-    single<HardwareService> {
-        MacOSHardwareService()
-    }
+    single { HardwareService() }
     single { AudioRecorderService() }
 
     /**

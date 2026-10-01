@@ -23,6 +23,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import platform.AVFoundation.AVCaptureDevice
 import platform.AVFoundation.AVMediaTypeAudio
 import platform.AVFoundation.AVMediaTypeVideo
+import platform.AVFoundation.requestAccessForMediaType
 import platform.Contacts.CNContactStore
 import platform.Contacts.CNEntityType
 import platform.CoreLocation.CLLocationManager
@@ -30,6 +31,10 @@ import platform.CoreLocation.CLAuthorizationStatus
 import platform.CoreLocation.kCLAuthorizationStatusAuthorizedAlways
 import platform.CoreLocation.kCLAuthorizationStatusNotDetermined
 import platform.CoreLocation.CLLocationManagerDelegateProtocol
+import platform.UserNotifications.UNAuthorizationOptionAlert
+import platform.UserNotifications.UNAuthorizationOptionBadge
+import platform.UserNotifications.UNAuthorizationOptionSound
+import platform.UserNotifications.UNUserNotificationCenter
 import platform.darwin.NSObject
 import kotlin.coroutines.resume
 
@@ -46,7 +51,7 @@ actual fun PermissionRequesterEffect(
             AppPermission.Camera -> requestAVPermission(AVMediaTypeVideo)
             AppPermission.Microphone -> requestAVPermission(AVMediaTypeAudio)
             AppPermission.Contacts -> requestContactsPermission()
-            AppPermission.Notifications -> true // macOS notification permission handled at app level
+            AppPermission.Notifications -> requestNotificationsPermission()
             AppPermission.Location -> requestLocationPermission()
         }
         onResult(granted)
@@ -54,7 +59,7 @@ actual fun PermissionRequesterEffect(
 }
 
 @OptIn(ExperimentalForeignApi::class)
-private suspend fun requestAVPermission(mediaType: String): Boolean =
+private suspend fun requestAVPermission(mediaType: String?): Boolean =
     suspendCancellableCoroutine { cont ->
         AVCaptureDevice.requestAccessForMediaType(mediaType) { granted ->
             cont.resume(granted)
@@ -69,6 +74,20 @@ private suspend fun requestContactsPermission(): Boolean =
         }
     }
 
+@OptIn(ExperimentalForeignApi::class)
+private suspend fun requestNotificationsPermission(): Boolean =
+    suspendCancellableCoroutine { cont ->
+        val options = UNAuthorizationOptionAlert or UNAuthorizationOptionBadge or UNAuthorizationOptionSound
+        UNUserNotificationCenter.currentNotificationCenter()
+            .requestAuthorizationWithOptions(options) { granted, _ ->
+                cont.resume(granted)
+            }
+    }
+
+/**
+ * macOS has no "when in use" authorization — [CLLocationManager.requestWhenInUseAuthorization]
+ * is iOS-only — so the always-on variant is the only option here.
+ */
 @OptIn(ExperimentalForeignApi::class)
 private suspend fun requestLocationPermission(): Boolean =
     suspendCancellableCoroutine { cont ->

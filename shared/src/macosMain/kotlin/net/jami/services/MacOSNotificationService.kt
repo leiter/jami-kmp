@@ -17,6 +17,7 @@
 package net.jami.services
 
 import net.jami.model.*
+import net.jami.repository.SettingsRepository
 import net.jami.utils.Log
 import platform.Foundation.NSUUID
 import platform.UserNotifications.*
@@ -49,7 +50,10 @@ private fun Conversation.getLastMessage(): String? =
  * UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
  * ```
  */
-class MacOSNotificationService : NotificationService {
+class MacOSNotificationService(
+    private val settingsRepository: SettingsRepository,
+    private val notificationGuard: NotificationGuard,
+) : NotificationService {
 
     private val notificationCenter = UNUserNotificationCenter.currentNotificationCenter()
 
@@ -123,6 +127,10 @@ class MacOSNotificationService : NotificationService {
     // ==================== Call Notifications ====================
 
     override fun showCallNotification(notifId: Int): Any? {
+        if (!notificationGuard.shouldShowCallNotification()) {
+            Log.d(TAG, "showCallNotification: suppressed by notification settings")
+            return null
+        }
         val identifier = "call_$notifId"
         currentCallNotificationId = identifier
 
@@ -284,6 +292,10 @@ class MacOSNotificationService : NotificationService {
     // ==================== Text Notifications ====================
 
     override fun showTextNotification(conversation: Conversation) {
+        if (!notificationGuard.shouldShowMessageNotification()) {
+            Log.d(TAG, "showTextNotification: suppressed by notification settings")
+            return
+        }
         val conversationKey = "${conversation.accountId}_${conversation.uri.uri}"
         val identifier = "message_$conversationKey"
         activeNotifications[conversationKey] = identifier
@@ -336,6 +348,10 @@ class MacOSNotificationService : NotificationService {
     // ==================== Trust Request Notifications ====================
 
     override fun showIncomingTrustRequestNotification(account: Account) {
+        if (!notificationGuard.shouldShowRequestNotification()) {
+            Log.d(TAG, "showIncomingTrustRequestNotification: suppressed by notification settings")
+            return
+        }
         val identifier = "request_${account.accountId}"
 
         val content = UNMutableNotificationContent().apply {

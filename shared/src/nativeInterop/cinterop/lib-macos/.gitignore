@@ -1,0 +1,6 @@
+# Symlinks into the jami-daemon contrib macOS install prefix and the daemon's
+# own libjami.a — machine-specific build products, not committed.
+# Recreate them with scripts/make_macos_links.py.
+# Only the compiled ObjC++ bridge wrapper is tracked.
+*.a
+!libJamiBridge_macos.a

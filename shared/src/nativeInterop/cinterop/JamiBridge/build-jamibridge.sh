@@ -5,20 +5,50 @@
 # This script compiles JamiBridgeWrapper.mm into a static library
 # that can be linked with Kotlin/Native via cinterop.
 #
+# Usage: build-jamibridge.sh [--target=all|ios|macos]
+#
+#   all    (default) build the iOS device, iOS simulator and macOS wrappers
+#   ios    build only the iOS device + simulator wrappers (into ../lib/)
+#   macos  build only the macOS wrapper (into ../lib-macos/)
+#
+# --target=macos exists because libJamiBridge_ios.a and libJamiBridge_iossim.a
+# are *tracked in git*: rebuilding them to get a macOS library would dirty two
+# committed binaries for no reason. The macOS wrapper is written to lib-macos/
+# rather than lib/, since lib/ holds iOS-device-arm64 libraries and mixing
+# architectures in one -L directory is how you get confusing link errors.
+#
 # Prerequisites:
-# - libjami.a in ../lib/
 # - libjami headers in ../headers/
+# - for --target=ios/all: libjami.a in ../lib/
+# - for --target=macos:   libjami.a in ../lib-macos/ (see scripts/make_macos_links.py)
 # - Xcode Command Line Tools installed
 #
 
 set -e
+
+TARGET_SEL="all"
+for arg in "$@"; do
+    case "$arg" in
+        --target=*) TARGET_SEL="${arg#--target=}" ;;
+        -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
+        *) echo "Unknown option: $arg" >&2; exit 1 ;;
+    esac
+done
+case "$TARGET_SEL" in
+    all|ios|macos) ;;
+    *) echo "Error: --target must be one of: all, ios, macos" >&2; exit 1 ;;
+esac
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CINTEROP_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Configuration
 HEADERS_DIR="$CINTEROP_DIR/headers"
-LIB_DIR="$CINTEROP_DIR/lib"
+if [ "$TARGET_SEL" = "macos" ]; then
+    LIB_DIR="$CINTEROP_DIR/lib-macos"
+else
+    LIB_DIR="$CINTEROP_DIR/lib"
+fi
 OUTPUT_DIR="$LIB_DIR"
 
 # Build settings
@@ -26,6 +56,7 @@ CXX_FLAGS="-std=c++17 -fobjc-arc -fmodules -DNDEBUG -O2"
 INCLUDE_FLAGS="-I$HEADERS_DIR -I$SCRIPT_DIR"
 
 echo "=== Building JamiBridge Static Library ==="
+echo "Target:  $TARGET_SEL"
 echo "Headers: $HEADERS_DIR"
 echo "Output:  $OUTPUT_DIR"
 echo ""
@@ -60,6 +91,7 @@ echo ""
 mkdir -p "$OUTPUT_DIR"
 
 # Build for macOS
+if [ "$TARGET_SEL" = "all" ] || [ "$TARGET_SEL" = "macos" ]; then
 echo "=== Compiling for macOS ($TARGET) ==="
 clang++ -c "$SCRIPT_DIR/JamiBridgeWrapper.mm" \
     -o "$OUTPUT_DIR/JamiBridgeWrapper_macos.o" \
@@ -69,9 +101,10 @@ clang++ -c "$SCRIPT_DIR/JamiBridgeWrapper.mm" \
 
 echo "Creating libJamiBridge_macos.a..."
 ar rcs "$OUTPUT_DIR/libJamiBridge_macos.a" "$OUTPUT_DIR/JamiBridgeWrapper_macos.o"
+fi
 
 # Build for iOS (if on arm64 Mac)
-if [ "$ARCH" = "arm64" ]; then
+if { [ "$TARGET_SEL" = "all" ] || [ "$TARGET_SEL" = "ios" ]; } && [ "$ARCH" = "arm64" ]; then
     # Get SDK paths
     IOS_SDK=$(xcrun --sdk iphoneos --show-sdk-path)
     IOS_SIM_SDK=$(xcrun --sdk iphonesimulator --show-sdk-path)

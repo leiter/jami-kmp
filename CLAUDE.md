@@ -70,8 +70,9 @@ jami-kmp/
 │       │   └── utils/        # Log, FileUtils, QRCodeUtils, HashUtils, StringUtils, …
 │       ├── commonTest/       # 52 test files (ViewModel + model + service + utility tests)
 │       ├── androidMain/      # JNI bridge, Android services, SharedPreferences, JNI libs
-│       ├── iosMain/          # C interop bridge, Foundation/AVFoundation services
-│       ├── macosMain/        # C interop bridge, macOS AppKit services
+│       ├── appleMain/        # Shared iOS+macOS: DaemonBridge (cinterop), Foundation-only actuals
+│       ├── iosMain/          # UIKit/CallKit/PushKit/AVAudioSession-specific actuals
+│       ├── macosMain/        # AppKit-specific actuals; HardwareService, PlatformModule
 │       ├── desktopMain/      # JVM/FFI daemon bridge, AWT/Swing helpers
 │       └── jsMain/           # WebSocket daemon bridge (WIP), Web API services
 ├── android-app/          # Android host — thin shell, wires Koin + renders JamiApp
@@ -142,7 +143,11 @@ All major mobile features are implemented, including CallKit (iOS) and Telecom A
 
 - **Push notifications** — Android (FCM) and iOS (APNs + PushKit) client integration are both done (2026-07-27, see `doc/push-notifications.md`). Delivery still needs a push-capable DHT proxy holding the FCM/APNs credentials for this app, so calls and messages currently still rely on the daemon running. The iOS half now compiles and runs (it was written on a Linux host, where Apple targets are skipped, and needed three fixes on first Mac build — see `ios_implementation_gap.md` §4.1).
 - **iOS connectivity never reaches the daemon** — `NWPathMonitor` feeds `HardwareService.connectivityChanged()`, so `_connectivityState` and `setAccountsActive()` are correct, but `DaemonBridge.ios.kt` cannot forward it: `JamiBridgeWrapper.h` exposes no `connectivityChanged` entry point, so the call is a log line. The daemon is never told to re-resolve its connections after a network change. Android is fully wired (`ConnectivityManager.NetworkCallback` → JNI). Fix is one wrapper passthrough + a `build-jamibridge.sh` rebuild.
-- **macOS target does not compile** — ~95 errors, mostly in `MacOSHardwareService.kt`. Since the iOS and macOS Darwin implementations are now substantively identical, the right fix is a shared `appleMain` source set.
+- **macOS now compiles and links** (2026-10-01) — `linkDebugFrameworkMacosArm64` produces an arm64 `JamiShared.framework` exporting ~1760 jami symbols. This needed a native `arm64-apple-darwin` contrib + daemon build; see "Building the macOS native libraries" in `shared/src/nativeInterop/cinterop/JamiBridge/README.md`, and note the `--ignore-system-libs` requirement there — a Homebrew GMP otherwise breaks the build ~20 minutes in with a misleading gnutls error. `macosX64` compiles but does not link: contrib builds one host architecture at a time and only `lib-macos/` (arm64) is populated. The former ~95 errors were `macosMain` drift: `MacOSHardwareService.kt` implemented `HardwareService` as an *interface* long after `commonMain` had made it an `expect class`, and `macosMain` had no `actual` for it or for `VideoRenderer`. Fixed by writing a real `actual class HardwareService` for macOS and moving the 15 UIKit-free Darwin files — `DaemonBridge` above all — into a shared **`appleMain`** source set so the two Darwin targets cannot drift apart again. `DaemonBridge` alone had fallen 42 of 173 `DaemonBridgeApi` methods behind iOS. Remaining macOS implementation gaps, all deliberate and commented at the implementation:
+  - **No camera capture.** There is no `MacOSCameraService` counterpart to `IOSCameraService`, so outgoing video does not work. Device *enumeration* is real (`AVCaptureDevice`), so the daemon is told which cameras exist.
+  - **No audio routing.** `AVAudioSession` is iOS-only; `HardwareService` tracks the speaker flag the UI binds to but does not force a route. Real device enumeration would need CoreAudio `AudioObjectGetPropertyData`.
+  - **No video rendering.** Compose Multiplatform has no AppKit interop composable (`UIKitView` is iOS-only), so `VideoRenderer`/`VideoSurface` are placeholders. Same underlying gap as iOS remote video.
+  - Connectivity monitoring **is** real and shared with iOS (`nw_path_monitor`), so `setAccountsActive()` behaves correctly across network changes.
 - **iOS remote video rendering** — no Metal/CALayer `SinkTarget` implementation yet; audio-only calls work fine. See `ios_implementation_gap.md`.
 - **Chat plugins** — Jami plugin system not ported to KMP. Menu item shows a "not yet supported" snackbar.
 - **OsmMapView (Desktop/macOS)** — no viable JVM or AppKit map library in scope; shows coordinate text instead of a map.
