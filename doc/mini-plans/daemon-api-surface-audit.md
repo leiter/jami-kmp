@@ -577,6 +577,28 @@ Quick wins that close obvious gaps without major architectural work:
    - Wire `version()`, `platform()`, `arch()`, `monitor()`, `getConnectionList()`, `getConversationConnectivity()`
    - Useful for field support; can catch network/daemon issues
 
+### Phase 2 — **NEXT UP** (agreed 2026-10-04)
+
+Checked the same day, before any work starts:
+
+- **Item 5 (service discovery/exposure, F7).** The Android SWIG bindings *do* carry the whole set
+  — `addExposedService`, `updateExposedService`, `removeExposedService`, `getExposedServices`,
+  `queryPeerServices`, `openServiceTunnel`, `closeServiceTunnel`, `getActiveTunnels` — and
+  `NetworkServiceCallback` exists, with `DaemonBridge.android.kt`'s factory for it still an empty
+  no-op (the notifications plan's F4). However there is **no `networkservice_interface.h` under
+  `shared/src/nativeInterop/cinterop/headers/`**, so iOS/macOS cannot reach any of it until that
+  header and matching `JamiBridgeWrapper` methods are added. Expect Android-first, with iOS
+  parity as separate native work.
+- **Item 6 (audio processing params).** Only `getNoiseSuppressState`, `setNoiseSuppressState` and
+  `setAgcState` are in the SWIG bindings. `getEchoCancellationState`/`setEchoCancellationState`
+  are in the daemon header but **not** bound, and there is no `getAgcState` at all — so a UI can
+  set AGC but never read back its state. The plan's "8 functions" is three reachable ones.
+- **Item 7 (video device enumeration).** `getDeviceList` and `getCapabilities` are **not** bound
+  either (only `getDefaultDevice`, `getSettings`, `applySettings`), and the plan itself calls
+  this "minor for Android". Lowest value of the three.
+
+---
+
 ### Phase 2: Medium Effort (3–4 weeks)
 
 Larger features that improve user experience but require more testing:
