@@ -59,7 +59,8 @@ class ConversationFacadeIntegrationTest {
 
     private fun makeFacade(
         stub: StubDaemonBridge,
-        scope: kotlinx.coroutines.test.TestScope
+        scope: kotlinx.coroutines.test.TestScope,
+        preferencesService: PreferencesService = StubPreferencesService()
     ): Triple<AccountService, ContactService, ConversationFacade> {
         val accountService = AccountService(stub, testHardwareService(), StubDeviceRuntimeService(), scope.testServiceScope())
         val callService = CallService(stub, accountService, net.jami.repository.SettingsRepository(stub, scope), scope)
@@ -73,7 +74,7 @@ class ConversationFacadeIntegrationTest {
             notificationService = StubNotificationService(),
             hardwareService = testHardwareService(),
             deviceRuntimeService = StubDeviceRuntimeService(),
-            preferencesService = StubPreferencesService(),
+            preferencesService = preferencesService,
             daemonBridge = stub,
             settingsRepository = net.jami.repository.SettingsRepository(stub, facadeScope),
             scope = facadeScope
@@ -127,6 +128,60 @@ class ConversationFacadeIntegrationTest {
             mapOf("color" to "#FF0000")
         )
         // No crash
+    }
+
+    /**
+     * The facade used to only write preferences to local storage, so a preference set on this
+     * device never reached the swarm and never synced to the user's other devices.
+     */
+    @Test
+    fun setConversationPreferencesSendsSwarmPreferencesToDaemon() = runTest {
+        val stub = StubDaemonBridge()
+        val (_, _, facade) = makeFacade(stub, this)
+
+        facade.setConversationPreferences(
+            "acc1",
+            Uri.fromString("swarm:conv123"),
+            mapOf("muted" to "true")
+        )
+
+        assertEquals(mapOf("muted" to "true"), stub.conversationPreferences["acc1:conv123"])
+    }
+
+    /** Legacy/SIP conversations have no daemon-side preferences, so they stay local-only. */
+    @Test
+    fun setConversationPreferencesKeepsNonSwarmPreferencesLocal() = runTest {
+        val stub = StubDaemonBridge()
+        val (_, _, facade) = makeFacade(stub, this)
+
+        facade.setConversationPreferences(
+            "acc1",
+            Uri.fromString("ring:peer123"),
+            mapOf("muted" to "true")
+        )
+
+        assertTrue(stub.conversationPreferences.isEmpty())
+    }
+
+    /**
+     * Preferences changed on another device arrive through the daemon; the refresh merges them
+     * over the local copy without dropping local-only keys.
+     */
+    @Test
+    fun refreshConversationPreferencesMergesDaemonValuesOverLocalOnes() = runTest {
+        val stub = StubDaemonBridge()
+        stub.conversationPreferences["acc1:conv123"] = mapOf("muted" to "true")
+        val prefs = StubPreferencesService()
+        val (_, _, facade) = makeFacade(stub, this, prefs)
+        val conversationUri = Uri(Uri.SWARM_SCHEME, "conv123")
+        prefs.setConversationPreferences("acc1", conversationUri, mapOf("color" to "#FF0000", "muted" to "false"))
+
+        facade.refreshConversationPreferences("acc1", "conv123")
+
+        assertEquals(
+            mapOf("color" to "#FF0000", "muted" to "true"),
+            prefs.getConversationPreferences("acc1", conversationUri)
+        )
     }
 
     @Test

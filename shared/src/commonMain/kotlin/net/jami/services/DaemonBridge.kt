@@ -579,6 +579,8 @@ class StubDaemonBridge : DaemonBridgeApi {
     var conversations: MutableMap<String, List<String>> = mutableMapOf()
     var conversationMembers: MutableMap<String, List<Map<String, String>>> = mutableMapOf()
     var conversationInfo: MutableMap<String, Map<String, String>> = mutableMapOf()
+    // Daemon-side conversation preferences, keyed "accountId:conversationId"
+    var conversationPreferences: MutableMap<String, Map<String, String>> = mutableMapOf()
     var contacts: MutableMap<String, List<Map<String, String>>> = mutableMapOf()
     var codecs: List<Long> = emptyList()
     var addAccountResult: String = ""
@@ -678,8 +680,11 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun addConversationMember(accountId: String, conversationId: String, uri: String) {}
     override fun removeConversationMember(accountId: String, conversationId: String, uri: String) {}
     override fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {}
-    override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> = emptyMap()
-    override fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {}
+    override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> =
+        conversationPreferences["$accountId:$conversationId"] ?: emptyMap()
+    override fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {
+        conversationPreferences["$accountId:$conversationId"] = prefs
+    }
     override fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int) {}
     override fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> = emptyList()
 

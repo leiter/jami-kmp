@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -864,18 +865,27 @@ class ChatViewModel(
      * Called when user scrolls to the top of the message list.
      */
     fun loadMore() {
-        val currentState = _state.value
-        Log.d(TAG, "loadMore: isLoadingMore=${currentState.isLoadingMore} hasMoreHistory=${currentState.hasMoreHistory}")
-        if (currentState.isLoadingMore || !currentState.hasMoreHistory) return
+        // Claim the in-flight slot atomically. Testing `isLoadingMore` and setting it inside the
+        // coroutine left a window in which two scroll callbacks both passed the check and ran
+        // overlapping daemon loads, which can interleave history pages.
+        val previousState = _state.getAndUpdate { current ->
+            if (current.isLoadingMore || !current.hasMoreHistory) current
+            else current.copy(isLoadingMore = true)
+        }
+        Log.d(TAG, "loadMore: isLoadingMore=${previousState.isLoadingMore} hasMoreHistory=${previousState.hasMoreHistory}")
+        if (previousState.isLoadingMore || !previousState.hasMoreHistory) return
 
         scope.launch {
-            val accountId = currentAccountId ?: return@launch
-            val conversationId = currentConversationId ?: return@launch
+            val accountId = currentAccountId
+            val conversationId = currentConversationId
+            if (accountId == null || conversationId == null) {
+                _state.value = _state.value.copy(isLoadingMore = false)
+                return@launch
+            }
             val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
             val conversation = conversationFacade.getConversation(accountId, conversationUri)
             if (conversation != null) {
                 val previousCount = _state.value.messages.size
-                _state.value = _state.value.copy(isLoadingMore = true)
                 try {
                     conversationFacade.loadConversationHistory(conversation)
                     loadMessagesFromHistory()
@@ -1124,12 +1134,17 @@ class ChatViewModel(
                     contactEventType = ContactEvent.Event.fromConversationAction(action)
                 )
             }
-            msg.type == "initial" -> MessageItem(
+            // "initial" is the conversation's creation commit. It only means "you were invited"
+            // in a 1:1 conversation; in a group it is not a user-visible event (member adds come
+            // through "member" events instead). The history path already drops it, so rendering
+            // it live made a group show an "invited" row that vanished on reload.
+            msg.type == "initial" && !isGroupConversation() -> MessageItem(
                 id = msg.id, text = "", author = displayName,
                 timestamp = timestampMs, isOutgoing = false,
                 type = MessageType.System,
                 contactEventType = ContactEvent.Event.INVITED
             )
+            msg.type == "initial" -> null
             else -> MessageItem(
                 id = msg.id,
                 text = msg.textContent,
@@ -1140,7 +1155,21 @@ class ChatViewModel(
                 replyTo = msg.replyTo.ifEmpty { null }?.let { replyPreview(it) },
             )
         }
+        if (item == null) {
+            if (withoutOptimistic !== current) {
+                _state.value = _state.value.copy(messages = withoutOptimistic)
+            }
+            return
+        }
         _state.value = _state.value.copy(messages = withoutOptimistic + item)
+    }
+
+    /** True when the open conversation is a swarm group rather than a 1:1. */
+    private fun isGroupConversation(): Boolean {
+        val accountId = currentAccountId ?: return false
+        val conversationId = currentConversationId ?: return false
+        val conversation = conversationFacade.getConversation(accountId, Uri(Uri.SWARM_SCHEME, conversationId))
+        return conversation?.mode?.isGroup == true
     }
 
     /**

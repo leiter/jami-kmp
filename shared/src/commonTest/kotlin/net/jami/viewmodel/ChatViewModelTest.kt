@@ -173,6 +173,23 @@ class ChatViewModelTest {
         // No conversationId → early return, no crash
     }
 
+    /**
+     * The in-flight slot is claimed synchronously. It used to be set inside the launched
+     * coroutine, so two scroll callbacks arriving before the dispatcher ran both passed the
+     * guard and started overlapping daemon history loads.
+     */
+    @Test
+    fun loadMoreClaimsTheInFlightSlotBeforeSuspending() = runTest {
+        val stub = StubDaemonBridge()
+        val vm = makeVm(stub, this)
+
+        vm.loadMore()
+        assertTrue(vm.state.value.isLoadingMore)
+
+        advanceUntilIdle()
+        assertFalse(vm.state.value.isLoadingMore)
+    }
+
     @Test
     fun onClearedDoesNotThrow() = runTest {
         val stub = StubDaemonBridge()

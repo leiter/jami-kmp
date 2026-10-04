@@ -261,9 +261,29 @@ class ConversationFacade(
         conversationUri: Uri,
         preferences: Map<String, String>
     ) {
-        // For swarm conversations, we would send to daemon
-        // For now, just save locally
+        // Local store first, so the UI reflects the change without waiting on the daemon.
         preferencesService.setConversationPreferences(accountId, conversationUri, preferences)
+        // Then the daemon, which persists them in the swarm and syncs them to this user's other
+        // devices; it echoes them back through ConversationPreferencesUpdated. Only swarm
+        // conversations have daemon-side preferences — legacy/SIP ones stay local-only.
+        if (conversationUri.isSwarm) {
+            accountService.setConversationPreferences(accountId, conversationUri.rawRingId, preferences)
+        }
+    }
+
+    /**
+     * Pull the daemon's copy of a conversation's preferences into the local store.
+     *
+     * Without this the local store only ever learns about preferences this device set, so a
+     * change made on another device stayed invisible until the user opened conversation
+     * settings. Daemon values win; local-only keys are preserved.
+     */
+    internal fun refreshConversationPreferences(accountId: String, conversationId: String) {
+        val daemonPrefs = daemonBridge.getConversationPreferences(accountId, conversationId)
+        if (daemonPrefs.isEmpty()) return
+        val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+        val merged = preferencesService.getConversationPreferences(accountId, conversationUri) + daemonPrefs
+        preferencesService.setConversationPreferences(accountId, conversationUri, merged)
     }
 
     // ==================== Conversation Access ====================
@@ -705,6 +725,8 @@ class ConversationFacade(
         }
 
         return if (conversation.isSwarm) {
+            // Conversation.id is the local DB row id; the swarm id is the URI's ring id.
+            refreshConversationPreferences(conversation.accountId, conversation.uri.rawRingId)
             accountService.loadMore(conversation)  // suspends until daemon callback
         } else {
             getConversationHistory(conversation)
@@ -785,6 +807,10 @@ class ConversationFacade(
                     if (!title.isNullOrEmpty()) {
                         conversation.setProfile(Profile(title, null))
                     }
+
+                    // Preferences live in the swarm, so another device may have changed them
+                    // while this one was away.
+                    if (!isSyncing) refreshConversationPreferences(account.accountId, convId)
 
                     account.conversationStarted(conversation)
 
