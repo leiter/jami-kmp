@@ -327,6 +327,35 @@ This sets the layout to grid (0), not muting all participants. The correct daemo
 
 ---
 
+## Implementation Status (2026-10-04, branch `docs/mini-plans`)
+
+- **Phase 1 — done.** `muteParticipantAudio` now calls `muteStream` instead of
+  `hangUpConference`.
+- **Phase 2 — done.** `DaemonBridgeApi` exposes `muteStream`, `setActiveStream`,
+  `hangupParticipant`, `raiseHand` and `setModerator`, implemented on Android (JNI) and
+  iOS/macOS (new `JamiBridgeWrapper` passthroughs: `muteParticipantStream`,
+  `setActiveParticipantStream`, `raiseParticipantHand`, `setParticipantModerator`),
+  stubbed on desktop/JS. `CallService` gained device-aware wrappers, and
+  `muteAllParticipants` iterates participants with `muteStream` instead of changing the
+  layout (F16).
+- **Phase 3 — done.** `ConferenceParticipantsSheet` + `ParticipantContextMenu` provide the
+  roster, per-participant moderation, raise/lower hand and the grid/focus/speaker layout
+  selector; `ConferenceLayout` replaces the magic numbers.
+- **F2 correction.** Per-participant *video* muting does not exist in libjami's client API:
+  `Conference::muteStream` (daemon `conference.cpp:1441`) ignores `streamId` and only mutes
+  audio, and `setActiveStream` focuses a stream rather than muting it. The `MUTEVIDEO`
+  conference-protocol key is host-internal. `disable/enableParticipantVideo` therefore stay
+  no-ops (logged), and the menu hides video entries by default.
+- **Also note.** `muteStream` resolves its target via `getCallWith(accountUri, deviceId)`,
+  so the device ID from the conference info is required — hence `ParticipantUi.peerUri` /
+  `.deviceId`. The old call-ID based methods remain for compatibility but pass an empty
+  device.
+- **Phases 4–5 — open.** F6 (prefer `setActiveStream` in `CallViewModel`, bridge method now
+  available), F8 in-call text messaging, F9 introspection, F11 audio-input switching,
+  F12 recorded playback, F13 tones, F14 call stats.
+
+---
+
 ## Known Good References
 
 - **Reference Android client** conference moderation: `jami-client-android/jami-android/libjamiclient/src/main/kotlin/net/jami/services/CallService.kt:324-345` (muteStream, raiseHand, hangupParticipant)
