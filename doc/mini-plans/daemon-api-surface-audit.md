@@ -459,7 +459,7 @@ Service discovery/exposure is entirely missing from KMP. This is used by the ref
 **Daemon support:** Full subsystem: install, load, configure, enable/disable, WebView attachment/detachment.
 **Scope:** 3–4 weeks for basic install/load/config; additional 2 weeks for WebView integration if needed.
 
-### F4: Video Device Enumeration — Missing (Category: Gap)
+### F4: Video Device Enumeration — Missing (Category: Gap) — **DEFERRED (2026-10-04): getDeviceList/getCapabilities are not in the SWIG bindings**
 **Evidence:** `videomanager_interface.h:178–185`, missing from both KMP and reference app for external camera lists.
 **Impact:** Cannot enumerate attached USB cameras or other external video sources. Desktop/laptop scenario: cannot switch between built-in and external webcams dynamically without re-enumerating.
 **Daemon support:** `getDeviceList()`, `getCapabilities(deviceId)`, `getSettings(deviceId)`, `applySettings(deviceId, map)`
@@ -474,7 +474,7 @@ Service discovery/exposure is entirely missing from KMP. This is used by the ref
 **Impact:** Jami supports SIP-based presence publishing (announcing "away," "busy," "on the phone") via `publish()` and `answerServerRequest()`. This is completely absent from KMP and reference Android app. Advanced deployments (corporate SIP presence) rely on this.
 **Daemon support:** `publish(status, note)`, `answerServerRequest(uri, flag)`, `getSubscriptions()`, `setSubscriptions()`
 
-### F7: Service Discovery/Exposure — Missing (Category: Gap)
+### F7: Service Discovery/Exposure — Missing (Category: Gap) — **DONE on Android (2026-10-04); Apple targets blocked on a missing header**
 **Evidence:** `networkservice_interface.h`, 8 functions; zero KMP wiring.
 **Impact:** Cannot advertise local services (e.g., "this peer has file transfer," "this peer supports screen share") or query peer capabilities before attempting operations. Peer feature negotiation is implicit/trial-based.
 **Daemon support:** `addExposedService()`, `updateExposedService()`, `removeExposedService()`, `queryPeerServices()`, `openServiceTunnel()`, `closeServiceTunnel()`, `getExposedServices()`, `getActiveTunnels()`
@@ -494,7 +494,7 @@ Service discovery/exposure is entirely missing from KMP. This is used by the ref
 **Impact:** No in-app "debug screen" showing daemon version, platform, connection quality, or network stats. Useful for field debugging.
 **Daemon support:** `version()`, `platform()`, `arch()`, `monitor()`, `logging()`, `getConnectionList()`, `getConversationConnectivity()`.
 
-### F11: Audio Processing Parameters Not Exposed (Category: Gap)
+### F11: Audio Processing Parameters Not Exposed (Category: Gap) — **PARTLY DONE (2026-10-04); echo-cancellation mis-mapping fixed**
 **Evidence:** `configurationmanager_interface.h:140–158`, noise suppression, echo cancellation, VAD, AGC states.
 **Impact:** Audio quality tuning is not user-controllable in KMP. The daemon supports these, but KMP only exposes the raw `setAgcState()` call (wired, but with no UI).
 **Daemon support:** 8 functions for noise suppression, EC, VAD, AGC.
@@ -577,7 +577,42 @@ Quick wins that close obvious gaps without major architectural work:
    - Wire `version()`, `platform()`, `arch()`, `monitor()`, `getConnectionList()`, `getConversationConnectivity()`
    - Useful for field support; can catch network/daemon issues
 
-### Phase 2 — **NEXT UP** (agreed 2026-10-04)
+### Phase 2 status (2026-10-04) — **items 5 and 6 done, item 7 dropped**
+
+Commit `1a3fd28`.
+
+- **Item 5, service discovery/exposure (F7) — done on Android.** All eight daemon functions are
+  on `DaemonBridgeApi`, `createNetworkServiceCallback()` is no longer a no-op (it forwards
+  `peerServicesReceived`, `serviceTunnelOpened`, `serviceTunnelClosed`), and
+  `PeerServicesService` is ported from libjamiclient with Flows and kotlinx.serialization in
+  place of RxJava and Gson. Two behaviours from the reference worth keeping in mind: the daemon
+  fires `TunnelOpened` *synchronously* from `openServiceTunnel`, before returning the tunnel id,
+  so opens are matched through a pending-open queue rather than by id; and `queryPeerServices`
+  correlates by request id, so one peer's reply cannot satisfy another peer's query.
+  Open tunnels are listed in the debug screen. **No feature UI yet** — a peer-services browser
+  is its own screen, and the Apple targets still return empty until
+  `networkservice_interface.h` plus wrapper methods are added.
+- **Item 6, audio processing (F11) — partly done, and it hid a real bug.** Android's
+  `setEchoCancellation()` called `JamiService.setAgcState()`: the echo-cancellation toggle in
+  settings was switching automatic gain control. AGC is now a setting of its own
+  (`CallSettings.automaticGainControl`), and `setEchoCancellation` logs that it is unreachable on
+  Android — libjami declares `setEchoCancellationState` but it is **not in the SWIG bindings**.
+  iOS/macOS already called the right function, so the bug was Android-only. `getNoiseSuppressState`
+  is now exposed too. Of the plan's "8 functions", three are reachable on Android:
+  `getNoiseSuppressState`, `setNoiseSuppressState`, `setAgcState`.
+- **Item 7, video device enumeration (F4) — dropped.** `getDeviceList` and `getCapabilities` are
+  not in the SWIG bindings either (only `getDefaultDevice`, `getSettings`, `applySettings`), and
+  the plan itself calls it "minor for Android". Revisit with the desktop bridge.
+
+**Recurring theme across Phases 1 and 2:** the audit counted functions in the daemon headers, not
+in the generated bindings. Five Phase 1–2 items turned out to be unreachable from Kotlin
+(`version`, `platform`, `arch`, `getConversationConnectivity`, `setEchoCancellationState`,
+`getDeviceList`, `getCapabilities`). Check `JamiService.java` before planning any further item
+from this document.
+
+---
+
+### Phase 2 — original plan (agreed 2026-10-04)
 
 Checked the same day, before any work starts:
 
