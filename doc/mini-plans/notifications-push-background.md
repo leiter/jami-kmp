@@ -8,7 +8,7 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ## Findings
 
-### F1: 13 call/presence/configuration signals silently dropped — gap
+### F1: 13 call/presence/configuration signals silently dropped — gap — **DONE (2026-10-04)**
 **Evidence:**
 - `callmanager.i` declares `audioMuted`, `videoMuted`, `peerHold`, `connectionUpdate`, `remoteRecordingChanged`, `mediaNegotiationStatus`; none have handlers in `DaemonBridge.createCallCallback()` (lines 821–854)
 - `presencemanager.i` declares `newServerSubscriptionRequest`, `serverError`, `subscriptionStateChanged`, `nearbyPeerNotification`; only `newBuddyNotification` has a handler in `DaemonBridge.createPresenceCallback()` (lines 856–860)
@@ -18,7 +18,7 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ---
 
-### F2: 14 configuration signals never forwarded — gap
+### F2: 14 configuration signals never forwarded — gap — **PARTLY DONE (2026-10-04): Android wired except certificate signals and audioMeter; iOS/macOS pending**
 **Evidence:**
 - `configurationmanager.i` declares `volumeChanged`, `historyChanged`, `stunStatusFailure`, `activeCallsChanged`, `errorAlert`, `getHardwareAudioFormat`, `hardwareDecodingChanged`, `hardwareEncodingChanged`, `audioMeter`, `messageSend`, and certificate-related signals (`certificatePinned`, `certificatePathPinned`, `certificateExpired`, `certificateStateChanged`)
 - `DaemonBridge.createConfigurationCallback()` implements none of these (only 21 of 37 signals)
@@ -28,7 +28,7 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ---
 
-### F3: Presence subscription model incomplete — gap
+### F3: Presence subscription model incomplete — gap — **DONE (2026-10-04)**
 **Evidence:**
 - `presencemanager.i` defines 5 presence callbacks; KMP only implements 1 (`newBuddyNotification` at line 857)
 - Missing: `newServerSubscriptionRequest` (lines 49, 300), `serverError` (lines 50, 304), `subscriptionStateChanged` (lines 53, 312), `nearbyPeerNotification` (lines 29, 51)
@@ -48,7 +48,7 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ---
 
-### F5: Conversation error callback missing — gap
+### F5: Conversation error callback missing — gap — **DONE (2026-10-04)**
 **Evidence:**
 - `conversation.i` declares `onConversationError(accountId, conversationId, code, what)` at lines 37, 109
 - `DaemonBridge.createConversationCallback()` (lines 956–1009) does not override it
@@ -68,7 +68,7 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ---
 
-### F7: Call recording state incomplete — gap
+### F7: Call recording state incomplete — gap — **INVALID (2026-10-04): `recordStateChange` has no daemon signal behind it**
 **Evidence:**
 - `callmanager.i` declares both `recordingStateChanged(callId, code)` and `recordStateChange(callId, state)` at lines 42, 43, 165, 166
 - `DaemonBridge.createCallCallback()` only handles `recordingStateChanged` (line 834–836), not `recordStateChange`
@@ -111,7 +111,7 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ---
 
-### F11: Callback dispatcher snapshot locking not used in KMP — gap
+### F11: Callback dispatcher snapshot locking not used in KMP — gap — **INVALID (2026-10-04): already solved by the per-conversation channel dispatcher**
 **Evidence:**
 - Reference app's `DaemonService.kt` lines 434–438 uses `snapshotConversationCallback()` to hold a lock during callback processing, preventing race conditions when concurrent daemon signals arrive
 - KMP's `DaemonBridge.createConversationCallback()` (lines 956–1009) calls `callbacks.onMessageReceived()` etc. directly without locking
@@ -121,7 +121,7 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ---
 
-### F12: Connection update signal unused in calls — gap
+### F12: Connection update signal unused in calls — gap — **DONE (2026-10-04)**
 **Evidence:**
 - `callmanager.i` line 49 declares `connectionUpdate(id, state)` for ICE connection state reporting
 - Reference implements at `DaemonService.kt` line 260–262, forwarding to `CallService.connectionUpdate()`
@@ -131,7 +131,7 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ---
 
-### F13: Message send logging signal missing — gap
+### F13: Message send logging signal missing — gap — **DONE (2026-10-04)**
 **Evidence:**
 - `configurationmanager.i` line 68 declares `messageSend(message)` for daemon debug logging
 - Reference app forwards at line 198–200 to `HardwareService.logMessage()`

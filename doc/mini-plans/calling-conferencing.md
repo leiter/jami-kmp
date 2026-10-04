@@ -8,7 +8,7 @@ The calling domain is fundamentally solid: basic 1:1 and multi-party calls, hold
 
 ## Findings
 
-### F1: `muteParticipantAudio` implementation is incorrect — calls `hangUpConference` instead of muting the participant — **bug**
+### F1: `muteParticipantAudio` implementation is incorrect — calls `hangUpConference` instead of muting the participant — **bug** — **DONE (2026-10-04)**
 **Evidence:** `DaemonBridge.android.kt:1017-1018`
 ```kotlin
 override fun muteParticipantAudio(accountId: String, confId: String, participantId: String) {
@@ -23,7 +23,7 @@ The implementation calls `hangUpConference`, which terminates the entire confere
 
 ---
 
-### F2: `unmuteParticipantAudio`, `disableParticipantVideo`, `enableParticipantVideo` are empty stubs — **gap**
+### F2: `unmuteParticipantAudio`, `disableParticipantVideo`, `enableParticipantVideo` are empty stubs — **gap** — **PARTLY DONE (2026-10-04): unmute wired; video mute does not exist in libjami**
 **Evidence:** `DaemonBridge.android.kt:1020-1022`
 ```kotlin
 override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {}
@@ -40,7 +40,7 @@ These methods are declared in `DaemonBridgeApi` (lines 350-370 of `DaemonBridge.
 
 ---
 
-### F3: `setModerator` daemon function never called from jami-kmp — **gap**
+### F3: `setModerator` daemon function never called from jami-kmp — **gap** — **DONE (2026-10-04)**
 **Evidence:** Zero calls to `setModerator` in the entire codebase. Daemon header `callmanager_interface.h:118-121` defines it:
 ```cpp
 LIBJAMI_PUBLIC void setModerator(const std::string& accountId,
@@ -56,7 +56,7 @@ The reference `jami-android-client` does not appear to expose this in its UI eit
 
 ---
 
-### F4: `muteStream` daemon function not called — **gap** (modern per-stream API not used)
+### F4: `muteStream` daemon function not called — **gap** (modern per-stream API not used) — **DONE (2026-10-04)**
 **Evidence:** Zero calls to `JamiService.muteStream()` or `daemonBridge.muteStream()` anywhere. The daemon exposes this modern API:
 ```cpp
 LIBJAMI_PUBLIC void muteStream(const std::string& accountId,
@@ -74,7 +74,7 @@ This is the modern replacement for the deprecated `muteParticipant` (which only 
 
 ---
 
-### F5: `raiseHand` daemon function not wired to UI — **gap** (hand-raising not exposed)
+### F5: `raiseHand` daemon function not wired to UI — **gap** (hand-raising not exposed) — **DONE (2026-10-04)**
 **Evidence:** The daemon function is defined:
 ```cpp
 LIBJAMI_PUBLIC void raiseHand(const std::string& accountId,
@@ -91,7 +91,7 @@ Zero calls to this function anywhere in jami-kmp. The reference `jami-android-cl
 
 ---
 
-### F6: `setActiveStream` not used (modern participant-focus API) — **gap**
+### F6: `setActiveStream` not used (modern participant-focus API) — **gap** — **PARTLY DONE (2026-10-04): bridge + CallService/ViewModel wired; setActiveParticipant call sites not yet migrated**
 **Evidence:** The daemon defines:
 ```cpp
 LIBJAMI_PUBLIC void setActiveStream(const std::string& accountId,
@@ -109,7 +109,7 @@ Zero calls in jami-kmp. jami-kmp uses the deprecated `setActiveParticipant` API 
 
 ---
 
-### F7: `hangupParticipant` not wired — **gap** (cannot eject participants)
+### F7: `hangupParticipant` not wired — **gap** (cannot eject participants) — **DONE (2026-10-04)**
 **Evidence:** The daemon function exists:
 ```cpp
 LIBJAMI_PUBLIC void hangupParticipant(const std::string& accountId,
@@ -225,7 +225,7 @@ None of these are surfaced in `CallScreen` or any call UI component.
 
 ---
 
-### F15: Conference layout modes not fully implemented — **gap**
+### F15: Conference layout modes not fully implemented — **gap** — **DONE (2026-10-04)**
 **Evidence:** `setConferenceLayout(accountId, confId, layout)` is called with layout IDs (0 = grid, 1 = focus, 2 = locked), but:
 1. These layout constants are never defined as named constants in the code (all uses are magic numbers).
 2. No UI exists to let the user select layout mode.
@@ -237,7 +237,7 @@ None of these are surfaced in `CallScreen` or any call UI component.
 
 ---
 
-### F16: `muteAllParticipants` incorrectly implemented — **secondary issue, lower priority than F1**
+### F16: `muteAllParticipants` incorrectly implemented — **secondary issue, lower priority than F1** — **DONE (2026-10-04)**
 **Evidence:** `DaemonBridge.android.kt:1011-1013`
 ```kotlin
 override fun muteAllParticipants(accountId: String, confId: String) {
