@@ -437,7 +437,7 @@ Service discovery/exposure is entirely missing from KMP. This is used by the ref
 
 ## Findings
 
-### F1: Audio Device Selection — Missing (Category: Gap)
+### F1: Audio Device Selection — Missing (Category: Gap) — **NOT APPLICABLE TO MOBILE (2026-10-04)**
 **Evidence:** `configurationmanager_interface.h:129–140`
 **Impact:** Users cannot switch between multiple Bluetooth headsets, wired earbuds, or speaker—the daemon exposes device enumeration and selection by index, but KMP has no UI or backend wiring.
 **Daemon support:** 
@@ -464,7 +464,7 @@ Service discovery/exposure is entirely missing from KMP. This is used by the ref
 **Impact:** Cannot enumerate attached USB cameras or other external video sources. Desktop/laptop scenario: cannot switch between built-in and external webcams dynamically without re-enumerating.
 **Daemon support:** `getDeviceList()`, `getCapabilities(deviceId)`, `getSettings(deviceId)`, `applySettings(deviceId, map)`
 
-### F5: History Management Functions Absent (Category: Gap)
+### F5: History Management Functions Absent (Category: Gap) — **DONE (2026-10-04)**
 **Evidence:** `configurationmanager_interface.h:175–177`, `getHistoryLimit`, `setHistoryLimit`, `getRingingTimeout`, `setRingingTimeout`
 **Impact:** No way to set call history retention policy or ringing timeout from app UI. These are hard-coded defaults or require manual daemon config file editing.
 **Daemon support:** Four functions exist; never called.
@@ -480,7 +480,7 @@ Service discovery/exposure is entirely missing from KMP. This is used by the ref
 **Daemon support:** `addExposedService()`, `updateExposedService()`, `removeExposedService()`, `queryPeerServices()`, `openServiceTunnel()`, `closeServiceTunnel()`, `getExposedServices()`, `getActiveTunnels()`
 **Reference:** jami-client-android wires all of these in `PeerServicesService.kt` and `ExposedServicesService.kt`.
 
-### F8: Call Recording Playback — Missing (Category: Gap)
+### F8: Call Recording Playback — Missing (Category: Gap) — **DEFERRED, WRONG API (2026-10-04)**
 **Evidence:** `callmanager_interface.h:159–168`, `startRecordedFilePlayback()`, `stopRecordedFilePlayback()`, `recordPlaybackSeek()`.
 **Impact:** Recordings can be made, but the app cannot play them back in-app; user must open a media player externally.
 **Daemon support:** Three functions for playback control and seeking.
@@ -489,7 +489,7 @@ Service discovery/exposure is entirely missing from KMP. This is used by the ref
 **Evidence:** `videomanager_interface.h:192–199` (8 functions for media player creation, playback control, seeking).
 **Impact:** No daemon-native media player support in KMP. This is rarely used (ringtone playback is Android-native).
 
-### F10: Diagnostic Functions Unused (Category: Improvement)
+### F10: Diagnostic Functions Unused (Category: Improvement) — **PARTLY DONE (2026-10-04); version/platform/arch and getConversationConnectivity are not in the SWIG bindings**
 **Evidence:** `jami.h`, `platform()`, `arch()`, `version()` never called; `logging()` callback registration for debug logs; `configurationmanager_interface.h::monitor()` for daemon status; `getConnectionList()`, `getConversationConnectivity()` for network diagnostics.
 **Impact:** No in-app "debug screen" showing daemon version, platform, connection quality, or network stats. Useful for field debugging.
 **Daemon support:** `version()`, `platform()`, `arch()`, `monitor()`, `logging()`, `getConnectionList()`, `getConversationConnectivity()`.
@@ -505,6 +505,51 @@ Service discovery/exposure is entirely missing from KMP. This is used by the ref
 **Daemon support:** `validateCertificate()`, `getCertificateDetails()`, `pinCertificate()`, `pinCertificatePath()`, `getSupportedTlsMethod()`, etc.
 
 ## Proposed Plan
+
+### Phase 1 status (2026-10-04, branch `docs/mini-plans`) — **done, with two items dropped after verification**
+
+Commit `da5fdd9`. Verifying the four Phase 1 items against the daemon headers, the SWIG
+bindings and the reference client changed the shape of this phase considerably:
+
+1. **Audio Device Selection — dropped, not a mobile gap.** The claim that
+   "jami-client-android calls all of these in `HardwareService.kt`" is false: grepping the whole
+   reference tree for `getAudioOutputDeviceList`, `setAudioOutputDevice`,
+   `getAudioInputDeviceList`, `getCurrentAudioDevicesIndex` and `setAudioRingtoneDevice` returns
+   nothing. On Android and iOS, routing between earpiece/speaker/Bluetooth belongs to
+   `AudioManager`/`AVAudioSession`, which jami-kmp already drives through `HardwareService`; the
+   daemon's device-index API is for desktop audio backends (PulseAudio/ALSA/CoreAudio). Doing
+   this would have been ~1 week of work for the one platform whose bridge is entirely no-ops.
+   Revisit only if the desktop bridge is ever built.
+2. **History Retention — done.** `getHistoryLimit`/`setHistoryLimit` plus
+   `getRingingTimeout`/`setRingingTimeout` are now on `DaemonBridgeApi`, real on Android, wired
+   on iOS/macOS through new `JamiBridgeWrapper` passthroughs, and selectable under App
+   settings → Advanced. Note: the plan called this an "easy win; reference app already does
+   this" — the reference does *not* expose it either (only the daemon's D-Bus XML mentions it),
+   so there was no UI to copy.
+3. **Call Recording Playback — deferred; the proposed API is the wrong tool.**
+   `startRecordedFilePlayback()`/`recordPlaybackSeek()` drive the daemon's *audio layer* (for
+   playing a file into a call), not an in-app player. The reference plays recordings with
+   Android `MediaPlayer`, and jami-kmp already bundles media3/ExoPlayer and plays voice
+   messages with it. The real feature here is a recordings browser screen reusing that player —
+   a UI task, not a daemon-wiring task. Tracked by the calling plan's F12.
+4. **Diagnostics — done as far as the bindings allow, and folded into the existing screen.**
+   `monitor(continuous)` and `getConnectionList(accountId, conversationId)` are now wired.
+   `version()`, `platform()`, `arch()` and `getConversationConnectivity()` are **not present in
+   `JamiService.java`/`JamiServiceJNI.java`**, so they cannot be called from Android without
+   regenerating the SWIG interface and rebuilding `libjami-core-jni.so`; the iOS wrapper has no
+   entries for them either. They are out of reach from Kotlin alone.
+   Rather than add the proposed new screen, the existing **Debug Logs** screen (which already
+   showed captured logs and per-conversation swarm-sync health) gained a daemon section: history
+   limit and ringing timeout, hardware decode/encode state, last error alert, last STUN failure,
+   the account's connection list, a bounded tail of the daemon's own log, and a "dump daemon
+   state to log" action calling `monitor()`. `AccountService.daemonDiagnostics` records the
+   signals forwarded in the notifications plan's work, which until now only reached the log.
+
+Coverage-table caveat: the table below is from 2026-09-25 and already understates current state
+(Presence reads 1/8 wired; four more presence callbacks and five conference functions have landed
+since). Treat its percentages as indicative only.
+
+---
 
 ### Phase 1: Low-Hanging Fruit (2–3 weeks)
 
