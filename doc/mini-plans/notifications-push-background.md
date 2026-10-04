@@ -222,6 +222,51 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ---
 
+## Implementation Status (2026-10-04, branch `docs/mini-plans`)
+
+**Phase 1 and Phase 2 are implemented**, with three corrections to the audit.
+
+Landed:
+- **F1 call signals.** `audioMuted`, `videoMuted` and `mediaNegotiationStatus` were already
+  declared in `DaemonCallbacks` and consumed by `CallService` — only the Android SWIG callback
+  never fired them, so a moderator/peer mute never reached the UI. Now wired. iOS and macOS
+  already forwarded the two mute signals through their delegate.
+- **F1/F12 remainder.** New `onPeerHold`, `onConnectionUpdate`, `onRemoteRecordingChanged` on
+  Android, iOS and macOS. `CallState` gained `isPeerHolding`, `isRemoteRecording` and
+  `remoteRecordingBy`; the call overlay shows a hold line and a "<name> recording…" badge.
+  `Conference.setParticipantRecording` (a TODO stub) now maintains the recording participant set.
+- **F3 presence.** All four remaining presence callbacks reach `ContactService`. A subscription
+  going inactive marks the contact offline rather than leaving a stale presence dot.
+- **F5 conversation errors.** Forwarded, emitted as `ConversationEvent.ConversationError`, held
+  in `ChatState.conversationError` and shown as a snackbar in `ChatScreen`.
+- **F2/F13 configuration signals (Android).** `activeCallsChanged` (also declared and consumed
+  but never fired), `errorAlert`, `volumeChanged`, `stunStatusFailure`, `historyChanged`,
+  `hardwareDecodingChanged`, `hardwareEncodingChanged`, `messageSend`.
+- **Not in the audit: `getHardwareAudioFormat`.** The daemon asks the app for the device's
+  native sample rate and frames-per-buffer; with no handler it used its own defaults, costing
+  latency and resampling on every frame. Implemented from `AudioManager` on Android, mirroring
+  `DeviceRuntimeServiceImpl.getHardwareAudioFormat()`.
+
+Corrections to the audit:
+- **F11 (snapshot locking) was already fixed and is not a bug.** `DaemonCallbacksImpl` routes
+  conversation events through per-`(accountId, conversationId)` FIFO channels with their own
+  consumer coroutines (commit `bd66d89`), which preserves per-conversation ordering *and* avoids
+  the head-of-line blocking the reference's single lock has. Nothing to do.
+- **F7 (`recordStateChange`) does not exist in this daemon.** `callmanager_interface.h` declares
+  only `RecordingStateChanged`; `recordStateChange` is a leftover in the generated SWIG
+  `Callback.java` with no daemon signal behind it. Wiring it would add a dead override.
+- **F2 certificate signals (F6) and `audioMeter` (F9) remain deliberately unwired**, as the plan
+  proposed. The diagnostics signals above are Android-only so far: the iOS/macOS delegate has no
+  entries for them, and they only log.
+
+Follow-up:
+- The `JamiBridgeWrapper.h/.mm` additions (call signals, presence, conversation error) need a Mac
+  `build-jamibridge.sh` rebuild before they take effect on iOS/macOS; that rebuild also covers the
+  moderation passthroughs added for the calling plan.
+- Phase 3 (F4 peer-services, F10 daemon-lifecycle resilience, F8 SIP in-call messaging) untouched.
+
+---
+
 ## Notes
 
 1. **Push delivery blocker remains unchanged.** The infrastructure (PushServiceManager, FCM wiring, notification routing) is correct, but push never arrives because the public DHT proxy (`dhtproxy.jami.net`) does not send to this app's Firebase sender ID. This is a deployment constraint, not a code bug.
