@@ -36,6 +36,7 @@ class DaemonCallbacksImpl(
     private val callService: CallService,
     private val contactService: ContactService,
     private val conversationFacade: ConversationFacade,
+    private val peerServicesService: PeerServicesService,
     private val scope: CoroutineScope
 ) : DaemonCallbacks {
 
@@ -411,6 +412,28 @@ class DaemonCallbacksImpl(
 
     override fun onDataTransferEvent(accountId: String, conversationId: String, interactionId: String, fileId: String, eventCode: Int) {
         enqueueConversationTask(ConversationTask.DataTransfer(accountId, conversationId, interactionId, fileId, eventCode))
+    }
+
+    // ==================== Peer Services Callbacks ====================
+
+    override fun onPeerServicesReceived(
+        requestId: Long,
+        accountId: String,
+        peerId: String,
+        status: Int,
+        servicesJson: String
+    ) {
+        peerServicesService.onPeerServicesReceived(requestId, accountId, peerId, status, servicesJson)
+    }
+
+    override fun onServiceTunnelOpened(accountId: String, tunnelId: String, localPort: Int) {
+        // The daemon fires this synchronously from openServiceTunnel, and the service matches it
+        // against its pending-open queue, so this must not be reordered onto another coroutine.
+        peerServicesService.onTunnelOpened(accountId, tunnelId, localPort)
+    }
+
+    override fun onServiceTunnelClosed(accountId: String, tunnelId: String, reason: String) {
+        peerServicesService.onTunnelClosed(accountId, tunnelId, reason)
     }
 
     // ==================== Diagnostics Callbacks ====================

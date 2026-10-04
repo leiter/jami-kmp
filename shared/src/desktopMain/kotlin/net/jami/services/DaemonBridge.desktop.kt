@@ -578,6 +578,25 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "answerMediaChangeRequest called (stub): $callId")
     }
 
+    override fun getNoiseSuppressState(): String = ""
+    override fun setAgcState(enabled: Boolean) {}
+
+    override fun addExposedService(accountId: String, details: Map<String, String>): String = ""
+    override fun updateExposedService(accountId: String, details: Map<String, String>): Boolean = false
+    override fun removeExposedService(accountId: String, serviceId: String): Boolean = false
+    override fun getExposedServices(accountId: String): List<Map<String, String>> = emptyList()
+    override fun queryPeerServices(accountId: String, peerUri: String): Long = 0L
+    override fun openServiceTunnel(
+        accountId: String,
+        peerUri: String,
+        deviceId: String,
+        serviceId: String,
+        serviceName: String,
+        localPort: Int
+    ): String = ""
+    override fun closeServiceTunnel(accountId: String, tunnelId: String): Boolean = false
+    override fun getActiveTunnels(accountId: String): List<Map<String, String>> = emptyList()
+
     override fun getHistoryLimit(): Int = 0
     override fun setHistoryLimit(days: Int) {}
     override fun getRingingTimeout(): Int = 0

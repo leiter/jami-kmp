@@ -2022,6 +2022,14 @@ static JBCallState toCallState(const std::string& state) {
     libjami::setEchoCancellationState(enabled ? "enabled" : "disabled");
 }
 
+- (NSString *)noiseSuppressState {
+    return toNSString(libjami::getNoiseSuppressState());
+}
+
+- (void)setAgcState:(BOOL)enabled {
+    libjami::setAgcState(enabled);
+}
+
 - (void)setPushNotificationToken:(NSString *)token {
     libjami::setPushNotificationToken(toCppString(token));
 }

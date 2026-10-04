@@ -169,7 +169,12 @@ data class CallSettings(
     /** Enable noise suppression */
     val noiseSuppression: Boolean = true,
     /** Enable echo cancellation */
-    val echoCancellation: Boolean = true
+    val echoCancellation: Boolean = true,
+    /**
+     * Enable automatic gain control, which normalises the microphone level.
+     * Distinct from [echoCancellation]; the daemon exposes them separately.
+     */
+    val automaticGainControl: Boolean = false
 )
 
 /**

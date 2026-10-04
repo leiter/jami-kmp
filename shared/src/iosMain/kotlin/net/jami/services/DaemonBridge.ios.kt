@@ -252,6 +252,38 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun restartAudioLayer() { Log.d(TAG, "restartAudioLayer") }
     override fun setNoiseSuppression(enabled: Boolean) { bridge.setNoiseSuppression(enabled) }
     override fun setEchoCancellation(enabled: Boolean) { bridge.setEchoCancellation(enabled) }
+    override fun getNoiseSuppressState(): String = bridge.noiseSuppressState() ?: ""
+    override fun setAgcState(enabled: Boolean) { bridge.setAgcState(enabled) }
+
+    // Peer services and tunnels are not reachable from the Apple targets: the cinterop header
+    // set has no networkservice_interface.h, so JamiBridgeWrapper cannot call libjami's
+    // addExposedService/queryPeerServices/openServiceTunnel family. Adding that header (and
+    // wrapper methods for it) is the prerequisite — see the Phase 2 note in
+    // doc/mini-plans/daemon-api-surface-audit.md.
+    override fun addExposedService(accountId: String, details: Map<String, String>): String {
+        Log.w(TAG, "addExposedService: no networkservice interface in the Apple bridge")
+        return ""
+    }
+    override fun updateExposedService(accountId: String, details: Map<String, String>): Boolean = false
+    override fun removeExposedService(accountId: String, serviceId: String): Boolean = false
+    override fun getExposedServices(accountId: String): List<Map<String, String>> = emptyList()
+    override fun queryPeerServices(accountId: String, peerUri: String): Long {
+        Log.w(TAG, "queryPeerServices: no networkservice interface in the Apple bridge")
+        return 0L
+    }
+    override fun openServiceTunnel(
+        accountId: String,
+        peerUri: String,
+        deviceId: String,
+        serviceId: String,
+        serviceName: String,
+        localPort: Int
+    ): String {
+        Log.w(TAG, "openServiceTunnel: no networkservice interface in the Apple bridge")
+        return ""
+    }
+    override fun closeServiceTunnel(accountId: String, tunnelId: String): Boolean = false
+    override fun getActiveTunnels(accountId: String): List<Map<String, String>> = emptyList()
     override fun transfer(accountId: String, callId: String, to: String): Boolean =
         bridge.transfer(accountId, callId = callId, to = to)
     override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean =

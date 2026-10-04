@@ -207,6 +207,22 @@ fun DebugLogsScreen(
                             modifier = Modifier.horizontalScroll(rememberScrollState()),
                         )
                     }
+                    if (state.tunnels.isNotEmpty()) {
+                        Text(
+                            text = "  service tunnels: ${state.tunnels.size}",
+                            style = mono,
+                            color = JamiTheme.colors.onSurfaceVariant,
+                        )
+                        state.tunnels.forEach { tunnel ->
+                            Text(
+                                text = "    ${tunnel.serviceName.ifEmpty { tunnel.serviceId }}" +
+                                    " → 127.0.0.1:${tunnel.localPort} (${tunnel.peerUri.take(12)})",
+                                style = mono,
+                                color = JamiTheme.colors.onSurfaceVariant,
+                                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            )
+                        }
+                    }
                     TextButton(onClick = { viewModel.dumpDaemonState() }) {
                         Text(stringResource(Res.string.debug_dump_daemon_state))
                     }

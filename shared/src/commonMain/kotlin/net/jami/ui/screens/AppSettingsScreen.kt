@@ -369,6 +369,12 @@ fun AppSettingsScreen(
                 onCheckedChange = { viewModel.toggleEchoCancellation() },
             )
             JamiToggle(
+                label = stringResource(Res.string.pref_agc_title),
+                description = stringResource(Res.string.pref_agc_summary),
+                checked = state.isAutomaticGainControl,
+                onCheckedChange = { viewModel.toggleAutomaticGainControl() },
+            )
+            JamiToggle(
                 label = stringResource(Res.string.pref_auto_answer),
                 description = stringResource(Res.string.pref_auto_answer_description),
                 checked = state.isAutoAnswer,

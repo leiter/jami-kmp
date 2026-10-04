@@ -13,6 +13,8 @@ import kotlinx.coroutines.launch
 import net.jami.services.AccountService
 import net.jami.services.ConversationFacade
 import net.jami.services.DaemonDiagnostics
+import net.jami.services.PeerServicesService
+import net.jami.services.TunnelInfo
 import net.jami.services.ConversationSyncInfo
 import net.jami.services.SyncState
 import net.jami.ui.platform.captureRecentLogs
@@ -32,11 +34,14 @@ data class DebugLogsState(
     val historyLimitDays: Int = 0,
     /** Outgoing-call ringing timeout in seconds. */
     val ringingTimeoutSeconds: Int = 0,
+    /** Peer-service tunnels the daemon currently holds open. */
+    val tunnels: List<TunnelInfo> = emptyList(),
 )
 
 class DebugLogsViewModel(
     private val conversationFacade: ConversationFacade,
     private val accountService: AccountService,
+    private val peerServicesService: PeerServicesService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) : ViewModel() {
     private val scope = scope
@@ -69,6 +74,10 @@ class DebugLogsViewModel(
                 connections = connections,
                 historyLimitDays = runCatching { accountService.getHistoryLimit() }.getOrDefault(0),
                 ringingTimeoutSeconds = runCatching { accountService.getRingingTimeout() }.getOrDefault(0),
+                tunnels = if (accountId != null) {
+                    runCatching { peerServicesService.getAllActiveTunnels(listOf(accountId)) }
+                        .getOrDefault(emptyList())
+                } else emptyList(),
             )
         }
     }

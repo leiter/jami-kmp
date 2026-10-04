@@ -112,7 +112,7 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
             videoCallback = createVideoCallback()
             dataTransferCallback = createDataTransferCallback(callbacks)
             conversationCallback = createConversationCallback(callbacks)
-            networkServiceCallback = createNetworkServiceCallback()
+            networkServiceCallback = createNetworkServiceCallback(callbacks)
 
             // Initialize daemon with all callbacks
             JamiService.init(
@@ -325,9 +325,53 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         JamiService.setNoiseSuppressState(if (enabled) "enabled" else "disabled")
     }
 
-    override fun setEchoCancellation(enabled: Boolean) {
+    override fun getNoiseSuppressState(): String = JamiService.getNoiseSuppressState()
+
+    override fun setAgcState(enabled: Boolean) {
         JamiService.setAgcState(enabled)
     }
+
+    override fun setEchoCancellation(enabled: Boolean) {
+        // This used to call setAgcState(), which is automatic gain control, not echo
+        // cancellation — the setting toggled the wrong daemon feature. libjami's
+        // setEchoCancellationState() is declared in configurationmanager_interface.h but is not
+        // in the generated SWIG bindings, so it cannot be reached from here; regenerating the
+        // interface and rebuilding libjami-core-jni.so would be required. AGC is exposed
+        // separately through setAgcState().
+        Log.w(TAG, "setEchoCancellation($enabled): not available in the current SWIG bindings")
+    }
+
+    // ==================== Peer Services & Tunnels ====================
+
+    override fun addExposedService(accountId: String, details: Map<String, String>): String =
+        JamiService.addExposedService(accountId, StringMap.toSwig(details))
+
+    override fun updateExposedService(accountId: String, details: Map<String, String>): Boolean =
+        JamiService.updateExposedService(accountId, StringMap.toSwig(details))
+
+    override fun removeExposedService(accountId: String, serviceId: String): Boolean =
+        JamiService.removeExposedService(accountId, serviceId)
+
+    override fun getExposedServices(accountId: String): List<Map<String, String>> =
+        JamiService.getExposedServices(accountId).toNative()
+
+    override fun queryPeerServices(accountId: String, peerUri: String): Long =
+        JamiService.queryPeerServices(accountId, peerUri)
+
+    override fun openServiceTunnel(
+        accountId: String,
+        peerUri: String,
+        deviceId: String,
+        serviceId: String,
+        serviceName: String,
+        localPort: Int
+    ): String = JamiService.openServiceTunnel(accountId, peerUri, deviceId, serviceId, serviceName, localPort)
+
+    override fun closeServiceTunnel(accountId: String, tunnelId: String): Boolean =
+        JamiService.closeServiceTunnel(accountId, tunnelId)
+
+    override fun getActiveTunnels(accountId: String): List<Map<String, String>> =
+        JamiService.getActiveTunnels(accountId).toNative()
 
     override fun transfer(accountId: String, callId: String, to: String): Boolean {
         return JamiService.transfer(accountId, callId, to)
@@ -955,8 +999,24 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         }
     }
 
-    private fun createNetworkServiceCallback() = object : NetworkServiceCallback() {
-        // No-op: jami-kmp does not use the peer-service-discovery/tunnel API yet.
+    private fun createNetworkServiceCallback(callbacks: DaemonCallbacks) = object : NetworkServiceCallback() {
+        override fun peerServicesReceived(
+            requestId: Long,
+            accountId: String,
+            peerId: String,
+            status: Int,
+            servicesJson: String
+        ) {
+            callbacks.onPeerServicesReceived(requestId, accountId, peerId, status, servicesJson)
+        }
+
+        override fun serviceTunnelOpened(accountId: String, tunnelId: String, localPort: Int) {
+            callbacks.onServiceTunnelOpened(accountId, tunnelId, localPort)
+        }
+
+        override fun serviceTunnelClosed(accountId: String, tunnelId: String, reason: String) {
+            callbacks.onServiceTunnelClosed(accountId, tunnelId, reason)
+        }
     }
 
     private fun createVideoCallback() = object : VideoCallback() {

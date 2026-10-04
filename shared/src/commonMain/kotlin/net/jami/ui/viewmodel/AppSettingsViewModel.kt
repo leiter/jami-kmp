@@ -68,6 +68,8 @@ data class AppSettingsState(
     val isHardwareAcceleration: Boolean = true,
     val isNoiseSuppression: Boolean = true,
     val isEchoCancellation: Boolean = true,
+    /** Automatic gain control — normalises mic level; separate from echo cancellation. */
+    val isAutomaticGainControl: Boolean = false,
     val isAutoAnswer: Boolean = false,
     /** Custom ringtone URI; empty string means system default. */
     val ringtone: String = "",
@@ -181,6 +183,7 @@ class AppSettingsViewModel(
                     isHardwareAcceleration = c.hardwareAcceleration,
                     isNoiseSuppression = c.noiseSuppression,
                     isEchoCancellation = c.echoCancellation,
+                    isAutomaticGainControl = c.automaticGainControl,
                     isAutoAnswer = c.autoAnswer,
                     ringtone = c.ringtone,
                 )}
@@ -310,6 +313,12 @@ class AppSettingsViewModel(
         val new = !_state.value.isEchoCancellation
         _state.update { it.copy(isEchoCancellation = new) }
         settingsRepository.updateEchoCancellation(new)
+    }
+
+    fun toggleAutomaticGainControl() {
+        val new = !_state.value.isAutomaticGainControl
+        _state.update { it.copy(isAutomaticGainControl = new) }
+        settingsRepository.updateAutomaticGainControl(new)
     }
 
     fun toggleAutoAnswer() {

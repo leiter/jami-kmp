@@ -649,6 +649,8 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 // Audio processing
 - (void)setNoiseSuppression:(BOOL)enabled;
 - (void)setEchoCancellation:(BOOL)enabled;
+- (NSString *)noiseSuppressState;
+- (void)setAgcState:(BOOL)enabled;
 
 // Push notifications. These only hand the token/payload to the daemon; end-to-end push
 // additionally needs PushKit on the app side and a push proxy server.

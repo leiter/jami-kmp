@@ -77,6 +77,27 @@ interface DaemonBridgeApi {
     fun restartAudioLayer()
     fun isCaptureMuted(): Boolean
     fun setNoiseSuppression(enabled: Boolean)
+
+    /**
+     * Noise-suppression state as the daemon reports it ("enabled"/"disabled", possibly a mode
+     * name on newer daemons). Empty when the platform cannot query it.
+     */
+    fun getNoiseSuppressState(): String
+
+    /**
+     * Automatic gain control, which normalises the microphone level.
+     *
+     * Note this is *not* echo cancellation: libjami's `setEchoCancellationState` exists in
+     * `configurationmanager_interface.h` but is absent from the SWIG bindings, so it cannot be
+     * reached from Kotlin on Android today. See [setEchoCancellation].
+     */
+    fun setAgcState(enabled: Boolean)
+
+    /**
+     * Echo cancellation. Unreachable on Android: `setEchoCancellationState` is not in the
+     * generated bindings, so implementations log and no-op rather than silently toggling
+     * something else. Regenerating the SWIG interface would be needed to wire it.
+     */
     fun setEchoCancellation(enabled: Boolean)
     fun transfer(accountId: String, callId: String, to: String): Boolean
     fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean
@@ -164,6 +185,51 @@ interface DaemonBridgeApi {
     fun getActiveCodecList(accountId: String): List<Long>
     fun setActiveCodecList(accountId: String, codecList: List<Long>)
     fun getCodecDetails(accountId: String, codecId: Long): Map<String, String>
+
+    // ==================== Peer Services & Tunnels ====================
+    /**
+     * Announce a service this device offers to its peers (id assigned by the daemon).
+     *
+     * @param details Service description: `name`, `description`, `scheme`, `port`, …
+     * @return The new service's id, or an empty string on failure.
+     */
+    fun addExposedService(accountId: String, details: Map<String, String>): String
+
+    /** Update an exposed service in place; [details] must carry its `id`. */
+    fun updateExposedService(accountId: String, details: Map<String, String>): Boolean
+
+    /** Stop announcing an exposed service. */
+    fun removeExposedService(accountId: String, serviceId: String): Boolean
+
+    /** Services this account currently announces. */
+    fun getExposedServices(accountId: String): List<Map<String, String>>
+
+    /**
+     * Ask a peer which services it offers. Answered asynchronously by
+     * DaemonCallbacks.onPeerServicesReceived, correlated by the returned request id.
+     */
+    fun queryPeerServices(accountId: String, peerUri: String): Long
+
+    /**
+     * Open a tunnel to one of a peer's services, forwarding it to a local port.
+     *
+     * @param localPort Desired local port, or 0 to let the daemon choose.
+     * @return The tunnel id, or an empty string if the tunnel could not be opened.
+     */
+    fun openServiceTunnel(
+        accountId: String,
+        peerUri: String,
+        deviceId: String,
+        serviceId: String,
+        serviceName: String,
+        localPort: Int
+    ): String
+
+    /** Close a tunnel previously opened with [openServiceTunnel]. */
+    fun closeServiceTunnel(accountId: String, tunnelId: String): Boolean
+
+    /** Tunnels currently open for an account. */
+    fun getActiveTunnels(accountId: String): List<Map<String, String>>
 
     // ==================== Daemon Settings & Diagnostics ====================
     /**
@@ -571,6 +637,21 @@ interface DaemonCallbacks {
     // ==================== Data Transfer Callbacks ====================
     fun onDataTransferEvent(accountId: String, conversationId: String, interactionId: String, fileId: String, eventCode: Int)
 
+    // ==================== Peer Services Callbacks ====================
+    /**
+     * A peer answered a [DaemonBridgeApi.queryPeerServices] request.
+     *
+     * @param status 0 = ok, 1 = no devices, 2 = unreachable, 3 = timeout, 4 = internal error
+     * @param servicesJson JSON array of `{id, name, description, scheme, device}` objects
+     */
+    fun onPeerServicesReceived(requestId: Long, accountId: String, peerId: String, status: Int, servicesJson: String)
+
+    /** A service tunnel is up and forwarding to [localPort] on this device. */
+    fun onServiceTunnelOpened(accountId: String, tunnelId: String, localPort: Int)
+
+    /** A service tunnel was closed, by either side. */
+    fun onServiceTunnelClosed(accountId: String, tunnelId: String, reason: String)
+
     // ==================== Diagnostics Callbacks ====================
     /** Daemon-level error alert (see libjami Alert codes). */
     fun onErrorAlert(alert: Int)
@@ -621,6 +702,15 @@ class StubDaemonBridge : DaemonBridgeApi {
     var historyLimitDays: Int = 0
     var ringingTimeoutSeconds: Int = 30
     var connectionList: List<Map<String, String>> = emptyList()
+    // Named to avoid colliding with the getNoiseSuppressState() override's JVM signature.
+    var noiseSuppressStateValue: String = "enabled"
+    var agcEnabled: Boolean = false
+    val echoCancellationCalls: MutableList<Boolean> = mutableListOf()
+    val exposedServices: MutableMap<String, Map<String, String>> = mutableMapOf()
+    var lastPeerServicesRequestId: Long = 0
+    var openTunnelResult: String = "tunnel1"
+    val closedTunnels: MutableList<String> = mutableListOf()
+    var activeTunnels: List<Map<String, String>> = emptyList()
     val monitorCalls: MutableList<Boolean> = mutableListOf()
 
     // Configurable lookup results: name -> LookupState (0=Success/taken, 1=Invalid, 2=NotFound/available, 3=NetworkError)
@@ -682,8 +772,42 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun muteCapture(mute: Boolean) {}
     override fun isCaptureMuted(): Boolean = false
     override fun restartAudioLayer() {}
-    override fun setNoiseSuppression(enabled: Boolean) {}
-    override fun setEchoCancellation(enabled: Boolean) {}
+    override fun setNoiseSuppression(enabled: Boolean) {
+        noiseSuppressStateValue = if (enabled) "enabled" else "disabled"
+    }
+    override fun getNoiseSuppressState(): String = noiseSuppressStateValue
+    override fun setAgcState(enabled: Boolean) { agcEnabled = enabled }
+    override fun setEchoCancellation(enabled: Boolean) { echoCancellationCalls += enabled }
+
+    override fun addExposedService(accountId: String, details: Map<String, String>): String {
+        val id = "service${exposedServices.size + 1}"
+        exposedServices[id] = details + ("id" to id)
+        return id
+    }
+    override fun updateExposedService(accountId: String, details: Map<String, String>): Boolean {
+        val id = details["id"] ?: return false
+        if (!exposedServices.containsKey(id)) return false
+        exposedServices[id] = details
+        return true
+    }
+    override fun removeExposedService(accountId: String, serviceId: String): Boolean =
+        exposedServices.remove(serviceId) != null
+    override fun getExposedServices(accountId: String): List<Map<String, String>> =
+        exposedServices.values.toList()
+    override fun queryPeerServices(accountId: String, peerUri: String): Long = ++lastPeerServicesRequestId
+    override fun openServiceTunnel(
+        accountId: String,
+        peerUri: String,
+        deviceId: String,
+        serviceId: String,
+        serviceName: String,
+        localPort: Int
+    ): String = openTunnelResult
+    override fun closeServiceTunnel(accountId: String, tunnelId: String): Boolean {
+        closedTunnels += tunnelId
+        return true
+    }
+    override fun getActiveTunnels(accountId: String): List<Map<String, String>> = activeTunnels
     override fun transfer(accountId: String, callId: String, to: String): Boolean = true
     override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean = true
     override fun getCallDetails(accountId: String, callId: String): Map<String, String> = emptyMap()
