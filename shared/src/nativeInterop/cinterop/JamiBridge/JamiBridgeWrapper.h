@@ -674,6 +674,31 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                      participantUri:(NSString *)participantUri
                            deviceId:(NSString *)deviceId;
 
+- (void)muteParticipantStream:(NSString *)accountId
+                 conferenceId:(NSString *)conferenceId
+               participantUri:(NSString *)participantUri
+                     deviceId:(NSString *)deviceId
+                     streamId:(NSString *)streamId
+                        muted:(BOOL)muted;
+
+- (void)setActiveParticipantStream:(NSString *)accountId
+                      conferenceId:(NSString *)conferenceId
+                    participantUri:(NSString *)participantUri
+                          deviceId:(NSString *)deviceId
+                          streamId:(NSString *)streamId
+                            active:(BOOL)active;
+
+- (void)raiseParticipantHand:(NSString *)accountId
+                conferenceId:(NSString *)conferenceId
+              participantUri:(NSString *)participantUri
+                    deviceId:(NSString *)deviceId
+                     raised:(BOOL)raised;
+
+- (void)setParticipantModerator:(NSString *)accountId
+                   conferenceId:(NSString *)conferenceId
+                 participantUri:(NSString *)participantUri
+                      moderator:(BOOL)moderator;
+
 - (BOOL)holdConference:(NSString *)accountId conferenceId:(NSString *)conferenceId;
 - (BOOL)unholdConference:(NSString *)accountId conferenceId:(NSString *)conferenceId;
 - (BOOL)resumeConference:(NSString *)accountId conferenceId:(NSString *)conferenceId;

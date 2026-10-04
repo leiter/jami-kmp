@@ -281,6 +281,8 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.setActiveParticipant(accountId, conferenceId = confId, callId = callId)
     }
 
+    // libjami exposes no per-participant video mute to clients (Conference::muteStream is
+    // audio-only), so these stay no-ops on every platform.
     override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {}
     override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {}
 
@@ -328,6 +330,26 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun setConferenceLocked(accountId: String, confId: String, locked: Boolean) {
         bridge.setConferenceLayout(accountId, conferenceId = confId, layout = if (locked) JBConferenceLayout.JBConferenceLayoutOneBigSmall else JBConferenceLayout.JBConferenceLayoutGrid)
+    }
+
+    override fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
+        bridge.muteParticipantStream(accountId, conferenceId = confId, participantUri = peerUri, deviceId = deviceId, streamId = streamId, muted = state)
+    }
+
+    override fun setActiveStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
+        bridge.setActiveParticipantStream(accountId, conferenceId = confId, participantUri = peerUri, deviceId = deviceId, streamId = streamId, active = state)
+    }
+
+    override fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String) {
+        bridge.hangUpConferenceParticipant(accountId, conferenceId = confId, participantUri = peerUri, deviceId = deviceId)
+    }
+
+    override fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, state: Boolean) {
+        bridge.raiseParticipantHand(accountId, conferenceId = confId, participantUri = peerUri, deviceId = deviceId, raised = state)
+    }
+
+    override fun setModerator(accountId: String, confId: String, peerUri: String, state: Boolean) {
+        bridge.setParticipantModerator(accountId, conferenceId = confId, participantUri = peerUri, moderator = state)
     }
 
     // ==================== Conversation Operations ====================

@@ -308,11 +308,88 @@ class CallService(
     }
 
     /**
-     * Mute all audio in a conference (moderator only).
+     * Mute every participant of a conference (moderator only).
+     *
+     * libjami has no "mute all" primitive, so this mutes each participant stream in turn.
+     * Falls back to the coarse bridge call only when no conference info is known yet.
      */
     fun muteAllParticipants(accountId: String, confId: String) {
         scope.launch {
-            daemonBridge.muteAllParticipants(accountId, confId)
+            val participants = conferences[confId]?.participantInfo.orEmpty()
+            if (participants.isEmpty()) {
+                Log.w(TAG, "muteAllParticipants: no participant info for $confId")
+                daemonBridge.muteAllParticipants(accountId, confId)
+                return@launch
+            }
+            participants.forEach { info ->
+                daemonBridge.muteStream(
+                    accountId, confId,
+                    info.contact.uri.rawRingId, info.device ?: "", "", true
+                )
+            }
+        }
+    }
+
+    /**
+     * Mute or unmute one participant's audio stream (moderator only).
+     *
+     * The daemon resolves the target call by (peerUri, deviceId), so pass the device ID
+     * reported in the conference info; see Conference.ParticipantInfo.device.
+     */
+    fun muteParticipantStream(
+        accountId: String,
+        confId: String,
+        peerUri: String,
+        deviceId: String,
+        muted: Boolean,
+        streamId: String = ""
+    ) {
+        scope.launch {
+            daemonBridge.muteStream(accountId, confId, peerUri, deviceId, streamId, muted)
+        }
+    }
+
+    /**
+     * Focus (or unfocus) a participant's video stream in the conference mixer.
+     * Modern replacement for [setActiveParticipant], which only takes a call ID.
+     */
+    fun setActiveStream(
+        accountId: String,
+        confId: String,
+        peerUri: String,
+        deviceId: String,
+        streamId: String,
+        active: Boolean
+    ) {
+        scope.launch {
+            daemonBridge.setActiveStream(accountId, confId, peerUri, deviceId, streamId, active)
+        }
+    }
+
+    /**
+     * Eject one participant from a conference (moderator only).
+     */
+    fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String = "") {
+        scope.launch {
+            daemonBridge.hangupParticipant(accountId, confId, peerUri, deviceId)
+        }
+    }
+
+    /**
+     * Raise or lower a hand in a conference. Participants may only raise their own hand.
+     */
+    fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, raised: Boolean) {
+        scope.launch {
+            daemonBridge.raiseHand(accountId, confId, peerUri, deviceId, raised)
+        }
+    }
+
+    /**
+     * Grant or revoke moderator rights for a participant (moderator only).
+     */
+    fun setModerator(accountId: String, confId: String, peerUri: String, moderator: Boolean) {
+        scope.launch {
+            daemonBridge.setModerator(accountId, confId, peerUri, moderator)
         }
     }
 

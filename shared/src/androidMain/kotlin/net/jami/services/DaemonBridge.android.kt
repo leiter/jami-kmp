@@ -1015,9 +1015,41 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         JamiService.setConferenceLayout(accountId, confId, if (locked) 2 else 0)
     }
     override fun muteParticipantAudio(accountId: String, confId: String, participantId: String) {
-        JamiService.hangUpConference(accountId, confId)
+        // participantId is the peer URI; the device is unknown here, so the daemon has to
+        // resolve the call itself. Prefer muteStream() with an explicit device ID.
+        JamiService.muteStream(accountId, confId, participantId, "", "", true)
     }
-    override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {}
-    override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {}
-    override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {}
+    override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {
+        JamiService.muteStream(accountId, confId, participantId, "", "", false)
+    }
+    // libjami exposes no per-participant video mute to clients: Conference::muteStream only
+    // acts on audio, and the MUTEVIDEO conference-protocol key is host-side only. Left as
+    // explicit no-ops rather than wired to setActiveStream, which focuses a stream instead
+    // of muting it.
+    override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {
+        Log.w(TAG, "disableParticipantVideo: not supported by libjami (audio-only muteStream)")
+    }
+    override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {
+        Log.w(TAG, "enableParticipantVideo: not supported by libjami (audio-only muteStream)")
+    }
+
+    override fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
+        JamiService.muteStream(accountId, confId, peerUri, deviceId, streamId, state)
+    }
+
+    override fun setActiveStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
+        JamiService.setActiveStream(accountId, confId, peerUri, deviceId, streamId, state)
+    }
+
+    override fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String) {
+        JamiService.hangupParticipant(accountId, confId, peerUri, deviceId)
+    }
+
+    override fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, state: Boolean) {
+        JamiService.raiseHand(accountId, confId, peerUri, deviceId, state)
+    }
+
+    override fun setModerator(accountId: String, confId: String, peerUri: String, state: Boolean) {
+        JamiService.setModerator(accountId, confId, peerUri, state)
+    }
 }

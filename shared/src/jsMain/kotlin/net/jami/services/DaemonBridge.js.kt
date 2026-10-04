@@ -325,6 +325,21 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun addMainParticipant(accountId: String, confId: String): Boolean = false
     override fun detachParticipant(accountId: String, callId: String): Boolean = false
     override fun getParticipantList(accountId: String, confId: String): List<String> = emptyList()
+    override fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
+        Log.d(TAG, "muteStream called (stub): $confId peer=$peerUri state=$state")
+    }
+    override fun setActiveStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
+        Log.d(TAG, "setActiveStream called (stub): $confId peer=$peerUri state=$state")
+    }
+    override fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String) {
+        Log.d(TAG, "hangupParticipant called (stub): $confId peer=$peerUri")
+    }
+    override fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, state: Boolean) {
+        Log.d(TAG, "raiseHand called (stub): $confId peer=$peerUri state=$state")
+    }
+    override fun setModerator(accountId: String, confId: String, peerUri: String, state: Boolean) {
+        Log.d(TAG, "setModerator called (stub): $confId peer=$peerUri state=$state")
+    }
     override fun getConferenceDetails(accountId: String, confId: String): Map<String, String> = emptyMap()
 
     // ==================== Conversation Operations ====================

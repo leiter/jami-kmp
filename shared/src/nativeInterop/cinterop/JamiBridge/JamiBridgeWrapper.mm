@@ -2029,6 +2029,49 @@ static JBCallState toCallState(const std::string& state) {
                               toCppString(participantUri), toCppString(deviceId));
 }
 
+- (void)muteParticipantStream:(NSString *)accountId
+                 conferenceId:(NSString *)conferenceId
+               participantUri:(NSString *)participantUri
+                     deviceId:(NSString *)deviceId
+                     streamId:(NSString *)streamId
+                        muted:(BOOL)muted {
+    NSLog(@"[JamiBridge] muteParticipantStream: %@ device: %@ muted: %d", participantUri, deviceId, muted);
+    libjami::muteStream(toCppString(accountId), toCppString(conferenceId),
+                        toCppString(participantUri), toCppString(deviceId),
+                        toCppString(streamId), muted);
+}
+
+- (void)setActiveParticipantStream:(NSString *)accountId
+                      conferenceId:(NSString *)conferenceId
+                    participantUri:(NSString *)participantUri
+                          deviceId:(NSString *)deviceId
+                          streamId:(NSString *)streamId
+                            active:(BOOL)active {
+    NSLog(@"[JamiBridge] setActiveParticipantStream: %@ stream: %@ active: %d", participantUri, streamId, active);
+    libjami::setActiveStream(toCppString(accountId), toCppString(conferenceId),
+                             toCppString(participantUri), toCppString(deviceId),
+                             toCppString(streamId), active);
+}
+
+- (void)raiseParticipantHand:(NSString *)accountId
+                conferenceId:(NSString *)conferenceId
+              participantUri:(NSString *)participantUri
+                    deviceId:(NSString *)deviceId
+                     raised:(BOOL)raised {
+    NSLog(@"[JamiBridge] raiseParticipantHand: %@ raised: %d", participantUri, raised);
+    libjami::raiseHand(toCppString(accountId), toCppString(conferenceId),
+                       toCppString(participantUri), toCppString(deviceId), raised);
+}
+
+- (void)setParticipantModerator:(NSString *)accountId
+                   conferenceId:(NSString *)conferenceId
+                 participantUri:(NSString *)participantUri
+                      moderator:(BOOL)moderator {
+    NSLog(@"[JamiBridge] setParticipantModerator: %@ moderator: %d", participantUri, moderator);
+    libjami::setModerator(toCppString(accountId), toCppString(conferenceId),
+                          toCppString(participantUri), moderator);
+}
+
 - (BOOL)holdConference:(NSString *)accountId conferenceId:(NSString *)conferenceId {
     NSLog(@"[JamiBridge] holdConference: %@", conferenceId);
     return libjami::holdConference(toCppString(accountId), toCppString(conferenceId));

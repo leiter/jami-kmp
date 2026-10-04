@@ -584,4 +584,9 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {}
     override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {}
     override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {}
+    override fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {}
+    override fun setActiveStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {}
+    override fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String) {}
+    override fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, state: Boolean) {}
+    override fun setModerator(accountId: String, confId: String, peerUri: String, state: Boolean) {}
 }

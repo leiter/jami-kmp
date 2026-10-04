@@ -65,11 +65,24 @@ sealed class CallMode {
 data class CallPickerItem(val callId: String, val peerName: String)
 
 /**
+ * Conference mixer layouts understood by the daemon (libjami::Layout).
+ */
+object ConferenceLayout {
+    const val GRID = 0
+    const val ONE_BIG = 1
+    const val ONE_BIG_WITH_SMALL = 2
+}
+
+/**
  * Minimal participant info surfaced to the UI.
  */
 data class ParticipantUi(
     val callId: String,
     val displayName: String,
+    /** Participant account URI (bare ring id) — needed to address moderation calls. */
+    val peerUri: String = "",
+    /** Participant device ID from the conference info — the daemon resolves mutes by it. */
+    val deviceId: String = "",
     val sinkId: String = "",
     val isModerator: Boolean = false,
     val isAudioMuted: Boolean = false,
@@ -103,6 +116,7 @@ data class CallState(
     val participantCount: Int = 1,
     val participants: List<ParticipantUi> = emptyList(),
     val conferenceLayout: Int = 0,
+    val isHandRaised: Boolean = false,
     val hangupReason: HangupReason = HangupReason.NONE,
     // Video state
     val hasVideo: Boolean = false,
@@ -609,6 +623,71 @@ class CallViewModel(
         }
     }
 
+    /**
+     * Mute or unmute a participant's audio (moderator only).
+     *
+     * Addresses the participant by (URI, device) the way the daemon expects, unlike the
+     * call-ID based [setParticipantAudioMuted].
+     */
+    fun setParticipantMuted(participant: ParticipantUi, muted: Boolean) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        callService.muteParticipantStream(
+            accountId, conf.id, participant.peerUri, participant.deviceId, muted
+        )
+    }
+
+    /**
+     * Eject a participant from the conference (moderator only).
+     * Hangs up their own call leg directly when we host it.
+     */
+    fun ejectParticipant(participant: ParticipantUi) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        callService.hangupParticipant(accountId, conf.id, participant.peerUri, participant.deviceId)
+    }
+
+    /**
+     * Promote or demote a participant to/from moderator (moderator only).
+     */
+    fun setParticipantModerator(participant: ParticipantUi, moderator: Boolean) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        callService.setModerator(accountId, conf.id, participant.peerUri, moderator)
+    }
+
+    /**
+     * Focus a participant's video stream in the conference mixer (modern per-stream API).
+     */
+    fun setActiveStream(participant: ParticipantUi, active: Boolean) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        callService.setActiveStream(
+            accountId, conf.id, participant.peerUri, participant.deviceId,
+            participant.sinkId, active
+        )
+    }
+
+    /**
+     * Raise or lower a participant's hand. Lowering someone else's hand requires moderator
+     * rights; with no participant given this acts on the local user.
+     */
+    fun setHandRaised(raised: Boolean, participant: ParticipantUi? = null) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        val account = accountService.getAccount(accountId)
+        val peerUri = participant?.peerUri
+            ?: Uri.fromString(account?.username ?: "").rawRingId.ifEmpty { return }
+        val deviceId = participant?.deviceId ?: account?.deviceId ?: ""
+        callService.raiseHand(accountId, conf.id, peerUri, deviceId, raised)
+        if (participant == null) {
+            _state.value = _state.value.copy(isHandRaised = raised)
+        }
+    }
+
+    /** Toggle the local user's raised hand. */
+    fun toggleRaiseHand() = setHandRaised(!_state.value.isHandRaised)
+
     // ==================== Video Loss Recovery ====================
 
     fun retryRemoteVideo() {
@@ -795,10 +874,14 @@ class CallViewModel(
             ParticipantUi(
                 callId = call.daemonId ?: "",
                 displayName = call.contact?.displayName ?: call.peerUri.uri,
+                peerUri = call.peerUri.rawRingId,
+                deviceId = participantInfo?.device ?: "",
                 sinkId = participantInfo?.sinkId ?: "",
-                isAudioMuted = call.isAudioMuted,
-                isVideoMuted = call.isVideoMuted,
+                isAudioMuted = participantInfo?.let { it.audioModeratorMuted || it.audioLocalMuted }
+                    ?: call.isAudioMuted,
+                isVideoMuted = participantInfo?.videoMuted ?: call.isVideoMuted,
                 isModerator = participantInfo?.isModerator ?: false,  // Moderator flag from daemon
+                isHandRaised = participantInfo?.isHandRaised ?: false,
                 isActive = participantInfo?.active ?: false  // Active speaker from daemon
             )
         }

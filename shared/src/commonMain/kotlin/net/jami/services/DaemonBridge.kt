@@ -319,6 +319,11 @@ interface DaemonBridgeApi {
     /**
      * Mute audio for all participants in a conference.
      *
+     * The daemon has no "mute all" primitive: callers should prefer iterating the
+     * conference participants and calling [muteStream] for each one (which is what
+     * CallService.muteAllParticipants does). This method is kept for platforms whose
+     * bridge offers a coarse equivalent.
+     *
      * @param accountId Account ID
      * @param confId Conference ID
      */
@@ -368,6 +373,70 @@ interface DaemonBridgeApi {
      * @param participantId Participant ID
      */
     fun enableParticipantVideo(accountId: String, confId: String, participantId: String)
+
+    /**
+     * Mute or unmute one media stream of a conference participant (moderator only).
+     *
+     * This is the modern per-stream replacement for the deprecated muteParticipant API.
+     * The daemon resolves the target by (accountUri, deviceId) pair, so [deviceId] must be
+     * the participant's device as reported in the conference info — an empty device only
+     * matches when the daemon can infer a single call for that URI.
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param peerUri Participant account URI (without the "jami:" scheme)
+     * @param deviceId Participant device ID (from Conference.ParticipantInfo.device)
+     * @param streamId Stream (sink) ID, or empty for the participant's default stream
+     * @param state true to mute, false to unmute
+     */
+    fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean)
+
+    /**
+     * Set or clear a participant stream as the conference's active (focused) stream.
+     *
+     * Modern replacement for [setActiveParticipant], which only takes a call ID.
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param peerUri Participant account URI
+     * @param deviceId Participant device ID
+     * @param streamId Stream (sink) ID to focus
+     * @param state true to make the stream active, false to clear it
+     */
+    fun setActiveStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean)
+
+    /**
+     * Eject a single participant from a conference (moderator only).
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param peerUri Participant account URI
+     * @param deviceId Participant device ID, or empty for all of that peer's devices
+     */
+    fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String)
+
+    /**
+     * Raise or lower a participant's hand in a conference.
+     *
+     * Participants may only raise their own hand; moderators may lower anyone's.
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param peerUri Participant account URI
+     * @param deviceId Participant device ID
+     * @param state true to raise, false to lower
+     */
+    fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, state: Boolean)
+
+    /**
+     * Grant or revoke moderator rights for a conference participant (moderator only).
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param peerUri Participant account URI
+     * @param state true to promote to moderator, false to demote
+     */
+    fun setModerator(accountId: String, confId: String, peerUri: String, state: Boolean)
 }
 
 /**
@@ -660,4 +729,9 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {}
     override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {}
     override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {}
+    override fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {}
+    override fun setActiveStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {}
+    override fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String) {}
+    override fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, state: Boolean) {}
+    override fun setModerator(accountId: String, confId: String, peerUri: String, state: Boolean) {}
 }

@@ -259,6 +259,26 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.setActiveParticipant(accountId, conferenceId = confId, callId = callId)
     }
 
+    override fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
+        bridge.muteParticipantStream(accountId, conferenceId = confId, participantUri = peerUri, deviceId = deviceId, streamId = streamId, muted = state)
+    }
+
+    override fun setActiveStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
+        bridge.setActiveParticipantStream(accountId, conferenceId = confId, participantUri = peerUri, deviceId = deviceId, streamId = streamId, active = state)
+    }
+
+    override fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String) {
+        bridge.hangUpConferenceParticipant(accountId, conferenceId = confId, participantUri = peerUri, deviceId = deviceId)
+    }
+
+    override fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, state: Boolean) {
+        bridge.raiseParticipantHand(accountId, conferenceId = confId, participantUri = peerUri, deviceId = deviceId, raised = state)
+    }
+
+    override fun setModerator(accountId: String, confId: String, peerUri: String, state: Boolean) {
+        bridge.setParticipantModerator(accountId, conferenceId = confId, participantUri = peerUri, moderator = state)
+    }
+
     override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {
         Log.d(TAG, "setConferenceLayout: $confId layout=$layout")
         // TODO: bridge.setConferenceLayout(accountId, confId, layout)
