@@ -719,6 +719,39 @@ private fun CallInfoOverlay(
                     color = Color.White.copy(alpha = 0.8f),
                 )
             }
+
+            // The peer put us on hold: the call stays CURRENT but media stops, so without this
+            // the UI looks like a live call with silence.
+            if (state.isPeerHolding) {
+                Spacer(Modifier.height(JamiTheme.spacing.xs))
+                Text(
+                    text = stringResource(Res.string.call_on_hold),
+                    style = JamiTheme.typography.labelMedium,
+                    color = Color.White.copy(alpha = 0.8f),
+                )
+            }
+
+            // Someone on the other side is recording this call.
+            if (state.isRemoteRecording) {
+                Spacer(Modifier.height(JamiTheme.spacing.xs))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.FiberManualRecord,
+                        contentDescription = null,
+                        tint = JamiColors.Red500,
+                        modifier = Modifier.size(12.dp),
+                    )
+                    Spacer(Modifier.size(JamiTheme.spacing.xs))
+                    Text(
+                        text = stringResource(
+                            Res.string.remote_recording,
+                            state.remoteRecordingBy.ifEmpty { state.peerName }
+                        ),
+                        style = JamiTheme.typography.labelMedium,
+                        color = Color.White,
+                    )
+                }
+            }
         }
 
         if (state.callMode is CallMode.OnGoing) {

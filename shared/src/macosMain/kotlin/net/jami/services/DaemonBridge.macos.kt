@@ -789,6 +789,38 @@ private class JamiBridgeDelegateImpl(
         callbacks.onVideoMuted(callId, muted)
     }
 
+    override fun onPeerHold(callId: String, holding: Boolean) {
+        callbacks.onPeerHold(callId, holding)
+    }
+
+    override fun onConnectionUpdate(callId: String, state: Int) {
+        callbacks.onConnectionUpdate(callId, state)
+    }
+
+    override fun onRemoteRecordingChanged(callId: String, peerUri: String, recording: Boolean) {
+        callbacks.onRemoteRecordingChanged(callId, peerUri, recording)
+    }
+
+    override fun onConversationError(accountId: String, conversationId: String, code: Int, message: String) {
+        callbacks.onConversationError(accountId, conversationId, code.toLong(), message)
+    }
+
+    override fun onNewServerSubscriptionRequest(remoteUri: String) {
+        callbacks.onNewServerSubscriptionRequest(remoteUri)
+    }
+
+    override fun onPresenceServerError(accountId: String, error: String, message: String) {
+        callbacks.onPresenceServerError(accountId, error, message)
+    }
+
+    override fun onPresenceSubscriptionStateChanged(accountId: String, buddyUri: String, state: Int) {
+        callbacks.onPresenceSubscriptionStateChanged(accountId, buddyUri, state)
+    }
+
+    override fun onNearbyPeerNotification(accountId: String, peerId: String, state: Int, displayName: String) {
+        callbacks.onNearbyPeerNotification(accountId, peerId, state, displayName)
+    }
+
     override fun onConferenceCreated(accountId: String, conversationId: String, conferenceId: String) {
         callbacks.onConferenceCreated(accountId, conversationId, conferenceId)
     }

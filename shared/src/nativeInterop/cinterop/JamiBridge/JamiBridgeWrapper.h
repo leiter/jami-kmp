@@ -185,6 +185,34 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 
 - (void)onVideoMuted:(NSString *)callId muted:(BOOL)muted;
 
+- (void)onPeerHold:(NSString *)callId holding:(BOOL)holding;
+
+- (void)onConnectionUpdate:(NSString *)callId state:(int)state;
+
+- (void)onRemoteRecordingChanged:(NSString *)callId
+                         peerUri:(NSString *)peerUri
+                       recording:(BOOL)recording;
+
+- (void)onConversationError:(NSString *)accountId
+             conversationId:(NSString *)conversationId
+                       code:(int)code
+                    message:(NSString *)message;
+
+- (void)onNewServerSubscriptionRequest:(NSString *)remoteUri;
+
+- (void)onPresenceServerError:(NSString *)accountId
+                        error:(NSString *)error
+                      message:(NSString *)message;
+
+- (void)onPresenceSubscriptionStateChanged:(NSString *)accountId
+                                  buddyUri:(NSString *)buddyUri
+                                     state:(int)state;
+
+- (void)onNearbyPeerNotification:(NSString *)accountId
+                          peerId:(NSString *)peerId
+                           state:(int)state
+                     displayName:(NSString *)displayName;
+
 - (void)onConferenceCreated:(NSString *)accountId
              conversationId:(NSString *)conversationId
                conferenceId:(NSString *)conferenceId;

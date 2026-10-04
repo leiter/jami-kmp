@@ -483,6 +483,12 @@ interface DaemonCallbacks {
     fun onVideoMuted(callId: String, muted: Boolean)
     fun onRecordingStateChanged(callId: String, recording: Boolean)
     fun onMediaNegotiationStatus(callId: String, event: String, mediaList: List<Map<String, String>>)
+    /** The peer put the call on hold (or took it off hold). */
+    fun onPeerHold(callId: String, holding: Boolean)
+    /** ICE/connection state for a call or a device connection: 0 = connected, 1/2 = closed. */
+    fun onConnectionUpdate(id: String, state: Int)
+    /** A conference participant started or stopped recording the call. */
+    fun onRemoteRecordingChanged(callId: String, peerUri: String, recording: Boolean)
     fun onConferenceCreated(accountId: String, conversationId: String, confId: String)
     fun onConferenceChanged(accountId: String, confId: String, state: String)
     fun onConferenceRemoved(accountId: String, confId: String)
@@ -503,9 +509,19 @@ interface DaemonCallbacks {
     fun onReactionAdded(accountId: String, conversationId: String, messageId: String, reaction: Map<String, String>)
     fun onReactionRemoved(accountId: String, conversationId: String, messageId: String, reactionId: String)
     fun onActiveCallsChanged(accountId: String, conversationId: String, activeCalls: List<Map<String, String>>)
+    /** The daemon failed to sync or operate on a conversation (swarm error). */
+    fun onConversationError(accountId: String, conversationId: String, code: Long, message: String)
 
     // ==================== Presence Callbacks ====================
     fun onNewBuddyNotification(accountId: String, buddyUri: String, status: Int, lineStatus: String)
+    /** A remote peer asked to subscribe to our presence (SIP presence server flow). */
+    fun onNewServerSubscriptionRequest(remoteUri: String)
+    /** The presence server reported an error for this account. */
+    fun onPresenceServerError(accountId: String, error: String, message: String)
+    /** Our subscription to a buddy's presence changed state (0 = inactive, 1 = active). */
+    fun onPresenceSubscriptionStateChanged(accountId: String, buddyUri: String, state: Int)
+    /** A peer was seen on the local network (nearby-peer discovery). */
+    fun onNearbyPeerNotification(accountId: String, peerId: String, state: Int, displayName: String)
 
     // ==================== Contact Callbacks ====================
     fun onContactAdded(accountId: String, uri: String, confirmed: Boolean)
@@ -525,6 +541,22 @@ interface DaemonCallbacks {
 
     // ==================== Data Transfer Callbacks ====================
     fun onDataTransferEvent(accountId: String, conversationId: String, interactionId: String, fileId: String, eventCode: Int)
+
+    // ==================== Diagnostics Callbacks ====================
+    /** Daemon-level error alert (see libjami Alert codes). */
+    fun onErrorAlert(alert: Int)
+    /** An audio device's volume was changed by the daemon. */
+    fun onVolumeChanged(device: String, value: Int)
+    /** STUN resolution failed for this account — NAT traversal may be degraded. */
+    fun onStunStatusFailure(accountId: String)
+    /** The daemon's call history file changed. */
+    fun onHistoryChanged()
+    /** Hardware-accelerated video decoding was enabled/disabled by the daemon. */
+    fun onHardwareDecodingChanged(enabled: Boolean)
+    /** Hardware-accelerated video encoding was enabled/disabled by the daemon. */
+    fun onHardwareEncodingChanged(enabled: Boolean)
+    /** A log line emitted by the daemon itself. */
+    fun onDaemonLogMessage(message: String)
 }
 
 /**

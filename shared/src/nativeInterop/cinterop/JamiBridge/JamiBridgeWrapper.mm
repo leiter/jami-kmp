@@ -654,6 +654,43 @@ static JBCallState toCallState(const std::string& state) {
             });
         }));
 
+    // Peer hold
+    handlers.insert(exportable_callback<CallSignal::PeerHold>(
+        [weakSelf](const std::string& callId, bool holding) {
+            NSString *callIdNS = toNSString(callId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onPeerHold:holding:)]) {
+                    [strongSelf.delegate onPeerHold:callIdNS holding:holding];
+                }
+            });
+        }));
+
+    // ICE/connection state
+    handlers.insert(exportable_callback<CallSignal::ConnectionUpdate>(
+        [weakSelf](const std::string& callId, int state) {
+            NSString *callIdNS = toNSString(callId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onConnectionUpdate:state:)]) {
+                    [strongSelf.delegate onConnectionUpdate:callIdNS state:state];
+                }
+            });
+        }));
+
+    // A remote participant started/stopped recording
+    handlers.insert(exportable_callback<CallSignal::RemoteRecordingChanged>(
+        [weakSelf](const std::string& callId, const std::string& peerUri, bool recording) {
+            NSString *callIdNS = toNSString(callId);
+            NSString *peerUriNS = toNSString(peerUri);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onRemoteRecordingChanged:peerUri:recording:)]) {
+                    [strongSelf.delegate onRemoteRecordingChanged:callIdNS peerUri:peerUriNS recording:recording];
+                }
+            });
+        }));
+
     // Conference created
     handlers.insert(exportable_callback<CallSignal::ConferenceCreated>(
         [weakSelf](const std::string& accountId, const std::string& conversationId,
@@ -974,6 +1011,60 @@ static JBCallState toCallState(const std::string& state) {
             });
         }));
 
+    // A remote peer asked to subscribe to our presence (SIP presence server)
+    handlers.insert(exportable_callback<PresenceSignal::NewServerSubscriptionRequest>(
+        [weakSelf](const std::string& remoteUri) {
+            NSString *remoteUriNS = toNSString(remoteUri);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onNewServerSubscriptionRequest:)]) {
+                    [strongSelf.delegate onNewServerSubscriptionRequest:remoteUriNS];
+                }
+            });
+        }));
+
+    // Presence server error
+    handlers.insert(exportable_callback<PresenceSignal::ServerError>(
+        [weakSelf](const std::string& accountId, const std::string& error, const std::string& message) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *errorNS = toNSString(error);
+            NSString *messageNS = toNSString(message);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onPresenceServerError:error:message:)]) {
+                    [strongSelf.delegate onPresenceServerError:accountIdNS error:errorNS message:messageNS];
+                }
+            });
+        }));
+
+    // Our subscription to a buddy's presence changed state
+    handlers.insert(exportable_callback<PresenceSignal::SubscriptionStateChanged>(
+        [weakSelf](const std::string& accountId, const std::string& buddyUri, int state) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *buddyUriNS = toNSString(buddyUri);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onPresenceSubscriptionStateChanged:buddyUri:state:)]) {
+                    [strongSelf.delegate onPresenceSubscriptionStateChanged:accountIdNS buddyUri:buddyUriNS state:state];
+                }
+            });
+        }));
+
+    // Peer seen on the local network
+    handlers.insert(exportable_callback<PresenceSignal::NearbyPeerNotification>(
+        [weakSelf](const std::string& accountId, const std::string& peerId,
+                   int state, const std::string& displayName) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *peerIdNS = toNSString(peerId);
+            NSString *displayNameNS = toNSString(displayName);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onNearbyPeerNotification:peerId:state:displayName:)]) {
+                    [strongSelf.delegate onNearbyPeerNotification:accountIdNS peerId:peerIdNS state:state displayName:displayNameNS];
+                }
+            });
+        }));
+
     // =========================================================================
     // iOS/Android-specific callbacks (conditionally compiled)
     // =========================================================================
@@ -1139,6 +1230,20 @@ static JBCallState toCallState(const std::string& state) {
                 JamiBridgeWrapper *strongSelf = weakSelf;
                 if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onMessagesFound:accountId:conversationId:messages:)]) {
                     [strongSelf.delegate onMessagesFound:requestId accountId:accountIdNS conversationId:conversationIdNS messages:messagesNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConversationSignal::OnConversationError>(
+        [weakSelf](const std::string& accountId, const std::string& conversationId,
+                   int code, const std::string& what) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *conversationIdNS = toNSString(conversationId);
+            NSString *whatNS = toNSString(what);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onConversationError:conversationId:code:message:)]) {
+                    [strongSelf.delegate onConversationError:accountIdNS conversationId:conversationIdNS code:code message:whatNS];
                 }
             });
         }));

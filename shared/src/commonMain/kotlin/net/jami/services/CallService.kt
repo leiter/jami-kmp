@@ -620,6 +620,54 @@ class CallService(
     }
 
     /**
+     * Called when the peer puts the call on hold, or resumes it.
+     *
+     * The daemon reports this separately from `callStateChanged`: a peer-side hold keeps the
+     * call CURRENT, so without this signal the UI cannot tell that media stopped flowing.
+     */
+    internal fun onPeerHold(callId: String, holding: Boolean) {
+        scope.launch {
+            calls[callId]?.let { call ->
+                call.isPeerHolding = holding
+                _callUpdates.emit(call)
+                // A held leg inside a conference also refreshes the conference view.
+                conferences[call.confId ?: ""]?.let { _conferenceUpdates.emit(it) }
+            }
+            conferences[callId]?.let { conf ->
+                _conferenceUpdates.emit(conf)
+            }
+        }
+    }
+
+    /**
+     * ICE/connection state update for a call or peer connection (0 = connected, 1/2 = closed).
+     * Logged only: the daemon drives the authoritative call state through `callStateChanged`.
+     */
+    internal fun onConnectionUpdate(id: String, state: Int) {
+        Log.d(TAG, "connectionUpdate: $id state=$state")
+    }
+
+    /**
+     * A remote participant started or stopped recording the call.
+     * Ports jami-client-android CallService.remoteRecordingChanged (:151-168).
+     */
+    internal fun onRemoteRecordingChanged(callId: String, peerUri: String, recording: Boolean) {
+        scope.launch {
+            val conference = conferences[callId]
+                ?: calls[callId]?.let { call -> conferences[call.confId ?: call.daemonId ?: ""] }
+            val call = conference?.firstCall ?: calls[callId]
+            val account = call?.account?.let { accountService.getAccount(it) }
+            val contact = account?.getContactFromCache(Uri.fromString(peerUri))
+            if (conference == null || contact == null) {
+                Log.w(TAG, "remoteRecordingChanged: no conference/contact for $callId $peerUri")
+                return@launch
+            }
+            conference.setParticipantRecording(contact, recording)
+            _conferenceUpdates.emit(conference)
+        }
+    }
+
+    /**
      * Called when media negotiation completes.
      */
     internal fun onMediaNegotiationStatus(callId: String, event: String, mediaList: List<Map<String, String>>) {

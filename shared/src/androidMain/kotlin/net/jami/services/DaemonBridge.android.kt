@@ -17,6 +17,7 @@
 package net.jami.services
 
 import android.content.Context
+import android.media.AudioManager
 import android.os.Build
 import android.util.Base64
 import net.jami.daemon.Blob
@@ -793,6 +794,61 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
             callbacks.onUserSearchEnded(accountId, state, query, results.toNative())
         }
 
+        override fun activeCallsChanged(accountId: String, conversationId: String, activeCalls: VectMap) {
+            callbacks.onActiveCallsChanged(accountId, conversationId, activeCalls.toNative())
+        }
+
+        override fun errorAlert(alert: Int) {
+            callbacks.onErrorAlert(alert)
+        }
+
+        override fun volumeChanged(device: String, value: Int) {
+            callbacks.onVolumeChanged(device, value)
+        }
+
+        override fun stunStatusFailure(account_id: String) {
+            callbacks.onStunStatusFailure(account_id)
+        }
+
+        override fun historyChanged() {
+            callbacks.onHistoryChanged()
+        }
+
+        override fun hardwareDecodingChanged(enabled: Boolean) {
+            callbacks.onHardwareDecodingChanged(enabled)
+        }
+
+        override fun hardwareEncodingChanged(enabled: Boolean) {
+            callbacks.onHardwareEncodingChanged(enabled)
+        }
+
+        override fun messageSend(message: String) {
+            callbacks.onDaemonLogMessage(message)
+        }
+
+        /**
+         * The daemon asks the app for the device's native audio configuration so OpenSL/AAudio
+         * can run without resampling. Without this the daemon falls back to its own defaults,
+         * which costs latency and can resample every frame. Mirrors the reference client's
+         * DeviceRuntimeServiceImpl.getHardwareAudioFormat().
+         */
+        override fun getHardwareAudioFormat(ret: net.jami.daemon.IntVect) {
+            var sampleRate = 44100
+            var bufferSize = 64
+            try {
+                val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)?.toIntOrNull()
+                    ?.let { sampleRate = it }
+                am.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER)?.toIntOrNull()
+                    ?.let { bufferSize = it }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to read native audio config: ${e.message}")
+            }
+            Log.d(TAG, "getHardwareAudioFormat: rate=$sampleRate buffer=$bufferSize")
+            ret.add(sampleRate)
+            ret.add(bufferSize)
+        }
+
         override fun getDeviceName(ret: StringVect) {
             val manufacturer = Build.MANUFACTURER
             val model = Build.MODEL
@@ -836,6 +892,30 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
             callbacks.onRecordingStateChanged(callId, code != 0)
         }
 
+        override fun audioMuted(callId: String, muted: Boolean) {
+            callbacks.onAudioMuted(callId, muted)
+        }
+
+        override fun videoMuted(callId: String, muted: Boolean) {
+            callbacks.onVideoMuted(callId, muted)
+        }
+
+        override fun mediaNegotiationStatus(callId: String, event: String, mediaList: VectMap) {
+            callbacks.onMediaNegotiationStatus(callId, event, mediaList.toNative())
+        }
+
+        override fun peerHold(callId: String, holding: Boolean) {
+            callbacks.onPeerHold(callId, holding)
+        }
+
+        override fun connectionUpdate(id: String, state: Int) {
+            callbacks.onConnectionUpdate(id, state)
+        }
+
+        override fun remoteRecordingChanged(callId: String, peer_number: String, state: Boolean) {
+            callbacks.onRemoteRecordingChanged(callId, peer_number, state)
+        }
+
         override fun conferenceCreated(accountId: String, conversationId: String, confId: String) {
             callbacks.onConferenceCreated(accountId, conversationId, confId)
         }
@@ -856,6 +936,22 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
     private fun createPresenceCallback(callbacks: DaemonCallbacks) = object : PresenceCallback() {
         override fun newBuddyNotification(accountId: String, buddyUri: String, status: Int, lineStatus: String) {
             callbacks.onNewBuddyNotification(accountId, buddyUri, status, lineStatus)
+        }
+
+        override fun newServerSubscriptionRequest(remote: String) {
+            callbacks.onNewServerSubscriptionRequest(remote)
+        }
+
+        override fun serverError(accountId: String, error: String, message: String) {
+            callbacks.onPresenceServerError(accountId, error, message)
+        }
+
+        override fun subscriptionStateChanged(accountId: String, buddyUri: String, state: Int) {
+            callbacks.onPresenceSubscriptionStateChanged(accountId, buddyUri, state)
+        }
+
+        override fun nearbyPeerNotification(accountId: String, peerId: String, state: Int, displayName: String) {
+            callbacks.onNearbyPeerNotification(accountId, peerId, state, displayName)
         }
     }
 
@@ -1005,6 +1101,10 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
 
         override fun conversationPreferencesUpdated(accountId: String, conversationId: String, preferences: StringMap) {
             callbacks.onConversationPreferencesUpdated(accountId, conversationId, preferences.toNative())
+        }
+
+        override fun onConversationError(accountId: String, conversationId: String, code: Long, what: String) {
+            callbacks.onConversationError(accountId, conversationId, code, what)
         }
     }
 

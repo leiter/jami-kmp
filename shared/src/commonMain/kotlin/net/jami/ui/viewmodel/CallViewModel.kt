@@ -117,6 +117,12 @@ data class CallState(
     val participants: List<ParticipantUi> = emptyList(),
     val conferenceLayout: Int = 0,
     val isHandRaised: Boolean = false,
+    /** The peer put us on hold — media stops while the call stays CURRENT. */
+    val isPeerHolding: Boolean = false,
+    /** At least one remote participant is recording the call. */
+    val isRemoteRecording: Boolean = false,
+    /** Display names of the remote participants currently recording, comma separated. */
+    val remoteRecordingBy: String = "",
     val hangupReason: HangupReason = HangupReason.NONE,
     // Video state
     val hasVideo: Boolean = false,
@@ -819,6 +825,7 @@ class CallViewModel(
             isRecording = call.isRecording,
             isIncoming = call.isIncoming,
             isOnHold = isHold,
+            isPeerHolding = call.isPeerHolding,
             hangupReason = call.hangupReason,
             hasVideo = hasVideo,
             hasLocalVideo = hasActiveVideo && !call.isVideoMuted,
@@ -895,7 +902,11 @@ class CallViewModel(
             isConferenceLocked = conf.isLocked,
             participantCount = conf.participants.size,
             participants = participantUis,
-            conferenceLayout = _state.value.conferenceLayout
+            conferenceLayout = _state.value.conferenceLayout,
+            isPeerHolding = conf.participants.any { it.isPeerHolding },
+            isRemoteRecording = conf.isRemoteRecording,
+            remoteRecordingBy = conf.participantRecordingFlow.value
+                .joinToString { it.displayName ?: it.uri.rawRingId.take(12) },
         )
 
         if (isOver) {

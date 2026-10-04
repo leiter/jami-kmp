@@ -1808,6 +1808,23 @@ class ConversationFacade(
     }
 
     /**
+     * The daemon failed an operation on a conversation (swarm fetch/merge error, permission
+     * denied on a member change, corrupt repository). The daemon keeps running, so the only
+     * remedy is to tell the user their conversation is out of sync.
+     *
+     * Error codes come from the daemon's `ConversationError`; the message is daemon-authored
+     * English, so it is logged and carried on the event for the UI to decide how to show it.
+     */
+    internal fun onConversationError(accountId: String, conversationId: String, code: Long, message: String) {
+        Log.w(TAG, "onConversationError: $conversationId code=$code: $message")
+        scope.launch {
+            _conversationEvents.emit(
+                ConversationEvent.ConversationError(accountId, conversationId, code, message)
+            )
+        }
+    }
+
+    /**
      * Called when active calls in a conversation change.
      */
     internal fun onActiveCallsChanged(accountId: String, conversationId: String, activeCalls: List<Map<String, String>>) {
@@ -2069,6 +2086,17 @@ sealed class ConversationEvent {
     data class ConversationRemoved(
         val accountId: String,
         val conversationId: String
+    ) : ConversationEvent()
+
+    /**
+     * The daemon reported an error for this conversation (sync/merge failure, denied member
+     * change). [code] is the daemon's `ConversationError` code, [message] its own description.
+     */
+    data class ConversationError(
+        val accountId: String,
+        val conversationId: String,
+        val code: Long,
+        val message: String
     ) : ConversationEvent()
 
     data class ConversationRequestReceived(

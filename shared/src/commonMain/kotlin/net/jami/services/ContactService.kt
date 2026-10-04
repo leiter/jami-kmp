@@ -246,6 +246,46 @@ class ContactService(
     }
 
     /**
+     * A remote peer asked to subscribe to our presence (SIP presence-server flow).
+     *
+     * Jami accounts do not use server-side subscriptions — presence rides the DHT — so this is
+     * recorded for diagnostics only. SIP deployments would prompt the user here.
+     */
+    internal fun onNewServerSubscriptionRequest(remoteUri: String) {
+        Log.d(TAG, "newServerSubscriptionRequest from $remoteUri")
+    }
+
+    /**
+     * The presence server rejected or failed a request for this account.
+     */
+    internal fun onPresenceServerError(accountId: String, error: String, message: String) {
+        Log.w(TAG, "presence serverError [$accountId] $error: $message")
+    }
+
+    /**
+     * Our subscription to a buddy's presence changed state (0 = inactive, 1 = active).
+     *
+     * A subscription dropping to inactive means we stop receiving that buddy's updates, so the
+     * cached presence is stale rather than offline — mark it offline so the UI does not keep
+     * showing a green dot for a contact we no longer track.
+     */
+    internal fun onPresenceSubscriptionStateChanged(accountId: String, buddyUri: String, state: Int) {
+        Log.d(TAG, "presence subscriptionStateChanged [$accountId] $buddyUri state=$state")
+        if (state != 0) return
+        val account = accountService.getAccount(accountId) ?: return
+        val contact = account.getContactFromCache(Uri.fromString(buddyUri))
+        contact.setPresence(Contact.PresenceStatus.OFFLINE)
+        scope.launch { _contactEvents.emit(ContactEvent.PresenceUpdated(accountId, contact)) }
+    }
+
+    /**
+     * A peer was announced on the local network (nearby-peer discovery, not used by the UI yet).
+     */
+    internal fun onNearbyPeerNotification(accountId: String, peerId: String, state: Int, displayName: String) {
+        Log.d(TAG, "nearbyPeerNotification [$accountId] $peerId state=$state name=$displayName")
+    }
+
+    /**
      * Handle profile received from daemon callback.
      */
     internal fun onProfileReceived(accountId: String, peerId: String, vcardPath: String) {

@@ -174,6 +174,11 @@ data class ChatState(
     val isLegacy: Boolean = false,
     /** The message the next sent text replies to (composer reply bar); null when not replying. */
     val replyingTo: ReplyPreview? = null,
+    /**
+     * Daemon-reported error for this conversation (sync/merge failure, denied member change),
+     * shown once as a snackbar and then cleared via [ChatViewModel.clearConversationError].
+     */
+    val conversationError: String? = null,
 )
 
 /**
@@ -257,6 +262,11 @@ class ChatViewModel(
                     }
                     is ConversationEvent.MessageStatusChanged -> {
                         if (event.conversationId == convId) updateDeliveryStatus(event)
+                    }
+                    is ConversationEvent.ConversationError -> {
+                        if (event.conversationId == convId) {
+                            _state.value = _state.value.copy(conversationError = event.message)
+                        }
                     }
                     is ConversationEvent.DataTransferProgress -> {
                         if (event.conversationId == convId) {
@@ -825,6 +835,13 @@ class ChatViewModel(
             conversationFacade.cancelFileTransfer(
                 accountId, Uri(Uri.SWARM_SCHEME, conversationId), messageId, fileId
             )
+        }
+    }
+
+    /** Acknowledge the daemon conversation error after it has been shown to the user. */
+    fun clearConversationError() {
+        if (_state.value.conversationError != null) {
+            _state.value = _state.value.copy(conversationError = null)
         }
     }
 

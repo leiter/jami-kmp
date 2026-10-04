@@ -444,6 +444,47 @@ class AccountService(
      * deactivation marks every non-proxy account so a later background restore can tell these
      * apart from user-driven ones.
      */
+    /**
+     * Daemon-level error alert (libjami Alert codes, e.g. no network, codec failure).
+     * Mirrors the reference client, which logs it without surfacing a dialog.
+     */
+    internal fun onErrorAlert(alert: Int) {
+        Log.w(TAG, "daemon errorAlert: $alert")
+    }
+
+    /** An audio device volume was changed daemon-side. */
+    internal fun onVolumeChanged(device: String, value: Int) {
+        Log.d(TAG, "volumeChanged: $device = $value")
+    }
+
+    /**
+     * STUN resolution failed for this account: NAT traversal falls back to TURN/relay, so calls
+     * may still work but connect more slowly.
+     */
+    internal fun onStunStatusFailure(accountId: String) {
+        Log.w(TAG, "stun status failure: $accountId")
+    }
+
+    /** The daemon's call-history store changed. jami-kmp keeps history in SQLDelight. */
+    internal fun onHistoryChanged() {
+        Log.d(TAG, "daemon historyChanged")
+    }
+
+    /** Hardware video decoding was enabled/disabled by the daemon. */
+    internal fun onHardwareDecodingChanged(enabled: Boolean) {
+        Log.d(TAG, "hardware decoding ${if (enabled) "enabled" else "disabled"}")
+    }
+
+    /** Hardware video encoding was enabled/disabled by the daemon. */
+    internal fun onHardwareEncodingChanged(enabled: Boolean) {
+        Log.d(TAG, "hardware encoding ${if (enabled) "enabled" else "disabled"}")
+    }
+
+    /** A log line emitted by libjami itself — routed into the app log so bug reports carry it. */
+    internal fun onDaemonLogMessage(message: String) {
+        Log.d(TAG, "[daemon] $message")
+    }
+
     fun setAccountsActive(active: Boolean) {
         if (active) {
             explicitlyDeactivatedAccounts.clear()
