@@ -49,6 +49,8 @@ import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material.icons.filled.BackHand
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -107,6 +109,7 @@ import net.jami.ui.viewmodel.CallPickerItem
 import net.jami.ui.viewmodel.CallState
 import net.jami.ui.viewmodel.CallViewModel
 import net.jami.ui.viewmodel.ParticipantUi
+import net.jami.ui.components.ConferenceParticipantsSheet
 import org.jetbrains.compose.resources.stringResource
 
 // ==================== Public entry points ====================
@@ -178,6 +181,12 @@ fun CallScreen(
         onToggleScreenShare = { viewModel.toggleScreenShare() },
         onMuteAll = { viewModel.muteAllParticipants() },
         onToggleConferenceLock = { locked -> viewModel.toggleConferenceLock(locked) },
+        onSetParticipantMuted = { p, muted -> viewModel.setParticipantMuted(p, muted) },
+        onSetParticipantModerator = { p, moderator -> viewModel.setParticipantModerator(p, moderator) },
+        onLowerHand = { p -> viewModel.setHandRaised(false, p) },
+        onEjectParticipant = { p -> viewModel.ejectParticipant(p) },
+        onToggleRaiseHand = { viewModel.toggleRaiseHand() },
+        onSetLayout = { layout -> viewModel.setConferenceLayout(layout) },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onTransfer = { to -> viewModel.transfer(to) },
         onAttendedTransfer = { callId -> viewModel.attendedTransfer(callId) },
@@ -263,6 +272,12 @@ fun IncomingCallScreen(
         onToggleScreenShare = { viewModel.toggleScreenShare() },
         onMuteAll = { viewModel.muteAllParticipants() },
         onToggleConferenceLock = { locked -> viewModel.toggleConferenceLock(locked) },
+        onSetParticipantMuted = { p, muted -> viewModel.setParticipantMuted(p, muted) },
+        onSetParticipantModerator = { p, moderator -> viewModel.setParticipantModerator(p, moderator) },
+        onLowerHand = { p -> viewModel.setHandRaised(false, p) },
+        onEjectParticipant = { p -> viewModel.ejectParticipant(p) },
+        onToggleRaiseHand = { viewModel.toggleRaiseHand() },
+        onSetLayout = { layout -> viewModel.setConferenceLayout(layout) },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onTransfer = { to -> viewModel.transfer(to) },
         onAttendedTransfer = { callId -> viewModel.attendedTransfer(callId) },
@@ -295,6 +310,12 @@ private fun CallScreenContent(
     onToggleScreenShare: () -> Unit,
     onMuteAll: () -> Unit = {},
     onToggleConferenceLock: (Boolean) -> Unit = {},
+    onSetParticipantMuted: (ParticipantUi, Boolean) -> Unit = { _, _ -> },
+    onSetParticipantModerator: (ParticipantUi, Boolean) -> Unit = { _, _ -> },
+    onLowerHand: (ParticipantUi) -> Unit = {},
+    onEjectParticipant: (ParticipantUi) -> Unit = {},
+    onToggleRaiseHand: () -> Unit = {},
+    onSetLayout: (Int) -> Unit = {},
     onSendDtmf: (Char) -> Unit,
     onTransfer: (String) -> Unit,
     onAttendedTransfer: (String) -> Unit,
@@ -330,6 +351,7 @@ private fun CallScreenContent(
 
     var showDtmfSheet by remember { mutableStateOf(false) }
     var showTransferSheet by remember { mutableStateOf(false) }
+    var showParticipantsSheet by remember { mutableStateOf(false) }
     var showControls by remember { mutableStateOf(true) }
 
     // Auto-hide controls after 3 seconds during ongoing video call
@@ -471,6 +493,8 @@ private fun CallScreenContent(
                             onToggleScreenShare = onToggleScreenShare,
                             onMuteAll = onMuteAll,
                             onToggleConferenceLock = onToggleConferenceLock,
+                            onToggleRaiseHand = onToggleRaiseHand,
+                            onOpenParticipants = { showParticipantsSheet = true },
                             onOpenDtmf = { showDtmfSheet = true },
                             onOpenTransfer = { showTransferSheet = true },
                             onToggleRecording = onToggleRecording,
@@ -491,6 +515,28 @@ private fun CallScreenContent(
             sheetState = sheetState,
         ) {
             DtmfDialpad(onKey = onSendDtmf)
+            Spacer(Modifier.height(JamiTheme.spacing.xl))
+        }
+    }
+
+    // Conference participants bottom sheet
+    if (showParticipantsSheet) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = { showParticipantsSheet = false },
+            sheetState = sheetState,
+        ) {
+            ConferenceParticipantsSheet(
+                participants = state.participants,
+                isModerator = state.isModerator,
+                conferenceLayout = state.conferenceLayout,
+                onSetParticipantMuted = onSetParticipantMuted,
+                onSetParticipantModerator = onSetParticipantModerator,
+                onLowerHand = onLowerHand,
+                onEjectParticipant = onEjectParticipant,
+                onMuteAll = onMuteAll,
+                onSetLayout = onSetLayout,
+            )
             Spacer(Modifier.height(JamiTheme.spacing.xl))
         }
     }
@@ -786,6 +832,8 @@ private fun OnGoingControls(
     onToggleScreenShare: () -> Unit,
     onMuteAll: () -> Unit = {},
     onToggleConferenceLock: (Boolean) -> Unit = {},
+    onToggleRaiseHand: () -> Unit = {},
+    onOpenParticipants: () -> Unit = {},
     onOpenDtmf: () -> Unit,
     onOpenTransfer: () -> Unit,
     onToggleRecording: () -> Unit,
@@ -904,30 +952,55 @@ private fun OnGoingControls(
             }
         }
 
-        // Moderator controls (visible only in conferences when user is moderator)
-        if (state.isConference && state.isModerator && state.participants.size > 1) {
+        // Conference controls — participant roster and hand raising are available to every
+        // participant; mute-all and locking are moderator-only.
+        if (state.isConference) {
             Spacer(Modifier.height(JamiTheme.spacing.m))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                // Mute all button
+                // Participant list (per-participant moderation lives in the sheet)
                 CallControlButton(
-                    icon = Icons.Default.MicOff,
-                    contentDescription = "Mute all participants",
+                    icon = Icons.Default.Groups,
+                    contentDescription = stringResource(Res.string.content_desc_participants),
                     isActive = false,
-                    onClick = onMuteAll,
+                    onClick = onOpenParticipants,
                 )
 
-                // Lock conference button
+                // Raise / lower own hand
                 CallControlButton(
-                    icon = if (state.isConferenceLocked) Icons.Default.Lock else Icons.Default.LockOpen,
-                    contentDescription = if (state.isConferenceLocked) "Unlock conference" else "Lock conference",
-                    isActive = state.isConferenceLocked,
-                    onClick = {
-                        onToggleConferenceLock(!state.isConferenceLocked)
-                    },
+                    icon = Icons.Default.BackHand,
+                    contentDescription = stringResource(
+                        if (state.isHandRaised) Res.string.content_desc_lower_hand
+                        else Res.string.content_desc_raise_hand
+                    ),
+                    isActive = state.isHandRaised,
+                    onClick = onToggleRaiseHand,
                 )
+
+                if (state.isModerator && state.participants.size > 1) {
+                    // Mute all button
+                    CallControlButton(
+                        icon = Icons.Default.MicOff,
+                        contentDescription = stringResource(Res.string.content_desc_mute_all),
+                        isActive = false,
+                        onClick = onMuteAll,
+                    )
+
+                    // Lock conference button
+                    CallControlButton(
+                        icon = if (state.isConferenceLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                        contentDescription = stringResource(
+                            if (state.isConferenceLocked) Res.string.content_desc_unlock_conference
+                            else Res.string.content_desc_lock_conference
+                        ),
+                        isActive = state.isConferenceLocked,
+                        onClick = {
+                            onToggleConferenceLock(!state.isConferenceLocked)
+                        },
+                    )
+                }
             }
         }
 
