@@ -499,6 +499,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="gallery_error_message">No application found on device to open Gallery</string>
 
     <string name="generic_error">An unknown error occurred.</string>
+    <string name="debug_dump_daemon_state">Dump daemon state to log</string>
+    <string name="pref_history_limit_title">Call history retention</string>
+    <string name="pref_history_limit_summary">Days of call history the daemon keeps. 0 keeps everything.</string>
+    <string name="pref_ringing_timeout_title">Ringing timeout</string>
+    <string name="pref_ringing_timeout_summary">Seconds an outgoing call rings before giving up.</string>
 
     <!--File Transfer-->
     <string name="invalid_file">Invalid file.</string>

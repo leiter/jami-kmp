@@ -514,6 +514,50 @@ fun AppSettingsScreen(
             // ==================== Advanced ====================
             JamiSectionTitle(title = stringResource(Res.string.pref_category_advanced))
 
+            SettingLabelRow(label = stringResource(Res.string.pref_history_limit_title))
+            Text(
+                text = stringResource(Res.string.pref_history_limit_summary),
+                style = JamiTheme.typography.bodySmall,
+                color = JamiTheme.colors.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = JamiTheme.spacing.l),
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+            ) {
+                for ((label, value) in listOf("Forever" to 0, "30 d" to 30, "90 d" to 90, "365 d" to 365)) {
+                    JamiFilterChip(
+                        text = label,
+                        selected = state.historyLimitDays == value,
+                        onClick = { viewModel.setHistoryLimit(value) },
+                    )
+                }
+            }
+
+            SettingLabelRow(label = stringResource(Res.string.pref_ringing_timeout_title))
+            Text(
+                text = stringResource(Res.string.pref_ringing_timeout_summary),
+                style = JamiTheme.typography.bodySmall,
+                color = JamiTheme.colors.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = JamiTheme.spacing.l),
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+            ) {
+                for (seconds in listOf(15, 30, 45, 60)) {
+                    JamiFilterChip(
+                        text = "${seconds}s",
+                        selected = state.ringingTimeoutSeconds == seconds,
+                        onClick = { viewModel.setRingingTimeout(seconds) },
+                    )
+                }
+            }
+
             NavigationRow(
                 label = stringResource(Res.string.pref_debugLogs_title),
                 description = stringResource(Res.string.pref_debugLogs_summary),

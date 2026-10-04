@@ -635,6 +635,15 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 
 - (BOOL)isCaptureMuted;
 
+// Daemon settings & diagnostics
+- (int32_t)historyLimit;
+- (void)setHistoryLimitDays:(int32_t)days;
+- (int32_t)ringingTimeout;
+- (void)setRingingTimeoutSeconds:(int32_t)seconds;
+- (void)monitorDaemon:(BOOL)continuous;
+- (NSArray<NSDictionary<NSString *, NSString *> *> *)connectionList:(NSString *)accountId
+                                                     conversationId:(NSString *)conversationId;
+
 - (void)muteRingtone:(BOOL)muted;
 
 // Audio processing

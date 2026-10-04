@@ -255,6 +255,25 @@ actual class DaemonBridge() : DaemonBridgeApi {
         return bridge.resumeConference(accountId, conferenceId = confId)
     }
 
+    override fun getHistoryLimit(): Int = bridge.historyLimit()
+
+    override fun setHistoryLimit(days: Int) {
+        bridge.setHistoryLimitDays(days)
+    }
+
+    override fun getRingingTimeout(): Int = bridge.ringingTimeout()
+
+    override fun setRingingTimeout(seconds: Int) {
+        bridge.setRingingTimeoutSeconds(seconds)
+    }
+
+    override fun monitor(continuous: Boolean) {
+        bridge.monitorDaemon(continuous)
+    }
+
+    override fun getConnectionList(accountId: String, conversationId: String): List<Map<String, String>> =
+        bridge.connectionList(accountId, conversationId = conversationId)?.toKotlinMapList() ?: emptyList()
+
     override fun setActiveParticipant(accountId: String, confId: String, callId: String) {
         bridge.setActiveParticipant(accountId, conferenceId = confId, callId = callId)
     }
@@ -644,6 +663,12 @@ private fun Any?.toKotlinMap(): Map<String, String> {
         result[keyStr] = valueStr
     }
     return result
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun Any?.toKotlinMapList(): List<Map<String, String>> {
+    val array = this as? List<*> ?: return emptyList()
+    return array.map { it.toKotlinMap() }
 }
 
 @Suppress("UNCHECKED_CAST")

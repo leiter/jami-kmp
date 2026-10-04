@@ -1985,6 +1985,35 @@ static JBCallState toCallState(const std::string& state) {
     return libjami::isCaptureMuted();
 }
 
+- (int32_t)historyLimit {
+    return libjami::getHistoryLimit();
+}
+
+- (void)setHistoryLimitDays:(int32_t)days {
+    NSLog(@"[JamiBridge] setHistoryLimit: %d", days);
+    libjami::setHistoryLimit(days);
+}
+
+- (int32_t)ringingTimeout {
+    return libjami::getRingingTimeout();
+}
+
+- (void)setRingingTimeoutSeconds:(int32_t)seconds {
+    NSLog(@"[JamiBridge] setRingingTimeout: %d", seconds);
+    libjami::setRingingTimeout(seconds);
+}
+
+- (void)monitorDaemon:(BOOL)continuous {
+    NSLog(@"[JamiBridge] monitor: %d", continuous);
+    libjami::monitor(continuous);
+}
+
+- (NSArray<NSDictionary<NSString *, NSString *> *> *)connectionList:(NSString *)accountId
+                                                     conversationId:(NSString *)conversationId {
+    return toNSArrayOfDictionaries(libjami::getConnectionList(toCppString(accountId),
+                                                              toCppString(conversationId)));
+}
+
 - (void)setNoiseSuppression:(BOOL)enabled {
     libjami::setNoiseSuppressState(enabled ? "enabled" : "disabled");
 }

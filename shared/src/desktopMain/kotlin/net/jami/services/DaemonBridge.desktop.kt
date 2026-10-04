@@ -578,6 +578,13 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "answerMediaChangeRequest called (stub): $callId")
     }
 
+    override fun getHistoryLimit(): Int = 0
+    override fun setHistoryLimit(days: Int) {}
+    override fun getRingingTimeout(): Int = 0
+    override fun setRingingTimeout(seconds: Int) {}
+    override fun monitor(continuous: Boolean) {}
+    override fun getConnectionList(accountId: String, conversationId: String): List<Map<String, String>> = emptyList()
+
     override fun muteAllParticipants(accountId: String, confId: String) {}
     override fun setConferenceLocked(accountId: String, confId: String, locked: Boolean) {}
     override fun muteParticipantAudio(accountId: String, confId: String, participantId: String) {}

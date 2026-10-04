@@ -1108,6 +1108,25 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         }
     }
 
+    override fun getHistoryLimit(): Int = JamiService.getHistoryLimit()
+
+    override fun setHistoryLimit(days: Int) {
+        JamiService.setHistoryLimit(days)
+    }
+
+    override fun getRingingTimeout(): Int = JamiService.getRingingTimeout()
+
+    override fun setRingingTimeout(seconds: Int) {
+        JamiService.setRingingTimeout(seconds)
+    }
+
+    override fun monitor(continuous: Boolean) {
+        JamiService.monitor(continuous)
+    }
+
+    override fun getConnectionList(accountId: String, conversationId: String): List<Map<String, String>> =
+        JamiService.getConnectionList(accountId, conversationId).toNative()
+
     override fun muteAllParticipants(accountId: String, confId: String) {
         JamiService.setConferenceLayout(accountId, confId, 0)
     }

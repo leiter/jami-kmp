@@ -165,6 +165,35 @@ interface DaemonBridgeApi {
     fun setActiveCodecList(accountId: String, codecList: List<Long>)
     fun getCodecDetails(accountId: String, codecId: Long): Map<String, String>
 
+    // ==================== Daemon Settings & Diagnostics ====================
+    /**
+     * Call-history retention in days (daemon-global, not per account).
+     * 0 means "keep forever"; the daemon prunes older entries on start.
+     */
+    fun getHistoryLimit(): Int
+
+    /** Set the call-history retention in days; 0 keeps everything. */
+    fun setHistoryLimit(days: Int)
+
+    /** How long an outgoing call rings before the daemon gives up, in seconds. */
+    fun getRingingTimeout(): Int
+
+    /** Set the outgoing-call ringing timeout, in seconds. */
+    fun setRingingTimeout(seconds: Int)
+
+    /**
+     * Ask the daemon to dump its internal state (connections, channels, sockets) to its own log.
+     * With [continuous] = true it keeps dumping on every change. The output arrives through the
+     * daemon's log, i.e. DaemonCallbacks.onDaemonLogMessage and the platform log.
+     */
+    fun monitor(continuous: Boolean)
+
+    /**
+     * Active peer connections for an account, optionally narrowed to one conversation.
+     * Each entry describes a device connection (peer, device, status, channels).
+     */
+    fun getConnectionList(accountId: String, conversationId: String = ""): List<Map<String, String>>
+
     // ==================== Search & History ====================
     fun searchConversation(accountId: String, conversationId: String, author: String, lastId: String, query: String, type: String, after: Long, before: Long, maxResult: Long, flag: Int): Long
     fun loadSwarmUntil(accountId: String, conversationId: String, fromMessage: String, toMessage: String): Long
@@ -587,6 +616,12 @@ class StubDaemonBridge : DaemonBridgeApi {
     var placeCallResult: String = ""
     var startConversationResult: String = ""
     var running: Boolean = false
+    // Named to avoid colliding with the getHistoryLimit()/setHistoryLimit() overrides below:
+    // a `var historyLimit` would generate the same JVM signatures.
+    var historyLimitDays: Int = 0
+    var ringingTimeoutSeconds: Int = 30
+    var connectionList: List<Map<String, String>> = emptyList()
+    val monitorCalls: MutableList<Boolean> = mutableListOf()
 
     // Configurable lookup results: name -> LookupState (0=Success/taken, 1=Invalid, 2=NotFound/available, 3=NetworkError)
     var lookupNameResults: MutableMap<String, Int> = mutableMapOf()
@@ -712,6 +747,13 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean = true
     override fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean = true
     override fun searchUser(accountId: String, query: String): Boolean = true
+    override fun getHistoryLimit(): Int = historyLimitDays
+    override fun setHistoryLimit(days: Int) { historyLimitDays = days }
+    override fun getRingingTimeout(): Int = ringingTimeoutSeconds
+    override fun setRingingTimeout(seconds: Int) { ringingTimeoutSeconds = seconds }
+    override fun monitor(continuous: Boolean) { monitorCalls += continuous }
+    override fun getConnectionList(accountId: String, conversationId: String): List<Map<String, String>> =
+        connectionList
 
     override fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {}
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {}

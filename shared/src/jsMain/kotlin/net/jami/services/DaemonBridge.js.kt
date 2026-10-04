@@ -325,6 +325,12 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun addMainParticipant(accountId: String, confId: String): Boolean = false
     override fun detachParticipant(accountId: String, callId: String): Boolean = false
     override fun getParticipantList(accountId: String, confId: String): List<String> = emptyList()
+    override fun getHistoryLimit(): Int = 0
+    override fun setHistoryLimit(days: Int) {}
+    override fun getRingingTimeout(): Int = 0
+    override fun setRingingTimeout(seconds: Int) {}
+    override fun monitor(continuous: Boolean) {}
+    override fun getConnectionList(accountId: String, conversationId: String): List<Map<String, String>> = emptyList()
     override fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
         Log.d(TAG, "muteStream called (stub): $confId peer=$peerUri state=$state")
     }
