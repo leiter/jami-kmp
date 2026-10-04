@@ -4,11 +4,11 @@ _Audited 2026-09-25. Scope: text/file messaging, swarm conversation management, 
 
 ## Summary
 
-jami-kmp implements most core messaging and conversation features (message send/receive/edit, file transfers, member add/remove, conversation metadata). However, several daemon capabilities exist but are not exposed or called in the KMP codebase: conversation history search via daemon, message/conversation count queries, conversation cache management, and member role changes via daemon. One correctness bug found in `ConversationFacade.setConversationPreferences()` which claims it will send to daemon but never does. File message replies lack UI affordance to attach/quote files. Lazy message history loading on scroll shows signs of race conditions and incomplete interaction parsing.
+jami-kmp implements most core messaging and conversation features (message send/receive/edit, file transfers, member add/remove, conversation metadata). However, several daemon capabilities exist but are not exposed or called in the KMP codebase: conversation history search via daemon, message/conversation count queries, conversation cache management, and member role changes via daemon. One correctness bug found in `ConversationFacade.setConversationPreferences()` which claims it will send to daemon but never does (**fixed 2026-10-04**). File message replies lack UI affordance to attach/quote files. Lazy message history loading on scroll shows signs of race conditions and incomplete interaction parsing.
 
 ## Findings
 
-### F1: ConversationFacade.setConversationPreferences() silently fails to call daemon — bug
+### F1: ConversationFacade.setConversationPreferences() silently fails to call daemon — bug — **DONE (2026-10-04)**
 **Evidence:** `ConversationFacade.kt:259-267`
 **Impact:** Conversation preferences set via the facade (e.g., mute settings, notification prefs) are never persisted to the daemon. They only update local storage. If the app is killed and restarted, user preferences are lost. Correct path is `AccountService.setConversationPreferences()` which does call the daemon.
 **Daemon support:** `setConversationPreferences(accountId, conversationId, prefs)` — `conversation_interface.h:72-74`; signal `ConversationPreferencesUpdated` exists to notify of changes — `conversation_interface.h:234-240`
@@ -18,7 +18,7 @@ jami-kmp implements most core messaging and conversation features (message send/
 **Impact:** Users cannot search within a conversation history on the daemon side. Client-side filtering in memory is currently the only option, which fails for large histories.
 **Daemon support:** `searchConversation(accountId, conversationId, author, lastId, regexSearch, type, after, before, maxResult, flag)` — `conversation_interface.h:108-117`; signal `MessagesFound` — `conversation_interface.h:130-137`
 
-### F3: Message history history loading race condition — correctness issue
+### F3: Message history history loading race condition — correctness issue — **DONE (2026-10-04)**
 **Evidence:** `ChatViewModel.kt:849-890` (`loadMore()` and `loadMessagesFromHistory()`) and `ConversationFacade.kt:894-912` — history is loaded asynchronously via `loadConversation()` daemon call, but there is no guard against overlapping loads. If user scrolls to load more while a previous load is in-flight, the `onSwarmLoaded` callback may insert messages out of order. The `messages` StateFlow is updated via `appendMessage()` without checking if the daemon load has completed.
 **Impact:** Chat history can appear out of order or with duplicates if the user rapidly scrolls. No visible loading indicator during history fetch.
 **Daemon support:** `loadConversation(accountId, conversationId, fromMessage, n)` returns a task ID; `loadSwarmUntil()` for date-range queries — `conversation_interface.h:94-101`
@@ -33,7 +33,7 @@ jami-kmp implements most core messaging and conversation features (message send/
 **Impact:** Group admins cannot promote/demote members via the app. The feature is partially exposed (roles are fetched and displayed) but non-functional. No screens (e.g., `ConversationDetailsScreen`) offer a "promote to admin" / "demote" action.
 **Daemon support:** No daemon function found in `conversation_interface.h` for role changes; role modifications may be done through `updateConversationInfo()` — `conversation_interface.h:67-69`
 
-### F6: Conversation preferences not synced on load — data sync issue
+### F6: Conversation preferences not synced on load — data sync issue — **DONE (2026-10-04)**
 **Evidence:** `ConversationFacade.kt:1750-1774` loads conversation info and members on-demand, but never calls `getConversationPreferences()` from the daemon. Preferences are only queried in `AccountService.getConversationPreferences()` on explicit request, not during conversation load.
 **Impact:** Conversation preferences (e.g., mute, archive, notification settings) are stale until the user opens conversation settings. Changes made on another device are not reflected until the user manually refreshes.
 **Daemon support:** `getConversationPreferences()` — `conversation_interface.h:75-76`; signal `ConversationPreferencesUpdated` — `conversation_interface.h:234-240`
@@ -58,7 +58,7 @@ jami-kmp implements most core messaging and conversation features (message send/
 **Impact:** When user scrolls up to load history, the chat jumps and loses context. User sees the message list shift instead of scrolling into history.
 **Daemon support:** Not a daemon issue; architectural pattern issue in message ordering
 
-### F11: No handling of "initial" invitation messages in group conversations — silent no-op
+### F11: No handling of "initial" invitation messages in group conversations — silent no-op — **INVALID; adjacent bug fixed instead (2026-10-04)**
 **Evidence:** `ConversationFacade.kt:1571-1579` only renders "initial" (invitation) events in 1:1 conversations; in group chats, the event is silently converted to a base `Interaction` with no visible trace. If a user is added to a group, there is no system message or notification shown to the group members.
 **Impact:** Group members never see who was added, when, or by whom. Audit trail is lost. The daemon emits the event (a "member" event with action "add"), but it is silently dropped.
 **Daemon support:** `ConversationMemberEvent` signal — `conversation_interface.h:197-204` (events: 0=add, 1=joins, 2=leave, 3=banned)
@@ -73,13 +73,47 @@ jami-kmp implements most core messaging and conversation features (message send/
 **Impact:** Contact profiles updated via vCard are not reflected in conversation UI. User info (name, avatar) may be stale.
 **Daemon support:** `updateProfile()` and `ProfileReceived` signal — `configurationmanager_interface.h:104-109, 428-434`
 
+## Implementation Status (2026-10-04, branch `docs/mini-plans`)
+
+**Phase 1 is complete** (commit `837a320`). Phases 2 and 3 untouched.
+
+- **F1 — fixed.** `ConversationFacade.setConversationPreferences()` wrote only to local storage
+  behind a `// For now, just save locally` comment, so preferences never reached the swarm and
+  never synced to the user's other devices. Swarm conversations now also go through
+  `AccountService.setConversationPreferences()`; legacy/SIP conversations stay local-only, since
+  they have no daemon-side preferences.
+- **F6 — fixed.** Nothing read the daemon's copy back. New
+  `ConversationFacade.refreshConversationPreferences()` merges daemon values over the local ones
+  (local-only keys survive), called during `loadSmartlistLocked()` for each non-syncing
+  conversation and from `loadConversationHistory()` when a swarm conversation is opened.
+  Note for anyone following the plan's wording: `Conversation.id` is the local DB row id
+  (`Int?`), not the swarm id — the swarm id is `conversation.uri.rawRingId`.
+- **F3 — fixed, though narrower than described.** `loadMore()` did have an `isLoadingMore`
+  guard, but it tested the flag and then set it inside the launched coroutine, so two scroll
+  callbacks arriving before the dispatcher ran both passed. The slot is now claimed atomically
+  with `getAndUpdate` before launching. The plan's "no guard at all" framing was out of date.
+- **F11 — the finding is invalid; a different bug in that code was fixed.** Group member adds
+  are *not* dropped: they arrive as `"member"` events and are rendered in both the live
+  (`appendMessage`) and history (`interactionToMessageItem`) paths. `"initial"` is the
+  conversation's *creation* commit, and libjamiclient also shows it only in 1:1 conversations
+  (`AccountService.kt:1414-1421` turns it into an INVALID interaction for groups), so KMP
+  matching that is correct. The real defect was the inverse inconsistency: the live path
+  rendered `"initial"` as an "invited" system row in groups too, which then disappeared on
+  reload because the history path drops it. The live path now checks the conversation mode.
+
+Tests added (all in the existing suites): daemon forwarding for swarm preferences, local-only
+for non-swarm, the daemon→local merge, and the synchronous `loadMore()` claim.
+`StubDaemonBridge` now records conversation preferences so these paths are assertable.
+
+---
+
 ## Proposed Plan
 
-### Phase 1: Critical Correctness Fixes
-1. **Fix ConversationFacade.setConversationPreferences()** — route through `daemonBridge.setConversationPreferences()` or remove the facade wrapper and call `accountService` directly. Add test to verify daemon is called.
-2. **Add load guard in ChatViewModel.loadMore()** — use a Mutex or completion flag to prevent overlapping history loads. Queue new loads if one is in-flight.
-3. **Load conversation preferences on init** — in `loadConversation()` and in the conversation refresh flow, fetch `getConversationPreferences()` and merge into the `Conversation` model.
-4. **Fix "initial" event visibility in groups** — render "initial" events in all conversation modes as a system message: "{User} was added to the conversation".
+### Phase 1: Critical Correctness Fixes — **COMPLETE (2026-10-04)**
+1. [x] **Fix ConversationFacade.setConversationPreferences()** — now writes locally *and*, for swarm conversations, through `accountService.setConversationPreferences()`. Test asserts the daemon receives it.
+2. [x] **Add load guard in ChatViewModel.loadMore()** — the in-flight slot is claimed atomically with `getAndUpdate` before the coroutine launches. Test asserts the claim happens synchronously.
+3. [x] **Load conversation preferences on init** — `ConversationFacade.refreshConversationPreferences()` merges daemon values over local ones; called from the smartlist load and when a conversation is opened.
+4. [x] **"initial" event visibility** — *not* implemented as written; the finding was wrong (see F11 below). The live path was instead aligned with the history path and libjamiclient.
 
 ### Phase 2: Missing Daemon APIs
 1. **Implement member role changes** — add `setConversationMember(accountId, conversationId, memberUri, role)` to `DaemonBridge` and wire UI for promote/demote actions in `ConversationDetailsScreen`.
