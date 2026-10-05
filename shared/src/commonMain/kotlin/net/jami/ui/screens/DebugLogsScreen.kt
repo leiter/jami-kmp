@@ -49,6 +49,7 @@ import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import net.jami.di.getViewModel
 import net.jami.services.ConversationSyncInfo
+import net.jami.services.DaemonLifecycleState
 import net.jami.services.SyncState
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.DebugLogsViewModel
@@ -168,6 +169,13 @@ fun DebugLogsScreen(
                         color = JamiTheme.colors.onSurface,
                     )
                     Text(
+                        text = "  " + daemonLifecycleLine(state.daemonLifecycle) +
+                            " · starts ${state.daemonStartCount}",
+                        style = mono,
+                        color = if (state.daemonLifecycle is DaemonLifecycleState.Running)
+                            JamiTheme.colors.onSurfaceVariant else JamiTheme.colors.error,
+                    )
+                    Text(
                         text = "  history limit: ${state.historyLimitDays} day(s)" +
                             " · ringing timeout: ${state.ringingTimeoutSeconds}s",
                         style = mono,
@@ -226,6 +234,11 @@ fun DebugLogsScreen(
                     TextButton(onClick = { viewModel.dumpDaemonState() }) {
                         Text(stringResource(Res.string.debug_dump_daemon_state))
                     }
+                    if (state.daemonLifecycle !is DaemonLifecycleState.Running) {
+                        TextButton(onClick = { viewModel.restartDaemon() }) {
+                            Text(stringResource(Res.string.debug_restart_daemon))
+                        }
+                    }
                     if (diagnostics.recentDaemonLog.isNotEmpty()) {
                         Text(
                             text = "daemon log (${diagnostics.recentDaemonLog.size}):",
@@ -257,6 +270,14 @@ fun DebugLogsScreen(
             }
         }
     }
+}
+
+private fun daemonLifecycleLine(state: DaemonLifecycleState): String = when (state) {
+    is DaemonLifecycleState.Stopped -> "stopped"
+    is DaemonLifecycleState.Starting -> "starting…"
+    is DaemonLifecycleState.Running -> "running"
+    is DaemonLifecycleState.Failed ->
+        "FAILED after ${state.attempts} attempt(s): ${state.reason}"
 }
 
 private fun Boolean?.orUnknown(): String = when (this) {

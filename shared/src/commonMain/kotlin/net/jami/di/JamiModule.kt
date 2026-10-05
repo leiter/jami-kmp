@@ -136,6 +136,18 @@ val jamiModule = module {
     }
 
     /**
+     * Keeps the daemon running and surfaces it when it is not (start retries, recovery on
+     * connectivity, state for the debug screen).
+     */
+    single {
+        DaemonLifecycleService(
+            daemonBridge = get(),
+            daemonCallbacks = get(),
+            scope = get()
+        )
+    }
+
+    /**
      * Browses the call recordings the daemon writes to its record directory.
      */
     single {
@@ -250,7 +262,7 @@ val jamiModule = module {
     viewModelFactory { ContactDetailsViewModel(get(), get(), get(), get()) }
     viewModelFactory { NewConversationViewModel(get(), get(), get(), get()) }
     viewModelFactory { AboutViewModel() }
-    viewModelFactory { DebugLogsViewModel(get(), get(), get()) }
+    viewModelFactory { DebugLogsViewModel(get(), get(), get(), get()) }
     viewModelFactory { RecordingsViewModel(get()) }
     viewModelFactory { AppViewModel(get(), get()) }
     viewModelFactory { ProfileSetupViewModel(get()) }

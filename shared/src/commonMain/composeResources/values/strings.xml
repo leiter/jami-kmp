@@ -500,6 +500,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
     <string name="generic_error">An unknown error occurred.</string>
     <string name="debug_dump_daemon_state">Dump daemon state to log</string>
+    <string name="debug_restart_daemon">Restart daemon</string>
     <string name="screen_title_recordings">Call recordings</string>
     <string name="recordings_empty">No call recordings yet.</string>
     <string name="recordings_delete_title">Delete recording?</string>

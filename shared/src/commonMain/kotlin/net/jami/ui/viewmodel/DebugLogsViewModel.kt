@@ -13,6 +13,8 @@ import kotlinx.coroutines.launch
 import net.jami.services.AccountService
 import net.jami.services.ConversationFacade
 import net.jami.services.DaemonDiagnostics
+import net.jami.services.DaemonLifecycleService
+import net.jami.services.DaemonLifecycleState
 import net.jami.services.PeerServicesService
 import net.jami.services.TunnelInfo
 import net.jami.services.ConversationSyncInfo
@@ -36,12 +38,16 @@ data class DebugLogsState(
     val ringingTimeoutSeconds: Int = 0,
     /** Peer-service tunnels the daemon currently holds open. */
     val tunnels: List<TunnelInfo> = emptyList(),
+    /** Whether the app believes the daemon is running, and how many times it has started. */
+    val daemonLifecycle: DaemonLifecycleState = DaemonLifecycleState.Stopped,
+    val daemonStartCount: Int = 0,
 )
 
 class DebugLogsViewModel(
     private val conversationFacade: ConversationFacade,
     private val accountService: AccountService,
     private val peerServicesService: PeerServicesService,
+    private val daemonLifecycle: DaemonLifecycleService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) : ViewModel() {
     private val scope = scope
@@ -78,6 +84,8 @@ class DebugLogsViewModel(
                     runCatching { peerServicesService.getAllActiveTunnels(listOf(accountId)) }
                         .getOrDefault(emptyList())
                 } else emptyList(),
+                daemonLifecycle = daemonLifecycle.state.value,
+                daemonStartCount = daemonLifecycle.startCount,
             )
         }
     }
@@ -86,6 +94,17 @@ class DebugLogsViewModel(
      * Ask the daemon to dump its internal connection state into its log, then re-read the log so
      * the dump shows up on screen.
      */
+    /**
+     * Try to bring the daemon back up from the debug screen. Useful in the field when a start
+     * failed and the retries have been exhausted.
+     */
+    fun restartDaemon() {
+        scope.launch {
+            daemonLifecycle.ensureRunning()
+            refresh()
+        }
+    }
+
     fun dumpDaemonState() {
         scope.launch {
             accountService.monitorDaemon(continuous = false)

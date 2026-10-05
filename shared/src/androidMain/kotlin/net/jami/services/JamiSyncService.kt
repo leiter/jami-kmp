@@ -29,7 +29,14 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import net.jami.utils.Log
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * Android foreground service for background synchronization.
@@ -39,11 +46,14 @@ import net.jami.utils.Log
  *
  * Reference: jami-android-client SyncService.kt
  */
-class JamiSyncService : Service() {
+class JamiSyncService : Service(), KoinComponent {
     private val handler = Handler(Looper.getMainLooper())
     private var serviceUsers = 0
     private var notification: Notification? = null
     private var timeoutRunnable: Runnable? = null
+
+    private val daemonLifecycle: DaemonLifecycleService by inject()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun onCreate() {
         super.onCreate()
@@ -88,6 +98,16 @@ class JamiSyncService : Service() {
 
         serviceUsers++
         Log.d(TAG, "Service users: $serviceUsers")
+
+        // Syncing needs a live daemon. If it is not running — a failed start, or a process that
+        // came back without one — try to bring it up; holding a data-sync notification over a
+        // dead daemon tells the user we are working when nothing can sync.
+        scope.launch {
+            if (!daemonLifecycle.ensureRunning()) {
+                Log.w(TAG, "no daemon available for sync — stopping the service")
+                handler.post { stopSync() }
+            }
+        }
 
         // Handle timeout
         val timeout = intent.getLongExtra(EXTRA_TIMEOUT, -1)
@@ -144,6 +164,7 @@ class JamiSyncService : Service() {
     override fun onDestroy() {
         Log.d(TAG, "onDestroy")
         timeoutRunnable?.let { handler.removeCallbacks(it) }
+        scope.cancel()
         super.onDestroy()
     }
 

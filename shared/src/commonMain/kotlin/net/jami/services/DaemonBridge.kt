@@ -741,6 +741,12 @@ class StubDaemonBridge : DaemonBridgeApi {
     var placeCallResult: String = ""
     var startConversationResult: String = ""
     var running: Boolean = false
+    // Daemon lifecycle controls for tests
+    var initSucceeds: Boolean = true
+    var startSucceeds: Boolean = true
+    var initThrows: Boolean = false
+    var initCalls: Int = 0
+    var startCalls: Int = 0
     // Named to avoid colliding with the getHistoryLimit()/setHistoryLimit() overrides below:
     // a `var historyLimit` would generate the same JVM signatures.
     var historyLimitDays: Int = 0
@@ -774,8 +780,17 @@ class StubDaemonBridge : DaemonBridgeApi {
     /** Recorded downloadFile() calls as (conversationId, interactionId, fileId). */
     val downloadedFiles: MutableList<Triple<String, String, String>> = mutableListOf()
 
-    override fun init(callbacks: DaemonCallbacks): Boolean = true
-    override fun start(): Boolean { running = true; return true }
+    override fun init(callbacks: DaemonCallbacks): Boolean {
+        initCalls++
+        if (initThrows) throw IllegalStateException("native library not loaded")
+        return initSucceeds
+    }
+    override fun start(): Boolean {
+        startCalls++
+        if (!startSucceeds) return false
+        running = true
+        return true
+    }
     override fun stop() { running = false }
     override fun isRunning(): Boolean = running
     override fun connectivityChanged() {}
