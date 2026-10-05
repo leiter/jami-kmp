@@ -91,7 +91,7 @@ Zero calls to this function anywhere in jami-kmp. The reference `jami-android-cl
 
 ---
 
-### F6: `setActiveStream` not used (modern participant-focus API) — **gap** — **PARTLY DONE (2026-10-04): bridge + CallService/ViewModel wired; setActiveParticipant call sites not yet migrated**
+### F6: `setActiveStream` not used (modern participant-focus API) — **gap** — **DONE (2026-10-05)**
 **Evidence:** The daemon defines:
 ```cpp
 LIBJAMI_PUBLIC void setActiveStream(const std::string& accountId,
@@ -125,7 +125,7 @@ Zero calls in jami-kmp. The reference `jami-android-client` (`CallService.kt:333
 
 ---
 
-### F8: In-call text messaging not exposed — **gap**
+### F8: In-call text messaging not exposed — **gap** — **DONE (2026-10-05); the send path was also broken**
 **Evidence:** The daemon supports `sendTextMessage` in the context of calls/conferences:
 ```cpp
 LIBJAMI_PUBLIC void sendTextMessage(const std::string& accountId,
@@ -142,7 +142,7 @@ LIBJAMI_PUBLIC void sendTextMessage(const std::string& accountId,
 
 ---
 
-### F9: Call/conference media inspection APIs not exposed — **gap**
+### F9: Call/conference media inspection APIs not exposed — **gap** — **PARTLY DONE (2026-10-05): getCallDetails surfaced via F14**
 **Evidence:** Several daemon functions for introspecting call state are never called:
 - `getCallList(accountId)` — get all active calls for an account (never called)
 - `getConferenceList(accountId)` — get all active conferences (never called)  
@@ -169,7 +169,7 @@ This is never called. Conferences are created implicitly by adding participants 
 
 ---
 
-### F11: Audio/video input switching during calls not fully implemented — **gap**
+### F11: Audio/video input switching during calls not fully implemented — **gap** — **NOT APPLICABLE TO MOBILE (2026-10-05)**
 **Evidence:** `switchInput(accountId, callId, uri)` is defined and called via `DaemonBridge.switchVideoInput()` in `CallService.replaceVideoMedia()` and `CallViewModel.switchCamera()`. However:
 1. Audio input switching via `switchInput` is never done (only video).
 2. The daemon's full `switchInput` signature is used only for video; no corresponding audio path exists in jami-kmp.
@@ -180,7 +180,7 @@ This is never called. Conferences are created implicitly by adding participants 
 
 ---
 
-### F12: Recorded file playback not integrated into UI — **gap**
+### F12: Recorded file playback not integrated into UI — **gap** — **OPEN; prerequisites identified (2026-10-05)**
 **Evidence:** Daemon functions exist for playing recorded calls:
 ```cpp
 LIBJAMI_PUBLIC bool startRecordedFilePlayback(const std::string& filepath);
@@ -195,7 +195,7 @@ These are never called from jami-kmp. The UI has no "playback recorded call" fea
 
 ---
 
-### F13: DTMF tone generation limited to key-press tone, not arbitrary tone start — **gap**
+### F13: DTMF tone generation limited to key-press tone, not arbitrary tone start — **gap** — **WON'T DO (2026-10-05): no user-facing need**
 **Evidence:** `playDTMF(key)` is implemented, but `startTone(start, type)` is never called:
 ```cpp
 LIBJAMI_PUBLIC void startTone(int32_t start, int32_t type);
@@ -208,7 +208,7 @@ This allows starting arbitrary tones (not just DTMF keys), useful for ringtones,
 
 ---
 
-### F14: Call details not proactively displayed — **gap**
+### F14: Call details not proactively displayed — **gap** — **DONE (2026-10-05)**
 **Evidence:** `getCallDetails(accountId, callId)` is implemented (`DaemonBridge.android.kt:339-341`), but it returns a map of details that is never displayed in the UI. `CallState` in `CallViewModel.kt` does not include raw call details.
 
 The daemon returns details like:
@@ -324,6 +324,43 @@ This sets the layout to grid (0), not muting all participants. The correct daemo
 | **5** | F9–F14 (stats, device switching, playback) | **M–L** | Nice-to-have; audio device enum+switch and playback UI are moderate; stats panel is low effort (~6–8 hours total, independent). |
 
 **Total rough estimate:** 24–40 hours spread over 2–3 weeks, with Phase 1–3 as the critical path (8–14 hours for working moderator control).
+
+---
+
+## Phase 4–5 Status (2026-10-05)
+
+Commits `cb96545` (F8), `5e8e631` (F14), `c6522f1` (F6).
+
+- **F8 in-call chat — done, and the existing code was broken in both directions.**
+  `CallViewModel.sendCallMessage` had no caller, and it routed to
+  `CallService.sendTextMessage` → `JamiService.sendAccountTextMessage`, which addresses a
+  *contact URI* through the account: a call ID handed to it went nowhere. The call-level
+  `sendTextMessage(accountId, callId, messages, from, isMixed)` was never bridged, and inbound
+  `CallSignal::IncomingMessage` was never forwarded. Both are now wired (Android JNI + a new
+  iOS/macOS signal handler; the Apple wrapper already had the send method). `CallService` holds
+  the chat in memory for the call's lifetime (bounded at 200 messages, cleared on OVER) and
+  records our own messages locally because the daemon does not echo them. `CallScreen` has a chat
+  sheet with an unread badge. Conferences send with `isMixed = true`.
+- **F14 call stats — done.** `getCallDetails` was bridged but never read. `CallStats` maps the
+  `call_const.h` Details keys, treating blank values as absent (the daemon sends empty strings
+  for anything not negotiated). The panel polls every 2s *only while open*, since codecs and
+  bitrate change on renegotiation. This also covers the useful half of **F9**.
+- **F6 — done, and there was nothing to migrate.** `CallService.setActiveParticipant` had no
+  callers, and `setActiveStream` had no UI entry point, so neither API was reachable. The
+  participant menu now offers Spotlight / Remove spotlight through `setActiveStream`.
+- **F11 audio input switching — not applicable to mobile**, for the same reason as the daemon
+  audit's F1: on Android/iOS, input routing belongs to `AudioManager`/`AVAudioSession`, which
+  `HardwareService` already drives; libjami's `switchInput` audio path targets desktop audio
+  backends. Revisit with the desktop bridge.
+- **F12 recorded playback — still open, and it is a feature rather than a wiring task.**
+  Prerequisites found while scoping it: there is no recording-path key in `ConfigKey` (so no
+  accessor for the daemon's record directory), `FileUtils` has no directory-listing
+  expect/actual (only copy/move/delete/exists/mkdirs/size/read/write), and `commonMain` has no
+  shared audio player — voice-message playback is platform-side. So this needs a new KMP file
+  boundary plus a recordings screen plus platform playback; the daemon's
+  `startRecordedFilePlayback` is *not* the right tool (it plays into the audio layer, and the
+  reference client uses Android `MediaPlayer`). Worth its own session.
+- **F13 tones — won't do.** `startTone` has no user-facing need in this client.
 
 ---
 
