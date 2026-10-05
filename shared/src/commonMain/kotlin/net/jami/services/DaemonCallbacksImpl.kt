@@ -414,6 +414,10 @@ class DaemonCallbacksImpl(
         enqueueConversationTask(ConversationTask.DataTransfer(accountId, conversationId, interactionId, fileId, eventCode))
     }
 
+    override fun onInCallMessage(accountId: String, callId: String, from: String, messages: Map<String, String>) {
+        scope.launch { callService.onInCallMessage(accountId, callId, from, messages) }
+    }
+
     // ==================== Peer Services Callbacks ====================
 
     override fun onPeerServicesReceived(

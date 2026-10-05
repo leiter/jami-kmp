@@ -325,6 +325,14 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun addMainParticipant(accountId: String, confId: String): Boolean = false
     override fun detachParticipant(accountId: String, callId: String): Boolean = false
     override fun getParticipantList(accountId: String, confId: String): List<String> = emptyList()
+    override fun sendCallTextMessage(
+        accountId: String,
+        callId: String,
+        messages: Map<String, String>,
+        from: String,
+        isMixed: Boolean
+    ) {}
+
     override fun getNoiseSuppressState(): String = ""
     override fun setAgcState(enabled: Boolean) {}
 

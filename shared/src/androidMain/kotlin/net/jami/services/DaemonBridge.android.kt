@@ -584,6 +584,16 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         JamiService.sendAccountTextMessage(accountId, callIdOrUri, payload, 0)
     }
 
+    override fun sendCallTextMessage(
+        accountId: String,
+        callId: String,
+        messages: Map<String, String>,
+        from: String,
+        isMixed: Boolean
+    ) {
+        JamiService.sendTextMessage(accountId, callId, StringMap.toSwig(messages), from, isMixed)
+    }
+
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
         JamiService.setIsComposing(accountId, uri, isComposing)
     }
@@ -946,6 +956,12 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
 
         override fun mediaNegotiationStatus(callId: String, event: String, mediaList: VectMap) {
             callbacks.onMediaNegotiationStatus(callId, event, mediaList.toNative())
+        }
+
+        override fun incomingMessage(accountId: String, callId: String, from: String, messages: StringMap) {
+            val native = messages.toNative()
+            if (native.isEmpty()) return
+            callbacks.onInCallMessage(accountId, callId, from, native)
         }
 
         override fun peerHold(callId: String, holding: Boolean) {

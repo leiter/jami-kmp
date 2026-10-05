@@ -65,6 +65,16 @@ sealed class CallMode {
 data class CallPickerItem(val callId: String, val peerName: String)
 
 /**
+ * One message in the in-call chat, resolved for display.
+ */
+data class InCallMessageUi(
+    val author: String,
+    val body: String,
+    val timestamp: Long,
+    val isOutgoing: Boolean,
+)
+
+/**
  * Conference mixer layouts understood by the daemon (libjami::Layout).
  */
 object ConferenceLayout {
@@ -121,6 +131,10 @@ data class CallState(
     val isPeerHolding: Boolean = false,
     /** At least one remote participant is recording the call. */
     val isRemoteRecording: Boolean = false,
+    /** Chat exchanged inside this call, oldest first. Lives only for the call's duration. */
+    val inCallMessages: List<InCallMessageUi> = emptyList(),
+    /** In-call messages received since the chat sheet was last open. */
+    val unreadInCallMessages: Int = 0,
     /** Display names of the remote participants currently recording, comma separated. */
     val remoteRecordingBy: String = "",
     val hangupReason: HangupReason = HangupReason.NONE,
@@ -480,10 +494,29 @@ class CallViewModel(
         _state.value = _state.value.copy(conferenceLayout = layout)
     }
 
+    /**
+     * Send a message into the ongoing call.
+     *
+     * This used to call CallService.sendTextMessage, which routes to the account-level send and
+     * addresses a contact URI — handing it a call ID sent the message nowhere. The call-level
+     * path also reaches every participant of a conference.
+     */
     fun sendCallMessage(text: String) {
+        val body = text.trim()
+        if (body.isEmpty()) return
         val accountId = currentAccountId ?: return
-        val callId = currentCallId ?: return
-        callService.sendTextMessage(accountId, callId, text)
+        val callId = currentConference?.id ?: currentCallId ?: return
+        val selfUri = accountService.getAccount(accountId)
+            ?.let { Uri.fromString(it.username).rawRingId }
+            ?: ""
+        callService.sendInCallMessage(accountId, callId, selfUri, body)
+    }
+
+    /** The user opened the in-call chat, so nothing is unread any more. */
+    fun markInCallMessagesRead() {
+        if (_state.value.unreadInCallMessages != 0) {
+            _state.value = _state.value.copy(unreadInCallMessages = 0)
+        }
     }
 
     // ==================== Video controls ====================
@@ -759,6 +792,50 @@ class CallViewModel(
         }
         // Subscribe to video events
         subscribeToVideoEvents()
+        subscribeToInCallMessages()
+    }
+
+    private var inCallMessagesJob: Job? = null
+
+    /**
+     * Mirror the call's chat into the UI state, counting anything incoming that arrives while the
+     * sheet is closed as unread.
+     */
+    private fun subscribeToInCallMessages() {
+        inCallMessagesJob?.cancel()
+        inCallMessagesJob = scope.launch {
+            callService.inCallMessages.collect { messages ->
+                val callId = currentConference?.id ?: currentCallId
+                val mine = messages.filter { callId == null || it.callId == callId }
+                val previousIncoming = _state.value.inCallMessages.count { !it.isOutgoing }
+                val incoming = mine.count { !it.isOutgoing }
+                val newIncoming = (incoming - previousIncoming).coerceAtLeast(0)
+                _state.value = _state.value.copy(
+                    inCallMessages = mine.map { message ->
+                        InCallMessageUi(
+                            author = resolveInCallAuthor(message.author, message.isOutgoing),
+                            body = message.body,
+                            timestamp = message.timestamp,
+                            isOutgoing = message.isOutgoing,
+                        )
+                    },
+                    unreadInCallMessages = _state.value.unreadInCallMessages + newIncoming,
+                )
+            }
+        }
+    }
+
+    /** Prefer a participant's display name over the raw URI for the chat's author line. */
+    private fun resolveInCallAuthor(authorUri: String, isOutgoing: Boolean): String {
+        if (isOutgoing) return ""
+        val uri = Uri.fromString(authorUri)
+        val participant = _state.value.participants
+            .firstOrNull { it.peerUri == uri.rawRingId }
+        return participant?.displayName
+            ?: currentConference?.participants
+                ?.firstOrNull { it.peerUri.rawRingId == uri.rawRingId }
+                ?.contact?.displayName
+            ?: _state.value.peerName.ifEmpty { uri.rawRingId.take(12) }
     }
 
     private var videoEventsJob: Job? = null
@@ -948,6 +1025,7 @@ class CallViewModel(
         callUpdatesJob?.cancel()
         videoEventsJob?.cancel()
         videoLossJob?.cancel()
+        inCallMessagesJob?.cancel()
         hardwareService.cameraCleanup()
         scope.cancel()
     }

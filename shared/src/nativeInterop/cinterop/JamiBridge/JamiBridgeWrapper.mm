@@ -654,6 +654,22 @@ static JBCallState toCallState(const std::string& state) {
             });
         }));
 
+    // In-call text message (SIP MESSAGE / in-call chat)
+    handlers.insert(exportable_callback<CallSignal::IncomingMessage>(
+        [weakSelf](const std::string& accountId, const std::string& callId,
+                   const std::string& from, const std::map<std::string, std::string>& messages) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *callIdNS = toNSString(callId);
+            NSString *fromNS = toNSString(from);
+            NSDictionary *messagesNS = toNSDictionary(messages);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onInCallMessage:callId:from:messages:)]) {
+                    [strongSelf.delegate onInCallMessage:accountIdNS callId:callIdNS from:fromNS messages:messagesNS];
+                }
+            });
+        }));
+
     // Peer hold
     handlers.insert(exportable_callback<CallSignal::PeerHold>(
         [weakSelf](const std::string& callId, bool holding) {

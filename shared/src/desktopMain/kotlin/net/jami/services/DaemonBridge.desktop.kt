@@ -578,6 +578,14 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "answerMediaChangeRequest called (stub): $callId")
     }
 
+    override fun sendCallTextMessage(
+        accountId: String,
+        callId: String,
+        messages: Map<String, String>,
+        from: String,
+        isMixed: Boolean
+    ) {}
+
     override fun getNoiseSuppressState(): String = ""
     override fun setAgcState(enabled: Boolean) {}
 

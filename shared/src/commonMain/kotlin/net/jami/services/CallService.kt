@@ -32,8 +32,10 @@ import net.jami.model.Call
 import net.jami.model.Call.CallStatus
 import net.jami.model.Call.Direction
 import net.jami.model.Conference
+import net.jami.model.InCallMessage
 import net.jami.model.Media
 import net.jami.utils.Log
+import net.jami.utils.currentTimeMillis
 import net.jami.model.Uri
 
 /**
@@ -74,6 +76,11 @@ class CallService(
 
     fun setPendingCallNavId(callId: String) { _pendingCallNavId.value = callId }
     fun consumePendingCallNavId() { _pendingCallNavId.value = null }
+
+    private val _inCallMessages = MutableStateFlow<List<InCallMessage>>(emptyList())
+
+    /** Messages exchanged inside active calls, oldest first. Cleared per call when it ends. */
+    val inCallMessages: StateFlow<List<InCallMessage>> = _inCallMessages.asStateFlow()
 
     private val _currentConferences = MutableStateFlow<List<Conference>>(emptyList())
     val currentConferences: StateFlow<List<Conference>> = _currentConferences.asStateFlow()
@@ -530,6 +537,7 @@ class CallService(
                     if (call.callStatus == CallStatus.OVER) {
                         calls.remove(call.daemonId)
                         conferences.remove(call.daemonId)
+                        call.daemonId?.let { clearInCallMessages(it) }
                         updateCurrentCalls()
                     }
                 }
@@ -878,6 +886,70 @@ class CallService(
     }
 
     /**
+     * Send a message inside an ongoing call or conference.
+     *
+     * [sendTextMessage] cannot do this: it routes to the account-level send, which addresses a
+     * contact URI rather than a call, so passing a call ID there sent the message nowhere useful.
+     *
+     * @param from Our own URI, recorded as the author by the daemon and echoed to peers.
+     */
+    fun sendInCallMessage(accountId: String, callId: String, from: String, message: String) {
+        val conference = conferences[callId]
+        val isMixed = conference?.isConference == true
+        scope.launch {
+            daemonBridge.sendCallTextMessage(
+                accountId, callId, mapOf(MIME_TEXT_PLAIN to message), from, isMixed
+            )
+            // The daemon does not echo our own in-call messages back, so record it locally.
+            appendInCallMessage(
+                InCallMessage(
+                    callId = callId,
+                    author = from,
+                    body = message,
+                    timestamp = currentTimeMillis(),
+                    isOutgoing = true,
+                )
+            )
+        }
+    }
+
+    /**
+     * Called when a text message arrives inside a call or conference.
+     * Only `text/plain` bodies are surfaced; other MIME parts are ignored.
+     */
+    internal fun onInCallMessage(accountId: String, callId: String, from: String, messages: Map<String, String>) {
+        val body = messages[MIME_TEXT_PLAIN] ?: messages.values.firstOrNull() ?: return
+        Log.d(TAG, "in-call message on $callId from $from")
+        appendInCallMessage(
+            InCallMessage(
+                callId = callId,
+                author = from,
+                body = body,
+                timestamp = currentTimeMillis(),
+                isOutgoing = false,
+            )
+        )
+    }
+
+    private fun appendInCallMessage(message: InCallMessage) {
+        // A call's chat is bounded: it exists only for the duration of the call, and the UI shows
+        // the tail of it.
+        val existing = _inCallMessages.value
+        val trimmed = if (existing.size >= MAX_IN_CALL_MESSAGES) {
+            existing.takeLast(MAX_IN_CALL_MESSAGES - 1)
+        } else existing
+        _inCallMessages.value = trimmed + message
+    }
+
+    /** Drop the chat history for a call that has ended. */
+    private fun clearInCallMessages(callId: String) {
+        val remaining = _inCallMessages.value.filterNot { it.callId == callId }
+        if (remaining.size != _inCallMessages.value.size) {
+            _inCallMessages.value = remaining
+        }
+    }
+
+    /**
      * Set typing/composing status.
      */
     fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
@@ -888,6 +960,9 @@ class CallService(
 
     companion object {
         private const val TAG = "CallService"
+
+        /** Upper bound on the in-call chat kept in memory for a call. */
+        private const val MAX_IN_CALL_MESSAGES = 200
         const val MIME_TEXT_PLAIN = "text/plain"
         const val MIME_GEOLOCATION = "application/geo"
         const val MEDIA_TYPE_AUDIO = "MEDIA_TYPE_AUDIO"

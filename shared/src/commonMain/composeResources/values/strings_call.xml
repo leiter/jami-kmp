@@ -68,4 +68,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_layout_one_big">Focus</string>
     <string name="call_layout_one_big_small">Speaker</string>
 
+    <!-- In-call chat -->
+    <string name="call_chat_title">Call chat</string>
+    <string name="call_chat_hint">Message</string>
+    <string name="call_chat_empty">Messages sent during this call appear here. They are not saved to the conversation.</string>
+
 </resources>

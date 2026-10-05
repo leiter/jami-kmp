@@ -237,6 +237,22 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun restartAudioLayer() {}
 
+    override fun sendCallTextMessage(
+        accountId: String,
+        callId: String,
+        messages: Map<String, String>,
+        from: String,
+        isMixed: Boolean
+    ) {
+        bridge.sendTextMessage(
+            accountId,
+            callId = callId,
+            messages = messages.toNSDictionary(),
+            from = from,
+            isMixed = isMixed
+        )
+    }
+
     override fun getNoiseSuppressState(): String = bridge.noiseSuppressState() ?: ""
     override fun setAgcState(enabled: Boolean) { bridge.setAgcState(enabled) }
 
@@ -848,6 +864,18 @@ private class JamiBridgeDelegateImpl(
 
     override fun onPeerHold(callId: String, holding: Boolean) {
         callbacks.onPeerHold(callId, holding)
+    }
+
+    override fun onInCallMessage(
+        accountId: String,
+        callId: String,
+        from: String,
+        messages: Map<Any?, *>
+    ) {
+        @Suppress("UNCHECKED_CAST")
+        val native = (messages as? Map<String, String>) ?: emptyMap()
+        if (native.isEmpty()) return
+        callbacks.onInCallMessage(accountId, callId, from, native)
     }
 
     override fun onConnectionUpdate(callId: String, state: Int) {

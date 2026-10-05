@@ -161,6 +161,25 @@ interface DaemonBridgeApi {
 
     // ==================== Messaging ====================
     fun sendTextMessage(accountId: String, callIdOrUri: String, message: String)
+
+    /**
+     * Send a text message inside an ongoing call or conference (SIP MESSAGE / in-call chat).
+     *
+     * Distinct from [sendTextMessage], which sends to a contact URI through the account and so
+     * cannot address a call. Received messages arrive as DaemonCallbacks.onInCallMessage.
+     *
+     * @param callId Call or conference ID
+     * @param messages MIME type → body, usually a single "text/plain" entry
+     * @param from Our own URI, used as the message author
+     * @param isMixed True for a conference, so every participant receives it
+     */
+    fun sendCallTextMessage(
+        accountId: String,
+        callId: String,
+        messages: Map<String, String>,
+        from: String,
+        isMixed: Boolean
+    )
     fun setIsComposing(accountId: String, uri: String, isComposing: Boolean)
 
     /**
@@ -547,6 +566,15 @@ expect class DaemonBridge : DaemonBridgeApi
 /**
  * File transfer information from the daemon.
  */
+/** One in-call message handed to the daemon, recorded by [StubDaemonBridge] for tests. */
+data class CallMessageSend(
+    val accountId: String,
+    val callId: String,
+    val messages: Map<String, String>,
+    val from: String,
+    val isMixed: Boolean,
+)
+
 data class FileTransferInfo(
     val path: String,
     val totalSize: Long,
@@ -637,6 +665,13 @@ interface DaemonCallbacks {
     // ==================== Data Transfer Callbacks ====================
     fun onDataTransferEvent(accountId: String, conversationId: String, interactionId: String, fileId: String, eventCode: Int)
 
+    /**
+     * A text message arrived inside a call or conference (in-call chat / SIP MESSAGE).
+     *
+     * @param messages MIME type → body
+     */
+    fun onInCallMessage(accountId: String, callId: String, from: String, messages: Map<String, String>)
+
     // ==================== Peer Services Callbacks ====================
     /**
      * A peer answered a [DaemonBridgeApi.queryPeerServices] request.
@@ -711,6 +746,7 @@ class StubDaemonBridge : DaemonBridgeApi {
     var openTunnelResult: String = "tunnel1"
     val closedTunnels: MutableList<String> = mutableListOf()
     var activeTunnels: List<Map<String, String>> = emptyList()
+    val sentCallMessages: MutableList<CallMessageSend> = mutableListOf()
     val monitorCalls: MutableList<Boolean> = mutableListOf()
 
     // Configurable lookup results: name -> LookupState (0=Success/taken, 1=Invalid, 2=NotFound/available, 3=NetworkError)
@@ -880,6 +916,15 @@ class StubDaemonBridge : DaemonBridgeApi {
         connectionList
 
     override fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {}
+    override fun sendCallTextMessage(
+        accountId: String,
+        callId: String,
+        messages: Map<String, String>,
+        from: String,
+        isMixed: Boolean
+    ) {
+        sentCallMessages += CallMessageSend(accountId, callId, messages, from, isMixed)
+    }
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {}
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {}
 

@@ -187,6 +187,11 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 
 - (void)onPeerHold:(NSString *)callId holding:(BOOL)holding;
 
+- (void)onInCallMessage:(NSString *)accountId
+                 callId:(NSString *)callId
+                   from:(NSString *)from
+               messages:(NSDictionary<NSString *, NSString *> *)messages;
+
 - (void)onConnectionUpdate:(NSString *)callId state:(int)state;
 
 - (void)onRemoteRecordingChanged:(NSString *)callId

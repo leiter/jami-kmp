@@ -50,7 +50,9 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.BackHand
+import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -70,6 +72,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Badge
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -109,6 +115,7 @@ import net.jami.ui.viewmodel.CallPickerItem
 import net.jami.ui.viewmodel.CallState
 import net.jami.ui.viewmodel.CallViewModel
 import net.jami.ui.viewmodel.ParticipantUi
+import net.jami.ui.viewmodel.InCallMessageUi
 import net.jami.ui.components.ConferenceParticipantsSheet
 import org.jetbrains.compose.resources.stringResource
 
@@ -187,6 +194,8 @@ fun CallScreen(
         onEjectParticipant = { p -> viewModel.ejectParticipant(p) },
         onToggleRaiseHand = { viewModel.toggleRaiseHand() },
         onSetLayout = { layout -> viewModel.setConferenceLayout(layout) },
+        onSendCallMessage = { text -> viewModel.sendCallMessage(text) },
+        onMarkCallMessagesRead = { viewModel.markInCallMessagesRead() },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onTransfer = { to -> viewModel.transfer(to) },
         onAttendedTransfer = { callId -> viewModel.attendedTransfer(callId) },
@@ -278,6 +287,8 @@ fun IncomingCallScreen(
         onEjectParticipant = { p -> viewModel.ejectParticipant(p) },
         onToggleRaiseHand = { viewModel.toggleRaiseHand() },
         onSetLayout = { layout -> viewModel.setConferenceLayout(layout) },
+        onSendCallMessage = { text -> viewModel.sendCallMessage(text) },
+        onMarkCallMessagesRead = { viewModel.markInCallMessagesRead() },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onTransfer = { to -> viewModel.transfer(to) },
         onAttendedTransfer = { callId -> viewModel.attendedTransfer(callId) },
@@ -316,6 +327,8 @@ private fun CallScreenContent(
     onEjectParticipant: (ParticipantUi) -> Unit = {},
     onToggleRaiseHand: () -> Unit = {},
     onSetLayout: (Int) -> Unit = {},
+    onSendCallMessage: (String) -> Unit = {},
+    onMarkCallMessagesRead: () -> Unit = {},
     onSendDtmf: (Char) -> Unit,
     onTransfer: (String) -> Unit,
     onAttendedTransfer: (String) -> Unit,
@@ -352,6 +365,7 @@ private fun CallScreenContent(
     var showDtmfSheet by remember { mutableStateOf(false) }
     var showTransferSheet by remember { mutableStateOf(false) }
     var showParticipantsSheet by remember { mutableStateOf(false) }
+    var showCallChatSheet by remember { mutableStateOf(false) }
     var showControls by remember { mutableStateOf(true) }
 
     // Auto-hide controls after 3 seconds during ongoing video call
@@ -495,6 +509,10 @@ private fun CallScreenContent(
                             onToggleConferenceLock = onToggleConferenceLock,
                             onToggleRaiseHand = onToggleRaiseHand,
                             onOpenParticipants = { showParticipantsSheet = true },
+                            onOpenCallChat = {
+                                showCallChatSheet = true
+                                onMarkCallMessagesRead()
+                            },
                             onOpenDtmf = { showDtmfSheet = true },
                             onOpenTransfer = { showTransferSheet = true },
                             onToggleRecording = onToggleRecording,
@@ -515,6 +533,21 @@ private fun CallScreenContent(
             sheetState = sheetState,
         ) {
             DtmfDialpad(onKey = onSendDtmf)
+            Spacer(Modifier.height(JamiTheme.spacing.xl))
+        }
+    }
+
+    // In-call chat bottom sheet
+    if (showCallChatSheet) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = { showCallChatSheet = false },
+            sheetState = sheetState,
+        ) {
+            InCallChatSheet(
+                messages = state.inCallMessages,
+                onSend = onSendCallMessage,
+            )
             Spacer(Modifier.height(JamiTheme.spacing.xl))
         }
     }
@@ -867,6 +900,7 @@ private fun OnGoingControls(
     onToggleConferenceLock: (Boolean) -> Unit = {},
     onToggleRaiseHand: () -> Unit = {},
     onOpenParticipants: () -> Unit = {},
+    onOpenCallChat: () -> Unit = {},
     onOpenDtmf: () -> Unit,
     onOpenTransfer: () -> Unit,
     onToggleRecording: () -> Unit,
@@ -923,6 +957,21 @@ private fun OnGoingControls(
                 isActive = false,
                 onClick = onOpenDtmf,
             )
+
+            // In-call chat, with a badge for messages that arrived while it was closed
+            Box {
+                CallControlButton(
+                    icon = Icons.Default.ChatBubble,
+                    contentDescription = stringResource(Res.string.content_desc_call_chat),
+                    isActive = false,
+                    onClick = onOpenCallChat,
+                )
+                if (state.unreadInCallMessages > 0) {
+                    Badge(modifier = Modifier.align(Alignment.TopEnd)) {
+                        Text(state.unreadInCallMessages.coerceAtMost(99).toString())
+                    }
+                }
+            }
 
             // Transfer button
             CallControlButton(
@@ -1158,6 +1207,97 @@ private fun DtmfDialpad(onKey: (Char) -> Unit) {
                 }
             }
             Spacer(Modifier.height(JamiTheme.spacing.s))
+        }
+    }
+}
+
+/**
+ * Chat for the duration of a call: the daemon carries these on the call's own channel, so there
+ * is no conversation history to load and nothing persists once the call ends.
+ */
+@Composable
+private fun InCallChatSheet(
+    messages: List<InCallMessageUi>,
+    onSend: (String) -> Unit,
+) {
+    var draft by remember { mutableStateOf("") }
+    val listState = rememberLazyListState()
+
+    // Keep the newest message in view as the conversation grows.
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.m),
+    ) {
+        Text(
+            text = stringResource(Res.string.call_chat_title),
+            style = JamiTheme.typography.titleMedium,
+            color = JamiTheme.colors.onSurface,
+        )
+        Spacer(Modifier.height(JamiTheme.spacing.s))
+
+        if (messages.isEmpty()) {
+            Text(
+                text = stringResource(Res.string.call_chat_empty),
+                style = JamiTheme.typography.bodyMedium,
+                color = JamiTheme.colors.onSurfaceVariant,
+            )
+        } else {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.heightIn(max = 260.dp).fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(JamiTheme.spacing.xs),
+            ) {
+                items(messages.size) { index ->
+                    val message = messages[index]
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = if (message.isOutgoing) Alignment.End else Alignment.Start,
+                    ) {
+                        if (!message.isOutgoing && message.author.isNotEmpty()) {
+                            Text(
+                                text = message.author,
+                                style = JamiTheme.typography.labelSmall,
+                                color = JamiTheme.colors.onSurfaceVariant,
+                            )
+                        }
+                        Text(
+                            text = message.body,
+                            style = JamiTheme.typography.bodyMedium,
+                            color = JamiTheme.colors.onSurface,
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(JamiTheme.spacing.s))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedTextField(
+                value = draft,
+                onValueChange = { draft = it },
+                label = { Text(stringResource(Res.string.call_chat_hint)) },
+                singleLine = true,
+                modifier = Modifier.weight(1f),
+            )
+            val sendDesc = stringResource(Res.string.content_desc_send_call_message)
+            IconButton(
+                onClick = {
+                    onSend(draft)
+                    draft = ""
+                },
+                enabled = draft.isNotBlank(),
+                modifier = Modifier.semantics { contentDescription = sendDesc },
+            ) {
+                Icon(Icons.Default.Send, contentDescription = null)
+            }
         }
     }
 }
