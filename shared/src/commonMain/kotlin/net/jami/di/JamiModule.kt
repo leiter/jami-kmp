@@ -136,6 +136,15 @@ val jamiModule = module {
     }
 
     /**
+     * Browses the call recordings the daemon writes to its record directory.
+     */
+    single {
+        CallRecordingsService(
+            daemonBridge = get()
+        )
+    }
+
+    /**
      * Peer service discovery and tunnelling (daemon NetworkService API). Android only for now —
      * the Apple bridge has no networkservice interface.
      */
@@ -242,6 +251,7 @@ val jamiModule = module {
     viewModelFactory { NewConversationViewModel(get(), get(), get(), get()) }
     viewModelFactory { AboutViewModel() }
     viewModelFactory { DebugLogsViewModel(get(), get(), get()) }
+    viewModelFactory { RecordingsViewModel(get()) }
     viewModelFactory { AppViewModel(get(), get()) }
     viewModelFactory { ProfileSetupViewModel(get()) }
     viewModelFactory { LocationSharingViewModel(get(), get()) }

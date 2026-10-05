@@ -19,6 +19,7 @@ package net.jami.utils
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.UnsafeNumber
 import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.BooleanVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
@@ -185,5 +186,28 @@ private fun ByteArray.toNSData(): NSData {
     if (isEmpty()) return NSData()
     return this.usePinned { pinned ->
         NSData.create(bytes = pinned.addressOf(0), length = size.toULong())
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+/**
+ * Files directly inside [path]. Directory entries are filtered out with a directory check per
+ * entry, since NSFileManager's shallow listing returns both.
+ */
+internal actual fun platformListFiles(path: String): List<String> {
+    return try {
+        val fileManager = NSFileManager.defaultManager
+        val names = fileManager.contentsOfDirectoryAtPath(path, null) ?: return emptyList()
+        names.mapNotNull { name ->
+            val child = name as? String ?: return@mapNotNull null
+            val childPath = "$path/$child"
+            memScoped {
+                val isDir = alloc<BooleanVar>()
+                val exists = fileManager.fileExistsAtPath(childPath, isDirectory = isDir.ptr)
+                if (exists && !isDir.value) childPath else null
+            }
+        }
+    } catch (e: Exception) {
+        emptyList()
     }
 }

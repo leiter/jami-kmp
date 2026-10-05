@@ -1184,6 +1184,12 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         }
     }
 
+    override fun getRecordPath(): String = JamiService.getRecordPath()
+
+    override fun setRecordPath(path: String) {
+        JamiService.setRecordPath(path)
+    }
+
     override fun getHistoryLimit(): Int = JamiService.getHistoryLimit()
 
     override fun setHistoryLimit(days: Int) {

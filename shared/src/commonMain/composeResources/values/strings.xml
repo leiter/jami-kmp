@@ -500,6 +500,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
     <string name="generic_error">An unknown error occurred.</string>
     <string name="debug_dump_daemon_state">Dump daemon state to log</string>
+    <string name="screen_title_recordings">Call recordings</string>
+    <string name="recordings_empty">No call recordings yet.</string>
+    <string name="recordings_delete_title">Delete recording?</string>
+    <string name="recordings_delete_message">%1$s will be deleted from this device. This cannot be undone.</string>
+    <string name="recordings_delete_confirm">Delete</string>
+    <string name="pref_recordings_title">Call recordings</string>
+    <string name="pref_recordings_summary">Play or delete calls you have recorded.</string>
     <string name="pref_agc_title">Automatic gain control</string>
     <string name="pref_agc_summary">Normalise the microphone level during calls.</string>
     <string name="pref_history_limit_title">Call history retention</string>

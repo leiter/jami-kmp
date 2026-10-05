@@ -605,6 +605,8 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun closeServiceTunnel(accountId: String, tunnelId: String): Boolean = false
     override fun getActiveTunnels(accountId: String): List<Map<String, String>> = emptyList()
 
+    override fun getRecordPath(): String = ""
+    override fun setRecordPath(path: String) {}
     override fun getHistoryLimit(): Int = 0
     override fun setHistoryLimit(days: Int) {}
     override fun getRingingTimeout(): Int = 0

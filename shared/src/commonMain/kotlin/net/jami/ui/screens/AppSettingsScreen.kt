@@ -82,6 +82,7 @@ import kotlin.math.roundToInt
 fun AppSettingsScreen(
     onBack: () -> Unit,
     onNavigateToDebugLogs: () -> Unit = {},
+    onNavigateToRecordings: () -> Unit = {},
 ) {
     val viewModel = getViewModel<AppSettingsViewModel>()
     val state by viewModel.state.collectAsState()
@@ -563,6 +564,12 @@ fun AppSettingsScreen(
                     )
                 }
             }
+
+            NavigationRow(
+                label = stringResource(Res.string.pref_recordings_title),
+                description = stringResource(Res.string.pref_recordings_summary),
+                onClick = onNavigateToRecordings,
+            )
 
             NavigationRow(
                 label = stringResource(Res.string.pref_debugLogs_title),

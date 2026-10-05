@@ -252,6 +252,15 @@ interface DaemonBridgeApi {
 
     // ==================== Daemon Settings & Diagnostics ====================
     /**
+     * Directory the daemon writes call recordings into (daemon-global).
+     * Empty when the platform cannot report it.
+     */
+    fun getRecordPath(): String
+
+    /** Change the directory the daemon writes call recordings into. */
+    fun setRecordPath(path: String)
+
+    /**
      * Call-history retention in days (daemon-global, not per account).
      * 0 means "keep forever"; the daemon prunes older entries on start.
      */
@@ -738,6 +747,8 @@ class StubDaemonBridge : DaemonBridgeApi {
     var ringingTimeoutSeconds: Int = 30
     var connectionList: List<Map<String, String>> = emptyList()
     // Named to avoid colliding with the getNoiseSuppressState() override's JVM signature.
+    // Named to avoid colliding with the getRecordPath()/setRecordPath() overrides' JVM signatures.
+    var recordPathValue: String = ""
     var noiseSuppressStateValue: String = "enabled"
     var agcEnabled: Boolean = false
     val echoCancellationCalls: MutableList<Boolean> = mutableListOf()
@@ -907,6 +918,8 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean = true
     override fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean = true
     override fun searchUser(accountId: String, query: String): Boolean = true
+    override fun getRecordPath(): String = recordPathValue
+    override fun setRecordPath(path: String) { recordPathValue = path }
     override fun getHistoryLimit(): Int = historyLimitDays
     override fun setHistoryLimit(days: Int) { historyLimitDays = days }
     override fun getRingingTimeout(): Int = ringingTimeoutSeconds

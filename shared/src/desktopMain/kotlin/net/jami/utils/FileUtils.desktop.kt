@@ -131,3 +131,14 @@ internal actual fun platformGetLastModified(path: String): Long {
         0L
     }
 }
+
+internal actual fun platformListFiles(path: String): List<String> {
+    return try {
+        File(path).listFiles()
+            ?.filter { it.isFile }
+            ?.map { it.absolutePath }
+            ?: emptyList()
+    } catch (e: Exception) {
+        emptyList()
+    }
+}

@@ -566,11 +566,17 @@ private fun MainNavigation(needsMigration: Boolean) {
             AppSettingsScreen(
                 onBack = { navController.popBackStack() },
                 onNavigateToDebugLogs = { navController.navigate(Screen.DebugLogs.route) },
+                onNavigateToRecordings = { navController.navigate(Screen.Recordings.route) },
             )
         }
 
         composable(Screen.DebugLogs.route) {
             DebugLogsScreen(
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(Screen.Recordings.route) {
+            RecordingsScreen(
                 onBack = { navController.popBackStack() },
             )
         }

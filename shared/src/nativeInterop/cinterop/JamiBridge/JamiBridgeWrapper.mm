@@ -2001,6 +2001,15 @@ static JBCallState toCallState(const std::string& state) {
     return libjami::isCaptureMuted();
 }
 
+- (NSString *)recordPath {
+    return toNSString(libjami::getRecordPath());
+}
+
+- (void)setRecordPathValue:(NSString *)path {
+    NSLog(@"[JamiBridge] setRecordPath: %@", path);
+    libjami::setRecordPath(toCppString(path));
+}
+
 - (int32_t)historyLimit {
     return libjami::getHistoryLimit();
 }

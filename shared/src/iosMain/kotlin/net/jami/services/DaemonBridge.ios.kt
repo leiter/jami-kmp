@@ -325,6 +325,12 @@ actual class DaemonBridge() : DaemonBridgeApi {
         return bridge.resumeConference(accountId, conferenceId = confId)
     }
 
+    override fun getRecordPath(): String = bridge.recordPath() ?: ""
+
+    override fun setRecordPath(path: String) {
+        bridge.setRecordPathValue(path)
+    }
+
     override fun getHistoryLimit(): Int = bridge.historyLimit()
 
     override fun setHistoryLimit(days: Int) {

@@ -641,6 +641,8 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (BOOL)isCaptureMuted;
 
 // Daemon settings & diagnostics
+- (NSString *)recordPath;
+- (void)setRecordPathValue:(NSString *)path;
 - (int32_t)historyLimit;
 - (void)setHistoryLimitDays:(int32_t)days;
 - (int32_t)ringingTimeout;
