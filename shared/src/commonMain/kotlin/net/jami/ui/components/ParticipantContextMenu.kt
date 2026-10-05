@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.BackHand
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -63,6 +64,7 @@ fun ParticipantContextMenu(
     showVideoControls: Boolean = false,
     onSetModerator: (ParticipantUi, Boolean) -> Unit = { _, _ -> },
     onLowerHand: (ParticipantUi) -> Unit = {},
+    onSetActiveStream: (ParticipantUi, Boolean) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     DropdownMenu(
@@ -125,6 +127,26 @@ fun ParticipantContextMenu(
                 }
             )
         }
+
+        // Spotlight: focus this participant's stream in the conference mixer. Uses the modern
+        // per-stream API rather than the deprecated call-ID based setActiveParticipant.
+        DropdownMenuItem(
+            text = {
+                Text(
+                    stringResource(
+                        if (participant.isActive) Res.string.call_participant_unfocus
+                        else Res.string.call_participant_focus
+                    )
+                )
+            },
+            leadingIcon = {
+                Icon(imageVector = Icons.Default.CenterFocusStrong, contentDescription = null)
+            },
+            onClick = {
+                onSetActiveStream(participant, !participant.isActive)
+                onDismiss()
+            }
+        )
 
         // Moderator promotion / demotion
         DropdownMenuItem(

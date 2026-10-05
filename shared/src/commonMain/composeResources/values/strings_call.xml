@@ -57,6 +57,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <!-- Conference moderation -->
     <string name="call_participants_title">Participants</string>
     <string name="call_participant_remove">Remove from call</string>
+    <string name="call_participant_focus">Spotlight</string>
+    <string name="call_participant_unfocus">Remove spotlight</string>
     <string name="call_participant_make_moderator">Make moderator</string>
     <string name="call_participant_revoke_moderator">Revoke moderator</string>
     <string name="call_participant_disable_video">Disable video</string>

@@ -74,6 +74,7 @@ fun ConferenceParticipantsSheet(
     onSetParticipantModerator: (ParticipantUi, Boolean) -> Unit,
     onLowerHand: (ParticipantUi) -> Unit,
     onEjectParticipant: (ParticipantUi) -> Unit,
+    onSetActiveStream: (ParticipantUi, Boolean) -> Unit,
     onMuteAll: () -> Unit,
     onSetLayout: (Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -109,6 +110,7 @@ fun ConferenceParticipantsSheet(
                     onSetParticipantModerator = onSetParticipantModerator,
                     onLowerHand = onLowerHand,
                     onEjectParticipant = onEjectParticipant,
+                    onSetActiveStream = onSetActiveStream,
                 )
             }
         }
@@ -169,6 +171,7 @@ private fun ParticipantRow(
     onSetParticipantModerator: (ParticipantUi, Boolean) -> Unit,
     onLowerHand: (ParticipantUi) -> Unit,
     onEjectParticipant: (ParticipantUi) -> Unit,
+    onSetActiveStream: (ParticipantUi, Boolean) -> Unit,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
@@ -242,6 +245,7 @@ private fun ParticipantRow(
                     onRemove = { onEjectParticipant(participant) },
                     onSetModerator = onSetParticipantModerator,
                     onLowerHand = onLowerHand,
+                    onSetActiveStream = onSetActiveStream,
                 )
             }
         }
