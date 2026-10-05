@@ -100,7 +100,7 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ---
 
-### F10: JamiSyncService background timeout relies on daemon process lifecycle — improvement
+### F10: JamiSyncService background timeout relies on daemon process lifecycle — improvement — **DONE (2026-10-05)**
 **Evidence:**
 - `JamiSyncService.kt` lines 69–99: foreground service with timeout mechanism, but relies on daemon being alive
 - No connectivity check before timeout removal; if daemon crashes, sync service stops
@@ -259,7 +259,7 @@ Corrections to the audit:
   proposed. The diagnostics signals above are Android-only so far: the iOS/macOS delegate has no
   entries for them, and they only log.
 
-**Phase 3 is now mostly closed by work done under other plans** (noted 2026-10-05):
+**Phase 3 is complete apart from the peer-services UI** (noted 2026-10-05):
 
 - **F4 (peer services / `NetworkServiceCallback`) — done.** The daemon-audit Phase 2 work
   (`1a3fd28`) bridged all eight NetworkService functions, replaced the deliberately empty
@@ -270,10 +270,27 @@ Corrections to the audit:
   call-level `sendTextMessage`, and added the in-call chat sheet. That is exactly what P3c
   asked for, and it fixed a real bug on the way: the existing send path pointed at the
   account-level API and delivered nowhere.
-- **F10 (daemon-lifecycle resilience) — still open**, and still the only Phase 3 item with work
-  left in it. Verified 2026-10-05: there is no liveness watchdog anywhere in the app — no
-  `isRunning` polling, no restart path — so a daemon killed by the OOM killer or SELinux stops
-  `JamiSyncService` without the app noticing.
+- **F10 (daemon-lifecycle resilience) — done** (`733289f`), which completes Phase 3 apart from
+  the unscoped peer-services UI.
+  The defect was narrower and worse than the finding described: the daemon was started once in
+  `JamiApplication.onCreate`, and a failed `init()`/`start()` was logged and forgotten — no
+  retry, no UI signal, and `AppViewModel` left waiting on an accounts-ready signal that would
+  never arrive. The post-start sequence (outbox, account load, push token, video devices) also
+  lived only on that one successful path, so even a manual restart would have left the app
+  half-wired.
+  `DaemonLifecycleService` now owns the start: `ensureRunning()` is idempotent and
+  mutex-guarded, failures retry with exponential backoff bounded at 5 attempts, and the state is
+  a `StateFlow` (Stopped / Starting / Running / Failed(attempts, reason)) shown in the debug
+  screen with a "Restart daemon" action. The post-start sequence moved into
+  `setStartupSequence`, so recoveries wire the app up exactly as the first start does.
+  `JamiSyncService` ensures a daemon before holding its data-sync notification and stops itself
+  when there is none.
+  **One correction to the finding:** there is no watchdog, and deliberately so. An in-process
+  daemon offers no liveness probe — `isRunning()` reports whether *this app* initialised it, not
+  whether the native side is healthy — and calling into a fini'd daemon is unsafe rather than
+  merely wrong. Recovery is therefore driven by the moments that matter (app start, connectivity
+  returning, a sync wakeup, the debug action) instead of by polling. If a real probe is ever
+  wanted, it needs a daemon-side health call that the bindings do not currently expose.
 
 Follow-up:
 - The `JamiBridgeWrapper.h/.mm` additions (call signals, presence, conversation error) need a Mac
