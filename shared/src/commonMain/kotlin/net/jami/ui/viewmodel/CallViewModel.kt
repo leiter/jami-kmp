@@ -65,6 +65,37 @@ sealed class CallMode {
 data class CallPickerItem(val callId: String, val peerName: String)
 
 /**
+ * Negotiated media details for the current call, as the daemon reports them.
+ *
+ * Every field can be absent: the daemon only fills in what has been negotiated, so an audio-only
+ * call has no video codec and a call still connecting may have neither.
+ */
+data class CallStats(
+    val audioCodec: String? = null,
+    val audioSampleRate: String? = null,
+    val videoCodec: String? = null,
+    val videoBitrate: String? = null,
+    val videoMinBitrate: String? = null,
+    val videoMaxBitrate: String? = null,
+    val isAudioOnly: Boolean = false,
+    val videoSource: String? = null,
+) {
+    companion object {
+        /** Keys from libjami `call_const.h`, namespace libjami::Call::Details. */
+        fun fromDetails(details: Map<String, String>): CallStats = CallStats(
+            audioCodec = details["AUDIO_CODEC"]?.ifBlank { null },
+            audioSampleRate = details["AUDIO_SAMPLE_RATE"]?.ifBlank { null },
+            videoCodec = details["VIDEO_CODEC"]?.ifBlank { null },
+            videoBitrate = details["VIDEO_BITRATE"]?.ifBlank { null },
+            videoMinBitrate = details["VIDEO_MIN_BITRATE"]?.ifBlank { null },
+            videoMaxBitrate = details["VIDEO_MAX_BITRATE"]?.ifBlank { null },
+            isAudioOnly = details["AUDIO_ONLY"]?.toBoolean() ?: false,
+            videoSource = details["VIDEO_SOURCE"]?.ifBlank { null },
+        )
+    }
+}
+
+/**
  * One message in the in-call chat, resolved for display.
  */
 data class InCallMessageUi(
@@ -135,6 +166,11 @@ data class CallState(
     val inCallMessages: List<InCallMessageUi> = emptyList(),
     /** In-call messages received since the chat sheet was last open. */
     val unreadInCallMessages: Int = 0,
+    /**
+     * Negotiated media details from the daemon (codecs, sample rate, bitrate), refreshed while
+     * the stats panel is open. Empty when the panel has never been opened.
+     */
+    val callStats: CallStats? = null,
     /** Display names of the remote participants currently recording, comma separated. */
     val remoteRecordingBy: String = "",
     val hangupReason: HangupReason = HangupReason.NONE,
@@ -512,6 +548,33 @@ class CallViewModel(
         callService.sendInCallMessage(accountId, callId, selfUri, body)
     }
 
+    /**
+     * Refresh the media stats while the panel is open.
+     *
+     * Codecs and bitrates change during a call (renegotiation, adaptive bitrate), so this polls
+     * rather than reading once. [stopCallStats] cancels it when the panel closes.
+     */
+    fun startCallStats() {
+        if (callStatsJob?.isActive == true) return
+        callStatsJob = scope.launch {
+            while (true) {
+                val accountId = currentAccountId
+                val callId = currentCallId ?: currentConference?.firstCall?.daemonId
+                if (accountId != null && callId != null) {
+                    val details = callService.getCallDetails(accountId, callId)
+                    _state.value = _state.value.copy(callStats = CallStats.fromDetails(details))
+                }
+                kotlinx.coroutines.delay(CALL_STATS_REFRESH_MS)
+            }
+        }
+    }
+
+    /** Stop refreshing media stats; the last values stay in state. */
+    fun stopCallStats() {
+        callStatsJob?.cancel()
+        callStatsJob = null
+    }
+
     /** The user opened the in-call chat, so nothing is unread any more. */
     fun markInCallMessagesRead() {
         if (_state.value.unreadInCallMessages != 0) {
@@ -796,6 +859,7 @@ class CallViewModel(
     }
 
     private var inCallMessagesJob: Job? = null
+    private var callStatsJob: Job? = null
 
     /**
      * Mirror the call's chat into the UI state, counting anything incoming that arrives while the
@@ -1026,12 +1090,16 @@ class CallViewModel(
         videoEventsJob?.cancel()
         videoLossJob?.cancel()
         inCallMessagesJob?.cancel()
+        callStatsJob?.cancel()
         hardwareService.cameraCleanup()
         scope.cancel()
     }
 
     companion object {
         private const val TAG = "CallViewModel"
+
+        /** How often the stats panel re-reads the daemon's call details. */
+        private const val CALL_STATS_REFRESH_MS = 2000L
 
         /** Bounds how long startScreenShare() waits for the platform permission prompt. */
         private const val SCREEN_SHARE_PERMISSION_TIMEOUT_MS = 30_000L

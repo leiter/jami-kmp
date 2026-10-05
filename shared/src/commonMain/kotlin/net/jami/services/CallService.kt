@@ -950,6 +950,13 @@ class CallService(
     }
 
     /**
+     * Live media details for a call, straight from the daemon: negotiated codecs, sample rate,
+     * bitrates and socket info. Keys come from libjami's `call_const.h` Details namespace.
+     */
+    fun getCallDetails(accountId: String, callId: String): Map<String, String> =
+        daemonBridge.getCallDetails(accountId, callId)
+
+    /**
      * Set typing/composing status.
      */
     fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {

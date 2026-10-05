@@ -116,6 +116,8 @@ import net.jami.ui.viewmodel.CallState
 import net.jami.ui.viewmodel.CallViewModel
 import net.jami.ui.viewmodel.ParticipantUi
 import net.jami.ui.viewmodel.InCallMessageUi
+import net.jami.ui.viewmodel.CallStats
+import androidx.compose.ui.text.font.FontFamily
 import net.jami.ui.components.ConferenceParticipantsSheet
 import org.jetbrains.compose.resources.stringResource
 
@@ -196,6 +198,8 @@ fun CallScreen(
         onSetLayout = { layout -> viewModel.setConferenceLayout(layout) },
         onSendCallMessage = { text -> viewModel.sendCallMessage(text) },
         onMarkCallMessagesRead = { viewModel.markInCallMessagesRead() },
+        onStartCallStats = { viewModel.startCallStats() },
+        onStopCallStats = { viewModel.stopCallStats() },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onTransfer = { to -> viewModel.transfer(to) },
         onAttendedTransfer = { callId -> viewModel.attendedTransfer(callId) },
@@ -289,6 +293,8 @@ fun IncomingCallScreen(
         onSetLayout = { layout -> viewModel.setConferenceLayout(layout) },
         onSendCallMessage = { text -> viewModel.sendCallMessage(text) },
         onMarkCallMessagesRead = { viewModel.markInCallMessagesRead() },
+        onStartCallStats = { viewModel.startCallStats() },
+        onStopCallStats = { viewModel.stopCallStats() },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onTransfer = { to -> viewModel.transfer(to) },
         onAttendedTransfer = { callId -> viewModel.attendedTransfer(callId) },
@@ -329,6 +335,8 @@ private fun CallScreenContent(
     onSetLayout: (Int) -> Unit = {},
     onSendCallMessage: (String) -> Unit = {},
     onMarkCallMessagesRead: () -> Unit = {},
+    onStartCallStats: () -> Unit = {},
+    onStopCallStats: () -> Unit = {},
     onSendDtmf: (Char) -> Unit,
     onTransfer: (String) -> Unit,
     onAttendedTransfer: (String) -> Unit,
@@ -366,6 +374,13 @@ private fun CallScreenContent(
     var showTransferSheet by remember { mutableStateOf(false) }
     var showParticipantsSheet by remember { mutableStateOf(false) }
     var showCallChatSheet by remember { mutableStateOf(false) }
+    var showCallStats by remember { mutableStateOf(false) }
+
+    // Only poll the daemon for media details while the panel is actually visible.
+    DisposableEffect(showCallStats) {
+        if (showCallStats) onStartCallStats() else onStopCallStats()
+        onDispose { onStopCallStats() }
+    }
     var showControls by remember { mutableStateOf(true) }
 
     // Auto-hide controls after 3 seconds during ongoing video call
@@ -478,6 +493,8 @@ private fun CallScreenContent(
                             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top)),
                         onRequestMicPermission = onRequestMicPermission,
                         onRequestCameraPermission = onRequestCameraPermission,
+                        showStats = showCallStats,
+                        onToggleStats = { showCallStats = !showCallStats },
                     )
                 }
 
@@ -726,6 +743,8 @@ private fun CallInfoOverlay(
     modifier: Modifier = Modifier,
     onRequestMicPermission: () -> Unit = {},
     onRequestCameraPermission: () -> Unit = {},
+    showStats: Boolean = false,
+    onToggleStats: () -> Unit = {},
 ) {
     Column(
         modifier = modifier,
@@ -788,10 +807,78 @@ private fun CallInfoOverlay(
         }
 
         if (state.callMode is CallMode.OnGoing) {
+            // Media details, off by default: useful when diagnosing a bad-sounding call.
+            TextButton(onClick = onToggleStats) {
+                Text(
+                    text = stringResource(
+                        if (showStats) Res.string.call_stats_hide else Res.string.call_stats_show
+                    ),
+                    color = Color.White,
+                )
+            }
+            if (showStats) {
+                CallStatsPanel(
+                    stats = state.callStats,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Black.copy(alpha = 0.6f))
+                        .padding(JamiTheme.spacing.m),
+                )
+            }
+
             if (!state.hasMicPermission)
                 MicPermissionBanner(onClick = onRequestMicPermission)
             if (!state.hasCamPermission && state.hasVideo)
                 CamPermissionBanner(onClick = onRequestCameraPermission)
+        }
+    }
+}
+
+/**
+ * Negotiated media details for the ongoing call. Rows are omitted when the daemon has not
+ * reported that value, which is normal for an audio-only or still-connecting call.
+ */
+@Composable
+private fun CallStatsPanel(
+    stats: CallStats?,
+    modifier: Modifier = Modifier,
+) {
+    val mono = JamiTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
+    Column(modifier = modifier) {
+        if (stats == null) {
+            Text(
+                text = stringResource(Res.string.call_stats_unavailable),
+                style = mono,
+                color = Color.White.copy(alpha = 0.8f),
+            )
+            return@Column
+        }
+        val rows = buildList {
+            stats.audioCodec?.let { add("audio" to it) }
+            stats.audioSampleRate?.let { add("rate" to "$it Hz") }
+            if (!stats.isAudioOnly) {
+                stats.videoCodec?.let { add("video" to it) }
+                stats.videoBitrate?.let { bitrate ->
+                    val range = listOfNotNull(stats.videoMinBitrate, stats.videoMaxBitrate)
+                    add("bitrate" to if (range.size == 2) "$bitrate (${range[0]}–${range[1]})" else bitrate)
+                }
+                stats.videoSource?.let { add("source" to it) }
+            }
+        }
+        if (rows.isEmpty()) {
+            Text(
+                text = stringResource(Res.string.call_stats_unavailable),
+                style = mono,
+                color = Color.White.copy(alpha = 0.8f),
+            )
+        } else {
+            rows.forEach { (label, value) ->
+                Text(
+                    text = "$label: $value",
+                    style = mono,
+                    color = Color.White.copy(alpha = 0.9f),
+                )
+            }
         }
     }
 }

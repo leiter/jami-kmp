@@ -26,6 +26,8 @@ import net.jami.services.StubDeviceRuntimeService
 import net.jami.services.expect.HardwareService
 import net.jami.ui.viewmodel.CallMode
 import net.jami.ui.viewmodel.CallViewModel
+import net.jami.ui.viewmodel.CallStats
+import kotlin.test.assertNull
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -217,5 +219,46 @@ class CallViewModelTest {
         val stub = StubDaemonBridge()
         val (vm) = makeVm(stub, disposableScope())
         vm.onCleared()
+    }
+
+    // ==================== Call stats (calling plan F14) ====================
+
+    @Test
+    fun callStatsMapTheDaemonsDetailKeys() {
+        val stats = CallStats.fromDetails(
+            mapOf(
+                "AUDIO_CODEC" to "opus",
+                "AUDIO_SAMPLE_RATE" to "48000",
+                "VIDEO_CODEC" to "H264",
+                "VIDEO_BITRATE" to "1000",
+                "VIDEO_MIN_BITRATE" to "200",
+                "VIDEO_MAX_BITRATE" to "2000",
+                "AUDIO_ONLY" to "false",
+                "VIDEO_SOURCE" to "camera://0",
+            )
+        )
+
+        assertEquals("opus", stats.audioCodec)
+        assertEquals("48000", stats.audioSampleRate)
+        assertEquals("H264", stats.videoCodec)
+        assertEquals("1000", stats.videoBitrate)
+        assertEquals("camera://0", stats.videoSource)
+        assertFalse(stats.isAudioOnly)
+    }
+
+    /**
+     * The daemon reports only what it has negotiated, and sends blanks for the rest, so absent
+     * and blank values must both read as "not reported" rather than showing an empty row.
+     */
+    @Test
+    fun callStatsTreatBlankDetailsAsAbsent() {
+        val stats = CallStats.fromDetails(
+            mapOf("AUDIO_CODEC" to "opus", "VIDEO_CODEC" to "", "AUDIO_ONLY" to "true")
+        )
+
+        assertEquals("opus", stats.audioCodec)
+        assertNull(stats.videoCodec)
+        assertNull(stats.videoBitrate)
+        assertTrue(stats.isAudioOnly)
     }
 }
