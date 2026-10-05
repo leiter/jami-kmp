@@ -38,7 +38,7 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ---
 
-### F4: NetworkServiceCallback (peer-services) unimplemented — gap
+### F4: NetworkServiceCallback (peer-services) unimplemented — gap — **DONE (2026-10-04) by the daemon-audit Phase 2 work**
 **Evidence:**
 - `jni_interface.i` exposes `NetworkServiceCallback` with three methods: `peerServicesReceived`, `serviceTunnelOpened`, `serviceTunnelClosed`
 - `DaemonBridge.createNetworkServiceCallback()` at line 862–864 is a no-op: `// No-op: jami-kmp does not use the peer-service-discovery/tunnel API yet.`
@@ -79,7 +79,7 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ---
 
-### F8: SIP call messaging not wired — gap
+### F8: SIP call messaging not wired — gap — **DONE (2026-10-05) by the calling plan's F8 work**
 **Evidence:**
 - `callmanager.i` line 31 declares `incomingMessage(accountId, callId, from, messages)` for in-call SIP MESSAGE requests
 - `DaemonBridge.createCallCallback()` does not override it (line 821–854)
@@ -258,6 +258,22 @@ Corrections to the audit:
 - **F2 certificate signals (F6) and `audioMeter` (F9) remain deliberately unwired**, as the plan
   proposed. The diagnostics signals above are Android-only so far: the iOS/macOS delegate has no
   entries for them, and they only log.
+
+**Phase 3 is now mostly closed by work done under other plans** (noted 2026-10-05):
+
+- **F4 (peer services / `NetworkServiceCallback`) — done.** The daemon-audit Phase 2 work
+  (`1a3fd28`) bridged all eight NetworkService functions, replaced the deliberately empty
+  `createNetworkServiceCallback()` with real forwarding, and added `PeerServicesService`. This
+  plan's P3a can be struck; what remains is a peer-services *UI*, which no plan has scoped.
+- **F8 (SIP in-call messaging) — done.** The calling plan's F8 work (`cb96545`) wired
+  `Callback.incomingMessage` → `DaemonCallbacks.onInCallMessage` → `CallService`, bridged the
+  call-level `sendTextMessage`, and added the in-call chat sheet. That is exactly what P3c
+  asked for, and it fixed a real bug on the way: the existing send path pointed at the
+  account-level API and delivered nowhere.
+- **F10 (daemon-lifecycle resilience) — still open**, and still the only Phase 3 item with work
+  left in it. Verified 2026-10-05: there is no liveness watchdog anywhere in the app — no
+  `isRunning` polling, no restart path — so a daemon killed by the OOM killer or SELinux stops
+  `JamiSyncService` without the app noticing.
 
 Follow-up:
 - The `JamiBridgeWrapper.h/.mm` additions (call signals, presence, conversation error) need a Mac

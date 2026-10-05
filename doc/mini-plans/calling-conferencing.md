@@ -180,7 +180,7 @@ This is never called. Conferences are created implicitly by adding participants 
 
 ---
 
-### F12: Recorded file playback not integrated into UI — **gap** — **OPEN; prerequisites identified (2026-10-05)**
+### F12: Recorded file playback not integrated into UI — **gap** — **DONE (2026-10-05)**
 **Evidence:** Daemon functions exist for playing recorded calls:
 ```cpp
 LIBJAMI_PUBLIC bool startRecordedFilePlayback(const std::string& filepath);
@@ -352,14 +352,19 @@ Commits `cb96545` (F8), `5e8e631` (F14), `c6522f1` (F6).
   audit's F1: on Android/iOS, input routing belongs to `AudioManager`/`AVAudioSession`, which
   `HardwareService` already drives; libjami's `switchInput` audio path targets desktop audio
   backends. Revisit with the desktop bridge.
-- **F12 recorded playback — still open, and it is a feature rather than a wiring task.**
-  Prerequisites found while scoping it: there is no recording-path key in `ConfigKey` (so no
-  accessor for the daemon's record directory), `FileUtils` has no directory-listing
-  expect/actual (only copy/move/delete/exists/mkdirs/size/read/write), and `commonMain` has no
-  shared audio player — voice-message playback is platform-side. So this needs a new KMP file
-  boundary plus a recordings screen plus platform playback; the daemon's
-  `startRecordedFilePlayback` is *not* the right tool (it plays into the audio layer, and the
-  reference client uses Android `MediaPlayer`). Worth its own session.
+- **F12 recorded playback — done** (`286d56e`), and cheaper than the first scoping suggested:
+  `getRecordPath`/`setRecordPath` turned out to be in the SWIG bindings already, and
+  `VideoPlayerView` (media3 on Android) plays audio-only files, so no new player was needed.
+  The one genuinely missing primitive was a directory listing: `FileUtils.listFiles` with a
+  `platformListFiles` expect/actual (java.io.File on Android/desktop, NSFileManager with a
+  per-entry directory check on Apple, stub on JS). `CallRecordingsService` lists the record
+  directory newest-first filtered to media extensions, behind a `RecordingFileSystem` seam so it
+  is testable without disk; `RecordingsScreen` (App settings → Advanced → Call recordings)
+  plays inline and deletes behind a confirmation.
+  libjami's `startRecordedFilePlayback` is still *not* used: it feeds a file into the daemon's
+  audio layer for sending into a call, which is not playback for the user.
+  Platform caveat: playback is real on Android and shows the existing placeholder on
+  iOS/desktop, where `VideoPlayerView` is still a stub.
 - **F13 tones — won't do.** `startTone` has no user-facing need in this client.
 
 ---
