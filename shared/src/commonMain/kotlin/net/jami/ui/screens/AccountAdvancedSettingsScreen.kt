@@ -49,6 +49,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.ui.unit.dp
+import net.jami.ui.viewmodel.PortRangeError
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import net.jami.di.getViewModel
@@ -247,6 +251,11 @@ fun AccountAdvancedSettingsScreen(
                     value = state.turnPassword,
                     onValueChange = { viewModel.setTurnPassword(it) },
                     label = { Text(stringResource(Res.string.account_turn_password_label)) },
+                    // The stored password is never loaded into state, so an empty field with a
+                    // password already set means "leave it as it is" rather than "no password".
+                    placeholder = if (state.turnPasswordSet) {
+                        { Text(stringResource(Res.string.account_turn_password_unchanged)) }
+                    } else null,
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -286,6 +295,10 @@ fun AccountAdvancedSettingsScreen(
                 onValueChange = { viewModel.setAudioPortMin(it) },
                 label = { Text(stringResource(Res.string.account_audio_rtp_min_label)) },
                 singleLine = true,
+                isError = state.audioPortError != null,
+                supportingText = state.audioPortError?.let { error ->
+                    { Text(portRangeErrorText(error), color = JamiTheme.colors.error) }
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -297,6 +310,10 @@ fun AccountAdvancedSettingsScreen(
                 onValueChange = { viewModel.setAudioPortMax(it) },
                 label = { Text(stringResource(Res.string.account_audio_rtp_max_label)) },
                 singleLine = true,
+                isError = state.audioPortError != null,
+                supportingText = state.audioPortError?.let { error ->
+                    { Text(portRangeErrorText(error), color = JamiTheme.colors.error) }
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -313,6 +330,10 @@ fun AccountAdvancedSettingsScreen(
                 onValueChange = { viewModel.setVideoPortMin(it) },
                 label = { Text(stringResource(Res.string.account_video_rtp_min_label)) },
                 singleLine = true,
+                isError = state.videoPortError != null,
+                supportingText = state.videoPortError?.let { error ->
+                    { Text(portRangeErrorText(error), color = JamiTheme.colors.error) }
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -324,6 +345,10 @@ fun AccountAdvancedSettingsScreen(
                 onValueChange = { viewModel.setVideoPortMax(it) },
                 label = { Text(stringResource(Res.string.account_video_rtp_max_label)) },
                 singleLine = true,
+                isError = state.videoPortError != null,
+                supportingText = state.videoPortError?.let { error ->
+                    { Text(portRangeErrorText(error), color = JamiTheme.colors.error) }
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -432,17 +457,27 @@ fun AccountAdvancedSettingsScreen(
 
                 JamiToggle(
                     label = stringResource(Res.string.account_tls_verify_server_label),
+                    description = stringResource(Res.string.account_tls_verify_server_summary),
                     checked = state.tlsVerifyServer,
                     onCheckedChange = { viewModel.setTlsVerifyServer(it) },
                 )
+                // Turning this off is the one setting on this screen that silently removes a
+                // security guarantee, so it says so rather than reading as just another toggle.
+                if (!state.tlsVerifyServer) {
+                    SecurityWarning(text = stringResource(Res.string.account_tls_verify_server_warning))
+                }
 
                 HorizontalDivider(color = JamiTheme.colors.outline)
 
                 JamiToggle(
                     label = stringResource(Res.string.account_tls_verify_client_label),
+                    description = stringResource(Res.string.account_tls_verify_client_summary),
                     checked = state.tlsVerifyClient,
                     onCheckedChange = { viewModel.setTlsVerifyClient(it) },
                 )
+                if (!state.tlsVerifyClient) {
+                    SecurityWarning(text = stringResource(Res.string.account_tls_verify_client_warning))
+                }
 
                 HorizontalDivider(color = JamiTheme.colors.outline)
 
@@ -467,6 +502,45 @@ fun AccountAdvancedSettingsScreen(
             Spacer(Modifier.height(JamiTheme.spacing.xxl))
         }
     }
+}
+
+/**
+ * An inline warning for a setting whose current value weakens security. Phrased as the
+ * consequence rather than "are you sure", since the user has already chosen.
+ */
+@Composable
+private fun SecurityWarning(text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Warning,
+            contentDescription = null,
+            tint = JamiTheme.colors.error,
+            modifier = Modifier.size(16.dp),
+        )
+        Spacer(Modifier.size(JamiTheme.spacing.s))
+        Text(
+            text = text,
+            style = JamiTheme.typography.labelSmall,
+            color = JamiTheme.colors.error,
+        )
+    }
+}
+
+/** Localized reason for a rejected RTP port range. */
+@Composable
+private fun portRangeErrorText(error: PortRangeError): String = when (error) {
+    PortRangeError.NOT_A_NUMBER -> stringResource(Res.string.account_port_error_not_a_number)
+    PortRangeError.OUT_OF_RANGE -> stringResource(
+        Res.string.account_port_error_out_of_range,
+        AccountSubSettingsViewModel.MIN_RTP_PORT,
+        AccountSubSettingsViewModel.MAX_RTP_PORT,
+    )
+    PortRangeError.MIN_ABOVE_MAX -> stringResource(Res.string.account_port_error_min_above_max)
 }
 
 @Composable

@@ -429,4 +429,14 @@ Biometric or device authentication adds a convenient way to locally unlock acces
     <string name="screen_title_blocked_contacts">Blocked Contacts</string>
     <string name="pref_category_account">Account</string>
 
+    <!-- Security & networking warnings and validation (security-networking plan F6/F7) -->
+    <string name="account_tls_verify_server_summary">Check that the peer's certificate is valid and trusted.</string>
+    <string name="account_tls_verify_server_warning">With this off, connections can be intercepted without warning. Only for testing.</string>
+    <string name="account_tls_verify_client_summary">Check certificates presented by peers connecting to this device.</string>
+    <string name="account_tls_verify_client_warning">With this off, any peer certificate is accepted.</string>
+    <string name="account_turn_password_unchanged">Unchanged</string>
+    <string name="account_port_error_not_a_number">Enter a port number.</string>
+    <string name="account_port_error_out_of_range">Port must be between %1$d and %2$d.</string>
+    <string name="account_port_error_min_above_max">The minimum port must not be above the maximum.</string>
+
 </resources>
