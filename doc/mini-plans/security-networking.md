@@ -100,7 +100,7 @@ Malformed port values could be written to daemon config (e.g., "99999" or "abc")
 
 ---
 
-### F7: TLS Verification Toggles Lack Context Warnings — improvement
+### F7: TLS Verification Toggles Lack Context Warnings — improvement — **DONE (2026-10-12)**
 
 **Evidence:**
 - `AccountAdvancedSettingsScreen.kt:433–453` three toggles: `tlsVerifyServer`, `tlsVerifyClient`, `tlsRequireClientCert`
