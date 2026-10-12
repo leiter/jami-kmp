@@ -13,7 +13,7 @@ jami-kmp implements most core messaging and conversation features (message send/
 **Impact:** Conversation preferences set via the facade (e.g., mute settings, notification prefs) are never persisted to the daemon. They only update local storage. If the app is killed and restarted, user preferences are lost. Correct path is `AccountService.setConversationPreferences()` which does call the daemon.
 **Daemon support:** `setConversationPreferences(accountId, conversationId, prefs)` — `conversation_interface.h:72-74`; signal `ConversationPreferencesUpdated` exists to notify of changes — `conversation_interface.h:234-240`
 
-### F2: No daemon-side conversation history search — capability gap
+### F2: No daemon-side conversation history search — capability gap — **ALREADY IMPLEMENTED; finding was stale (verified 2026-10-12)**
 **Evidence:** `DaemonBridge.kt:169` defines `searchConversation()` and it is called in `AccountService.kt` (line ~1250), but no UI screen or viewmodel triggers it. The search result is handled via `onMessagesFound()` callback but never displayed.
 **Impact:** Users cannot search within a conversation history on the daemon side. Client-side filtering in memory is currently the only option, which fails for large histories.
 **Daemon support:** `searchConversation(accountId, conversationId, author, lastId, regexSearch, type, after, before, maxResult, flag)` — `conversation_interface.h:108-117`; signal `MessagesFound` — `conversation_interface.h:130-137`
@@ -28,7 +28,7 @@ jami-kmp implements most core messaging and conversation features (message send/
 **Impact:** User can only reply with text to a file message; cannot directly re-share or attach a file in the same interaction. User must cancel reply, send the file separately, then try to remember to reply to the original message.
 **Daemon support:** `sendFile()` accepts `replyTo` parameter — `datatransfer_interface.h:106-110`; files can be nested in reply threads via the daemon
 
-### F5: No member role promotion/demotion in UI or API — capability gap
+### F5: No member role promotion/demotion in UI or API — capability gap — **BLOCKED: no daemon function exists (verified 2026-10-12)**
 **Evidence:** `Conversation.kt` tracks `roles: MutableMap<String, MemberRole>` (with ADMIN, MEMBER, INVITED, LEFT, BLOCKED states), and `ContactDetailsViewModel.kt:22` exposes `memberRoles` to the UI, but there is no function in `DaemonBridge`, `AccountService`, or `ConversationFacade` to change a member's role.
 **Impact:** Group admins cannot promote/demote members via the app. The feature is partially exposed (roles are fetched and displayed) but non-functional. No screens (e.g., `ConversationDetailsScreen`) offer a "promote to admin" / "demote" action.
 **Daemon support:** No daemon function found in `conversation_interface.h` for role changes; role modifications may be done through `updateConversationInfo()` — `conversation_interface.h:67-69`
@@ -53,7 +53,7 @@ jami-kmp implements most core messaging and conversation features (message send/
 **Impact:** Unknown/unmapped message statuses (e.g., from a newer daemon) may silently fall through to a default state, giving the user incorrect delivery feedback.
 **Daemon support:** Daemon emits `AccountMessageStatusChanged` signal — `configurationmanager_interface.h:407-415`
 
-### F10: Lazy-loaded message history does not preserve scroll position — UX issue
+### F10: Lazy-loaded message history does not preserve scroll position — UX issue — **DOES NOT APPLY to this implementation (verified 2026-10-12)**
 **Evidence:** `ChatViewModel.kt:849-890` appends old messages but does not adjust scroll offset. The list is rebuilt with new messages prepended, which causes the UI to jump. Android `LazyColumn` and iOS equivalents need explicit scroll anchor management.
 **Impact:** When user scrolls up to load history, the chat jumps and loses context. User sees the message list shift instead of scrolling into history.
 **Daemon support:** Not a daemon issue; architectural pattern issue in message ordering
@@ -72,6 +72,32 @@ jami-kmp implements most core messaging and conversation features (message send/
 **Evidence:** `ConversationFacade.kt` does not handle profile vCard updates per conversation. `onProfileReceived()` callback in `DaemonBridge.kt:445` receives the vCard path but there is no code to parse it or link it to a specific conversation's contact profile.
 **Impact:** Contact profiles updated via vCard are not reflected in conversation UI. User info (name, avatar) may be stale.
 **Daemon support:** `updateProfile()` and `ProfileReceived` signal — `configurationmanager_interface.h:104-109, 428-434`
+
+## Three further findings resolved on inspection (verified 2026-10-12)
+
+Checked against source while taking stock of the plans; none needed code changes:
+
+- **F2 (no daemon-side search) — already implemented.** `ChatViewModel.searchConversation()`
+  (`:1207`) calls `accountService.searchConversation` → daemon, results arrive via
+  `onMessagesFound` → `handleSearchResults` (`:1257`), and `ChatState` carries
+  `searchQuery`/`searchResults`/`isSearchActive` with search UI in `ChatScreen`. The finding's
+  "no UI screen or viewmodel triggers it" was already untrue.
+- **F10 (scroll jump on history load) — does not apply.** The message list uses
+  `reverseLayout = true` (`ChatScreen.kt:571`), so older messages appended to the data list
+  render *above* the viewport and nothing shifts. The finding assumed a prepend into a normal
+  layout, which this screen does not do.
+- **F5 (member role promotion/demotion) — blocked, not deferred.** `conversation_interface.h`
+  exposes only `addConversationMember`, `removeConversationMember` and `getConversationMembers`;
+  there is no role-change function in the header *or* the SWIG bindings. The plan's own
+  "blocking risks" note anticipated this. Roles can only change through
+  `updateConversationInfo()` if the daemon ever honours that, which is unverified — so this
+  cannot be implemented as written.
+
+**Genuinely open:** F4 (attach a file while replying), F7 (`clearCache`/`countInteractions`),
+F8 (`reloadConversationsAndRequests`), F9 (message-status mapping test coverage),
+F12 (ban/unban member UI), F13 (per-conversation vCard profile).
+
+---
 
 ## Implementation Status (2026-10-04, branch `docs/mini-plans`)
 

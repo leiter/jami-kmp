@@ -8,7 +8,7 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 
 ## Findings
 
-### F1: No live presence status display — gap
+### F1: No live presence status display — gap — **ALREADY IMPLEMENTED; finding was stale (verified 2026-10-12)**
 **Evidence:** 
 - `ContactService.kt`: implements `onNewBuddyNotification(accountId, buddyUri, status, lineStatus)` callback (line 439 in DaemonBridge.kt); message is never read or acted upon
 - `ContactService.kt:216-222`: `subscribeBuddy()` wires subscriptions but never stores or emits status
@@ -68,7 +68,7 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 
 ---
 
-### F5: No connectivity diagnostics (`getConnectionList`, `getConversationConnectivity`, `getConversationTrackedMembers`) — not used
+### F5: No connectivity diagnostics (`getConnectionList`, `getConversationConnectivity`, `getConversationTrackedMembers`) — not used — **PARTLY DONE (2026-10-04)**
 **Evidence:**
 - `getConnectionList(accountId, conversationId)` (configurationmanager_interface.h:54) never called
 - `getConversationConnectivity(accountId, conversationId)` (line 56) never called
@@ -84,7 +84,7 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 
 ---
 
-### F6: Audio/video device list functions never called — not used
+### F6: Audio/video device list functions never called — not used — **NOT APPLICABLE TO MOBILE (2026-10-04)**
 **Evidence:**
 - `getAudioOutputDeviceList()` (configurationmanager_interface.h:131) never called
 - `getAudioInputDeviceList()` (line 135) never called
@@ -150,7 +150,7 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 
 ---
 
-### F10: No `monitor(bool continuous)` call for daemon state monitoring — not used
+### F10: No `monitor(bool continuous)` call for daemon state monitoring — not used — **DONE (2026-10-04)**
 **Evidence:**
 - `monitor(bool continuous)` (configurationmanager_interface.h:53) never called
 - `DaemonBridge` has no `monitor()` method
@@ -165,7 +165,7 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 
 ---
 
-### F11: Missing `SubscriptionStateChanged` callback handling — gap
+### F11: Missing `SubscriptionStateChanged` callback handling — gap — **DONE (2026-10-04)**
 **Evidence:**
 - Daemon signal `SubscriptionStateChanged(accountId, buddyUri, state)` (presencemanager_interface.h:73-76) has no callback in `DaemonCallbacks`
 - No `onSubscriptionStateChanged` method in `DaemonCallbacks` interface
@@ -179,7 +179,7 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 
 ---
 
-### F12: Unused presence signals — not handled
+### F12: Unused presence signals — not handled — **DONE (2026-10-04)**
 **Evidence:**
 - `NewServerSubscriptionRequest(remote)` (presencemanager_interface.h:45-48) no callback
 - `ServerError(accountId, error, msg)` (line 50-55) no callback
@@ -195,7 +195,7 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 
 ---
 
-### F13: Trust request accept uses both `conversationUri` (correct) and bare `uri` (potential bug) — minor issue
+### F13: Trust request accept uses both `conversationUri` (correct) and bare `uri` (potential bug) — minor issue — **INVALID; already correct (verified 2026-10-12)**
 **Evidence:**
 - `ContactService.kt:792`: `daemonBridge.acceptTrustRequest(accountId, from.uri)` passes the peer URI
 - `doc/TODO.md:209`: harness testing found that accepting via peer URI (vs. `conversationUri`) takes the legacy path and silently fails to join the swarm — "confirming the contact but never actually joining the swarm conversation"
@@ -238,6 +238,42 @@ Scanning `jami-client-android` for features not yet ported to KMP:
 8. **Trust request history** (reference: not found; single-request UI only) — **not in KMP** (correct parity)
 
 **Conclusion**: KMP's contact/presence/account management is **functionally equivalent** to the reference for mainstream features (add, remove, block, device linking, profile, account creation/import). Gaps are in **niche/diagnostic features** (certificate pinning, subscription state, connection diagnostics) and **one UX feature** (live presence status display, F1).
+
+---
+
+## Status (verified 2026-10-12)
+
+This plan was never worked on directly, but five of its findings were resolved by work under
+other plans and two were wrong to begin with. Verified against source on 2026-10-12 before
+marking:
+
+- **F1 (no live presence display) — stale.** `Contact` has `PresenceStatus`/`isOnline`,
+  `ContactService.onPresenceUpdate` sets it and emits `ContactEvent.PresenceUpdated`,
+  `ChatViewModel` tracks `isContactOnline`, and `HomeScreen`/`SharePickerScreen` render presence
+  dots on conversation rows (`HomeScreen.kt:654`). The claim that "`Contact.kt` has no
+  `presenceStatus` field" was already untrue when the audit was written.
+- **F11 (`SubscriptionStateChanged`) and F12 (unused presence signals) — done** by the
+  notifications plan's Phase 1 work (`8df3fdf`). All four remaining presence callbacks reach
+  `ContactService`; an inactive subscription now marks the contact offline rather than leaving a
+  stale dot.
+- **F13 (trust-request URI) — invalid.** `AccountService.acceptTrustRequest` branches on
+  `from.isSwarm` and routes swarm URIs to `acceptConversationRequest`
+  (`AccountService.kt:882-884`), and both UI call sites pass `conversationUri`. The
+  `ContactService.kt:792` line the finding cites no longer exists.
+- **F10 (`monitor()`) — done** by the daemon-audit Phase 1 work (`da5fdd9`): bridged, called from
+  the debug screen's "dump daemon state" action.
+- **F5 (connectivity diagnostics) — partly done.** `getConnectionList` is bridged and shown in
+  the debug screen. `getConversationConnectivity` and `getConversationTrackedMembers` are **not
+  in the SWIG bindings**, so they cannot be reached from Kotlin without regenerating the
+  interface and rebuilding `libjami-core-jni.so`.
+- **F6 (audio device lists) — not applicable to mobile**, for the reason given under the daemon
+  audit's F1: routing belongs to `AudioManager`/`AVAudioSession`, which `HardwareService` already
+  drives; the daemon's device-index API targets desktop audio backends.
+
+**Genuinely open:** F2 (presence unsubscribe on background — needs a product decision),
+F3/F4 (presence publish and subscription lists — unused daemon APIs), F7 (credential list),
+F8 (certificate pinning UI, overlaps the security plan's F11), F9 (`getMessageStatus`),
+F14 (`searchUser()` UI).
 
 ---
 
