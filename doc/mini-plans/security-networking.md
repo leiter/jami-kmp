@@ -68,7 +68,7 @@ If a DHT proxy server runs on a non-standard port, users must hardcode it into t
 
 ---
 
-### F5: TURN Credentials Stored Plaintext in UI State — improvement
+### F5: TURN Credentials Stored Plaintext in UI State — improvement — **DONE (2026-10-12), with a caveat**
 
 **Evidence:**
 - `AccountSubSettingsViewModel.kt:80–81`: `val turnPassword: String = ""`
@@ -84,7 +84,7 @@ Low in practice (password is not broadcast to network, only sent via JNI to daem
 
 ---
 
-### F6: Port Range Fields Lack Input Validation — improvement
+### F6: Port Range Fields Lack Input Validation — improvement — **DONE (2026-10-12)**
 
 **Evidence:**
 - `AccountAdvancedSettingsScreen.kt:284–331` audio/video port fields use `KeyboardOptions(keyboardType = KeyboardType.Number)` only
@@ -336,6 +336,42 @@ File path validation missing; users can enter invalid paths and daemon will sile
 
 **Daemon support:** 
 `TLS.certificateListFile`, `TLS.certificateFile`, `TLS.privateKeyFile`, `TLS.password`, `TLS.method`, `TLS.ciphers`, `TLS.serverName`, `TLS.verifyServer`, `TLS.verifyClient`, `TLS.requireClientCertificate`, `TLS.negotiationTimeoutSec`, `TLS.disableSecureDlgCheck`; `account_const.h:228–242`.
+
+---
+
+## Status (2026-10-12)
+
+**Phase 1 plus F6 done** (`b53d3ec`) — the three items this plan calls medium risk. No new
+settings yet; this was the hygiene pass over the settings that already exist.
+
+- **F6 (port validation) — done, and the finding understated it.** The four RTP port fields did
+  not merely lack validation: each setter called `updateDetail` with the raw string, so "99999",
+  "80" and "abc" were all sent to the daemon, which rejects or clamps them silently. Ports are
+  now checked (1024–65535, min ≤ max, non-numeric rejected) and only valid values are written;
+  the typed text stays in state so the field does not fight the keyboard, and the reason shows as
+  supporting text. An empty field is not an error — the user may be mid-edit, and the daemon keeps
+  its previous value.
+- **F7 (TLS verification warnings) — done.** The toggles had no supporting text at all, not just
+  no warning. They now describe what they do, and turning server or client verification off
+  shows an inline warning in error colour.
+- **F5 (TURN password) — done as hygiene; the proposed fix is not achievable.** The password was
+  read into Compose state on load purely to render it as dots, and the field is now write-only
+  (state holds only what the user types, a placeholder says "Unchanged" when one exists, and the
+  typed value is dropped with the screen).
+  **Caveat, stated plainly:** the plan proposes a `SecureString`/KeyStore wrapper and a test that
+  verifies "no plaintext password in memory dumps". Neither is reachable. The daemon keeps this
+  password in its own configuration and it has to cross the JNI boundary in plaintext to get
+  there, so the app cannot be the thing that protects it; what was removed is an unnecessary
+  second copy. Anything stronger needs the daemon to hold a reference rather than the secret.
+
+Incidental finding while testing: `AccountService` seeds Jami's public TURN credentials
+(`turn.jami.net` / `ring` / `ring`) onto any account that has none, so a freshly loaded account
+*does* have a TURN password set. Worth knowing before reasoning about these fields.
+
+**Still open:** the 18 settings-breadth findings (F1–F4, F8–F21). Phase 2 is the highest-value
+block of those (SIP account editing, published address/port, interface binding, DHT proxy port),
+but note that most of this plan is SIP-specific, which sits against the swarm-first, mobile-first
+priority in CLAUDE.md — worth deciding scope before working through it.
 
 ---
 
