@@ -370,3 +370,65 @@ these are what the run surfaced.
   here claiming otherwise was wrong.)
 - [ ] **Shared `appleMain` source set** — the iOS and macOS Darwin implementations are now
   substantively identical, and macOS does not compile (~95 errors). One copy would fix both.
+
+## Licensing & Copyright Attribution (2026-10-01)
+
+`LICENSE` (GPLv3, byte-identical to upstream `jami-client-android/COPYING`) was added with the
+README on 2026-10-01. The license choice is correct and settled — GPLv3 on a derivative of GPLv3
+work. What is **not** settled is per-file attribution, and the gap runs opposite to the obvious
+worry: nothing falsely claims affiliation with Savoir-faire Linux, but our own authorship is
+nowhere asserted and the modifications are nowhere declared.
+
+Current state, measured 2026-10-01 (excluding `build/`):
+
+| Files carrying the SFL header | Count |
+|---|---|
+| `.kt` | 341 |
+| `.xml` | 477 |
+| `.h` | 16 |
+| `.swift` | 3 |
+
+Every one of them carries **only** `Copyright (C) 2004-2025 Savoir-faire Linux Inc.` — there is no
+second copyright line anywhere in the repo. The header sits even on files with no upstream
+counterpart and no derived content, e.g. `JamiAvatar.kt`, `JamiBadge.kt`, `OsmMapView.ios.kt`, and
+the whole e2e harness (`HarnessAgent.kt`, `HarnessAgentService.kt`, `CommandHandler.kt`).
+
+- [ ] **BLOCKED — decide the copyright holder name/entity.** Nothing below can be written until
+  this is chosen: a copyright line should say what the holder wants it to say, and it must not be
+  guessed from a git config or GitHub handle. Everything else here is mechanical once it is fixed.
+
+- [ ] **Do not strip the SFL notices.** Recording this explicitly so it is not "tidied" later:
+  GPLv3 §4 requires keeping intact all notices, and §5(b) modifies that requirement without
+  lifting it. Removing SFL's line from a derived file is the one change here that would actually
+  be a violation. Stacked multi-holder headers are the normal state of a GPL file.
+
+- [ ] **Declare the modification — GPLv3 §5(a).** This is the genuine compliance gap: §5(a)
+  requires prominent notices "stating that you modified it, and giving a relevant date," and
+  nothing in the repo does. A reader cannot currently tell these files are third-party
+  modifications at all. Add a "part of Jami KMP, a modified cross-platform port of
+  jami-client-android; modified 2026" line to the header block.
+
+- [ ] **Classify the ~341 `.kt` files into derived vs. original, then add our line.** The only
+  judgement-heavy step; git history plus the presence of an upstream counterpart in
+  `jami-client-android/jami-android/{libjamiclient,app}` resolves most of it.
+  - Derived (ported from `libjamiclient` or the Android app) → keep the SFL line, add ours below it.
+  - Wholly original (KMP components, navigation, e2e harness) → our line only, plus the GPL block.
+  - Apply the same split to the 477 `.xml` resource files, where most string files are derived
+    (keys are reused verbatim from Android by policy) but KMP-only additions are not.
+
+- [ ] **Fix the user-visible claim in `AboutViewModel.kt:39`.** `const val COPYRIGHT =
+  "Copyright (C) 2004-2025 Savoir-faire Linux Inc."` is rendered in the About screen
+  (`AboutViewModel.kt:34`), so the running app currently tells users this *is* an SFL product.
+  This is the highest-priority item after the name decision — it is the only one users see.
+  Should become a two-line attribution (upstream + our port). Note GPLv3 §5(d) ("Appropriate
+  Legal Notices" in interactive interfaces) makes this a compliance concern, not just a courtesy.
+  **`AboutViewModelTest.kt:37` asserts on this constant and must be updated in the same commit.**
+
+- [ ] **Add a non-affiliation disclaimer to `README.md`.** Unofficial third-party client, not
+  affiliated with or endorsed by Savoir-faire Linux; "Jami" is their trademark, used only to
+  describe compatibility. Practically this does more to prevent confusion than any header change,
+  since the README is what people read first.
+
+- [ ] **Consider an `AUTHORS` file** listing upstream (Savoir-faire Linux and the Jami community)
+  and this port's contributors separately, so attribution lives in one canonical place rather than
+  only in 800+ file headers.
