@@ -167,6 +167,15 @@ val jamiModule = module {
     }
 
     /**
+     * Certificate pinning and trust (daemon security API), plus the four certificate signals.
+     */
+    single {
+        CertificateService(
+            daemonBridge = get()
+        )
+    }
+
+    /**
      * Durable outbox for messages sent before a conversation can deliver them (Phase 4 / F4).
      * Started explicitly at app start (JamiApplication / IOSApplicationHelper).
      */
@@ -194,6 +203,7 @@ val jamiModule = module {
             contactService = get(),
             conversationFacade = get(),
             peerServicesService = get(),
+            certificateService = get(),
             scope = get()
         )
     }
@@ -264,6 +274,7 @@ val jamiModule = module {
     viewModelFactory { AboutViewModel() }
     viewModelFactory { DebugLogsViewModel(get(), get(), get(), get()) }
     viewModelFactory { RecordingsViewModel(get()) }
+    viewModelFactory { CertificatesViewModel(get(), get()) }
     viewModelFactory { AppViewModel(get(), get()) }
     viewModelFactory { ProfileSetupViewModel(get()) }
     viewModelFactory { LocationSharingViewModel(get(), get()) }

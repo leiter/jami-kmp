@@ -64,6 +64,12 @@ enum class ConfigKey(val key: String) {
     TLS_REQUIRE_CLIENT_CERTIFICATE("TLS.requireClientCertificate"),
     TLS_NEGOTIATION_TIMEOUT_SEC("TLS.negotiationTimeoutSec"),
 
+    // Relaxed peer-certificate trust: accept a certificate on the strength of who presents it
+    // rather than full verification (account_const.h:133-135).
+    ACCOUNT_ALLOW_CERT_FROM_HISTORY("Account.allowCertFromHistory"),
+    ACCOUNT_ALLOW_CERT_FROM_CONTACT("Account.allowCertFromContact"),
+    ACCOUNT_ALLOW_CERT_FROM_TRUSTED("Account.allowCertFromTrusted"),
+
     // SRTP
     SRTP_ENABLE("SRTP.enable"),
     SRTP_KEY_EXCHANGE("SRTP.keyExchange"),

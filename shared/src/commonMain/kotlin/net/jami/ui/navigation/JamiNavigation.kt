@@ -552,7 +552,14 @@ private fun MainNavigation(needsMigration: Boolean) {
         }
 
         composable(Screen.AccountSettingsAdvanced.route) {
-            AccountAdvancedSettingsScreen(onBack = { navController.popBackStack() })
+            AccountAdvancedSettingsScreen(
+                onBack = { navController.popBackStack() },
+                onCertificates = { navController.navigate(Screen.AccountSettingsCertificates.route) },
+            )
+        }
+
+        composable(Screen.AccountSettingsCertificates.route) {
+            CertificatesScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.AccountSettingsAccount.route) {

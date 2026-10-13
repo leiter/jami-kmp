@@ -533,6 +533,36 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         JamiService.sendTrustRequest(accountId, uri, blob)
     }
 
+    // ==================== Certificate Management ====================
+
+    override fun getPinnedCertificates(accountId: String): List<String> =
+        JamiService.getPinnedCertificates(accountId).toList()
+
+    override fun getCertificatesByStatus(accountId: String, status: String): List<String> =
+        JamiService.getCertificatesByStatus(accountId, status).toList()
+
+    override fun getCertificateDetails(accountId: String, certId: String): Map<String, String> =
+        JamiService.getCertificateDetails(accountId, certId).toNative()
+
+    override fun validateCertificate(accountId: String, certId: String): Map<String, String> =
+        JamiService.validateCertificate(accountId, certId).toNative()
+
+    override fun pinCertificate(accountId: String, certificate: ByteArray, local: Boolean): List<String> =
+        JamiService.pinCertificate(accountId, Blob(certificate), local).toList()
+
+    override fun pinCertificatePath(accountId: String, path: String) {
+        JamiService.pinCertificatePath(accountId, path)
+    }
+
+    override fun unpinCertificate(accountId: String, certId: String): Boolean =
+        JamiService.unpinCertificate(accountId, certId)
+
+    override fun unpinCertificatePath(accountId: String, path: String): Int =
+        JamiService.unpinCertificatePath(accountId, path).toInt()
+
+    override fun setCertificateStatus(accountId: String, certId: String, status: String): Boolean =
+        JamiService.setCertificateStatus(accountId, certId, status)
+
     // ==================== Contact Operations ====================
 
     override fun addContact(accountId: String, uri: String) {
@@ -782,6 +812,22 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
 
         override fun volatileAccountDetailsChanged(accountId: String, details: StringMap) {
             callbacks.onVolatileAccountDetailsChanged(accountId, details.toNative())
+        }
+
+        override fun certificatePinned(certId: String) {
+            callbacks.onCertificatePinned(certId)
+        }
+
+        override fun certificatePathPinned(path: String, certIds: StringVect) {
+            callbacks.onCertificatePathPinned(path, certIds.toList())
+        }
+
+        override fun certificateExpired(certId: String) {
+            callbacks.onCertificateExpired(certId)
+        }
+
+        override fun certificateStateChanged(accountId: String, certId: String, state: String) {
+            callbacks.onCertificateStateChanged(accountId, certId, state)
         }
 
         override fun knownDevicesChanged(accountId: String, devices: StringMap) {

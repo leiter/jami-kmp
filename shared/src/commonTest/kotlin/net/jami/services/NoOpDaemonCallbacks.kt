@@ -84,6 +84,10 @@ object NoOpDaemonCallbacks : DaemonCallbacks {
     override fun onPeerServicesReceived(requestId: Long, accountId: String, peerId: String, status: Int, servicesJson: String) {}
     override fun onServiceTunnelOpened(accountId: String, tunnelId: String, localPort: Int) {}
     override fun onServiceTunnelClosed(accountId: String, tunnelId: String, reason: String) {}
+    override fun onCertificatePinned(certId: String) {}
+    override fun onCertificatePathPinned(path: String, certIds: List<String>) {}
+    override fun onCertificateExpired(certId: String) {}
+    override fun onCertificateStateChanged(accountId: String, certId: String, state: String) {}
     override fun onErrorAlert(alert: Int) {}
     override fun onVolumeChanged(device: String, value: Int) {}
     override fun onStunStatusFailure(accountId: String) {}

@@ -58,13 +58,20 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ---
 
-### F6: Certificate management signals absent — gap
+### F6: Certificate management signals absent — gap — **DONE (2026-10-13)**
 **Evidence:**
 - `configurationmanager.i` lines 46–49 declare: `certificatePinned`, `certificatePathPinned`, `certificateExpired`, `certificateStateChanged`
 - No handlers in `DaemonBridge.createConfigurationCallback()`
 - Reference omits these too (no override in `DaemonService.kt`), but they are daemon-side signals that some deployments use for certificate pinning
 
 **Impact:** Custom CA pinning strategies or certificate expiry warnings are not available to the app, even if the daemon emits them.
+
+**Done with the certificate-management slice.** All four signals now arrive: Android through
+`ConfigurationCallback`, Apple through four new `ConfigurationSignal` handlers in
+`JamiBridgeWrapper.mm`. They land on `DaemonCallbacks` and are relayed by `CertificateService` as
+a `CertificateEvent` flow. `certificateExpired` is the one that could not be obtained any other
+way — nothing else tells the app that a pinned authority has lapsed and connections relying on it
+are about to start failing verification.
 
 ---
 

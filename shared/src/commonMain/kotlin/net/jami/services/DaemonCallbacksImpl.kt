@@ -37,6 +37,7 @@ class DaemonCallbacksImpl(
     private val contactService: ContactService,
     private val conversationFacade: ConversationFacade,
     private val peerServicesService: PeerServicesService,
+    private val certificateService: CertificateService,
     private val scope: CoroutineScope
 ) : DaemonCallbacks {
 
@@ -438,6 +439,26 @@ class DaemonCallbacksImpl(
 
     override fun onServiceTunnelClosed(accountId: String, tunnelId: String, reason: String) {
         peerServicesService.onTunnelClosed(accountId, tunnelId, reason)
+    }
+
+    // ==================== Certificate Callbacks ====================
+    // Relayed straight through: certificate state is small, read on demand from the daemon, and
+    // these signals are notifications rather than data the services cache.
+
+    override fun onCertificatePinned(certId: String) {
+        certificateService.onCertificatePinned(certId)
+    }
+
+    override fun onCertificatePathPinned(path: String, certIds: List<String>) {
+        certificateService.onCertificatePathPinned(path, certIds)
+    }
+
+    override fun onCertificateExpired(certId: String) {
+        certificateService.onCertificateExpired(certId)
+    }
+
+    override fun onCertificateStateChanged(accountId: String, certId: String, state: String) {
+        certificateService.onCertificateStateChanged(accountId, certId, state)
     }
 
     // ==================== Diagnostics Callbacks ====================

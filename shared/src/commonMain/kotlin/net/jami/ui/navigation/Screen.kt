@@ -79,6 +79,7 @@ sealed class Screen(val route: String) {
     data object AccountSettingsMessages : Screen("account_settings_messages")
     data object AccountSettingsAdvanced : Screen("account_settings_advanced")
     data object AccountSettingsAccount : Screen("account_settings_account")
+    data object AccountSettingsCertificates : Screen("account_settings_certificates")
     data object AppSettings : Screen("app_settings")
     data object DebugLogs : Screen("debug_logs")
     data object Recordings : Screen("recordings")

@@ -29,6 +29,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -78,6 +79,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun AccountAdvancedSettingsScreen(
     onBack: () -> Unit,
+    onCertificates: () -> Unit = {},
 ) {
     val viewModel = getViewModel<AccountSubSettingsViewModel>()
     val state by viewModel.state.collectAsState()
@@ -360,6 +362,16 @@ fun AccountAdvancedSettingsScreen(
             // ── Security ──────────────────────────────────────────────────────
             JamiSectionTitle(title = stringResource(Res.string.account_preferences_security_tab))
 
+            // Pinned certificates are per-account and apply to Jami accounts too, so this is not
+            // gated on TLS being enabled for SIP.
+            SettingsNavigationRow(
+                label = stringResource(Res.string.pref_certificates_title),
+                description = stringResource(Res.string.pref_certificates_summary),
+                onClick = onCertificates,
+            )
+
+            HorizontalDivider(color = JamiTheme.colors.outline)
+
             JamiToggle(
                 label = stringResource(Res.string.account_srtp_switch_label),
                 checked = state.srtpKeyExchange,
@@ -487,6 +499,38 @@ fun AccountAdvancedSettingsScreen(
                     onCheckedChange = { viewModel.setTlsRequireClientCert(it) },
                 )
 
+                HorizontalDivider(color = JamiTheme.colors.outline)
+
+                // Relaxed trust: the daemon accepts a peer certificate because of who presents
+                // it rather than because it verifies. Grouped under one warning instead of three
+                // identical ones, since they are the same trade-off made three ways.
+                JamiToggle(
+                    label = stringResource(Res.string.account_allow_cert_from_history_label),
+                    description = stringResource(Res.string.account_allow_cert_from_history_summary),
+                    checked = state.allowCertFromHistory,
+                    onCheckedChange = { viewModel.setAllowCertFromHistory(it) },
+                )
+
+                JamiToggle(
+                    label = stringResource(Res.string.account_allow_cert_from_contact_label),
+                    description = stringResource(Res.string.account_allow_cert_from_contact_summary),
+                    checked = state.allowCertFromContact,
+                    onCheckedChange = { viewModel.setAllowCertFromContact(it) },
+                )
+
+                JamiToggle(
+                    label = stringResource(Res.string.account_allow_cert_from_trusted_label),
+                    description = stringResource(Res.string.account_allow_cert_from_trusted_summary),
+                    checked = state.allowCertFromTrusted,
+                    onCheckedChange = { viewModel.setAllowCertFromTrusted(it) },
+                )
+
+                if (state.allowCertFromHistory || state.allowCertFromContact ||
+                    state.allowCertFromTrusted
+                ) {
+                    SecurityWarning(text = stringResource(Res.string.account_allow_cert_warning))
+                }
+
                 OutlinedTextField(
                     value = state.tlsNegotiationTimeout,
                     onValueChange = { viewModel.setTlsNegotiationTimeout(it) },
@@ -541,6 +585,40 @@ private fun portRangeErrorText(error: PortRangeError): String = when (error) {
         AccountSubSettingsViewModel.MAX_RTP_PORT,
     )
     PortRangeError.MIN_ABOVE_MAX -> stringResource(Res.string.account_port_error_min_above_max)
+}
+
+/** A settings row that opens another screen. */
+@Composable
+private fun SettingsNavigationRow(
+    label: String,
+    description: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                style = JamiTheme.typography.bodyLarge,
+                color = JamiTheme.colors.onSurface,
+            )
+            Text(
+                text = description,
+                style = JamiTheme.typography.bodySmall,
+                color = JamiTheme.colors.onSurfaceVariant,
+            )
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = JamiTheme.colors.onSurfaceVariant,
+        )
+    }
 }
 
 @Composable

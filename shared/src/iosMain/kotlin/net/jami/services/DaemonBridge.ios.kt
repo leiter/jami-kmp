@@ -588,6 +588,40 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.subscribeBuddy(accountId, uri = uri, flag = subscribe)
     }
 
+    // ==================== Certificate Management ====================
+
+    override fun getPinnedCertificates(accountId: String): List<String> =
+        bridge.getPinnedCertificates(accountId).toKotlinList()
+
+    override fun getCertificatesByStatus(accountId: String, status: String): List<String> =
+        bridge.getCertificatesByStatus(accountId, status = status).toKotlinList()
+
+    override fun getCertificateDetails(accountId: String, certId: String): Map<String, String> =
+        bridge.getCertificateDetails(accountId, certId = certId).toKotlinMap()
+
+    override fun validateCertificate(accountId: String, certId: String): Map<String, String> =
+        bridge.validateCertificate(accountId, certId = certId).toKotlinMap()
+
+    override fun pinCertificate(accountId: String, certificate: ByteArray, local: Boolean): List<String> {
+        val data = certificate.usePinned { pinned ->
+            NSData.create(bytes = pinned.addressOf(0), length = certificate.size.toULong())
+        }
+        return bridge.pinCertificate(accountId, certificate = data, local = local).toKotlinList()
+    }
+
+    override fun pinCertificatePath(accountId: String, path: String) {
+        bridge.pinCertificatePath(accountId, path = path)
+    }
+
+    override fun unpinCertificate(accountId: String, certId: String): Boolean =
+        bridge.unpinCertificate(accountId, certId = certId)
+
+    override fun unpinCertificatePath(accountId: String, path: String): Int =
+        bridge.unpinCertificatePath(accountId, path = path).toInt()
+
+    override fun setCertificateStatus(accountId: String, certId: String, status: String): Boolean =
+        bridge.setCertificateStatus(accountId, certId = certId, status = status)
+
     // ==================== Name Lookup ====================
 
     override fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
@@ -1310,6 +1344,23 @@ private class JamiBridgeDelegateImpl(
 
     override fun onPresenceChanged(accountId: String, uri: String, isOnline: Boolean) {
         callbacks.onNewBuddyNotification(accountId, uri, if (isOnline) 1 else 0, "")
+    }
+
+    // Certificate Events
+    override fun onCertificatePinned(certId: String) {
+        callbacks.onCertificatePinned(certId)
+    }
+
+    override fun onCertificatePathPinned(path: String, certIds: List<*>) {
+        callbacks.onCertificatePathPinned(path, certIds.filterIsInstance<String>())
+    }
+
+    override fun onCertificateExpired(certId: String) {
+        callbacks.onCertificateExpired(certId)
+    }
+
+    override fun onCertificateStateChanged(accountId: String, certId: String, state: String) {
+        callbacks.onCertificateStateChanged(accountId, certId, state)
     }
 }
 

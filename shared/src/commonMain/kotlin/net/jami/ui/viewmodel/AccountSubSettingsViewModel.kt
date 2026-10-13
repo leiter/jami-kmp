@@ -120,6 +120,10 @@ data class AccountSubSettingsState(
     val tlsVerifyClient: Boolean = false,
     val tlsRequireClientCert: Boolean = false,
     val tlsNegotiationTimeout: String = "",
+    /** Relaxed peer-certificate trust (security-networking plan F11). */
+    val allowCertFromHistory: Boolean = false,
+    val allowCertFromContact: Boolean = false,
+    val allowCertFromTrusted: Boolean = false,
 
     val isLoading: Boolean = false,
 )
@@ -222,6 +226,9 @@ class AccountSubSettingsViewModel(
                 tlsVerifyClient = bool(ConfigKey.TLS_VERIFY_CLIENT),
                 tlsRequireClientCert = bool(ConfigKey.TLS_REQUIRE_CLIENT_CERTIFICATE),
                 tlsNegotiationTimeout = str(ConfigKey.TLS_NEGOTIATION_TIMEOUT_SEC),
+                allowCertFromHistory = bool(ConfigKey.ACCOUNT_ALLOW_CERT_FROM_HISTORY),
+                allowCertFromContact = bool(ConfigKey.ACCOUNT_ALLOW_CERT_FROM_CONTACT),
+                allowCertFromTrusted = bool(ConfigKey.ACCOUNT_ALLOW_CERT_FROM_TRUSTED),
                 isLoading = false,
             )
         }
@@ -489,6 +496,21 @@ class AccountSubSettingsViewModel(
     fun setTlsRequireClientCert(enabled: Boolean) {
         _state.update { it.copy(tlsRequireClientCert = enabled) }
         updateDetail(ConfigKey.TLS_REQUIRE_CLIENT_CERTIFICATE, enabled.toString())
+    }
+
+    fun setAllowCertFromHistory(enabled: Boolean) {
+        _state.update { it.copy(allowCertFromHistory = enabled) }
+        updateDetail(ConfigKey.ACCOUNT_ALLOW_CERT_FROM_HISTORY, enabled.toString())
+    }
+
+    fun setAllowCertFromContact(enabled: Boolean) {
+        _state.update { it.copy(allowCertFromContact = enabled) }
+        updateDetail(ConfigKey.ACCOUNT_ALLOW_CERT_FROM_CONTACT, enabled.toString())
+    }
+
+    fun setAllowCertFromTrusted(enabled: Boolean) {
+        _state.update { it.copy(allowCertFromTrusted = enabled) }
+        updateDetail(ConfigKey.ACCOUNT_ALLOW_CERT_FROM_TRUSTED, enabled.toString())
     }
 
     fun setTlsNegotiationTimeout(secs: String) {

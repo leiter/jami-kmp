@@ -499,10 +499,19 @@ Service discovery/exposure is entirely missing from KMP. This is used by the ref
 **Impact:** Audio quality tuning is not user-controllable in KMP. The daemon supports these, but KMP only exposes the raw `setAgcState()` call (wired, but with no UI).
 **Daemon support:** 8 functions for noise suppression, EC, VAD, AGC.
 
-### F12: Certificate Pinning — Partially Wired (Category: Gap)
+### F12: Certificate Pinning — Partially Wired (Category: Gap) — **DONE (2026-10-13)**
 **Evidence:** `configurationmanager_interface.h:198–227`, 14 functions; only `getTrustRequests/acceptTrustRequest` are used; no certificate validation/pinning UI.
 **Impact:** Advanced TLS cert validation (certificate pinning, custom CA) is available in daemon but not exposed to users. Only peer-side trust (via QR code / trust requests) is implemented.
 **Daemon support:** `validateCertificate()`, `getCertificateDetails()`, `pinCertificate()`, `pinCertificatePath()`, `getSupportedTlsMethod()`, etc.
+
+**Done (2026-10-13), nine of the fourteen.** `getPinnedCertificates`, `getCertificatesByStatus`,
+`getCertificateDetails`, `validateCertificate`, `pinCertificate`, `pinCertificatePath`,
+`unpinCertificate`, `unpinCertificatePath` and `setCertificateStatus` are on the bridge, wired on
+Android and Apple, and surfaced by the Certificates screen (see contacts F8). The remaining five
+were left out deliberately rather than missed: `validateCertificatePath` and
+`getCertificateDetailsPath` take a private key and password and belong to account provisioning,
+not pinning; `pinRemoteCertificate` pins by id from a peer's connection, which has no entry point
+in the UI; and the trust-request pair was already wired.
 
 ## Proposed Plan
 

@@ -164,7 +164,7 @@ Presence features may not be controllable at account level. Users cannot opt out
 
 ---
 
-### F11: Allow Certificate from History/Contact/Trusted — gap
+### F11: Allow Certificate from History/Contact/Trusted — gap — **DONE (2026-10-13)**
 
 **Evidence:**
 - Daemon properties: `Account.allowCertFromHistory`, `Account.allowCertFromContact`, `Account.allowCertFromTrusted`; `account_const.h:133–135`
@@ -177,6 +177,12 @@ TLS verification is all-or-nothing; no option to use contact/history-based trust
 
 **Daemon support:** 
 `Account.allowCertFromHistory`, `Account.allowCertFromContact`, `Account.allowCertFromTrusted`; `account_const.h:133–135`.
+
+**Done (2026-10-13)** alongside the certificate-management work, since it is the same trade-off
+from the other side: three `ConfigKey`s and three toggles under Advanced → Security, inside the
+TLS block because that is where the daemon applies them. They share one warning rather than
+carrying three identical ones — the point is the same each time: a certificate is accepted on the
+strength of who presents it rather than because it verifies.
 
 ---
 

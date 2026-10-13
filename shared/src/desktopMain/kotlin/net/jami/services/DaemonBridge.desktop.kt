@@ -362,6 +362,52 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Trust Requests (Stubs) ====================
 
+    // ==================== Certificate Management ====================
+
+    override fun getPinnedCertificates(accountId: String): List<String> {
+        Log.d(TAG, "getPinnedCertificates called (stub): $accountId")
+        return emptyList()
+    }
+
+    override fun getCertificatesByStatus(accountId: String, status: String): List<String> {
+        Log.d(TAG, "getCertificatesByStatus called (stub): $accountId")
+        return emptyList()
+    }
+
+    override fun getCertificateDetails(accountId: String, certId: String): Map<String, String> {
+        Log.d(TAG, "getCertificateDetails called (stub): $certId")
+        return emptyMap()
+    }
+
+    override fun validateCertificate(accountId: String, certId: String): Map<String, String> {
+        Log.d(TAG, "validateCertificate called (stub): $certId")
+        return emptyMap()
+    }
+
+    override fun pinCertificate(accountId: String, certificate: ByteArray, local: Boolean): List<String> {
+        Log.d(TAG, "pinCertificate called (stub): ${certificate.size} bytes")
+        return emptyList()
+    }
+
+    override fun pinCertificatePath(accountId: String, path: String) {
+        Log.d(TAG, "pinCertificatePath called (stub): $path")
+    }
+
+    override fun unpinCertificate(accountId: String, certId: String): Boolean {
+        Log.d(TAG, "unpinCertificate called (stub): $certId")
+        return false
+    }
+
+    override fun unpinCertificatePath(accountId: String, path: String): Int {
+        Log.d(TAG, "unpinCertificatePath called (stub): $path")
+        return 0
+    }
+
+    override fun setCertificateStatus(accountId: String, certId: String, status: String): Boolean {
+        Log.d(TAG, "setCertificateStatus called (stub): $certId -> $status")
+        return false
+    }
+
     override fun getTrustRequests(accountId: String): List<Map<String, String>> {
         Log.d(TAG, "getTrustRequests called (stub): $accountId")
         return emptyList()

@@ -390,6 +390,21 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                       uri:(NSString *)uri
                  isOnline:(BOOL)isOnline;
 
+// =============================================================================
+// Certificates
+// =============================================================================
+
+- (void)onCertificatePinned:(NSString *)certId;
+
+- (void)onCertificatePathPinned:(NSString *)path
+                        certIds:(NSArray<NSString *> *)certIds;
+
+- (void)onCertificateExpired:(NSString *)certId;
+
+- (void)onCertificateStateChanged:(NSString *)accountId
+                           certId:(NSString *)certId
+                            state:(NSString *)state;
+
 @end
 
 // =============================================================================
@@ -807,6 +822,35 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (NSArray<NSNumber *> *)getActiveCodecList:(NSString *)accountId;
 - (void)setActiveCodecList:(NSString *)accountId codecList:(NSArray<NSNumber *> *)codecList;
 - (NSDictionary<NSString *, NSString *> *)getCodecDetails:(NSString *)accountId codecId:(uint32_t)codecId;
+
+// =========================================================================
+// Certificate Management (9 methods)
+// =========================================================================
+
+- (NSArray<NSString *> *)getPinnedCertificates:(NSString *)accountId;
+
+- (NSArray<NSString *> *)getCertificatesByStatus:(NSString *)accountId
+                                          status:(NSString *)status;
+
+- (NSDictionary<NSString *, NSString *> *)getCertificateDetails:(NSString *)accountId
+                                                         certId:(NSString *)certId;
+
+- (NSDictionary<NSString *, NSString *> *)validateCertificate:(NSString *)accountId
+                                                       certId:(NSString *)certId;
+
+- (NSArray<NSString *> *)pinCertificate:(NSString *)accountId
+                            certificate:(NSData *)certificate
+                                  local:(BOOL)local;
+
+- (void)pinCertificatePath:(NSString *)accountId path:(NSString *)path;
+
+- (BOOL)unpinCertificate:(NSString *)accountId certId:(NSString *)certId;
+
+- (uint32_t)unpinCertificatePath:(NSString *)accountId path:(NSString *)path;
+
+- (BOOL)setCertificateStatus:(NSString *)accountId
+                      certId:(NSString *)certId
+                      status:(NSString *)status;
 
 // =========================================================================
 // File Picker (1 method)

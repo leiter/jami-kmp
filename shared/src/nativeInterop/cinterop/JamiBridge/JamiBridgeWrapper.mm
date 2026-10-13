@@ -537,6 +537,60 @@ static JBCallState toCallState(const std::string& state) {
             });
         }));
 
+    // Certificate pinned
+    handlers.insert(exportable_callback<ConfigurationSignal::CertificatePinned>(
+        [weakSelf](const std::string& certId) {
+            NSString *certIdNS = toNSString(certId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onCertificatePinned:)]) {
+                    [strongSelf.delegate onCertificatePinned:certIdNS];
+                }
+            });
+        }));
+
+    // Certificate path pinned
+    handlers.insert(exportable_callback<ConfigurationSignal::CertificatePathPinned>(
+        [weakSelf](const std::string& path, const std::vector<std::string>& certIds) {
+            NSString *pathNS = toNSString(path);
+            NSArray<NSString *> *certIdsNS = toNSArray(certIds);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onCertificatePathPinned:certIds:)]) {
+                    [strongSelf.delegate onCertificatePathPinned:pathNS certIds:certIdsNS];
+                }
+            });
+        }));
+
+    // Certificate expired
+    handlers.insert(exportable_callback<ConfigurationSignal::CertificateExpired>(
+        [weakSelf](const std::string& certId) {
+            NSString *certIdNS = toNSString(certId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onCertificateExpired:)]) {
+                    [strongSelf.delegate onCertificateExpired:certIdNS];
+                }
+            });
+        }));
+
+    // Certificate state changed
+    handlers.insert(exportable_callback<ConfigurationSignal::CertificateStateChanged>(
+        [weakSelf](const std::string& accountId, const std::string& certId,
+                   const std::string& state) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *certIdNS = toNSString(certId);
+            NSString *stateNS = toNSString(state);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onCertificateStateChanged:certId:state:)]) {
+                    [strongSelf.delegate onCertificateStateChanged:accountIdNS
+                                                            certId:certIdNS
+                                                             state:stateNS];
+                }
+            });
+        }));
+
     // Composing status changed
     handlers.insert(exportable_callback<ConfigurationSignal::ComposingStatusChanged>(
         [weakSelf](const std::string& accountId, const std::string& convId,
@@ -1664,6 +1718,62 @@ static JBCallState toCallState(const std::string& state) {
     }
 
     return [result copy];
+}
+
+// =============================================================================
+// Certificate Management
+// =============================================================================
+
+- (NSArray<NSString *> *)getPinnedCertificates:(NSString *)accountId {
+    return toNSArray(libjami::getPinnedCertificates(toCppString(accountId)));
+}
+
+- (NSArray<NSString *> *)getCertificatesByStatus:(NSString *)accountId
+                                          status:(NSString *)status {
+    return toNSArray(libjami::getCertificatesByStatus(toCppString(accountId),
+                                                      toCppString(status)));
+}
+
+- (NSDictionary<NSString *, NSString *> *)getCertificateDetails:(NSString *)accountId
+                                                         certId:(NSString *)certId {
+    return toNSDictionary(libjami::getCertificateDetails(toCppString(accountId),
+                                                         toCppString(certId)));
+}
+
+- (NSDictionary<NSString *, NSString *> *)validateCertificate:(NSString *)accountId
+                                                       certId:(NSString *)certId {
+    return toNSDictionary(libjami::validateCertificate(toCppString(accountId),
+                                                       toCppString(certId)));
+}
+
+- (NSArray<NSString *> *)pinCertificate:(NSString *)accountId
+                            certificate:(NSData *)certificate
+                                  local:(BOOL)local {
+    const uint8_t *bytes = (const uint8_t *)certificate.bytes;
+    std::vector<uint8_t> cert(bytes, bytes + certificate.length);
+    return toNSArray(libjami::pinCertificate(toCppString(accountId), cert, local));
+}
+
+- (void)pinCertificatePath:(NSString *)accountId path:(NSString *)path {
+    FILE_LOG_I("JamiBridge", @"pinCertificatePath: accountId=%@ path=%@", accountId, path);
+    libjami::pinCertificatePath(toCppString(accountId), toCppString(path));
+}
+
+- (BOOL)unpinCertificate:(NSString *)accountId certId:(NSString *)certId {
+    return libjami::unpinCertificate(toCppString(accountId), toCppString(certId));
+}
+
+- (uint32_t)unpinCertificatePath:(NSString *)accountId path:(NSString *)path {
+    return libjami::unpinCertificatePath(toCppString(accountId), toCppString(path));
+}
+
+- (BOOL)setCertificateStatus:(NSString *)accountId
+                      certId:(NSString *)certId
+                      status:(NSString *)status {
+    FILE_LOG_I("JamiBridge", @"setCertificateStatus: certId=%@ status=%@", certId, status);
+    return libjami::setCertificateStatus(toCppString(accountId),
+                                         toCppString(certId),
+                                         toCppString(status));
 }
 
 - (void)subscribeBuddy:(NSString *)accountId uri:(NSString *)uri flag:(BOOL)flag {

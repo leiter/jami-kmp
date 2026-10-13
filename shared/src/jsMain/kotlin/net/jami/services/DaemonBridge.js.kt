@@ -459,6 +459,52 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Trust Requests ====================
 
+    // ==================== Certificate Management ====================
+
+    override fun getPinnedCertificates(accountId: String): List<String> {
+        // TODO: GET /accounts/{accountId}/certificates
+        return emptyList()
+    }
+
+    override fun getCertificatesByStatus(accountId: String, status: String): List<String> {
+        // TODO: GET /accounts/{accountId}/certificates?status={status}
+        return emptyList()
+    }
+
+    override fun getCertificateDetails(accountId: String, certId: String): Map<String, String> {
+        // TODO: GET /accounts/{accountId}/certificates/{certId}
+        return emptyMap()
+    }
+
+    override fun validateCertificate(accountId: String, certId: String): Map<String, String> {
+        // TODO: GET /accounts/{accountId}/certificates/{certId}/validate
+        return emptyMap()
+    }
+
+    override fun pinCertificate(accountId: String, certificate: ByteArray, local: Boolean): List<String> {
+        // TODO: POST /accounts/{accountId}/certificates
+        return emptyList()
+    }
+
+    override fun pinCertificatePath(accountId: String, path: String) {
+        // TODO: POST /accounts/{accountId}/certificates (by path)
+    }
+
+    override fun unpinCertificate(accountId: String, certId: String): Boolean {
+        // TODO: DELETE /accounts/{accountId}/certificates/{certId}
+        return false
+    }
+
+    override fun unpinCertificatePath(accountId: String, path: String): Int {
+        // TODO: DELETE /accounts/{accountId}/certificates (by path)
+        return 0
+    }
+
+    override fun setCertificateStatus(accountId: String, certId: String, status: String): Boolean {
+        // TODO: PUT /accounts/{accountId}/certificates/{certId}/status
+        return false
+    }
+
     override fun getTrustRequests(accountId: String): List<Map<String, String>> {
         // TODO: GET /accounts/{accountId}/trust-requests
         return emptyList()

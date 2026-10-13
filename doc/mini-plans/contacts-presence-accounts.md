@@ -117,7 +117,7 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 
 ---
 
-### F8: No certificate pinning UI — functions exist but no UI
+### F8: No certificate pinning UI — functions exist but no UI — **DONE (2026-10-13)**
 **Evidence:**
 - `getPinnedCertificates(accountId)` (configurationmanager_interface.h:213) never called
 - `pinCertificate(accountId, cert, local)` (line 215) never called
@@ -132,6 +132,20 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 **Daemon support:** Five functions present in configurationmanager_interface.h; also `validateCertificate`, `getCertificateDetails`, `setCertificateStatus`, `getCertificatesByStatus`.
 
 **Suggested fix:** Skip for now. Certificate pinning is niche. If a security-conscious user base emerges, add a "Certificate Management" advanced settings screen.
+
+**Done (2026-10-13).** Built as the plan's own suggestion describes: a Certificates screen under
+Account settings → Advanced → Security, listing what is pinned with the daemon's own checks, the
+SHA-1 fingerprint in monospace for out-of-band comparison, pin-from-file, unpin, and the trust
+decision (verify normally / always allow / block). All nine functions are on `DaemonBridgeApi`
+and implemented on Android and Apple.
+
+Two things worth recording. First, the daemon has no "list with details" call, so the list is one
+`getCertificateDetails` + `validateCertificate` per id; the pinned set is a handful of entries in
+practice. Second, trust status can only be read as "which certificates have status X", so the
+per-certificate status is assembled from the ALLOWED and BANNED answers and anything absent is
+UNDEFINED. Neither reference client has a certificate UI — libjamiclient has only the
+`validateCertificate`/`getCertificateDetails` helpers in `AccountService` — so the screen follows
+our own settings patterns rather than resampling one.
 
 ---
 

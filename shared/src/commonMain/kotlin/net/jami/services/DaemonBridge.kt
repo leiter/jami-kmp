@@ -1,5 +1,6 @@
 package net.jami.services
 
+import net.jami.model.CertificateStatus
 import net.jami.model.MediaAttribute
 import net.jami.model.SwarmMessage
 
@@ -145,6 +146,50 @@ interface DaemonBridgeApi {
     fun acceptTrustRequest(accountId: String, uri: String)
     fun discardTrustRequest(accountId: String, uri: String)
     fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray)
+
+    // ==================== Certificate Management ====================
+    /**
+     * Certificates this account has pinned, as daemon certificate ids (the fingerprint-like id the
+     * daemon uses everywhere else in this group of functions).
+     */
+    fun getPinnedCertificates(accountId: String): List<String>
+
+    /**
+     * Pinned certificate ids filtered by trust status — one of the values in
+     * [net.jami.model.CertificateStatus]. The daemon's own constants are in `security_const.h`.
+     */
+    fun getCertificatesByStatus(accountId: String, status: String): List<String>
+
+    /**
+     * Everything the daemon knows about a certificate: subject, issuer, fingerprints, validity
+     * dates, whether it is a CA. Keys are libjami's `Certificate::DetailsNames`. Empty if the
+     * daemon does not know this id.
+     */
+    fun getCertificateDetails(accountId: String, certId: String): Map<String, String>
+
+    /**
+     * Run the daemon's checks over a certificate. Keys are libjami's `Certificate::ChecksNames`
+     * (EXPIRED, NOT_REVOKED, KNOWN_AUTHORITY, …), values PASSED/FAILED/UNSUPPORTED.
+     */
+    fun validateCertificate(accountId: String, certId: String): Map<String, String>
+
+    /** Pin a certificate from raw DER/PEM bytes. Returns the ids the daemon stored. */
+    fun pinCertificate(accountId: String, certificate: ByteArray, local: Boolean): List<String>
+
+    /** Pin a certificate, or a whole directory of them, from a file path on this device. */
+    fun pinCertificatePath(accountId: String, path: String)
+
+    fun unpinCertificate(accountId: String, certId: String): Boolean
+
+    /** Unpin everything that came from [path]. Returns how many certificates were removed. */
+    fun unpinCertificatePath(accountId: String, path: String): Int
+
+    /**
+     * Set a pinned certificate's trust status (see [net.jami.model.CertificateStatus]). BANNED
+     * refuses connections presenting it; ALLOWED accepts it even when it would not otherwise
+     * verify.
+     */
+    fun setCertificateStatus(accountId: String, certId: String, status: String): Boolean
 
     // ==================== Contact Operations ====================
     fun addContact(accountId: String, uri: String)
@@ -696,6 +741,22 @@ interface DaemonCallbacks {
     /** A service tunnel was closed, by either side. */
     fun onServiceTunnelClosed(accountId: String, tunnelId: String, reason: String)
 
+    // ==================== Certificate Callbacks ====================
+    /** A certificate was pinned, by us or by the daemon accepting a peer's. */
+    fun onCertificatePinned(certId: String)
+
+    /** A path was pinned; [certIds] are the certificates found there. */
+    fun onCertificatePathPinned(path: String, certIds: List<String>)
+
+    /**
+     * A pinned certificate is past its validity date. The daemon keeps it, but connections
+     * relying on it will fail verification.
+     */
+    fun onCertificateExpired(certId: String)
+
+    /** A certificate's trust status changed (see [net.jami.model.CertificateStatus]). */
+    fun onCertificateStateChanged(accountId: String, certId: String, state: String)
+
     // ==================== Diagnostics Callbacks ====================
     /** Daemon-level error alert (see libjami Alert codes). */
     fun onErrorAlert(alert: Int)
@@ -765,6 +826,15 @@ class StubDaemonBridge : DaemonBridgeApi {
     var activeTunnels: List<Map<String, String>> = emptyList()
     val sentCallMessages: MutableList<CallMessageSend> = mutableListOf()
     val monitorCalls: MutableList<Boolean> = mutableListOf()
+
+    /** accountId -> certId -> details, as getCertificateDetails() would report them. */
+    val certificates: MutableMap<String, MutableMap<String, Map<String, String>>> = mutableMapOf()
+    /** accountId -> certId -> trust status. Absent means UNDEFINED. */
+    val certificateStatuses: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
+    /** certId -> what validateCertificate() reports. */
+    val certificateChecks: MutableMap<String, Map<String, String>> = mutableMapOf()
+    /** Recorded pinCertificatePath() calls as (accountId, path). */
+    val pinnedCertificatePaths: MutableList<Pair<String, String>> = mutableListOf()
 
     // Configurable lookup results: name -> LookupState (0=Success/taken, 1=Invalid, 2=NotFound/available, 3=NetworkError)
     var lookupNameResults: MutableMap<String, Int> = mutableMapOf()
@@ -917,6 +987,46 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun acceptTrustRequest(accountId: String, uri: String) {}
     override fun discardTrustRequest(accountId: String, uri: String) {}
     override fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray) {}
+
+    // ==================== Certificate Management ====================
+    override fun getPinnedCertificates(accountId: String): List<String> =
+        certificates[accountId]?.keys?.toList() ?: emptyList()
+
+    override fun getCertificatesByStatus(accountId: String, status: String): List<String> =
+        certificates[accountId]?.keys?.filter {
+            (certificateStatuses[accountId]?.get(it) ?: CertificateStatus.UNDEFINED) == status
+        } ?: emptyList()
+
+    override fun getCertificateDetails(accountId: String, certId: String): Map<String, String> =
+        certificates[accountId]?.get(certId) ?: emptyMap()
+
+    override fun validateCertificate(accountId: String, certId: String): Map<String, String> =
+        certificateChecks[certId] ?: emptyMap()
+
+    override fun pinCertificate(accountId: String, certificate: ByteArray, local: Boolean): List<String> {
+        val certId = "cert-${certificate.contentHashCode()}"
+        certificates.getOrPut(accountId) { mutableMapOf() }[certId] = emptyMap()
+        return listOf(certId)
+    }
+
+    override fun pinCertificatePath(accountId: String, path: String) {
+        pinnedCertificatePaths += accountId to path
+    }
+
+    override fun unpinCertificate(accountId: String, certId: String): Boolean =
+        certificates[accountId]?.remove(certId) != null
+
+    override fun unpinCertificatePath(accountId: String, path: String): Int {
+        val removed = pinnedCertificatePaths.count { it == accountId to path }
+        pinnedCertificatePaths.removeAll { it == accountId to path }
+        return removed
+    }
+
+    override fun setCertificateStatus(accountId: String, certId: String, status: String): Boolean {
+        if (certificates[accountId]?.containsKey(certId) != true) return false
+        certificateStatuses.getOrPut(accountId) { mutableMapOf() }[certId] = status
+        return true
+    }
 
     override fun addContact(accountId: String, uri: String) {}
     override fun removeContact(accountId: String, uri: String, ban: Boolean) {}
