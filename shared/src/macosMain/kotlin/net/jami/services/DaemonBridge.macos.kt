@@ -520,6 +520,24 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.subscribeBuddy(accountId, uri = uri, flag = subscribe)
     }
 
+    override fun countInteractions(
+        accountId: String,
+        conversationId: String,
+        toId: String,
+        fromId: String,
+        authorUri: String,
+    ): Int = bridge.countInteractions(
+        accountId,
+        conversationId = conversationId,
+        toId = toId,
+        fromId = fromId,
+        authorUri = authorUri,
+    ).toInt()
+
+    override fun clearCache(accountId: String, conversationId: String) {
+        bridge.clearCache(accountId, conversationId = conversationId)
+    }
+
     // ==================== Certificate Management ====================
 
     override fun getPinnedCertificates(accountId: String): List<String> =

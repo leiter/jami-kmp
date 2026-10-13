@@ -459,6 +459,21 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Trust Requests ====================
 
+    override fun countInteractions(
+        accountId: String,
+        conversationId: String,
+        toId: String,
+        fromId: String,
+        authorUri: String,
+    ): Int {
+        // TODO: GET /accounts/{accountId}/conversations/{conversationId}/count
+        return 0
+    }
+
+    override fun clearCache(accountId: String, conversationId: String) {
+        // TODO: DELETE /accounts/{accountId}/conversations/{conversationId}/cache
+    }
+
     // ==================== Certificate Management ====================
 
     override fun getPinnedCertificates(accountId: String): List<String> {

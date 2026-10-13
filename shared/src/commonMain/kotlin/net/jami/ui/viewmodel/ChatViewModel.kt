@@ -856,6 +856,11 @@ class ChatViewModel(
             val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
             val conversation = conversationFacade.getConversation(accountId, conversationUri) ?: return@launch
             conversation.clearHistory(delete = false)
+            // The client's model was the only thing cleared before this: the daemon kept its own
+            // loaded copy of the same history, so nothing was actually released. For a swarm the
+            // commits remain in the git repository either way — this frees the memory, it does
+            // not make the clear permanent.
+            conversationFacade.clearDaemonCache(accountId, conversationId)
             _state.value = _state.value.copy(messages = emptyList())
         }
     }

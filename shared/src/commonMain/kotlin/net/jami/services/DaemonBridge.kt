@@ -333,6 +333,35 @@ interface DaemonBridgeApi {
      */
     fun getConnectionList(accountId: String, conversationId: String = ""): List<Map<String, String>>
 
+    /**
+     * Number of commits in a conversation, walking back from [fromId] (empty = the newest commit)
+     * and stopping at [toId] (empty = the first commit).
+     *
+     * Note what [authorUri] does here, because the name suggests the opposite: in the daemon's
+     * fast-log path it is not a filter but a **boundary** — the walk stops at the first commit by
+     * that author (`conversationrepository.cpp:2385-2392`). So passing one's own URI counts what
+     * has happened since one last posted.
+     *
+     * The count covers commits of every kind — messages, member events, votes, profile updates —
+     * since the fast log does not parse content and so cannot filter by type.
+     */
+    fun countInteractions(
+        accountId: String,
+        conversationId: String,
+        toId: String = "",
+        fromId: String = "",
+        authorUri: String = "",
+    ): Int
+
+    /**
+     * Drop the daemon's in-memory copy of a conversation's history (message list, pending
+     * edits/reactions and per-member delivery status).
+     *
+     * This frees memory; it does not delete anything. For a swarm the commits live in the
+     * conversation's git repository, so the next load reads them back from disk.
+     */
+    fun clearCache(accountId: String, conversationId: String)
+
     // ==================== Search & History ====================
     fun searchConversation(accountId: String, conversationId: String, author: String, lastId: String, query: String, type: String, after: Long, before: Long, maxResult: Long, flag: Int): Long
     fun loadSwarmUntil(accountId: String, conversationId: String, fromMessage: String, toMessage: String): Long
@@ -836,6 +865,11 @@ class StubDaemonBridge : DaemonBridgeApi {
     /** Recorded pinCertificatePath() calls as (accountId, path). */
     val pinnedCertificatePaths: MutableList<Pair<String, String>> = mutableListOf()
 
+    /** What countInteractions() reports, keyed "accountId:conversationId". */
+    val interactionCounts: MutableMap<String, Int> = mutableMapOf()
+    /** Recorded clearCache() calls as (accountId, conversationId). */
+    val clearedCaches: MutableList<Pair<String, String>> = mutableListOf()
+
     // Configurable lookup results: name -> LookupState (0=Success/taken, 1=Invalid, 2=NotFound/available, 3=NetworkError)
     var lookupNameResults: MutableMap<String, Int> = mutableMapOf()
     // Callback for when lookupName is called - set this to accountService.onRegisteredNameFound in tests
@@ -968,6 +1002,18 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun getConversationMembers(accountId: String, conversationId: String): List<Map<String, String>> = conversationMembers[conversationId] ?: emptyList()
     override fun getConversationInfo(accountId: String, conversationId: String): Map<String, String> = conversationInfo[conversationId] ?: emptyMap()
     override fun removeConversation(accountId: String, conversationId: String) {}
+    override fun countInteractions(
+        accountId: String,
+        conversationId: String,
+        toId: String,
+        fromId: String,
+        authorUri: String,
+    ): Int = interactionCounts["$accountId:$conversationId"] ?: 0
+
+    override fun clearCache(accountId: String, conversationId: String) {
+        clearedCaches += accountId to conversationId
+    }
+
     override fun addConversationMember(accountId: String, conversationId: String, uri: String) {}
     override fun removeConversationMember(accountId: String, conversationId: String, uri: String) {}
     override fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {}

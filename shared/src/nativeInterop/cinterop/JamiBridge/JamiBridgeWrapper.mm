@@ -1721,6 +1721,27 @@ static JBCallState toCallState(const std::string& state) {
 }
 
 // =============================================================================
+// Conversation History
+// =============================================================================
+
+- (uint32_t)countInteractions:(NSString *)accountId
+               conversationId:(NSString *)conversationId
+                         toId:(NSString *)toId
+                       fromId:(NSString *)fromId
+                    authorUri:(NSString *)authorUri {
+    return libjami::countInteractions(toCppString(accountId),
+                                      toCppString(conversationId),
+                                      toCppString(toId),
+                                      toCppString(fromId),
+                                      toCppString(authorUri));
+}
+
+- (void)clearCache:(NSString *)accountId conversationId:(NSString *)conversationId {
+    FILE_LOG_I("JamiBridge", @"clearCache: conversationId=%@", conversationId);
+    libjami::clearCache(toCppString(accountId), toCppString(conversationId));
+}
+
+// =============================================================================
 // Certificate Management
 // =============================================================================
 

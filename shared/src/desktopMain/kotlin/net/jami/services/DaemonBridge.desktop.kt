@@ -362,6 +362,21 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Trust Requests (Stubs) ====================
 
+    override fun countInteractions(
+        accountId: String,
+        conversationId: String,
+        toId: String,
+        fromId: String,
+        authorUri: String,
+    ): Int {
+        Log.d(TAG, "countInteractions called (stub): $conversationId")
+        return 0
+    }
+
+    override fun clearCache(accountId: String, conversationId: String) {
+        Log.d(TAG, "clearCache called (stub): $conversationId")
+    }
+
     // ==================== Certificate Management ====================
 
     override fun getPinnedCertificates(accountId: String): List<String> {

@@ -311,7 +311,9 @@ private fun conversationSyncLine(i: ConversationSyncInfo): String = buildString 
     i.requestMode?.let { append(" (→${it.name})") }
     append(" · members ").append(i.memberCount)
     append(" · peers ").append(i.activePeerCount)
+    // Daemon-side commit count, with what this client has loaded beside it.
     append(" · msgs ").append(i.messageCount)
+    append("/").append(i.loadedMessageCount)
     i.lastCommitId?.let { append(" · last ").append(it.take(8)) }
     if (i.bootstrapping) append(" · BOOTSTRAPPING")
 }

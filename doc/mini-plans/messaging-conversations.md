@@ -38,10 +38,37 @@ jami-kmp implements most core messaging and conversation features (message send/
 **Impact:** Conversation preferences (e.g., mute, archive, notification settings) are stale until the user opens conversation settings. Changes made on another device are not reflected until the user manually refreshes.
 **Daemon support:** `getConversationPreferences()` — `conversation_interface.h:75-76`; signal `ConversationPreferencesUpdated` — `conversation_interface.h:234-240`
 
-### F7: clearCache() and countInteractions() daemon functions unused — capability gap
+### F7: clearCache() and countInteractions() daemon functions unused — capability gap — **DONE (2026-10-13); the unread-count idea does not work, and the real bug was elsewhere**
 **Evidence:** `DaemonBridge.kt` does not define `clearCache()` or `countInteractions()` methods despite these existing in `conversation_interface.h:107, 102-106`.
 **Impact:** No way to clear cached messages or count messages matching criteria (e.g., "how many unread messages in this conversation?"). Unread count is inferred from the contact's unread flag, not a daemon query.
 **Daemon support:** `clearCache(accountId, conversationId)` — `conversation_interface.h:107`; `countInteractions()` with filters — `conversation_interface.h:102-106`
+
+Both are now on `DaemonBridgeApi` and implemented on Android and Apple. What they are good for
+turned out to be different from what this finding assumes, and checking that first changed the
+work:
+
+- **`countInteractions` cannot answer "how many unread messages".** It is a *commit* counter. Its
+  fast-log path does not parse commit content (`conversationrepository.cpp:2385-2392`), so it
+  cannot filter to text messages — member events, votes and profile updates all count — and it
+  cannot exclude one's own. And `authorUri` is not a filter but a **stop boundary**: the walk
+  breaks at the first commit by that author, so passing one's own URI counts what has happened
+  since one last posted. It is exposed for what it does do, and used in the sync-diagnostics panel
+  where an exact commit count is the useful number: the panel reported the *locally loaded*
+  history as the message count, which made a fully synced conversation look half-empty until it
+  had been scrolled. It now shows `daemon/loaded`.
+- **`clearCache` frees memory; it does not delete anything.** It drops the daemon's in-memory
+  message list, pending edits/reactions and per-member status (`conversation.cpp:2424-2435`). It
+  is called from the local "clear history" action, which previously cleared only the *client's*
+  model while the daemon held its own copy of the same history. Worth being plain about: for a
+  swarm the commits are in the git repository, so this releases memory rather than making the
+  clear permanent.
+
+**The unread gap was worse than "inferred from a flag".** `ConversationsViewModel` passed
+`unreadCount = 0` as a literal, so `HomeScreen`'s `if (conversation.unreadCount > 0)` badge could
+never render — a dead UI path. The count now comes from `Conversation.unreadMessageCount()`,
+ported from libjamiclient's `unreadTextMessages`: walk the loaded history backwards and stop at
+the first message already read or notified, skipping one's own (a reply of mine does not mark what
+came before it as read).
 
 ### F8: reloadConversationsAndRequests() not wired — capability gap
 **Evidence:** `DaemonBridge.kt` does not define `reloadConversationsAndRequests()` method despite it existing in `conversation_interface.h:118`.
@@ -83,10 +110,37 @@ mapping. Note this is an upstream bug: libjamiclient's enum has the same skew.
 **Impact:** Group members never see who was added, when, or by whom. Audit trail is lost. The daemon emits the event (a "member" event with action "add"), but it is silently dropped.
 **Daemon support:** `ConversationMemberEvent` signal — `conversation_interface.h:197-204` (events: 0=add, 1=joins, 2=leave, 3=banned)
 
-### F12: No visible UI for banning/unbanning conversation members — capability gap
+### F12: No visible UI for banning/unbanning conversation members — capability gap — **DONE (2026-10-13); no ban flag exists, because removal *is* the ban**
 **Evidence:** Daemon supports `removeConversationMember()` (which may include a ban flag in the message body), but `DaemonBridge.kt` only exposes a simple `removeConversationMember(accountId, conversationId, uri)` with no ban parameter. `ConversationDetailsScreen.kt` shows a list of members but has no "ban member" action.
 **Impact:** Conversation admins cannot ban members. Only removal (which may rejoin) is possible via the UI.
 **Daemon support:** `removeConversationMember()` — `conversation_interface.h:82-84`; `ConversationMemberEvent` signal indicates banned state (event=3) — `conversation_interface.h:197-204`
+
+**Corrected against the daemon before implementing — two of this finding's claims are wrong, and
+no new daemon function was needed:**
+
+- There is no ban flag and no message body: `removeConversationMember` takes exactly
+  (accountId, conversationId, contactUri). It votes to kick and, for an admin, resolves the vote
+  with `CommitAction::BAN` and disconnects the peer (`conversation.cpp:2074-2097`). **Removing a
+  member from a swarm is banning them** — so "only removal (which may rejoin) is possible" is the
+  opposite of what happens; a removed member cannot rejoin.
+- Unbanning is not its own call either: `addConversationMember` on a banned member is routed to
+  the unban vote (`Conversation::addMember` → `voteUnban`, `conversation.cpp:1908-1918`), again
+  admin-only.
+- The screen did already have admin-gated add/remove, so "no action" was stale.
+
+**What was actually missing**, and is now done:
+
+- **Banned members were indistinguishable.** `getConversationMembers` is called with
+  `includeBanned = true` (`conversation_interface.cpp:166`) and `Conversation.addContact` keeps a
+  BLOCKED member in `roles`, so they were listed looking like ordinary members — an admin could
+  not tell a ban had taken effect. Every role but plain member is now labelled (Admin, Blocked,
+  Left, Invited).
+- **A ban could not be undone from the UI.** `removeMember` filtered the member out of
+  `memberUris` optimistically, and the unblock action can only live on that row. The row now stays
+  and is marked blocked.
+- **No unblock action.** Added, admin-gated, calling `addConversationMember`.
+- **The wording said "Remove"** for an action that blocks permanently. It now says Block, and the
+  confirmation says they cannot rejoin unless unblocked.
 
 ### F13: Profile vCard exchange not tied to conversation level — data model issue
 **Evidence:** `ConversationFacade.kt` does not handle profile vCard updates per conversation. `onProfileReceived()` callback in `DaemonBridge.kt:445` receives the vCard path but there is no code to parse it or link it to a specific conversation's contact profile.

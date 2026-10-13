@@ -533,6 +533,18 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         JamiService.sendTrustRequest(accountId, uri, blob)
     }
 
+    override fun countInteractions(
+        accountId: String,
+        conversationId: String,
+        toId: String,
+        fromId: String,
+        authorUri: String,
+    ): Int = JamiService.countInteractions(accountId, conversationId, toId, fromId, authorUri).toInt()
+
+    override fun clearCache(accountId: String, conversationId: String) {
+        JamiService.clearCache(accountId, conversationId)
+    }
+
     // ==================== Certificate Management ====================
 
     override fun getPinnedCertificates(accountId: String): List<String> =

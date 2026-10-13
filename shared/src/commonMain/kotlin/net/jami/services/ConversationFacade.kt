@@ -979,6 +979,15 @@ class ConversationFacade(
                 uri != null && uri != account.username && !uri.endsWith(account.username)
             }
             val history = conversation.getSortedHistory()
+            // The daemon's own commit count, not just what this client has paged in — the panel
+            // is there to compare the two sides, and "msgs" meaning "messages I happen to have
+            // loaded" made a healthy conversation look half-synced.
+            val commitCount = try {
+                daemonBridge.countInteractions(accountId, convId)
+            } catch (e: Exception) {
+                Log.w(TAG, "snapshotConversationSyncInfo: countInteractions failed for $convId", e)
+                history.size
+            }
             ConversationSyncInfo(
                 conversationId = convId,
                 uri = conversation.uri.uri,
@@ -986,12 +995,37 @@ class ConversationFacade(
                 requestMode = conversation.requestMode,
                 memberCount = members.size,
                 activePeerCount = nonSelf,
-                messageCount = history.size,
+                messageCount = commitCount,
+                loadedMessageCount = history.size,
                 lastCommitId = history.lastOrNull { it.messageId != null }?.messageId,
                 bootstrapping = conversation.mode == Conversation.Mode.Syncing
             )
         }
     }
+
+    /**
+     * Drop the daemon's in-memory history for a conversation. Frees memory only: a swarm's
+     * commits are in its git repository and come back on the next load.
+     */
+    fun clearDaemonCache(accountId: String, conversationId: String) {
+        try {
+            daemonBridge.clearCache(accountId, conversationId)
+        } catch (e: Exception) {
+            Log.w(TAG, "clearDaemonCache failed for $conversationId", e)
+        }
+    }
+
+    /**
+     * Total commits the daemon holds for a conversation. See [DaemonBridgeApi.countInteractions]
+     * for what the count does and does not include.
+     */
+    fun countInteractions(accountId: String, conversationId: String): Int =
+        try {
+            daemonBridge.countInteractions(accountId, conversationId)
+        } catch (e: Exception) {
+            Log.w(TAG, "countInteractions failed for $conversationId", e)
+            0
+        }
 
     // ==================== Profile/Contact Operations ====================
 
@@ -2244,7 +2278,10 @@ data class ConversationSyncInfo(
     val memberCount: Int,
     /** Non-self members the daemon still lists with a role (best available "active peers" proxy). */
     val activePeerCount: Int,
+    /** Commits the daemon has in the conversation's repository, of every kind. */
     val messageCount: Int,
+    /** Interactions this client has loaded into memory, which is usually fewer. */
+    val loadedMessageCount: Int = 0,
     val lastCommitId: String?,
     /** Daemon reports the conversation's git repo as still cloning / not bootstrapped. */
     val bootstrapping: Boolean,

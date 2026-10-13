@@ -824,6 +824,18 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (NSDictionary<NSString *, NSString *> *)getCodecDetails:(NSString *)accountId codecId:(uint32_t)codecId;
 
 // =========================================================================
+// Conversation History (2 methods)
+// =========================================================================
+
+- (uint32_t)countInteractions:(NSString *)accountId
+               conversationId:(NSString *)conversationId
+                         toId:(NSString *)toId
+                       fromId:(NSString *)fromId
+                    authorUri:(NSString *)authorUri;
+
+- (void)clearCache:(NSString *)accountId conversationId:(NSString *)conversationId;
+
+// =========================================================================
 // Certificate Management (9 methods)
 // =========================================================================
 
