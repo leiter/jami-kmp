@@ -19,10 +19,12 @@ package net.jami.viewmodel
 import net.jami.testAudioRecorderService
 
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import net.jami.services.StubDaemonBridge
 import net.jami.services.StubDeviceRuntimeService
 import net.jami.ui.viewmodel.ChatViewModel
+import net.jami.ui.viewmodel.DeliveryStatus
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -199,5 +201,113 @@ class ChatViewModelTest {
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
         val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, disposableScope()), testAudioRecorderService(), makeSendQueue(stub, accountService, facade, disposableScope()), disposableScope())
         vm.onCleared()
+    }
+
+    // ==================== Daemon delivery status (messaging plan F9) ====================
+
+    /**
+     * Sets up a chat with one outgoing message still in flight and returns its id, together with
+     * the facade the daemon status callbacks go through. Time is deliberately not advanced past
+     * the send watchdog, which would flip the bubble to FAILED by itself.
+     */
+    private fun kotlinx.coroutines.test.TestScope.chatWithPendingMessage(): Triple<ChatViewModel, net.jami.services.ConversationFacade, String> {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        prepareAccountInService(stub, accountService)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
+        val vmScope = viewModelScope()
+        val vm = ChatViewModel(
+            facade, accountService, StubDeviceRuntimeService(),
+            net.jami.repository.DraftRepository(stub, vmScope), testAudioRecorderService(),
+            makeSendQueue(stub, accountService, facade, this), vmScope
+        )
+        vm.loadConversation(CONVERSATION_ID)
+        advanceUntilIdle()
+        vm.updateInput("hi")
+        vm.sendMessage()
+        runCurrent()
+        val pending = vm.state.value.messages.last { it.isOutgoing }
+        // The conversation is not live in the stub, so SendQueueService holds the message in the
+        // durable outbox: the bubble starts WAITING_TO_SYNC rather than SENDING. Either way it is
+        // not yet a terminal state, which is all these tests need.
+        assertTrue(
+            pending.deliveryStatus == DeliveryStatus.WAITING_TO_SYNC ||
+                pending.deliveryStatus == DeliveryStatus.SENDING
+        )
+        return Triple(vm, facade, pending.id)
+    }
+
+    private fun ChatViewModel.statusOf(messageId: String): DeliveryStatus =
+        state.value.messages.first { it.id == messageId }.deliveryStatus
+
+    /**
+     * The daemon reports a failed send as code 4. It used to be read as INVALID (the client enum
+     * listed an extra state at that index), fall through the status mapping, and leave the bubble
+     * on "sending" until the local watchdog expired.
+     */
+    @Test
+    fun aDaemonFailureMarksTheMessageFailed() = runTest {
+        val (vm, facade, id) = chatWithPendingMessage()
+
+        facade.onAccountMessageStatusChanged(TEST_ACCOUNT_ID, CONVERSATION_ID, id, PEER_URI, 4)
+        runCurrent()
+
+        assertEquals(DeliveryStatus.FAILED, vm.statusOf(id))
+    }
+
+    /** Code 5 is CANCELLED, which used to be read as FAILURE. It is also a failed send to the user. */
+    @Test
+    fun aCancelledSendMarksTheMessageFailed() = runTest {
+        val (vm, facade, id) = chatWithPendingMessage()
+
+        facade.onAccountMessageStatusChanged(TEST_ACCOUNT_ID, CONVERSATION_ID, id, PEER_URI, 5)
+        runCurrent()
+
+        assertEquals(DeliveryStatus.FAILED, vm.statusOf(id))
+    }
+
+    @Test
+    fun theDaemonsSentAndDisplayedCodesStillMapToDeliveredAndRead() = runTest {
+        val (vm, facade, id) = chatWithPendingMessage()
+
+        facade.onAccountMessageStatusChanged(TEST_ACCOUNT_ID, CONVERSATION_ID, id, PEER_URI, 2)
+        runCurrent()
+        assertEquals(DeliveryStatus.DELIVERED, vm.statusOf(id))
+
+        facade.onAccountMessageStatusChanged(TEST_ACCOUNT_ID, CONVERSATION_ID, id, PEER_URI, 3)
+        runCurrent()
+        assertEquals(DeliveryStatus.READ, vm.statusOf(id))
+    }
+
+    /** A late failure must not undo a delivery the user already saw. */
+    @Test
+    fun aFailureAfterDeliveryDoesNotDowngradeTheMessage() = runTest {
+        val (vm, facade, id) = chatWithPendingMessage()
+
+        facade.onAccountMessageStatusChanged(TEST_ACCOUNT_ID, CONVERSATION_ID, id, PEER_URI, 2)
+        runCurrent()
+        facade.onAccountMessageStatusChanged(TEST_ACCOUNT_ID, CONVERSATION_ID, id, PEER_URI, 4)
+        runCurrent()
+
+        assertEquals(DeliveryStatus.DELIVERED, vm.statusOf(id))
+    }
+
+    /** An unknown code from a newer daemon must leave the status alone rather than guess. */
+    @Test
+    fun anUnknownStatusCodeIsIgnored() = runTest {
+        val (vm, facade, id) = chatWithPendingMessage()
+        val before = vm.statusOf(id)
+
+        facade.onAccountMessageStatusChanged(TEST_ACCOUNT_ID, CONVERSATION_ID, id, PEER_URI, 42)
+        runCurrent()
+
+        assertEquals(before, vm.statusOf(id))
+    }
+
+    private companion object {
+        const val CONVERSATION_ID = "conv_001"
+        const val PEER_URI = "peer000000000000000000000000000000000001"
     }
 }

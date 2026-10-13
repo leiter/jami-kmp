@@ -1362,13 +1362,19 @@ class ChatViewModel(
         val newStatus = fromModel ?: when (Interaction.MessageStates.fromInt(event.status)) {
             Interaction.MessageStates.DISPLAYED -> DeliveryStatus.READ
             Interaction.MessageStates.SUCCESS -> DeliveryStatus.DELIVERED
+            Interaction.MessageStates.FAILURE, Interaction.MessageStates.CANCELLED ->
+                DeliveryStatus.FAILED
             else -> return
         }
         _state.update { current ->
             val idx = current.messages.indexOfFirst { it.id == event.messageId && it.isOutgoing }
             if (idx < 0) return@update current
             val old = current.messages[idx].deliveryStatus
-            if (deliveryRank(newStatus) <= deliveryRank(old)) return@update current
+            if (newStatus == DeliveryStatus.FAILED) {
+                // A failure is terminal, so the no-downgrade guard below would drop it (it ranks
+                // with SENDING). It must still not undo a delivery that already happened.
+                if (old == DeliveryStatus.DELIVERED || old == DeliveryStatus.READ) return@update current
+            } else if (deliveryRank(newStatus) <= deliveryRank(old)) return@update current
             current.copy(messages = current.messages.toMutableList().also {
                 it[idx] = it[idx].copy(deliveryStatus = newStatus)
             })
@@ -1392,6 +1398,11 @@ class ChatViewModel(
         return when {
             peers.values.any { it == Interaction.MessageStates.DISPLAYED } -> DeliveryStatus.READ
             peers.values.any { it == Interaction.MessageStates.SUCCESS }   -> DeliveryStatus.DELIVERED
+            // Only a failure for every peer is a failed message: in a group, one unreachable
+            // member does not make a message that reached the others undelivered.
+            peers.values.all {
+                it == Interaction.MessageStates.FAILURE || it == Interaction.MessageStates.CANCELLED
+            } -> DeliveryStatus.FAILED
             else -> DeliveryStatus.SENDING
         }
     }

@@ -48,10 +48,30 @@ jami-kmp implements most core messaging and conversation features (message send/
 **Impact:** No explicit "refresh all conversations and pending requests" operation. The app relies on daemon signals to update state; no force-refresh from the service layer.
 **Daemon support:** `reloadConversationsAndRequests(accountId)` — `conversation_interface.h:118`
 
-### F9: Message status mapping may be incomplete — potential bug
+### F9: Message status mapping may be incomplete — potential bug — **DONE (2026-10-13); it was a real off-by-one, not just missing tests**
 **Evidence:** `ConversationFacade.kt:1687` maps daemon status integers via `Interaction.MessageStates.fromInt(it.value)`. The daemon sends status codes (e.g., 0=sent, 1=delivered, 2=displayed, etc.), but there is no comprehensive test of all possible daemon status codes or validation that the UI renders all states correctly.
 **Impact:** Unknown/unmapped message statuses (e.g., from a newer daemon) may silently fall through to a default state, giving the user incorrect delivery feedback.
 **Daemon support:** Daemon emits `AccountMessageStatusChanged` signal — `configurationmanager_interface.h:407-415`
+
+**What was actually wrong.** libjami's `Account::MessageStates` (`account_const.h:64`) is
+`UNKNOWN=0, SENDING=1, SENT=2, DISPLAYED=3, FAILURE=4, CANCELLED=5`. Our enum — copied from
+libjamiclient — listed an extra client-only `INVALID` fourth and `fromInt` read the code as an
+**ordinal**, so every code from 4 up was shifted: a daemon FAILURE arrived as `INVALID` and a
+CANCELLED as `FAILURE`. Codes 0–3 happened to line up, which is why delivery ticks looked correct.
+
+Both consumers in `ChatViewModel` then dropped the shifted values (`else -> return`,
+`else -> SENDING`), so **a message the daemon reported as failed kept showing the "sending"
+indicator**. `DeliveryStatus.FAILED` was only ever reached from the local 20 s `armSendWatchdog`
+timeout, meaning a definite daemon-side failure was reported later and less accurately than a
+guess — and the retry affordance on the bubble never appeared for it.
+
+**Fix.** The codes are now declared explicitly against the header and `INVALID` is a sentinel at
+`-1`, so an unknown code from a newer daemon cannot read as a known state. `FAILURE`/`CANCELLED`
+map to `DeliveryStatus.FAILED` in both the per-peer aggregate and the event fallback. A failure is
+terminal, so it bypasses the no-downgrade rank guard, but it cannot undo a delivery that already
+happened; in a group, only a failure for *every* peer makes the message failed. The same ordinal
+trap in `InteractionStatus.fromIntTextMessage` (unused, but adjacent) now goes through the one
+mapping. Note this is an upstream bug: libjamiclient's enum has the same skew.
 
 ### F10: Lazy-loaded message history does not preserve scroll position — UX issue — **DOES NOT APPLY to this implementation (verified 2026-10-12)**
 **Evidence:** `ChatViewModel.kt:849-890` appends old messages but does not adjust scroll offset. The list is rebuilt with new messages prepended, which causes the UI to jump. Android `LazyColumn` and iOS equivalents need explicit scroll anchor management.

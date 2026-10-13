@@ -188,18 +188,31 @@ open class Interaction {
 
     // ==================== Enums ====================
 
+    /**
+     * Per-peer delivery state of a swarm message, as reported by the daemon.
+     *
+     * [value] mirrors `libjami::Account::MessageStates` (`account_const.h`), which has no
+     * equivalent of [INVALID] — so unlike libjamiclient, which lists INVALID fourth and reads the
+     * code as an ordinal, the codes are declared explicitly and [INVALID] is a client-only
+     * sentinel for anything the daemon sends that we do not know. Taking the ordinal shifted
+     * everything from FAILURE on by one, which is why a failed message used to arrive as INVALID
+     * and a cancelled one as FAILURE, and so never showed as failed in the chat.
+     */
     enum class MessageStates(val value: Int) {
         UNKNOWN(0),
         SENDING(1),
+        /** The daemon's `SENT`. */
         SUCCESS(2),
         DISPLAYED(3),
-        INVALID(4),
-        FAILURE(5),
-        CANCELLED(6);
+        FAILURE(4),
+        CANCELLED(5),
+
+        /** Not a daemon code: an unmapped or unset status. */
+        INVALID(-1);
 
         companion object {
             fun fromInt(value: Int): MessageStates =
-                entries.getOrElse(value) { INVALID }
+                entries.firstOrNull { it.value == value } ?: INVALID
         }
     }
 
@@ -210,8 +223,20 @@ open class Interaction {
             fun fromString(str: String): InteractionStatus =
                 entries.firstOrNull { it.name == str } ?: INVALID
 
+            /**
+             * Daemon status code → interaction status. Goes through [MessageStates] rather than
+             * reading the code as an ordinal, for the reason given there; this enum has no
+             * CANCELLED, so a cancelled send is reported as a failure.
+             */
             fun fromIntTextMessage(n: Int): InteractionStatus =
-                entries.getOrElse(n) { INVALID }
+                when (MessageStates.fromInt(n)) {
+                    MessageStates.UNKNOWN -> UNKNOWN
+                    MessageStates.SENDING -> SENDING
+                    MessageStates.SUCCESS -> SUCCESS
+                    MessageStates.DISPLAYED -> DISPLAYED
+                    MessageStates.FAILURE, MessageStates.CANCELLED -> FAILURE
+                    MessageStates.INVALID -> INVALID
+                }
         }
     }
 
