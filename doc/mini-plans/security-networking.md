@@ -39,7 +39,7 @@ Minor — the key-exchange toggle is present. But users cannot disable SRTP enti
 
 ---
 
-### F3: DHT Proxy Configuration Incomplete — gap
+### F3: DHT Proxy Configuration Incomplete — gap — **INVALID (2026-10-13): the key means the opposite of what the finding assumes**
 
 **Evidence:**
 - KMP exposes: `proxyEnabled`, `proxyServer`, `proxyListEnabled`, `proxyListUrl` in `AccountAdvancedSettingsScreen.kt:161–197`
@@ -53,6 +53,24 @@ If a DHT proxy server runs on a non-standard port, users must hardcode it into t
 
 **Daemon support:** 
 `Account.dhtProxyServerPort`; `account_const.h:147`.
+
+**Verified against the daemon we link (2026-10-13): the finding misreads the key.**
+`Account.dhtProxyServerPort` is not the port of the proxy this device *connects to* — it is the
+port this device *listens on when it runs a DHT proxy server itself*. Its only consumer is
+`jamidht/jamiaccount.cpp:2019-2023`, inside `if (conf.dhtProxyServerEnabled)`, where it fills
+`dht::ProxyServerConfig::port` for a locally hosted `DhtProxyServer` (default 42443,
+`jamiaccount_config.h:60`). It pairs with `Account.dhtProxyServerEnabled`, which this plan does
+not mention.
+
+The premise is wrong too: `Account.proxyServer` is *designed* to carry a port, and the daemon's
+own default is a port **range** — `dhtproxy.jami.net:[80-95]` (`jamiaccount_config.h:56`). So
+"users must hardcode it into the proxyServer string" describes the intended format, not a
+workaround, and a separate numeric port field could not express the default.
+
+Nothing to implement. The real capability behind these two keys — hosting a DHT proxy on this
+device — is not a mobile feature: it needs inbound reachability and a process that stays alive,
+neither of which a phone offers. Note also that the newer daemon in `letsJam/jami-daemon` has
+dropped both keys from `account_const.h` entirely.
 
 ---
 
@@ -202,7 +220,7 @@ Interoperability issue only; affects SIP servers that don't send Secure dialog h
 
 ---
 
-### F13: Published Address and Port Configuration Missing — gap
+### F13: Published Address and Port Configuration Missing — gap — **NOT APPLICABLE to Jami accounts (2026-10-13); SIP-only**
 
 **Evidence:**
 - Daemon properties: `Account.publishedAddress`, `Account.publishedPort`, `Account.publishedSameAsLocal`; `account_const.h:126–129`
@@ -216,9 +234,32 @@ NAT traversal less granular; relies on UPnP/STUN only. Manual published address 
 **Daemon support:** 
 `Account.publishedAddress`, `Account.publishedPort`, `Account.publishedSameAsLocal`; `account_const.h:126–129`.
 
+**Verified against the daemon (2026-10-13). Split three ways, and none of it is a Jami gap:**
+
+- `Account.publishedPort` lives in `SIPAccountConfig` (`sip/sipaccount_config.cpp:190-198`), not
+  in the shared base — it does not exist for a Jami account at all.
+- `Account.publishedAddress` and `publishedSameAsLocal` *are* in `SipAccountBaseConfig`
+  (`sip/sipaccountbase_config.h:47-49`), which `JamiAccountConfig` extends, so they are stored
+  for Jami accounts and `SIPAccountBase::loadConfig` does call `setPublishedAddress`
+  (`sipaccountbase.cpp:120-122`). But **a Jami account never reads the value back**:
+  `JamiAccount::getPublishedIpAddress()` overrides the base to return
+  `connectionManager_->getPublishedIpAddress(...)` (`jamiaccount.cpp:3327-3330`), i.e. the address
+  the daemon *discovered*, and `JamiAccount::loadConfig` copies only the UPnP and TURN settings
+  into the connection manager's config (`jamiaccount.cpp:1012-1020`). The one call site that
+  matters for a Jami call picks between the local interface address and the connection manager's
+  discovered address (`jamiaccount.cpp:881-884`) — the configured string is not consulted on
+  either branch.
+- The consumers that *do* read it are in `sip/sipvoiplink.cpp:407-410, 989-991` and
+  `sip/sipcall.cpp`, on the SIP transport path.
+
+So a published-address field on a Jami account would be stored, shown back, and ignored — a
+setting that lies. The reference client agrees and is explicit about it:
+`AdvancedAccountFragment.kt:126-131` sets `isVisible = !isJamiAccount` on PUBLISHED_ADDRESS,
+PUBLISHED_PORT and PUBLISHED_SAMEAS_LOCAL. Belongs with the SIP work (F1), not before it.
+
 ---
 
-### F14: Local Interface and Bind Address Selection Missing — gap
+### F14: Local Interface and Bind Address Selection Missing — gap — **MOSTLY SIP-ONLY (2026-10-13); the one Jami-visible part is desktop-only in practice**
 
 **Evidence:**
 - Daemon properties: `Account.localInterface`, `Account.bindAddress`, `Account.localPort`; `account_const.h:121–128`
@@ -231,6 +272,24 @@ On multi-interface machines, the daemon auto-selects an interface. Users cannot 
 
 **Daemon support:** 
 `Account.localInterface`, `Account.bindAddress`, `Account.localPort`; `account_const.h:121–128`.
+
+**Verified against the daemon (2026-10-13):**
+
+- `Account.bindAddress` and `Account.localPort` are `SIPAccountConfig` fields
+  (`sip/sipaccount_config.cpp:190, 198, 241-242`) — they do not exist for a Jami account.
+- `Account.localInterface` is in `SipAccountBaseConfig` (`sipaccountbase_config.h:41`, default
+  `"default"`) and a Jami account **does** read it: `JamiAccount::onConnectedOutgoingCall` resolves
+  it to the local address that goes into the SDP of an outgoing call
+  (`jamiaccount.cpp:881`, via `getLocalInterface()` at `sipaccountbase.h:132`).
+
+So one of the three is real for Jami — but it is a multi-homed-host knob, and the reference hides
+it for Jami accounts too (`AdvancedAccountFragment.kt:123-124`,
+`sipLocalInterface?.isVisible = !isJamiAccount`). On a phone there is one sensible interface and
+the daemon's `"default"` already picks it; a picker would also need interface enumeration, which
+no daemon call provides — it would be a five-target expect/actual (`NetworkInterface` on
+Android/JVM, `getifaddrs` on Apple) for a setting that only pays off on a desktop, which CLAUDE.md
+ranks secondary. Left open rather than closed: worth doing *with* the SIP work or if desktop
+becomes a priority, not before.
 
 ---
 
@@ -378,6 +437,38 @@ Incidental finding while testing: `AccountService` seeds Jami's public TURN cred
 block of those (SIP account editing, published address/port, interface binding, DHT proxy port),
 but note that most of this plan is SIP-specific, which sits against the swarm-first, mobile-first
 priority in CLAUDE.md — worth deciding scope before working through it.
+
+---
+
+## Status (2026-10-13): F11 done; F3/F13/F14 verified and closed, and the "non-SIP" grouping was wrong
+
+**F11 (relaxed peer-certificate trust) — done** with the certificate-management slice; see the
+finding.
+
+**F3, F13 and F14 were picked as the three items of this plan that affect Jami accounts rather
+than SIP. Checked against the daemon source, that grouping does not hold** — which is why they
+are closed with evidence instead of implemented:
+
+- **F3 is invalid.** `Account.dhtProxyServerPort` is the port used when this device *hosts* a DHT
+  proxy, not the port of the proxy it connects to; and `Account.proxyServer` is meant to carry a
+  port, its default being the range `dhtproxy.jami.net:[80-95]`.
+- **F13 does not apply to a Jami account.** `publishedPort` is SIP-only; `publishedAddress` is
+  stored but never read back, because `JamiAccount` overrides the getter to return the address the
+  daemon discovered. The field would be a setting that lies.
+- **F14 is two-thirds SIP-only** (`bindAddress`, `localPort`). `localInterface` is genuinely used
+  by `JamiAccount` for the SDP address of an outgoing call, so it stays open — but it is a
+  multi-homed-host setting that needs interface enumeration on five targets and only pays off on
+  desktop.
+
+The reference client corroborates all three: `AdvancedAccountFragment.kt` explicitly sets
+`isVisible = !isJamiAccount` on PUBLISHED_ADDRESS, PUBLISHED_PORT, PUBLISHED_SAMEAS_LOCAL,
+LOCAL_PORT and LOCAL_INTERFACE.
+
+**Revised view of what is left here:** with F5/F6/F7/F11 done, this plan has no remaining items
+that change behaviour for a Jami account on mobile. The other 17 are SIP surface (F1, F8, F15,
+F16, F20), hosting/diagnostic keys that do not apply (F3), or small settings-breadth additions
+whose value depends on SIP support landing first. The plan is best treated as blocked on the
+decision to support SIP accounts properly, rather than worked through finding by finding.
 
 ---
 
