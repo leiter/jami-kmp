@@ -118,13 +118,24 @@ bundled headers and all 89 resolve. The plausible failure modes, in order:
 
 ## Next Steps
 
-1. **Confirm the prerequisites exist before anything else.** A sibling `jami-client-ios`
-   checkout that has *already been built* (`DEPS/` and `xcframework/` are build products):
+1. **Prerequisites — already verified on 2026-10-14, skip unless something has moved.**
+   Checked on the Mac that day: all 47 libraries named in
+   `OTHER_LDFLAGS[sdk=iphoneos*]` are present in
+   `../jami-client-ios/DEPS/arm64-iPhoneOS/lib/`, `libjami-core.a` among them; the
+   `xcframework/` set is complete including `libjami-core.xcframework`; Xcode is at
+   `/Applications/Xcode.app/Contents/Developer`. **No dependency drift.**
+
+   To re-check after the daemon submodule moves, compare the pbxproj's expected set against
+   what `DEPS/` holds — that mismatch is the drift described below, and it surfaces only as an
+   undefined-symbol error:
    ```bash
-   ls ../jami-client-ios/DEPS/arm64-iPhoneOS/lib/ | head
-   ls ../jami-client-ios/xcframework/
+   awk '/OTHER_LDFLAGS\[sdk=iphoneos/,/\);/' ios-app/iosApp.xcodeproj/project.pbxproj \
+     | sed 's/^[ \t]*//' | tr -d '",' | grep '^-l' | sed 's/^-l//' | sort -u \
+     | grep -vE '^(c\+\+|iconv|resolv|sqlite3|z|jami|JamiBridge_ios)$' \
+     | while read l; do
+         [ -f "../jami-client-ios/DEPS/arm64-iPhoneOS/lib/lib$l.a" ] || echo "MISSING: lib$l.a"
+       done
    ```
-   If these are missing, that is the whole first task — do not start the rebuild.
 2. **Regenerate simulator symlinks:** `python3 scripts/make_sim_links.py` — expect
    "Created 49 symlinks / All libs found". Anything it cannot find means the xcframework build
    is incomplete.
@@ -136,10 +147,27 @@ bundled headers and all 89 resolve. The plausible failure modes, in order:
    `shared/src/nativeInterop/cinterop/JamiBridge/build-jamibridge.sh`. Fix compile errors
    against the checklist table above. This overwrites two tracked `.a` files; the tree is clean
    so `git checkout -- shared/src/nativeInterop/cinterop/lib/` resets a bad run.
-5. **Link the simulator target** (the fastest feedback loop, and it avoids the device symlink
-   question entirely): `./gradlew :shared:linkDebugFrameworkIosSimulatorArm64` or the
-   equivalent for this project's target names. Undefined symbols here mean step 4 did not
-   actually produce them — check `nm -gU lib/libJamiBridge_iossim.a | grep <symbol>`.
+5. **Verify the symbols, then link in Xcode. Do not trust a green Gradle link.**
+
+   `shared/build.gradle.kts:36-60` builds the iOS framework with `isStatic = true`, and the
+   iOS targets pass no `-ljami` or per-dependency linker flags — only macOS does. A static
+   archive tolerates undefined symbols, and the real resolution happens in Xcode's app link
+   using `OTHER_LDFLAGS`. So `linkDebugFrameworkIosSimulatorArm64` **can succeed while the
+   `.a` is still missing every method added in step 4**. Two checks instead:
+
+   ```bash
+   # a) did the rebuild actually emit the new symbols?
+   nm -gU shared/src/nativeInterop/cinterop/lib/libJamiBridge_iossim.a \
+     | grep -E "countInteractions|pinCertificate|setCertificateStatus|muteParticipantStream|updateProfile"
+
+   # b) the real link
+   xcodebuild -project ios-app/iosApp.xcodeproj -scheme iosApp \
+     -sdk iphonesimulator -configuration Debug build
+   ```
+
+   (a) is what tells you the Obj-C++ rebuild worked. Also note `build-jamibridge.sh` overwrites
+   tracked `.a` files, so a run that silently did nothing looks identical to one that worked —
+   `git status` should show both `.a` files modified afterwards.
 6. **Run the app on a simulator** and walk the right-hand column of the checklist table.
 7. **Commit the rebuilt `.a` files on their own**, with a message listing the nine commits they
    now cover, so the next drift is easy to date.
