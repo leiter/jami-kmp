@@ -143,9 +143,18 @@ bundled headers and all 89 resolve. The plausible failure modes, in order:
 6. **Run the app on a simulator** and walk the right-hand column of the checklist table.
 7. **Commit the rebuilt `.a` files on their own**, with a message listing the nine commits they
    now cover, so the next drift is easy to date.
-8. **Then macOS**, as a separate piece of work: the iOS and macOS Darwin implementations are
-   now substantively identical, so the fix is a shared `appleMain` source set rather than
-   patching `MacOSHardwareService.kt` twice. See `doc/TODO.md`.
+8. **Then macOS — but do not start it from scratch.** There is already a branch:
+   `origin/macos-build-and-apple-source-set`, one commit (`f0f66ce`, "Make the macOS target
+   build, and share Darwin code via appleMain", 2026-10-01). Continue that rather than
+   re-deriving it. It predates all nine wrapper commits, so it needs rebasing onto `main`
+   before it can even be evaluated:
+   ```bash
+   git log --oneline origin/macos-build-and-apple-source-set
+   git rev-list --left-right --count main...origin/macos-build-and-apple-source-set
+   ```
+   The approach in it is the right one — the iOS and macOS Darwin implementations are
+   substantively identical, so a shared `appleMain` source set beats patching
+   `MacOSHardwareService.kt` twice. See also `doc/TODO.md`.
 
 ## Key Constraints
 
