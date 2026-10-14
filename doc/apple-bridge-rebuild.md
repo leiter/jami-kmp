@@ -92,7 +92,17 @@ README's drift section, and worth expecting again:
 ### Known hazard 2: `OTHER_LDFLAGS` in `project.pbxproj` drifts the same way
 - Same cause, same symptom, different file. Check it against the current `lib/` contents.
 
-### Known hazard 3: Release archives die in `DevirtualizationAnalysis`
+### Known hazard 3: `build-jamibridge.sh`'s macOS stage fails, and always has
+- **What happens:** the script compiles three stages (device, simulator, macOS). The macOS one
+  fails because the wrapper's UIKit file-picker code (`UIScene`, `UIWindow`) is compiled against
+  the macOS SDK.
+- **Not caused by the nine commits:** that code dates to `93df547a` (April), so macOS has been
+  broken here since long before. Confirmed on 2026-10-14.
+- **What to do:** it is step 8's problem, not step 4's. Run the script's two iOS stages with the
+  script's own flags rather than editing the script, and leave macOS to the
+  `macos-build-and-apple-source-set` branch.
+
+### Known hazard 4: Release archives die in `DevirtualizationAnalysis`
 - **Cause:** Kotlin/Native LTO runs *inside* the Gradle daemon here, so only
   `org.gradle.jvmargs` controls its heap — `kotlin.native.jvmArgs` and
   `kotlin.daemon.jvm.options` are inert. Needs ~6 GB.
@@ -136,9 +146,12 @@ bundled headers and all 89 resolve. The plausible failure modes, in order:
          [ -f "../jami-client-ios/DEPS/arm64-iPhoneOS/lib/lib$l.a" ] || echo "MISSING: lib$l.a"
        done
    ```
-2. **Regenerate simulator symlinks:** `python3 scripts/make_sim_links.py` — expect
-   "Created 49 symlinks / All libs found". Anything it cannot find means the xcframework build
-   is incomplete.
+2. **Regenerate simulator symlinks:** `python3 scripts/make_sim_links.py`. Correct output is
+   **"Created 48 symlinks / No arm64-simulator slice (1): libvpx"** — libvpx genuinely has no
+   arm64-sim slice (ffmpeg is configured `--disable-libvpx` there), which the script treats as
+   non-fatal and the README lists as one of the three 2026-09-08 drift findings. The README's
+   example output showing "49 symlinks / All libs found" is stale; do not chase the difference.
+   Any *other* library it cannot find does mean the xcframework build is incomplete.
 3. **Check device symlinks** in `shared/src/nativeInterop/cinterop/lib/` against the current
    `jami-client-ios/DEPS/arm64-iPhoneOS/lib/`. Note `libjami-core.a` must be linked as
    `lib/libjami.a` — both the `.def` and the build script expect the short name. The README
@@ -156,16 +169,28 @@ bundled headers and all 89 resolve. The plausible failure modes, in order:
    `.a` is still missing every method added in step 4**. Two checks instead:
 
    ```bash
-   # a) did the rebuild actually emit the new symbols?
-   nm -gU shared/src/nativeInterop/cinterop/lib/libJamiBridge_iossim.a \
-     | grep -E "countInteractions|pinCertificate|setCertificateStatus|muteParticipantStream|updateProfile"
+   # a) are the header's methods actually in the rebuilt archive?
+   #    NOTE: not `nm -gU`. Objective-C methods are local (t) symbols, not global, so a
+   #    global-symbol listing finds none of them and looks like total failure.
+   L=shared/src/nativeInterop/cinterop/lib
+   for a in ios iossim; do
+     echo "$a: $(nm $L/libJamiBridge_$a.a | grep -cE '[-+]\[JamiBridgeWrapper ') methods"
+   done
+   # Cross-check every declared method against the archive (empty output = all present):
+   awk '/@interface JamiBridgeWrapper/,/@end/' \
+     shared/src/nativeInterop/cinterop/JamiBridge/JamiBridgeWrapper.h \
+     | grep -oE '^[-+] \([^)]*\)[A-Za-z]+' | grep -oE '[A-Za-z]+$' | sort -u \
+     | while read m; do
+         nm $L/libJamiBridge_ios.a | grep -q "JamiBridgeWrapper $m" || echo "declared, not in .a: $m"
+       done
 
    # b) the real link
    xcodebuild -project ios-app/iosApp.xcodeproj -scheme iosApp \
      -sdk iphonesimulator -configuration Debug build
    ```
 
-   (a) is what tells you the Obj-C++ rebuild worked. Also note `build-jamibridge.sh` overwrites
+   For reference, the 2026-10-14 rebuild gave **1096 methods, up from 875**, and all 153
+   header-declared methods present. (a) is what tells you the Obj-C++ rebuild worked. Also note `build-jamibridge.sh` overwrites
    tracked `.a` files, so a run that silently did nothing looks identical to one that worked —
    `git status` should show both `.a` files modified afterwards.
 6. **Run the app on a simulator** and walk the right-hand column of the checklist table.
