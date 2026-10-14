@@ -1,0 +1,10 @@
+# macOS libraries — machine-specific symlinks, same situation as ../lib-sim/.
+#
+# Created by the macOS/appleMain work (see the macos-build-and-apple-source-set
+# branch) and left behind when switching branches, which is how this directory
+# turned up untracked *and* unignored on main — one `git add .` away from being
+# committed. Nothing here belongs in git.
+#
+# See ../JamiBridge/README.md for the setup.
+*
+!.gitignore
