@@ -102,7 +102,20 @@ README's drift section, and worth expecting again:
   script's own flags rather than editing the script, and leave macOS to the
   `macos-build-and-apple-source-set` branch.
 
-### Known hazard 4: Release archives die in `DevirtualizationAnalysis`
+### Known hazard 4: the simulator is arm64-only, and `iosX64` cannot link at all
+- **What happens:** `xcodebuild -destination 'generic/platform=iOS Simulator'` also builds
+  x86_64 and fails. Use an explicit arm64 simulator destination, e.g.
+  `-destination 'platform=iOS Simulator,name=iPhone 17 Pro'`.
+- **Why:** `scripts/make_sim_links.py:47-49` selects arm64-simulator slices only — it
+  deliberately excludes `ios-x86_64-simulator` — so `lib-sim/` holds arm64 libraries and
+  nothing else. The jami dependencies simply are not built for the x86_64 simulator here.
+- **Unresolved, worth a decision:** `shared/build.gradle.kts:29` still declares `iosX64()` and
+  points it at that same arm64-only `lib-sim` path, so that target can never link. It is a
+  declared-but-unbuildable target and the reason the generic destination fails. Removing it
+  would make the failure impossible rather than merely documented — but it is a build-config
+  change, so ask first.
+
+### Known hazard 5: Release archives die in `DevirtualizationAnalysis`
 - **Cause:** Kotlin/Native LTO runs *inside* the Gradle daemon here, so only
   `org.gradle.jvmargs` controls its heap — `kotlin.native.jvmArgs` and
   `kotlin.daemon.jvm.options` are inert. Needs ~6 GB.
