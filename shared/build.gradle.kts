@@ -25,11 +25,21 @@ kotlin {
     }
 
     // iOS
+    //
+    // No iosX64: the Intel simulator cannot be linked here. scripts/make_sim_links.py links
+    // arm64-simulator slices only (it excludes ios-x86_64-simulator deliberately), so lib-sim/
+    // holds no x86_64 libjami or dependencies to link against. While the target was declared,
+    // an Intel-simulator build compiled fine and then failed at *link* time with undefined
+    // symbols for every daemon function — the expensive failure mode the bridge README warns
+    // about. Without it, Xcode's embedAndSignAppleFrameworkForXcode fails immediately instead,
+    // naming the unmatched architecture.
+    //
+    // Re-adding it means rebuilding the jami-client-ios dependencies for the x86_64 simulator
+    // first, and teaching make_sim_links.py to pick those slices.
     val iosArm64Target = iosArm64()
-    val iosX64Target = iosX64()
     val iosSimArm64Target = iosSimulatorArm64()
 
-    listOf(iosArm64Target, iosX64Target, iosSimArm64Target).forEach { iosTarget ->
+    listOf(iosArm64Target, iosSimArm64Target).forEach { iosTarget ->
         val libPath = when (iosTarget) {
             iosArm64Target -> libjamiLibPath
             else -> "${projectDir}/src/nativeInterop/cinterop/lib-sim"
