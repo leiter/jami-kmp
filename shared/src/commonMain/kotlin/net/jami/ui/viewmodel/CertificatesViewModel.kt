@@ -115,13 +115,15 @@ class CertificatesViewModel(
         _state.update { it.copy(expandedId = if (it.expandedId == certId) null else certId) }
     }
 
-    fun pinCertificatePath(path: String) {
+    /**
+     * Pin a certificate from a file. Reads the bytes and pins by content rather than by path, so
+     * the pin survives a daemon restart — see [CertificateService.pinCertificateFile].
+     */
+    fun pinCertificateFile(path: String) {
         val accountId = accountId ?: return
         scope.launch {
-            // The daemon reports what it pinned through certificatePathPinned, which refreshes the
-            // list; a path holding nothing usable raises no error, so say so rather than sit idle.
-            val accepted = certificateService.pinCertificatePath(accountId, path)
-            if (!accepted) {
+            val ids = certificateService.pinCertificateFile(accountId, path)
+            if (ids.isEmpty()) {
                 _state.update { it.copy(errorMessage = PIN_FAILED) }
             } else {
                 refresh()
@@ -129,10 +131,10 @@ class CertificatesViewModel(
         }
     }
 
-    fun unpinCertificate(certId: String) {
+    fun unpinCertificate(certificate: Certificate) {
         val accountId = accountId ?: return
         scope.launch {
-            if (!certificateService.unpinCertificate(accountId, certId)) {
+            if (!certificateService.unpinCertificate(accountId, certificate)) {
                 _state.update { it.copy(errorMessage = UNPIN_FAILED) }
             }
             refresh()
@@ -140,10 +142,10 @@ class CertificatesViewModel(
     }
 
     /** Set a certificate's trust status: UNDEFINED, ALLOWED or BANNED. */
-    fun setStatus(certId: String, status: String) {
+    fun setStatus(certificate: Certificate, status: String) {
         val accountId = accountId ?: return
         scope.launch {
-            if (!certificateService.setCertificateStatus(accountId, certId, status)) {
+            if (!certificateService.setCertificateStatus(accountId, certificate, status)) {
                 _state.update { it.copy(errorMessage = STATUS_FAILED) }
             }
             refresh()

@@ -84,9 +84,20 @@ fun CertificatesScreen(
     var showPicker by remember { mutableStateOf(false) }
     var pendingUnpin by remember { mutableStateOf<Certificate?>(null) }
 
-    net.jami.ui.platform.FilePickerEffect(show = showPicker) { path ->
+    // Explicit types: the default "*/*" greys out every file in the iOS document picker, which
+    // made this flow unusable there. PEM/DER certificates are x509; public.data is the fallback
+    // for a file the system cannot classify.
+    net.jami.ui.platform.FilePickerEffect(
+        show = showPicker,
+        mimeTypes = listOf(
+            "public.x509-certificate",
+            "application/x-x509-ca-cert",
+            "application/x-pem-file",
+            "public.data",
+        ),
+    ) { path ->
         showPicker = false
-        if (path != null) viewModel.pinCertificatePath(path)
+        if (path != null) viewModel.pinCertificateFile(path)
     }
 
     Scaffold(
@@ -152,7 +163,7 @@ fun CertificatesScreen(
                                 certificate.id in state.expiredIds,
                             isExpanded = state.expandedId == certificate.id,
                             onToggle = { viewModel.toggleExpanded(certificate.id) },
-                            onStatusSelected = { viewModel.setStatus(certificate.id, it) },
+                            onStatusSelected = { viewModel.setStatus(certificate, it) },
                             onUnpin = { pendingUnpin = certificate },
                         )
                         HorizontalDivider()
@@ -170,7 +181,7 @@ fun CertificatesScreen(
             dismissText = stringResource(Res.string.action_cancel),
             isDestructive = true,
             onConfirm = {
-                viewModel.unpinCertificate(certificate.id)
+                viewModel.unpinCertificate(certificate)
                 pendingUnpin = null
             },
             onDismiss = { pendingUnpin = null },

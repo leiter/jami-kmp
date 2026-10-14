@@ -51,6 +51,12 @@ object CertificateDetail {
 
 /** Keys of the check map returned by `validateCertificate` (`Certificate::ChecksNames`). */
 object CertificateCheck {
+    /**
+     * **The name is libjami's and it is a misnomer.** The check behind it is
+     * `TlsValidator::notExpired()` (`tlsvalidator.cpp:768-776`), which returns PASSED when the
+     * certificate is *within* its validity and FAILED when it has expired. Read it as
+     * "not expired", never as "is expired".
+     */
     const val EXPIRED = "EXPIRED"
     const val NOT_REVOKED = "NOT_REVOKED"
     const val KNOWN_AUTHORITY = "KNOWN_AUTHORITY"
@@ -73,10 +79,25 @@ object CertificateCheck {
  * the named properties are the handful the UI shows, and the full maps back the detail screen.
  */
 data class Certificate(
+    /**
+     * The id to act on. The daemon's store holds each certificate under several ids (see [ids]);
+     * this is the longest, because that is the one `unpinCertificate` can actually delete — the
+     * stored file is named after it (`certstore.cpp:384`).
+     */
     val id: String,
+    /**
+     * Every id the daemon's store returns for this one certificate. `CertificateStore` emplaces
+     * both the short and the long id, and walks the issuer chain doing the same
+     * (`certstore.cpp:299-302`, `:366-380`), so `getPinnedCertificates()` lists two or more ids
+     * per certificate. They must be collapsed into one row, and a trust change has to be applied
+     * to all of them or the ids disagree about the certificate's status.
+     */
+    val ids: List<String> = listOf(id),
     val status: String = CertificateStatus.UNDEFINED,
     val details: Map<String, String> = emptyMap(),
     val checks: Map<String, String> = emptyMap(),
+    /** Set when this certificate was pinned from a file, which is the only way to unpin it. */
+    val pinnedFromPath: String? = null,
 ) {
     /** Subject common name, falling back to the id so a row is never blank. */
     val commonName: String
@@ -100,9 +121,26 @@ data class Certificate(
     val hasFailedChecks: Boolean
         get() = checks.any { (_, value) -> value == CertificateCheck.FAILED }
 
-    /** The daemon reports expiry as a check that *passed* when the certificate is expired. */
+    /**
+     * Whether the certificate is past its validity.
+     *
+     * The daemon's check is `notExpired` despite being keyed EXPIRED, so a **FAILED** value is
+     * what means expired. Reading PASSED as expired — which this did until 2026-10-14 — labelled
+     * every valid certificate "Expired".
+     */
     val isExpired: Boolean
-        get() = checks[CertificateCheck.EXPIRED] == CertificateCheck.PASSED
+        get() = checks[CertificateCheck.EXPIRED] == CertificateCheck.FAILED
+
+    /**
+     * Stable identity of the certificate itself, used to collapse the store's several ids into
+     * one row. The fingerprint is preferred; the public key id is the fallback, and the id itself
+     * the last resort (which groups nothing, leaving the duplicate visible rather than merging
+     * two certificates that might not be the same).
+     */
+    val identity: String
+        get() = details[CertificateDetail.SHA1_FINGERPRINT]?.takeIf { it.isNotBlank() }
+            ?: details[CertificateDetail.PUBLIC_KEY_ID]?.takeIf { it.isNotBlank() }
+            ?: id
 
     /** Names of the checks that failed, for the detail screen. */
     val failedChecks: List<String>

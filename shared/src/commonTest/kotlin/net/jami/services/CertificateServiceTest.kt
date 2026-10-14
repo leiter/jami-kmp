@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import net.jami.model.Certificate
 import net.jami.model.CertificateCheck
 import net.jami.model.CertificateDetail
 import net.jami.model.CertificateStatus
@@ -64,7 +65,8 @@ class CertificateServiceTest {
     fun trustStatusIsResolvedPerCertificate() {
         val stub = stubWithCertificates()
         val service = CertificateService(stub)
-        service.setCertificateStatus(accountId, "cert-peer", CertificateStatus.BANNED)
+        val peer = service.listCertificates(accountId).first { it.id == "cert-peer" }
+        service.setCertificateStatus(accountId, peer, CertificateStatus.BANNED)
 
         val certificates = service.listCertificates(accountId).associateBy { it.id }
 
@@ -98,34 +100,50 @@ class CertificateServiceTest {
 
         val certificate = service.listCertificates(accountId).first { it.id == "cert-peer" }
 
-        // The daemon reports expiry as a check that *passed* when the certificate is expired.
-        assertTrue(certificate.isExpired)
+        // EXPIRED = PASSED means the notExpired check passed, i.e. the certificate is valid.
+        assertFalse(certificate.isExpired)
         assertTrue(certificate.hasFailedChecks)
         // A check the daemon could not run is not a failure.
         assertEquals(listOf(CertificateCheck.KNOWN_AUTHORITY), certificate.failedChecks)
     }
 
+    /**
+     * The regression that shipped in 4000a79: EXPIRED=PASSED was read as expired, so every valid
+     * certificate was labelled "Expired". The daemon's check is `notExpired`, so FAILED is what
+     * means expired.
+     */
     @Test
-    fun aCertificateWithPassingChecksHasNoFailures() {
+    fun onlyAFailedExpiryCheckMeansExpired() {
         val stub = stubWithCertificates()
         stub.certificateChecks["cert-ca"] = mapOf(
             CertificateCheck.EXPIRED to CertificateCheck.FAILED,
             CertificateCheck.KNOWN_AUTHORITY to CertificateCheck.PASSED,
         )
+        stub.certificateChecks["cert-peer"] = mapOf(
+            CertificateCheck.EXPIRED to CertificateCheck.PASSED,
+        )
         val service = CertificateService(stub)
+        val certificates = service.listCertificates(accountId).associateBy { it.id }
 
-        val certificate = service.listCertificates(accountId).first { it.id == "cert-ca" }
+        assertTrue(certificates["cert-ca"]!!.isExpired)
+        assertFalse(certificates["cert-peer"]!!.isExpired)
+    }
 
-        assertFalse(certificate.isExpired)
-        assertTrue(certificate.failedChecks.contains(CertificateCheck.EXPIRED))
+    /** A certificate the daemon has not validated is not assumed expired either. */
+    @Test
+    fun anUncheckedCertificateIsNotExpired() {
+        val service = CertificateService(stubWithCertificates())
+
+        assertFalse(service.listCertificates(accountId).first { it.id == "cert-ca" }.isExpired)
     }
 
     @Test
     fun unpinningRemovesTheCertificate() {
         val stub = stubWithCertificates()
         val service = CertificateService(stub)
+        val peer = service.listCertificates(accountId).first { it.id == "cert-peer" }
 
-        assertTrue(service.unpinCertificate(accountId, "cert-peer"))
+        assertTrue(service.unpinCertificate(accountId, peer))
 
         assertEquals(listOf("cert-ca"), service.listCertificates(accountId).map { it.id })
     }
@@ -134,7 +152,7 @@ class CertificateServiceTest {
     fun unpinningSomethingThatIsNotPinnedIsReportedAsAFailure() {
         val service = CertificateService(stubWithCertificates())
 
-        assertFalse(service.unpinCertificate(accountId, "cert-unknown"))
+        assertFalse(service.unpinCertificate(accountId, Certificate(id = "cert-unknown")))
     }
 
     /**
@@ -145,8 +163,9 @@ class CertificateServiceTest {
     fun anUnknownTrustStatusIsRefusedWithoutReachingTheDaemon() {
         val stub = stubWithCertificates()
         val service = CertificateService(stub)
+        val peer = service.listCertificates(accountId).first { it.id == "cert-peer" }
 
-        assertFalse(service.setCertificateStatus(accountId, "cert-peer", "SOMEWHAT_TRUSTED"))
+        assertFalse(service.setCertificateStatus(accountId, peer, "SOMEWHAT_TRUSTED"))
 
         assertEquals(
             CertificateStatus.UNDEFINED,
@@ -170,6 +189,121 @@ class CertificateServiceTest {
         val service = CertificateService(StubDaemonBridge())
 
         assertTrue(service.listCertificates(accountId).isEmpty())
+    }
+
+    // ==================== One certificate, several store ids ====================
+
+    /**
+     * `CertificateStore` emplaces both the short and the long id for every certificate, and
+     * repeats that up the issuer chain, so `getPinnedCertificates` returns two or more ids per
+     * certificate. Listing them raw showed the same certificate as several rows.
+     */
+    private fun stubWithDoubleIds(): StubDaemonBridge = StubDaemonBridge().apply {
+        val details = mapOf(
+            CertificateDetail.COMMON_NAME to "Example CA",
+            CertificateDetail.SHA1_FINGERPRINT to "AA:BB:CC",
+        )
+        certificates[accountId] = mutableMapOf(
+            "short" to details,
+            "the-much-longer-id" to details,
+        )
+    }
+
+    @Test
+    fun theStoresTwoIdsForOneCertificateCollapseIntoOneRow() {
+        val service = CertificateService(stubWithDoubleIds())
+
+        val certificates = service.listCertificates(accountId)
+
+        assertEquals(1, certificates.size)
+        assertEquals(setOf("short", "the-much-longer-id"), certificates.single().ids.toSet())
+    }
+
+    /** The long id is the one to act on: the stored file is named after it. */
+    @Test
+    fun theLongestIdIsTheOneActionsUse() {
+        val service = CertificateService(stubWithDoubleIds())
+
+        assertEquals("the-much-longer-id", service.listCertificates(accountId).single().id)
+    }
+
+    /** Two certificates that merely lack a fingerprint must not be merged into one. */
+    @Test
+    fun certificatesWithNoFingerprintAreNotGroupedTogether() {
+        val stub = StubDaemonBridge().apply {
+            certificates[accountId] = mutableMapOf("a" to emptyMap(), "b" to emptyMap())
+        }
+        val service = CertificateService(stub)
+
+        assertEquals(2, service.listCertificates(accountId).size)
+    }
+
+    /** A status set on either id counts for the certificate, instead of the rows disagreeing. */
+    @Test
+    fun aStatusSetOnOneIdIsReportedForTheCertificate() {
+        val stub = stubWithDoubleIds()
+        val service = CertificateService(stub)
+        stub.setCertificateStatus(accountId, "short", CertificateStatus.BANNED)
+
+        assertEquals(CertificateStatus.BANNED, service.listCertificates(accountId).single().status)
+    }
+
+    @Test
+    fun settingAStatusAppliesItToEveryIdOfTheCertificate() {
+        val stub = stubWithDoubleIds()
+        val service = CertificateService(stub)
+        val certificate = service.listCertificates(accountId).single()
+
+        assertTrue(service.setCertificateStatus(accountId, certificate, CertificateStatus.ALLOWED))
+
+        assertEquals(
+            setOf(CertificateStatus.ALLOWED),
+            certificate.ids.map { stub.certificateStatuses[accountId]?.get(it) }.toSet(),
+        )
+    }
+
+    /** Unpinning must clear every id, not just the one the row happened to carry. */
+    @Test
+    fun unpinningRemovesEveryIdOfTheCertificate() {
+        val stub = stubWithDoubleIds()
+        val service = CertificateService(stub)
+        val certificate = service.listCertificates(accountId).single()
+
+        assertTrue(service.unpinCertificate(accountId, certificate))
+
+        assertTrue(service.listCertificates(accountId).isEmpty())
+    }
+
+    // ==================== Pinning from a file ====================
+
+    /**
+     * Pinning by *path* leaves the certificate in the daemon's in-memory map and writes nothing,
+     * so it is gone after a restart. Pinning the file's content takes the persisting path.
+     */
+    /**
+     * Pinning the content takes the daemon's `local = true` path, which writes the certificate to
+     * its store and therefore survives a restart. Pinning by *path* only fills an in-memory map.
+     */
+    @Test
+    fun pinningByContentReachesTheStoreAndNotThePathMap() {
+        val stub = StubDaemonBridge()
+        val service = CertificateService(stub)
+
+        val ids = service.pinCertificate(accountId, "a certificate".encodeToByteArray(), local = true)
+
+        assertTrue(ids.isNotEmpty())
+        assertEquals(ids.toSet(), stub.certificates[accountId]!!.keys)
+        assertTrue(stub.pinnedCertificatePaths.isEmpty())
+    }
+
+    /** A file that cannot be read pins nothing, and must not fall back to the path call. */
+    @Test
+    fun pinningAFileThatCannotBeReadPinsNothing() {
+        val stub = stubWithCertificates()
+        val service = CertificateService(stub)
+
+        assertTrue(service.pinCertificateFile(accountId, "/no/such/certificate.pem").isEmpty())
+        assertTrue(stub.pinnedCertificatePaths.isEmpty())
     }
 
     // ==================== Daemon signals (notifications plan F6) ====================

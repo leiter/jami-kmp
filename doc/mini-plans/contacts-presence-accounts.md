@@ -139,6 +139,30 @@ SHA-1 fingerprint in monospace for out-of-band comparison, pin-from-file, unpin,
 decision (verify normally / always allow / block). All nine functions are on `DaemonBridgeApi`
 and implemented on Android and Apple.
 
+**Five bugs in the first version, found by testing it on an iOS simulator (fixed 2026-10-14).**
+Four of them came from assuming the daemon's shape instead of reading it:
+
+1. **Every certificate showed "Expired".** libjami's `EXPIRED` check key is a misnomer: the
+   function behind it is `TlsValidator::notExpired()` (`tlsvalidator.cpp:774`), which returns
+   PASSED when the certificate is *valid*. The model read PASSED as expired. Worse, the mistake
+   was asserted in a comment and locked in by two tests, so the suite confirmed it.
+2. **Each certificate was listed twice, and the rows disagreed about trust status.**
+   `CertificateStore` emplaces both the short and the long id, and repeats that up the issuer
+   chain (`certstore.cpp:299-302`), so `getPinnedCertificates` returns two ids for a self-signed
+   certificate and six for one with a CA. Rows are now collapsed on the SHA-1 fingerprint.
+3. **Trust status was set on one id only**, which is why the two rows diverged. It is now applied
+   to every id of the certificate.
+4. **Unpin always reported failure.** `unpinCertificate` returns the result of deleting
+   `certPath_/<id>` (`certstore.cpp:396-402`), and the stored file is named after the *long* id —
+   so unpinning by the short id fails, and a path-pinned certificate has no file there at all.
+   Now: the path when known, then every id, longest first.
+5. **Pins did not survive a relaunch**, because `pinCertificatePath` only fills the daemon's
+   in-memory `paths_` map and writes nothing. The UI now reads the file and pins by *content*,
+   which takes the `local = true` branch and persists.
+
+Also: the file picker was left on the default `"*/*"` mime type, which greys out every file in
+the iOS document picker — the pin flow was unusable on iOS as first shipped.
+
 Two things worth recording. First, the daemon has no "list with details" call, so the list is one
 `getCertificateDetails` + `validateCertificate` per id; the pinned set is a handful of entries in
 practice. Second, trust status can only be read as "which certificates have status X", so the

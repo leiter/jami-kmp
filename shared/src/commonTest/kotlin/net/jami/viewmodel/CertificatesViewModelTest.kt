@@ -49,6 +49,9 @@ class CertificatesViewModelTest {
         return CertificatesViewModel(certificateService, accountService, viewModelScope())
     }
 
+    private fun CertificatesViewModel.certificate(id: String) =
+        state.value.certificates.first { id in it.ids }
+
     @Test
     fun pinnedCertificatesAreLoadedForTheActiveAccount() = runTest {
         val vm = viewModel(stubWithCertificates())
@@ -67,7 +70,7 @@ class CertificatesViewModelTest {
         val vm = viewModel(stub)
         advanceUntilIdle()
 
-        vm.setStatus("cert-peer", CertificateStatus.BANNED)
+        vm.setStatus(vm.certificate("cert-peer"), CertificateStatus.BANNED)
         advanceUntilIdle()
 
         val peer = vm.state.value.certificates.first { it.id == "cert-peer" }
@@ -79,7 +82,7 @@ class CertificatesViewModelTest {
         val vm = viewModel(stubWithCertificates())
         advanceUntilIdle()
 
-        vm.unpinCertificate("cert-peer")
+        vm.unpinCertificate(vm.certificate("cert-peer"))
         advanceUntilIdle()
 
         assertEquals(listOf("cert-ca"), vm.state.value.certificates.map { it.id })
@@ -92,7 +95,7 @@ class CertificatesViewModelTest {
         val vm = viewModel(stubWithCertificates())
         advanceUntilIdle()
 
-        vm.unpinCertificate("cert-gone")
+        vm.unpinCertificate(net.jami.model.Certificate(id = "cert-gone"))
         advanceUntilIdle()
 
         assertEquals(CertificatesViewModel.UNPIN_FAILED, vm.state.value.errorMessage)
@@ -105,7 +108,7 @@ class CertificatesViewModelTest {
         val vm = viewModel(stubWithCertificates())
         advanceUntilIdle()
 
-        vm.setStatus("cert-peer", "SOMEWHAT_TRUSTED")
+        vm.setStatus(vm.certificate("cert-peer"), "SOMEWHAT_TRUSTED")
         advanceUntilIdle()
 
         assertEquals(CertificatesViewModel.STATUS_FAILED, vm.state.value.errorMessage)
@@ -120,7 +123,7 @@ class CertificatesViewModelTest {
         vm.toggleExpanded("cert-peer")
         assertEquals("cert-peer", vm.state.value.expandedId)
 
-        vm.unpinCertificate("cert-peer")
+        vm.unpinCertificate(vm.certificate("cert-peer"))
         advanceUntilIdle()
 
         assertNull(vm.state.value.expandedId)
@@ -164,7 +167,7 @@ class CertificatesViewModelTest {
 
         certificateService.onCertificateExpired("cert-peer")
         advanceUntilIdle()
-        vm.unpinCertificate("cert-peer")
+        vm.unpinCertificate(vm.certificate("cert-peer"))
         advanceUntilIdle()
 
         assertTrue(vm.state.value.expiredIds.isEmpty())
@@ -186,17 +189,22 @@ class CertificatesViewModelTest {
         assertEquals(listOf("cert-new"), vm.state.value.certificates.map { it.id })
     }
 
+    /**
+     * Pinning reads the file and pins by content, so a path that cannot be read is an error the
+     * screen reports rather than a silent no-op — and it must not fall back to the path call,
+     * which the daemon does not persist.
+     */
     @Test
-    fun pinningAPathRefreshesTheList() = runTest {
+    fun pinningAnUnreadableFileIsReportedAsAnError() = runTest {
         val stub = StubDaemonBridge()
         val vm = viewModel(stub)
         advanceUntilIdle()
 
-        vm.pinCertificatePath("/sdcard/ca.pem")
+        vm.pinCertificateFile("/no/such/ca.pem")
         advanceUntilIdle()
 
-        assertEquals(listOf(TEST_ACCOUNT_ID to "/sdcard/ca.pem"), stub.pinnedCertificatePaths)
-        assertNull(vm.state.value.errorMessage)
+        assertEquals(CertificatesViewModel.PIN_FAILED, vm.state.value.errorMessage)
+        assertTrue(stub.pinnedCertificatePaths.isEmpty())
     }
 
     /** With no account there is nothing to read, and no crash either. */
