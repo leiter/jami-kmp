@@ -89,3 +89,44 @@ Create a symlink from the old data path to the new one. Fragile and requires roo
 - `jami-client-android/jami-android/app/build.gradle.kts` line 36 - JAMI_DATADIR cmake arg
 - `letsJam/androidApp/src/main/kotlin/.../SwigJamiBridge.kt` line 749 - initDaemon()
 - `jami-kmp/android-app/src/androidMain/kotlin/.../JamiApplication.kt` - Daemon init
+
+## Two YAML config errors on every launch of an account-less install
+
+**Status:** Upstream daemon behaviour — benign, not ours to fix
+**Impact:** Two red `[config]` error lines on every launch until an account exists; permanent log noise, no functional effect
+**Date:** Traced 2026-10-14 against daemon `421cac609`
+
+### What you see
+
+```
+[config] Preferences unserialize YAML exception: invalid node; first invalid key: "preferences"
+```
+twice, on each launch, followed by the app correctly reaching "NoAccounts".
+
+### The chain
+
+1. `ManagerPimpl::parseConfiguration()` (`manager.cpp:427`) opens `dring.yml` with an
+   `std::ifstream` and hands it to `YAML::Load`. **A missing or empty file does not throw here**:
+   the ifstream fails silently and `YAML::Load` returns an empty node, so the `catch
+   YAML::BadFile` handler never fires. The daemon therefore cannot distinguish "no config yet"
+   from "corrupt config".
+2. `Preferences::unserialize` (`preferences.cpp:246`) reads `in["preferences"]` off that empty
+   node and `.as<T>()` throws `InvalidNode` — the message above, logged at `manager.cpp:2887`.
+3. The error sends `init` down "Restoring last working configuration" (`manager.cpp:835`).
+   `restore_backup` copies `dring.bak` over `dring.yml`, but on a first run no `.bak` exists —
+   and **`copy_over` from a missing source creates an empty destination**. So the recovery path
+   manufactures the empty `dring.yml` that caused the failure.
+4. The re-parse fails identically, which is why the message appears exactly twice. The daemon
+   then falls back to defaults (`manager.cpp:849`) and carries on correctly.
+
+### Why it recurs rather than self-healing
+
+Step 3 leaves a 0-byte `dring.yml` on disk. Every subsequent launch repeats the same two errors
+until an account is created and the daemon writes a real config over it.
+
+### Worth knowing
+
+Do not read these lines as a symptom of whatever you are debugging — they predate it. They are
+also *not* exclusive to a fresh install: the case that prompted this trace was a simulator whose
+data folder dated from a month earlier but had never held a `dring.yml`, because no account was
+ever created in it.
