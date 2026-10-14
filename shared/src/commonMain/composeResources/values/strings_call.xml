@@ -54,4 +54,30 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_mic_permission_denied">Microphone unavailable — tap to grant permission</string>
     <string name="call_cam_permission_denied">Camera unavailable — tap to grant permission</string>
 
+    <!-- Conference moderation -->
+    <string name="call_participants_title">Participants</string>
+    <string name="call_participant_remove">Remove from call</string>
+    <string name="call_participant_focus">Spotlight</string>
+    <string name="call_participant_unfocus">Remove spotlight</string>
+    <string name="call_participant_make_moderator">Make moderator</string>
+    <string name="call_participant_revoke_moderator">Revoke moderator</string>
+    <string name="call_participant_disable_video">Disable video</string>
+    <string name="call_participant_enable_video">Enable video</string>
+    <string name="call_lower_hand">Lower hand</string>
+    <string name="call_mute_all">Mute all</string>
+    <string name="call_layout_title">Layout</string>
+    <string name="call_layout_grid">Grid</string>
+    <string name="call_layout_one_big">Focus</string>
+    <string name="call_layout_one_big_small">Speaker</string>
+
+    <!-- In-call media details -->
+    <string name="call_stats_show">Show call details</string>
+    <string name="call_stats_hide">Hide call details</string>
+    <string name="call_stats_unavailable">No media details reported yet.</string>
+
+    <!-- In-call chat -->
+    <string name="call_chat_title">Call chat</string>
+    <string name="call_chat_hint">Message</string>
+    <string name="call_chat_empty">Messages sent during this call appear here. They are not saved to the conversation.</string>
+
 </resources>

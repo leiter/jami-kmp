@@ -136,6 +136,46 @@ val jamiModule = module {
     }
 
     /**
+     * Keeps the daemon running and surfaces it when it is not (start retries, recovery on
+     * connectivity, state for the debug screen).
+     */
+    single {
+        DaemonLifecycleService(
+            daemonBridge = get(),
+            daemonCallbacks = get(),
+            scope = get()
+        )
+    }
+
+    /**
+     * Browses the call recordings the daemon writes to its record directory.
+     */
+    single {
+        CallRecordingsService(
+            daemonBridge = get()
+        )
+    }
+
+    /**
+     * Peer service discovery and tunnelling (daemon NetworkService API). Android only for now —
+     * the Apple bridge has no networkservice interface.
+     */
+    single {
+        PeerServicesService(
+            daemonBridge = get()
+        )
+    }
+
+    /**
+     * Certificate pinning and trust (daemon security API), plus the four certificate signals.
+     */
+    single {
+        CertificateService(
+            daemonBridge = get()
+        )
+    }
+
+    /**
      * Durable outbox for messages sent before a conversation can deliver them (Phase 4 / F4).
      * Started explicitly at app start (JamiApplication / IOSApplicationHelper).
      */
@@ -162,6 +202,8 @@ val jamiModule = module {
             callService = get(),
             contactService = get(),
             conversationFacade = get(),
+            peerServicesService = get(),
+            certificateService = get(),
             scope = get()
         )
     }
@@ -230,7 +272,9 @@ val jamiModule = module {
     viewModelFactory { ContactDetailsViewModel(get(), get(), get(), get()) }
     viewModelFactory { NewConversationViewModel(get(), get(), get(), get()) }
     viewModelFactory { AboutViewModel() }
-    viewModelFactory { DebugLogsViewModel(get(), get()) }
+    viewModelFactory { DebugLogsViewModel(get(), get(), get(), get()) }
+    viewModelFactory { RecordingsViewModel(get()) }
+    viewModelFactory { CertificatesViewModel(get(), get()) }
     viewModelFactory { AppViewModel(get(), get()) }
     viewModelFactory { ProfileSetupViewModel(get()) }
     viewModelFactory { LocationSharingViewModel(get(), get()) }

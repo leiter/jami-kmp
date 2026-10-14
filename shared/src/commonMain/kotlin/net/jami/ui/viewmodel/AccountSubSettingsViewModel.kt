@@ -47,6 +47,13 @@ data class CodecItem(
 /**
  * State for account sub-settings screens (Media, Messages, Advanced).
  */
+/** Why an RTP port range was rejected. The UI maps these to localized messages. */
+enum class PortRangeError {
+    NOT_A_NUMBER,
+    OUT_OF_RANGE,
+    MIN_ABOVE_MAX,
+}
+
 data class AccountSubSettingsState(
     // ── Media ────────────────────────────────────────────────────────────────
     val videoEnabled: Boolean = false,
@@ -78,11 +85,18 @@ data class AccountSubSettingsState(
     val turnEnabled: Boolean = false,
     val turnServer: String = "",
     val turnUsername: String = "",
+    /** Only what the user has typed this session; the stored password is never loaded here. */
     val turnPassword: String = "",
+    /** Whether the account already has a TURN password, so the field can say so. */
+    val turnPasswordSet: Boolean = false,
     // STUN
     val stunEnabled: Boolean = false,
     val stunServer: String = "",
     // Audio-RTP port range
+    /** Why the audio RTP range is rejected, or null when it is acceptable. */
+    val audioPortError: PortRangeError? = null,
+    /** Why the video RTP range is rejected, or null when it is acceptable. */
+    val videoPortError: PortRangeError? = null,
     val audioPortMin: String = "",
     val audioPortMax: String = "",
     // Video-RTP port range
@@ -106,6 +120,10 @@ data class AccountSubSettingsState(
     val tlsVerifyClient: Boolean = false,
     val tlsRequireClientCert: Boolean = false,
     val tlsNegotiationTimeout: String = "",
+    /** Relaxed peer-certificate trust (security-networking plan F11). */
+    val allowCertFromHistory: Boolean = false,
+    val allowCertFromContact: Boolean = false,
+    val allowCertFromTrusted: Boolean = false,
 
     val isLoading: Boolean = false,
 )
@@ -184,7 +202,10 @@ class AccountSubSettingsViewModel(
                 turnEnabled = bool(ConfigKey.TURN_ENABLE),
                 turnServer = str(ConfigKey.TURN_SERVER),
                 turnUsername = str(ConfigKey.TURN_USERNAME),
-                turnPassword = str(ConfigKey.TURN_PASSWORD),
+                // The stored TURN password is deliberately not read into UI state; see
+                // setTurnPassword(). Only whether one exists is surfaced.
+                turnPasswordSet = str(ConfigKey.TURN_PASSWORD).isNotEmpty(),
+                turnPassword = "",
                 stunEnabled = bool(ConfigKey.STUN_ENABLE),
                 stunServer = str(ConfigKey.STUN_SERVER),
                 audioPortMin = str(ConfigKey.AUDIO_PORT_MIN),
@@ -205,6 +226,9 @@ class AccountSubSettingsViewModel(
                 tlsVerifyClient = bool(ConfigKey.TLS_VERIFY_CLIENT),
                 tlsRequireClientCert = bool(ConfigKey.TLS_REQUIRE_CLIENT_CERTIFICATE),
                 tlsNegotiationTimeout = str(ConfigKey.TLS_NEGOTIATION_TIMEOUT_SEC),
+                allowCertFromHistory = bool(ConfigKey.ACCOUNT_ALLOW_CERT_FROM_HISTORY),
+                allowCertFromContact = bool(ConfigKey.ACCOUNT_ALLOW_CERT_FROM_CONTACT),
+                allowCertFromTrusted = bool(ConfigKey.ACCOUNT_ALLOW_CERT_FROM_TRUSTED),
                 isLoading = false,
             )
         }
@@ -352,19 +376,34 @@ class AccountSubSettingsViewModel(
         updateDetail(ConfigKey.TURN_USERNAME, username)
     }
 
+    /**
+     * Write-only: the stored password is never loaded into UI state, so the screen does not hold
+     * a copy of a secret it only renders as dots. [clearTurnPassword] drops what the user typed
+     * when the screen goes away.
+     *
+     * This is hygiene, not protection: the daemon keeps the TURN password in its own config and
+     * it has to cross the JNI boundary in plaintext to get there. Anything stronger would need
+     * the daemon to hold a reference rather than the secret.
+     */
     fun setTurnPassword(password: String) {
         _state.update { it.copy(turnPassword = password) }
         updateDetail(ConfigKey.TURN_PASSWORD, password)
     }
 
+    /**
+     * RTP port setters validate before writing: the daemon accepts whatever string it is handed
+     * and silently rejects or clamps nonsense, so "99999" or "abc" used to be sent and the user
+     * got no feedback. The typed text is kept in state either way so the field does not fight
+     * the keyboard; only a valid value reaches the daemon.
+     */
     fun setAudioPortMin(port: String) {
-        _state.update { it.copy(audioPortMin = port) }
-        updateDetail(ConfigKey.AUDIO_PORT_MIN, port)
+        _state.update { it.copy(audioPortMin = port, audioPortError = portRangeError(port, it.audioPortMax)) }
+        if (_state.value.audioPortError == null) updateDetail(ConfigKey.AUDIO_PORT_MIN, port)
     }
 
     fun setAudioPortMax(port: String) {
-        _state.update { it.copy(audioPortMax = port) }
-        updateDetail(ConfigKey.AUDIO_PORT_MAX, port)
+        _state.update { it.copy(audioPortMax = port, audioPortError = portRangeError(it.audioPortMin, port)) }
+        if (_state.value.audioPortError == null) updateDetail(ConfigKey.AUDIO_PORT_MAX, port)
     }
 
     fun setStunEnabled(enabled: Boolean) {
@@ -378,13 +417,13 @@ class AccountSubSettingsViewModel(
     }
 
     fun setVideoPortMin(port: String) {
-        _state.update { it.copy(videoPortMin = port) }
-        updateDetail(ConfigKey.VIDEO_PORT_MIN, port)
+        _state.update { it.copy(videoPortMin = port, videoPortError = portRangeError(port, it.videoPortMax)) }
+        if (_state.value.videoPortError == null) updateDetail(ConfigKey.VIDEO_PORT_MIN, port)
     }
 
     fun setVideoPortMax(port: String) {
-        _state.update { it.copy(videoPortMax = port) }
-        updateDetail(ConfigKey.VIDEO_PORT_MAX, port)
+        _state.update { it.copy(videoPortMax = port, videoPortError = portRangeError(it.videoPortMin, port)) }
+        if (_state.value.videoPortError == null) updateDetail(ConfigKey.VIDEO_PORT_MAX, port)
     }
 
     // ── Security ──────────────────────────────────────────────────────────────
@@ -459,12 +498,51 @@ class AccountSubSettingsViewModel(
         updateDetail(ConfigKey.TLS_REQUIRE_CLIENT_CERTIFICATE, enabled.toString())
     }
 
+    fun setAllowCertFromHistory(enabled: Boolean) {
+        _state.update { it.copy(allowCertFromHistory = enabled) }
+        updateDetail(ConfigKey.ACCOUNT_ALLOW_CERT_FROM_HISTORY, enabled.toString())
+    }
+
+    fun setAllowCertFromContact(enabled: Boolean) {
+        _state.update { it.copy(allowCertFromContact = enabled) }
+        updateDetail(ConfigKey.ACCOUNT_ALLOW_CERT_FROM_CONTACT, enabled.toString())
+    }
+
+    fun setAllowCertFromTrusted(enabled: Boolean) {
+        _state.update { it.copy(allowCertFromTrusted = enabled) }
+        updateDetail(ConfigKey.ACCOUNT_ALLOW_CERT_FROM_TRUSTED, enabled.toString())
+    }
+
     fun setTlsNegotiationTimeout(secs: String) {
         _state.update { it.copy(tlsNegotiationTimeout = secs) }
         updateDetail(ConfigKey.TLS_NEGOTIATION_TIMEOUT_SEC, secs)
     }
 
     // ── Internal ──────────────────────────────────────────────────────────────
+
+    /** Forget the typed TURN password when leaving the screen. */
+    fun clearTurnPassword() {
+        if (_state.value.turnPassword.isNotEmpty()) {
+            _state.update { it.copy(turnPassword = "") }
+        }
+    }
+
+    /**
+     * Returns null when [min]/[max] are an acceptable RTP range, else a reason.
+     *
+     * An empty field is not an error — the user may be mid-edit, and the daemon keeps its
+     * previous value until a valid one arrives.
+     */
+    private fun portRangeError(min: String, max: String): PortRangeError? {
+        val minPort = min.takeIf { it.isNotBlank() }?.toIntOrNull()
+        val maxPort = max.takeIf { it.isNotBlank() }?.toIntOrNull()
+        if (min.isNotBlank() && minPort == null) return PortRangeError.NOT_A_NUMBER
+        if (max.isNotBlank() && maxPort == null) return PortRangeError.NOT_A_NUMBER
+        if (minPort != null && minPort !in MIN_RTP_PORT..MAX_RTP_PORT) return PortRangeError.OUT_OF_RANGE
+        if (maxPort != null && maxPort !in MIN_RTP_PORT..MAX_RTP_PORT) return PortRangeError.OUT_OF_RANGE
+        if (minPort != null && maxPort != null && minPort > maxPort) return PortRangeError.MIN_ABOVE_MAX
+        return null
+    }
 
     private fun updateDetail(key: ConfigKey, value: String) {
         scope.launch {
@@ -475,6 +553,13 @@ class AccountSubSettingsViewModel(
     }
 
     public override fun onCleared() {
+        clearTurnPassword()
         scope.cancel()
+    }
+
+    companion object {
+        /** Ports below 1024 need privileges the app does not have; 65535 is the protocol limit. */
+        internal const val MIN_RTP_PORT = 1024
+        internal const val MAX_RTP_PORT = 65535
     }
 }

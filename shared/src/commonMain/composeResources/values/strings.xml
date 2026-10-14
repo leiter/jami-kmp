@@ -499,6 +499,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="gallery_error_message">No application found on device to open Gallery</string>
 
     <string name="generic_error">An unknown error occurred.</string>
+    <string name="debug_dump_daemon_state">Dump daemon state to log</string>
+    <string name="debug_restart_daemon">Restart daemon</string>
+    <string name="screen_title_recordings">Call recordings</string>
+    <string name="recordings_empty">No call recordings yet.</string>
+    <string name="recordings_delete_title">Delete recording?</string>
+    <string name="recordings_delete_message">%1$s will be deleted from this device. This cannot be undone.</string>
+    <string name="recordings_delete_confirm">Delete</string>
+    <string name="pref_recordings_title">Call recordings</string>
+    <string name="pref_recordings_summary">Play or delete calls you have recorded.</string>
+    <string name="pref_agc_title">Automatic gain control</string>
+    <string name="pref_agc_summary">Normalise the microphone level during calls.</string>
+    <string name="pref_history_limit_title">Call history retention</string>
+    <string name="pref_history_limit_summary">Days of call history the daemon keeps. 0 keeps everything.</string>
+    <string name="pref_ringing_timeout_title">Ringing timeout</string>
+    <string name="pref_ringing_timeout_summary">Seconds an outgoing call rings before giving up.</string>
 
     <!--File Transfer-->
     <string name="invalid_file">Invalid file.</string>
@@ -736,9 +751,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="step_format">Step %1$d of %2$d: %3$s</string>
     <string name="action_cancel">Cancel</string>
     <string name="group_add_member">Add member</string>
-    <string name="group_remove_member">Remove</string>
-    <string name="group_remove_member_title">Remove member?</string>
-    <string name="group_remove_member_message">This member will be removed from the group.</string>
+    <string name="group_remove_member">Block</string>
+    <string name="group_remove_member_title">Block member?</string>
+    <string name="group_remove_member_message">They will be removed from the group and cannot rejoin unless you unblock them.</string>
+    <string name="group_unblock_member">Unblock</string>
+    <string name="group_unblock_member_title">Unblock member?</string>
+    <string name="group_unblock_member_message">They will be able to rejoin the group.</string>
+    <string name="group_member_blocked">Blocked</string>
+    <string name="group_member_left">Left</string>
+    <string name="group_member_invited">Invited</string>
     <string name="group_members">Members</string>
     <string name="group_enter_jami_id">Enter Jami ID</string>
     <string name="date_today">Today</string>

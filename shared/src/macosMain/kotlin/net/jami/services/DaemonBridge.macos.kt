@@ -237,6 +237,54 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun restartAudioLayer() {}
 
+    override fun sendCallTextMessage(
+        accountId: String,
+        callId: String,
+        messages: Map<String, String>,
+        from: String,
+        isMixed: Boolean
+    ) {
+        bridge.sendTextMessage(
+            accountId,
+            callId = callId,
+            messages = messages.toNSDictionary(),
+            from = from,
+            isMixed = isMixed
+        )
+    }
+
+    override fun getNoiseSuppressState(): String = bridge.noiseSuppressState() ?: ""
+    override fun setAgcState(enabled: Boolean) { bridge.setAgcState(enabled) }
+
+    // Peer services and tunnels are not reachable from the Apple targets: the cinterop header
+    // set has no networkservice_interface.h, so JamiBridgeWrapper cannot call libjami's
+    // addExposedService/queryPeerServices/openServiceTunnel family. See the Phase 2 note in
+    // doc/mini-plans/daemon-api-surface-audit.md.
+    override fun addExposedService(accountId: String, details: Map<String, String>): String {
+        Log.w(TAG, "addExposedService: no networkservice interface in the Apple bridge")
+        return ""
+    }
+    override fun updateExposedService(accountId: String, details: Map<String, String>): Boolean = false
+    override fun removeExposedService(accountId: String, serviceId: String): Boolean = false
+    override fun getExposedServices(accountId: String): List<Map<String, String>> = emptyList()
+    override fun queryPeerServices(accountId: String, peerUri: String): Long {
+        Log.w(TAG, "queryPeerServices: no networkservice interface in the Apple bridge")
+        return 0L
+    }
+    override fun openServiceTunnel(
+        accountId: String,
+        peerUri: String,
+        deviceId: String,
+        serviceId: String,
+        serviceName: String,
+        localPort: Int
+    ): String {
+        Log.w(TAG, "openServiceTunnel: no networkservice interface in the Apple bridge")
+        return ""
+    }
+    override fun closeServiceTunnel(accountId: String, tunnelId: String): Boolean = false
+    override fun getActiveTunnels(accountId: String): List<Map<String, String>> = emptyList()
+
     // Recording: stub until the native JamiBridgeWrapper exposes the recording API
     // (see doc/plan_call_recording.md "iOS / macOS follow-up").
     override fun toggleRecording(accountId: String, callId: String): Boolean = false
@@ -255,8 +303,53 @@ actual class DaemonBridge() : DaemonBridgeApi {
         return bridge.resumeConference(accountId, conferenceId = confId)
     }
 
+    override fun getRecordPath(): String = bridge.recordPath() ?: ""
+
+    override fun setRecordPath(path: String) {
+        bridge.setRecordPathValue(path)
+    }
+
+    override fun getHistoryLimit(): Int = bridge.historyLimit()
+
+    override fun setHistoryLimit(days: Int) {
+        bridge.setHistoryLimitDays(days)
+    }
+
+    override fun getRingingTimeout(): Int = bridge.ringingTimeout()
+
+    override fun setRingingTimeout(seconds: Int) {
+        bridge.setRingingTimeoutSeconds(seconds)
+    }
+
+    override fun monitor(continuous: Boolean) {
+        bridge.monitorDaemon(continuous)
+    }
+
+    override fun getConnectionList(accountId: String, conversationId: String): List<Map<String, String>> =
+        bridge.connectionList(accountId, conversationId = conversationId)?.toKotlinMapList() ?: emptyList()
+
     override fun setActiveParticipant(accountId: String, confId: String, callId: String) {
         bridge.setActiveParticipant(accountId, conferenceId = confId, callId = callId)
+    }
+
+    override fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
+        bridge.muteParticipantStream(accountId, conferenceId = confId, participantUri = peerUri, deviceId = deviceId, streamId = streamId, muted = state)
+    }
+
+    override fun setActiveStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
+        bridge.setActiveParticipantStream(accountId, conferenceId = confId, participantUri = peerUri, deviceId = deviceId, streamId = streamId, active = state)
+    }
+
+    override fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String) {
+        bridge.hangUpConferenceParticipant(accountId, conferenceId = confId, participantUri = peerUri, deviceId = deviceId)
+    }
+
+    override fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, state: Boolean) {
+        bridge.raiseParticipantHand(accountId, conferenceId = confId, participantUri = peerUri, deviceId = deviceId, raised = state)
+    }
+
+    override fun setModerator(accountId: String, confId: String, peerUri: String, state: Boolean) {
+        bridge.setParticipantModerator(accountId, conferenceId = confId, participantUri = peerUri, moderator = state)
     }
 
     override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {
@@ -426,6 +519,59 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun subscribeBuddy(accountId: String, uri: String, subscribe: Boolean) {
         bridge.subscribeBuddy(accountId, uri = uri, flag = subscribe)
     }
+
+    override fun countInteractions(
+        accountId: String,
+        conversationId: String,
+        toId: String,
+        fromId: String,
+        authorUri: String,
+    ): Int = bridge.countInteractions(
+        accountId,
+        conversationId = conversationId,
+        toId = toId,
+        fromId = fromId,
+        authorUri = authorUri,
+    ).toInt()
+
+    override fun clearCache(accountId: String, conversationId: String) {
+        bridge.clearCache(accountId, conversationId = conversationId)
+    }
+
+    // ==================== Certificate Management ====================
+
+    override fun getPinnedCertificates(accountId: String): List<String> =
+        bridge.getPinnedCertificates(accountId)?.toKotlinList() ?: emptyList()
+
+    override fun getCertificatesByStatus(accountId: String, status: String): List<String> =
+        bridge.getCertificatesByStatus(accountId, status = status)?.toKotlinList() ?: emptyList()
+
+    override fun getCertificateDetails(accountId: String, certId: String): Map<String, String> =
+        bridge.getCertificateDetails(accountId, certId = certId)?.toKotlinMap() ?: emptyMap()
+
+    override fun validateCertificate(accountId: String, certId: String): Map<String, String> =
+        bridge.validateCertificate(accountId, certId = certId)?.toKotlinMap() ?: emptyMap()
+
+    override fun pinCertificate(accountId: String, certificate: ByteArray, local: Boolean): List<String> {
+        val data = certificate.usePinned { pinned ->
+            NSData.create(bytes = pinned.addressOf(0), length = certificate.size.toULong())
+        }
+        return bridge.pinCertificate(accountId, certificate = data, local = local)?.toKotlinList()
+            ?: emptyList()
+    }
+
+    override fun pinCertificatePath(accountId: String, path: String) {
+        bridge.pinCertificatePath(accountId, path = path)
+    }
+
+    override fun unpinCertificate(accountId: String, certId: String): Boolean =
+        bridge.unpinCertificate(accountId, certId = certId)
+
+    override fun unpinCertificatePath(accountId: String, path: String): Int =
+        bridge.unpinCertificatePath(accountId, path = path).toInt()
+
+    override fun setCertificateStatus(accountId: String, certId: String, status: String): Boolean =
+        bridge.setCertificateStatus(accountId, certId = certId, status = status)
 
     // ==================== Name Lookup ====================
 
@@ -627,6 +773,12 @@ private fun Any?.toKotlinMap(): Map<String, String> {
 }
 
 @Suppress("UNCHECKED_CAST")
+private fun Any?.toKotlinMapList(): List<Map<String, String>> {
+    val array = this as? List<*> ?: return emptyList()
+    return array.map { it.toKotlinMap() }
+}
+
+@Suppress("UNCHECKED_CAST")
 private fun Any?.toKotlinList(): List<String> {
     val array = this as? List<*> ?: return emptyList()
     return array.mapNotNull { it as? String }
@@ -769,6 +921,50 @@ private class JamiBridgeDelegateImpl(
         callbacks.onVideoMuted(callId, muted)
     }
 
+    override fun onPeerHold(callId: String, holding: Boolean) {
+        callbacks.onPeerHold(callId, holding)
+    }
+
+    override fun onInCallMessage(
+        accountId: String,
+        callId: String,
+        from: String,
+        messages: Map<Any?, *>
+    ) {
+        @Suppress("UNCHECKED_CAST")
+        val native = (messages as? Map<String, String>) ?: emptyMap()
+        if (native.isEmpty()) return
+        callbacks.onInCallMessage(accountId, callId, from, native)
+    }
+
+    override fun onConnectionUpdate(callId: String, state: Int) {
+        callbacks.onConnectionUpdate(callId, state)
+    }
+
+    override fun onRemoteRecordingChanged(callId: String, peerUri: String, recording: Boolean) {
+        callbacks.onRemoteRecordingChanged(callId, peerUri, recording)
+    }
+
+    override fun onConversationError(accountId: String, conversationId: String, code: Int, message: String) {
+        callbacks.onConversationError(accountId, conversationId, code.toLong(), message)
+    }
+
+    override fun onNewServerSubscriptionRequest(remoteUri: String) {
+        callbacks.onNewServerSubscriptionRequest(remoteUri)
+    }
+
+    override fun onPresenceServerError(accountId: String, error: String, message: String) {
+        callbacks.onPresenceServerError(accountId, error, message)
+    }
+
+    override fun onPresenceSubscriptionStateChanged(accountId: String, buddyUri: String, state: Int) {
+        callbacks.onPresenceSubscriptionStateChanged(accountId, buddyUri, state)
+    }
+
+    override fun onNearbyPeerNotification(accountId: String, peerId: String, state: Int, displayName: String) {
+        callbacks.onNearbyPeerNotification(accountId, peerId, state, displayName)
+    }
+
     override fun onConferenceCreated(accountId: String, conversationId: String, conferenceId: String) {
         callbacks.onConferenceCreated(accountId, conversationId, conferenceId)
     }
@@ -865,6 +1061,23 @@ private class JamiBridgeDelegateImpl(
 
     override fun onPresenceChanged(accountId: String, uri: String, isOnline: Boolean) {
         callbacks.onNewBuddyNotification(accountId, uri, if (isOnline) 1 else 0, "")
+    }
+
+    // Certificate Events
+    override fun onCertificatePinned(certId: String) {
+        callbacks.onCertificatePinned(certId)
+    }
+
+    override fun onCertificatePathPinned(path: String, certIds: List<*>) {
+        callbacks.onCertificatePathPinned(path, certIds.filterIsInstance<String>())
+    }
+
+    override fun onCertificateExpired(certId: String) {
+        callbacks.onCertificateExpired(certId)
+    }
+
+    override fun onCertificateStateChanged(accountId: String, certId: String, state: String) {
+        callbacks.onCertificateStateChanged(accountId, certId, state)
     }
 }
 

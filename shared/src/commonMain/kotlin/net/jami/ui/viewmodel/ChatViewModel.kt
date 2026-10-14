@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -174,6 +175,11 @@ data class ChatState(
     val isLegacy: Boolean = false,
     /** The message the next sent text replies to (composer reply bar); null when not replying. */
     val replyingTo: ReplyPreview? = null,
+    /**
+     * Daemon-reported error for this conversation (sync/merge failure, denied member change),
+     * shown once as a snackbar and then cleared via [ChatViewModel.clearConversationError].
+     */
+    val conversationError: String? = null,
 )
 
 /**
@@ -257,6 +263,11 @@ class ChatViewModel(
                     }
                     is ConversationEvent.MessageStatusChanged -> {
                         if (event.conversationId == convId) updateDeliveryStatus(event)
+                    }
+                    is ConversationEvent.ConversationError -> {
+                        if (event.conversationId == convId) {
+                            _state.value = _state.value.copy(conversationError = event.message)
+                        }
                     }
                     is ConversationEvent.DataTransferProgress -> {
                         if (event.conversationId == convId) {
@@ -828,6 +839,13 @@ class ChatViewModel(
         }
     }
 
+    /** Acknowledge the daemon conversation error after it has been shown to the user. */
+    fun clearConversationError() {
+        if (_state.value.conversationError != null) {
+            _state.value = _state.value.copy(conversationError = null)
+        }
+    }
+
     /**
      * Clear the local history of the current conversation.
      */
@@ -838,6 +856,11 @@ class ChatViewModel(
             val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
             val conversation = conversationFacade.getConversation(accountId, conversationUri) ?: return@launch
             conversation.clearHistory(delete = false)
+            // The client's model was the only thing cleared before this: the daemon kept its own
+            // loaded copy of the same history, so nothing was actually released. For a swarm the
+            // commits remain in the git repository either way — this frees the memory, it does
+            // not make the clear permanent.
+            conversationFacade.clearDaemonCache(accountId, conversationId)
             _state.value = _state.value.copy(messages = emptyList())
         }
     }
@@ -847,18 +870,27 @@ class ChatViewModel(
      * Called when user scrolls to the top of the message list.
      */
     fun loadMore() {
-        val currentState = _state.value
-        Log.d(TAG, "loadMore: isLoadingMore=${currentState.isLoadingMore} hasMoreHistory=${currentState.hasMoreHistory}")
-        if (currentState.isLoadingMore || !currentState.hasMoreHistory) return
+        // Claim the in-flight slot atomically. Testing `isLoadingMore` and setting it inside the
+        // coroutine left a window in which two scroll callbacks both passed the check and ran
+        // overlapping daemon loads, which can interleave history pages.
+        val previousState = _state.getAndUpdate { current ->
+            if (current.isLoadingMore || !current.hasMoreHistory) current
+            else current.copy(isLoadingMore = true)
+        }
+        Log.d(TAG, "loadMore: isLoadingMore=${previousState.isLoadingMore} hasMoreHistory=${previousState.hasMoreHistory}")
+        if (previousState.isLoadingMore || !previousState.hasMoreHistory) return
 
         scope.launch {
-            val accountId = currentAccountId ?: return@launch
-            val conversationId = currentConversationId ?: return@launch
+            val accountId = currentAccountId
+            val conversationId = currentConversationId
+            if (accountId == null || conversationId == null) {
+                _state.value = _state.value.copy(isLoadingMore = false)
+                return@launch
+            }
             val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
             val conversation = conversationFacade.getConversation(accountId, conversationUri)
             if (conversation != null) {
                 val previousCount = _state.value.messages.size
-                _state.value = _state.value.copy(isLoadingMore = true)
                 try {
                     conversationFacade.loadConversationHistory(conversation)
                     loadMessagesFromHistory()
@@ -1107,12 +1139,17 @@ class ChatViewModel(
                     contactEventType = ContactEvent.Event.fromConversationAction(action)
                 )
             }
-            msg.type == "initial" -> MessageItem(
+            // "initial" is the conversation's creation commit. It only means "you were invited"
+            // in a 1:1 conversation; in a group it is not a user-visible event (member adds come
+            // through "member" events instead). The history path already drops it, so rendering
+            // it live made a group show an "invited" row that vanished on reload.
+            msg.type == "initial" && !isGroupConversation() -> MessageItem(
                 id = msg.id, text = "", author = displayName,
                 timestamp = timestampMs, isOutgoing = false,
                 type = MessageType.System,
                 contactEventType = ContactEvent.Event.INVITED
             )
+            msg.type == "initial" -> null
             else -> MessageItem(
                 id = msg.id,
                 text = msg.textContent,
@@ -1123,7 +1160,21 @@ class ChatViewModel(
                 replyTo = msg.replyTo.ifEmpty { null }?.let { replyPreview(it) },
             )
         }
+        if (item == null) {
+            if (withoutOptimistic !== current) {
+                _state.value = _state.value.copy(messages = withoutOptimistic)
+            }
+            return
+        }
         _state.value = _state.value.copy(messages = withoutOptimistic + item)
+    }
+
+    /** True when the open conversation is a swarm group rather than a 1:1. */
+    private fun isGroupConversation(): Boolean {
+        val accountId = currentAccountId ?: return false
+        val conversationId = currentConversationId ?: return false
+        val conversation = conversationFacade.getConversation(accountId, Uri(Uri.SWARM_SCHEME, conversationId))
+        return conversation?.mode?.isGroup == true
     }
 
     /**
@@ -1316,13 +1367,19 @@ class ChatViewModel(
         val newStatus = fromModel ?: when (Interaction.MessageStates.fromInt(event.status)) {
             Interaction.MessageStates.DISPLAYED -> DeliveryStatus.READ
             Interaction.MessageStates.SUCCESS -> DeliveryStatus.DELIVERED
+            Interaction.MessageStates.FAILURE, Interaction.MessageStates.CANCELLED ->
+                DeliveryStatus.FAILED
             else -> return
         }
         _state.update { current ->
             val idx = current.messages.indexOfFirst { it.id == event.messageId && it.isOutgoing }
             if (idx < 0) return@update current
             val old = current.messages[idx].deliveryStatus
-            if (deliveryRank(newStatus) <= deliveryRank(old)) return@update current
+            if (newStatus == DeliveryStatus.FAILED) {
+                // A failure is terminal, so the no-downgrade guard below would drop it (it ranks
+                // with SENDING). It must still not undo a delivery that already happened.
+                if (old == DeliveryStatus.DELIVERED || old == DeliveryStatus.READ) return@update current
+            } else if (deliveryRank(newStatus) <= deliveryRank(old)) return@update current
             current.copy(messages = current.messages.toMutableList().also {
                 it[idx] = it[idx].copy(deliveryStatus = newStatus)
             })
@@ -1346,6 +1403,11 @@ class ChatViewModel(
         return when {
             peers.values.any { it == Interaction.MessageStates.DISPLAYED } -> DeliveryStatus.READ
             peers.values.any { it == Interaction.MessageStates.SUCCESS }   -> DeliveryStatus.DELIVERED
+            // Only a failure for every peer is a failed message: in a group, one unreachable
+            // member does not make a message that reached the others undelivered.
+            peers.values.all {
+                it == Interaction.MessageStates.FAILURE || it == Interaction.MessageStates.CANCELLED
+            } -> DeliveryStatus.FAILED
             else -> DeliveryStatus.SENDING
         }
     }

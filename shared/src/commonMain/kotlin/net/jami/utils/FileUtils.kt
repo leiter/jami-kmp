@@ -151,6 +151,14 @@ object FileUtils {
     fun getLastModified(path: String): Long = platformGetLastModified(path)
 
     /**
+     * Absolute paths of the files directly inside [path], excluding directories.
+     *
+     * Returns an empty list when the directory does not exist or cannot be read, so callers can
+     * treat "no directory yet" and "nothing in it" the same way.
+     */
+    fun listFiles(path: String): List<String> = platformListFiles(path)
+
+    /**
      * Platform-specific path separator.
      */
     val separator: String = platformPathSeparator()
@@ -169,3 +177,4 @@ internal expect fun platformReadBytes(path: String): ByteArray?
 internal expect fun platformWriteBytes(path: String, data: ByteArray): Boolean
 internal expect fun platformPathSeparator(): String
 internal expect fun platformGetLastModified(path: String): Long
+internal expect fun platformListFiles(path: String): List<String>

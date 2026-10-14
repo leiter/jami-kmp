@@ -36,6 +36,8 @@ class DaemonCallbacksImpl(
     private val callService: CallService,
     private val contactService: ContactService,
     private val conversationFacade: ConversationFacade,
+    private val peerServicesService: PeerServicesService,
+    private val certificateService: CertificateService,
     private val scope: CoroutineScope
 ) : DaemonCallbacks {
 
@@ -243,6 +245,18 @@ class DaemonCallbacksImpl(
         scope.launch { callService.onMediaNegotiationStatus(callId, event, mediaList) }
     }
 
+    override fun onPeerHold(callId: String, holding: Boolean) {
+        scope.launch { callService.onPeerHold(callId, holding) }
+    }
+
+    override fun onConnectionUpdate(id: String, state: Int) {
+        scope.launch { callService.onConnectionUpdate(id, state) }
+    }
+
+    override fun onRemoteRecordingChanged(callId: String, peerUri: String, recording: Boolean) {
+        scope.launch { callService.onRemoteRecordingChanged(callId, peerUri, recording) }
+    }
+
     override fun onConferenceCreated(accountId: String, conversationId: String, confId: String) {
         scope.launch { callService.onConferenceCreated(accountId, conversationId, confId) }
     }
@@ -317,10 +331,30 @@ class DaemonCallbacksImpl(
         scope.launch { conversationFacade.onActiveCallsChanged(accountId, conversationId, activeCalls) }
     }
 
+    override fun onConversationError(accountId: String, conversationId: String, code: Long, message: String) {
+        scope.launch { conversationFacade.onConversationError(accountId, conversationId, code, message) }
+    }
+
     // ==================== Presence Callbacks ====================
 
     override fun onNewBuddyNotification(accountId: String, buddyUri: String, status: Int, lineStatus: String) {
         scope.launch { contactService.onPresenceUpdate(accountId, buddyUri, status) }
+    }
+
+    override fun onNewServerSubscriptionRequest(remoteUri: String) {
+        scope.launch { contactService.onNewServerSubscriptionRequest(remoteUri) }
+    }
+
+    override fun onPresenceServerError(accountId: String, error: String, message: String) {
+        scope.launch { contactService.onPresenceServerError(accountId, error, message) }
+    }
+
+    override fun onPresenceSubscriptionStateChanged(accountId: String, buddyUri: String, state: Int) {
+        scope.launch { contactService.onPresenceSubscriptionStateChanged(accountId, buddyUri, state) }
+    }
+
+    override fun onNearbyPeerNotification(accountId: String, peerId: String, state: Int, displayName: String) {
+        scope.launch { contactService.onNearbyPeerNotification(accountId, peerId, state, displayName) }
     }
 
     // ==================== Contact Callbacks ====================
@@ -379,5 +413,81 @@ class DaemonCallbacksImpl(
 
     override fun onDataTransferEvent(accountId: String, conversationId: String, interactionId: String, fileId: String, eventCode: Int) {
         enqueueConversationTask(ConversationTask.DataTransfer(accountId, conversationId, interactionId, fileId, eventCode))
+    }
+
+    override fun onInCallMessage(accountId: String, callId: String, from: String, messages: Map<String, String>) {
+        scope.launch { callService.onInCallMessage(accountId, callId, from, messages) }
+    }
+
+    // ==================== Peer Services Callbacks ====================
+
+    override fun onPeerServicesReceived(
+        requestId: Long,
+        accountId: String,
+        peerId: String,
+        status: Int,
+        servicesJson: String
+    ) {
+        peerServicesService.onPeerServicesReceived(requestId, accountId, peerId, status, servicesJson)
+    }
+
+    override fun onServiceTunnelOpened(accountId: String, tunnelId: String, localPort: Int) {
+        // The daemon fires this synchronously from openServiceTunnel, and the service matches it
+        // against its pending-open queue, so this must not be reordered onto another coroutine.
+        peerServicesService.onTunnelOpened(accountId, tunnelId, localPort)
+    }
+
+    override fun onServiceTunnelClosed(accountId: String, tunnelId: String, reason: String) {
+        peerServicesService.onTunnelClosed(accountId, tunnelId, reason)
+    }
+
+    // ==================== Certificate Callbacks ====================
+    // Relayed straight through: certificate state is small, read on demand from the daemon, and
+    // these signals are notifications rather than data the services cache.
+
+    override fun onCertificatePinned(certId: String) {
+        certificateService.onCertificatePinned(certId)
+    }
+
+    override fun onCertificatePathPinned(path: String, certIds: List<String>) {
+        certificateService.onCertificatePathPinned(path, certIds)
+    }
+
+    override fun onCertificateExpired(certId: String) {
+        certificateService.onCertificateExpired(certId)
+    }
+
+    override fun onCertificateStateChanged(accountId: String, certId: String, state: String) {
+        certificateService.onCertificateStateChanged(accountId, certId, state)
+    }
+
+    // ==================== Diagnostics Callbacks ====================
+
+    override fun onErrorAlert(alert: Int) {
+        scope.launch { accountService.onErrorAlert(alert) }
+    }
+
+    override fun onVolumeChanged(device: String, value: Int) {
+        scope.launch { accountService.onVolumeChanged(device, value) }
+    }
+
+    override fun onStunStatusFailure(accountId: String) {
+        scope.launch { accountService.onStunStatusFailure(accountId) }
+    }
+
+    override fun onHistoryChanged() {
+        scope.launch { accountService.onHistoryChanged() }
+    }
+
+    override fun onHardwareDecodingChanged(enabled: Boolean) {
+        scope.launch { accountService.onHardwareDecodingChanged(enabled) }
+    }
+
+    override fun onHardwareEncodingChanged(enabled: Boolean) {
+        scope.launch { accountService.onHardwareEncodingChanged(enabled) }
+    }
+
+    override fun onDaemonLogMessage(message: String) {
+        accountService.onDaemonLogMessage(message)
     }
 }

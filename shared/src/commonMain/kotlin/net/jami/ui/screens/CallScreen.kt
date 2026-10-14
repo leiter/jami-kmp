@@ -49,6 +49,10 @@ import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material.icons.filled.BackHand
+import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -68,6 +72,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Badge
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -107,6 +115,10 @@ import net.jami.ui.viewmodel.CallPickerItem
 import net.jami.ui.viewmodel.CallState
 import net.jami.ui.viewmodel.CallViewModel
 import net.jami.ui.viewmodel.ParticipantUi
+import net.jami.ui.viewmodel.InCallMessageUi
+import net.jami.ui.viewmodel.CallStats
+import androidx.compose.ui.text.font.FontFamily
+import net.jami.ui.components.ConferenceParticipantsSheet
 import org.jetbrains.compose.resources.stringResource
 
 // ==================== Public entry points ====================
@@ -178,6 +190,17 @@ fun CallScreen(
         onToggleScreenShare = { viewModel.toggleScreenShare() },
         onMuteAll = { viewModel.muteAllParticipants() },
         onToggleConferenceLock = { locked -> viewModel.toggleConferenceLock(locked) },
+        onSetParticipantMuted = { p, muted -> viewModel.setParticipantMuted(p, muted) },
+        onSetParticipantModerator = { p, moderator -> viewModel.setParticipantModerator(p, moderator) },
+        onLowerHand = { p -> viewModel.setHandRaised(false, p) },
+        onEjectParticipant = { p -> viewModel.ejectParticipant(p) },
+        onSetActiveStream = { p, active -> viewModel.setActiveStream(p, active) },
+        onToggleRaiseHand = { viewModel.toggleRaiseHand() },
+        onSetLayout = { layout -> viewModel.setConferenceLayout(layout) },
+        onSendCallMessage = { text -> viewModel.sendCallMessage(text) },
+        onMarkCallMessagesRead = { viewModel.markInCallMessagesRead() },
+        onStartCallStats = { viewModel.startCallStats() },
+        onStopCallStats = { viewModel.stopCallStats() },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onTransfer = { to -> viewModel.transfer(to) },
         onAttendedTransfer = { callId -> viewModel.attendedTransfer(callId) },
@@ -263,6 +286,17 @@ fun IncomingCallScreen(
         onToggleScreenShare = { viewModel.toggleScreenShare() },
         onMuteAll = { viewModel.muteAllParticipants() },
         onToggleConferenceLock = { locked -> viewModel.toggleConferenceLock(locked) },
+        onSetParticipantMuted = { p, muted -> viewModel.setParticipantMuted(p, muted) },
+        onSetParticipantModerator = { p, moderator -> viewModel.setParticipantModerator(p, moderator) },
+        onLowerHand = { p -> viewModel.setHandRaised(false, p) },
+        onEjectParticipant = { p -> viewModel.ejectParticipant(p) },
+        onSetActiveStream = { p, active -> viewModel.setActiveStream(p, active) },
+        onToggleRaiseHand = { viewModel.toggleRaiseHand() },
+        onSetLayout = { layout -> viewModel.setConferenceLayout(layout) },
+        onSendCallMessage = { text -> viewModel.sendCallMessage(text) },
+        onMarkCallMessagesRead = { viewModel.markInCallMessagesRead() },
+        onStartCallStats = { viewModel.startCallStats() },
+        onStopCallStats = { viewModel.stopCallStats() },
         onSendDtmf = { key -> viewModel.sendDtmf(key) },
         onTransfer = { to -> viewModel.transfer(to) },
         onAttendedTransfer = { callId -> viewModel.attendedTransfer(callId) },
@@ -295,6 +329,17 @@ private fun CallScreenContent(
     onToggleScreenShare: () -> Unit,
     onMuteAll: () -> Unit = {},
     onToggleConferenceLock: (Boolean) -> Unit = {},
+    onSetParticipantMuted: (ParticipantUi, Boolean) -> Unit = { _, _ -> },
+    onSetParticipantModerator: (ParticipantUi, Boolean) -> Unit = { _, _ -> },
+    onLowerHand: (ParticipantUi) -> Unit = {},
+    onEjectParticipant: (ParticipantUi) -> Unit = {},
+    onSetActiveStream: (ParticipantUi, Boolean) -> Unit = { _, _ -> },
+    onToggleRaiseHand: () -> Unit = {},
+    onSetLayout: (Int) -> Unit = {},
+    onSendCallMessage: (String) -> Unit = {},
+    onMarkCallMessagesRead: () -> Unit = {},
+    onStartCallStats: () -> Unit = {},
+    onStopCallStats: () -> Unit = {},
     onSendDtmf: (Char) -> Unit,
     onTransfer: (String) -> Unit,
     onAttendedTransfer: (String) -> Unit,
@@ -330,6 +375,15 @@ private fun CallScreenContent(
 
     var showDtmfSheet by remember { mutableStateOf(false) }
     var showTransferSheet by remember { mutableStateOf(false) }
+    var showParticipantsSheet by remember { mutableStateOf(false) }
+    var showCallChatSheet by remember { mutableStateOf(false) }
+    var showCallStats by remember { mutableStateOf(false) }
+
+    // Only poll the daemon for media details while the panel is actually visible.
+    DisposableEffect(showCallStats) {
+        if (showCallStats) onStartCallStats() else onStopCallStats()
+        onDispose { onStopCallStats() }
+    }
     var showControls by remember { mutableStateOf(true) }
 
     // Auto-hide controls after 3 seconds during ongoing video call
@@ -442,6 +496,8 @@ private fun CallScreenContent(
                             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top)),
                         onRequestMicPermission = onRequestMicPermission,
                         onRequestCameraPermission = onRequestCameraPermission,
+                        showStats = showCallStats,
+                        onToggleStats = { showCallStats = !showCallStats },
                     )
                 }
 
@@ -471,6 +527,12 @@ private fun CallScreenContent(
                             onToggleScreenShare = onToggleScreenShare,
                             onMuteAll = onMuteAll,
                             onToggleConferenceLock = onToggleConferenceLock,
+                            onToggleRaiseHand = onToggleRaiseHand,
+                            onOpenParticipants = { showParticipantsSheet = true },
+                            onOpenCallChat = {
+                                showCallChatSheet = true
+                                onMarkCallMessagesRead()
+                            },
                             onOpenDtmf = { showDtmfSheet = true },
                             onOpenTransfer = { showTransferSheet = true },
                             onToggleRecording = onToggleRecording,
@@ -491,6 +553,44 @@ private fun CallScreenContent(
             sheetState = sheetState,
         ) {
             DtmfDialpad(onKey = onSendDtmf)
+            Spacer(Modifier.height(JamiTheme.spacing.xl))
+        }
+    }
+
+    // In-call chat bottom sheet
+    if (showCallChatSheet) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = { showCallChatSheet = false },
+            sheetState = sheetState,
+        ) {
+            InCallChatSheet(
+                messages = state.inCallMessages,
+                onSend = onSendCallMessage,
+            )
+            Spacer(Modifier.height(JamiTheme.spacing.xl))
+        }
+    }
+
+    // Conference participants bottom sheet
+    if (showParticipantsSheet) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = { showParticipantsSheet = false },
+            sheetState = sheetState,
+        ) {
+            ConferenceParticipantsSheet(
+                participants = state.participants,
+                isModerator = state.isModerator,
+                conferenceLayout = state.conferenceLayout,
+                onSetParticipantMuted = onSetParticipantMuted,
+                onSetParticipantModerator = onSetParticipantModerator,
+                onLowerHand = onLowerHand,
+                onEjectParticipant = onEjectParticipant,
+                onSetActiveStream = onSetActiveStream,
+                onMuteAll = onMuteAll,
+                onSetLayout = onSetLayout,
+            )
             Spacer(Modifier.height(JamiTheme.spacing.xl))
         }
     }
@@ -647,6 +747,8 @@ private fun CallInfoOverlay(
     modifier: Modifier = Modifier,
     onRequestMicPermission: () -> Unit = {},
     onRequestCameraPermission: () -> Unit = {},
+    showStats: Boolean = false,
+    onToggleStats: () -> Unit = {},
 ) {
     Column(
         modifier = modifier,
@@ -673,13 +775,114 @@ private fun CallInfoOverlay(
                     color = Color.White.copy(alpha = 0.8f),
                 )
             }
+
+            // The peer put us on hold: the call stays CURRENT but media stops, so without this
+            // the UI looks like a live call with silence.
+            if (state.isPeerHolding) {
+                Spacer(Modifier.height(JamiTheme.spacing.xs))
+                Text(
+                    text = stringResource(Res.string.call_on_hold),
+                    style = JamiTheme.typography.labelMedium,
+                    color = Color.White.copy(alpha = 0.8f),
+                )
+            }
+
+            // Someone on the other side is recording this call.
+            if (state.isRemoteRecording) {
+                Spacer(Modifier.height(JamiTheme.spacing.xs))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.FiberManualRecord,
+                        contentDescription = null,
+                        tint = JamiColors.Red500,
+                        modifier = Modifier.size(12.dp),
+                    )
+                    Spacer(Modifier.size(JamiTheme.spacing.xs))
+                    Text(
+                        text = stringResource(
+                            Res.string.remote_recording,
+                            state.remoteRecordingBy.ifEmpty { state.peerName }
+                        ),
+                        style = JamiTheme.typography.labelMedium,
+                        color = Color.White,
+                    )
+                }
+            }
         }
 
         if (state.callMode is CallMode.OnGoing) {
+            // Media details, off by default: useful when diagnosing a bad-sounding call.
+            TextButton(onClick = onToggleStats) {
+                Text(
+                    text = stringResource(
+                        if (showStats) Res.string.call_stats_hide else Res.string.call_stats_show
+                    ),
+                    color = Color.White,
+                )
+            }
+            if (showStats) {
+                CallStatsPanel(
+                    stats = state.callStats,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Black.copy(alpha = 0.6f))
+                        .padding(JamiTheme.spacing.m),
+                )
+            }
+
             if (!state.hasMicPermission)
                 MicPermissionBanner(onClick = onRequestMicPermission)
             if (!state.hasCamPermission && state.hasVideo)
                 CamPermissionBanner(onClick = onRequestCameraPermission)
+        }
+    }
+}
+
+/**
+ * Negotiated media details for the ongoing call. Rows are omitted when the daemon has not
+ * reported that value, which is normal for an audio-only or still-connecting call.
+ */
+@Composable
+private fun CallStatsPanel(
+    stats: CallStats?,
+    modifier: Modifier = Modifier,
+) {
+    val mono = JamiTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
+    Column(modifier = modifier) {
+        if (stats == null) {
+            Text(
+                text = stringResource(Res.string.call_stats_unavailable),
+                style = mono,
+                color = Color.White.copy(alpha = 0.8f),
+            )
+            return@Column
+        }
+        val rows = buildList {
+            stats.audioCodec?.let { add("audio" to it) }
+            stats.audioSampleRate?.let { add("rate" to "$it Hz") }
+            if (!stats.isAudioOnly) {
+                stats.videoCodec?.let { add("video" to it) }
+                stats.videoBitrate?.let { bitrate ->
+                    val range = listOfNotNull(stats.videoMinBitrate, stats.videoMaxBitrate)
+                    add("bitrate" to if (range.size == 2) "$bitrate (${range[0]}–${range[1]})" else bitrate)
+                }
+                stats.videoSource?.let { add("source" to it) }
+            }
+        }
+        if (rows.isEmpty()) {
+            Text(
+                text = stringResource(Res.string.call_stats_unavailable),
+                style = mono,
+                color = Color.White.copy(alpha = 0.8f),
+            )
+        } else {
+            rows.forEach { (label, value) ->
+                Text(
+                    text = "$label: $value",
+                    style = mono,
+                    color = Color.White.copy(alpha = 0.9f),
+                )
+            }
         }
     }
 }
@@ -786,6 +989,9 @@ private fun OnGoingControls(
     onToggleScreenShare: () -> Unit,
     onMuteAll: () -> Unit = {},
     onToggleConferenceLock: (Boolean) -> Unit = {},
+    onToggleRaiseHand: () -> Unit = {},
+    onOpenParticipants: () -> Unit = {},
+    onOpenCallChat: () -> Unit = {},
     onOpenDtmf: () -> Unit,
     onOpenTransfer: () -> Unit,
     onToggleRecording: () -> Unit,
@@ -842,6 +1048,21 @@ private fun OnGoingControls(
                 isActive = false,
                 onClick = onOpenDtmf,
             )
+
+            // In-call chat, with a badge for messages that arrived while it was closed
+            Box {
+                CallControlButton(
+                    icon = Icons.Default.ChatBubble,
+                    contentDescription = stringResource(Res.string.content_desc_call_chat),
+                    isActive = false,
+                    onClick = onOpenCallChat,
+                )
+                if (state.unreadInCallMessages > 0) {
+                    Badge(modifier = Modifier.align(Alignment.TopEnd)) {
+                        Text(state.unreadInCallMessages.coerceAtMost(99).toString())
+                    }
+                }
+            }
 
             // Transfer button
             CallControlButton(
@@ -904,30 +1125,55 @@ private fun OnGoingControls(
             }
         }
 
-        // Moderator controls (visible only in conferences when user is moderator)
-        if (state.isConference && state.isModerator && state.participants.size > 1) {
+        // Conference controls — participant roster and hand raising are available to every
+        // participant; mute-all and locking are moderator-only.
+        if (state.isConference) {
             Spacer(Modifier.height(JamiTheme.spacing.m))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                // Mute all button
+                // Participant list (per-participant moderation lives in the sheet)
                 CallControlButton(
-                    icon = Icons.Default.MicOff,
-                    contentDescription = "Mute all participants",
+                    icon = Icons.Default.Groups,
+                    contentDescription = stringResource(Res.string.content_desc_participants),
                     isActive = false,
-                    onClick = onMuteAll,
+                    onClick = onOpenParticipants,
                 )
 
-                // Lock conference button
+                // Raise / lower own hand
                 CallControlButton(
-                    icon = if (state.isConferenceLocked) Icons.Default.Lock else Icons.Default.LockOpen,
-                    contentDescription = if (state.isConferenceLocked) "Unlock conference" else "Lock conference",
-                    isActive = state.isConferenceLocked,
-                    onClick = {
-                        onToggleConferenceLock(!state.isConferenceLocked)
-                    },
+                    icon = Icons.Default.BackHand,
+                    contentDescription = stringResource(
+                        if (state.isHandRaised) Res.string.content_desc_lower_hand
+                        else Res.string.content_desc_raise_hand
+                    ),
+                    isActive = state.isHandRaised,
+                    onClick = onToggleRaiseHand,
                 )
+
+                if (state.isModerator && state.participants.size > 1) {
+                    // Mute all button
+                    CallControlButton(
+                        icon = Icons.Default.MicOff,
+                        contentDescription = stringResource(Res.string.content_desc_mute_all),
+                        isActive = false,
+                        onClick = onMuteAll,
+                    )
+
+                    // Lock conference button
+                    CallControlButton(
+                        icon = if (state.isConferenceLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                        contentDescription = stringResource(
+                            if (state.isConferenceLocked) Res.string.content_desc_unlock_conference
+                            else Res.string.content_desc_lock_conference
+                        ),
+                        isActive = state.isConferenceLocked,
+                        onClick = {
+                            onToggleConferenceLock(!state.isConferenceLocked)
+                        },
+                    )
+                }
             }
         }
 
@@ -1052,6 +1298,97 @@ private fun DtmfDialpad(onKey: (Char) -> Unit) {
                 }
             }
             Spacer(Modifier.height(JamiTheme.spacing.s))
+        }
+    }
+}
+
+/**
+ * Chat for the duration of a call: the daemon carries these on the call's own channel, so there
+ * is no conversation history to load and nothing persists once the call ends.
+ */
+@Composable
+private fun InCallChatSheet(
+    messages: List<InCallMessageUi>,
+    onSend: (String) -> Unit,
+) {
+    var draft by remember { mutableStateOf("") }
+    val listState = rememberLazyListState()
+
+    // Keep the newest message in view as the conversation grows.
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.m),
+    ) {
+        Text(
+            text = stringResource(Res.string.call_chat_title),
+            style = JamiTheme.typography.titleMedium,
+            color = JamiTheme.colors.onSurface,
+        )
+        Spacer(Modifier.height(JamiTheme.spacing.s))
+
+        if (messages.isEmpty()) {
+            Text(
+                text = stringResource(Res.string.call_chat_empty),
+                style = JamiTheme.typography.bodyMedium,
+                color = JamiTheme.colors.onSurfaceVariant,
+            )
+        } else {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.heightIn(max = 260.dp).fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(JamiTheme.spacing.xs),
+            ) {
+                items(messages.size) { index ->
+                    val message = messages[index]
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = if (message.isOutgoing) Alignment.End else Alignment.Start,
+                    ) {
+                        if (!message.isOutgoing && message.author.isNotEmpty()) {
+                            Text(
+                                text = message.author,
+                                style = JamiTheme.typography.labelSmall,
+                                color = JamiTheme.colors.onSurfaceVariant,
+                            )
+                        }
+                        Text(
+                            text = message.body,
+                            style = JamiTheme.typography.bodyMedium,
+                            color = JamiTheme.colors.onSurface,
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(JamiTheme.spacing.s))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedTextField(
+                value = draft,
+                onValueChange = { draft = it },
+                label = { Text(stringResource(Res.string.call_chat_hint)) },
+                singleLine = true,
+                modifier = Modifier.weight(1f),
+            )
+            val sendDesc = stringResource(Res.string.content_desc_send_call_message)
+            IconButton(
+                onClick = {
+                    onSend(draft)
+                    draft = ""
+                },
+                enabled = draft.isNotBlank(),
+                modifier = Modifier.semantics { contentDescription = sendDesc },
+            ) {
+                Icon(Icons.Default.Send, contentDescription = null)
+            }
         }
     }
 }

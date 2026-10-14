@@ -382,6 +382,30 @@ class Conversation(
         return interactions
     }
 
+    /**
+     * Incoming text messages newer than the last one that was read or notified.
+     *
+     * Ported from libjamiclient's `unreadTextMessages`: walk the history backwards and stop at
+     * the first message already read or notified, since everything older has been seen too.
+     * Outgoing messages are skipped rather than ending the walk — one's own reply does not mark
+     * what came before it as read.
+     *
+     * Counted from the loaded history, not from the daemon: `countInteractions` cannot answer
+     * this. Its fast log does not parse commits, so it can neither filter to text messages nor
+     * exclude one's own, and its `authorUri` argument is a stop boundary rather than a filter.
+     */
+    fun unreadMessageCount(): Int {
+        var count = 0
+        for (interaction in aggregateHistory.asReversed()) {
+            if (interaction.type != Interaction.InteractionType.TEXT) continue
+            val isOutgoing = interaction.author == null || interaction.contact?.isUser == true
+            if (isOutgoing) continue
+            if (interaction.isRead || interaction.isNotified) break
+            count++
+        }
+        return count
+    }
+
     fun getSortedHistory(): List<Interaction> {
         sortHistory()
         return aggregateHistory.toList()

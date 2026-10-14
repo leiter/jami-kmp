@@ -1,5 +1,6 @@
 package net.jami.services
 
+import net.jami.model.CertificateStatus
 import net.jami.model.MediaAttribute
 import net.jami.model.SwarmMessage
 
@@ -77,6 +78,27 @@ interface DaemonBridgeApi {
     fun restartAudioLayer()
     fun isCaptureMuted(): Boolean
     fun setNoiseSuppression(enabled: Boolean)
+
+    /**
+     * Noise-suppression state as the daemon reports it ("enabled"/"disabled", possibly a mode
+     * name on newer daemons). Empty when the platform cannot query it.
+     */
+    fun getNoiseSuppressState(): String
+
+    /**
+     * Automatic gain control, which normalises the microphone level.
+     *
+     * Note this is *not* echo cancellation: libjami's `setEchoCancellationState` exists in
+     * `configurationmanager_interface.h` but is absent from the SWIG bindings, so it cannot be
+     * reached from Kotlin on Android today. See [setEchoCancellation].
+     */
+    fun setAgcState(enabled: Boolean)
+
+    /**
+     * Echo cancellation. Unreachable on Android: `setEchoCancellationState` is not in the
+     * generated bindings, so implementations log and no-op rather than silently toggling
+     * something else. Regenerating the SWIG interface would be needed to wire it.
+     */
     fun setEchoCancellation(enabled: Boolean)
     fun transfer(accountId: String, callId: String, to: String): Boolean
     fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean
@@ -125,6 +147,50 @@ interface DaemonBridgeApi {
     fun discardTrustRequest(accountId: String, uri: String)
     fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray)
 
+    // ==================== Certificate Management ====================
+    /**
+     * Certificates this account has pinned, as daemon certificate ids (the fingerprint-like id the
+     * daemon uses everywhere else in this group of functions).
+     */
+    fun getPinnedCertificates(accountId: String): List<String>
+
+    /**
+     * Pinned certificate ids filtered by trust status — one of the values in
+     * [net.jami.model.CertificateStatus]. The daemon's own constants are in `security_const.h`.
+     */
+    fun getCertificatesByStatus(accountId: String, status: String): List<String>
+
+    /**
+     * Everything the daemon knows about a certificate: subject, issuer, fingerprints, validity
+     * dates, whether it is a CA. Keys are libjami's `Certificate::DetailsNames`. Empty if the
+     * daemon does not know this id.
+     */
+    fun getCertificateDetails(accountId: String, certId: String): Map<String, String>
+
+    /**
+     * Run the daemon's checks over a certificate. Keys are libjami's `Certificate::ChecksNames`
+     * (EXPIRED, NOT_REVOKED, KNOWN_AUTHORITY, …), values PASSED/FAILED/UNSUPPORTED.
+     */
+    fun validateCertificate(accountId: String, certId: String): Map<String, String>
+
+    /** Pin a certificate from raw DER/PEM bytes. Returns the ids the daemon stored. */
+    fun pinCertificate(accountId: String, certificate: ByteArray, local: Boolean): List<String>
+
+    /** Pin a certificate, or a whole directory of them, from a file path on this device. */
+    fun pinCertificatePath(accountId: String, path: String)
+
+    fun unpinCertificate(accountId: String, certId: String): Boolean
+
+    /** Unpin everything that came from [path]. Returns how many certificates were removed. */
+    fun unpinCertificatePath(accountId: String, path: String): Int
+
+    /**
+     * Set a pinned certificate's trust status (see [net.jami.model.CertificateStatus]). BANNED
+     * refuses connections presenting it; ALLOWED accepts it even when it would not otherwise
+     * verify.
+     */
+    fun setCertificateStatus(accountId: String, certId: String, status: String): Boolean
+
     // ==================== Contact Operations ====================
     fun addContact(accountId: String, uri: String)
     fun removeContact(accountId: String, uri: String, ban: Boolean)
@@ -140,6 +206,25 @@ interface DaemonBridgeApi {
 
     // ==================== Messaging ====================
     fun sendTextMessage(accountId: String, callIdOrUri: String, message: String)
+
+    /**
+     * Send a text message inside an ongoing call or conference (SIP MESSAGE / in-call chat).
+     *
+     * Distinct from [sendTextMessage], which sends to a contact URI through the account and so
+     * cannot address a call. Received messages arrive as DaemonCallbacks.onInCallMessage.
+     *
+     * @param callId Call or conference ID
+     * @param messages MIME type → body, usually a single "text/plain" entry
+     * @param from Our own URI, used as the message author
+     * @param isMixed True for a conference, so every participant receives it
+     */
+    fun sendCallTextMessage(
+        accountId: String,
+        callId: String,
+        messages: Map<String, String>,
+        from: String,
+        isMixed: Boolean
+    )
     fun setIsComposing(accountId: String, uri: String, isComposing: Boolean)
 
     /**
@@ -164,6 +249,118 @@ interface DaemonBridgeApi {
     fun getActiveCodecList(accountId: String): List<Long>
     fun setActiveCodecList(accountId: String, codecList: List<Long>)
     fun getCodecDetails(accountId: String, codecId: Long): Map<String, String>
+
+    // ==================== Peer Services & Tunnels ====================
+    /**
+     * Announce a service this device offers to its peers (id assigned by the daemon).
+     *
+     * @param details Service description: `name`, `description`, `scheme`, `port`, …
+     * @return The new service's id, or an empty string on failure.
+     */
+    fun addExposedService(accountId: String, details: Map<String, String>): String
+
+    /** Update an exposed service in place; [details] must carry its `id`. */
+    fun updateExposedService(accountId: String, details: Map<String, String>): Boolean
+
+    /** Stop announcing an exposed service. */
+    fun removeExposedService(accountId: String, serviceId: String): Boolean
+
+    /** Services this account currently announces. */
+    fun getExposedServices(accountId: String): List<Map<String, String>>
+
+    /**
+     * Ask a peer which services it offers. Answered asynchronously by
+     * DaemonCallbacks.onPeerServicesReceived, correlated by the returned request id.
+     */
+    fun queryPeerServices(accountId: String, peerUri: String): Long
+
+    /**
+     * Open a tunnel to one of a peer's services, forwarding it to a local port.
+     *
+     * @param localPort Desired local port, or 0 to let the daemon choose.
+     * @return The tunnel id, or an empty string if the tunnel could not be opened.
+     */
+    fun openServiceTunnel(
+        accountId: String,
+        peerUri: String,
+        deviceId: String,
+        serviceId: String,
+        serviceName: String,
+        localPort: Int
+    ): String
+
+    /** Close a tunnel previously opened with [openServiceTunnel]. */
+    fun closeServiceTunnel(accountId: String, tunnelId: String): Boolean
+
+    /** Tunnels currently open for an account. */
+    fun getActiveTunnels(accountId: String): List<Map<String, String>>
+
+    // ==================== Daemon Settings & Diagnostics ====================
+    /**
+     * Directory the daemon writes call recordings into (daemon-global).
+     * Empty when the platform cannot report it.
+     */
+    fun getRecordPath(): String
+
+    /** Change the directory the daemon writes call recordings into. */
+    fun setRecordPath(path: String)
+
+    /**
+     * Call-history retention in days (daemon-global, not per account).
+     * 0 means "keep forever"; the daemon prunes older entries on start.
+     */
+    fun getHistoryLimit(): Int
+
+    /** Set the call-history retention in days; 0 keeps everything. */
+    fun setHistoryLimit(days: Int)
+
+    /** How long an outgoing call rings before the daemon gives up, in seconds. */
+    fun getRingingTimeout(): Int
+
+    /** Set the outgoing-call ringing timeout, in seconds. */
+    fun setRingingTimeout(seconds: Int)
+
+    /**
+     * Ask the daemon to dump its internal state (connections, channels, sockets) to its own log.
+     * With [continuous] = true it keeps dumping on every change. The output arrives through the
+     * daemon's log, i.e. DaemonCallbacks.onDaemonLogMessage and the platform log.
+     */
+    fun monitor(continuous: Boolean)
+
+    /**
+     * Active peer connections for an account, optionally narrowed to one conversation.
+     * Each entry describes a device connection (peer, device, status, channels).
+     */
+    fun getConnectionList(accountId: String, conversationId: String = ""): List<Map<String, String>>
+
+    /**
+     * Number of commits in a conversation, walking back from [fromId] (empty = the newest commit)
+     * and stopping at [toId] (empty = the first commit).
+     *
+     * Note what [authorUri] does here, because the name suggests the opposite: in the daemon's
+     * fast-log path it is not a filter but a **boundary** — the walk stops at the first commit by
+     * that author (`conversationrepository.cpp:2385-2392`). So passing one's own URI counts what
+     * has happened since one last posted.
+     *
+     * The count covers commits of every kind — messages, member events, votes, profile updates —
+     * since the fast log does not parse content and so cannot filter by type.
+     */
+    fun countInteractions(
+        accountId: String,
+        conversationId: String,
+        toId: String = "",
+        fromId: String = "",
+        authorUri: String = "",
+    ): Int
+
+    /**
+     * Drop the daemon's in-memory copy of a conversation's history (message list, pending
+     * edits/reactions and per-member delivery status).
+     *
+     * This frees memory; it does not delete anything. For a swarm the commits live in the
+     * conversation's git repository, so the next load reads them back from disk.
+     */
+    fun clearCache(accountId: String, conversationId: String)
 
     // ==================== Search & History ====================
     fun searchConversation(accountId: String, conversationId: String, author: String, lastId: String, query: String, type: String, after: Long, before: Long, maxResult: Long, flag: Int): Long
@@ -319,6 +516,11 @@ interface DaemonBridgeApi {
     /**
      * Mute audio for all participants in a conference.
      *
+     * The daemon has no "mute all" primitive: callers should prefer iterating the
+     * conference participants and calling [muteStream] for each one (which is what
+     * CallService.muteAllParticipants does). This method is kept for platforms whose
+     * bridge offers a coarse equivalent.
+     *
      * @param accountId Account ID
      * @param confId Conference ID
      */
@@ -368,6 +570,70 @@ interface DaemonBridgeApi {
      * @param participantId Participant ID
      */
     fun enableParticipantVideo(accountId: String, confId: String, participantId: String)
+
+    /**
+     * Mute or unmute one media stream of a conference participant (moderator only).
+     *
+     * This is the modern per-stream replacement for the deprecated muteParticipant API.
+     * The daemon resolves the target by (accountUri, deviceId) pair, so [deviceId] must be
+     * the participant's device as reported in the conference info — an empty device only
+     * matches when the daemon can infer a single call for that URI.
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param peerUri Participant account URI (without the "jami:" scheme)
+     * @param deviceId Participant device ID (from Conference.ParticipantInfo.device)
+     * @param streamId Stream (sink) ID, or empty for the participant's default stream
+     * @param state true to mute, false to unmute
+     */
+    fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean)
+
+    /**
+     * Set or clear a participant stream as the conference's active (focused) stream.
+     *
+     * Modern replacement for [setActiveParticipant], which only takes a call ID.
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param peerUri Participant account URI
+     * @param deviceId Participant device ID
+     * @param streamId Stream (sink) ID to focus
+     * @param state true to make the stream active, false to clear it
+     */
+    fun setActiveStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean)
+
+    /**
+     * Eject a single participant from a conference (moderator only).
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param peerUri Participant account URI
+     * @param deviceId Participant device ID, or empty for all of that peer's devices
+     */
+    fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String)
+
+    /**
+     * Raise or lower a participant's hand in a conference.
+     *
+     * Participants may only raise their own hand; moderators may lower anyone's.
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param peerUri Participant account URI
+     * @param deviceId Participant device ID
+     * @param state true to raise, false to lower
+     */
+    fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, state: Boolean)
+
+    /**
+     * Grant or revoke moderator rights for a conference participant (moderator only).
+     *
+     * @param accountId Account ID
+     * @param confId Conference ID
+     * @param peerUri Participant account URI
+     * @param state true to promote to moderator, false to demote
+     */
+    fun setModerator(accountId: String, confId: String, peerUri: String, state: Boolean)
 }
 
 /**
@@ -383,6 +649,15 @@ expect class DaemonBridge : DaemonBridgeApi
 /**
  * File transfer information from the daemon.
  */
+/** One in-call message handed to the daemon, recorded by [StubDaemonBridge] for tests. */
+data class CallMessageSend(
+    val accountId: String,
+    val callId: String,
+    val messages: Map<String, String>,
+    val from: String,
+    val isMixed: Boolean,
+)
+
 data class FileTransferInfo(
     val path: String,
     val totalSize: Long,
@@ -414,6 +689,12 @@ interface DaemonCallbacks {
     fun onVideoMuted(callId: String, muted: Boolean)
     fun onRecordingStateChanged(callId: String, recording: Boolean)
     fun onMediaNegotiationStatus(callId: String, event: String, mediaList: List<Map<String, String>>)
+    /** The peer put the call on hold (or took it off hold). */
+    fun onPeerHold(callId: String, holding: Boolean)
+    /** ICE/connection state for a call or a device connection: 0 = connected, 1/2 = closed. */
+    fun onConnectionUpdate(id: String, state: Int)
+    /** A conference participant started or stopped recording the call. */
+    fun onRemoteRecordingChanged(callId: String, peerUri: String, recording: Boolean)
     fun onConferenceCreated(accountId: String, conversationId: String, confId: String)
     fun onConferenceChanged(accountId: String, confId: String, state: String)
     fun onConferenceRemoved(accountId: String, confId: String)
@@ -434,9 +715,19 @@ interface DaemonCallbacks {
     fun onReactionAdded(accountId: String, conversationId: String, messageId: String, reaction: Map<String, String>)
     fun onReactionRemoved(accountId: String, conversationId: String, messageId: String, reactionId: String)
     fun onActiveCallsChanged(accountId: String, conversationId: String, activeCalls: List<Map<String, String>>)
+    /** The daemon failed to sync or operate on a conversation (swarm error). */
+    fun onConversationError(accountId: String, conversationId: String, code: Long, message: String)
 
     // ==================== Presence Callbacks ====================
     fun onNewBuddyNotification(accountId: String, buddyUri: String, status: Int, lineStatus: String)
+    /** A remote peer asked to subscribe to our presence (SIP presence server flow). */
+    fun onNewServerSubscriptionRequest(remoteUri: String)
+    /** The presence server reported an error for this account. */
+    fun onPresenceServerError(accountId: String, error: String, message: String)
+    /** Our subscription to a buddy's presence changed state (0 = inactive, 1 = active). */
+    fun onPresenceSubscriptionStateChanged(accountId: String, buddyUri: String, state: Int)
+    /** A peer was seen on the local network (nearby-peer discovery). */
+    fun onNearbyPeerNotification(accountId: String, peerId: String, state: Int, displayName: String)
 
     // ==================== Contact Callbacks ====================
     fun onContactAdded(accountId: String, uri: String, confirmed: Boolean)
@@ -456,6 +747,60 @@ interface DaemonCallbacks {
 
     // ==================== Data Transfer Callbacks ====================
     fun onDataTransferEvent(accountId: String, conversationId: String, interactionId: String, fileId: String, eventCode: Int)
+
+    /**
+     * A text message arrived inside a call or conference (in-call chat / SIP MESSAGE).
+     *
+     * @param messages MIME type → body
+     */
+    fun onInCallMessage(accountId: String, callId: String, from: String, messages: Map<String, String>)
+
+    // ==================== Peer Services Callbacks ====================
+    /**
+     * A peer answered a [DaemonBridgeApi.queryPeerServices] request.
+     *
+     * @param status 0 = ok, 1 = no devices, 2 = unreachable, 3 = timeout, 4 = internal error
+     * @param servicesJson JSON array of `{id, name, description, scheme, device}` objects
+     */
+    fun onPeerServicesReceived(requestId: Long, accountId: String, peerId: String, status: Int, servicesJson: String)
+
+    /** A service tunnel is up and forwarding to [localPort] on this device. */
+    fun onServiceTunnelOpened(accountId: String, tunnelId: String, localPort: Int)
+
+    /** A service tunnel was closed, by either side. */
+    fun onServiceTunnelClosed(accountId: String, tunnelId: String, reason: String)
+
+    // ==================== Certificate Callbacks ====================
+    /** A certificate was pinned, by us or by the daemon accepting a peer's. */
+    fun onCertificatePinned(certId: String)
+
+    /** A path was pinned; [certIds] are the certificates found there. */
+    fun onCertificatePathPinned(path: String, certIds: List<String>)
+
+    /**
+     * A pinned certificate is past its validity date. The daemon keeps it, but connections
+     * relying on it will fail verification.
+     */
+    fun onCertificateExpired(certId: String)
+
+    /** A certificate's trust status changed (see [net.jami.model.CertificateStatus]). */
+    fun onCertificateStateChanged(accountId: String, certId: String, state: String)
+
+    // ==================== Diagnostics Callbacks ====================
+    /** Daemon-level error alert (see libjami Alert codes). */
+    fun onErrorAlert(alert: Int)
+    /** An audio device's volume was changed by the daemon. */
+    fun onVolumeChanged(device: String, value: Int)
+    /** STUN resolution failed for this account — NAT traversal may be degraded. */
+    fun onStunStatusFailure(accountId: String)
+    /** The daemon's call history file changed. */
+    fun onHistoryChanged()
+    /** Hardware-accelerated video decoding was enabled/disabled by the daemon. */
+    fun onHardwareDecodingChanged(enabled: Boolean)
+    /** Hardware-accelerated video encoding was enabled/disabled by the daemon. */
+    fun onHardwareEncodingChanged(enabled: Boolean)
+    /** A log line emitted by the daemon itself. */
+    fun onDaemonLogMessage(message: String)
 }
 
 /**
@@ -478,12 +823,52 @@ class StubDaemonBridge : DaemonBridgeApi {
     var conversations: MutableMap<String, List<String>> = mutableMapOf()
     var conversationMembers: MutableMap<String, List<Map<String, String>>> = mutableMapOf()
     var conversationInfo: MutableMap<String, Map<String, String>> = mutableMapOf()
+    // Daemon-side conversation preferences, keyed "accountId:conversationId"
+    var conversationPreferences: MutableMap<String, Map<String, String>> = mutableMapOf()
     var contacts: MutableMap<String, List<Map<String, String>>> = mutableMapOf()
     var codecs: List<Long> = emptyList()
     var addAccountResult: String = ""
     var placeCallResult: String = ""
     var startConversationResult: String = ""
     var running: Boolean = false
+    // Daemon lifecycle controls for tests
+    var initSucceeds: Boolean = true
+    var startSucceeds: Boolean = true
+    var initThrows: Boolean = false
+    var initCalls: Int = 0
+    var startCalls: Int = 0
+    // Named to avoid colliding with the getHistoryLimit()/setHistoryLimit() overrides below:
+    // a `var historyLimit` would generate the same JVM signatures.
+    var historyLimitDays: Int = 0
+    var ringingTimeoutSeconds: Int = 30
+    var connectionList: List<Map<String, String>> = emptyList()
+    // Named to avoid colliding with the getNoiseSuppressState() override's JVM signature.
+    // Named to avoid colliding with the getRecordPath()/setRecordPath() overrides' JVM signatures.
+    var recordPathValue: String = ""
+    var noiseSuppressStateValue: String = "enabled"
+    var agcEnabled: Boolean = false
+    val echoCancellationCalls: MutableList<Boolean> = mutableListOf()
+    val exposedServices: MutableMap<String, Map<String, String>> = mutableMapOf()
+    var lastPeerServicesRequestId: Long = 0
+    var openTunnelResult: String = "tunnel1"
+    val closedTunnels: MutableList<String> = mutableListOf()
+    var activeTunnels: List<Map<String, String>> = emptyList()
+    val sentCallMessages: MutableList<CallMessageSend> = mutableListOf()
+    val monitorCalls: MutableList<Boolean> = mutableListOf()
+
+    /** accountId -> certId -> details, as getCertificateDetails() would report them. */
+    val certificates: MutableMap<String, MutableMap<String, Map<String, String>>> = mutableMapOf()
+    /** accountId -> certId -> trust status. Absent means UNDEFINED. */
+    val certificateStatuses: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
+    /** certId -> what validateCertificate() reports. */
+    val certificateChecks: MutableMap<String, Map<String, String>> = mutableMapOf()
+    /** Recorded pinCertificatePath() calls as (accountId, path). */
+    val pinnedCertificatePaths: MutableList<Pair<String, String>> = mutableListOf()
+
+    /** What countInteractions() reports, keyed "accountId:conversationId". */
+    val interactionCounts: MutableMap<String, Int> = mutableMapOf()
+    /** Recorded clearCache() calls as (accountId, conversationId). */
+    val clearedCaches: MutableList<Pair<String, String>> = mutableListOf()
 
     // Configurable lookup results: name -> LookupState (0=Success/taken, 1=Invalid, 2=NotFound/available, 3=NetworkError)
     var lookupNameResults: MutableMap<String, Int> = mutableMapOf()
@@ -499,8 +884,17 @@ class StubDaemonBridge : DaemonBridgeApi {
     /** Recorded downloadFile() calls as (conversationId, interactionId, fileId). */
     val downloadedFiles: MutableList<Triple<String, String, String>> = mutableListOf()
 
-    override fun init(callbacks: DaemonCallbacks): Boolean = true
-    override fun start(): Boolean { running = true; return true }
+    override fun init(callbacks: DaemonCallbacks): Boolean {
+        initCalls++
+        if (initThrows) throw IllegalStateException("native library not loaded")
+        return initSucceeds
+    }
+    override fun start(): Boolean {
+        startCalls++
+        if (!startSucceeds) return false
+        running = true
+        return true
+    }
     override fun stop() { running = false }
     override fun isRunning(): Boolean = running
     override fun connectivityChanged() {}
@@ -544,8 +938,42 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun muteCapture(mute: Boolean) {}
     override fun isCaptureMuted(): Boolean = false
     override fun restartAudioLayer() {}
-    override fun setNoiseSuppression(enabled: Boolean) {}
-    override fun setEchoCancellation(enabled: Boolean) {}
+    override fun setNoiseSuppression(enabled: Boolean) {
+        noiseSuppressStateValue = if (enabled) "enabled" else "disabled"
+    }
+    override fun getNoiseSuppressState(): String = noiseSuppressStateValue
+    override fun setAgcState(enabled: Boolean) { agcEnabled = enabled }
+    override fun setEchoCancellation(enabled: Boolean) { echoCancellationCalls += enabled }
+
+    override fun addExposedService(accountId: String, details: Map<String, String>): String {
+        val id = "service${exposedServices.size + 1}"
+        exposedServices[id] = details + ("id" to id)
+        return id
+    }
+    override fun updateExposedService(accountId: String, details: Map<String, String>): Boolean {
+        val id = details["id"] ?: return false
+        if (!exposedServices.containsKey(id)) return false
+        exposedServices[id] = details
+        return true
+    }
+    override fun removeExposedService(accountId: String, serviceId: String): Boolean =
+        exposedServices.remove(serviceId) != null
+    override fun getExposedServices(accountId: String): List<Map<String, String>> =
+        exposedServices.values.toList()
+    override fun queryPeerServices(accountId: String, peerUri: String): Long = ++lastPeerServicesRequestId
+    override fun openServiceTunnel(
+        accountId: String,
+        peerUri: String,
+        deviceId: String,
+        serviceId: String,
+        serviceName: String,
+        localPort: Int
+    ): String = openTunnelResult
+    override fun closeServiceTunnel(accountId: String, tunnelId: String): Boolean {
+        closedTunnels += tunnelId
+        return true
+    }
+    override fun getActiveTunnels(accountId: String): List<Map<String, String>> = activeTunnels
     override fun transfer(accountId: String, callId: String, to: String): Boolean = true
     override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean = true
     override fun getCallDetails(accountId: String, callId: String): Map<String, String> = emptyMap()
@@ -574,11 +1002,26 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun getConversationMembers(accountId: String, conversationId: String): List<Map<String, String>> = conversationMembers[conversationId] ?: emptyList()
     override fun getConversationInfo(accountId: String, conversationId: String): Map<String, String> = conversationInfo[conversationId] ?: emptyMap()
     override fun removeConversation(accountId: String, conversationId: String) {}
+    override fun countInteractions(
+        accountId: String,
+        conversationId: String,
+        toId: String,
+        fromId: String,
+        authorUri: String,
+    ): Int = interactionCounts["$accountId:$conversationId"] ?: 0
+
+    override fun clearCache(accountId: String, conversationId: String) {
+        clearedCaches += accountId to conversationId
+    }
+
     override fun addConversationMember(accountId: String, conversationId: String, uri: String) {}
     override fun removeConversationMember(accountId: String, conversationId: String, uri: String) {}
     override fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {}
-    override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> = emptyMap()
-    override fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {}
+    override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> =
+        conversationPreferences["$accountId:$conversationId"] ?: emptyMap()
+    override fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {
+        conversationPreferences["$accountId:$conversationId"] = prefs
+    }
     override fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int) {}
     override fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> = emptyList()
 
@@ -590,6 +1033,46 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun acceptTrustRequest(accountId: String, uri: String) {}
     override fun discardTrustRequest(accountId: String, uri: String) {}
     override fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray) {}
+
+    // ==================== Certificate Management ====================
+    override fun getPinnedCertificates(accountId: String): List<String> =
+        certificates[accountId]?.keys?.toList() ?: emptyList()
+
+    override fun getCertificatesByStatus(accountId: String, status: String): List<String> =
+        certificates[accountId]?.keys?.filter {
+            (certificateStatuses[accountId]?.get(it) ?: CertificateStatus.UNDEFINED) == status
+        } ?: emptyList()
+
+    override fun getCertificateDetails(accountId: String, certId: String): Map<String, String> =
+        certificates[accountId]?.get(certId) ?: emptyMap()
+
+    override fun validateCertificate(accountId: String, certId: String): Map<String, String> =
+        certificateChecks[certId] ?: emptyMap()
+
+    override fun pinCertificate(accountId: String, certificate: ByteArray, local: Boolean): List<String> {
+        val certId = "cert-${certificate.contentHashCode()}"
+        certificates.getOrPut(accountId) { mutableMapOf() }[certId] = emptyMap()
+        return listOf(certId)
+    }
+
+    override fun pinCertificatePath(accountId: String, path: String) {
+        pinnedCertificatePaths += accountId to path
+    }
+
+    override fun unpinCertificate(accountId: String, certId: String): Boolean =
+        certificates[accountId]?.remove(certId) != null
+
+    override fun unpinCertificatePath(accountId: String, path: String): Int {
+        val removed = pinnedCertificatePaths.count { it == accountId to path }
+        pinnedCertificatePaths.removeAll { it == accountId to path }
+        return removed
+    }
+
+    override fun setCertificateStatus(accountId: String, certId: String, status: String): Boolean {
+        if (certificates[accountId]?.containsKey(certId) != true) return false
+        certificateStatuses.getOrPut(accountId) { mutableMapOf() }[certId] = status
+        return true
+    }
 
     override fun addContact(accountId: String, uri: String) {}
     override fun removeContact(accountId: String, uri: String, ban: Boolean) {}
@@ -606,8 +1089,26 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean = true
     override fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean = true
     override fun searchUser(accountId: String, query: String): Boolean = true
+    override fun getRecordPath(): String = recordPathValue
+    override fun setRecordPath(path: String) { recordPathValue = path }
+    override fun getHistoryLimit(): Int = historyLimitDays
+    override fun setHistoryLimit(days: Int) { historyLimitDays = days }
+    override fun getRingingTimeout(): Int = ringingTimeoutSeconds
+    override fun setRingingTimeout(seconds: Int) { ringingTimeoutSeconds = seconds }
+    override fun monitor(continuous: Boolean) { monitorCalls += continuous }
+    override fun getConnectionList(accountId: String, conversationId: String): List<Map<String, String>> =
+        connectionList
 
     override fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {}
+    override fun sendCallTextMessage(
+        accountId: String,
+        callId: String,
+        messages: Map<String, String>,
+        from: String,
+        isMixed: Boolean
+    ) {
+        sentCallMessages += CallMessageSend(accountId, callId, messages, from, isMixed)
+    }
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {}
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {}
 
@@ -660,4 +1161,9 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {}
     override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {}
     override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {}
+    override fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {}
+    override fun setActiveStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {}
+    override fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String) {}
+    override fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, state: Boolean) {}
+    override fun setModerator(accountId: String, confId: String, peerUri: String, state: Boolean) {}
 }

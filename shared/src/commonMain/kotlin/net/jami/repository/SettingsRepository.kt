@@ -408,6 +408,18 @@ class SettingsRepository(
         }
     }
 
+    /**
+     * Update automatic gain control. The daemon keeps this separate from echo cancellation;
+     * before this existed the echo-cancellation toggle was wired to AGC by mistake.
+     */
+    fun updateAutomaticGainControl(enabled: Boolean) {
+        val current = _callSettings.value
+        if (current.automaticGainControl != enabled) {
+            updateCallSettings(current.copy(automaticGainControl = enabled))
+            daemonBridge.setAgcState(enabled)
+        }
+    }
+
     private fun updateCallSettings(settings: CallSettings) {
         _callSettings.value = settings
         saveSettings(SettingsKeys.CALLS) { json.encodeToString(settings) }
@@ -611,6 +623,7 @@ class SettingsRepository(
                     _callSettings.value = calls
                     daemonBridge.setNoiseSuppression(calls.noiseSuppression)
                     daemonBridge.setEchoCancellation(calls.echoCancellation)
+                    daemonBridge.setAgcState(calls.automaticGainControl)
                 }
 
                 details[SettingsKeys.FILE_TRANSFER]?.let { jsonStr ->

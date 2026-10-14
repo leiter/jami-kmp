@@ -185,6 +185,39 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 
 - (void)onVideoMuted:(NSString *)callId muted:(BOOL)muted;
 
+- (void)onPeerHold:(NSString *)callId holding:(BOOL)holding;
+
+- (void)onInCallMessage:(NSString *)accountId
+                 callId:(NSString *)callId
+                   from:(NSString *)from
+               messages:(NSDictionary<NSString *, NSString *> *)messages;
+
+- (void)onConnectionUpdate:(NSString *)callId state:(int)state;
+
+- (void)onRemoteRecordingChanged:(NSString *)callId
+                         peerUri:(NSString *)peerUri
+                       recording:(BOOL)recording;
+
+- (void)onConversationError:(NSString *)accountId
+             conversationId:(NSString *)conversationId
+                       code:(int)code
+                    message:(NSString *)message;
+
+- (void)onNewServerSubscriptionRequest:(NSString *)remoteUri;
+
+- (void)onPresenceServerError:(NSString *)accountId
+                        error:(NSString *)error
+                      message:(NSString *)message;
+
+- (void)onPresenceSubscriptionStateChanged:(NSString *)accountId
+                                  buddyUri:(NSString *)buddyUri
+                                     state:(int)state;
+
+- (void)onNearbyPeerNotification:(NSString *)accountId
+                          peerId:(NSString *)peerId
+                           state:(int)state
+                     displayName:(NSString *)displayName;
+
 - (void)onConferenceCreated:(NSString *)accountId
              conversationId:(NSString *)conversationId
                conferenceId:(NSString *)conferenceId;
@@ -356,6 +389,21 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (void)onPresenceChanged:(NSString *)accountId
                       uri:(NSString *)uri
                  isOnline:(BOOL)isOnline;
+
+// =============================================================================
+// Certificates
+// =============================================================================
+
+- (void)onCertificatePinned:(NSString *)certId;
+
+- (void)onCertificatePathPinned:(NSString *)path
+                        certIds:(NSArray<NSString *> *)certIds;
+
+- (void)onCertificateExpired:(NSString *)certId;
+
+- (void)onCertificateStateChanged:(NSString *)accountId
+                           certId:(NSString *)certId
+                            state:(NSString *)state;
 
 @end
 
@@ -607,11 +655,24 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 
 - (BOOL)isCaptureMuted;
 
+// Daemon settings & diagnostics
+- (NSString *)recordPath;
+- (void)setRecordPathValue:(NSString *)path;
+- (int32_t)historyLimit;
+- (void)setHistoryLimitDays:(int32_t)days;
+- (int32_t)ringingTimeout;
+- (void)setRingingTimeoutSeconds:(int32_t)seconds;
+- (void)monitorDaemon:(BOOL)continuous;
+- (NSArray<NSDictionary<NSString *, NSString *> *> *)connectionList:(NSString *)accountId
+                                                     conversationId:(NSString *)conversationId;
+
 - (void)muteRingtone:(BOOL)muted;
 
 // Audio processing
 - (void)setNoiseSuppression:(BOOL)enabled;
 - (void)setEchoCancellation:(BOOL)enabled;
+- (NSString *)noiseSuppressState;
+- (void)setAgcState:(BOOL)enabled;
 
 // Push notifications. These only hand the token/payload to the daemon; end-to-end push
 // additionally needs PushKit on the app side and a push proxy server.
@@ -673,6 +734,31 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                        conferenceId:(NSString *)conferenceId
                      participantUri:(NSString *)participantUri
                            deviceId:(NSString *)deviceId;
+
+- (void)muteParticipantStream:(NSString *)accountId
+                 conferenceId:(NSString *)conferenceId
+               participantUri:(NSString *)participantUri
+                     deviceId:(NSString *)deviceId
+                     streamId:(NSString *)streamId
+                        muted:(BOOL)muted;
+
+- (void)setActiveParticipantStream:(NSString *)accountId
+                      conferenceId:(NSString *)conferenceId
+                    participantUri:(NSString *)participantUri
+                          deviceId:(NSString *)deviceId
+                          streamId:(NSString *)streamId
+                            active:(BOOL)active;
+
+- (void)raiseParticipantHand:(NSString *)accountId
+                conferenceId:(NSString *)conferenceId
+              participantUri:(NSString *)participantUri
+                    deviceId:(NSString *)deviceId
+                     raised:(BOOL)raised;
+
+- (void)setParticipantModerator:(NSString *)accountId
+                   conferenceId:(NSString *)conferenceId
+                 participantUri:(NSString *)participantUri
+                      moderator:(BOOL)moderator;
 
 - (BOOL)holdConference:(NSString *)accountId conferenceId:(NSString *)conferenceId;
 - (BOOL)unholdConference:(NSString *)accountId conferenceId:(NSString *)conferenceId;
@@ -736,6 +822,47 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (NSArray<NSNumber *> *)getActiveCodecList:(NSString *)accountId;
 - (void)setActiveCodecList:(NSString *)accountId codecList:(NSArray<NSNumber *> *)codecList;
 - (NSDictionary<NSString *, NSString *> *)getCodecDetails:(NSString *)accountId codecId:(uint32_t)codecId;
+
+// =========================================================================
+// Conversation History (2 methods)
+// =========================================================================
+
+- (uint32_t)countInteractions:(NSString *)accountId
+               conversationId:(NSString *)conversationId
+                         toId:(NSString *)toId
+                       fromId:(NSString *)fromId
+                    authorUri:(NSString *)authorUri;
+
+- (void)clearCache:(NSString *)accountId conversationId:(NSString *)conversationId;
+
+// =========================================================================
+// Certificate Management (9 methods)
+// =========================================================================
+
+- (NSArray<NSString *> *)getPinnedCertificates:(NSString *)accountId;
+
+- (NSArray<NSString *> *)getCertificatesByStatus:(NSString *)accountId
+                                          status:(NSString *)status;
+
+- (NSDictionary<NSString *, NSString *> *)getCertificateDetails:(NSString *)accountId
+                                                         certId:(NSString *)certId;
+
+- (NSDictionary<NSString *, NSString *> *)validateCertificate:(NSString *)accountId
+                                                       certId:(NSString *)certId;
+
+- (NSArray<NSString *> *)pinCertificate:(NSString *)accountId
+                            certificate:(NSData *)certificate
+                                  local:(BOOL)local;
+
+- (void)pinCertificatePath:(NSString *)accountId path:(NSString *)path;
+
+- (BOOL)unpinCertificate:(NSString *)accountId certId:(NSString *)certId;
+
+- (uint32_t)unpinCertificatePath:(NSString *)accountId path:(NSString *)path;
+
+- (BOOL)setCertificateStatus:(NSString *)accountId
+                      certId:(NSString *)certId
+                      status:(NSString *)status;
 
 // =========================================================================
 // File Picker (1 method)

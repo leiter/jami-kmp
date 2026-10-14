@@ -12,6 +12,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.jami.services.AccountService
 import net.jami.services.ConversationFacade
+import net.jami.services.DaemonDiagnostics
+import net.jami.services.DaemonLifecycleService
+import net.jami.services.DaemonLifecycleState
+import net.jami.services.PeerServicesService
+import net.jami.services.TunnelInfo
 import net.jami.services.ConversationSyncInfo
 import net.jami.services.SyncState
 import net.jami.ui.platform.captureRecentLogs
@@ -23,11 +28,26 @@ data class DebugLogsState(
     val syncState: SyncState = SyncState.Idle,
     /** Per-conversation swarm-sync health at the last refresh. */
     val conversations: List<ConversationSyncInfo> = emptyList(),
+    /** Daemon-reported diagnostics (error alerts, STUN failures, codec state, daemon log). */
+    val daemonDiagnostics: DaemonDiagnostics = DaemonDiagnostics(),
+    /** Active peer connections for the current account at the last refresh. */
+    val connections: List<Map<String, String>> = emptyList(),
+    /** Call-history retention in days as the daemon reports it; 0 keeps everything. */
+    val historyLimitDays: Int = 0,
+    /** Outgoing-call ringing timeout in seconds. */
+    val ringingTimeoutSeconds: Int = 0,
+    /** Peer-service tunnels the daemon currently holds open. */
+    val tunnels: List<TunnelInfo> = emptyList(),
+    /** Whether the app believes the daemon is running, and how many times it has started. */
+    val daemonLifecycle: DaemonLifecycleState = DaemonLifecycleState.Stopped,
+    val daemonStartCount: Int = 0,
 )
 
 class DebugLogsViewModel(
     private val conversationFacade: ConversationFacade,
     private val accountService: AccountService,
+    private val peerServicesService: PeerServicesService,
+    private val daemonLifecycle: DaemonLifecycleService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) : ViewModel() {
     private val scope = scope
@@ -48,12 +68,47 @@ class DebugLogsViewModel(
                 runCatching { conversationFacade.snapshotConversationSyncInfo(accountId) }
                     .getOrDefault(emptyList())
             } else emptyList()
+            val connections = if (accountId != null) {
+                runCatching { accountService.getConnectionList(accountId) }.getOrDefault(emptyList())
+            } else emptyList()
             _state.value = DebugLogsState(
                 logs = logs,
                 isLoading = false,
                 syncState = conversationFacade.syncState.value,
                 conversations = conversations,
+                daemonDiagnostics = accountService.daemonDiagnostics.value,
+                connections = connections,
+                historyLimitDays = runCatching { accountService.getHistoryLimit() }.getOrDefault(0),
+                ringingTimeoutSeconds = runCatching { accountService.getRingingTimeout() }.getOrDefault(0),
+                tunnels = if (accountId != null) {
+                    runCatching { peerServicesService.getAllActiveTunnels(listOf(accountId)) }
+                        .getOrDefault(emptyList())
+                } else emptyList(),
+                daemonLifecycle = daemonLifecycle.state.value,
+                daemonStartCount = daemonLifecycle.startCount,
             )
+        }
+    }
+
+    /**
+     * Ask the daemon to dump its internal connection state into its log, then re-read the log so
+     * the dump shows up on screen.
+     */
+    /**
+     * Try to bring the daemon back up from the debug screen. Useful in the field when a start
+     * failed and the retries have been exhausted.
+     */
+    fun restartDaemon() {
+        scope.launch {
+            daemonLifecycle.ensureRunning()
+            refresh()
+        }
+    }
+
+    fun dumpDaemonState() {
+        scope.launch {
+            accountService.monitorDaemon(continuous = false)
+            refresh()
         }
     }
 

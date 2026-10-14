@@ -362,6 +362,67 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Trust Requests (Stubs) ====================
 
+    override fun countInteractions(
+        accountId: String,
+        conversationId: String,
+        toId: String,
+        fromId: String,
+        authorUri: String,
+    ): Int {
+        Log.d(TAG, "countInteractions called (stub): $conversationId")
+        return 0
+    }
+
+    override fun clearCache(accountId: String, conversationId: String) {
+        Log.d(TAG, "clearCache called (stub): $conversationId")
+    }
+
+    // ==================== Certificate Management ====================
+
+    override fun getPinnedCertificates(accountId: String): List<String> {
+        Log.d(TAG, "getPinnedCertificates called (stub): $accountId")
+        return emptyList()
+    }
+
+    override fun getCertificatesByStatus(accountId: String, status: String): List<String> {
+        Log.d(TAG, "getCertificatesByStatus called (stub): $accountId")
+        return emptyList()
+    }
+
+    override fun getCertificateDetails(accountId: String, certId: String): Map<String, String> {
+        Log.d(TAG, "getCertificateDetails called (stub): $certId")
+        return emptyMap()
+    }
+
+    override fun validateCertificate(accountId: String, certId: String): Map<String, String> {
+        Log.d(TAG, "validateCertificate called (stub): $certId")
+        return emptyMap()
+    }
+
+    override fun pinCertificate(accountId: String, certificate: ByteArray, local: Boolean): List<String> {
+        Log.d(TAG, "pinCertificate called (stub): ${certificate.size} bytes")
+        return emptyList()
+    }
+
+    override fun pinCertificatePath(accountId: String, path: String) {
+        Log.d(TAG, "pinCertificatePath called (stub): $path")
+    }
+
+    override fun unpinCertificate(accountId: String, certId: String): Boolean {
+        Log.d(TAG, "unpinCertificate called (stub): $certId")
+        return false
+    }
+
+    override fun unpinCertificatePath(accountId: String, path: String): Int {
+        Log.d(TAG, "unpinCertificatePath called (stub): $path")
+        return 0
+    }
+
+    override fun setCertificateStatus(accountId: String, certId: String, status: String): Boolean {
+        Log.d(TAG, "setCertificateStatus called (stub): $certId -> $status")
+        return false
+    }
+
     override fun getTrustRequests(accountId: String): List<Map<String, String>> {
         Log.d(TAG, "getTrustRequests called (stub): $accountId")
         return emptyList()
@@ -578,10 +639,51 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "answerMediaChangeRequest called (stub): $callId")
     }
 
+    override fun sendCallTextMessage(
+        accountId: String,
+        callId: String,
+        messages: Map<String, String>,
+        from: String,
+        isMixed: Boolean
+    ) {}
+
+    override fun getNoiseSuppressState(): String = ""
+    override fun setAgcState(enabled: Boolean) {}
+
+    override fun addExposedService(accountId: String, details: Map<String, String>): String = ""
+    override fun updateExposedService(accountId: String, details: Map<String, String>): Boolean = false
+    override fun removeExposedService(accountId: String, serviceId: String): Boolean = false
+    override fun getExposedServices(accountId: String): List<Map<String, String>> = emptyList()
+    override fun queryPeerServices(accountId: String, peerUri: String): Long = 0L
+    override fun openServiceTunnel(
+        accountId: String,
+        peerUri: String,
+        deviceId: String,
+        serviceId: String,
+        serviceName: String,
+        localPort: Int
+    ): String = ""
+    override fun closeServiceTunnel(accountId: String, tunnelId: String): Boolean = false
+    override fun getActiveTunnels(accountId: String): List<Map<String, String>> = emptyList()
+
+    override fun getRecordPath(): String = ""
+    override fun setRecordPath(path: String) {}
+    override fun getHistoryLimit(): Int = 0
+    override fun setHistoryLimit(days: Int) {}
+    override fun getRingingTimeout(): Int = 0
+    override fun setRingingTimeout(seconds: Int) {}
+    override fun monitor(continuous: Boolean) {}
+    override fun getConnectionList(accountId: String, conversationId: String): List<Map<String, String>> = emptyList()
+
     override fun muteAllParticipants(accountId: String, confId: String) {}
     override fun setConferenceLocked(accountId: String, confId: String, locked: Boolean) {}
     override fun muteParticipantAudio(accountId: String, confId: String, participantId: String) {}
     override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {}
     override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {}
     override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {}
+    override fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {}
+    override fun setActiveStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {}
+    override fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String) {}
+    override fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, state: Boolean) {}
+    override fun setModerator(accountId: String, confId: String, peerUri: String, state: Boolean) {}
 }

@@ -542,7 +542,9 @@ class ConversationsViewModel(
                 displayName = displayName,
                 lastMessage = lastMessage,
                 timestamp = timestamp,
-                unreadCount = 0,
+                // Was hardcoded 0, which meant the badge in the list
+                // (HomeScreen's `if (conversation.unreadCount > 0)`) could never appear.
+                unreadCount = conversation.unreadMessageCount(),
                 avatarBytes = avatarBytes,
                 isOnline = contact?.isOnline == true,
                 isRead = isRead,

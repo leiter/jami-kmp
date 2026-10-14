@@ -429,4 +429,48 @@ Biometric or device authentication adds a convenient way to locally unlock acces
     <string name="screen_title_blocked_contacts">Blocked Contacts</string>
     <string name="pref_category_account">Account</string>
 
+    <!-- Security & networking warnings and validation (security-networking plan F6/F7) -->
+    <string name="account_tls_verify_server_summary">Check that the peer's certificate is valid and trusted.</string>
+    <string name="account_tls_verify_server_warning">With this off, connections can be intercepted without warning. Only for testing.</string>
+    <string name="account_tls_verify_client_summary">Check certificates presented by peers connecting to this device.</string>
+    <string name="account_tls_verify_client_warning">With this off, any peer certificate is accepted.</string>
+    <string name="account_turn_password_unchanged">Unchanged</string>
+    <string name="account_port_error_not_a_number">Enter a port number.</string>
+    <string name="account_port_error_out_of_range">Port must be between %1$d and %2$d.</string>
+    <string name="account_port_error_min_above_max">The minimum port must not be above the maximum.</string>
+
+    <!-- Certificate management (contacts F8 / daemon-audit F12 / notifications F6) -->
+    <string name="screen_title_certificates">Certificates</string>
+    <string name="pref_certificates_title">Certificates</string>
+    <string name="pref_certificates_summary">Pinned certificates and their trust</string>
+    <string name="certificate">Certificate</string>
+    <string name="cert_issuer">Issuer</string>
+    <string name="cert_valid_to">Not after</string>
+    <string name="cert_is_ca">Certificate Authority</string>
+    <string name="cert_fingerprint">SHA-1 fingerprint</string>
+    <string name="cert_serial_number">Serial number</string>
+    <string name="cert_signature_algorithm">Signature Algorithm</string>
+    <string name="certificates_empty">No certificates are pinned on this account.</string>
+    <string name="certificates_empty_hint">Jami verifies peers through the DHT; pinning is only needed for a custom authority or to block a certificate outright.</string>
+    <string name="certificates_pin_from_file">Pin from file…</string>
+    <string name="certificates_unpin">Unpin</string>
+    <string name="certificates_expired">Expired</string>
+    <string name="certificates_checks_failed">Failed checks: %1$s</string>
+    <string name="certificates_status_undefined">Verify normally</string>
+    <string name="certificates_status_allowed">Always allow</string>
+    <string name="certificates_status_banned">Block</string>
+    <string name="certificates_status_allowed_warning">This certificate is accepted even when verification would reject it.</string>
+    <string name="certificates_error_pin_failed">Could not pin that certificate.</string>
+    <string name="certificates_error_unpin_failed">Could not unpin that certificate.</string>
+    <string name="certificates_error_status_failed">Could not change the trust setting.</string>
+
+    <!-- Relaxed peer-certificate trust (security-networking plan F11) -->
+    <string name="account_allow_cert_from_history_label">Accept certificates seen before</string>
+    <string name="account_allow_cert_from_history_summary">Trust a peer certificate that appears in call history.</string>
+    <string name="account_allow_cert_from_contact_label">Accept certificates from contacts</string>
+    <string name="account_allow_cert_from_contact_summary">Trust a peer certificate presented by someone in your contacts.</string>
+    <string name="account_allow_cert_from_trusted_label">Accept certificates from trusted contacts</string>
+    <string name="account_allow_cert_from_trusted_summary">Trust a peer certificate presented by a contact you marked as trusted.</string>
+    <string name="account_allow_cert_warning">Weaker than full verification: a certificate is accepted on the strength of who presents it.</string>
+
 </resources>

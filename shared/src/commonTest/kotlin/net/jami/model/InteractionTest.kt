@@ -129,16 +129,39 @@ class InteractionTest {
         assertEquals(Interaction.InteractionStatus.INVALID, Interaction.InteractionStatus.fromString("bad_value"))
     }
 
+    /**
+     * The codes are libjami's `Account::MessageStates` (`account_const.h`): UNKNOWN, SENDING,
+     * SENT, DISPLAYED, FAILURE, CANCELLED. This enum carries an extra INVALID that the daemon
+     * does not know, so the mapping cannot go through ordinals.
+     */
     @Test
     fun testMessageStates() {
         assertEquals(Interaction.MessageStates.UNKNOWN, Interaction.MessageStates.fromInt(0))
         assertEquals(Interaction.MessageStates.SENDING, Interaction.MessageStates.fromInt(1))
         assertEquals(Interaction.MessageStates.SUCCESS, Interaction.MessageStates.fromInt(2))
         assertEquals(Interaction.MessageStates.DISPLAYED, Interaction.MessageStates.fromInt(3))
-        assertEquals(Interaction.MessageStates.INVALID, Interaction.MessageStates.fromInt(4))
-        assertEquals(Interaction.MessageStates.FAILURE, Interaction.MessageStates.fromInt(5))
-        assertEquals(Interaction.MessageStates.CANCELLED, Interaction.MessageStates.fromInt(6))
+        assertEquals(Interaction.MessageStates.FAILURE, Interaction.MessageStates.fromInt(4))
+        assertEquals(Interaction.MessageStates.CANCELLED, Interaction.MessageStates.fromInt(5))
+        // Beyond the daemon's range: a newer daemon's code must not read as a known state.
+        assertEquals(Interaction.MessageStates.INVALID, Interaction.MessageStates.fromInt(6))
         assertEquals(Interaction.MessageStates.INVALID, Interaction.MessageStates.fromInt(99))
+        assertEquals(Interaction.MessageStates.INVALID, Interaction.MessageStates.fromInt(-7))
+    }
+
+    @Test
+    fun testTextMessageStatusUsesTheSameCodes() {
+        assertEquals(
+            Interaction.InteractionStatus.DISPLAYED,
+            Interaction.InteractionStatus.fromIntTextMessage(3)
+        )
+        assertEquals(
+            Interaction.InteractionStatus.FAILURE,
+            Interaction.InteractionStatus.fromIntTextMessage(4)
+        )
+        assertEquals(
+            Interaction.InteractionStatus.INVALID,
+            Interaction.InteractionStatus.fromIntTextMessage(99)
+        )
     }
 
     @Test

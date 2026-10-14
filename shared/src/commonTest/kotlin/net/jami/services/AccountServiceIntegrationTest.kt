@@ -166,6 +166,79 @@ class AccountServiceIntegrationTest {
         assertFalse(service.hasSipAccount())
     }
 
+    // ==================== Daemon settings & diagnostics ====================
+
+    @Test
+    fun historyLimitAndRingingTimeoutRoundTripThroughTheDaemon() = runTest {
+        val stub = StubDaemonBridge()
+        val service = AccountService(stub, testHardwareService(), StubDeviceRuntimeService(), testServiceScope())
+
+        service.setHistoryLimit(90)
+        service.setRingingTimeout(45)
+
+        assertEquals(90, stub.historyLimitDays)
+        assertEquals(45, stub.ringingTimeoutSeconds)
+        assertEquals(90, service.getHistoryLimit())
+        assertEquals(45, service.getRingingTimeout())
+    }
+
+    @Test
+    fun getConnectionListReturnsWhatTheDaemonReports() = runTest {
+        val stub = StubDaemonBridge()
+        stub.connectionList = listOf(mapOf("peer" to "peer123", "status" to "connected"))
+        val service = AccountService(stub, testHardwareService(), StubDeviceRuntimeService(), testServiceScope())
+
+        val connections = service.getConnectionList("acc1")
+
+        assertEquals(1, connections.size)
+        assertEquals("connected", connections[0]["status"])
+    }
+
+    @Test
+    fun monitorDaemonAsksTheDaemonForAStateDump() = runTest {
+        val stub = StubDaemonBridge()
+        val service = AccountService(stub, testHardwareService(), StubDeviceRuntimeService(), testServiceScope())
+
+        service.monitorDaemon(continuous = false)
+
+        assertEquals(listOf(false), stub.monitorCalls)
+    }
+
+    /**
+     * These signals used to only reach the log, so the debug screen could not show them.
+     */
+    @Test
+    fun diagnosticSignalsAreRecordedForTheDebugScreen() = runTest {
+        val stub = StubDaemonBridge()
+        val service = AccountService(stub, testHardwareService(), StubDeviceRuntimeService(), testServiceScope())
+
+        service.onErrorAlert(3)
+        service.onStunStatusFailure("acc1")
+        service.onHardwareDecodingChanged(true)
+        service.onHardwareEncodingChanged(false)
+        service.onDaemonLogMessage("peer connection established")
+
+        val diagnostics = service.daemonDiagnostics.value
+        assertEquals(3, diagnostics.lastErrorAlert)
+        assertEquals("acc1", diagnostics.lastStunFailureAccountId)
+        assertEquals(true, diagnostics.hardwareDecoding)
+        assertEquals(false, diagnostics.hardwareEncoding)
+        assertEquals(listOf("peer connection established"), diagnostics.recentDaemonLog)
+    }
+
+    /** The daemon log buffer is bounded so a chatty daemon cannot grow it without limit. */
+    @Test
+    fun daemonLogBufferIsBounded() = runTest {
+        val stub = StubDaemonBridge()
+        val service = AccountService(stub, testHardwareService(), StubDeviceRuntimeService(), testServiceScope())
+
+        repeat(150) { service.onDaemonLogMessage("line $it") }
+
+        val log = service.daemonDiagnostics.value.recentDaemonLog
+        assertEquals(100, log.size)
+        assertEquals("line 149", log.last())
+    }
+
     @Test
     fun hasSipAccountReturnsTrueWhenPresent() = runTest {
         val stub = StubDaemonBridge()

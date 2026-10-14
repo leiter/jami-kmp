@@ -32,8 +32,10 @@ import net.jami.model.Call
 import net.jami.model.Call.CallStatus
 import net.jami.model.Call.Direction
 import net.jami.model.Conference
+import net.jami.model.InCallMessage
 import net.jami.model.Media
 import net.jami.utils.Log
+import net.jami.utils.currentTimeMillis
 import net.jami.model.Uri
 
 /**
@@ -74,6 +76,11 @@ class CallService(
 
     fun setPendingCallNavId(callId: String) { _pendingCallNavId.value = callId }
     fun consumePendingCallNavId() { _pendingCallNavId.value = null }
+
+    private val _inCallMessages = MutableStateFlow<List<InCallMessage>>(emptyList())
+
+    /** Messages exchanged inside active calls, oldest first. Cleared per call when it ends. */
+    val inCallMessages: StateFlow<List<InCallMessage>> = _inCallMessages.asStateFlow()
 
     private val _currentConferences = MutableStateFlow<List<Conference>>(emptyList())
     val currentConferences: StateFlow<List<Conference>> = _currentConferences.asStateFlow()
@@ -308,11 +315,88 @@ class CallService(
     }
 
     /**
-     * Mute all audio in a conference (moderator only).
+     * Mute every participant of a conference (moderator only).
+     *
+     * libjami has no "mute all" primitive, so this mutes each participant stream in turn.
+     * Falls back to the coarse bridge call only when no conference info is known yet.
      */
     fun muteAllParticipants(accountId: String, confId: String) {
         scope.launch {
-            daemonBridge.muteAllParticipants(accountId, confId)
+            val participants = conferences[confId]?.participantInfo.orEmpty()
+            if (participants.isEmpty()) {
+                Log.w(TAG, "muteAllParticipants: no participant info for $confId")
+                daemonBridge.muteAllParticipants(accountId, confId)
+                return@launch
+            }
+            participants.forEach { info ->
+                daemonBridge.muteStream(
+                    accountId, confId,
+                    info.contact.uri.rawRingId, info.device ?: "", "", true
+                )
+            }
+        }
+    }
+
+    /**
+     * Mute or unmute one participant's audio stream (moderator only).
+     *
+     * The daemon resolves the target call by (peerUri, deviceId), so pass the device ID
+     * reported in the conference info; see Conference.ParticipantInfo.device.
+     */
+    fun muteParticipantStream(
+        accountId: String,
+        confId: String,
+        peerUri: String,
+        deviceId: String,
+        muted: Boolean,
+        streamId: String = ""
+    ) {
+        scope.launch {
+            daemonBridge.muteStream(accountId, confId, peerUri, deviceId, streamId, muted)
+        }
+    }
+
+    /**
+     * Focus (or unfocus) a participant's video stream in the conference mixer.
+     * Modern replacement for [setActiveParticipant], which only takes a call ID.
+     */
+    fun setActiveStream(
+        accountId: String,
+        confId: String,
+        peerUri: String,
+        deviceId: String,
+        streamId: String,
+        active: Boolean
+    ) {
+        scope.launch {
+            daemonBridge.setActiveStream(accountId, confId, peerUri, deviceId, streamId, active)
+        }
+    }
+
+    /**
+     * Eject one participant from a conference (moderator only).
+     */
+    fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String = "") {
+        scope.launch {
+            daemonBridge.hangupParticipant(accountId, confId, peerUri, deviceId)
+        }
+    }
+
+    /**
+     * Raise or lower a hand in a conference. Participants may only raise their own hand.
+     */
+    fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, raised: Boolean) {
+        scope.launch {
+            daemonBridge.raiseHand(accountId, confId, peerUri, deviceId, raised)
+        }
+    }
+
+    /**
+     * Grant or revoke moderator rights for a participant (moderator only).
+     */
+    fun setModerator(accountId: String, confId: String, peerUri: String, moderator: Boolean) {
+        scope.launch {
+            daemonBridge.setModerator(accountId, confId, peerUri, moderator)
         }
     }
 
@@ -453,6 +537,7 @@ class CallService(
                     if (call.callStatus == CallStatus.OVER) {
                         calls.remove(call.daemonId)
                         conferences.remove(call.daemonId)
+                        call.daemonId?.let { clearInCallMessages(it) }
                         updateCurrentCalls()
                     }
                 }
@@ -539,6 +624,54 @@ class CallService(
             conferences[callId]?.let { conf ->
                 _conferenceUpdates.emit(conf)
             }
+        }
+    }
+
+    /**
+     * Called when the peer puts the call on hold, or resumes it.
+     *
+     * The daemon reports this separately from `callStateChanged`: a peer-side hold keeps the
+     * call CURRENT, so without this signal the UI cannot tell that media stopped flowing.
+     */
+    internal fun onPeerHold(callId: String, holding: Boolean) {
+        scope.launch {
+            calls[callId]?.let { call ->
+                call.isPeerHolding = holding
+                _callUpdates.emit(call)
+                // A held leg inside a conference also refreshes the conference view.
+                conferences[call.confId ?: ""]?.let { _conferenceUpdates.emit(it) }
+            }
+            conferences[callId]?.let { conf ->
+                _conferenceUpdates.emit(conf)
+            }
+        }
+    }
+
+    /**
+     * ICE/connection state update for a call or peer connection (0 = connected, 1/2 = closed).
+     * Logged only: the daemon drives the authoritative call state through `callStateChanged`.
+     */
+    internal fun onConnectionUpdate(id: String, state: Int) {
+        Log.d(TAG, "connectionUpdate: $id state=$state")
+    }
+
+    /**
+     * A remote participant started or stopped recording the call.
+     * Ports jami-client-android CallService.remoteRecordingChanged (:151-168).
+     */
+    internal fun onRemoteRecordingChanged(callId: String, peerUri: String, recording: Boolean) {
+        scope.launch {
+            val conference = conferences[callId]
+                ?: calls[callId]?.let { call -> conferences[call.confId ?: call.daemonId ?: ""] }
+            val call = conference?.firstCall ?: calls[callId]
+            val account = call?.account?.let { accountService.getAccount(it) }
+            val contact = account?.getContactFromCache(Uri.fromString(peerUri))
+            if (conference == null || contact == null) {
+                Log.w(TAG, "remoteRecordingChanged: no conference/contact for $callId $peerUri")
+                return@launch
+            }
+            conference.setParticipantRecording(contact, recording)
+            _conferenceUpdates.emit(conference)
         }
     }
 
@@ -753,6 +886,77 @@ class CallService(
     }
 
     /**
+     * Send a message inside an ongoing call or conference.
+     *
+     * [sendTextMessage] cannot do this: it routes to the account-level send, which addresses a
+     * contact URI rather than a call, so passing a call ID there sent the message nowhere useful.
+     *
+     * @param from Our own URI, recorded as the author by the daemon and echoed to peers.
+     */
+    fun sendInCallMessage(accountId: String, callId: String, from: String, message: String) {
+        val conference = conferences[callId]
+        val isMixed = conference?.isConference == true
+        scope.launch {
+            daemonBridge.sendCallTextMessage(
+                accountId, callId, mapOf(MIME_TEXT_PLAIN to message), from, isMixed
+            )
+            // The daemon does not echo our own in-call messages back, so record it locally.
+            appendInCallMessage(
+                InCallMessage(
+                    callId = callId,
+                    author = from,
+                    body = message,
+                    timestamp = currentTimeMillis(),
+                    isOutgoing = true,
+                )
+            )
+        }
+    }
+
+    /**
+     * Called when a text message arrives inside a call or conference.
+     * Only `text/plain` bodies are surfaced; other MIME parts are ignored.
+     */
+    internal fun onInCallMessage(accountId: String, callId: String, from: String, messages: Map<String, String>) {
+        val body = messages[MIME_TEXT_PLAIN] ?: messages.values.firstOrNull() ?: return
+        Log.d(TAG, "in-call message on $callId from $from")
+        appendInCallMessage(
+            InCallMessage(
+                callId = callId,
+                author = from,
+                body = body,
+                timestamp = currentTimeMillis(),
+                isOutgoing = false,
+            )
+        )
+    }
+
+    private fun appendInCallMessage(message: InCallMessage) {
+        // A call's chat is bounded: it exists only for the duration of the call, and the UI shows
+        // the tail of it.
+        val existing = _inCallMessages.value
+        val trimmed = if (existing.size >= MAX_IN_CALL_MESSAGES) {
+            existing.takeLast(MAX_IN_CALL_MESSAGES - 1)
+        } else existing
+        _inCallMessages.value = trimmed + message
+    }
+
+    /** Drop the chat history for a call that has ended. */
+    private fun clearInCallMessages(callId: String) {
+        val remaining = _inCallMessages.value.filterNot { it.callId == callId }
+        if (remaining.size != _inCallMessages.value.size) {
+            _inCallMessages.value = remaining
+        }
+    }
+
+    /**
+     * Live media details for a call, straight from the daemon: negotiated codecs, sample rate,
+     * bitrates and socket info. Keys come from libjami's `call_const.h` Details namespace.
+     */
+    fun getCallDetails(accountId: String, callId: String): Map<String, String> =
+        daemonBridge.getCallDetails(accountId, callId)
+
+    /**
      * Set typing/composing status.
      */
     fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
@@ -763,6 +967,9 @@ class CallService(
 
     companion object {
         private const val TAG = "CallService"
+
+        /** Upper bound on the in-call chat kept in memory for a call. */
+        private const val MAX_IN_CALL_MESSAGES = 200
         const val MIME_TEXT_PLAIN = "text/plain"
         const val MIME_GEOLOCATION = "application/geo"
         const val MEDIA_TYPE_AUDIO = "MEDIA_TYPE_AUDIO"

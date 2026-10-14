@@ -246,6 +246,14 @@ fun ChatScreen(
         if (!openFile(path)) coroutineScope.launch { snackbarHostState.showSnackbar(openFileErrorMsg) }
     }
 
+    // Daemon-reported conversation errors (swarm sync/merge failure, denied member change):
+    // shown once, then acknowledged so a later error can be shown again.
+    LaunchedEffect(state.conversationError) {
+        val error = state.conversationError ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(error)
+        viewModel.clearConversationError()
+    }
+
     // Link preview setting
     val settingsRepository: net.jami.repository.SettingsRepository = org.koin.compose.koinInject()
     val privacySettings by settingsRepository.privacySettings.collectAsState()

@@ -75,6 +75,10 @@ class Account(
     val alias: String
         get() = details[ConfigKey.ACCOUNT_ALIAS.key] ?: ""
 
+    /** This device's ID, as reported by the daemon (used to target conference streams). */
+    val deviceId: String
+        get() = details[ConfigKey.ACCOUNT_DEVICE_ID.key] ?: ""
+
     val displayUsername: String
         get() = alias.ifEmpty { username.ifEmpty { accountId } }
 

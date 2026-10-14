@@ -46,6 +46,9 @@ class Conference(
     private val _state = MutableStateFlow<Call.CallStatus?>(null)
     val stateFlow: StateFlow<Call.CallStatus?> = _state.asStateFlow()
 
+    private val _participantRecording = MutableStateFlow<Set<Contact>>(emptySet())
+    val participantRecordingFlow: StateFlow<Set<Contact>> = _participantRecording.asStateFlow()
+
     var hostCall: Call? = null
     var conversationId: String? = null
     var isModerator: Boolean = false
@@ -120,9 +123,18 @@ class Conference(
         _participantInfo.value = info
     }
 
+    /**
+     * Track which participants are recording the call, as reported by the daemon's
+     * `remoteRecordingChanged` signal. Mirrors libjamiclient's participantRecording set.
+     */
     fun setParticipantRecording(contact: Contact, recording: Boolean) {
-        // TODO: Track recording state per participant
+        val current = _participantRecording.value
+        _participantRecording.value = if (recording) current + contact else current - contact
     }
+
+    /** True while at least one remote participant is recording. */
+    val isRemoteRecording: Boolean
+        get() = _participantRecording.value.isNotEmpty()
 
     /**
      * Information about a participant in a conference.

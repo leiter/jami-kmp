@@ -537,6 +537,60 @@ static JBCallState toCallState(const std::string& state) {
             });
         }));
 
+    // Certificate pinned
+    handlers.insert(exportable_callback<ConfigurationSignal::CertificatePinned>(
+        [weakSelf](const std::string& certId) {
+            NSString *certIdNS = toNSString(certId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onCertificatePinned:)]) {
+                    [strongSelf.delegate onCertificatePinned:certIdNS];
+                }
+            });
+        }));
+
+    // Certificate path pinned
+    handlers.insert(exportable_callback<ConfigurationSignal::CertificatePathPinned>(
+        [weakSelf](const std::string& path, const std::vector<std::string>& certIds) {
+            NSString *pathNS = toNSString(path);
+            NSArray<NSString *> *certIdsNS = toNSArray(certIds);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onCertificatePathPinned:certIds:)]) {
+                    [strongSelf.delegate onCertificatePathPinned:pathNS certIds:certIdsNS];
+                }
+            });
+        }));
+
+    // Certificate expired
+    handlers.insert(exportable_callback<ConfigurationSignal::CertificateExpired>(
+        [weakSelf](const std::string& certId) {
+            NSString *certIdNS = toNSString(certId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onCertificateExpired:)]) {
+                    [strongSelf.delegate onCertificateExpired:certIdNS];
+                }
+            });
+        }));
+
+    // Certificate state changed
+    handlers.insert(exportable_callback<ConfigurationSignal::CertificateStateChanged>(
+        [weakSelf](const std::string& accountId, const std::string& certId,
+                   const std::string& state) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *certIdNS = toNSString(certId);
+            NSString *stateNS = toNSString(state);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onCertificateStateChanged:certId:state:)]) {
+                    [strongSelf.delegate onCertificateStateChanged:accountIdNS
+                                                            certId:certIdNS
+                                                             state:stateNS];
+                }
+            });
+        }));
+
     // Composing status changed
     handlers.insert(exportable_callback<ConfigurationSignal::ComposingStatusChanged>(
         [weakSelf](const std::string& accountId, const std::string& convId,
@@ -650,6 +704,59 @@ static JBCallState toCallState(const std::string& state) {
                 JamiBridgeWrapper *strongSelf = weakSelf;
                 if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onVideoMuted:muted:)]) {
                     [strongSelf.delegate onVideoMuted:callIdNS muted:muted];
+                }
+            });
+        }));
+
+    // In-call text message (SIP MESSAGE / in-call chat)
+    handlers.insert(exportable_callback<CallSignal::IncomingMessage>(
+        [weakSelf](const std::string& accountId, const std::string& callId,
+                   const std::string& from, const std::map<std::string, std::string>& messages) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *callIdNS = toNSString(callId);
+            NSString *fromNS = toNSString(from);
+            NSDictionary *messagesNS = toNSDictionary(messages);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onInCallMessage:callId:from:messages:)]) {
+                    [strongSelf.delegate onInCallMessage:accountIdNS callId:callIdNS from:fromNS messages:messagesNS];
+                }
+            });
+        }));
+
+    // Peer hold
+    handlers.insert(exportable_callback<CallSignal::PeerHold>(
+        [weakSelf](const std::string& callId, bool holding) {
+            NSString *callIdNS = toNSString(callId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onPeerHold:holding:)]) {
+                    [strongSelf.delegate onPeerHold:callIdNS holding:holding];
+                }
+            });
+        }));
+
+    // ICE/connection state
+    handlers.insert(exportable_callback<CallSignal::ConnectionUpdate>(
+        [weakSelf](const std::string& callId, int state) {
+            NSString *callIdNS = toNSString(callId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onConnectionUpdate:state:)]) {
+                    [strongSelf.delegate onConnectionUpdate:callIdNS state:state];
+                }
+            });
+        }));
+
+    // A remote participant started/stopped recording
+    handlers.insert(exportable_callback<CallSignal::RemoteRecordingChanged>(
+        [weakSelf](const std::string& callId, const std::string& peerUri, bool recording) {
+            NSString *callIdNS = toNSString(callId);
+            NSString *peerUriNS = toNSString(peerUri);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onRemoteRecordingChanged:peerUri:recording:)]) {
+                    [strongSelf.delegate onRemoteRecordingChanged:callIdNS peerUri:peerUriNS recording:recording];
                 }
             });
         }));
@@ -974,6 +1081,60 @@ static JBCallState toCallState(const std::string& state) {
             });
         }));
 
+    // A remote peer asked to subscribe to our presence (SIP presence server)
+    handlers.insert(exportable_callback<PresenceSignal::NewServerSubscriptionRequest>(
+        [weakSelf](const std::string& remoteUri) {
+            NSString *remoteUriNS = toNSString(remoteUri);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onNewServerSubscriptionRequest:)]) {
+                    [strongSelf.delegate onNewServerSubscriptionRequest:remoteUriNS];
+                }
+            });
+        }));
+
+    // Presence server error
+    handlers.insert(exportable_callback<PresenceSignal::ServerError>(
+        [weakSelf](const std::string& accountId, const std::string& error, const std::string& message) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *errorNS = toNSString(error);
+            NSString *messageNS = toNSString(message);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onPresenceServerError:error:message:)]) {
+                    [strongSelf.delegate onPresenceServerError:accountIdNS error:errorNS message:messageNS];
+                }
+            });
+        }));
+
+    // Our subscription to a buddy's presence changed state
+    handlers.insert(exportable_callback<PresenceSignal::SubscriptionStateChanged>(
+        [weakSelf](const std::string& accountId, const std::string& buddyUri, int state) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *buddyUriNS = toNSString(buddyUri);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onPresenceSubscriptionStateChanged:buddyUri:state:)]) {
+                    [strongSelf.delegate onPresenceSubscriptionStateChanged:accountIdNS buddyUri:buddyUriNS state:state];
+                }
+            });
+        }));
+
+    // Peer seen on the local network
+    handlers.insert(exportable_callback<PresenceSignal::NearbyPeerNotification>(
+        [weakSelf](const std::string& accountId, const std::string& peerId,
+                   int state, const std::string& displayName) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *peerIdNS = toNSString(peerId);
+            NSString *displayNameNS = toNSString(displayName);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onNearbyPeerNotification:peerId:state:displayName:)]) {
+                    [strongSelf.delegate onNearbyPeerNotification:accountIdNS peerId:peerIdNS state:state displayName:displayNameNS];
+                }
+            });
+        }));
+
     // =========================================================================
     // iOS/Android-specific callbacks (conditionally compiled)
     // =========================================================================
@@ -1139,6 +1300,20 @@ static JBCallState toCallState(const std::string& state) {
                 JamiBridgeWrapper *strongSelf = weakSelf;
                 if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onMessagesFound:accountId:conversationId:messages:)]) {
                     [strongSelf.delegate onMessagesFound:requestId accountId:accountIdNS conversationId:conversationIdNS messages:messagesNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConversationSignal::OnConversationError>(
+        [weakSelf](const std::string& accountId, const std::string& conversationId,
+                   int code, const std::string& what) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSString *conversationIdNS = toNSString(conversationId);
+            NSString *whatNS = toNSString(what);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onConversationError:conversationId:code:message:)]) {
+                    [strongSelf.delegate onConversationError:accountIdNS conversationId:conversationIdNS code:code message:whatNS];
                 }
             });
         }));
@@ -1545,6 +1720,83 @@ static JBCallState toCallState(const std::string& state) {
     return [result copy];
 }
 
+// =============================================================================
+// Conversation History
+// =============================================================================
+
+- (uint32_t)countInteractions:(NSString *)accountId
+               conversationId:(NSString *)conversationId
+                         toId:(NSString *)toId
+                       fromId:(NSString *)fromId
+                    authorUri:(NSString *)authorUri {
+    return libjami::countInteractions(toCppString(accountId),
+                                      toCppString(conversationId),
+                                      toCppString(toId),
+                                      toCppString(fromId),
+                                      toCppString(authorUri));
+}
+
+- (void)clearCache:(NSString *)accountId conversationId:(NSString *)conversationId {
+    FILE_LOG_I("JamiBridge", @"clearCache: conversationId=%@", conversationId);
+    libjami::clearCache(toCppString(accountId), toCppString(conversationId));
+}
+
+// =============================================================================
+// Certificate Management
+// =============================================================================
+
+- (NSArray<NSString *> *)getPinnedCertificates:(NSString *)accountId {
+    return toNSArray(libjami::getPinnedCertificates(toCppString(accountId)));
+}
+
+- (NSArray<NSString *> *)getCertificatesByStatus:(NSString *)accountId
+                                          status:(NSString *)status {
+    return toNSArray(libjami::getCertificatesByStatus(toCppString(accountId),
+                                                      toCppString(status)));
+}
+
+- (NSDictionary<NSString *, NSString *> *)getCertificateDetails:(NSString *)accountId
+                                                         certId:(NSString *)certId {
+    return toNSDictionary(libjami::getCertificateDetails(toCppString(accountId),
+                                                         toCppString(certId)));
+}
+
+- (NSDictionary<NSString *, NSString *> *)validateCertificate:(NSString *)accountId
+                                                       certId:(NSString *)certId {
+    return toNSDictionary(libjami::validateCertificate(toCppString(accountId),
+                                                       toCppString(certId)));
+}
+
+- (NSArray<NSString *> *)pinCertificate:(NSString *)accountId
+                            certificate:(NSData *)certificate
+                                  local:(BOOL)local {
+    const uint8_t *bytes = (const uint8_t *)certificate.bytes;
+    std::vector<uint8_t> cert(bytes, bytes + certificate.length);
+    return toNSArray(libjami::pinCertificate(toCppString(accountId), cert, local));
+}
+
+- (void)pinCertificatePath:(NSString *)accountId path:(NSString *)path {
+    FILE_LOG_I("JamiBridge", @"pinCertificatePath: accountId=%@ path=%@", accountId, path);
+    libjami::pinCertificatePath(toCppString(accountId), toCppString(path));
+}
+
+- (BOOL)unpinCertificate:(NSString *)accountId certId:(NSString *)certId {
+    return libjami::unpinCertificate(toCppString(accountId), toCppString(certId));
+}
+
+- (uint32_t)unpinCertificatePath:(NSString *)accountId path:(NSString *)path {
+    return libjami::unpinCertificatePath(toCppString(accountId), toCppString(path));
+}
+
+- (BOOL)setCertificateStatus:(NSString *)accountId
+                      certId:(NSString *)certId
+                      status:(NSString *)status {
+    FILE_LOG_I("JamiBridge", @"setCertificateStatus: certId=%@ status=%@", certId, status);
+    return libjami::setCertificateStatus(toCppString(accountId),
+                                         toCppString(certId),
+                                         toCppString(status));
+}
+
 - (void)subscribeBuddy:(NSString *)accountId uri:(NSString *)uri flag:(BOOL)flag {
     FILE_LOG_I("JamiBridge", @"subscribeBuddy: accountId=%@ uri=%@ flag=%d", accountId, uri, flag);
     libjami::subscribeBuddy(toCppString(accountId), toCppString(uri), flag);
@@ -1880,12 +2132,58 @@ static JBCallState toCallState(const std::string& state) {
     return libjami::isCaptureMuted();
 }
 
+- (NSString *)recordPath {
+    return toNSString(libjami::getRecordPath());
+}
+
+- (void)setRecordPathValue:(NSString *)path {
+    NSLog(@"[JamiBridge] setRecordPath: %@", path);
+    libjami::setRecordPath(toCppString(path));
+}
+
+- (int32_t)historyLimit {
+    return libjami::getHistoryLimit();
+}
+
+- (void)setHistoryLimitDays:(int32_t)days {
+    NSLog(@"[JamiBridge] setHistoryLimit: %d", days);
+    libjami::setHistoryLimit(days);
+}
+
+- (int32_t)ringingTimeout {
+    return libjami::getRingingTimeout();
+}
+
+- (void)setRingingTimeoutSeconds:(int32_t)seconds {
+    NSLog(@"[JamiBridge] setRingingTimeout: %d", seconds);
+    libjami::setRingingTimeout(seconds);
+}
+
+- (void)monitorDaemon:(BOOL)continuous {
+    NSLog(@"[JamiBridge] monitor: %d", continuous);
+    libjami::monitor(continuous);
+}
+
+- (NSArray<NSDictionary<NSString *, NSString *> *> *)connectionList:(NSString *)accountId
+                                                     conversationId:(NSString *)conversationId {
+    return toNSArrayOfDictionaries(libjami::getConnectionList(toCppString(accountId),
+                                                              toCppString(conversationId)));
+}
+
 - (void)setNoiseSuppression:(BOOL)enabled {
     libjami::setNoiseSuppressState(enabled ? "enabled" : "disabled");
 }
 
 - (void)setEchoCancellation:(BOOL)enabled {
     libjami::setEchoCancellationState(enabled ? "enabled" : "disabled");
+}
+
+- (NSString *)noiseSuppressState {
+    return toNSString(libjami::getNoiseSuppressState());
+}
+
+- (void)setAgcState:(BOOL)enabled {
+    libjami::setAgcState(enabled);
 }
 
 - (void)setPushNotificationToken:(NSString *)token {
@@ -2027,6 +2325,49 @@ static JBCallState toCallState(const std::string& state) {
     NSLog(@"[JamiBridge] hangUpConferenceParticipant: %@", participantUri);
     libjami::hangupParticipant(toCppString(accountId), toCppString(conferenceId),
                               toCppString(participantUri), toCppString(deviceId));
+}
+
+- (void)muteParticipantStream:(NSString *)accountId
+                 conferenceId:(NSString *)conferenceId
+               participantUri:(NSString *)participantUri
+                     deviceId:(NSString *)deviceId
+                     streamId:(NSString *)streamId
+                        muted:(BOOL)muted {
+    NSLog(@"[JamiBridge] muteParticipantStream: %@ device: %@ muted: %d", participantUri, deviceId, muted);
+    libjami::muteStream(toCppString(accountId), toCppString(conferenceId),
+                        toCppString(participantUri), toCppString(deviceId),
+                        toCppString(streamId), muted);
+}
+
+- (void)setActiveParticipantStream:(NSString *)accountId
+                      conferenceId:(NSString *)conferenceId
+                    participantUri:(NSString *)participantUri
+                          deviceId:(NSString *)deviceId
+                          streamId:(NSString *)streamId
+                            active:(BOOL)active {
+    NSLog(@"[JamiBridge] setActiveParticipantStream: %@ stream: %@ active: %d", participantUri, streamId, active);
+    libjami::setActiveStream(toCppString(accountId), toCppString(conferenceId),
+                             toCppString(participantUri), toCppString(deviceId),
+                             toCppString(streamId), active);
+}
+
+- (void)raiseParticipantHand:(NSString *)accountId
+                conferenceId:(NSString *)conferenceId
+              participantUri:(NSString *)participantUri
+                    deviceId:(NSString *)deviceId
+                     raised:(BOOL)raised {
+    NSLog(@"[JamiBridge] raiseParticipantHand: %@ raised: %d", participantUri, raised);
+    libjami::raiseHand(toCppString(accountId), toCppString(conferenceId),
+                       toCppString(participantUri), toCppString(deviceId), raised);
+}
+
+- (void)setParticipantModerator:(NSString *)accountId
+                   conferenceId:(NSString *)conferenceId
+                 participantUri:(NSString *)participantUri
+                      moderator:(BOOL)moderator {
+    NSLog(@"[JamiBridge] setParticipantModerator: %@ moderator: %d", participantUri, moderator);
+    libjami::setModerator(toCppString(accountId), toCppString(conferenceId),
+                          toCppString(participantUri), moderator);
 }
 
 - (BOOL)holdConference:(NSString *)accountId conferenceId:(NSString *)conferenceId {

@@ -68,6 +68,8 @@ data class AppSettingsState(
     val isHardwareAcceleration: Boolean = true,
     val isNoiseSuppression: Boolean = true,
     val isEchoCancellation: Boolean = true,
+    /** Automatic gain control — normalises mic level; separate from echo cancellation. */
+    val isAutomaticGainControl: Boolean = false,
     val isAutoAnswer: Boolean = false,
     /** Custom ringtone URI; empty string means system default. */
     val ringtone: String = "",
@@ -93,6 +95,12 @@ data class AppSettingsState(
     // --- Video Quality ---
     val videoBitrate: Int = 0,
     val videoResolution: Int = 480,
+
+    // --- Daemon-global settings ---
+    /** Days of call history the daemon keeps; 0 keeps everything. */
+    val historyLimitDays: Int = 0,
+    /** Seconds an outgoing call rings before the daemon gives up. */
+    val ringingTimeoutSeconds: Int = 30,
 )
 
 /**
@@ -131,6 +139,9 @@ class AppSettingsViewModel(
             notificationVisibility = LocalPrefs.getInt(LocalPrefKeys.NOTIFICATION_VISIBILITY, NotificationVisibility.PRIVATE),
             videoBitrate = LocalPrefs.getInt(LocalPrefKeys.VIDEO_BITRATE, 0),
             videoResolution = LocalPrefs.getInt(LocalPrefKeys.VIDEO_RESOLUTION, 480),
+            // Daemon-global, so read from the daemon rather than from preferences.
+            historyLimitDays = runCatching { accountService.getHistoryLimit() }.getOrDefault(0),
+            ringingTimeoutSeconds = runCatching { accountService.getRingingTimeout() }.getOrDefault(30),
         )}
 
         // Observe daemon-synced settings reactively
@@ -172,6 +183,7 @@ class AppSettingsViewModel(
                     isHardwareAcceleration = c.hardwareAcceleration,
                     isNoiseSuppression = c.noiseSuppression,
                     isEchoCancellation = c.echoCancellation,
+                    isAutomaticGainControl = c.automaticGainControl,
                     isAutoAnswer = c.autoAnswer,
                     ringtone = c.ringtone,
                 )}
@@ -303,6 +315,12 @@ class AppSettingsViewModel(
         settingsRepository.updateEchoCancellation(new)
     }
 
+    fun toggleAutomaticGainControl() {
+        val new = !_state.value.isAutomaticGainControl
+        _state.update { it.copy(isAutomaticGainControl = new) }
+        settingsRepository.updateAutomaticGainControl(new)
+    }
+
     fun toggleAutoAnswer() {
         val new = !_state.value.isAutoAnswer
         _state.update { it.copy(isAutoAnswer = new) }
@@ -385,6 +403,21 @@ class AppSettingsViewModel(
     }
 
     // ==================== Video Quality ====================
+
+    /**
+     * Call-history retention, in days. Daemon-global rather than per account, and applied by the
+     * daemon when it prunes history, so it is written straight through.
+     */
+    fun setHistoryLimit(days: Int) {
+        _state.update { it.copy(historyLimitDays = days) }
+        accountService.setHistoryLimit(days)
+    }
+
+    /** Seconds an outgoing call rings before the daemon gives up. */
+    fun setRingingTimeout(seconds: Int) {
+        _state.update { it.copy(ringingTimeoutSeconds = seconds) }
+        accountService.setRingingTimeout(seconds)
+    }
 
     fun setVideoBitrate(bitrate: Int) {
         _state.update { it.copy(videoBitrate = bitrate) }

@@ -391,6 +391,7 @@ fun ConversationDetailsScreen(
                     onLeaveConversation = { viewModel.leaveConversation() },
                     onAddMember = { uri -> viewModel.addMember(uri) },
                     onRemoveMember = { uri -> viewModel.removeMember(uri) },
+                    onUnbanMember = { uri -> viewModel.unbanMember(uri) },
                     onCopyIdentifier = { copyToClipboard(state.identityHash) },
                     onCopySwarmId = { copyToClipboard(state.swarmId) },
                 )
@@ -488,6 +489,7 @@ private fun DetailsTabContent(
     onLeaveConversation: () -> Unit = {},
     onAddMember: (String) -> Unit = {},
     onRemoveMember: (String) -> Unit = {},
+    onUnbanMember: (String) -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -605,6 +607,7 @@ private fun DetailsTabContent(
                 onLeave = onLeaveConversation,
                 onAdd = onAddMember,
                 onRemove = onRemoveMember,
+                onUnban = onUnbanMember,
             )
         }
 
@@ -664,9 +667,11 @@ private fun GroupMemberSection(
     onLeave: () -> Unit,
     onAdd: (String) -> Unit,
     onRemove: (String) -> Unit,
+    onUnban: (String) -> Unit = {},
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var showRemoveUri by remember { mutableStateOf<String?>(null) }
+    var showUnbanUri by remember { mutableStateOf<String?>(null) }
     var newMemberInput by remember { mutableStateOf("") }
 
     Card(
@@ -708,29 +713,23 @@ private fun GroupMemberSection(
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     )
-                    if (memberRoles[uri] == MemberRole.ADMIN) {
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    JamiTheme.colors.primary.copy(alpha = 0.15f),
-                                    RoundedCornerShape(50),
-                                )
-                                .padding(horizontal = JamiTheme.spacing.s, vertical = 2.dp),
-                        ) {
-                            Text(
-                                text = stringResource(Res.string.group_admin),
-                                style = JamiTheme.typography.labelSmall,
-                                color = JamiTheme.colors.primary,
-                            )
-                        }
-                        Spacer(Modifier.width(JamiTheme.spacing.xs))
-                    }
+                    val role = memberRoles[uri]
+                    // Every role but plain MEMBER is labelled: a blocked member is still listed
+                    // (the daemon reports banned members too) and must not look like an ordinary
+                    // one, or an admin cannot tell a ban took effect.
+                    MemberRoleBadge(role)
                     if (isAdmin) {
-                        TextButton(onClick = { showRemoveUri = uri }) {
-                            Text(
-                                text = stringResource(Res.string.group_remove_member),
-                                color = JamiTheme.colors.error,
-                            )
+                        if (role == MemberRole.BLOCKED) {
+                            TextButton(onClick = { showUnbanUri = uri }) {
+                                Text(text = stringResource(Res.string.group_unblock_member))
+                            }
+                        } else {
+                            TextButton(onClick = { showRemoveUri = uri }) {
+                                Text(
+                                    text = stringResource(Res.string.group_remove_member),
+                                    color = JamiTheme.colors.error,
+                                )
+                            }
                         }
                     }
                 }
@@ -805,6 +804,48 @@ private fun GroupMemberSection(
             },
         )
     }
+
+    showUnbanUri?.let { uri ->
+        AlertDialog(
+            onDismissRequest = { showUnbanUri = null },
+            title = { Text(stringResource(Res.string.group_unblock_member_title)) },
+            text = { Text(stringResource(Res.string.group_unblock_member_message)) },
+            confirmButton = {
+                Button(onClick = { onUnban(uri); showUnbanUri = null }) {
+                    Text(stringResource(Res.string.group_unblock_member))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUnbanUri = null }) {
+                    Text(stringResource(Res.string.action_cancel))
+                }
+            },
+        )
+    }
+}
+
+/** Role chip next to a member's name. Nothing is drawn for an ordinary member. */
+@Composable
+private fun MemberRoleBadge(role: MemberRole?) {
+    val (label, color) = when (role) {
+        MemberRole.ADMIN -> stringResource(Res.string.group_admin) to JamiTheme.colors.primary
+        MemberRole.BLOCKED -> stringResource(Res.string.group_member_blocked) to JamiTheme.colors.error
+        MemberRole.LEFT -> stringResource(Res.string.group_member_left) to JamiTheme.colors.onSurfaceVariant
+        MemberRole.INVITED -> stringResource(Res.string.group_member_invited) to JamiTheme.colors.onSurfaceVariant
+        else -> return
+    }
+    Box(
+        modifier = Modifier
+            .background(color.copy(alpha = 0.15f), RoundedCornerShape(50))
+            .padding(horizontal = JamiTheme.spacing.s, vertical = 2.dp),
+    ) {
+        Text(
+            text = label,
+            style = JamiTheme.typography.labelSmall,
+            color = color,
+        )
+    }
+    Spacer(Modifier.width(JamiTheme.spacing.xs))
 }
 
 @Composable

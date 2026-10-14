@@ -44,7 +44,8 @@ class Call(
         private set(value) { _callStatus.value = value }
 
     // Media state
-    private var isPeerHolding = false
+    /** True while the *peer* holds the call (daemon `peerHold` signal / PEER_HOLDING detail). */
+    var isPeerHolding = false
     var isAudioMuted = false
     var isVideoMuted = false
     var isRecording = false

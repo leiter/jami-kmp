@@ -17,6 +17,7 @@
 package net.jami.services
 
 import android.content.Context
+import android.media.AudioManager
 import android.os.Build
 import android.util.Base64
 import net.jami.daemon.Blob
@@ -111,7 +112,7 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
             videoCallback = createVideoCallback()
             dataTransferCallback = createDataTransferCallback(callbacks)
             conversationCallback = createConversationCallback(callbacks)
-            networkServiceCallback = createNetworkServiceCallback()
+            networkServiceCallback = createNetworkServiceCallback(callbacks)
 
             // Initialize daemon with all callbacks
             JamiService.init(
@@ -324,9 +325,53 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         JamiService.setNoiseSuppressState(if (enabled) "enabled" else "disabled")
     }
 
-    override fun setEchoCancellation(enabled: Boolean) {
+    override fun getNoiseSuppressState(): String = JamiService.getNoiseSuppressState()
+
+    override fun setAgcState(enabled: Boolean) {
         JamiService.setAgcState(enabled)
     }
+
+    override fun setEchoCancellation(enabled: Boolean) {
+        // This used to call setAgcState(), which is automatic gain control, not echo
+        // cancellation — the setting toggled the wrong daemon feature. libjami's
+        // setEchoCancellationState() is declared in configurationmanager_interface.h but is not
+        // in the generated SWIG bindings, so it cannot be reached from here; regenerating the
+        // interface and rebuilding libjami-core-jni.so would be required. AGC is exposed
+        // separately through setAgcState().
+        Log.w(TAG, "setEchoCancellation($enabled): not available in the current SWIG bindings")
+    }
+
+    // ==================== Peer Services & Tunnels ====================
+
+    override fun addExposedService(accountId: String, details: Map<String, String>): String =
+        JamiService.addExposedService(accountId, StringMap.toSwig(details))
+
+    override fun updateExposedService(accountId: String, details: Map<String, String>): Boolean =
+        JamiService.updateExposedService(accountId, StringMap.toSwig(details))
+
+    override fun removeExposedService(accountId: String, serviceId: String): Boolean =
+        JamiService.removeExposedService(accountId, serviceId)
+
+    override fun getExposedServices(accountId: String): List<Map<String, String>> =
+        JamiService.getExposedServices(accountId).toNative()
+
+    override fun queryPeerServices(accountId: String, peerUri: String): Long =
+        JamiService.queryPeerServices(accountId, peerUri)
+
+    override fun openServiceTunnel(
+        accountId: String,
+        peerUri: String,
+        deviceId: String,
+        serviceId: String,
+        serviceName: String,
+        localPort: Int
+    ): String = JamiService.openServiceTunnel(accountId, peerUri, deviceId, serviceId, serviceName, localPort)
+
+    override fun closeServiceTunnel(accountId: String, tunnelId: String): Boolean =
+        JamiService.closeServiceTunnel(accountId, tunnelId)
+
+    override fun getActiveTunnels(accountId: String): List<Map<String, String>> =
+        JamiService.getActiveTunnels(accountId).toNative()
 
     override fun transfer(accountId: String, callId: String, to: String): Boolean {
         return JamiService.transfer(accountId, callId, to)
@@ -488,6 +533,48 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         JamiService.sendTrustRequest(accountId, uri, blob)
     }
 
+    override fun countInteractions(
+        accountId: String,
+        conversationId: String,
+        toId: String,
+        fromId: String,
+        authorUri: String,
+    ): Int = JamiService.countInteractions(accountId, conversationId, toId, fromId, authorUri).toInt()
+
+    override fun clearCache(accountId: String, conversationId: String) {
+        JamiService.clearCache(accountId, conversationId)
+    }
+
+    // ==================== Certificate Management ====================
+
+    override fun getPinnedCertificates(accountId: String): List<String> =
+        JamiService.getPinnedCertificates(accountId).toList()
+
+    override fun getCertificatesByStatus(accountId: String, status: String): List<String> =
+        JamiService.getCertificatesByStatus(accountId, status).toList()
+
+    override fun getCertificateDetails(accountId: String, certId: String): Map<String, String> =
+        JamiService.getCertificateDetails(accountId, certId).toNative()
+
+    override fun validateCertificate(accountId: String, certId: String): Map<String, String> =
+        JamiService.validateCertificate(accountId, certId).toNative()
+
+    override fun pinCertificate(accountId: String, certificate: ByteArray, local: Boolean): List<String> =
+        JamiService.pinCertificate(accountId, Blob(certificate), local).toList()
+
+    override fun pinCertificatePath(accountId: String, path: String) {
+        JamiService.pinCertificatePath(accountId, path)
+    }
+
+    override fun unpinCertificate(accountId: String, certId: String): Boolean =
+        JamiService.unpinCertificate(accountId, certId)
+
+    override fun unpinCertificatePath(accountId: String, path: String): Int =
+        JamiService.unpinCertificatePath(accountId, path).toInt()
+
+    override fun setCertificateStatus(accountId: String, certId: String, status: String): Boolean =
+        JamiService.setCertificateStatus(accountId, certId, status)
+
     // ==================== Contact Operations ====================
 
     override fun addContact(accountId: String, uri: String) {
@@ -537,6 +624,16 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         val payload = StringMap()
         payload["text/plain"] = message
         JamiService.sendAccountTextMessage(accountId, callIdOrUri, payload, 0)
+    }
+
+    override fun sendCallTextMessage(
+        accountId: String,
+        callId: String,
+        messages: Map<String, String>,
+        from: String,
+        isMixed: Boolean
+    ) {
+        JamiService.sendTextMessage(accountId, callId, StringMap.toSwig(messages), from, isMixed)
     }
 
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
@@ -729,6 +826,22 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
             callbacks.onVolatileAccountDetailsChanged(accountId, details.toNative())
         }
 
+        override fun certificatePinned(certId: String) {
+            callbacks.onCertificatePinned(certId)
+        }
+
+        override fun certificatePathPinned(path: String, certIds: StringVect) {
+            callbacks.onCertificatePathPinned(path, certIds.toList())
+        }
+
+        override fun certificateExpired(certId: String) {
+            callbacks.onCertificateExpired(certId)
+        }
+
+        override fun certificateStateChanged(accountId: String, certId: String, state: String) {
+            callbacks.onCertificateStateChanged(accountId, certId, state)
+        }
+
         override fun knownDevicesChanged(accountId: String, devices: StringMap) {
             callbacks.onKnownDevicesChanged(accountId, devices.toNativeFromUtf8())
         }
@@ -793,6 +906,61 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
             callbacks.onUserSearchEnded(accountId, state, query, results.toNative())
         }
 
+        override fun activeCallsChanged(accountId: String, conversationId: String, activeCalls: VectMap) {
+            callbacks.onActiveCallsChanged(accountId, conversationId, activeCalls.toNative())
+        }
+
+        override fun errorAlert(alert: Int) {
+            callbacks.onErrorAlert(alert)
+        }
+
+        override fun volumeChanged(device: String, value: Int) {
+            callbacks.onVolumeChanged(device, value)
+        }
+
+        override fun stunStatusFailure(account_id: String) {
+            callbacks.onStunStatusFailure(account_id)
+        }
+
+        override fun historyChanged() {
+            callbacks.onHistoryChanged()
+        }
+
+        override fun hardwareDecodingChanged(enabled: Boolean) {
+            callbacks.onHardwareDecodingChanged(enabled)
+        }
+
+        override fun hardwareEncodingChanged(enabled: Boolean) {
+            callbacks.onHardwareEncodingChanged(enabled)
+        }
+
+        override fun messageSend(message: String) {
+            callbacks.onDaemonLogMessage(message)
+        }
+
+        /**
+         * The daemon asks the app for the device's native audio configuration so OpenSL/AAudio
+         * can run without resampling. Without this the daemon falls back to its own defaults,
+         * which costs latency and can resample every frame. Mirrors the reference client's
+         * DeviceRuntimeServiceImpl.getHardwareAudioFormat().
+         */
+        override fun getHardwareAudioFormat(ret: net.jami.daemon.IntVect) {
+            var sampleRate = 44100
+            var bufferSize = 64
+            try {
+                val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)?.toIntOrNull()
+                    ?.let { sampleRate = it }
+                am.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER)?.toIntOrNull()
+                    ?.let { bufferSize = it }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to read native audio config: ${e.message}")
+            }
+            Log.d(TAG, "getHardwareAudioFormat: rate=$sampleRate buffer=$bufferSize")
+            ret.add(sampleRate)
+            ret.add(bufferSize)
+        }
+
         override fun getDeviceName(ret: StringVect) {
             val manufacturer = Build.MANUFACTURER
             val model = Build.MODEL
@@ -836,6 +1004,36 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
             callbacks.onRecordingStateChanged(callId, code != 0)
         }
 
+        override fun audioMuted(callId: String, muted: Boolean) {
+            callbacks.onAudioMuted(callId, muted)
+        }
+
+        override fun videoMuted(callId: String, muted: Boolean) {
+            callbacks.onVideoMuted(callId, muted)
+        }
+
+        override fun mediaNegotiationStatus(callId: String, event: String, mediaList: VectMap) {
+            callbacks.onMediaNegotiationStatus(callId, event, mediaList.toNative())
+        }
+
+        override fun incomingMessage(accountId: String, callId: String, from: String, messages: StringMap) {
+            val native = messages.toNative()
+            if (native.isEmpty()) return
+            callbacks.onInCallMessage(accountId, callId, from, native)
+        }
+
+        override fun peerHold(callId: String, holding: Boolean) {
+            callbacks.onPeerHold(callId, holding)
+        }
+
+        override fun connectionUpdate(id: String, state: Int) {
+            callbacks.onConnectionUpdate(id, state)
+        }
+
+        override fun remoteRecordingChanged(callId: String, peer_number: String, state: Boolean) {
+            callbacks.onRemoteRecordingChanged(callId, peer_number, state)
+        }
+
         override fun conferenceCreated(accountId: String, conversationId: String, confId: String) {
             callbacks.onConferenceCreated(accountId, conversationId, confId)
         }
@@ -857,10 +1055,42 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         override fun newBuddyNotification(accountId: String, buddyUri: String, status: Int, lineStatus: String) {
             callbacks.onNewBuddyNotification(accountId, buddyUri, status, lineStatus)
         }
+
+        override fun newServerSubscriptionRequest(remote: String) {
+            callbacks.onNewServerSubscriptionRequest(remote)
+        }
+
+        override fun serverError(accountId: String, error: String, message: String) {
+            callbacks.onPresenceServerError(accountId, error, message)
+        }
+
+        override fun subscriptionStateChanged(accountId: String, buddyUri: String, state: Int) {
+            callbacks.onPresenceSubscriptionStateChanged(accountId, buddyUri, state)
+        }
+
+        override fun nearbyPeerNotification(accountId: String, peerId: String, state: Int, displayName: String) {
+            callbacks.onNearbyPeerNotification(accountId, peerId, state, displayName)
+        }
     }
 
-    private fun createNetworkServiceCallback() = object : NetworkServiceCallback() {
-        // No-op: jami-kmp does not use the peer-service-discovery/tunnel API yet.
+    private fun createNetworkServiceCallback(callbacks: DaemonCallbacks) = object : NetworkServiceCallback() {
+        override fun peerServicesReceived(
+            requestId: Long,
+            accountId: String,
+            peerId: String,
+            status: Int,
+            servicesJson: String
+        ) {
+            callbacks.onPeerServicesReceived(requestId, accountId, peerId, status, servicesJson)
+        }
+
+        override fun serviceTunnelOpened(accountId: String, tunnelId: String, localPort: Int) {
+            callbacks.onServiceTunnelOpened(accountId, tunnelId, localPort)
+        }
+
+        override fun serviceTunnelClosed(accountId: String, tunnelId: String, reason: String) {
+            callbacks.onServiceTunnelClosed(accountId, tunnelId, reason)
+        }
     }
 
     private fun createVideoCallback() = object : VideoCallback() {
@@ -1006,7 +1236,36 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         override fun conversationPreferencesUpdated(accountId: String, conversationId: String, preferences: StringMap) {
             callbacks.onConversationPreferencesUpdated(accountId, conversationId, preferences.toNative())
         }
+
+        override fun onConversationError(accountId: String, conversationId: String, code: Long, what: String) {
+            callbacks.onConversationError(accountId, conversationId, code, what)
+        }
     }
+
+    override fun getRecordPath(): String = JamiService.getRecordPath()
+
+    override fun setRecordPath(path: String) {
+        JamiService.setRecordPath(path)
+    }
+
+    override fun getHistoryLimit(): Int = JamiService.getHistoryLimit()
+
+    override fun setHistoryLimit(days: Int) {
+        JamiService.setHistoryLimit(days)
+    }
+
+    override fun getRingingTimeout(): Int = JamiService.getRingingTimeout()
+
+    override fun setRingingTimeout(seconds: Int) {
+        JamiService.setRingingTimeout(seconds)
+    }
+
+    override fun monitor(continuous: Boolean) {
+        JamiService.monitor(continuous)
+    }
+
+    override fun getConnectionList(accountId: String, conversationId: String): List<Map<String, String>> =
+        JamiService.getConnectionList(accountId, conversationId).toNative()
 
     override fun muteAllParticipants(accountId: String, confId: String) {
         JamiService.setConferenceLayout(accountId, confId, 0)
@@ -1015,9 +1274,41 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         JamiService.setConferenceLayout(accountId, confId, if (locked) 2 else 0)
     }
     override fun muteParticipantAudio(accountId: String, confId: String, participantId: String) {
-        JamiService.hangUpConference(accountId, confId)
+        // participantId is the peer URI; the device is unknown here, so the daemon has to
+        // resolve the call itself. Prefer muteStream() with an explicit device ID.
+        JamiService.muteStream(accountId, confId, participantId, "", "", true)
     }
-    override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {}
-    override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {}
-    override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {}
+    override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {
+        JamiService.muteStream(accountId, confId, participantId, "", "", false)
+    }
+    // libjami exposes no per-participant video mute to clients: Conference::muteStream only
+    // acts on audio, and the MUTEVIDEO conference-protocol key is host-side only. Left as
+    // explicit no-ops rather than wired to setActiveStream, which focuses a stream instead
+    // of muting it.
+    override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {
+        Log.w(TAG, "disableParticipantVideo: not supported by libjami (audio-only muteStream)")
+    }
+    override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {
+        Log.w(TAG, "enableParticipantVideo: not supported by libjami (audio-only muteStream)")
+    }
+
+    override fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
+        JamiService.muteStream(accountId, confId, peerUri, deviceId, streamId, state)
+    }
+
+    override fun setActiveStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
+        JamiService.setActiveStream(accountId, confId, peerUri, deviceId, streamId, state)
+    }
+
+    override fun hangupParticipant(accountId: String, confId: String, peerUri: String, deviceId: String) {
+        JamiService.hangupParticipant(accountId, confId, peerUri, deviceId)
+    }
+
+    override fun raiseHand(accountId: String, confId: String, peerUri: String, deviceId: String, state: Boolean) {
+        JamiService.raiseHand(accountId, confId, peerUri, deviceId, state)
+    }
+
+    override fun setModerator(accountId: String, confId: String, peerUri: String, state: Boolean) {
+        JamiService.setModerator(accountId, confId, peerUri, state)
+    }
 }

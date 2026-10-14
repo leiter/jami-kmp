@@ -248,11 +248,46 @@ class ContactDetailsViewModel(
         conversationFacade.addConversationMember(accountId, swarmId, memberUri)
     }
 
+    /**
+     * Block a member: in a swarm this *is* `removeConversationMember`. The daemon votes to kick
+     * and, for an admin, resolves the vote as a ban and disconnects the peer — there is no
+     * separate ban call and no ban flag.
+     *
+     * The row stays in the list, marked blocked, because that is the only place [unbanMember]
+     * can be reached from; dropping it here would make the ban irreversible from the UI.
+     */
     fun removeMember(memberUri: String) {
         val accountId = currentAccountId ?: return
         val swarmId = _state.value.swarmId.takeIf { it.isNotEmpty() } ?: return
         conversationFacade.removeConversationMember(accountId, swarmId, memberUri)
-        _state.value = _state.value.copy(memberUris = _state.value.memberUris.filter { it != memberUri })
+        setMemberRole(memberUri, MemberRole.BLOCKED)
+    }
+
+    /**
+     * Unblock a member. Also not its own daemon call: `addConversationMember` on a banned member
+     * is routed to the unban vote (`Conversation::addMember` → `voteUnban`), which only an admin
+     * can resolve — and these actions are only offered to admins.
+     */
+    fun unbanMember(memberUri: String) {
+        val accountId = currentAccountId ?: return
+        val swarmId = _state.value.swarmId.takeIf { it.isNotEmpty() } ?: return
+        conversationFacade.addConversationMember(accountId, swarmId, memberUri)
+        setMemberRole(memberUri, MemberRole.MEMBER)
+    }
+
+    /**
+     * Show the new role straight away. The daemon confirms it with a member event, but that
+     * arrives after the commit is announced, which is too slow to feel like a response.
+     */
+    private fun setMemberRole(memberUri: String, role: MemberRole) {
+        _state.value = _state.value.copy(
+            memberRoles = _state.value.memberRoles + (memberUri to role),
+            memberUris = if (memberUri in _state.value.memberUris) {
+                _state.value.memberUris
+            } else {
+                _state.value.memberUris + memberUri
+            },
+        )
     }
 
     /**

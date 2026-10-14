@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
@@ -422,6 +423,15 @@ class AccountService(
     // persisting ids would only produce stale state. Ported from libjamiclient AccountService.kt.
     private val explicitlyDeactivatedAccounts = mutableSetOf<String>()
 
+    private val _daemonDiagnostics = MutableStateFlow(DaemonDiagnostics())
+
+    /**
+     * Daemon-reported diagnostics collected from signals that otherwise only reach the log
+     * (error alerts, STUN failures, hardware codec state, the daemon's own log lines).
+     * Surfaced by the debug screen.
+     */
+    val daemonDiagnostics: StateFlow<DaemonDiagnostics> = _daemonDiagnostics.asStateFlow()
+
     /** Account ids the user has explicitly deactivated via [setAccountActive]. */
     val deactivatedAccounts: Set<String> get() = explicitlyDeactivatedAccounts.toSet()
 
@@ -444,6 +454,85 @@ class AccountService(
      * deactivation marks every non-proxy account so a later background restore can tell these
      * apart from user-driven ones.
      */
+    /**
+     * Daemon-level error alert (libjami Alert codes, e.g. no network, codec failure).
+     * Mirrors the reference client, which logs it without surfacing a dialog.
+     */
+    internal fun onErrorAlert(alert: Int) {
+        Log.w(TAG, "daemon errorAlert: $alert")
+        _daemonDiagnostics.update { it.copy(lastErrorAlert = alert) }
+    }
+
+    /** An audio device volume was changed daemon-side. */
+    internal fun onVolumeChanged(device: String, value: Int) {
+        Log.d(TAG, "volumeChanged: $device = $value")
+    }
+
+    /**
+     * STUN resolution failed for this account: NAT traversal falls back to TURN/relay, so calls
+     * may still work but connect more slowly.
+     */
+    internal fun onStunStatusFailure(accountId: String) {
+        Log.w(TAG, "stun status failure: $accountId")
+        _daemonDiagnostics.update { it.copy(lastStunFailureAccountId = accountId) }
+    }
+
+    /** The daemon's call-history store changed. jami-kmp keeps history in SQLDelight. */
+    internal fun onHistoryChanged() {
+        Log.d(TAG, "daemon historyChanged")
+    }
+
+    /** Hardware video decoding was enabled/disabled by the daemon. */
+    internal fun onHardwareDecodingChanged(enabled: Boolean) {
+        Log.d(TAG, "hardware decoding ${if (enabled) "enabled" else "disabled"}")
+        _daemonDiagnostics.update { it.copy(hardwareDecoding = enabled) }
+    }
+
+    /** Hardware video encoding was enabled/disabled by the daemon. */
+    internal fun onHardwareEncodingChanged(enabled: Boolean) {
+        Log.d(TAG, "hardware encoding ${if (enabled) "enabled" else "disabled"}")
+        _daemonDiagnostics.update { it.copy(hardwareEncoding = enabled) }
+    }
+
+    /** A log line emitted by libjami itself — routed into the app log so bug reports carry it. */
+    internal fun onDaemonLogMessage(message: String) {
+        Log.d(TAG, "[daemon] $message")
+        _daemonDiagnostics.update { current ->
+            val lines = current.recentDaemonLog + message
+            current.copy(
+                recentDaemonLog = if (lines.size > DAEMON_LOG_LINES) lines.takeLast(DAEMON_LOG_LINES)
+                                  else lines
+            )
+        }
+    }
+
+    /**
+     * Ask the daemon to dump its internal state (connections, channels, sockets). The dump lands
+     * in the daemon's own log, which reaches [daemonDiagnostics]'s `recentDaemonLog` through the
+     * messageSend signal, as well as the platform log.
+     */
+    fun monitorDaemon(continuous: Boolean = false) {
+        daemonBridge.monitor(continuous)
+    }
+
+    /** Active peer connections for an account, optionally narrowed to one conversation. */
+    fun getConnectionList(accountId: String, conversationId: String = ""): List<Map<String, String>> =
+        daemonBridge.getConnectionList(accountId, conversationId)
+
+    /** Call-history retention in days; 0 keeps everything. */
+    fun getHistoryLimit(): Int = daemonBridge.getHistoryLimit()
+
+    fun setHistoryLimit(days: Int) {
+        daemonBridge.setHistoryLimit(days)
+    }
+
+    /** Outgoing-call ringing timeout in seconds. */
+    fun getRingingTimeout(): Int = daemonBridge.getRingingTimeout()
+
+    fun setRingingTimeout(seconds: Int) {
+        daemonBridge.setRingingTimeout(seconds)
+    }
+
     fun setAccountsActive(active: Boolean) {
         if (active) {
             explicitlyDeactivatedAccounts.clear()
@@ -1418,6 +1507,9 @@ class AccountService(
     companion object {
         private const val TAG = "AccountService"
 
+        /** How many daemon log lines the diagnostics buffer keeps. */
+        private const val DAEMON_LOG_LINES = 100
+
         /** Upper bound on waiting for an imported archive to be loaded before deleting it. */
         private const val IMPORT_ARCHIVE_CLEANUP_TIMEOUT_MS = 120_000L
         const val ACCOUNT_SCHEME_NONE = ""
@@ -1444,6 +1536,25 @@ data class IncomingMessage(
 /**
  * Events emitted by AccountService.
  */
+/**
+ * Daemon-reported diagnostics that have no other home in the UI.
+ *
+ * These come from signals the daemon emits for troubleshooting rather than for state: an error
+ * alert, a failed STUN resolution, hardware codec availability, and the daemon's own log lines.
+ */
+data class DaemonDiagnostics(
+    /** Last libjami Alert code, or null if none was reported this session. */
+    val lastErrorAlert: Int? = null,
+    /** Account whose STUN resolution last failed — NAT traversal fell back to TURN/relay. */
+    val lastStunFailureAccountId: String? = null,
+    /** Hardware-accelerated video decoding, as last reported by the daemon. */
+    val hardwareDecoding: Boolean? = null,
+    /** Hardware-accelerated video encoding, as last reported by the daemon. */
+    val hardwareEncoding: Boolean? = null,
+    /** Tail of the daemon's own log lines, oldest first. */
+    val recentDaemonLog: List<String> = emptyList(),
+)
+
 sealed class AccountEvent {
     data object AccountsChanged : AccountEvent()
 

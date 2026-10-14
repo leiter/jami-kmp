@@ -61,6 +61,18 @@
     <string name="content_desc_presence_online">Online</string>
     <string name="content_desc_presence_away">Away</string>
     <string name="content_desc_presence_offline">Offline</string>
+    <!-- Conference moderation -->
+    <string name="content_desc_participants">Show participants</string>
+    <string name="content_desc_participant_options">Participant options</string>
+    <string name="content_desc_mute_all">Mute all participants</string>
+    <string name="content_desc_lock_conference">Lock conference</string>
+    <string name="content_desc_unlock_conference">Unlock conference</string>
+    <string name="content_desc_raise_hand">Raise hand</string>
+    <string name="content_desc_lower_hand">Lower hand</string>
+    <string name="content_desc_conference_layout">Conference layout</string>
+    <string name="content_desc_call_chat">Call chat</string>
+    <string name="content_desc_send_call_message">Send message</string>
+
     <plurals name="content_desc_unread_count">
         <item quantity="one">%d unread message</item>
         <item quantity="other">%d unread messages</item>

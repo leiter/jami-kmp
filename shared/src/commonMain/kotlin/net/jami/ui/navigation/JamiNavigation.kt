@@ -552,7 +552,14 @@ private fun MainNavigation(needsMigration: Boolean) {
         }
 
         composable(Screen.AccountSettingsAdvanced.route) {
-            AccountAdvancedSettingsScreen(onBack = { navController.popBackStack() })
+            AccountAdvancedSettingsScreen(
+                onBack = { navController.popBackStack() },
+                onCertificates = { navController.navigate(Screen.AccountSettingsCertificates.route) },
+            )
+        }
+
+        composable(Screen.AccountSettingsCertificates.route) {
+            CertificatesScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.AccountSettingsAccount.route) {
@@ -566,11 +573,17 @@ private fun MainNavigation(needsMigration: Boolean) {
             AppSettingsScreen(
                 onBack = { navController.popBackStack() },
                 onNavigateToDebugLogs = { navController.navigate(Screen.DebugLogs.route) },
+                onNavigateToRecordings = { navController.navigate(Screen.Recordings.route) },
             )
         }
 
         composable(Screen.DebugLogs.route) {
             DebugLogsScreen(
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(Screen.Recordings.route) {
+            RecordingsScreen(
                 onBack = { navController.popBackStack() },
             )
         }

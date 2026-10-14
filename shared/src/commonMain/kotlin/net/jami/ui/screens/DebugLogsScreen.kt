@@ -36,6 +36,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -48,6 +49,7 @@ import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import net.jami.di.getViewModel
 import net.jami.services.ConversationSyncInfo
+import net.jami.services.DaemonLifecycleState
 import net.jami.services.SyncState
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.DebugLogsViewModel
@@ -157,6 +159,107 @@ fun DebugLogsScreen(
                             .fillMaxWidth()
                             .padding(vertical = JamiTheme.spacing.s),
                     )
+
+                    // Daemon diagnostics: signals the daemon emits for troubleshooting and the
+                    // connection list it keeps per account. Both were previously log-only.
+                    val diagnostics = state.daemonDiagnostics
+                    Text(
+                        text = "daemon:",
+                        style = mono,
+                        color = JamiTheme.colors.onSurface,
+                    )
+                    Text(
+                        text = "  " + daemonLifecycleLine(state.daemonLifecycle) +
+                            " · starts ${state.daemonStartCount}",
+                        style = mono,
+                        color = if (state.daemonLifecycle is DaemonLifecycleState.Running)
+                            JamiTheme.colors.onSurfaceVariant else JamiTheme.colors.error,
+                    )
+                    Text(
+                        text = "  history limit: ${state.historyLimitDays} day(s)" +
+                            " · ringing timeout: ${state.ringingTimeoutSeconds}s",
+                        style = mono,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                    )
+                    Text(
+                        text = "  hw decode: ${diagnostics.hardwareDecoding.orUnknown()}" +
+                            " · hw encode: ${diagnostics.hardwareEncoding.orUnknown()}",
+                        style = mono,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                    )
+                    diagnostics.lastErrorAlert?.let { alert ->
+                        Text(
+                            text = "  last error alert: $alert",
+                            style = mono,
+                            color = JamiTheme.colors.error,
+                        )
+                    }
+                    diagnostics.lastStunFailureAccountId?.let { account ->
+                        Text(
+                            text = "  STUN failed for ${account.take(12)} (relaying)",
+                            style = mono,
+                            color = JamiTheme.colors.error,
+                        )
+                    }
+                    Text(
+                        text = if (state.connections.isEmpty()) "  connections: none"
+                               else "  connections: ${state.connections.size}",
+                        style = mono,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                    )
+                    state.connections.forEach { connection ->
+                        Text(
+                            text = "    " + connectionLine(connection),
+                            style = mono,
+                            color = JamiTheme.colors.onSurfaceVariant,
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        )
+                    }
+                    if (state.tunnels.isNotEmpty()) {
+                        Text(
+                            text = "  service tunnels: ${state.tunnels.size}",
+                            style = mono,
+                            color = JamiTheme.colors.onSurfaceVariant,
+                        )
+                        state.tunnels.forEach { tunnel ->
+                            Text(
+                                text = "    ${tunnel.serviceName.ifEmpty { tunnel.serviceId }}" +
+                                    " → 127.0.0.1:${tunnel.localPort} (${tunnel.peerUri.take(12)})",
+                                style = mono,
+                                color = JamiTheme.colors.onSurfaceVariant,
+                                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            )
+                        }
+                    }
+                    TextButton(onClick = { viewModel.dumpDaemonState() }) {
+                        Text(stringResource(Res.string.debug_dump_daemon_state))
+                    }
+                    if (state.daemonLifecycle !is DaemonLifecycleState.Running) {
+                        TextButton(onClick = { viewModel.restartDaemon() }) {
+                            Text(stringResource(Res.string.debug_restart_daemon))
+                        }
+                    }
+                    if (diagnostics.recentDaemonLog.isNotEmpty()) {
+                        Text(
+                            text = "daemon log (${diagnostics.recentDaemonLog.size}):",
+                            style = mono,
+                            color = JamiTheme.colors.onSurface,
+                        )
+                        diagnostics.recentDaemonLog.forEach { line ->
+                            Text(
+                                text = "  $line",
+                                style = mono,
+                                color = JamiTheme.colors.onSurfaceVariant,
+                                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = JamiTheme.spacing.s),
+                    )
                     Text(
                         text = state.logs.ifEmpty { stringResource(Res.string.debug_logs_empty) },
                         style = mono,
@@ -167,6 +270,29 @@ fun DebugLogsScreen(
             }
         }
     }
+}
+
+private fun daemonLifecycleLine(state: DaemonLifecycleState): String = when (state) {
+    is DaemonLifecycleState.Stopped -> "stopped"
+    is DaemonLifecycleState.Starting -> "starting…"
+    is DaemonLifecycleState.Running -> "running"
+    is DaemonLifecycleState.Failed ->
+        "FAILED after ${state.attempts} attempt(s): ${state.reason}"
+}
+
+private fun Boolean?.orUnknown(): String = when (this) {
+    true -> "on"
+    false -> "off"
+    null -> "unknown"
+}
+
+/** One line per daemon connection, keyed the way libjami's getConnectionList reports them. */
+private fun connectionLine(c: Map<String, String>): String = buildString {
+    append(c["peer"]?.take(12) ?: c["device"]?.take(12) ?: "?")
+    c["device"]?.let { append(" · dev ").append(it.take(8)) }
+    c["status"]?.let { append(" · ").append(it) }
+    c["channels"]?.let { append(" · ch ").append(it) }
+    c["remoteAddress"]?.let { append(" · ").append(it) }
 }
 
 private fun syncStateLabel(s: SyncState): String = when (s) {
@@ -185,7 +311,9 @@ private fun conversationSyncLine(i: ConversationSyncInfo): String = buildString 
     i.requestMode?.let { append(" (→${it.name})") }
     append(" · members ").append(i.memberCount)
     append(" · peers ").append(i.activePeerCount)
+    // Daemon-side commit count, with what this client has loaded beside it.
     append(" · msgs ").append(i.messageCount)
+    append("/").append(i.loadedMessageCount)
     i.lastCommitId?.let { append(" · last ").append(it.take(8)) }
     if (i.bootstrapping) append(" · BOOTSTRAPPING")
 }

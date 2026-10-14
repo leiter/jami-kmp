@@ -65,11 +65,65 @@ sealed class CallMode {
 data class CallPickerItem(val callId: String, val peerName: String)
 
 /**
+ * Negotiated media details for the current call, as the daemon reports them.
+ *
+ * Every field can be absent: the daemon only fills in what has been negotiated, so an audio-only
+ * call has no video codec and a call still connecting may have neither.
+ */
+data class CallStats(
+    val audioCodec: String? = null,
+    val audioSampleRate: String? = null,
+    val videoCodec: String? = null,
+    val videoBitrate: String? = null,
+    val videoMinBitrate: String? = null,
+    val videoMaxBitrate: String? = null,
+    val isAudioOnly: Boolean = false,
+    val videoSource: String? = null,
+) {
+    companion object {
+        /** Keys from libjami `call_const.h`, namespace libjami::Call::Details. */
+        fun fromDetails(details: Map<String, String>): CallStats = CallStats(
+            audioCodec = details["AUDIO_CODEC"]?.ifBlank { null },
+            audioSampleRate = details["AUDIO_SAMPLE_RATE"]?.ifBlank { null },
+            videoCodec = details["VIDEO_CODEC"]?.ifBlank { null },
+            videoBitrate = details["VIDEO_BITRATE"]?.ifBlank { null },
+            videoMinBitrate = details["VIDEO_MIN_BITRATE"]?.ifBlank { null },
+            videoMaxBitrate = details["VIDEO_MAX_BITRATE"]?.ifBlank { null },
+            isAudioOnly = details["AUDIO_ONLY"]?.toBoolean() ?: false,
+            videoSource = details["VIDEO_SOURCE"]?.ifBlank { null },
+        )
+    }
+}
+
+/**
+ * One message in the in-call chat, resolved for display.
+ */
+data class InCallMessageUi(
+    val author: String,
+    val body: String,
+    val timestamp: Long,
+    val isOutgoing: Boolean,
+)
+
+/**
+ * Conference mixer layouts understood by the daemon (libjami::Layout).
+ */
+object ConferenceLayout {
+    const val GRID = 0
+    const val ONE_BIG = 1
+    const val ONE_BIG_WITH_SMALL = 2
+}
+
+/**
  * Minimal participant info surfaced to the UI.
  */
 data class ParticipantUi(
     val callId: String,
     val displayName: String,
+    /** Participant account URI (bare ring id) — needed to address moderation calls. */
+    val peerUri: String = "",
+    /** Participant device ID from the conference info — the daemon resolves mutes by it. */
+    val deviceId: String = "",
     val sinkId: String = "",
     val isModerator: Boolean = false,
     val isAudioMuted: Boolean = false,
@@ -103,6 +157,22 @@ data class CallState(
     val participantCount: Int = 1,
     val participants: List<ParticipantUi> = emptyList(),
     val conferenceLayout: Int = 0,
+    val isHandRaised: Boolean = false,
+    /** The peer put us on hold — media stops while the call stays CURRENT. */
+    val isPeerHolding: Boolean = false,
+    /** At least one remote participant is recording the call. */
+    val isRemoteRecording: Boolean = false,
+    /** Chat exchanged inside this call, oldest first. Lives only for the call's duration. */
+    val inCallMessages: List<InCallMessageUi> = emptyList(),
+    /** In-call messages received since the chat sheet was last open. */
+    val unreadInCallMessages: Int = 0,
+    /**
+     * Negotiated media details from the daemon (codecs, sample rate, bitrate), refreshed while
+     * the stats panel is open. Empty when the panel has never been opened.
+     */
+    val callStats: CallStats? = null,
+    /** Display names of the remote participants currently recording, comma separated. */
+    val remoteRecordingBy: String = "",
     val hangupReason: HangupReason = HangupReason.NONE,
     // Video state
     val hasVideo: Boolean = false,
@@ -460,10 +530,56 @@ class CallViewModel(
         _state.value = _state.value.copy(conferenceLayout = layout)
     }
 
+    /**
+     * Send a message into the ongoing call.
+     *
+     * This used to call CallService.sendTextMessage, which routes to the account-level send and
+     * addresses a contact URI — handing it a call ID sent the message nowhere. The call-level
+     * path also reaches every participant of a conference.
+     */
     fun sendCallMessage(text: String) {
+        val body = text.trim()
+        if (body.isEmpty()) return
         val accountId = currentAccountId ?: return
-        val callId = currentCallId ?: return
-        callService.sendTextMessage(accountId, callId, text)
+        val callId = currentConference?.id ?: currentCallId ?: return
+        val selfUri = accountService.getAccount(accountId)
+            ?.let { Uri.fromString(it.username).rawRingId }
+            ?: ""
+        callService.sendInCallMessage(accountId, callId, selfUri, body)
+    }
+
+    /**
+     * Refresh the media stats while the panel is open.
+     *
+     * Codecs and bitrates change during a call (renegotiation, adaptive bitrate), so this polls
+     * rather than reading once. [stopCallStats] cancels it when the panel closes.
+     */
+    fun startCallStats() {
+        if (callStatsJob?.isActive == true) return
+        callStatsJob = scope.launch {
+            while (true) {
+                val accountId = currentAccountId
+                val callId = currentCallId ?: currentConference?.firstCall?.daemonId
+                if (accountId != null && callId != null) {
+                    val details = callService.getCallDetails(accountId, callId)
+                    _state.value = _state.value.copy(callStats = CallStats.fromDetails(details))
+                }
+                kotlinx.coroutines.delay(CALL_STATS_REFRESH_MS)
+            }
+        }
+    }
+
+    /** Stop refreshing media stats; the last values stay in state. */
+    fun stopCallStats() {
+        callStatsJob?.cancel()
+        callStatsJob = null
+    }
+
+    /** The user opened the in-call chat, so nothing is unread any more. */
+    fun markInCallMessagesRead() {
+        if (_state.value.unreadInCallMessages != 0) {
+            _state.value = _state.value.copy(unreadInCallMessages = 0)
+        }
     }
 
     // ==================== Video controls ====================
@@ -609,6 +725,71 @@ class CallViewModel(
         }
     }
 
+    /**
+     * Mute or unmute a participant's audio (moderator only).
+     *
+     * Addresses the participant by (URI, device) the way the daemon expects, unlike the
+     * call-ID based [setParticipantAudioMuted].
+     */
+    fun setParticipantMuted(participant: ParticipantUi, muted: Boolean) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        callService.muteParticipantStream(
+            accountId, conf.id, participant.peerUri, participant.deviceId, muted
+        )
+    }
+
+    /**
+     * Eject a participant from the conference (moderator only).
+     * Hangs up their own call leg directly when we host it.
+     */
+    fun ejectParticipant(participant: ParticipantUi) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        callService.hangupParticipant(accountId, conf.id, participant.peerUri, participant.deviceId)
+    }
+
+    /**
+     * Promote or demote a participant to/from moderator (moderator only).
+     */
+    fun setParticipantModerator(participant: ParticipantUi, moderator: Boolean) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        callService.setModerator(accountId, conf.id, participant.peerUri, moderator)
+    }
+
+    /**
+     * Focus a participant's video stream in the conference mixer (modern per-stream API).
+     */
+    fun setActiveStream(participant: ParticipantUi, active: Boolean) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        callService.setActiveStream(
+            accountId, conf.id, participant.peerUri, participant.deviceId,
+            participant.sinkId, active
+        )
+    }
+
+    /**
+     * Raise or lower a participant's hand. Lowering someone else's hand requires moderator
+     * rights; with no participant given this acts on the local user.
+     */
+    fun setHandRaised(raised: Boolean, participant: ParticipantUi? = null) {
+        val accountId = currentAccountId ?: return
+        val conf = currentConference ?: return
+        val account = accountService.getAccount(accountId)
+        val peerUri = participant?.peerUri
+            ?: Uri.fromString(account?.username ?: "").rawRingId.ifEmpty { return }
+        val deviceId = participant?.deviceId ?: account?.deviceId ?: ""
+        callService.raiseHand(accountId, conf.id, peerUri, deviceId, raised)
+        if (participant == null) {
+            _state.value = _state.value.copy(isHandRaised = raised)
+        }
+    }
+
+    /** Toggle the local user's raised hand. */
+    fun toggleRaiseHand() = setHandRaised(!_state.value.isHandRaised)
+
     // ==================== Video Loss Recovery ====================
 
     fun retryRemoteVideo() {
@@ -674,6 +855,51 @@ class CallViewModel(
         }
         // Subscribe to video events
         subscribeToVideoEvents()
+        subscribeToInCallMessages()
+    }
+
+    private var inCallMessagesJob: Job? = null
+    private var callStatsJob: Job? = null
+
+    /**
+     * Mirror the call's chat into the UI state, counting anything incoming that arrives while the
+     * sheet is closed as unread.
+     */
+    private fun subscribeToInCallMessages() {
+        inCallMessagesJob?.cancel()
+        inCallMessagesJob = scope.launch {
+            callService.inCallMessages.collect { messages ->
+                val callId = currentConference?.id ?: currentCallId
+                val mine = messages.filter { callId == null || it.callId == callId }
+                val previousIncoming = _state.value.inCallMessages.count { !it.isOutgoing }
+                val incoming = mine.count { !it.isOutgoing }
+                val newIncoming = (incoming - previousIncoming).coerceAtLeast(0)
+                _state.value = _state.value.copy(
+                    inCallMessages = mine.map { message ->
+                        InCallMessageUi(
+                            author = resolveInCallAuthor(message.author, message.isOutgoing),
+                            body = message.body,
+                            timestamp = message.timestamp,
+                            isOutgoing = message.isOutgoing,
+                        )
+                    },
+                    unreadInCallMessages = _state.value.unreadInCallMessages + newIncoming,
+                )
+            }
+        }
+    }
+
+    /** Prefer a participant's display name over the raw URI for the chat's author line. */
+    private fun resolveInCallAuthor(authorUri: String, isOutgoing: Boolean): String {
+        if (isOutgoing) return ""
+        val uri = Uri.fromString(authorUri)
+        val participant = _state.value.participants
+            .firstOrNull { it.peerUri == uri.rawRingId }
+        return participant?.displayName
+            ?: currentConference?.participants
+                ?.firstOrNull { it.peerUri.rawRingId == uri.rawRingId }
+                ?.contact?.displayName
+            ?: _state.value.peerName.ifEmpty { uri.rawRingId.take(12) }
     }
 
     private var videoEventsJob: Job? = null
@@ -740,6 +966,7 @@ class CallViewModel(
             isRecording = call.isRecording,
             isIncoming = call.isIncoming,
             isOnHold = isHold,
+            isPeerHolding = call.isPeerHolding,
             hangupReason = call.hangupReason,
             hasVideo = hasVideo,
             hasLocalVideo = hasActiveVideo && !call.isVideoMuted,
@@ -795,10 +1022,14 @@ class CallViewModel(
             ParticipantUi(
                 callId = call.daemonId ?: "",
                 displayName = call.contact?.displayName ?: call.peerUri.uri,
+                peerUri = call.peerUri.rawRingId,
+                deviceId = participantInfo?.device ?: "",
                 sinkId = participantInfo?.sinkId ?: "",
-                isAudioMuted = call.isAudioMuted,
-                isVideoMuted = call.isVideoMuted,
+                isAudioMuted = participantInfo?.let { it.audioModeratorMuted || it.audioLocalMuted }
+                    ?: call.isAudioMuted,
+                isVideoMuted = participantInfo?.videoMuted ?: call.isVideoMuted,
                 isModerator = participantInfo?.isModerator ?: false,  // Moderator flag from daemon
+                isHandRaised = participantInfo?.isHandRaised ?: false,
                 isActive = participantInfo?.active ?: false  // Active speaker from daemon
             )
         }
@@ -812,7 +1043,11 @@ class CallViewModel(
             isConferenceLocked = conf.isLocked,
             participantCount = conf.participants.size,
             participants = participantUis,
-            conferenceLayout = _state.value.conferenceLayout
+            conferenceLayout = _state.value.conferenceLayout,
+            isPeerHolding = conf.participants.any { it.isPeerHolding },
+            isRemoteRecording = conf.isRemoteRecording,
+            remoteRecordingBy = conf.participantRecordingFlow.value
+                .joinToString { it.displayName ?: it.uri.rawRingId.take(12) },
         )
 
         if (isOver) {
@@ -854,12 +1089,17 @@ class CallViewModel(
         callUpdatesJob?.cancel()
         videoEventsJob?.cancel()
         videoLossJob?.cancel()
+        inCallMessagesJob?.cancel()
+        callStatsJob?.cancel()
         hardwareService.cameraCleanup()
         scope.cancel()
     }
 
     companion object {
         private const val TAG = "CallViewModel"
+
+        /** How often the stats panel re-reads the daemon's call details. */
+        private const val CALL_STATS_REFRESH_MS = 2000L
 
         /** Bounds how long startScreenShare() waits for the platform permission prompt. */
         private const val SCREEN_SHARE_PERMISSION_TIMEOUT_MS = 30_000L

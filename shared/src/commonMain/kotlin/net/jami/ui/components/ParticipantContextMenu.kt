@@ -24,6 +24,9 @@ import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material.icons.filled.PersonRemove
+import androidx.compose.material.icons.filled.BackHand
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -39,6 +42,13 @@ import org.jetbrains.compose.resources.stringResource
  * Context menu for moderator actions on a participant.
  *
  * Shows options like mute, kick, etc. (only for moderators).
+ *
+ * The audio/video callbacks are passed the participant's call ID for backwards
+ * compatibility; the moderator, hand and participant-level callbacks receive the whole
+ * [ParticipantUi] because the daemon addresses those by (URI, device) pair.
+ *
+ * [showVideoControls] is off by default: libjami has no client-facing per-participant
+ * video mute, so those entries would be dead buttons (see DaemonBridgeApi.muteStream).
  */
 @Composable
 fun ParticipantContextMenu(
@@ -51,6 +61,10 @@ fun ParticipantContextMenu(
     onDisableVideo: (String) -> Unit = {},
     onEnableVideo: (String) -> Unit = {},
     onRemove: (String) -> Unit = {},
+    showVideoControls: Boolean = false,
+    onSetModerator: (ParticipantUi, Boolean) -> Unit = { _, _ -> },
+    onLowerHand: (ParticipantUi) -> Unit = {},
+    onSetActiveStream: (ParticipantUi, Boolean) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     DropdownMenu(
@@ -62,7 +76,10 @@ fun ParticipantContextMenu(
         DropdownMenuItem(
             text = {
                 Text(
-                    if (participant.isAudioMuted) "Unmute Audio" else "Mute Audio"
+                    stringResource(
+                        if (participant.isAudioMuted) Res.string.action_call_unmute
+                        else Res.string.action_call_mute
+                    )
                 )
             },
             leadingIcon = {
@@ -82,33 +99,91 @@ fun ParticipantContextMenu(
             }
         )
 
-        // Video toggle
+        // Video toggle — only when the platform can actually honour it
+        if (showVideoControls) {
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        stringResource(
+                            if (participant.isVideoMuted) Res.string.call_participant_enable_video
+                            else Res.string.call_participant_disable_video
+                        )
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = if (participant.isVideoMuted)
+                            Icons.Default.Videocam else Icons.Default.VideocamOff,
+                        contentDescription = null
+                    )
+                },
+                onClick = {
+                    if (participant.isVideoMuted) {
+                        onEnableVideo(participant.callId)
+                    } else {
+                        onDisableVideo(participant.callId)
+                    }
+                    onDismiss()
+                }
+            )
+        }
+
+        // Spotlight: focus this participant's stream in the conference mixer. Uses the modern
+        // per-stream API rather than the deprecated call-ID based setActiveParticipant.
         DropdownMenuItem(
             text = {
                 Text(
-                    if (participant.isVideoMuted) "Enable Video" else "Disable Video"
+                    stringResource(
+                        if (participant.isActive) Res.string.call_participant_unfocus
+                        else Res.string.call_participant_focus
+                    )
                 )
             },
             leadingIcon = {
-                Icon(
-                    imageVector = if (participant.isVideoMuted)
-                        Icons.Default.Videocam else Icons.Default.VideocamOff,
-                    contentDescription = null
-                )
+                Icon(imageVector = Icons.Default.CenterFocusStrong, contentDescription = null)
             },
             onClick = {
-                if (participant.isVideoMuted) {
-                    onEnableVideo(participant.callId)
-                } else {
-                    onDisableVideo(participant.callId)
-                }
+                onSetActiveStream(participant, !participant.isActive)
                 onDismiss()
             }
         )
 
+        // Moderator promotion / demotion
+        DropdownMenuItem(
+            text = {
+                Text(
+                    stringResource(
+                        if (participant.isModerator) Res.string.call_participant_revoke_moderator
+                        else Res.string.call_participant_make_moderator
+                    )
+                )
+            },
+            leadingIcon = {
+                Icon(imageVector = Icons.Default.Shield, contentDescription = null)
+            },
+            onClick = {
+                onSetModerator(participant, !participant.isModerator)
+                onDismiss()
+            }
+        )
+
+        // Lower a raised hand
+        if (participant.isHandRaised) {
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.call_lower_hand)) },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Default.BackHand, contentDescription = null)
+                },
+                onClick = {
+                    onLowerHand(participant)
+                    onDismiss()
+                }
+            )
+        }
+
         // Remove participant
         DropdownMenuItem(
-            text = { Text("Remove from Call") },
+            text = { Text(stringResource(Res.string.call_participant_remove)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.PersonRemove,

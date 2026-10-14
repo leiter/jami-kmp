@@ -261,9 +261,29 @@ class ConversationFacade(
         conversationUri: Uri,
         preferences: Map<String, String>
     ) {
-        // For swarm conversations, we would send to daemon
-        // For now, just save locally
+        // Local store first, so the UI reflects the change without waiting on the daemon.
         preferencesService.setConversationPreferences(accountId, conversationUri, preferences)
+        // Then the daemon, which persists them in the swarm and syncs them to this user's other
+        // devices; it echoes them back through ConversationPreferencesUpdated. Only swarm
+        // conversations have daemon-side preferences — legacy/SIP ones stay local-only.
+        if (conversationUri.isSwarm) {
+            accountService.setConversationPreferences(accountId, conversationUri.rawRingId, preferences)
+        }
+    }
+
+    /**
+     * Pull the daemon's copy of a conversation's preferences into the local store.
+     *
+     * Without this the local store only ever learns about preferences this device set, so a
+     * change made on another device stayed invisible until the user opened conversation
+     * settings. Daemon values win; local-only keys are preserved.
+     */
+    internal fun refreshConversationPreferences(accountId: String, conversationId: String) {
+        val daemonPrefs = daemonBridge.getConversationPreferences(accountId, conversationId)
+        if (daemonPrefs.isEmpty()) return
+        val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
+        val merged = preferencesService.getConversationPreferences(accountId, conversationUri) + daemonPrefs
+        preferencesService.setConversationPreferences(accountId, conversationUri, merged)
     }
 
     // ==================== Conversation Access ====================
@@ -705,6 +725,8 @@ class ConversationFacade(
         }
 
         return if (conversation.isSwarm) {
+            // Conversation.id is the local DB row id; the swarm id is the URI's ring id.
+            refreshConversationPreferences(conversation.accountId, conversation.uri.rawRingId)
             accountService.loadMore(conversation)  // suspends until daemon callback
         } else {
             getConversationHistory(conversation)
@@ -785,6 +807,10 @@ class ConversationFacade(
                     if (!title.isNullOrEmpty()) {
                         conversation.setProfile(Profile(title, null))
                     }
+
+                    // Preferences live in the swarm, so another device may have changed them
+                    // while this one was away.
+                    if (!isSyncing) refreshConversationPreferences(account.accountId, convId)
 
                     account.conversationStarted(conversation)
 
@@ -953,6 +979,15 @@ class ConversationFacade(
                 uri != null && uri != account.username && !uri.endsWith(account.username)
             }
             val history = conversation.getSortedHistory()
+            // The daemon's own commit count, not just what this client has paged in — the panel
+            // is there to compare the two sides, and "msgs" meaning "messages I happen to have
+            // loaded" made a healthy conversation look half-synced.
+            val commitCount = try {
+                daemonBridge.countInteractions(accountId, convId)
+            } catch (e: Exception) {
+                Log.w(TAG, "snapshotConversationSyncInfo: countInteractions failed for $convId", e)
+                history.size
+            }
             ConversationSyncInfo(
                 conversationId = convId,
                 uri = conversation.uri.uri,
@@ -960,12 +995,37 @@ class ConversationFacade(
                 requestMode = conversation.requestMode,
                 memberCount = members.size,
                 activePeerCount = nonSelf,
-                messageCount = history.size,
+                messageCount = commitCount,
+                loadedMessageCount = history.size,
                 lastCommitId = history.lastOrNull { it.messageId != null }?.messageId,
                 bootstrapping = conversation.mode == Conversation.Mode.Syncing
             )
         }
     }
+
+    /**
+     * Drop the daemon's in-memory history for a conversation. Frees memory only: a swarm's
+     * commits are in its git repository and come back on the next load.
+     */
+    fun clearDaemonCache(accountId: String, conversationId: String) {
+        try {
+            daemonBridge.clearCache(accountId, conversationId)
+        } catch (e: Exception) {
+            Log.w(TAG, "clearDaemonCache failed for $conversationId", e)
+        }
+    }
+
+    /**
+     * Total commits the daemon holds for a conversation. See [DaemonBridgeApi.countInteractions]
+     * for what the count does and does not include.
+     */
+    fun countInteractions(accountId: String, conversationId: String): Int =
+        try {
+            daemonBridge.countInteractions(accountId, conversationId)
+        } catch (e: Exception) {
+            Log.w(TAG, "countInteractions failed for $conversationId", e)
+            0
+        }
 
     // ==================== Profile/Contact Operations ====================
 
@@ -1808,6 +1868,23 @@ class ConversationFacade(
     }
 
     /**
+     * The daemon failed an operation on a conversation (swarm fetch/merge error, permission
+     * denied on a member change, corrupt repository). The daemon keeps running, so the only
+     * remedy is to tell the user their conversation is out of sync.
+     *
+     * Error codes come from the daemon's `ConversationError`; the message is daemon-authored
+     * English, so it is logged and carried on the event for the UI to decide how to show it.
+     */
+    internal fun onConversationError(accountId: String, conversationId: String, code: Long, message: String) {
+        Log.w(TAG, "onConversationError: $conversationId code=$code: $message")
+        scope.launch {
+            _conversationEvents.emit(
+                ConversationEvent.ConversationError(accountId, conversationId, code, message)
+            )
+        }
+    }
+
+    /**
      * Called when active calls in a conversation change.
      */
     internal fun onActiveCallsChanged(accountId: String, conversationId: String, activeCalls: List<Map<String, String>>) {
@@ -2071,6 +2148,17 @@ sealed class ConversationEvent {
         val conversationId: String
     ) : ConversationEvent()
 
+    /**
+     * The daemon reported an error for this conversation (sync/merge failure, denied member
+     * change). [code] is the daemon's `ConversationError` code, [message] its own description.
+     */
+    data class ConversationError(
+        val accountId: String,
+        val conversationId: String,
+        val code: Long,
+        val message: String
+    ) : ConversationEvent()
+
     data class ConversationRequestReceived(
         val accountId: String,
         val conversationId: String,
@@ -2190,7 +2278,10 @@ data class ConversationSyncInfo(
     val memberCount: Int,
     /** Non-self members the daemon still lists with a role (best available "active peers" proxy). */
     val activePeerCount: Int,
+    /** Commits the daemon has in the conversation's repository, of every kind. */
     val messageCount: Int,
+    /** Interactions this client has loaded into memory, which is usually fewer. */
+    val loadedMessageCount: Int = 0,
     val lastCommitId: String?,
     /** Daemon reports the conversation's git repo as still cloning / not bootstrapped. */
     val bootstrapping: Boolean,
