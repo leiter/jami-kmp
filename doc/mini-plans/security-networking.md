@@ -213,7 +213,7 @@ The evidence is stale as well: `ACCOUNT_ACTIVE_CALL_LIMIT("Account.activeCallLim
 
 ---
 
-### F10: Presence and Subscription Settings Missing — gap
+### F10: Presence and Subscription Settings Missing — gap — **INVALID (2026-10-28); `Account.presenceEnabled` is SIP-only, so the toggle would be dead on a Jami account**
 
 **Evidence:**
 - Daemon properties: `Account.presencePublishSupported`, `Account.presenceSubscribeSupported`, `Account.presenceEnabled`; `account_const.h:197–200`
@@ -226,6 +226,27 @@ Presence features may not be controllable at account level. Users cannot opt out
 
 **Daemon support:** 
 `Account.presencePublishSupported`, `Account.presenceSubscribeSupported`, `Account.presenceEnabled`; `account_const.h:197–200`.
+
+**Invalid — verified in the daemon 2026-10-28.** The finding reads the keys off
+`account_const.h`, which declares them without saying which account type implements them. Following
+them into the daemon settles it:
+
+- `Account.presenceEnabled` is emitted and parsed **only** by `sip/sipaccount_config.cpp`
+  (`:201`, `:249`). `jamidht/jamiaccount_config.cpp` never reads or writes it.
+- `Account.presencePublishSupported` is likewise SIP-only (`sipaccount_config.cpp:40`).
+- For a Jami account the daemon **hardcodes** `presenceSubscribeSupported` to `TRUE`
+  (`jamiaccount_config.cpp:138`). It is a capability statement, not a setting.
+
+So there is no account-level presence switch for a Jami account. Writing
+`Account.presenceEnabled` through `setAccountDetails` on one would be silently discarded, and the
+UI this finding asks for would be a toggle that does nothing — the same failure mode F3 was closed
+for. Its "Users cannot opt out if account type supports presence" is answered by the daemon: the
+Jami account type does not support opting out.
+
+Presence *is* now managed, just not here: `contacts-presence-accounts.md` F2 releases and restores
+the subscriptions around app background, which is the behaviour that actually costs anything.
+If a user-facing "share my online status" switch is ever wanted on Jami, it has to be a
+client-side preference driving `subscribeBuddy`/`publish`, not an account property.
 
 ---
 
@@ -442,7 +463,7 @@ whoever wants the property itself.
 
 ---
 
-### F19: Moderator Settings and Auto-Publish Not Exposed — gap
+### F19: Moderator Settings and Auto-Publish Not Exposed — gap — **DONE (2026-10-28); all five keys verified Jami-applicable and round-tripping through the daemon**
 
 **Evidence:**
 - Daemon properties: `Account.defaultModerators`, `Account.localModeratorsEnabled`, `Account.allModeratorsEnabled`, `Account.accountPublish`, `Account.accountDiscovery`; `account_const.h:150–152, 158–160`
@@ -455,6 +476,45 @@ Swarm moderation config not user-settable; relies on daemon defaults.
 
 **Daemon support:** 
 `Account.defaultModerators`, `Account.localModeratorsEnabled`, `Account.allModeratorsEnabled`, `Account.accountPublish`, `Account.accountDiscovery`; `account_const.h:150–152, 158–160`.
+
+**Done 2026-10-28.** All five are exposed in `AccountAdvancedSettingsScreen` under two new
+sections, "Call moderation" and "Local network".
+
+**Each key was checked for Jami applicability first**, because `account_const.h` declares keys
+without saying which account type implements them — the trap that made F10 invalid on the same day:
+
+- `defaultModerators`, `localModeratorsEnabled`, `allModeratorsEnabled` live in the daemon's **base**
+  account config (`account_config.cpp`), so they apply to Jami accounts. Confirmed empirically: a
+  live Jami account's `config.yml` on an Android device carries `defaultModerators: ""`.
+- `accountPublish` and `accountDiscovery` are **Jami-account** properties
+  (`jamidht/jamiaccount_config.cpp`). They are *not* the same thing as the existing peer-discovery
+  toggle, which maps `Account.peerDiscovery` (`DHT_PEER_DISCOVERY`) — three adjacent keys in the
+  header that are easy to conflate. The new ConfigKey is named `ACCOUNT_LAN_DISCOVERY` to keep them
+  apart.
+- All five round-trip: present in both `toMap` and `fromMap` (`account_config.cpp:150-152` /
+  `:176-179`; `jamiaccount_config.cpp:135-136` / `:176-177`), so none of them is a dead toggle.
+  This is the check F6 taught — there the setters wrote values the daemon silently rejected.
+
+**`defaultModerators` goes through the details map, not the dedicated API.** The daemon also offers
+`setDefaultModerator(accountId, peerURI, state)` and `getDefaultModerators(accountId)`
+(`configurationmanager_interface.h:286`, `:291`), and both are in the SWIG bindings
+(`JamiService.java:668`, `:672`) — but neither is in `JamiBridgeWrapper.h`, so using them would
+leave iOS and macOS blocked on an Apple wrapper rebuild, which overwrites tracked binaries and
+needs a Mac. The details map carries the same data as a `"/"`-joined set (`string_join` /
+`string_split_set` default, `string_utils.h:222-224`) and works on every platform today, so that is
+what the UI reads and writes.
+
+The moderator list is add/remove only; there is no contact picker yet, so entries are added
+programmatically or by a future "set as default moderator" action on a contact. Both "everyone is a
+moderator" and the host toggle carry summaries explaining the consequence, following F7's
+precedent for settings that widen who can act.
+
+**Verified:** 7 new unit tests in `AccountSubSettingsViewModelTest` cover the `"/"` parse (including
+empty and trailing-separator values the daemon can write), add/remove/duplicate/blank handling, that
+removing the last moderator writes `""` rather than leaving the old value, and that all four
+toggles reach the daemon. `:shared:desktopTest` 783 passing.
+**Not exercised on a device** — the daemon-side acceptance was established statically from the
+config code rather than by toggling on hardware.
 
 ---
 

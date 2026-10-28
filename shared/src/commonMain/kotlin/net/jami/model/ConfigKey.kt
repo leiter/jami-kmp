@@ -105,6 +105,23 @@ enum class ConfigKey(val key: String) {
     PRESENCE_STATUS("Account.presenceStatus"),
     PRESENCE_NOTE("Account.presenceNote"),
 
+    // Moderation defaults for swarm calls/conferences.
+    // These three live in the daemon's *base* account config (account_config.cpp), not the SIP
+    // one, so they apply to Jami accounts — a live Jami account's config.yml carries
+    // `defaultModerators`. DEFAULT_MODERATORS is a "/"-separated set of peer URIs in the details
+    // map (string_join/string_split_set default to "/"); the daemon also offers
+    // setDefaultModerator/getDefaultModerators, but those are absent from the Apple wrapper
+    // header, and going through the details map works on every platform without a wrapper rebuild.
+    DEFAULT_MODERATORS("Account.defaultModerators"),
+    LOCAL_MODERATORS_ENABLED("Account.localModeratorsEnabled"),
+    ALL_MODERATORS_ENABLED("Account.allModeratorsEnabled"),
+
+    // Announce/discover this account on the local network. Jami-account properties
+    // (jamiaccount_config.cpp) — distinct from ACCOUNT_CONVERSATION_ENABLED above, which maps
+    // "Account.peerDiscovery" (DHT peer discovery).
+    ACCOUNT_PUBLISH("Account.accountPublish"),
+    ACCOUNT_LAN_DISCOVERY("Account.accountDiscovery"),
+
     // Read receipts
     SEND_READ_RECEIPT("Account.sendReadReceipt"),
 

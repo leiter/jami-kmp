@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -209,6 +210,105 @@ fun AccountAdvancedSettingsScreen(
                 description = stringResource(Res.string.account_peer_discovery_enable_summary),
                 checked = state.peerDiscoveryEnabled,
                 onCheckedChange = { viewModel.setPeerDiscovery(it) },
+            )
+
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+
+            // ── Call moderation (security plan F19) ───────────────────────────
+            JamiSectionTitle(title = stringResource(Res.string.account_moderation_section_label))
+
+            JamiToggle(
+                label = stringResource(Res.string.account_local_moderators_label),
+                description = stringResource(Res.string.account_local_moderators_summary),
+                checked = state.localModeratorsEnabled,
+                onCheckedChange = { viewModel.setLocalModeratorsEnabled(it) },
+            )
+
+            HorizontalDivider(color = JamiTheme.colors.outline)
+
+            JamiToggle(
+                label = stringResource(Res.string.account_all_moderators_label),
+                description = stringResource(Res.string.account_all_moderators_summary),
+                checked = state.allModeratorsEnabled,
+                onCheckedChange = { viewModel.setAllModeratorsEnabled(it) },
+            )
+
+            HorizontalDivider(color = JamiTheme.colors.outline)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.m),
+            ) {
+                Text(
+                    text = stringResource(Res.string.account_default_moderators_label),
+                    style = JamiTheme.typography.bodyLarge,
+                    color = JamiTheme.colors.onSurface,
+                )
+                Text(
+                    text = stringResource(Res.string.account_default_moderators_summary),
+                    style = JamiTheme.typography.bodySmall,
+                    color = JamiTheme.colors.onSurfaceVariant,
+                )
+            }
+
+            if (state.defaultModerators.isEmpty()) {
+                Text(
+                    text = stringResource(Res.string.account_default_moderators_empty),
+                    style = JamiTheme.typography.bodySmall,
+                    color = JamiTheme.colors.onSurfaceVariant,
+                    modifier = Modifier.padding(
+                        start = JamiTheme.spacing.l,
+                        end = JamiTheme.spacing.l,
+                        bottom = JamiTheme.spacing.m,
+                    ),
+                )
+            } else {
+                for (uri in state.defaultModerators) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = JamiTheme.spacing.l, end = JamiTheme.spacing.s),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = uri,
+                            style = JamiTheme.typography.bodyMedium,
+                            color = JamiTheme.colors.onSurface,
+                            modifier = Modifier.weight(1f),
+                        )
+                        IconButton(onClick = { viewModel.removeDefaultModerator(uri) }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(
+                                    Res.string.account_default_moderator_remove, uri
+                                ),
+                                tint = JamiTheme.colors.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+
+            // ── Local network (Jami accounts only) ────────────────────────────
+            JamiSectionTitle(title = stringResource(Res.string.account_local_network_section_label))
+
+            JamiToggle(
+                label = stringResource(Res.string.account_publish_label),
+                description = stringResource(Res.string.account_publish_summary),
+                checked = state.accountPublishEnabled,
+                onCheckedChange = { viewModel.setAccountPublishEnabled(it) },
+            )
+
+            HorizontalDivider(color = JamiTheme.colors.outline)
+
+            JamiToggle(
+                label = stringResource(Res.string.account_lan_discovery_label),
+                description = stringResource(Res.string.account_lan_discovery_summary),
+                checked = state.lanDiscoveryEnabled,
+                onCheckedChange = { viewModel.setLanDiscoveryEnabled(it) },
             )
 
             Spacer(Modifier.height(JamiTheme.spacing.m))

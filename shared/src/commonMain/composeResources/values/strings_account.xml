@@ -473,4 +473,22 @@ Biometric or device authentication adds a convenient way to locally unlock acces
     <string name="account_allow_cert_from_trusted_summary">Trust a peer certificate presented by a contact you marked as trusted.</string>
     <string name="account_allow_cert_warning">Weaker than full verification: a certificate is accepted on the strength of who presents it.</string>
 
+    <!-- Moderation defaults for swarm calls (security plan F19). No jami-client-android
+         equivalent exists, so these follow the account_* convention. -->
+    <string name="account_moderation_section_label">Call moderation</string>
+    <string name="account_local_moderators_label">Host is a moderator</string>
+    <string name="account_local_moderators_summary">Whoever starts a group call on this account can mute, eject and set the layout.</string>
+    <string name="account_all_moderators_label">Everyone is a moderator</string>
+    <string name="account_all_moderators_summary">Every participant of a group call can mute and eject anyone else. Turn on only for calls among people you trust.</string>
+    <string name="account_default_moderators_label">Default moderators</string>
+    <string name="account_default_moderators_summary">These contacts are made moderators in every group call on this account.</string>
+    <string name="account_default_moderators_empty">No default moderators.</string>
+
+    <!-- Local-network account announce/discovery (Jami accounts only) -->
+    <string name="account_local_network_section_label">Local network</string>
+    <string name="account_publish_label">Announce this account</string>
+    <string name="account_publish_summary">Let devices on the same network find this account without going through the DHT.</string>
+    <string name="account_lan_discovery_label">Find accounts nearby</string>
+    <string name="account_lan_discovery_summary">Discover accounts announced by other devices on the same network.</string>
+
 </resources>

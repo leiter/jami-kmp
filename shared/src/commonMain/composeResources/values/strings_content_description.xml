@@ -77,4 +77,5 @@
         <item quantity="one">%d unread message</item>
         <item quantity="other">%d unread messages</item>
     </plurals>
+    <string name="account_default_moderator_remove">Remove %1$s from default moderators</string>
 </resources>

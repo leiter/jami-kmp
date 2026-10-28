@@ -70,6 +70,14 @@ data class AccountSubSettingsState(
     // Conversation settings
     val maxAutoAcceptMb: Int = 32,
 
+    // ── Moderation (security plan F19) ───────────────────────────────────────
+    val localModeratorsEnabled: Boolean = false,
+    val allModeratorsEnabled: Boolean = false,
+    /** Peer URIs promoted to moderator automatically in every swarm call on this account. */
+    val defaultModerators: List<String> = emptyList(),
+    val accountPublishEnabled: Boolean = false,
+    val lanDiscoveryEnabled: Boolean = false,
+
     // ── Advanced ─────────────────────────────────────────────────────────────
     // Name server
     val nameServer: String = "",
@@ -191,6 +199,11 @@ class AccountSubSettingsViewModel(
                 autoAnswer = bool(ConfigKey.ACCOUNT_AUTOANSWER),
                 isRendezvous = bool(ConfigKey.ACCOUNT_ISRENDEZVOUS),
                 maxAutoAcceptMb = maxMb,
+                localModeratorsEnabled = bool(ConfigKey.LOCAL_MODERATORS_ENABLED),
+                allModeratorsEnabled = bool(ConfigKey.ALL_MODERATORS_ENABLED),
+                defaultModerators = parseModerators(str(ConfigKey.DEFAULT_MODERATORS)),
+                accountPublishEnabled = bool(ConfigKey.ACCOUNT_PUBLISH),
+                lanDiscoveryEnabled = bool(ConfigKey.ACCOUNT_LAN_DISCOVERY),
                 nameServer = str(ConfigKey.RINGNS_HOST),
                 bootstrapNode = str(ConfigKey.ACCOUNT_HOSTNAME),
                 proxyEnabled = bool(ConfigKey.ACCOUNT_PROXY_ENABLED),
@@ -317,6 +330,62 @@ class AccountSubSettingsViewModel(
     fun setMaxAutoAcceptMb(mb: Int) {
         _state.update { it.copy(maxAutoAcceptMb = mb) }
         settingsRepository.updateMaxAutoAcceptSize(mb.toLong() * 1024L * 1024L)
+    }
+
+    // ── Moderation (security plan F19) ────────────────────────────────────────
+
+    /**
+     * Whether the host of a swarm call is a moderator of it.
+     *
+     * Off means even the person who started the call holds no moderator rights unless they were
+     * granted some other way, so it is left to the daemon default rather than being flipped
+     * casually.
+     */
+    fun setLocalModeratorsEnabled(enabled: Boolean) {
+        _state.update { it.copy(localModeratorsEnabled = enabled) }
+        updateDetail(ConfigKey.LOCAL_MODERATORS_ENABLED, enabled.toString())
+    }
+
+    /** Whether *every* participant of a swarm call is a moderator. */
+    fun setAllModeratorsEnabled(enabled: Boolean) {
+        _state.update { it.copy(allModeratorsEnabled = enabled) }
+        updateDetail(ConfigKey.ALL_MODERATORS_ENABLED, enabled.toString())
+    }
+
+    /** Announce this account to peers on the local network. */
+    fun setAccountPublishEnabled(enabled: Boolean) {
+        _state.update { it.copy(accountPublishEnabled = enabled) }
+        updateDetail(ConfigKey.ACCOUNT_PUBLISH, enabled.toString())
+    }
+
+    /** Discover accounts published by peers on the local network. */
+    fun setLanDiscoveryEnabled(enabled: Boolean) {
+        _state.update { it.copy(lanDiscoveryEnabled = enabled) }
+        updateDetail(ConfigKey.ACCOUNT_LAN_DISCOVERY, enabled.toString())
+    }
+
+    /** Adds [uri] to the default moderators, if it is not already one. */
+    fun addDefaultModerator(uri: String) {
+        val trimmed = uri.trim()
+        if (trimmed.isEmpty()) return
+        val current = _state.value.defaultModerators
+        if (trimmed in current) return
+        writeModerators(current + trimmed)
+    }
+
+    /** Removes [uri] from the default moderators. */
+    fun removeDefaultModerator(uri: String) {
+        val current = _state.value.defaultModerators
+        if (uri !in current) return
+        writeModerators(current.filter { it != uri })
+    }
+
+    private fun writeModerators(uris: List<String>) {
+        _state.update { it.copy(defaultModerators = uris) }
+        // The daemon stores this as a set and splits on "/" (string_split_set's default), so the
+        // details value is joined the same way. A URI cannot contain "/" after the scheme is
+        // stripped, which is the form the daemon keeps.
+        updateDetail(ConfigKey.DEFAULT_MODERATORS, uris.joinToString(MODERATOR_SEPARATOR))
     }
 
     // ── Advanced ──────────────────────────────────────────────────────────────
@@ -544,6 +613,10 @@ class AccountSubSettingsViewModel(
         return null
     }
 
+    /** Splits the daemon's "/"-joined moderator set, dropping empties from a trailing separator. */
+    private fun parseModerators(raw: String): List<String> =
+        raw.split(MODERATOR_SEPARATOR).map { it.trim() }.filter { it.isNotEmpty() }
+
     private fun updateDetail(key: ConfigKey, value: String) {
         scope.launch {
             val account = accountService.currentAccount.value ?: return@launch
@@ -558,6 +631,9 @@ class AccountSubSettingsViewModel(
     }
 
     companion object {
+        /** The daemon joins and splits Account.defaultModerators on this; see string_utils.h. */
+        private const val MODERATOR_SEPARATOR = "/"
+
         /** Ports below 1024 need privileges the app does not have; 65535 is the protocol limit. */
         internal const val MIN_RTP_PORT = 1024
         internal const val MAX_RTP_PORT = 65535

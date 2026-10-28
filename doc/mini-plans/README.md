@@ -25,7 +25,7 @@ had gone stale — see the caveat at the end of this file.
 | [`notifications-push-background.md`](notifications-push-background.md) | 13 | 9 | 1 | 2 | 1 |
 | [`contacts-presence-accounts.md`](contacts-presence-accounts.md) | 14 | 5 | 1 | 8 | **0 — closed** |
 | [`daemon-api-surface-audit.md`](daemon-api-surface-audit.md) | 12 | 3 | 2 | 3 | 4 |
-| [`security-networking.md`](security-networking.md) | 21 | 4 | 0 | 14 | 3 |
+| [`security-networking.md`](security-networking.md) | 21 | 5 | 0 | 15 | 1 |
 
 "Closed without work" means the finding was disproved, found already implemented, blocked on a
 daemon function that does not exist, or judged not applicable to a mobile client — each with a
@@ -39,19 +39,16 @@ is how this section used to read as well — but a re-read on 2026-10-28 found t
 (daemon-api-surface-audit, 4) holds the single biggest remaining feature. Sort by the sub-bullets,
 not the numbers.
 
-- **`security-networking.md` — 3 open: F10, F17, F19.** Triaged 2026-10-28; the other 18 are
-  resolved or closed. What is left is genuine Jami surface, not SIP:
+- **`security-networking.md` — 1 open: F17.** Triaged 2026-10-28, then worked down the same day.
+  **F19 is done** (moderation and local-network settings) and **F10 turned out invalid**:
+  `Account.presenceEnabled` is emitted and parsed only by `sip/sipaccount_config.cpp`, and for a
+  Jami account the daemon hardcodes `presenceSubscribeSupported` to true, so the toggle the finding
+  asks for would be dead. That leaves:
 
-  - **F10** presence/subscription settings at account level. The `PRESENCE_*` keys are mapped
-    (`ConfigKey.kt:103-106`) but reach no UI, and `Account.presenceEnabled` is not mapped at all.
-    Natural companion to `contacts-presence-accounts.md` F2, which added the background
-    suspend/resume but no user-facing switch.
-  - **F17** `Account.bootstrapListUrl` and `RingNS.account`, neither mapped — DHT bootstrap and
-    nameserver account, Jami-specific.
-  - **F19** swarm moderator settings (`defaultModerators`, `localModeratorsEnabled`,
-    `allModeratorsEnabled`) plus `accountPublish`/`accountDiscovery`, nothing mapped. The natural
-    follow-on to `calling-conferencing.md` F3, which wired `setModerator` per call but left
-    account-level defaults unset.
+  - **F17 — the only open finding, and only half of it is real.** `Account.bootstrapListUrl` is a
+    Jami-account property (`jamidht/jamiaccount_config.cpp`) and worth exposing. Its other half,
+    `RingNS.account`, appears **only** in `account_const.h` and nowhere in the daemon
+    implementation — a declared-but-unimplemented key, so there is nothing to wire.
 
   The closures fell into four groups, each recorded with its grounds in the finding itself: five
   SIP-only (F1, F8, F12, F15, F20 — F1 is the anchor, and they are really one unbuilt screen rather

@@ -31,7 +31,7 @@ import kotlin.test.assertTrue
 
 /**
  * Covers the validation and secret-handling behaviour from the security-networking plan
- * (F6 port validation, F5 TURN password handling).
+ * (F6 port validation, F5 TURN password handling, F19 moderation defaults).
  */
 class AccountSubSettingsViewModelTest {
 
@@ -188,5 +188,108 @@ class AccountSubSettingsViewModelTest {
 
         vm.clearTurnPassword()
         assertEquals("", vm.state.value.turnPassword)
+    }
+
+    // ==================== F19: moderation defaults ====================
+
+    private val alice = "aaaa1111"
+    private val bob = "bbbb2222"
+
+    @Test
+    fun theDaemonsSlashJoinedModeratorSetIsParsedIntoAList() = runTest {
+        val vm = viewModel(stubWithAccount(mapOf(ConfigKey.DEFAULT_MODERATORS.key to "$alice/$bob")))
+        advanceUntilIdle()
+
+        assertEquals(listOf(alice, bob), vm.state.value.defaultModerators)
+    }
+
+    @Test
+    fun anEmptyOrTrailingSeparatorDoesNotProduceBlankModerators() = runTest {
+        // A set the daemon wrote while empty, and one with a trailing separator.
+        val empty = viewModel(stubWithAccount(mapOf(ConfigKey.DEFAULT_MODERATORS.key to "")))
+        advanceUntilIdle()
+        assertTrue(empty.state.value.defaultModerators.isEmpty())
+
+        val trailing = viewModel(
+            stubWithAccount(mapOf(ConfigKey.DEFAULT_MODERATORS.key to "$alice/"))
+        )
+        advanceUntilIdle()
+        assertEquals(listOf(alice), trailing.state.value.defaultModerators)
+    }
+
+    @Test
+    fun addingAModeratorWritesTheSlashJoinedSetBackToTheDaemon() = runTest {
+        val stub = stubWithAccount(mapOf(ConfigKey.DEFAULT_MODERATORS.key to alice))
+        val vm = viewModel(stub)
+        advanceUntilIdle()
+
+        vm.addDefaultModerator(bob)
+        advanceUntilIdle()
+
+        assertEquals(listOf(alice, bob), vm.state.value.defaultModerators)
+        assertEquals("$alice/$bob", stub.accountDetails["acc1"]!![ConfigKey.DEFAULT_MODERATORS.key])
+    }
+
+    @Test
+    fun addingADuplicateOrBlankModeratorIsIgnored() = runTest {
+        val stub = stubWithAccount(mapOf(ConfigKey.DEFAULT_MODERATORS.key to alice))
+        val vm = viewModel(stub)
+        advanceUntilIdle()
+
+        vm.addDefaultModerator(alice)
+        vm.addDefaultModerator("   ")
+        advanceUntilIdle()
+
+        assertEquals(listOf(alice), vm.state.value.defaultModerators)
+    }
+
+    @Test
+    fun removingAModeratorLeavesTheRest() = runTest {
+        val stub = stubWithAccount(mapOf(ConfigKey.DEFAULT_MODERATORS.key to "$alice/$bob"))
+        val vm = viewModel(stub)
+        advanceUntilIdle()
+
+        vm.removeDefaultModerator(alice)
+        advanceUntilIdle()
+
+        assertEquals(listOf(bob), vm.state.value.defaultModerators)
+        assertEquals(bob, stub.accountDetails["acc1"]!![ConfigKey.DEFAULT_MODERATORS.key])
+    }
+
+    @Test
+    fun removingTheLastModeratorWritesAnEmptyValueRatherThanLeavingTheOldOne() = runTest {
+        val stub = stubWithAccount(mapOf(ConfigKey.DEFAULT_MODERATORS.key to alice))
+        val vm = viewModel(stub)
+        advanceUntilIdle()
+
+        vm.removeDefaultModerator(alice)
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.defaultModerators.isEmpty())
+        assertEquals("", stub.accountDetails["acc1"]!![ConfigKey.DEFAULT_MODERATORS.key])
+    }
+
+    @Test
+    fun theModerationAndLocalNetworkTogglesReachTheDaemon() = runTest {
+        val stub = stubWithAccount()
+        val vm = viewModel(stub)
+        advanceUntilIdle()
+
+        vm.setLocalModeratorsEnabled(true)
+        vm.setAllModeratorsEnabled(true)
+        vm.setAccountPublishEnabled(true)
+        vm.setLanDiscoveryEnabled(true)
+        advanceUntilIdle()
+
+        val details = stub.accountDetails["acc1"]!!
+        assertEquals("true", details[ConfigKey.LOCAL_MODERATORS_ENABLED.key])
+        assertEquals("true", details[ConfigKey.ALL_MODERATORS_ENABLED.key])
+        assertEquals("true", details[ConfigKey.ACCOUNT_PUBLISH.key])
+        assertEquals("true", details[ConfigKey.ACCOUNT_LAN_DISCOVERY.key])
+
+        assertTrue(vm.state.value.localModeratorsEnabled)
+        assertTrue(vm.state.value.allModeratorsEnabled)
+        assertTrue(vm.state.value.accountPublishEnabled)
+        assertTrue(vm.state.value.lanDiscoveryEnabled)
     }
 }
