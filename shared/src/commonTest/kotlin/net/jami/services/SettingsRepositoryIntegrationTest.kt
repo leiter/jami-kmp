@@ -16,7 +16,12 @@
  */
 package net.jami.services
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import net.jami.model.Account
+import net.jami.model.ConfigKey
+import net.jami.model.settings.SettingsKeys
 import net.jami.model.settings.Theme
 import net.jami.repository.SettingsRepository
 import kotlin.test.Test
@@ -125,5 +130,60 @@ class SettingsRepositoryIntegrationTest {
 
         repo.unmuteConversation("conv123")
         assertFalse(repo.isConversationMuted("conv123"))
+    }
+
+    // ==================== Account following ====================
+
+    /**
+     * Nothing called observeAccount() in production until 2026-10-28, so currentAccountId stayed
+     * null and both loadSettings() and saveSettings() returned early: every KMP.* setting lived
+     * in memory for the session and was lost on restart.
+     */
+    @Test
+    fun followingTheAccountFlowMakesSettingsPersist() = runTest {
+        val stub = StubDaemonBridge()
+        stub.accountDetails["acc1"] = mutableMapOf()
+        val accounts = MutableStateFlow<Account?>(null)
+        // follow() collects for as long as the repository lives, so it gets a scope that is not
+        // a child of the test body's job — otherwise runTest waits for a collector that never
+        // finishes.
+        val repoScope = kotlinx.coroutines.CoroutineScope(coroutineContext + kotlinx.coroutines.SupervisorJob())
+        val repo = SettingsRepository(stub, repoScope)
+        repo.follow(accounts)
+
+        repo.updateTheme(Theme.DARK)
+        advanceUntilIdle()
+        assertFalse(
+            stub.accountDetails["acc1"]!!.keys.any { SettingsKeys.isKmpKey(it) },
+            "with no account there is nowhere to store settings"
+        )
+
+        accounts.value = Account("acc1", mutableMapOf(ConfigKey.ACCOUNT_TYPE.key to "RING"))
+        advanceUntilIdle()
+        // A different value, because updateTheme() short-circuits when the in-memory state
+        // already matches — which is how the missing persistence stayed invisible.
+        repo.updateTheme(Theme.LIGHT)
+        advanceUntilIdle()
+
+        assertTrue(stub.accountDetails["acc1"]!!.containsKey(SettingsKeys.UI))
+    }
+
+    @Test
+    fun switchingAccountsDoesNotCarryTheOldAccountsSettingsOver() = runTest {
+        val stub = StubDaemonBridge()
+        stub.accountDetails["acc1"] = mutableMapOf(
+            SettingsKeys.UI to """{"theme":"DARK"}"""
+        )
+        stub.accountDetails["acc2"] = mutableMapOf()
+        val repo = SettingsRepository(stub, this)
+
+        repo.observeAccount("acc1")
+        advanceUntilIdle()
+        assertEquals(Theme.DARK, repo.uiSettings.value.theme)
+
+        repo.observeAccount("acc2")
+        advanceUntilIdle()
+
+        assertEquals(Theme.SYSTEM, repo.uiSettings.value.theme)
     }
 }

@@ -20,9 +20,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import net.jami.model.Account
 import net.jami.model.settings.*
 import net.jami.services.DaemonBridgeApi
 import net.jami.utils.Log
@@ -100,8 +103,31 @@ class SettingsRepository(
      * @param accountId Account to observe
      */
     fun observeAccount(accountId: String) {
+        // Switching accounts: drop the previous account's values first. loadSettings() only
+        // overwrites the groups the new account actually has stored, so without this reset an
+        // account with no stored settings would inherit the last one's.
+        if (currentAccountId != null && currentAccountId != accountId) resetToDefaults()
         currentAccountId = accountId
         loadSettings(accountId)
+    }
+
+    /**
+     * Follow the active account for the lifetime of this repository.
+     *
+     * Without this nothing ever calls [observeAccount], `currentAccountId` stays null, and both
+     * [loadSettings] and [saveSettings] return early — every KMP.* setting then lives in memory
+     * only and is lost on restart. Wired from the DI module, which is the only place that has
+     * both the repository and the account flow.
+     */
+    fun follow(currentAccount: StateFlow<Account?>) {
+        scope.launch {
+            currentAccount
+                .map { it?.accountId }
+                .distinctUntilChanged()
+                .collect { accountId ->
+                    if (accountId == null) stopObserving() else observeAccount(accountId)
+                }
+        }
     }
 
     /**
@@ -110,6 +136,10 @@ class SettingsRepository(
      */
     fun stopObserving() {
         currentAccountId = null
+        resetToDefaults()
+    }
+
+    private fun resetToDefaults() {
         _meta.value = KmpMeta()
         _uiSettings.value = UiSettings()
         _privacySettings.value = PrivacySettings()
