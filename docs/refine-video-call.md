@@ -1,5 +1,20 @@
 # Refine Video Call — Gap Analysis
 
+> **Status update 2026-10-26** — four of the five prioritised fixes below have landed. Verified
+> against the current code:
+> - **P1 incoming-call string — fixed.** `CallScreen.kt:695` picks `call_incoming_video` or
+>   `call_incoming_audio` from `state.isVideo`.
+> - **P1 notification accept — fixed.** `MainActivity.kt:135-138` resolves `hasVideo` from the
+>   call's media list before calling `accept`.
+> - **P2 `videoEnabled` settings UI — done.** Exposed in `AccountMediaSettingsScreen` (and read
+>   into `AppSettingsViewModel`).
+> - **P3 outgoing gate — done.** `CallViewModel.kt:259` computes
+>   `effectiveVideo = hasVideo && hardwareService.hasCamera()`.
+> - **Still open: P2 camera preview on the incoming screen.** No `CameraPreview` is composed in
+>   `CallScreen.kt` while a video call is ringing, and there is no separate "accept audio only"
+>   button. That is the only item in this document still outstanding.
+
+
 Compares jami-android-client (reference) with jami-kmp (current) for receiver-side video call handling.
 
 ---

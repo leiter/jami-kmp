@@ -30,13 +30,21 @@ The scale of that gap is measured in
 |---|---|
 | `libjami` public API | **~150** across 9 interface headers |
 | `jami-client-android` (reference) | ~120 — **80%** |
-| `jami-kmp` (this project) | ~100 — **67%** |
+| `jami-kmp` (this project) | ~100 — **67%** at audit time |
 
 So there are two distinct tracks of work, and both matter:
 
-1. **Close the gap to the reference client** (~20 functions) — audio device selection by
-   index or name, `getPasswordKey`, history management, certificate pinning and validation,
-   and several video capabilities.
+Since that audit, several of those gaps have closed — certificate pinning and validation,
+conference per-stream moderation, in-call text, history limit and conversation counts, and the
+recording path among them. As of 2026-10-26 the Android bridge calls **149 distinct
+`JamiService.*` entry points** (SWIG bindings, which is a different count from the header
+functions the audit measured — the two are not directly comparable). The per-finding status
+lives in the mini-plans; roughly half of their 89 findings are now closed, deferred or
+disproved.
+
+1. **Close the gap to the reference client** (~20 functions at audit time) — audio device
+   selection by index or name, `getPasswordKey`, history management, and several video
+   capabilities. Certificate pinning and validation has since landed.
 2. **Go past it** into the ~30 functions *no* client wires today — most prominently the
    **Jami plugin system** (19 functions in `plugin_manager_interface.h`, untouched by this
    project and only partly used upstream), plus exposed services / service discovery,
@@ -99,8 +107,8 @@ Mobile is the priority; the honest answer varies sharply by platform.
 | Platform | UI | Daemon bridge | Status |
 |---|---|---|---|
 | **Android** | ✅ | JNI via SWIG bindings + `libjami-core-jni.so` | 🟢 Primary — production-ready for implemented features |
-| **iOS** | ✅ | Kotlin/Native C interop (`JamiBridge.def` / `JamiBridgeWrapper.mm`) | 🟡 Core features working; no remote video rendering yet |
-| **macOS** | ⚠️ | Kotlin/Native C interop (same as iOS) | 🟡 Mirrors iOS, but the target currently does not compile |
+| **iOS** | ✅ | Kotlin/Native C interop (`JamiBridge.def` / `JamiBridgeWrapper.mm`) | 🟡 Builds, links and runs on the simulator; no remote video rendering yet |
+| **macOS** | ⚠️ | Kotlin/Native C interop (same as iOS) | 🟠 Mirrors iOS in source, but the target does not compile (~95 errors) |
 | **Desktop (JVM)** | ✅ | — | 🟠 Shell only — all bridge methods are no-ops |
 | **Web (JS)** | ⚠️ | REST stubs | 🔴 Experimental |
 
@@ -123,14 +131,16 @@ transfer with retry, audio recording, location sharing (OpenStreetMap / MapKit),
 indicators, read receipts, drafts, media gallery, search, group management with admin roles.
 
 **Accounts & contacts** — multi-account with switching, Jami and SIP account creation, import,
-link-device, account export, profile management, biometric auth, QR generation and scanning,
-contact requests, trust/block, device management, system-contact sync (Android).
+link-device, account export, change password, profile management, biometric auth, QR generation
+and scanning, contact requests, trust/block, device management, certificate pinning and trust,
+system-contact sync (Android).
 
 **Notifications** — full Android channel setup, `UNUserNotificationCenter` on Apple platforms,
 quiet hours with per-type control, full-screen incoming-call intents, answer/decline actions.
 
 **Settings** — reactive `SettingsRepository` with DHT-synced preferences; privacy, call,
-appearance, and per-conversation settings enforced throughout.
+appearance, and per-conversation settings enforced throughout; debug-log viewer and a
+recordings browser under Advanced.
 
 ---
 
@@ -141,7 +151,7 @@ jami-kmp/
 ├── shared/              # KMP shared module — ALL cross-platform code
 │   └── src/
 │       ├── commonMain/  # di · model · services · repository · domain · ui · utils
-│       ├── commonTest/  # ~52 test files (ViewModel, model, service, utility)
+│       ├── commonTest/  # 70 test files (ViewModel, model, service, utility) — 97 across all source sets
 │       ├── androidMain/ # JNI bridge, Android services
 │       ├── iosMain/     # C interop bridge, Foundation/AVFoundation services
 │       ├── macosMain/   # C interop bridge, AppKit services
@@ -165,7 +175,7 @@ substantive lives in `shared`.
 | Navigation | Navigation Compose — type-safe `Screen` sealed class, 3 graphs (Loading / Onboarding / Main) |
 | UI | Material 3 with `JamiTheme` composition locals (colors, typography, tokens) |
 | Database | SQLDelight 2.0 — platform-specific `DatabaseDriverFactory` |
-| Daemon | `DaemonBridge` expect class, 100+ methods, per-platform actuals |
+| Daemon | `DaemonBridge` expect class, 231 methods on `DaemonBridgeApi`, per-platform actuals |
 | Testing | `runTest` + `advanceUntilIdle` + stub `DaemonBridgeApi` in `TestFixtures.kt` |
 
 **Versions:** Kotlin 2.1.20 · Compose Multiplatform 1.9.0 · Koin 4.1.0 · Navigation Compose
@@ -245,6 +255,8 @@ Unit tests run against a stub daemon bridge, no real daemon required:
 ./gradlew :shared:desktopTest       # JVM only — fastest
 ```
 
+`:shared:desktopTest` is **769 tests, 0 failures** as of 2026-10-26.
+
 A separate harness drives **real scenarios against the live daemon on USB-connected Android
 devices**, covering account setup, contact requests, and messaging across two physical devices:
 
@@ -270,10 +282,15 @@ tests assert logic in isolation, the harness asserts real behaviour against the 
   the daemon is never told to re-resolve connections after a network change. Android is fully
   wired. Fix is one wrapper passthrough plus a `build-jamibridge.sh` rebuild.
 - **iOS remote video rendering** — no Metal/CALayer `SinkTarget` yet; audio-only calls work fine.
-  See [`ios_implementation_gap.md`](ios_implementation_gap.md).
+  `VideoSurface.ios.kt` creates an `AVSampleBufferDisplayLayer` that nothing enqueues into, and
+  outgoing frames are captured, copied and discarded. See
+  [`ios_implementation_gap.md`](ios_implementation_gap.md) §5.
+- **iOS call recording** — `toggleRecording` / `getIsRecording` return `false`; the wrapper
+  exposes no entry point yet. Android recording works.
 - **macOS target does not compile** — ~95 errors, mostly in `MacOSHardwareService.kt`. Since the
   iOS and macOS Darwin implementations are now substantively identical, the right fix is a shared
-  `appleMain` source set.
+  `appleMain` source set; a start exists on `origin/macos-build-and-apple-source-set` and needs
+  rebasing onto `main`.
 - **Desktop daemon bridge** — all 100+ methods are no-ops. Architectural blocker: the
   SWIG-generated JNI classes conflict with KMP's Android plugin and need a separate JVM module.
   Deprioritised.
@@ -301,7 +318,10 @@ Current issue list: [`doc/KNOWN-ISSUES.md`](doc/KNOWN-ISSUES.md) ·
 | [`doc/push-notifications.md`](doc/push-notifications.md) | Push architecture and the proxy constraint |
 | [`Permissions.md`](Permissions.md) | Runtime permission matrix per platform |
 | [`ios_implementation_gap.md`](ios_implementation_gap.md) | iOS parity gaps against `jami-client-ios` |
-| [`doc/mini-plans/`](doc/mini-plans/) | Per-area gap analyses against the Android client |
+| [`doc/mini-plans/`](doc/mini-plans/) | Per-area gap analyses against the Android client — start at [`doc/mini-plans/README.md`](doc/mini-plans/README.md) for the progress roll-up |
+| [`doc/apple-bridge-rebuild.md`](doc/apple-bridge-rebuild.md) | The Obj-C++ wrapper rebuild: what landed 2026-10-14, and the Apple build hazards |
+| [`doc/stabilization-findings-2026-09-04.md`](doc/stabilization-findings-2026-09-04.md) | Two-device findings F1–F5 and how the durable outbox closed F1/F4 |
+| [`doc/plan_daemon_stability_sync.md`](doc/plan_daemon_stability_sync.md) | Five-phase daemon stability/sync plan and its per-phase status |
 
 ---
 
@@ -321,3 +341,7 @@ Licensed under the **GNU General Public License v3.0 or later** — see [`LICENS
 
 This matches upstream Jami. Jami and `libjami` are developed by
 [Savoir-faire Linux](https://savoirfairelinux.com) and the Jami community.
+
+**This is an unofficial, third-party client.** It is not produced, endorsed or supported by
+Savoir-faire Linux or the Jami project. The copyright-attribution work this implies is tracked
+in [`doc/TODO.md`](doc/TODO.md) → "Licensing & Copyright Attribution" and is still open.

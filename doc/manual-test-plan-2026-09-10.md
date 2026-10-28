@@ -1,5 +1,14 @@
 # Manual Test Plan — Candidate Bug Confirmation (2026-09-10)
 
+> **Status 2026-10-26 — still a work order; no verdict has been filled in.** The code evidence for
+> B10–B16 was re-checked statically on that date and every one of those hypotheses still holds in
+> the source: notification sound/vibration are set on the builder (inert from API 26) while the
+> channels hardcode theirs; quiet hours still gates `shouldShowCallNotification()`;
+> `autoDownloadWifi`/`autoDownloadMobile`, `blockUnknownContacts`, `conversationSort` and
+> `compactMode` still have no consumer outside the settings screen. That is static evidence, not a
+> device verdict — the point of this document is the device run, which is still owed.
+> B1–B9 and B17–B22 were not re-checked.
+
 **Purpose.** This document is a work order, not a bug list. Every entry below is a
 *hypothesis* derived from reading the source, not an observed failure. Each one has a
 repro procedure designed so that a single run produces an unambiguous

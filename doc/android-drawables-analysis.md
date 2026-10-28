@@ -2,7 +2,7 @@
 
 Analysis of XML drawables in `android-app/src/androidMain/res/drawable/` for potential migration to shared Compose Multiplatform resources (`composeResources/drawable/`).
 
-**Date:** 2026-03-28
+**Date:** 2026-03-28 — not re-checked since; treat the counts as a snapshot of that date.
 
 ---
 

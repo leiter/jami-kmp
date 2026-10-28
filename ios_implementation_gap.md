@@ -3,6 +3,8 @@
 Audited: 2026-06-15. Re-audited and rewritten: 2026-09-08, then reconciled with the
 daemon-stability and push work merged from main, then updated again the same day once the
 app had actually been **built and run in the simulator** for the first time.
+Status reconciled against the code again on **2026-10-26**; the second Mac session
+(2026-10-14) is summarised in §8.
 Compares `shared/src/iosMain/` against `shared/src/androidMain/` as the reference.
 
 The 2026-06-15 revision of this file declared almost everything "Done". That was optimistic:
@@ -205,8 +207,9 @@ Two standing constraints: **no physical-device testing** (peer-to-peer fails beh
 **The test suite now compiles and passes.** It did not when this file was first rewritten: ~35
 errors across 11 files, from production constructors gaining parameters (`vCardService`,
 `contactService`, `biometricService`, `deviceRuntimeService`, `audioRecorderService`), a new
-`linkColor`, and a removed `StubHardwareService`. All repaired. Last full run: **617/617
-`:shared:desktopTest`** and **602/602 `:shared:iosSimulatorArm64Test`** green.
+`linkColor`, and a removed `StubHardwareService`. All repaired. The run current at the time of
+writing was **617/617 `:shared:desktopTest`** and **602/602 `:shared:iosSimulatorArm64Test`**.
+**As of 2026-10-26 `:shared:desktopTest` is 769/769, 0 failures.**
 
 Three test-infrastructure fixes worth not re-learning:
 
@@ -320,3 +323,31 @@ Not a defect: `E/IOSPushServiceManager: Remote notification registration failed:
 aps-environment entitlement` in the simulator log. That is an artifact of building with
 `CODE_SIGNING_ALLOWED=NO`, which strips entitlements; the entitlements file itself is present
 (§3.1).
+
+---
+
+## 8. Second Mac session — 2026-10-14
+
+What changed since §4.1, and what each item means for the sections above.
+
+- **The Obj-C++ wrapper was rebuilt and committed** (`5b4a17e`). The two tracked archives went
+  from **875 to 1096 methods**, and all 153 methods declared in `JamiBridgeWrapper.h` are present.
+  Nine commits' worth of never-compiled wrapper code (certificates, conference per-stream
+  moderation, in-call text, recording path, history limit, ~13 previously-dropped signals) is now
+  built. `doc/apple-bridge-rebuild.md` has the per-commit checklist.
+- **The Xcode iOS-simulator build links and runs.** Note that a green
+  `linkDebugFrameworkIosSimulatorArm64` proves nothing here — the framework is `isStatic = true`
+  and tolerates undefined symbols; Xcode's app link is the real test.
+- **`iosX64` was removed** (`022e684`). `scripts/make_sim_links.py` links arm64-simulator slices
+  only, so that target could never link.
+- **Five certificate bugs** were found by exercising the Certificates screen on the simulator and
+  fixed in `89d1443`: an inverted expiry reading (libjami's `EXPIRED` key is a misnomer — the
+  check behind it is `TlsValidator::notExpired()`, which `PASSED` means *valid*), duplicate rows
+  (the daemon's `CertificateStore` emplaces both the short and long id, and repeats that up the
+  issuer chain), trust status reaching only one id, unpin always reporting failure, and pins not
+  surviving a relaunch (`pinCertificatePath` writes nothing). Four of the five came from assuming
+  the daemon's shape rather than reading it, and two of them were locked in by passing tests.
+- **Unchanged by that session, still open:** remote video rendering (§5), `connectivityChanged`
+  (§3.2 — the wrapper still exposes no entry point), call recording on iOS, and the macOS target
+  (§6). `build-jamibridge.sh`'s macOS stage also fails on its own, on UIKit code compiled against
+  the macOS SDK; that dates to `93df547a` (April) and is not caused by the nine wrapper commits.

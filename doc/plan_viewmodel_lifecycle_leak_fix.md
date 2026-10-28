@@ -10,8 +10,8 @@ step of `doc/plan_ui_logic_separation_qt_ipc.md`, so doing this first is a clean
 
 ## 1. The bug
 
-The 18 ViewModels in `shared/src/commonMain/kotlin/net/jami/ui/viewmodel` are plain Kotlin
-classes. Each owns a long-lived scope:
+The 20 ViewModels in `shared/src/commonMain/kotlin/net/jami/ui/viewmodel` are plain Kotlin
+classes (18 when this plan was written; still unmigrated as of 2026-10-26). Each owns a long-lived scope:
 
 ```kotlin
 class XViewModel(

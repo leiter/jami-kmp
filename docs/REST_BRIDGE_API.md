@@ -1,5 +1,11 @@
 # Jami REST Bridge API Specification
 
+> **Status 2026-10-26: specification only — no REST bridge server exists.** The Kotlin/JS client
+> side (`shared/src/jsMain/.../DaemonBridge.js.kt`, ~740 lines) is stubs: ~98 `// TODO: Call REST
+> API` sites. The Web target is explicitly experimental and is a candidate for removal if this
+> server is never built (see `README.md` → Known limitations).
+
+
 ## Overview
 
 The REST Bridge provides a way for the Kotlin/JS web client to communicate with libjami. Since libjami is a native C++ library that cannot run directly in a browser, a server-side bridge is required.

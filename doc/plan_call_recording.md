@@ -1,6 +1,11 @@
 # Plan: In-Call Recording
 
-> Status: NOT STARTED. Target branch `main_merge`.
+> **Status (2026-10-26): IMPLEMENTED on Android; iOS/macOS still stubbed.**
+> `DaemonBridge.android.kt` forwards `toggleRecording` to `JamiService`, `CallViewModel.toggleRecording()`
+> drives it from the call screen, and `RecordingsScreen` lists and plays the files. The iOS/macOS
+> actuals return `false` — the wrapper exposes no `toggleRecording`/`getIsRecording` and there is no
+> `RecordingStateChanged` delegate, so the "iOS / macOS follow-up" section below is what remains.
+> (The original header, kept for the record: "NOT STARTED. Target branch `main_merge`.")
 
 Add a record toggle to the active-call screen. The libjami daemon does all the heavy
 lifting (capture, mixing, file writing); the app only needs to flip recording on/off and

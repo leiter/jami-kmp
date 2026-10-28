@@ -1,6 +1,7 @@
 # Permission Handling Audit: jami-kmp vs jami-client-android
 
-Audit date: 2026-06-13
+Audit date: 2026-06-13 · Manifest re-checked against the code 2026-10-26 (see
+"Current manifest, 2026-10-26" near the end)
 
 ---
 
@@ -197,5 +198,49 @@ of it, and the service only uses `specialUse` on API 34+.
 
 - `READ_PROFILE` not declared (low priority — profile sync via daemon bridge)
 - `shouldShowRequestPermissionRationale()` pre-request rationale for camera/microphone (Accompanist or expect/actual required)
-- `FOREGROUND_SERVICE_MEDIA_PROJECTION` — only needed if screen-share feature is implemented
+- `FOREGROUND_SERVICE_MEDIA_PROJECTION` — **this is no longer hypothetical: screen sharing is
+  implemented.** See the manifest re-check below.
 - Persistent "open device settings" deep-link button in denial dialog (requires expect/actual `openAppSettings()`)
+
+---
+
+## Current manifest, 2026-10-26
+
+`android-app/src/androidMain/AndroidManifest.xml` now declares, in full:
+
+`ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION`, `ACCESS_NETWORK_STATE`, `BLUETOOTH_CONNECT`,
+`CAMERA`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_CAMERA`, `FOREGROUND_SERVICE_DATA_SYNC`,
+`FOREGROUND_SERVICE_LOCATION`, `FOREGROUND_SERVICE_MICROPHONE`, `FOREGROUND_SERVICE_PHONE_CALL`,
+`FOREGROUND_SERVICE_REMOTE_MESSAGING`, `FOREGROUND_SERVICE_SPECIAL_USE`, `INTERNET`,
+`MANAGE_OWN_CALLS`, `MODIFY_AUDIO_SETTINGS`, `POST_NOTIFICATIONS`, `READ_CONTACTS`,
+`RECEIVE_BOOT_COMPLETED`, `RECORD_AUDIO`, `USE_FULL_SCREEN_INTENT`, `VIBRATE`, `WAKE_LOCK`,
+`WRITE_CONTACTS`.
+
+So the "jami-kmp (before fixes)" table above is historical: `READ_CONTACTS` / `WRITE_CONTACTS`
+(system-contact sync), `MANAGE_OWN_CALLS` (Telecom), and five further `FOREGROUND_SERVICE_*`
+types have been added since.
+
+Differences against the reference client that remain:
+
+| Permission | Reference | jami-kmp | Note |
+|---|---|---|---|
+| `ACCESS_WIFI_STATE` / `CHANGE_WIFI_STATE` | declared | not declared | No observed use in KMP |
+| `READ_PROFILE` | declared | not declared | Legacy; profile comes via the daemon |
+| `BLUETOOTH` (maxSdkVersion 30) | declared | not declared | KMP declares only the modern `BLUETOOTH_CONNECT`; audio routing on API ≤30 is worth a check |
+| `FOREGROUND_SERVICE_MEDIA_PROJECTION` | declared | **not declared** | See below |
+
+### Flagged, not reproduced: screen sharing and `mediaProjection`
+
+Screen sharing *is* implemented on Android (`MainActivity` runs the `MediaProjectionManager`
+consent flow, `CameraService.startScreenSharing()` wires the `VirtualDisplay` to the daemon's
+`Surface`), and `compileSdk`/`targetSdk` are 36. But:
+
+- `FOREGROUND_SERVICE_MEDIA_PROJECTION` is not declared, and
+- no service in the manifest lists `mediaProjection` among its `foregroundServiceType` values —
+  the call service is `microphone|phoneCall|camera|dataSync`.
+
+From API 34 onward the platform requires a foreground service of type `mediaProjection` to be
+running before `MediaProjectionManager.getMediaProjection()` is used, and throws otherwise. This
+was read off the manifest and the source; **it has not been reproduced on a device**, so it is
+recorded as a candidate defect rather than a confirmed one. Confirming it needs one screen-share
+attempt on an Android 14+ device.

@@ -2,6 +2,15 @@
 
 > Written 2026-10-14 on a Linux host, at `fe40027`.
 > **Read this on the Mac before touching the iOS build.**
+>
+> **Status, updated 2026-10-26: steps 1–7 are done.** The rebuild ran on a Mac on 2026-10-14;
+> `lib/libJamiBridge_ios.a` and `lib/libJamiBridge_iossim.a` were rebuilt and committed
+> (`5b4a17e`) — **1096 methods, up from 875**, all 153 header-declared methods present — and the
+> Xcode iOS-simulator build links and runs. Walking the step-6 checklist on the simulator found
+> five certificate bugs, fixed in `89d1443`. `iosX64` was removed in `022e684`.
+> **Only step 8 (macOS via a shared `appleMain` source set) is outstanding**, so this file is kept
+> as the record of how the rebuild went and of the hazards, rather than deleted as the next
+> paragraph originally instructed.
 
 Nine commits added ~514 lines of Objective-C++ to the JamiBridge wrapper that has never been
 compiled, because those sessions ran on Linux where Apple targets are skipped. The committed
@@ -74,6 +83,18 @@ bisecting blind, and to exercise each feature once the app runs.
 | `ea0081a` | +23 | `updateProfile` — contact profile changes appear live, avatars update |
 
 ## What Has Been Tried (and Why It Failed)
+
+**Superseded 2026-10-14 — this did run on a Mac.** What follows was written before that session;
+it is kept because the hazards it lists are still live. What the run actually produced:
+
+- The Obj-C++ compiled; the predicted signal-handler arity problems did not materialise.
+- No dependency drift on the device side — all 47 libraries in `OTHER_LDFLAGS[sdk=iphoneos*]`
+  were present.
+- `make_sim_links.py` created 48 symlinks and reported one miss, `libvpx`, which is correct.
+- The macOS stage of `build-jamibridge.sh` failed on UIKit code, as hazard 3 below predicted.
+- The five bugs found afterwards were in Kotlin (certificate handling), not in the wrapper.
+
+The original text follows.
 
 **Nothing has been attempted on a Mac for any of this.** There are no failed approaches to
 avoid — this is a first build. Recorded explicitly so nobody goes looking for a history that
@@ -251,6 +272,7 @@ messages record that. `git log --oneline ed6673a..HEAD -- shared/src/nativeInter
 lists exactly the set this file is about.
 
 Related docs: `shared/src/nativeInterop/cinterop/JamiBridge/README.md` (symlinks, drift),
-`doc/ios_implementation_gap.md` (remote video, the three first-Mac-build fixes),
+`ios_implementation_gap.md` — at the repo root, not under `doc/` — (remote video, the five
+first-Mac-build fixes),
 `ios-app/fastlane/RELEASING.md` (the Release heap problem), `doc/TODO.md` (the `appleMain`
 item).

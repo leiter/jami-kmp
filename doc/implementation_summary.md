@@ -9,7 +9,11 @@ Groundwork vertical slice for the end-to-end device test harness. Design: see
   `two-device-contact` all green on physical hardware (Pixel 2 / Android 11 +
   Pixel 7a / Android 16). Plus host-side **screenshot diagnostics** (on-demand +
   auto-on-failure) and a **distinct harness app icon** (amber launcher background).
-- **Last verified:** 2026-06-28
+- **Last verified:** 2026-06-28 — **this file describes the groundwork slice only and has not
+  been updated since.** The harness has grown to 24 registered scenarios (account reuse,
+  change-password, device rename, name registration, import success/failure, git rewind/resync,
+  `send-before-member-join`, …), and two-device messaging passed on hardware on 2026-08-17.
+  `doc/end2endTesting.md` and `./gradlew :e2e-runner:e2eList` are the current references.
 
 ## Scope
 

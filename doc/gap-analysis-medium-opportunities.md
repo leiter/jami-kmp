@@ -1,6 +1,8 @@
 # Gap Analysis: jami-android-client vs jami-kmp (Medium Opportunities)
 
-**Date:** 2026-03-19
+**Date:** 2026-03-19 — **superseded.** The six `doc/mini-plans/` audits (2026-09-25) cover the
+same ground against the daemon headers and carry live per-finding status; start there. Kept for
+the effort/impact framing.
 **Context:** After completing the low-hanging fruit plan (Groups A-G), this report identifies the next tier of medium-effort opportunities.
 
 ---

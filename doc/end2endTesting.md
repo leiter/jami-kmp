@@ -4,9 +4,17 @@ Status: **IMPLEMENTED (single- and two-device)** — the harness runs real scena
 the live daemon on USB-connected Android devices. M0–M2 plus an account-fixture pool and the
 import/name-registration edge cases are **live-validated on hardware**. Two-device contact
 (M3) is now **live-validated on two devices** (2026-07-01: B's DHT contact request reached A
-and the contact confirmed bidirectionally). M4's messaging half (`send-message`) is
-**implemented but currently FAILS on hardware** (2026-08-14) — see `doc/TODO.md` → "Bug
-Findings (2026-08-14)"; calls + recording are not started.
+and the contact confirmed bidirectionally). M4's messaging half (`send-message`) **passed on
+hardware on 2026-08-17** in the previously-broken direction (B, the initiator, sends first),
+after two fixes — proactive conversation registration in `AccountService.onContactAdded` and an
+`awaitMemberJoined` gate in the scenario — plus the SELinux reinstall-race finding the same day.
+See `doc/TODO.md` → "Bug Findings (2026-08-14)" and the two 2026-08-17 entries. Calls and
+recording scenarios are still not started.
+
+The scenario catalogue has grown well past M0–M4; `./gradlew :e2e-runner:e2eList` is the
+authoritative list (24 registered scenarios as of 2026-10-26, including account-reuse, change-password,
+device-rename, name registration, import success/failure, git rewind/resync, and
+`send-before-member-join`).
 
 ## Goal
 

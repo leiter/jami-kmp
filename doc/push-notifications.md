@@ -2,8 +2,13 @@
 
 **Status:** Android **and** iOS client-side integration complete (2026-07-27).
 Delivery is **not** yet functional end to end — see "What is still missing" below.
-The iOS code has **not been compiled** — Apple targets are skipped on a Linux host and this
-machine has no macOS toolchain. It needs a build on a Mac before it can be trusted.
+The iOS code **has since been compiled and run** on a Mac (first simulator run 2026-09-08,
+Obj-C++ wrapper rebuilt 2026-10-14). What remains unverified on iOS is *delivery*, which is
+blocked on the same proxy constraint as Android, not on the client code.
+
+> The simulator logs `Remote notification registration failed: no valid aps-environment
+> entitlement`. That is an artifact of building with `CODE_SIGNING_ALLOWED=NO`, which strips
+> entitlements — the entitlements file itself is present.
 
 ---
 

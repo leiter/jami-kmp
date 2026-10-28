@@ -51,14 +51,14 @@ jami-kmp/
 │       │   ├── model/        # Domain data classes (Account, Call, Conversation, …)
 │       │   │   ├── interaction/   # TextMessage, DataTransfer, CallHistory, …
 │       │   │   └── settings/      # @Serializable settings models
-│       │   ├── services/     # 20 services including ConversationFacade
+│       │   ├── services/     # 30 services including ConversationFacade, SendQueueService
 │       │   ├── repository/   # SettingsRepository, DraftRepository
 │       │   ├── domain/       # Use cases
 │       │   ├── ui/
 │       │   │   ├── JamiApp.kt           # Root Compose entry point (all platforms)
-│       │   │   ├── navigation/          # Screen (30 routes), JamiNavigation
-│       │   │   ├── screens/             # 31 screen files
-│       │   │   ├── viewmodel/           # 18 ViewModels
+│       │   │   ├── navigation/          # Screen (32 routes), JamiNavigation
+│       │   │   ├── screens/             # 33 screen files
+│       │   │   ├── viewmodel/           # 20 ViewModels
 │       │   │   ├── components/          # Reusable components
 │       │   │   │   ├── actions/         # JamiButton, JamiIconButton, JamiFilterChip
 │       │   │   │   ├── content/         # JamiAvatar, JamiBadge, JamiToggle, JamiSectionTitle
@@ -68,7 +68,7 @@ jami-kmp/
 │       │   │   │   └── notification/    # JamiAlertDialog
 │       │   │   └── theme/               # JamiTheme, JamiColors, JamiTypography, ThemeTokens
 │       │   └── utils/        # Log, FileUtils, QRCodeUtils, HashUtils, StringUtils, …
-│       ├── commonTest/       # 52 test files (ViewModel + model + service + utility tests)
+│       ├── commonTest/       # 70 test files (ViewModel + model + service + utility tests)
 │       ├── androidMain/      # JNI bridge, Android services, SharedPreferences, JNI libs
 │       ├── iosMain/          # C interop bridge, Foundation/AVFoundation services
 │       ├── macosMain/        # C interop bridge, macOS AppKit services
@@ -136,31 +136,29 @@ All user-visible strings live in `shared/src/commonMain/composeResources/`. The 
 
 ---
 
-## Known Gaps (as of 2026-09-08)
+## Known Gaps (as of 2026-10-26)
 
-All major mobile features are implemented, including CallKit (iOS) and Telecom API/ConnectionService (Android). The only remaining gaps are:
+All major mobile features are implemented, including CallKit (iOS) and Telecom API/ConnectionService (Android). The remaining gaps are:
 
-- **Push notifications** — Android (FCM) and iOS (APNs + PushKit) client integration are both done (2026-07-27, see `doc/push-notifications.md`). Delivery still needs a push-capable DHT proxy holding the FCM/APNs credentials for this app, so calls and messages currently still rely on the daemon running. The iOS half now compiles and runs (it was written on a Linux host, where Apple targets are skipped, and needed three fixes on first Mac build — see `ios_implementation_gap.md` §4.1).
+- **Push notifications** — Android (FCM) and iOS (APNs + PushKit) client integration are both done (2026-07-27, see `doc/push-notifications.md`). Delivery still needs a push-capable DHT proxy holding the FCM/APNs credentials for this app, so calls and messages currently still rely on the daemon running. The iOS half now compiles and runs (it was written on a Linux host, where Apple targets are skipped, and needed five fixes on the first Mac build — see `ios_implementation_gap.md` §4.1).
 - **iOS connectivity never reaches the daemon** — `NWPathMonitor` feeds `HardwareService.connectivityChanged()`, so `_connectivityState` and `setAccountsActive()` are correct, but `DaemonBridge.ios.kt` cannot forward it: `JamiBridgeWrapper.h` exposes no `connectivityChanged` entry point, so the call is a log line. The daemon is never told to re-resolve its connections after a network change. Android is fully wired (`ConnectivityManager.NetworkCallback` → JNI). Fix is one wrapper passthrough + a `build-jamibridge.sh` rebuild.
-- **macOS target does not compile** — ~95 errors, mostly in `MacOSHardwareService.kt`. Since the iOS and macOS Darwin implementations are now substantively identical, the right fix is a shared `appleMain` source set.
+- **macOS target does not compile** — ~95 errors, mostly in `MacOSHardwareService.kt`. Since the iOS and macOS Darwin implementations are now substantively identical, the right fix is a shared `appleMain` source set. A start exists on `origin/macos-build-and-apple-source-set` (`f0f66ce`, 2026-10-01); it predates the nine wrapper commits and needs rebasing onto `main`. `build-jamibridge.sh`'s macOS stage also fails independently, on UIKit code compiled against the macOS SDK — long-standing, not caused by recent work.
 - **iOS remote video rendering** — no Metal/CALayer `SinkTarget` implementation yet; audio-only calls work fine. See `ios_implementation_gap.md`.
 - **Chat plugins** — Jami plugin system not ported to KMP. Menu item shows a "not yet supported" snackbar.
 - **OsmMapView (Desktop/macOS)** — no viable JVM or AppKit map library in scope; shows coordinate text instead of a map.
 - **Desktop DaemonBridge** — all 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.
 - **Web/JS platform** — entire daemon bridge is REST stubs. Explicitly experimental; candidate for removal if a REST bridge server is not developed.
-- **Sending into a not-yet-live 1:1 swarm** (post-2026-08-08 finding) — the first message sent into a 1:1 conversation that is still bootstrapping can be silently dropped: on restore/cold-load, and when sent within ~2–3 s of `ContactAdded(confirmed=true)`. `loadSmartlist` now ports the reference's `info["syncing"]` → `Mode.Syncing` handling, but a send gate and hardware verification are still outstanding. See `doc/stabilization-findings-2026-09-04.md` (F1/F4) and `doc/TODO.md`.
-
----
+- **~~Sending into a not-yet-live 1:1 swarm~~ — closed 2026-09-18.** The daemon never delivers a message committed into a 1:1 swarm that has no peer device, so such sends are no longer handed to it: `SendQueueService` + `OutboxStore` hold them while the conversation is `Syncing` or the peer's role is `invited`, persist them, and send once the conversation is live — on `ConversationReady`, on the peer joining, or after the next smartlist load, so they survive a restart. Started from both hosts (`JamiApplication`, `IOSApplicationHelper`). Still outstanding: UI-driven verification on real devices — the `send-before-member-join` e2e scenario bypasses the outbox. See `doc/stabilization-findings-2026-09-04.md` (F1/F4).
 
 ## Daemon Bridge
 
-The `DaemonBridge` expect class (100+ methods) is the gateway to `libjami`:
+The `DaemonBridge` expect class is the gateway to `libjami`. `DaemonBridgeApi` declares **231 methods**, and the Android actual calls **149 distinct `JamiService.*` entry points**:
 
 | Platform | Implementation | Status |
 |----------|---------------|--------|
 | Android | JNI via SWIG-generated bindings + `libjami-core-jni.so` | Working |
 | iOS | Kotlin/Native C interop via `JamiBridge.def` / `JamiBridgeWrapper.mm` | Working |
-| macOS | Kotlin/Native C interop (same as iOS) | Working |
+| macOS | Kotlin/Native C interop (same as iOS) | Does not compile (~95 Kotlin errors) |
 | Desktop | JVM FFI or socket bridge | No-op stubs (deprioritised) |
 | Web/JS | WebSocket / HTTP | REST stubs (experimental) |
 
@@ -197,3 +195,21 @@ fails at *link* time with undefined libjami symbols.
 
 Full detail, including the symptom when it is missing:
 `shared/src/nativeInterop/cinterop/JamiBridge/README.md`.
+
+---
+
+## iOS/macOS build facts worth not re-deriving (2026-10-14)
+
+- The Obj-C++ wrapper `.a` files were rebuilt on a Mac and committed (`5b4a17e`): **1096 methods,
+  up from 875**, with all 153 header-declared methods present. The Xcode iOS-simulator build links
+  and runs. `doc/apple-bridge-rebuild.md` carries the per-commit checklist and the hazards.
+- **`iosX64` was removed** (`022e684`). `scripts/make_sim_links.py` links arm64-simulator slices
+  only, so that target could never link — and it was what a generic simulator destination resolved
+  to. Use an explicit arm64 destination, e.g. `-destination 'platform=iOS Simulator,name=iPhone 17 Pro'`.
+- `nm -gU` finds **no** Obj-C methods — they are local (`t`) symbols. Verify the archive with
+  `nm <archive> | grep -cE '[-+]\[JamiBridgeWrapper '`, not a global-symbol listing.
+- A green `linkDebugFrameworkIosSimulatorArm64` does **not** prove the rebuild worked: the framework
+  is built `isStatic = true` and tolerates undefined symbols; the real resolution happens in Xcode's
+  app link via `OTHER_LDFLAGS`.
+- `libvpx` has no arm64-simulator slice by design (ffmpeg is configured `--disable-libvpx` there), so
+  `make_sim_links.py` printing "Created 48 symlinks / No arm64-simulator slice (1): libvpx" is correct.

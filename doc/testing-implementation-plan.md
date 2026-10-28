@@ -1,5 +1,12 @@
 # Testing Implementation Plan for jami-kmp
 
+> **Status 2026-10-26: all phases of this plan are in place and the numbers below are historical.**
+> `DaemonBridgeApi` now declares **231 methods** (not 124), there are **20 ViewModels** (not 13),
+> and the suite is **97 test files — 70 in commonTest** — running **769 tests, 0 failures** on
+> `:shared:desktopTest`. Four classes (`HardwareServiceTest`, `AppSettingsViewModelTest`,
+> `AppViewModelTest`, `CallViewModelTest`) are excluded from the *Android* unit-test task only,
+> because they need an Android runtime; Robolectric would let them run there too (`doc/TODO.md`).
+
 ## Context
 
 jami-kmp started with 32 existing tests (19 model, 8 service, 5 utility) but **zero ViewModel tests** and no integration tests. The primary blocker was `expect class DaemonBridge()` — an expect class cannot be subclassed or mocked in commonTest. All 13 ViewModels also hardcoded their `CoroutineScope`, making them untestable with `runTest`. This plan introduced testability without changing runtime behavior.

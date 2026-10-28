@@ -1,6 +1,7 @@
 # Jami KMP - Implementation Status
 
-**Last Updated:** 2026-08-08 (structural counts + messaging caveat reconciled 2026-09-06)
+**Last Updated:** 2026-10-26 (structural counts re-measured, messaging caveat retired,
+"partially implemented" section reconciled against the code)
 **Version:** In Development
 **Primary Platforms:** Android, iOS
 
@@ -9,12 +10,11 @@
 ## ✅ Fully Implemented & Working
 
 ### UI / Navigation
-- 31 screen files with type-safe navigation (30 routes)
+- 33 screen files with type-safe navigation (32 routes)
 - Loading, Onboarding, and Main navigation graphs
 - Material 3 design with JamiTheme (semantic + component token layers)
 - Reusable UI components (buttons, inputs, avatars, dialogs, etc.)
 - Dark/light theme support with user preference
-- Compact mode for conversation list
 - Auto-navigate to incoming call screen when app is in foreground
 
 ### Calling
@@ -36,7 +36,12 @@
 
 ### Conversation Features
 - Conversation list sorted by last activity
-- Message sending and receiving (text, emoji) — fresh-handshake path solid; **known issue:** the first send into a still-bootstrapping 1:1 swarm (restore/cold-load, or a send within ~2–3 s of contact confirmation) can be silently dropped — see `doc/stabilization-findings-2026-09-04.md` (F1/F4)
+- Message sending and receiving (text, emoji) — including the first send into a still-bootstrapping
+  1:1 swarm, which used to be silently dropped (F1/F4 in `doc/stabilization-findings-2026-09-04.md`).
+  A send into a conversation that is `Syncing`, or whose peer is still `invited`, now goes to the
+  durable outbox (`SendQueueService` + `OutboxStore`) and is handed to the daemon on
+  `ConversationReady`, on the peer joining, or after the next smartlist load — so it survives a
+  restart. Started from both hosts (`JamiApplication` on Android, `IOSApplicationHelper` on iOS)
 - Message drafts with auto-save
 - Chat bubbles with sender names
 - File sending and download
@@ -44,7 +49,9 @@
 - Location sharing with OpenStreetMap (Android + iOS with MapKit)
 - Camera capture integration
 - Message search and filtering
-- Conversation sorting (last activity, alphabetical, unread first)
+- Conversation list ordering: pinned first, then last activity (the alphabetical and
+  unread-first choices in Settings are stored but not applied — see "Settings stored but not
+  applied" below)
 - Group conversation management: add/remove members, leave conversation, rename group, change group avatar, admin role badges
 - Link detection in chat messages
 - Conversation media gallery (3-column grid of shared images/videos)
@@ -58,6 +65,8 @@
 - System contacts sync (Android: ContactsContract lookup by SIP/IM address + PhoneLookup fallback, merged into Jami contacts)
 - Device management
 - Account migration dialog
+- Certificate management (`CertificatesScreen`): list pinned certificates, pin from file, unpin,
+  set trust status — rows collapsed on the SHA-1 fingerprint, every id acted on
 
 ### Contact Management
 - Contact list, contact requests (accept/reject)
@@ -69,7 +78,7 @@
 - Android: full notification channel setup (calls, messages, file transfer, background service)
 - iOS/macOS: UNUserNotificationCenter integration
 - NotificationGuard: quiet hours with midnight wraparound, per-type control (calls, messages, requests)
-- Sound/vibration preferences applied from user settings
+- Per-type notification control (calls / messages / requests) and quiet hours via NotificationGuard
 - Full-screen intents for incoming calls (Android)
 - Incoming call notification with Answer / Decline actions
 - Ongoing call notification with Hang-up action
@@ -82,8 +91,10 @@
 - Call settings: auto-answer with configurable delay, video preference
 - Per-conversation settings: mute, pin, custom notifications
 - Draft persistence per conversation
-- App appearance settings (theme, compact mode, sort order)
+- App appearance settings (theme applied; compact mode and sort order stored only — see below)
 - System settings: start on boot, run in background (LocalPrefs)
+- Debug logs viewer (`DebugLogsScreen`, Advanced → Debug logs) with share/export; logcat capture on Android
+- Call recordings browser (`RecordingsScreen`) — list and play daemon-written recordings (Android)
 
 ### Background Services
 - Android: JamiSyncService foreground service with timeout-based lifecycle
@@ -91,7 +102,9 @@
 - Connectivity change handling; sync restart on network recovery
 
 ### Testing
-- 60 test files (52 in commonTest; remainder in androidInstrumentedTest / desktopTest / iosTest / macosTest / androidUnitTest)
+- 97 test files (70 in commonTest; the rest in desktopTest 9, iosTest 5, macosTest 4, jsTest 4,
+  androidUnitTest 4, androidInstrumentedTest 1)
+- `:shared:desktopTest` — **769 tests, 0 failures** (last run 2026-10-26)
 - ViewModel tests, model tests, service integration tests, utility tests
 - `runTest` + `advanceUntilIdle` pattern throughout
 - `TestFixtures.kt` with stub `DaemonBridgeApi` for isolated ViewModel testing
@@ -101,28 +114,59 @@
 ## 🚧 Partially Implemented
 
 ### AppSettingsScreen
-- All settings UI present and most wired
-- Screenshot blocking: stored but window flags not applied
-- Audio/video hardware: noise suppression and echo cancellation stored but not applied at platform layer
+- All settings UI present and wired
+- Screenshot blocking: **done on Android** (`WindowSecure.android.kt` adds/clears `FLAG_SECURE`
+  reactively). On iOS it covers the window while `UIScreen.isCaptured` is true and in the
+  app-switcher snapshot, but **screenshots themselves cannot be blocked through public API** —
+  see `ios_implementation_gap.md` §3.3
+- Audio/video hardware: noise suppression and echo cancellation are applied —
+  `SettingsRepository` calls `DaemonBridge.setNoiseSuppression()` / `setEchoCancellation()` on
+  load and on every toggle. (Android routes `setEchoCancellation` to the daemon's `setAgcState`,
+  which is automatic gain control, not echo cancellation — noted in `ios_implementation_gap.md` §2.2)
 
-### AccountSettingsScreen
-- Profile editing, media, messages, advanced — all done
-- Change password dialog — deferred
-- Export account full flow — deferred
+### Settings stored but not applied
 
-### File Transfers
-- File sending in swarm conversations — done
-- File download/transfer UI — done
-- Auto-accept size and WiFi/mobile toggles — stored, enforcement logic not wired
+Flagged by reading the code on 2026-10-26, and still true then. These are hypotheses from
+`doc/manual-test-plan-2026-09-10.md` (B10–B16) that have **not been given a device verdict**, but
+the static evidence for each still holds:
 
----
+- **Notification sound / vibration toggles** (B10, B11) — `AndroidNotificationService` sets them on
+  the `Notification.Builder`, which Android ignores from API 26 on; the channels hardcode
+  `enableVibration(...)` and the default sound, and only `CHANNEL_CALLS` is ever recreated (for the
+  ringtone). `NotificationGuard.getSoundUri()` also returns `null` both for "sound off" and "no
+  custom sound", and `null` means *use the default*.
+- **Quiet hours suppresses incoming calls** (B12) — `NotificationGuard.shouldShowCallNotification()`
+  includes `!isInQuietHours(settings)`, so a call during quiet hours shows no notification.
+- **Auto-download on Wi-Fi / mobile data** (B13) — `autoDownloadWifi` / `autoDownloadMobile` have no
+  consumer; the auto-accept decision checks the size limit only, never the network type.
+- **Block unknown contacts** (B14) — `blockUnknownContacts` is written and read back into the
+  settings screen, and nowhere else.
+- **Conversation sort order** (B15) — `ConversationsViewModel` sorts with a hardcoded
+  `pinned desc, timestamp desc` comparator and never reads `conversationSort`.
+- **Compact mode** (B16) — `compactMode` is stored and rendered as a toggle; no composable reads it.
+
+### File transfers
+- Sending in swarm conversations, download, and the transfer UI — done
+- Auto-accept is enforced in `ConversationFacade.onDataTransferEvent()` against the size limit
+- The Wi-Fi / mobile-data auto-download toggles are stored but never consulted (B13 above)
+
+### Account settings
+- Profile editing, media, messages, advanced — done
+- Change password and account export — **done** (both reach `DaemonBridge`; the earlier
+  "deferred" note here was stale)
+
+### Incoming call screen
+- Incoming video calls now show the correct "incoming video call" string, and notification-driven
+  accept resolves `hasVideo` from the call's media list
+- Still missing against the Android reference: the live camera preview while a video call is
+  ringing, and a separate "accept audio only" button — see `docs/refine-video-call.md`
 
 ## ❌ Not Yet Implemented
 
-### Push Notifications — infrastructure only
+### Push Notifications — delivery infrastructure only
 - Client integration (FCM/APNs token registration, `DaemonBridge.setPushNotificationConfig()`, wake-on-push) is done on both platforms
+- The iOS half **now compiles and runs** — built on a Mac and launched in the simulator (2026-10-14)
 - Still blocked: the push is sent by the DHT proxy, not the peer, and the public proxy only holds SFL's FCM credentials — needs a self-hosted `dhtnode --proxyserver` with this app's own Firebase/APNs server keys. See `doc/push-notifications.md`
-- iOS half is uncompiled — Apple targets are skipped on this Linux dev host; needs a Mac build to verify
 
 ### Chat Features
 - Video recording in chat — deferred (requires Camera2 / AVFoundation capture session)
@@ -149,10 +193,12 @@
 - FCM push client integration
 - Notification system complete with settings enforcement
 - Background sync operational
-- 60 test files (see Testing section above)
+- 97 test files (see Testing section above)
 
 ### iOS
-**Status:** 🟡 Good — core features working, platform integrations incomplete
+**Status:** 🟡 Good — core features working, platform integrations incomplete.
+Built on a Mac and run in the simulator; the Obj-C++ wrapper `.a` files were rebuilt 2026-10-14
+(1096 methods, all 153 header-declared ones present) and the Xcode simulator link is green.
 
 - C interop bridge to libjami — working
 - Core messaging, calling (audio + video), profile management
@@ -162,15 +208,25 @@
 - Biometric auth (LocalAuthentication)
 - CallKit integration for native incoming-call UI
 - APNs + PushKit VoIP push client integration
+- Certificate management screen (list / pin / unpin / trust), exercised on the simulator — five
+  bugs found and fixed there (2026-10-14, `89d1443`)
 - Missing: remote video rendering (Metal/CALayer sink target — architectural, multi-week; audio-only calls work fine)
+- Missing: `connectivityChanged` passthrough — `JamiBridgeWrapper.h` still exposes no entry point,
+  so the daemon is never told to re-resolve connections after a network change
+- Missing: call recording (`toggleRecording` / `getIsRecording` return `false`)
+- `iosX64` was removed from the build (2026-10-14): the simulator libraries are arm64-only, so that
+  target could never link. Declared Apple targets are iosArm64, iosSimulatorArm64, macosArm64, macosX64
 
 ### macOS
-**Status:** 🟡 Fair — mirrors iOS implementation
+**Status:** 🟠 Does not compile — ~95 errors, mostly in `MacOSHardwareService.kt`.
+The fix in progress is a shared `appleMain` source set; see branch
+`origin/macos-build-and-apple-source-set` and `doc/apple-bridge-rebuild.md` step 8.
 
-- C interop bridge (same as iOS) — working
-- Core messaging and calling
-- Biometric auth, notifications, share utilities
+- Source-complete: C interop bridge, core messaging and calling, biometric auth, notifications,
+  share utilities — all written, **none of it verified, because the target does not build**
 - Missing: push notifications, map view
+- `build-jamibridge.sh`'s macOS stage also fails independently, on UIKit code compiled against the
+  macOS SDK — long-standing (dates to `93df547a`), not caused by the recent wrapper work
 
 ### Desktop JVM
 **Status:** 🟠 Shell only

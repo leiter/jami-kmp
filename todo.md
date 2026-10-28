@@ -1,5 +1,10 @@
 # jami-kmp — Open Work Items
 
+> Reconciled against the code on 2026-10-26. This file dates from June 2026 and overlaps
+> `doc/TODO.md`, which is the live list; keep it for the P1–P4 framing and the "already
+> implemented" evidence table.
+
+
 Derived from gap analysis screenshots (2026-06-09) cross-referenced against current codebase (2026-06-13).
 Items confirmed as already implemented are listed at the bottom for reference.
 
@@ -9,7 +14,7 @@ Items confirmed as already implemented are listed at the bottom for reference.
 
 ### Push notifications (FCM + APNs)
 - ~~Android: integrate Firebase Cloud Messaging; register device token with Jami server; handle `RemoteMessage` in a `FirebaseMessagingService` subclass; wake the daemon on push arrival.~~ ✓ DONE (2026-07-27) — `net.jami.android.push.{PushServiceManager, JamiFirebaseMessagingService}` + `PushForegroundService`. Firebase is opt-in at build time (plugin applied only when `google-services.json` is present).
-- ~~iOS: integrate APNs via `UNUserNotificationCenter`; handle VoIP pushes with `PKPushRegistry` for call wakeup.~~ ✓ DONE (2026-07-27) — `IOSPushServiceManager` + `IOSPushHelper.kt` + `AppDelegate` APNs/PushKit delegates + `CallKitManager.reportIncomingCallFromPush`. **Uncompiled** — needs a macOS build.
+- ~~iOS: integrate APNs via `UNUserNotificationCenter`; handle VoIP pushes with `PKPushRegistry` for call wakeup.~~ ✓ DONE (2026-07-27) — `IOSPushServiceManager` + `IOSPushHelper.kt` + `AppDelegate` APNs/PushKit delegates + `CallKitManager.reportIncomingCallFromPush`. **Compiled and run on a Mac since 2026-09-08**, wrapper rebuilt 2026-10-14.
 - ~~Both platforms: pass token to `DaemonBridge.setPushNotificationConfig()`.~~ ✓ DONE both platforms.
 - **Still blocked on infrastructure**: the push is sent by the DHT proxy, not the peer, and the public proxy only holds SFL's FCM credentials. Needs a self-hosted `dhtnode --proxyserver` with your own Firebase server key. See `doc/push-notifications.md`.
 - **Reference**: `jami-client-android` `JamiFirebaseMessagingService.kt`
@@ -90,9 +95,9 @@ actually changes. Invoked before showing call notifications with the current
 ## P4 — Polish / Low Priority
 
 ### Adopt koin-compose-viewmodel (koinViewModel) across all platforms
-- Currently: Android uses `koinInject()` (+ implicit `remember`); iOS/macOS use a custom Koin-core resolver (`jamiResolveViewModel` / `vmKClassCache`) wrapped in `remember { }`. The 18 view models in `ui/viewmodel/` are plain classes with a hand-rolled `onCleared()` and their own `CoroutineScope`.
+- Currently: Android uses `koinInject()` (+ implicit `remember`); iOS/macOS use a custom Koin-core resolver (`jamiResolveViewModel` / `vmKClassCache`) wrapped in `remember { }`. The 20 view models in `ui/viewmodel/` are plain classes with a hand-rolled `onCleared()` and their own `CoroutineScope`.
 - Goal: switch registration/lookup to `koinViewModel { }` / `koinViewModel()` (dep already in `libs.versions.toml`; Koin 4.1 supports this on iOS/macOS via Compose Multiplatform `lifecycle-viewmodel-compose`). Gains proper `LocalViewModelStoreOwner` (nav back-stack) scoping + auto-clear, and lets the per-platform `getViewModel` expect/actual largely collapse to one common impl.
-- Migrate all 18 VMs to `androidx.lifecycle.ViewModel` (`onCleared()` → `override`; own scope → `viewModelScope`). Do it on **all** platforms so they don't diverge.
+- Migrate all 20 VMs to `androidx.lifecycle.ViewModel` (`onCleared()` → `override`; own scope → `viewModelScope`). Do it on **all** platforms so they don't diverge.
 - **Gate on an on-device check**: `koinViewModel()` resolves via Koin core `get(KClass)` — the exact Kotlin/Native KClass path the custom resolver was built to avoid; verify it doesn't regress iOS startup/resolution before trusting it.
 - Not a bugfix — the `remember { }` fix already resolved the "Jami-tab input resets each keystroke" bug. This is a quality/architecture upgrade.
 
