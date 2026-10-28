@@ -333,8 +333,11 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
   dropped. Three daemon constraints shape it: the daemon does not persist the note (so
   `SettingsRepository` stores it in the `KMP.*` settings and republishes on load), the peer parses
   it with `<basic>([\w\s]+)</basic>` so only ASCII word characters and spaces can be delivered,
-  and an empty note cannot clear a status — clearing publishes a single space. See mini-plan
-  `daemon-api-surface-audit.md` F6.
+  and an empty note cannot clear a status — clearing publishes a single space. Verified between
+  two devices the same day: typed on a Pixel 7a, shown under the contact's name on a Pixel 2, and
+  updated live. **The persistence half does not work**: the daemon drops `KMP.*` keys, so no
+  client setting survives a restart — see `doc/status-note-open-ends.md`, which also lists what
+  is still untested and the iOS/macOS gaps. See mini-plan `daemon-api-surface-audit.md` F6.
 - [x] **Add presence unsubscribe on background like the official app** *(decided and done 2026-10-28:
   adopted on both platforms. Android keeps proxy accounts registered in background, so the
   subscriptions cost DHT traffic with nothing to display them; the reference Android client gets the

@@ -8,7 +8,10 @@
 > (`5b4a17e`) — **1096 methods, up from 875**, all 153 header-declared methods present — and the
 > Xcode iOS-simulator build links and runs. Walking the step-6 checklist on the simulator found
 > five certificate bugs, fixed in `89d1443`. `iosX64` was removed in `022e684`.
-> **Only step 8 (macOS via a shared `appleMain` source set) is outstanding**, so this file is kept
+> **Only step 8 (macOS via a shared `appleMain` source set) is outstanding**, plus three wrapper
+> passthroughs that have accumulated since: `connectivityChanged`, `setDefaultModerator` and
+> `publish` (the presence status note, which also needs the presence callback to carry
+> `lineStatus` — see `status-note-open-ends.md`), so this file is kept
 > as the record of how the rebuild went and of the hazards, rather than deleted as the next
 > paragraph originally instructed.
 

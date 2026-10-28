@@ -517,8 +517,11 @@ Three constraints that reading the daemon settled, none of them guessable:
 
 - **The daemon does not persist the note.** `presenceNote_` is a `JamiAccount` member, not
   config: after a restart contacts see nothing. The note is therefore stored in the `KMP.*`
-  settings (so it also syncs between the user's own devices) and published again on every load,
-  the same shape as the CALLS branch pushing audio flags back down.
+  settings and published again on every load, the same shape as the CALLS branch pushing audio
+  flags back down. **That half does not work yet** — the two-device run on 2026-10-28 showed the
+  daemon dropping `KMP.*` keys from `setAccountDetails` entirely, so no client setting survives a
+  restart. See `doc/status-note-open-ends.md`; it is a `SettingsRepository` problem, not a
+  presence one.
 - **The peer's parser is `std::regex("<basic>([\w\s]+)</basic>")`** (`jamiaccount.cpp:4177`).
   `\w` on a `char` regex is ASCII `[A-Za-z0-9_]`, so a note with punctuation, an accent, CJK or
   an emoji does not match **at all** and the peer is told nothing — worse than no note. Notes
@@ -526,6 +529,11 @@ Three constraints that reading the daemon settled, none of them guessable:
 - **An empty note cannot clear a status.** `+` needs one character, so publishing `""` leaves
   every peer displaying the previous note indefinitely. Clearing publishes a single space, which
   matches, and the receiving side trims it back to empty.
+
+**Verified on two devices (2026-10-28).** Typed on a Pixel 7a, rendered under the contact's name
+in the chat header on a Pixel 2, and updated live when changed with the chat open. Clearing a
+note was not exercised against the peer. Details and the remaining open ends are in
+`doc/status-note-open-ends.md`.
 
 **Not done, deliberately.** `answerServerRequest()` is `#if 0` in the daemon and logs
 "answerServerRequest() is deprecated and does nothing" (`presencemanager.cpp:88`).
