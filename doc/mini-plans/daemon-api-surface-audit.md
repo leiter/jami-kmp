@@ -453,11 +453,32 @@ Service discovery/exposure is entirely missing from KMP. This is used by the ref
 **Impact:** The daemon supports full codec enumeration and reordering of active codecs (priority order matters for negotiation), but KMP exposes no UI to reorder or disable codecs. Users cannot prefer VP9 over H.264, or disable specific audio codecs. The reference app also does not expose this in its UI (settings are daemon-side only, not user-configurable).
 **Daemon support:** Four functions are wired; `setCodecDetails` (per-codec param editing) is not called.
 
-### F3: Plugin System Not Ported — Major Gap (Category: Gap)
+### F3: Plugin System Not Ported — Major Gap (Category: Gap) — **PLANNED (2026-10-28): `doc/plan_plugin_system.md`; the audit undercounts the API and misses the handlers**
 **Evidence:** `plugin_manager_interface.h` (19 functions); jami-kmp/doc/TODO.md explicitly lists "Chat plugins: not yet ported — deprioritised."
 **Impact:** The Jami plugin system allows third-party message processors (e.g., spam filters, encryption wrappers, translation), call media handlers (echo cancellation plugins), and WebView-based plugin UIs. None of this is ported to KMP. A user cannot install a Jami plugin archive (`.jpl` file) or toggle plugin features.
 **Daemon support:** Full subsystem: install, load, configure, enable/disable, WebView attachment/detachment.
 **Scope:** 3–4 weeks for basic install/load/config; additional 2 weeks for WebView integration if needed.
+
+
+**Planned 2026-10-28 — `doc/plan_plugin_system.md`.** Still open; the plan replaces this entry's
+three lines with something actionable, and corrects it in three ways:
+
+- **The count is wrong in both directions.** The bindings hold ~20 relevant functions, and the
+  audit's "19" silently includes `getAudioPluginList`/`setAudioPlugin`/`getCurrentAudioOutputPlugin`,
+  which are ALSA/PulseAudio device plumbing unrelated to `.jpl` extensions — they belong with F1,
+  already closed as not applicable to mobile.
+- **It misses the handler API entirely.** `getChatHandlers`, `getChatHandlerDetails`,
+  `getChatHandlerStatus`, `toggleChatHandler` and the four `CallMediaHandler` equivalents are all in
+  the bindings and unmentioned here. They are the part that makes a loaded plugin do anything, and
+  they are per-account and per-conversation rather than global.
+- **Nothing is in `DaemonBridgeApi`.** A grep for "plugin" in `DaemonBridge.kt` returns zero, so
+  every function needs a declaration plus six platform actuals — and `JamiBridgeWrapper.h` coverage
+  has to be checked first, since it has already blocked `connectivityChanged` and
+  `setDefaultModerator` on the Apple targets.
+
+The plan also raises the question this finding never asks: plugins are desktop-first in the
+reference clients, installed by hand from `.jpl` bundles, and no one has established that the
+mobile-primary targets want them. That decision belongs before Phase 1.
 
 ### F4: Video Device Enumeration — Missing (Category: Gap) — **DEFERRED (2026-10-04): getDeviceList/getCapabilities are not in the SWIG bindings**
 **Evidence:** `videomanager_interface.h:178–185`, missing from both KMP and reference app for external camera lists.
