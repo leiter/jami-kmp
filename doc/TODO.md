@@ -326,6 +326,15 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
 
 ## Open Decisions
 
+- [x] **Publish a presence status note** *(done 2026-10-28, Android only — `publish` is not in
+  `JamiBridgeWrapper.h`.)* — libjami's `publish()` has a Jami branch that forwards a free-text
+  note to every contact over the message channels, so a custom status ("away", "in a meeting")
+  works peer-to-peer with no presence server. The receive half was already arriving and being
+  dropped. Three daemon constraints shape it: the daemon does not persist the note (so
+  `SettingsRepository` stores it in the `KMP.*` settings and republishes on load), the peer parses
+  it with `<basic>([\w\s]+)</basic>` so only ASCII word characters and spaces can be delivered,
+  and an empty note cannot clear a status — clearing publishes a single space. See mini-plan
+  `daemon-api-surface-audit.md` F6.
 - [x] **Add presence unsubscribe on background like the official app** *(decided and done 2026-10-28:
   adopted on both platforms. Android keeps proxy accounts registered in background, so the
   subscriptions cost DHT traffic with nothing to display them; the reference Android client gets the

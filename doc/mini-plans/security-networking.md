@@ -417,7 +417,7 @@ keys, so there was never anything to expose there.
 
 ---
 
-### F17: DNS Resolver and Bootstrap List URL Not Exposed — gap
+### F17: DNS Resolver and Bootstrap List URL Not Exposed — gap — **INVALID (2026-10-28); both properties are dead in the daemon**
 
 **Evidence:**
 - Daemon properties: `Account.bootstrapListUrl`, `Account.dhtProxyListUrl` (proxy list is exposed in KMP, but not bootstrap list)
@@ -431,6 +431,27 @@ Minor; nameserver account selection not user-facing. Expected to be default per 
 
 **Daemon support:** 
 `RingNS.account`, `Account.bootstrapListUrl`; `account_const.h:155, 256`.
+
+**Closed 2026-10-28 — neither half is a usable setting.** This was picked up as a quick win and
+then dropped, because following both keys past `account_const.h` into the implementation shows
+nothing reads them:
+
+- **`Account.bootstrapListUrl` is a write-only, non-persisted, unread field.**
+  `jamiaccount_config.cpp:185` parses it in `fromMap`, but it is **not** emitted in `toMap`
+  (contrast `DHT_PROXY_LIST_URL`, which is at `:162`), it has **no** `SERIALIZE_CONFIG` or
+  `parseValueOptional` so it never reaches `config.yml`, and `jamiaccount_config.h:52`'s
+  `bootstrapListUrl` member is **read by nothing in the entire daemon** — the only three hits for
+  the name in `src/` are the constant, the member declaration and that one `parseString`. A
+  settings field for it would therefore render empty on every visit (the daemon never reports the
+  value back), lose the value on restart, and change no behaviour even while set.
+- **`RingNS.account` exists only as a constant.** Declared at `account_const.h:256`, parsed and
+  used nowhere. The reference Android client does not expose it either, as the finding itself
+  notes.
+
+So the "proxy list URL is exposed but bootstrap list URL is not" asymmetry is not an oversight:
+the proxy list URL is a real round-tripping property and the bootstrap list URL is vestigial.
+Implementing it would have produced exactly the dead control that F3 and F10 were closed for,
+with the extra twist that the write half *looks* like it works for one session.
 
 ---
 
@@ -573,18 +594,33 @@ is F12's. Nothing TLS-specific left to do.
 
 ---
 
-## Status (2026-10-28) — triaged to 3 open
+## Status (2026-10-28) — closed
 
-18 of 21 findings are resolved or closed. **F10, F17 and F19 are the only open work**, and all
-three are Jami account surface rather than SIP.
+All 21 findings are resolved or closed. The plan was triaged to three open (F10, F17, F19) and
+then finished the same day: **F19 implemented**, **F10 and F17 both invalid**.
 
 | Outcome | Count | Findings |
 |---|---|---|
-| Done | 4 | F5, F6, F7, F11 |
-| Closed without work | 14 | F1, F8, F12, F15, F20 (SIP-only) · F2, F9, F16 (Android parity) · F4, F18 (self-disproved) · F21 (stale premise) · F3 (invalid) · F13, F14 (SIP-only, 2026-10-13) |
-| Open | 3 | F10, F17, F19 |
+| Done | 5 | F5, F6, F7, F11, F19 |
+| Closed without work | 16 | F1, F8, F12, F15, F20 (SIP-only) · F2, F9, F16 (Android parity) · F4, F18 (self-disproved) · F21 (stale premise) · F3, F10, F17 (invalid) · F13, F14 (SIP-only, 2026-10-13) |
+| Open | 0 | — |
 
 Counts to 21 because F13 and F14 were closed on 2026-10-13 and are listed once.
+
+**The last two closures are the plan's real lesson.** Both F10 and F17 cite keys from
+`account_const.h`, and both keys are useless to a Jami client for different reasons:
+
+- **F10's `Account.presenceEnabled` is SIP-only** — emitted and parsed only by
+  `sip/sipaccount_config.cpp` (`:201`, `:249`), while for a Jami account the daemon *hardcodes*
+  `presenceSubscribeSupported = TRUE` (`jamidht/jamiaccount_config.cpp:138`). The toggle would
+  have been dead.
+- **F17's `Account.bootstrapListUrl` is vestigial** — parsed in `fromMap` but never emitted in
+  `toMap`, never serialized to `config.yml`, and the struct member it fills is read by nothing in
+  the daemon. The toggle would have looked alive for one session and changed nothing.
+
+A key existing in `account_const.h` says only that someone declared it. Before implementing one,
+check that the Jami config (not the SIP or base config) both parses **and** emits it, and that
+something reads the field — three greps that would have saved both findings.
 
 **Why the count was so misleading.** This plan carried 14 open headings into 2026-10-28 and led the
 index's "where the remaining work is concentrated" section on that basis. Reading the findings

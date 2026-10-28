@@ -70,10 +70,20 @@ ported from libjamiclient's `unreadTextMessages`: walk the loaded history backwa
 the first message already read or notified, skipping one's own (a reply of mine does not mark what
 came before it as read).
 
-### F8: reloadConversationsAndRequests() not wired — capability gap
+### F8: reloadConversationsAndRequests() not wired — capability gap — **NOT IMPLEMENTABLE (2026-10-28); absent from the SWIG bindings**
 **Evidence:** `DaemonBridge.kt` does not define `reloadConversationsAndRequests()` method despite it existing in `conversation_interface.h:118`.
 **Impact:** No explicit "refresh all conversations and pending requests" operation. The app relies on daemon signals to update state; no force-refresh from the service layer.
 **Daemon support:** `reloadConversationsAndRequests(accountId)` — `conversation_interface.h:118`
+
+**Closed 2026-10-28.** The function is in the interface header but **not in the generated
+bindings**: `grep -c "public static .*reloadConversationsAndRequests("
+shared/src/androidMain/java/net/jami/daemon/JamiService.java` returns 0, and there is no
+`JamiBridgeWrapper.h` entry either. There is nothing to call from any platform, so this cannot be
+wired without regenerating the daemon's SWIG interface — the same disposition as
+`daemon-api-surface-audit.md` F4 (video device enumeration).
+
+This is the header-set-is-not-the-binding-set caveat in `README.md` again, and it is why the
+binding check now comes before any implementation estimate.
 
 ### F9: Message status mapping may be incomplete — potential bug — **DONE (2026-10-13); it was a real off-by-one, not just missing tests**
 **Evidence:** `ConversationFacade.kt:1687` maps daemon status integers via `Interaction.MessageStates.fromInt(it.value)`. The daemon sends status codes (e.g., 0=sent, 1=delivered, 2=displayed, etc.), but there is no comprehensive test of all possible daemon status codes or validation that the UI renders all states correctly.

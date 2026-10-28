@@ -490,10 +490,49 @@ mobile-primary targets want them. That decision belongs before Phase 1.
 **Impact:** No way to set call history retention policy or ringing timeout from app UI. These are hard-coded defaults or require manual daemon config file editing.
 **Daemon support:** Four functions exist; never called.
 
-### F6: Presence Server Integration Missing (Category: Gap)
+### F6: Presence Server Integration Missing (Category: Gap) — **DONE on Android (2026-10-28) as a status note; the other three functions are dead or SIP-only**
 **Evidence:** `presencemanager_interface.h:35–41`, only buddy subscription is wired.
 **Impact:** Jami supports SIP-based presence publishing (announcing "away," "busy," "on the phone") via `publish()` and `answerServerRequest()`. This is completely absent from KMP and reference Android app. Advanced deployments (corporate SIP presence) rely on this.
 **Daemon support:** `publish(status, note)`, `answerServerRequest(uri, flag)`, `getSubscriptions()`, `setSubscriptions()`
+
+**The framing was wrong, and the feature is better than the finding claims.** "SIP-based presence
+publishing ... advanced deployments (corporate SIP presence) rely on this" describes only the SIP
+branch. `publish()` has an explicit **Jami** branch
+(`client/presencemanager.cpp:79` → `JamiAccount::sendPresenceNote`): the daemon ignores the
+boolean status and forwards the note, wrapped in a PIDF document, over each contact's message
+channel (`jamiaccount.cpp:4322`), re-sending it when a device reconnects (`:4248`). The peer
+parses it back out and emits `NewBuddyNotification(..., CONNECTED, customStatus)` (`:4180`). It is
+a peer-to-peer **custom status message**, needing no presence server at all.
+
+The receive half was already arriving and being discarded: `DaemonCallbacksImpl` took
+`lineStatus` and passed only `status` to `ContactService.onPresenceUpdate`.
+
+**Done:** `publishPresence()` on `DaemonBridgeApi` (Android forwards to `JamiService.publish`;
+iOS/macOS log and drop — `publish` is **not** in `JamiBridgeWrapper.h`, so it joins
+`connectivityChanged` and `setDefaultModerator` waiting on a Mac wrapper rebuild), a status field
+in `AccountSettingsScreen` for Jami accounts, and the peer's note under their name in the chat
+header. `SettingsRepository` owns the stored note and republishes it on load.
+
+Three constraints that reading the daemon settled, none of them guessable:
+
+- **The daemon does not persist the note.** `presenceNote_` is a `JamiAccount` member, not
+  config: after a restart contacts see nothing. The note is therefore stored in the `KMP.*`
+  settings (so it also syncs between the user's own devices) and published again on every load,
+  the same shape as the CALLS branch pushing audio flags back down.
+- **The peer's parser is `std::regex("<basic>([\w\s]+)</basic>")`** (`jamiaccount.cpp:4177`).
+  `\w` on a `char` regex is ASCII `[A-Za-z0-9_]`, so a note with punctuation, an accent, CJK or
+  an emoji does not match **at all** and the peer is told nothing — worse than no note. Notes
+  are validated against that set before publishing, with the error shown on the field.
+- **An empty note cannot clear a status.** `+` needs one character, so publishing `""` leaves
+  every peer displaying the previous note indefinitely. Clearing publishes a single space, which
+  matches, and the receiving side trims it back to empty.
+
+**Not done, deliberately.** `answerServerRequest()` is `#if 0` in the daemon and logs
+"answerServerRequest() is deprecated and does nothing" (`presencemanager.cpp:88`).
+`getSubscriptions()` has a Jami branch but only returns the buddies we already track, so it is a
+diagnostic, not a feature. `setSubscriptions()` is not in the bindings. The SIP publish path
+needs `Account.presenceEnabled`, which `security-networking.md` F10 closed as SIP-only — hence
+the field is hidden on SIP accounts.
 
 ### F7: Service Discovery/Exposure — Missing (Category: Gap) — **DONE on Android (2026-10-04); Apple targets blocked on a missing header**
 **Evidence:** `networkservice_interface.h`, 8 functions; zero KMP wiring.
@@ -506,9 +545,16 @@ mobile-primary targets want them. That decision belongs before Phase 1.
 **Impact:** Recordings can be made, but the app cannot play them back in-app; user must open a media player externally.
 **Daemon support:** Three functions for playback control and seeking.
 
-### F9: Media Player Instance Management — Missing (Category: Gap)
+### F9: Media Player Instance Management — Missing (Category: Gap) — **NOT IMPLEMENTABLE (2026-10-28); absent from the SWIG bindings**
 **Evidence:** `videomanager_interface.h:192–199` (8 functions for media player creation, playback control, seeking).
 **Impact:** No daemon-native media player support in KMP. This is rarely used (ringtone playback is Android-native).
+
+**Closed 2026-10-28.** None of the eight is in the bindings — `createMediaPlayer`,
+`closeMediaPlayer`, `pausePlayer`, `mutePlayerAudio`, `playerSeekToTime`, `getPlayerPosition`,
+`getPlayerDuration` and `setAutoRestart` all return 0 hits in `JamiService.java`. The finding's
+own impact line already says this is rarely used and that ringtone playback is platform-native,
+so there is no reason to regenerate the SWIG interface for it. Same disposition as F4 and F8 of
+`messaging-conversations.md`.
 
 ### F10: Diagnostic Functions Unused (Category: Improvement) — **PARTLY DONE (2026-10-04); version/platform/arch and getConversationConnectivity are not in the SWIG bindings**
 **Evidence:** `jami.h`, `platform()`, `arch()`, `version()` never called; `logging()` callback registration for debug logs; `configurationmanager_interface.h::monitor()` for daemon status; `getConnectionList()`, `getConversationConnectivity()` for network diagnostics.
