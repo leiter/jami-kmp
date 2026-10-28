@@ -157,6 +157,8 @@ data class ChatState(
     val hasMoreHistory: Boolean = true,
     val isContactTyping: Boolean = false,
     val isContactOnline: Boolean = false,
+    /** The status note the peer published, or empty when they have none. 1:1 conversations only. */
+    val contactStatusNote: String = "",
     val searchQuery: String = "",
     val searchResults: List<MessageItem> = emptyList(),
     val isSearchActive: Boolean = false,
@@ -206,6 +208,7 @@ class ChatViewModel(
     private var currentAccountId: String? = null
     private var searchJob: kotlinx.coroutines.Job? = null
     private var presenceJob: kotlinx.coroutines.Job? = null
+    private var statusNoteJob: kotlinx.coroutines.Job? = null
     private var profileJob: kotlinx.coroutines.Job? = null
     /** Replied-to message ids already requested from the daemon (see [replyPreview]). */
     private val requestedReplyOriginals = mutableSetOf<String>()
@@ -426,6 +429,12 @@ class ChatViewModel(
             contact.presenceStatus.collect { status ->
                 val isOnline = status != Contact.PresenceStatus.OFFLINE
                 _state.value = _state.value.copy(isContactOnline = isOnline)
+            }
+        }
+        statusNoteJob?.cancel()
+        statusNoteJob = scope.launch {
+            contact.statusNote.collect { note ->
+                _state.value = _state.value.copy(contactStatusNote = note)
             }
         }
     }

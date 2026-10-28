@@ -491,4 +491,11 @@ Biometric or device authentication adds a convenient way to locally unlock acces
     <string name="account_lan_discovery_label">Find accounts nearby</string>
     <string name="account_lan_discovery_summary">Discover accounts announced by other devices on the same network.</string>
 
+    <!-- Presence status note (daemon-audit F6). Published to contacts via libjami publish();
+         the character restriction is the receiving daemon's PIDF regex, not ours. -->
+    <string name="account_status_note_label">Status</string>
+    <string name="account_status_note_summary">A short line your contacts see next to your name.</string>
+    <string name="account_status_note_error_charset">Use only letters, digits, spaces and underscores — other characters cannot be delivered.</string>
+    <string name="account_status_note_error_long">Too long. Keep it under %1$d characters.</string>
+
 </resources>

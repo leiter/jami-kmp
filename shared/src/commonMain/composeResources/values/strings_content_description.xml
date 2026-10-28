@@ -78,4 +78,6 @@
         <item quantity="other">%d unread messages</item>
     </plurals>
     <string name="account_default_moderator_remove">Remove %1$s from default moderators</string>
+    <string name="account_status_note_save">Publish status</string>
+    <string name="account_status_note_clear">Clear status</string>
 </resources>

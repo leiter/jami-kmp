@@ -78,6 +78,10 @@ class SettingsRepository(
     /** Privacy settings (read receipts, typing indicators) */
     val privacySettings: StateFlow<PrivacySettings> = _privacySettings.asStateFlow()
 
+    private val _presenceSettings = MutableStateFlow(PresenceSettings())
+    /** Presence settings (the status note published to contacts) */
+    val presenceSettings: StateFlow<PresenceSettings> = _presenceSettings.asStateFlow()
+
     private val _notificationSettings = MutableStateFlow(NotificationSettings())
     /** Notification settings */
     val notificationSettings: StateFlow<NotificationSettings> = _notificationSettings.asStateFlow()
@@ -143,6 +147,7 @@ class SettingsRepository(
         _meta.value = KmpMeta()
         _uiSettings.value = UiSettings()
         _privacySettings.value = PrivacySettings()
+        _presenceSettings.value = PresenceSettings()
         _notificationSettings.value = NotificationSettings()
         _callSettings.value = CallSettings()
         _fileTransferSettings.value = FileTransferSettings()
@@ -287,6 +292,34 @@ class SettingsRepository(
         if (current.showLinkPreviews != enabled) {
             updatePrivacySettings(current.copy(showLinkPreviews = enabled))
         }
+    }
+
+    // ==================== Presence Settings ====================
+
+    /**
+     * Set the status note published to this account's contacts, and publish it now.
+     *
+     * Returns the reason the note was not accepted, or null on success. An invalid note is not
+     * stored and not published: the peer's daemon would fail to parse it and report nothing at
+     * all, which looks to the user like the status silently vanished.
+     *
+     * Clearing (a blank note) is stored as empty but published as [PresenceNote.CLEARED] — see
+     * that object for why an empty string cannot be used on the wire.
+     */
+    fun updateStatusNote(note: String): PresenceNoteError? {
+        PresenceNote.validate(note)?.let { return it }
+        val trimmed = note.trim()
+        if (_presenceSettings.value.statusNote == trimmed) return null
+        _presenceSettings.value = PresenceSettings(statusNote = trimmed)
+        saveSettings(SettingsKeys.PRESENCE) { json.encodeToString(_presenceSettings.value) }
+        currentAccountId?.let { publishStatusNote(it, trimmed) }
+        return null
+    }
+
+    private fun publishStatusNote(accountId: String, note: String) {
+        // status is ignored for Jami accounts; only the note is forwarded. See
+        // DaemonBridgeApi.publishPresence.
+        daemonBridge.publishPresence(accountId, true, PresenceNote.toWire(note))
     }
 
     private fun updatePrivacySettings(settings: PrivacySettings) {
@@ -640,6 +673,19 @@ class SettingsRepository(
                 details[SettingsKeys.PRIVACY]?.let { jsonStr ->
                     _privacySettings.value = runCatching { json.decodeFromString<PrivacySettings>(jsonStr) }
                         .getOrDefault(PrivacySettings())
+                }
+
+                // The daemon keeps the published note in memory only (JamiAccount::presenceNote_),
+                // so a stored note has to be published again on every load — after an app or
+                // daemon restart the peers' view is otherwise stale or empty. Same shape as the
+                // CALLS branch below pushing the audio flags back down.
+                details[SettingsKeys.PRESENCE]?.let { jsonStr ->
+                    val presence = runCatching { json.decodeFromString<PresenceSettings>(jsonStr) }
+                        .getOrDefault(PresenceSettings())
+                    _presenceSettings.value = presence
+                    if (presence.statusNote.isNotEmpty()) {
+                        publishStatusNote(accountId, presence.statusNote)
+                    }
                 }
 
                 details[SettingsKeys.NOTIFICATIONS]?.let { jsonStr ->

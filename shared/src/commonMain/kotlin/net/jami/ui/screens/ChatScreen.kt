@@ -438,12 +438,25 @@ fun ChatScreen(
                                 presenceStatus = if (state.isContactOnline) PresenceStatus.Online else PresenceStatus.Offline,
                             )
                             Spacer(Modifier.width(JamiTheme.spacing.m))
-                            Text(
-                                text = state.conversationTitle,
-                                style = JamiTheme.typography.titleMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                            Column {
+                                Text(
+                                    text = state.conversationTitle,
+                                    style = JamiTheme.typography.titleMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                // The peer's published status note, when they have one. Dropped
+                                // automatically when they go offline (Contact.setPresence).
+                                if (state.contactStatusNote.isNotEmpty()) {
+                                    Text(
+                                        text = state.contactStatusNote,
+                                        style = JamiTheme.typography.bodySmall,
+                                        color = JamiTheme.colors.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
                         }
                     }
                 },

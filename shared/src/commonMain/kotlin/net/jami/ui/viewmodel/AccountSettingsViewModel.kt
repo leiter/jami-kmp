@@ -35,6 +35,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import net.jami.model.Account
 import net.jami.model.ConfigKey
+import net.jami.model.settings.PresenceNote
+import net.jami.model.settings.PresenceNoteError
 import net.jami.repository.SettingsRepository
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
@@ -108,6 +110,11 @@ data class AccountSettingsState(
     val registerNameInProgress: Boolean = false,
     /** null = no result yet, true = success, false = failed */
     val registerNameResult: Boolean? = null,
+    /** The status note as typed, which may differ from the published one until committed. */
+    val statusNote: String = "",
+    /** The published note, so the UI can tell whether the typed one is still unsaved. */
+    val publishedStatusNote: String = "",
+    val statusNoteError: PresenceNoteError? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -133,7 +140,10 @@ data class AccountSettingsState(
             registerNameAvailable == other.registerNameAvailable &&
             registerNameError == other.registerNameError &&
             registerNameInProgress == other.registerNameInProgress &&
-            registerNameResult == other.registerNameResult
+            registerNameResult == other.registerNameResult &&
+            statusNote == other.statusNote &&
+            publishedStatusNote == other.publishedStatusNote &&
+            statusNoteError == other.statusNoteError
     }
 
     override fun hashCode(): Int {
@@ -159,6 +169,9 @@ data class AccountSettingsState(
         result = 31 * result + registerNameError.hashCode()
         result = 31 * result + registerNameInProgress.hashCode()
         result = 31 * result + registerNameResult.hashCode()
+        result = 31 * result + statusNote.hashCode()
+        result = 31 * result + publishedStatusNote.hashCode()
+        result = 31 * result + statusNoteError.hashCode()
         return result
     }
 }
@@ -252,6 +265,69 @@ class AccountSettingsViewModel(
                 }
             }
         }
+        // The published note is owned by SettingsRepository (it also replays it to the daemon
+        // after a restart), so the screen follows the repository rather than keeping its own
+        // copy. A note typed on another device arrives here too, via the KMP.* settings sync.
+        scope.launch {
+            settingsRepository.presenceSettings.collect { presence ->
+                _state.update {
+                    if (it.statusNote == it.publishedStatusNote) {
+                        // Nothing unsaved in the field; follow the published value.
+                        it.copy(
+                            statusNote = presence.statusNote,
+                            publishedStatusNote = presence.statusNote,
+                            statusNoteError = null,
+                        )
+                    } else {
+                        // Keep what the user is typing; only the "saved" baseline moves.
+                        it.copy(publishedStatusNote = presence.statusNote)
+                    }
+                }
+            }
+        }
+    }
+
+    // ==================== Status note (presence) ====================
+
+    /**
+     * Record what the user is typing and validate it, without publishing.
+     *
+     * Publishing on each keystroke would send a PIDF presence message to every contact per
+     * character, so the note is only sent on [commitStatusNote].
+     */
+    fun onStatusNoteChanged(note: String) {
+        _state.update {
+            it.copy(statusNote = note, statusNoteError = PresenceNote.validate(note))
+        }
+    }
+
+    /**
+     * Publish the typed note. No-op when it is invalid or unchanged.
+     *
+     * @return true when the note was handed to the daemon.
+     */
+    fun commitStatusNote(): Boolean {
+        val note = _state.value.statusNote
+        val error = PresenceNote.validate(note)
+        if (error != null) {
+            _state.update { it.copy(statusNoteError = error) }
+            return false
+        }
+        val published = settingsRepository.updateStatusNote(note)
+        if (published != null) {
+            _state.update { it.copy(statusNoteError = published) }
+            return false
+        }
+        _state.update {
+            it.copy(statusNote = note.trim(), publishedStatusNote = note.trim(), statusNoteError = null)
+        }
+        return true
+    }
+
+    /** Clear the note and tell contacts about it. */
+    fun clearStatusNote() {
+        _state.update { it.copy(statusNote = "", statusNoteError = null) }
+        commitStatusNote()
     }
 
     /**

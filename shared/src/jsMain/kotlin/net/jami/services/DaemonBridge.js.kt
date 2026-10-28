@@ -561,6 +561,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
         // TODO: PUT /accounts/{accountId}/contacts/{uri}/presence
     }
 
+    override fun publishPresence(accountId: String, status: Boolean, note: String) {
+        // TODO: POST /accounts/{accountId}/presence
+    }
+
     // ==================== Name Lookup ====================
 
     override fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {

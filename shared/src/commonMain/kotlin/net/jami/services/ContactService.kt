@@ -35,6 +35,7 @@ import net.jami.model.ContactViewModel
 import net.jami.model.Conversation
 import net.jami.model.Profile
 import net.jami.model.Uri
+import net.jami.model.settings.PresenceNote
 import net.jami.ui.utils.scaleImageBytes
 import net.jami.utils.Log
 
@@ -312,7 +313,12 @@ class ContactService(
     /**
      * Handle presence update from daemon callback.
      */
-    internal fun onPresenceUpdate(accountId: String, uriString: String, status: Int) {
+    internal fun onPresenceUpdate(
+        accountId: String,
+        uriString: String,
+        status: Int,
+        lineStatus: String = ""
+    ) {
         Log.d(TAG, "onPresenceUpdate: uriString=$uriString status=$status accountId=$accountId")
         val uri = Uri.fromString(uriString)
         Log.d(TAG, "onPresenceUpdate: parsed uri.uri=${uri.uri} rawRingId=${uri.rawRingId}")
@@ -331,6 +337,13 @@ class ContactService(
         }
         Log.d(TAG, "onPresenceUpdate: setting presence $presenceStatus for contact ${contact.uri.rawRingId}, isOnline will be ${presenceStatus != Contact.PresenceStatus.OFFLINE}")
         contact.setPresence(presenceStatus)
+        // lineStatus carries a published note only on the PIDF path (jamiaccount.cpp:4180); the
+        // plain online/offline notifications send it empty, so an empty value means "nothing new
+        // said" rather than "note cleared". Clearing is a note of PresenceNote.CLEARED, which
+        // fromWire() turns back into an empty string.
+        if (lineStatus.isNotEmpty()) {
+            contact.setStatusNote(PresenceNote.fromWire(lineStatus))
+        }
         scope.launch {
             _contactEvents.emit(ContactEvent.PresenceUpdated(accountId, contact))
             Log.d(TAG, "onPresenceUpdate: emitted PresenceUpdated event for ${contact.uri.rawRingId}")

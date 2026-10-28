@@ -464,6 +464,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "subscribeBuddy called (stub): $uri, subscribe=$subscribe")
     }
 
+    override fun publishPresence(accountId: String, status: Boolean, note: String) {
+        Log.d(TAG, "publishPresence called (stub): status=$status note='$note'")
+    }
+
     // ==================== Name Lookup (Stubs) ====================
 
     override fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {

@@ -65,6 +65,16 @@ class Contact(
     private val _presenceStatus = MutableStateFlow(PresenceStatus.OFFLINE)
     val presenceStatus: StateFlow<PresenceStatus> = _presenceStatus.asStateFlow()
 
+    /**
+     * Free-text status this contact published ("away", "in a meeting"), or empty for none.
+     *
+     * Arrives on the `lineStatus` field of the daemon's buddy notification, which carries a note
+     * only for the PIDF presence messages a peer publishes; ordinary online/offline transitions
+     * leave it empty and must not clear a note that is still current.
+     */
+    private val _statusNote = MutableStateFlow("")
+    val statusNote: StateFlow<String> = _statusNote.asStateFlow()
+
     // Profile management
     private val _loadedProfile = MutableStateFlow(Profile.EMPTY_PROFILE)
     private val _customProfile = MutableStateFlow(Profile.EMPTY_PROFILE)
@@ -122,6 +132,14 @@ class Contact(
 
     fun setPresence(present: PresenceStatus) {
         _presenceStatus.value = present
+        // A contact that has gone offline is no longer saying anything about itself; keeping the
+        // note would leave "in a meeting" next to a grey dot indefinitely.
+        if (present == PresenceStatus.OFFLINE) _statusNote.value = ""
+    }
+
+    /** Record a note this contact published. */
+    fun setStatusNote(note: String) {
+        _statusNote.value = note
     }
 
     fun setSystemId(id: Long) {

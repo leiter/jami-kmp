@@ -48,6 +48,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddLink
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
@@ -127,6 +129,12 @@ import jami_kmp.shared.generated.resources.account_rename_device
 import jami_kmp.shared.generated.resources.account_share_body
 import jami_kmp.shared.generated.resources.account_sip_server
 import jami_kmp.shared.generated.resources.account_sip_username
+import jami_kmp.shared.generated.resources.account_status_note_clear
+import jami_kmp.shared.generated.resources.account_status_note_error_charset
+import jami_kmp.shared.generated.resources.account_status_note_error_long
+import jami_kmp.shared.generated.resources.account_status_note_label
+import jami_kmp.shared.generated.resources.account_status_note_save
+import jami_kmp.shared.generated.resources.account_status_note_summary
 import jami_kmp.shared.generated.resources.account_status_offline
 import jami_kmp.shared.generated.resources.account_status_online
 import jami_kmp.shared.generated.resources.action_link_device
@@ -179,6 +187,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.jami.di.getViewModel
+import net.jami.model.settings.PresenceNote
+import net.jami.model.settings.PresenceNoteError
 import net.jami.services.AuthError
 import net.jami.ui.components.QrCodeScannerView
 import net.jami.ui.components.actions.JamiAccountSwitch
@@ -493,6 +503,65 @@ fun AccountSettingsScreen(
                         viewModel.updateDisplayName(displayNameEdit)
                         focusManager.clearFocus()
                     }),
+                )
+            }
+
+            // Status note. Jami only: on a SIP account publish() takes the SIP presence path,
+            // which needs a presence server and the SIP-only Account.presenceEnabled.
+            if (!state.isSip) {
+                val noteDirty = state.statusNote != state.publishedStatusNote
+                TextField(
+                    value = state.statusNote,
+                    onValueChange = { viewModel.onStatusNoteChanged(it) },
+                    label = { Text(stringResource(Res.string.account_status_note_label)) },
+                    singleLine = true,
+                    isError = state.statusNoteError != null,
+                    supportingText = {
+                        Text(
+                            text = when (state.statusNoteError) {
+                                PresenceNoteError.UNSUPPORTED_CHARACTERS ->
+                                    stringResource(Res.string.account_status_note_error_charset)
+                                PresenceNoteError.TOO_LONG ->
+                                    stringResource(
+                                        Res.string.account_status_note_error_long,
+                                        PresenceNote.MAX_LENGTH,
+                                    )
+                                null -> stringResource(Res.string.account_status_note_summary)
+                            },
+                            color = if (state.statusNoteError != null) JamiTheme.colors.error
+                                    else JamiTheme.colors.onSurfaceVariant,
+                        )
+                    },
+                    trailingIcon = {
+                        // Publishing sends a presence message to every contact, so it happens on
+                        // an explicit action rather than per keystroke.
+                        if (noteDirty) {
+                            IconButton(
+                                onClick = { viewModel.commitStatusNote(); focusManager.clearFocus() },
+                                enabled = state.statusNoteError == null,
+                            ) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = stringResource(Res.string.account_status_note_save),
+                                )
+                            }
+                        } else if (state.statusNote.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.clearStatusNote(); focusManager.clearFocus() }) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = stringResource(Res.string.account_status_note_clear),
+                                )
+                            }
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        viewModel.commitStatusNote()
+                        focusManager.clearFocus()
+                    }),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.l),
                 )
             }
 

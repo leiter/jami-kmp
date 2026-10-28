@@ -198,6 +198,26 @@ interface DaemonBridgeApi {
     fun getContactDetails(accountId: String, uri: String): Map<String, String>
     fun subscribeBuddy(accountId: String, uri: String, subscribe: Boolean)
 
+    /**
+     * Publish a presence note — a short free-text status ("away", "in a meeting") — to every
+     * contact of this account.
+     *
+     * Mirrors libjami's `publish()` (`presencemanager_interface.h:36`). On a Jami account the
+     * daemon ignores [status] entirely and forwards only the note
+     * (`presencemanager.cpp:79` -> `JamiAccount::sendPresenceNote`), wrapping it in a PIDF
+     * document sent over each contact's message channel. It is re-sent when a contact's device
+     * reconnects, but it is **not** persisted by the daemon: after a daemon restart the note is
+     * gone unless the client publishes it again. [SettingsRepository] owns that replay.
+     *
+     * The peer's daemon recovers the note with the regex `<basic>([\w\s]+)</basic>`
+     * (`jamiaccount.cpp:4177`), so a note carrying anything outside ASCII letters, digits,
+     * underscore and whitespace fails to match and the peer is told nothing at all. Callers must
+     * validate before publishing; see `PresenceNoteError`.
+     *
+     * Platforms whose wrapper has no entry point for this (iOS/macOS) log and drop the call.
+     */
+    fun publishPresence(accountId: String, status: Boolean, note: String)
+
     // ==================== Name Lookup ====================
     fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean
     fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean
@@ -1082,6 +1102,12 @@ class StubDaemonBridge : DaemonBridgeApi {
     val subscribeBuddyCalls = mutableListOf<Triple<String, String, Boolean>>()
     override fun subscribeBuddy(accountId: String, uri: String, subscribe: Boolean) {
         subscribeBuddyCalls += Triple(accountId, uri, subscribe)
+    }
+
+    /** Every publishPresence() call that reached the "daemon", in order. */
+    val publishedPresenceNotes = mutableListOf<Triple<String, Boolean, String>>()
+    override fun publishPresence(accountId: String, status: Boolean, note: String) {
+        publishedPresenceNotes += Triple(accountId, status, note)
     }
 
     override fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {

@@ -121,6 +121,64 @@ data class PrivacySettings(
 )
 
 /**
+ * Presence settings that sync across devices.
+ *
+ * The status note is a short free-text line the daemon publishes to every contact of the
+ * account. The daemon does not persist it, so it is kept here and republished whenever settings
+ * are loaded; see `SettingsRepository`.
+ */
+@Serializable
+data class PresenceSettings(
+    /** Free-text status published to contacts. Empty means no status. */
+    val statusNote: String = ""
+)
+
+/** Why a status note cannot be published as typed. */
+enum class PresenceNoteError {
+    /** Contains something the peer's daemon cannot parse out of the PIDF document. */
+    UNSUPPORTED_CHARACTERS,
+    TOO_LONG,
+}
+
+/**
+ * Rules for a presence status note, imposed by the receiving daemon rather than by us.
+ *
+ * A published note travels as a PIDF document and the peer recovers it with
+ * `std::regex("<basic>([\\w\\s]+)</basic>")` (`jamiaccount.cpp:4177`). That has two
+ * consequences a client has to design around:
+ *
+ * 1. `\w` on a `char` regex is ASCII `[A-Za-z0-9_]`, so a note containing accented letters,
+ *    CJK, emoji or punctuation does not match **at all** — the peer logs "unable to parse
+ *    status" and is told nothing. A rejected note is worse than no note, so these are blocked
+ *    before publishing instead of being silently mangled.
+ * 2. The `+` means an empty note cannot match either, so publishing `""` would leave every peer
+ *    displaying the previous note forever. Clearing therefore publishes [CLEARED], a single
+ *    space, which does match and which the receiving side trims back to empty.
+ */
+object PresenceNote {
+    /** Kept short because the note renders on one line next to a contact's name. */
+    const val MAX_LENGTH = 80
+
+    /** Published to clear a note; an empty string would not match the peer's regex. */
+    const val CLEARED = " "
+
+    /** ASCII word characters, space and tab — the intersection of `\w`, `\s` and one line. */
+    private val SUPPORTED = Regex("[A-Za-z0-9_ \t]*")
+
+    fun validate(note: String): PresenceNoteError? = when {
+        note.length > MAX_LENGTH -> PresenceNoteError.TOO_LONG
+        !SUPPORTED.matches(note) -> PresenceNoteError.UNSUPPORTED_CHARACTERS
+        else -> null
+    }
+
+    /** The string to hand the daemon for [note]: blank clears, anything else is sent trimmed. */
+    fun toWire(note: String): String = note.trim().ifEmpty { CLEARED }
+
+    /** The note as received from a peer; [CLEARED] and padding come back as no note. */
+    fun fromWire(note: String): String = note.trim()
+}
+
+/**
  * Notification settings that sync across devices.
  */
 @Serializable
@@ -272,6 +330,9 @@ object SettingsKeys {
 
     /** Privacy settings */
     const val PRIVACY = "${PREFIX}Settings.Privacy"
+
+    /** Presence settings (status note) */
+    const val PRESENCE = "${PREFIX}Settings.Presence"
 
     /** Notification settings */
     const val NOTIFICATIONS = "${PREFIX}Settings.Notifications"

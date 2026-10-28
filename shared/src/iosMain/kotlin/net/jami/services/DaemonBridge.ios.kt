@@ -588,6 +588,14 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.subscribeBuddy(accountId, uri = uri, flag = subscribe)
     }
 
+    override fun publishPresence(accountId: String, status: Boolean, note: String) {
+        // JamiBridgeWrapper exposes no presence-publish entry point yet. libjami's `publish()`
+        // (presencemanager_interface.h:36) needs surfacing on the Obj-C++ wrapper and
+        // libJamiBridge.a rebuilt before this can forward to the daemon. Batch it with the other
+        // missing passthroughs (connectivityChanged, setDefaultModerator) rather than alone.
+        Log.d(TAG, "publishPresence('$note') - not yet exposed via JamiBridge")
+    }
+
     override fun countInteractions(
         accountId: String,
         conversationId: String,

@@ -520,6 +520,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.subscribeBuddy(accountId, uri = uri, flag = subscribe)
     }
 
+    override fun publishPresence(accountId: String, status: Boolean, note: String) {
+        // See the iOS actual: not in JamiBridgeWrapper.h, needs a Mac wrapper rebuild.
+        Log.d(TAG, "publishPresence('$note') - not yet exposed via JamiBridge")
+    }
+
     override fun countInteractions(
         accountId: String,
         conversationId: String,

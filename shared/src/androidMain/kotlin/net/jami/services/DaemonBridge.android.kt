@@ -597,6 +597,12 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         JamiService.subscribeBuddy(accountId, uri, subscribe)
     }
 
+    override fun publishPresence(accountId: String, status: Boolean, note: String) {
+        if (!isInitialized) return
+        Log.d(TAG, "publishPresence: accountId='$accountId' status=$status note='$note'")
+        JamiService.publish(accountId, status, note)
+    }
+
     // ==================== Name Lookup ====================
 
     override fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
