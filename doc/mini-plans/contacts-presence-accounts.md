@@ -23,7 +23,7 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 
 ---
 
-### F2: Presence unsubscribe on background — open decision (documented)
+### F2: Presence unsubscribe on background — open decision (documented) — **DONE (2026-10-28); adopted on both platforms, and the three independent subscribers had to be unified first**
 **Evidence:**
 - `doc/TODO.md:331-337`: explicitly flagged as an open decision
 - `HardwareService.connectivityState` is collected (AccountService.kt:142-148), but never drives presence subscribe/unsubscribe
@@ -36,9 +36,50 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 
 **Suggested fix:** Wire lifecycle foreground/background transitions (via `ProcessLifecycleOwner.Lifecycle` on Android, `AppDelegate` callbacks on iOS, `onPause`/`onResume` equivalent on other platforms) into `AccountService` or `ContactService` to call `daemonBridge.subscribeBuddy(accountId, uri, false)` for all tracked contacts on background, and re-subscribe on foreground. See `TODO.md` for the broader context (jami-kmp's daemon stays alive in a foreground service, so the battery impact may be lower than on iOS where the daemon stops; this is the "open decision").
 
+**Resolved (2026-10-28).** Adopted on **both** platforms, not iOS only.
+
+The open decision assumed Android might want to keep presence because the daemon stays alive.
+It does stay alive — and that is the argument for suspending, not against it. `setAccountsActive(false)`
+deliberately keeps proxy-enabled accounts active (`AccountService.kt:536-546`), so on Android the
+subscriptions keep costing DHT traffic for as long as `JamiDaemonService` runs, with nothing on
+screen to display the result. The reference Android client reaches the same outcome by a different
+route: it deactivates proxy accounts outright in background when push is available
+(`JamiApplicationFirebase.kt:183-225`, upstream `a60107b32`), which subsumes presence. jami-kmp has
+no such background-deactivation path yet — the comment at `AccountService.kt:418-422` calls it "a
+future path" — so presence has to be released on its own.
+
+**What the fix actually required.** Not a lifecycle hook calling `subscribeBuddy(false)` in a loop.
+Three owners subscribe independently, each with its own bookkeeping, and the daemon reference-counts
+`subscribeBuddy`, so one buddy can hold one to three daemon refs:
+
+| Owner | Bookkeeping | Released when |
+|---|---|---|
+| `ConversationFacade.subscribedBuddies` | set, `firstTime()` guarded | never |
+| `ConversationsViewModel.subscribedBuddies` | set | `onCleared()` |
+| `ContactService.activeSubscriptions` | refcounted map | `observeContact` flow completes |
+
+Unsubscribing from any one of them would have dropped a buddy the other two still held, or left
+refs behind on resume. So the aggregate count was moved into `ContactService.subscribeBuddy`
+(`ContactService.kt:240-270`), which is the one call all three pass through: it refcounts, forwards
+only the 0→1 and 1→0 edges to the daemon, and ignores an unsubscribe with no matching subscribe.
+The three owners are untouched and keep their own dedupe; it is now harmless redundancy.
+
+`suspendPresence()` / `resumePresence()` then release and restore whatever is referenced. A buddy
+first referenced while suspended is subscribed once, on resume; a buddy whose last ref is released
+while suspended is not resurrected. Both are idempotent.
+
+**Wiring:** `JamiApplication` observes `ProcessLifecycleOwner` (`onStop`/`onStart`), so a rotation or
+a move between activities is not mistaken for a background transition — this needed a new
+`androidx.lifecycle:lifecycle-process` dependency. iOS hooks the existing
+`IOSApplicationHelper.enterBackground()` / `enterForeground()`, which the Swift `AppDelegate`
+already drives. Desktop's bridge is a no-op and macOS does not compile, so neither is wired.
+
+**Not verified on a device.** The Apple half could not be compiled on this Linux host, and neither
+platform has been exercised against a live peer — only `:shared:desktopTest`.
+
 ---
 
-### F3: No `publish()` for presence status updates — not used
+### F3: No `publish()` for presence status updates — not used — **CLOSED WITHOUT WORK (2026-10-28); no user-facing need, and the finding's signature is wrong**
 **Evidence:**
 - `publish(accountId, status, note)` (configurationmanager_interface.h:36) never called anywhere in jami-kmp
 - `AccountService`, `ContactService`, no reference to setting user's own presence status
@@ -51,9 +92,20 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 
 **Suggested fix:** Low priority. If a "Set status" feature is desired, add a UI option in account settings, then call `daemonBridge.publish(accountId, status, note)`. Not present in reference Android app either, so not a functional gap.
 
+**Closed 2026-10-28.** Jami presence is published implicitly on registration; a manual status or
+away message is a feature nobody has asked for, and the reference Android client does not have one
+either. There is nothing to fix until that feature is wanted.
+
+Two corrections for whoever picks it up later. `publish` **is** in the SWIG bindings
+(`JamiService.java:708`) — it is simply not declared in `DaemonBridgeApi`, so adopting it means
+adding a bridge method, not working around a missing binding. And its signature is
+`publish(String accountID, boolean status, String note)`: the finding's "status (int, likely
+0=offline/1=online)" was read off the header and is wrong about the type. Exactly the
+header-versus-bindings drift the index warns about.
+
 ---
 
-### F4: No `getSubscriptions()` / `setSubscriptions()` for buddy list management — not used
+### F4: No `getSubscriptions()` / `setSubscriptions()` for buddy list management — not used — **CLOSED WITHOUT WORK (2026-10-28); per-buddy subscription is the right granularity here**
 **Evidence:**
 - `getSubscriptions(accountId)` (presencemanager_interface.h:39) never called
 - `setSubscriptions(accountId, uris)` (line 40) never called
@@ -65,6 +117,14 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 **Daemon support:** `getSubscriptions(accountId)` → list of maps with subscription data; `setSubscriptions(accountId, uris)` → bulk replace the list.
 
 **Suggested fix:** Not needed unless there is a user feature request (e.g., "export my buddy list"). Skip for now.
+
+**Closed 2026-10-28.** Accepted as written: no feature wants a bulk buddy list. The per-buddy path
+is also now the load-bearing one — F2 put the aggregate refcount in
+`ContactService.subscribeBuddy`, and a `setSubscriptions()` bulk replace would write straight past
+it and desynchronise the count from the daemon's. Adopting these would mean teaching the registry
+about bulk operations first.
+
+Both are in the SWIG bindings (`JamiService.java:720`, `:724`) but absent from `DaemonBridgeApi`.
 
 ---
 
@@ -102,7 +162,7 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 
 ---
 
-### F7: No account credential list fetch/sync — partially used
+### F7: No account credential list fetch/sync — partially used — **CLOSED WITHOUT WORK (2026-10-28); the fetch/sync half is stale, the editing half is SIP-only**
 **Evidence:**
 - `getCredentials(accountId)` (configurationmanager_interface.h:183) called in `AccountService.kt:482`, returns `List<Map<String, String>>`
 - `setCredentials(accountId, credentials)` (line 184) called in `AccountService.kt:489`
@@ -114,6 +174,20 @@ Jami-kmp implements core account and contact operations (creation, import, devic
 **Daemon support:** Both functions exist and are wired into `DaemonBridgeApi`.
 
 **Suggested fix:** Low priority (SIP is secondary to Jami). If SIP account editing is desired, implement credential list UI in `AccountSettingsScreen` and call `setCredentials()`.
+
+**Closed 2026-10-28, in two halves.**
+
+*Fetch/sync — stale, already implemented.* The title claims there is none. In fact every account
+load fetches the credential list and parses it into the domain model:
+`AccountService.kt:198-207` calls `daemonBridge.getCredentials(accountId)` and populates
+`Account.credentials` as `AccountCredentials` (`Account.kt:308-320`), and `:1215` refreshes it. The
+line numbers the finding cites (`AccountService.kt:482`/`:489`) have moved to `:571`/`:578`.
+
+*Editing UI — genuinely absent, and deliberately so.* Nothing under `ui/` mentions credentials at
+all. But this is SIP server/username/password editing, and `security-networking.md` closed its
+whole SIP account-settings cluster as SIP-only on 2026-10-13 (F1, F13, F14). This belongs with that
+cluster, not here, and is deferred on the same grounds: SIP is secondary to Jami and no SIP user
+has asked.
 
 ---
 
@@ -173,7 +247,7 @@ our own settings patterns rather than resampling one.
 
 ---
 
-### F9: No message status query (`getMessageStatus`) — not used
+### F9: No message status query (`getMessageStatus`) — not used — **CLOSED WITHOUT WORK (2026-10-28); the event-driven path is correct and was separately fixed**
 **Evidence:**
 - `getMessageStatus(id)` (configurationmanager_interface.h:110) never called
 - `getMessageStatus(accountId, id)` (line 111) never called
@@ -185,6 +259,14 @@ our own settings patterns rather than resampling one.
 **Daemon support:** Both function overloads exist.
 
 **Suggested fix:** Not needed. Current implementation is better (event-driven). Skip.
+
+**Closed 2026-10-28.** Accepted as written — polling a status the daemon already pushes would be
+redundant. Reinforced since: `messaging-conversations.md` F9 found and fixed a real off-by-one in
+the event-driven status mapping on 2026-10-13 (`49fb07a`), so that path is now mapped against the
+header rather than guessed. A query API would not have surfaced that bug; reading the header did.
+
+Both overloads are in the SWIG bindings (`JamiService.java:280`, `:284`) but absent from
+`DaemonBridgeApi`.
 
 ---
 
@@ -247,7 +329,7 @@ our own settings patterns rather than resampling one.
 
 ---
 
-### F14: No `searchUser()` UI despite daemon support — minor gap
+### F14: No `searchUser()` UI despite daemon support — minor gap — **ALREADY IMPLEMENTED; finding was stale (verified 2026-10-28)**
 **Evidence:**
 - `searchUser(accountId, query)` (configurationmanager_interface.h:92) is wired in `DaemonBridge`
 - `AccountService.kt:634-644` implements `searchUser()`, calls daemon, emits `UserSearchEnded` event
@@ -259,6 +341,21 @@ our own settings patterns rather than resampling one.
 **Daemon support:** `searchUser(accountId, query)` initiates search; `UserSearchEnded(accountId, state, query, results)` callback returns results.
 
 **Suggested fix:** Low priority. If a "Search all users" feature is desired (niche), add a search screen and wire it. Not blocking.
+
+**Stale — verified against source 2026-10-28.** The claim "No UI screen calls `searchUser()` or
+displays results" is untrue. It is wired end to end:
+
+- `NewConversationViewModel.startSearch` calls `accountService.searchUser(accountId, query)` for
+  any plain-text query, alongside the nameserver lookup
+  (`NewConversationViewModel.kt:246-249`).
+- `AccountEvent.UserSearchEnded` is collected at `:86` and handled by `handleSearchResults` (`:372`),
+  which maps each result's `id`/`username`/`firstName`/`lastName` into a `ContactItem` and merges it
+  into `publicDirectoryResults` without duplicating nameserver hits.
+- `SearchScreen` renders that list under its own heading (`SearchScreen.kt:206`), and the same
+  ViewModel backs `NewConversationScreen`.
+
+So JAMS/public-directory search is reachable from the search screen, which is more than the
+reference client exposes.
 
 ---
 
@@ -279,7 +376,35 @@ Scanning `jami-client-android` for features not yet ported to KMP:
 
 ---
 
-## Status (verified 2026-10-12)
+## Status (2026-10-28) — plan closed
+
+All 14 findings are resolved. One piece of work was done directly (F2); everything else was either
+resolved by work under another plan, already implemented when the audit was written, or closed as
+not wanted.
+
+| Outcome | Count | Findings |
+|---|---|---|
+| Done | 5 | F2, F8, F10, F11, F12 |
+| Partly done | 1 | F5 |
+| Closed without work | 8 | F1 and F14 (already implemented), F13 (invalid), F6 (not applicable to mobile), F3, F4, F7, F9 (not wanted) |
+
+**F2 — presence suspended on background (2026-10-28)** is the only implementation this plan drove.
+It also unified the three independent presence subscribers behind one refcount in
+`ContactService.subscribeBuddy`; see the finding for the design and the caveats. Not yet exercised
+on a device, and the Apple half has not been compiled.
+
+**Three of the five closures were checked against source first, and two findings did not survive
+it:** F14 is fully implemented (JAMS search reaches `SearchScreen`), and F7's fetch/sync half has
+been implemented all along — only its SIP credential-editing UI is missing, which belongs with
+`security-networking.md`'s SIP cluster. F3, F4 and F9 were accepted as written. That is three stale
+findings in this one plan (F1, F13, F14) plus one half-stale (F7), out of fourteen.
+
+**A note for the other plans.** `publish`, `getSubscriptions`, `setSubscriptions` and
+`getMessageStatus` are all present in the SWIG bindings but absent from `DaemonBridgeApi` — these
+findings are "not wanted", not "not available". And F3's cited signature was wrong: `publish` takes
+a `boolean` status, not an int. Read the bindings, not just the headers.
+
+## Earlier status (verified 2026-10-12)
 
 This plan was never worked on directly, but five of its findings were resolved by work under
 other plans and two were wrong to begin with. Verified against source on 2026-10-12 before

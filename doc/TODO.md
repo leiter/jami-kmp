@@ -73,7 +73,7 @@
 ## Push Notifications
 
 - [x] **FCM push notifications (Android)** — `PushServiceManager` owns the token and reconciles it with the `ConnectivityMode.GOOGLE_SERVICES` setting (previously stored but never applied); `JamiFirebaseMessagingService` receives pushes and feeds `AccountService.pushNotificationReceived`; `PushForegroundService` covers the reconnect window for high-priority call pushes. Firebase is opt-in at build time. **Delivery still needs infrastructure** — the push is sent by the DHT proxy, and the public one only holds SFL's FCM credentials. See `doc/push-notifications.md`.
-- [x] **APNs push notifications (iOS)** — `IOSPushServiceManager` mirrors the Android policy layer; `AppDelegate` registers for both APNs and PushKit VoIP and forwards tokens via `IOSPushHelperKt`. A VoIP push reports a placeholder call to CallKit synchronously (iOS 13+ requirement) which the real daemon call then adopts. `UIBackgroundModes` + `aps-environment` entitlement added. **Not compiled** — Apple targets are skipped on this Linux host; needs a build on a Mac. See `doc/push-notifications.md`.
+- [x] **APNs push notifications (iOS)** — `IOSPushServiceManager` mirrors the Android policy layer; `AppDelegate` registers for both APNs and PushKit VoIP and forwards tokens via `IOSPushHelperKt`. A VoIP push reports a placeholder call to CallKit synchronously (iOS 13+ requirement) which the real daemon call then adopts. `UIBackgroundModes` + `aps-environment` entitlement added. **Compiled and run on a Mac since 2026-10-14** — the simulator logs `no valid aps-environment entitlement`, which is an artifact of building with `CODE_SIGNING_ALLOWED=NO`, not a missing entitlement. Delivery is still blocked on the proxy, as on Android. See `doc/push-notifications.md`.
 
 ## Deep Links & Intents
 
@@ -148,7 +148,9 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
 - [ ] **Battery optimisation exemption prompt** — Reference prompts the user to whitelist the app. No `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` intent in KMP.
 - [ ] **Language selector** — Reference has a locale preference. Not found in `AppSettingsScreen`.
 - [ ] **Display name in notifications setting** — Reference lets users hide contact names from notifications for privacy. Not in `AppSettingsScreen`.
-- [ ] **Log export / debug mode** — Reference has `LogsActivity`. No log viewer integrated into the KMP app.
+- [x] **Log export / debug mode** — `DebugLogsScreen` + `DebugLogsViewModel` (AppSettings → Advanced
+  → Debug logs): scrollable monospace view, refresh, share. `LogCapture` expect/actual reads logcat
+  on Android and is a no-op elsewhere. (This item was left unchecked long after the screen landed.)
 - [ ] **App shortcuts** — Reference `AndroidManifest.xml` declares conversation shortcuts. Not in KMP manifest.
 
 ## Bug Fixes (2026-08-07)
@@ -311,9 +313,26 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
 - [ ] **OsmMapView — macOS** — Stub retained: no stable `NSView` embedding API in Compose Multiplatform for macOS targets. Shows location coordinates as text.
 - [ ] **OsmMapView — Desktop** — Stub retained; no viable JVM map library in scope.
 
+## Candidate defects found while reconciling the docs (2026-10-26) — read-only, not reproduced
+
+- [ ] **Screen sharing may be broken on Android 14+: no `mediaProjection` foreground service.**
+  `FOREGROUND_SERVICE_MEDIA_PROJECTION` is not declared in `android-app/src/androidMain/AndroidManifest.xml`,
+  and no service lists `mediaProjection` among its `foregroundServiceType` values (the call service
+  is `microphone|phoneCall|camera|dataSync`). From API 34 the platform requires such a service to be
+  running before `MediaProjectionManager.getMediaProjection()`. `targetSdk` is 36 and screen sharing
+  is implemented (`MainActivity` consent flow → `CameraService.startScreenSharing()`). **Read off the
+  manifest and source only — not reproduced on a device.** One screen-share attempt on an Android 14+
+  device settles it. See `Permissions.md` → "Flagged, not reproduced".
+
 ## Open Decisions
 
-- [ ] **Add presence unsubscribe on background like the official app** *(open decision, 2026-09-18)* —
+- [x] **Add presence unsubscribe on background like the official app** *(decided and done 2026-10-28:
+  adopted on both platforms. Android keeps proxy accounts registered in background, so the
+  subscriptions cost DHT traffic with nothing to display them; the reference Android client gets the
+  same effect by deactivating proxy accounts entirely, which jami-kmp does not yet do. Required
+  unifying the three independent presence subscribers behind the refcount in
+  `ContactService.subscribeBuddy` first — see mini-plan `contacts-presence-accounts.md` F2. Not yet
+  run on a device.)* —
   jami-client-ios unsubscribes presence for all contacts in `sceneDidEnterBackground`
   (`presenceService.subscribeBuddies(..., subscribe: false)`, `AppDelegate.swift:340`) and
   re-subscribes in `sceneWillEnterForeground`. jami-kmp keeps presence subscriptions while in the
@@ -326,7 +345,7 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
 ## Testing
 
 - [x] **Unit tests compile and pass on both JVM targets (2026-09-18)** — `:shared:desktopTest` 617/617,
-  `:shared:testDebugUnitTest` 530/530. The Android unit-test build failed with 35 × "No value passed
+  `:shared:testDebugUnitTest` 530/530. **Re-run 2026-10-26: `:shared:desktopTest` 769/769, 0 failures.** The Android unit-test build failed with 35 × "No value passed
   for parameter 'context'": common tests constructed Android actuals (`HardwareService`,
   `SystemContactsService`, `BiometricService`, `AudioRecorderService`) without a Context. They now
   use per-platform `test*()` helpers (`commonTest/.../TestHardwareService.kt`,
@@ -343,12 +362,23 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
 - [ ] Run full test suite: `./gradlew :shared:desktopTest`
 - [ ] Verify platform builds: `./gradlew :shared:compileKotlinDesktop :shared:compileDebugKotlinAndroid`
 - [ ] Fix any failing tests from the `viewModelScope()` migration (replaced `backgroundScope` to fix `UncompletedCoroutinesError`)
-- [ ] **Pre-existing broken test**: `AppSettingsViewModelTest.kt` calls `AppSettingsViewModel(repo, scope)` with 2 args, but the constructor requires 3 mandatory params (`settingsRepository`, `accountService`, `contactService`) plus an optional `scope` — was already not compiling against `commonTest` before the 2026-08-07 system-contacts-sync change added a 4th (`systemContactsSyncService`). Needs the test's call sites updated.
+- [x] **Pre-existing broken test — fixed.** `AppSettingsViewModelTest.kt` now calls
+  `AppSettingsViewModel(repo, accountService, contactService, syncService, scope)` and compiles. It
+  is still excluded from the *Android* unit-test task only (needs an Android runtime), and runs on
+  desktop as part of the 769-test suite.
 
 ## iOS — after the first simulator run (2026-09-08)
 
 The iOS host app had never been compiled on a Mac until now. It builds, launches and stays up;
 these are what the run surfaced.
+
+**Second Mac session, 2026-10-14 — the Apple bridge rebuild landed.** The wrapper `.a` files were
+rebuilt and committed (`5b4a17e`: 1096 methods, up from 875, all 153 header-declared ones present),
+the Xcode iOS-simulator build links and runs, `iosX64` was dropped (`022e684`) because the
+simulator libraries are arm64-only, and walking the feature checklist on the simulator found five
+certificate bugs, all fixed in `89d1443`. `doc/apple-bridge-rebuild.md` has the detail. Still open
+from that session: the macOS target, and `build-jamibridge.sh`'s macOS stage, which fails on UIKit
+code compiled against the macOS SDK (long-standing, dates to `93df547a`).
 
 - [x] **Welcome-screen button clips long labels** — Fixed in `JamiButton`, which pinned all three
   style variants to a fixed `height(minTouchTarget)`, so any wrapped label was clipped. Now
@@ -370,6 +400,8 @@ these are what the run surfaced.
   here claiming otherwise was wrong.)
 - [ ] **Shared `appleMain` source set** — the iOS and macOS Darwin implementations are now
   substantively identical, and macOS does not compile (~95 errors). One copy would fix both.
+  Start from `origin/macos-build-and-apple-source-set` (`f0f66ce`, 2026-10-01) rather than from
+  scratch; it predates the nine wrapper commits and needs rebasing onto `main` first.
 
 ## Licensing & Copyright Attribution (2026-10-01)
 
@@ -424,7 +456,8 @@ the whole e2e harness (`HarnessAgent.kt`, `HarnessAgentService.kt`, `CommandHand
   Legal Notices" in interactive interfaces) makes this a compliance concern, not just a courtesy.
   **`AboutViewModelTest.kt:37` asserts on this constant and must be updated in the same commit.**
 
-- [ ] **Add a non-affiliation disclaimer to `README.md`.** Unofficial third-party client, not
+- [x] **Add a non-affiliation disclaimer to `README.md`** *(done 2026-10-26, in the License
+  section)*. Unofficial third-party client, not
   affiliated with or endorsed by Savoir-faire Linux; "Jami" is their trademark, used only to
   describe compatibility. Practically this does more to prevent confusion than any header change,
   since the README is what people read first.

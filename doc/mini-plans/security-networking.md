@@ -4,11 +4,11 @@ _Audited 2026-09-25. Scope: TLS/STUN/TURN/proxy/UPnP/ICE config, account securit
 
 ## Summary
 
-The audit compared the complete daemon account property space (`account_const.h`, 78+ properties) against what jami-kmp's settings UI exposes (28 security/networking properties across four screens). KMP is missing 20+ settings that the daemon supports and the official Android app exposes. Most notably: SIP-specific account configuration, SRTP fallback, DHT proxy server explicit port control, call limiter, presence/subscription settings, certificate verification policy overrides, TLS disableSecureDlgCheck, and DTMF settings. All observable settings are read/written via `AccountSubSettingsViewModel` → `AccountService.setAccountDetails()`. No security bugs found, but three medium-risk items: TLS verification toggles lack clear warnings, TURN passwords stored plaintext in UI state, and no input validation on port fields.
+The audit compared the complete daemon account property space (`account_const.h`, 78+ properties) against what jami-kmp's settings UI exposes (28 security/networking properties across four screens). KMP is missing 20+ settings that the daemon supports and the official Android app exposes. Most notably: SIP-specific account configuration, SRTP fallback, DHT proxy server explicit port control, call limiter, presence/subscription settings, certificate verification policy overrides, TLS disableSecureDlgCheck, and DTMF settings. All observable settings are read/written via `AccountSubSettingsViewModel` → `AccountService.setAccountDetails()`. No security bugs were found *in the settings surface this audit covered*, but three medium-risk items remain: TLS verification toggles lack clear warnings, TURN passwords stored plaintext in UI state, and no input validation on port fields. **Not covered by that statement:** the certificate-management slice built for F11 later turned out to carry five real bugs, found by running it on an iOS simulator on 2026-10-14 and fixed in `89d1443` — see `doc/mini-plans/contacts-presence-accounts.md` and `ios_implementation_gap.md` §8. Four of them came from assuming the daemon's shape instead of reading it.
 
 ## Findings
 
-### F1: SIP Account Settings Entirely Absent — gap
+### F1: SIP Account Settings Entirely Absent — gap — **CLOSED WITHOUT WORK (2026-10-28); SIP-only, and the largest item in that cluster**
 
 **Evidence:** 
 - KMP hides SIP settings in `AccountSettingsScreen.kt:504–516` (shows only hostname + username for SIP, read-only display)
@@ -21,9 +21,16 @@ SIP users cannot edit SIP server credentials, proxy routing, or expiry settings.
 **Daemon support:** 
 Account.alias, Account.hostname, Account.username, Account.password, Account.routeset, Account.useragent, Account.registrationExpire; `account_const.h:119–130`.
 
+**Closed 2026-10-28 — SIP-only.** Same grounds as F13 and F14, closed on 2026-10-13: Jami is the
+primary account type, SIP is secondary, and no SIP user has asked for this. Reopen if that changes.
+
+This is the anchor of the SIP cluster — F8, F12, F15, F20 and `contacts-presence-accounts.md` F7
+(SIP credential editing) are all pieces of the same unbuilt screen. If SIP account editing is ever
+wanted they should be planned together as one feature, not as six findings.
+
 ---
 
-### F2: SRTP Fallback and Key Exchange Details Hidden — gap
+### F2: SRTP Fallback and Key Exchange Details Hidden — gap — **CLOSED WITHOUT WORK (2026-10-28); Android parity, and the finding says so itself**
 
 **Evidence:**
 - KMP exposes only one toggle: `SRTP_KEY_EXCHANGE` (maps "sdes"/"") in `AccountAdvancedSettingsScreen.kt:338–342`
@@ -36,6 +43,18 @@ Minor — the key-exchange toggle is present. But users cannot disable SRTP enti
 
 **Daemon support:** 
 `SRTP.enable`, `SRTP.rtpFallback`; `account_const.h:220–223`.
+
+**Closed 2026-10-28.** The finding records its own answer: "Android reference: only shows
+`SRTP.keyExchange` toggle (same as KMP)" and "This is also an Android parity issue (Android also
+doesn't expose `SRTP.enable` and `SRTP.rtpFallback`)". Matching the reference client is the bar this
+plan was written against, and KMP meets it. The plan's own Phase 4 already lists F2 as "matches
+Android; defer".
+
+Worth being explicit about why it should stay deferred rather than merely waiting: both controls
+weaken call confidentiality — `SRTP.enable` off disables media encryption, `rtpFallback` lets a
+call silently continue in the clear when SRTP negotiation fails. Neither belongs in a settings
+screen without a deliberate decision and a warning, which is the treatment F7 gave the TLS
+verification toggles. Not a gap to fill by default.
 
 ---
 
@@ -74,7 +93,7 @@ dropped both keys from `account_const.h` entirely.
 
 ---
 
-### F4: STUN Configuration Incomplete — gap
+### F4: STUN Configuration Incomplete — gap — **CLOSED WITHOUT WORK (2026-10-28); the finding disproves itself, and the heading was never marked**
 
 **Evidence:**
 - KMP exposes: `stunEnabled`, `stunServer` in `AccountAdvancedSettingsScreen.kt:261–277`
@@ -83,6 +102,16 @@ dropped both keys from `account_const.h` entirely.
 - Comparison OK; both KMP and Android match daemon support
 
 **Impact:** None observed; this is correctly implemented.
+
+**Closed 2026-10-28.** Nothing was ever open here. The finding's own Evidence ends "Comparison OK;
+both KMP and Android match daemon support" and its Impact reads "None observed; this is correctly
+implemented" — it is a verification that passed, filed under a "gap" title. The heading simply
+never got a marker, so it kept counting as open work in the index.
+
+Re-confirmed against source: the daemon exposes only `STUN.enable` and `STUN.server`, both are
+mapped (`ConfigKey.kt:79-80`), read at `AccountSubSettingsViewModel.kt:209-210`, written at
+`:411`/`:416`, and rendered at `AccountAdvancedSettingsScreen.kt:274-280`. Full coverage of the
+available surface.
 
 ---
 
@@ -134,7 +163,7 @@ Disabling server verification silently downgrades to susceptibility to MITM atta
 
 ---
 
-### F8: DTMF Type Configuration Missing — gap
+### F8: DTMF Type Configuration Missing — gap — **CLOSED WITHOUT WORK (2026-10-28); SIP-only, and the ConfigKey claim is stale**
 
 **Evidence:**
 - Daemon property: `Account.dtmfType`; `account_const.h:112`
@@ -148,9 +177,19 @@ SIP users cannot choose DTMF delivery method. Daemon uses default. If peer requi
 **Daemon support:** 
 `Account.dtmfType`; `account_const.h:112`.
 
+**Closed 2026-10-28 — SIP-only.** Same grounds as F13 and F14, closed on 2026-10-13: Jami is the
+primary account type, SIP is secondary, and no SIP user has asked for this. Reopen if that changes.
+
+The evidence is also out of date: "KMP: no ConfigKey mapping" is wrong —
+`ACCOUNT_DTMF_TYPE("Account.dtmfType")` exists at `ConfigKey.kt:41`. Only the UI control is
+missing, so adopting this would be a one-row settings change, not a mapping exercise.
+
+Consistent with `calling-conferencing.md` F13, which closed DTMF tone generation as "WON'T DO
+(2026-10-05): no user-facing need".
+
 ---
 
-### F9: Active Call Limit Not Exposed — gap
+### F9: Active Call Limit Not Exposed — gap — **CLOSED WITHOUT WORK (2026-10-28); Android parity, low-use, ConfigKey claim stale**
 
 **Evidence:**
 - Daemon property: `Account.activeCallLimit`; `account_const.h:118`
@@ -163,6 +202,14 @@ Accounts without a configured limit accept unlimited concurrent calls. Users can
 
 **Daemon support:** 
 `Account.activeCallLimit`; `account_const.h:118`.
+
+**Closed 2026-10-28.** "Android reference: not exposed", and the plan's own Phase 4 already files
+this as "low-use feature; defer to expert-settings dialog". A concurrent-call cap is a business-PBX
+control; on a mobile client the platform call UI and the daemon default already bound this in
+practice.
+
+The evidence is stale as well: `ACCOUNT_ACTIVE_CALL_LIMIT("Account.activeCallLimit")` exists at
+`ConfigKey.kt:26`, so "no ConfigKey mapping" is wrong and the remaining work would be UI only.
 
 ---
 
@@ -204,7 +251,7 @@ strength of who presents it rather than because it verifies.
 
 ---
 
-### F12: TLS Disable Secure Dialog Check Not Exposed — gap
+### F12: TLS Disable Secure Dialog Check Not Exposed — gap — **CLOSED WITHOUT WORK (2026-10-28); SIP-only by its own description**
 
 **Evidence:**
 - Daemon property: `TLS.disableSecureDlgCheck`; `account_const.h:241`
@@ -217,6 +264,15 @@ Interoperability issue only; affects SIP servers that don't send Secure dialog h
 
 **Daemon support:** 
 `TLS.disableSecureDlgCheck`; `account_const.h:241`.
+
+**Closed 2026-10-28 — SIP-only.** Same grounds as F13 and F14, closed on 2026-10-13: Jami is the
+primary account type, SIP is secondary, and no SIP user has asked for this. Reopen if that changes.
+
+The finding describes itself as SIP-specific in both its Purpose ("SIP-specific; disables 'Secure'
+dialog header requirement in TLS") and its Impact ("Interoperability issue only; affects SIP
+servers that don't send Secure dialog headers"). The plan's Phase 4 already groups it with F16 and
+F20 as "SIP-specific interop". It is also a security-weakening toggle, so it would need the same
+warning treatment as F7 if ever exposed.
 
 ---
 
@@ -293,7 +349,7 @@ becomes a priority, not before.
 
 ---
 
-### F15: Mailbox and User Agent Customization Missing — gap
+### F15: Mailbox and User Agent Customization Missing — gap — **CLOSED WITHOUT WORK (2026-10-28); SIP-only, as the plan's own phasing says**
 
 **Evidence:**
 - Daemon properties: `Account.mailbox`, `Account.useragent`, `Account.hasCustomUserAgent`; `account_const.h:111, 130, 132`
@@ -307,9 +363,16 @@ Voicemail configuration not accessible. User-Agent field cannot be customized (d
 **Daemon support:** 
 `Account.mailbox`, `Account.useragent`, `Account.hasCustomUserAgent`; `account_const.h:111, 130, 132`.
 
+**Closed 2026-10-28 — SIP-only.** Same grounds as F13 and F14, closed on 2026-10-13: Jami is the
+primary account type, SIP is secondary, and no SIP user has asked for this. Reopen if that changes.
+
+Both properties are SIP concepts: `mailbox` is a SIP voicemail number and `useragent` is the SIP
+`REGISTER` header. The plan's own Phase 3 entry for F15 already says "Show only for SIP accounts",
+which makes it part of the F1 cluster rather than a finding of its own.
+
 ---
 
-### F16: ICE, TURN Realm, and Trickle-ICE Not Exposed — gap
+### F16: ICE, TURN Realm, and Trickle-ICE Not Exposed — gap — **CLOSED WITHOUT WORK (2026-10-28); Android parity, ConfigKey claim stale**
 
 **Evidence:**
 - Daemon property: `TURN.realm`; `account_const.h:192` (exists but no trickle-ICE or ICE-restart settings visible)
@@ -321,6 +384,15 @@ If TURN server requires realm authentication, users cannot configure it. Realm m
 
 **Daemon support:** 
 `TURN.realm`; `account_const.h:192`.
+
+**Closed 2026-10-28.** "Android reference: also not exposed for TURN realm", and the plan's Phase 4
+groups it with F12 and F20 to defer. Jami ships a default TURN server; a realm is only needed for a
+custom TURN deployment that demands realm authentication, which no user has reported.
+
+The evidence is stale: "`TURN_REALM` not in ConfigKey enum" is wrong — `TURN_REALM("TURN.realm")`
+exists at `ConfigKey.kt:87`. Only the field is missing. Note also that the finding's title promises
+trickle-ICE and ICE-restart settings, but its own evidence concedes the daemon exposes no such
+keys, so there was never anything to expose there.
 
 ---
 
@@ -341,7 +413,7 @@ Minor; nameserver account selection not user-facing. Expected to be default per 
 
 ---
 
-### F18: Account Enable Flag Wired but Hidden from Main Settings — semi-gap
+### F18: Account Enable Flag Wired but Hidden from Main Settings — semi-gap — **CLOSED WITHOUT WORK (2026-10-28); parity by different UX, as the finding itself concludes**
 
 **Evidence:**
 - Daemon property: `Account.enable` (volatile-accessible via `Account.active`)
@@ -354,6 +426,19 @@ No functional gap; KMP moves the toggle to the top bar rather than a settings se
 
 **Daemon support:** 
 `Account.enable`; `account_const.h:110`.
+
+**Closed 2026-10-28.** The finding reaches its own verdict — "No functional gap… Parity maintained
+via different UX" — and classes itself a semi-gap rather than a gap. Accepted: moving a control
+from a settings row to the top app bar is a UX choice, not missing functionality, and the reference
+client's placement is not binding.
+
+Re-confirmed against source: `JamiAccountSwitch` is present at `AccountSettingsScreen.kt:385-387`
+and its `onCheckedChange` calls `AccountSettingsViewModel.setOnline`
+(`AccountSettingsViewModel.kt:362-366`). One nuance the finding glosses: that path goes through
+`accountService.setAccountEnabled` → `daemonBridge.sendRegister(accountId, enabled)`, so it drives
+registration rather than writing `Account.enable` directly. The user-visible effect — account
+registered or not — is the same, and `ACCOUNT_ENABLE` remains mapped (`ConfigKey.kt:12`) for
+whoever wants the property itself.
 
 ---
 
@@ -373,7 +458,7 @@ Swarm moderation config not user-settable; relies on daemon defaults.
 
 ---
 
-### F20: IP Auto-Rewrite and UI Customization Hidden — gap
+### F20: IP Auto-Rewrite and UI Customization Hidden — gap — **CLOSED WITHOUT WORK (2026-10-28); SIP NAT workaround plus a legacy key**
 
 **Evidence:**
 - Daemon properties: `Account.allowIPAutoRewrite`, `Account.uiCustomization`; `account_const.h:161–162`
@@ -387,9 +472,17 @@ SIP NAT workaround not controllable.
 **Daemon support:** 
 `Account.allowIPAutoRewrite`, `Account.uiCustomization`; `account_const.h:161–162`.
 
+**Closed 2026-10-28 — SIP-only.** Same grounds as F13 and F14, closed on 2026-10-13: Jami is the
+primary account type, SIP is secondary, and no SIP user has asked for this. Reopen if that changes.
+
+The finding gives the grounds itself: `allowIPAutoRewrite` is a "SIP NAT workaround" (Jami's
+ICE/TURN path does not need it) and `uiCustomization` is marked "legacy/experimental" — a key with
+no defined client contract, which should not be surfaced on guesswork. The plan's Phase 4 already
+groups it with F12 and F16.
+
 ---
 
-### F21: TLS Specific Settings Incomplete — improvement
+### F21: TLS Specific Settings Incomplete — improvement — **CLOSED WITHOUT WORK (2026-10-28); the premise is stale, the fields are not free text**
 
 **Evidence:**
 - `AccountAdvancedSettingsScreen.kt:388–429` exposes: port, CA list, cert, key, password, method, ciphers, server name, verify server, verify client, require client cert, negotiation timeout
@@ -402,9 +495,69 @@ File path validation missing; users can enter invalid paths and daemon will sile
 **Daemon support:** 
 `TLS.certificateListFile`, `TLS.certificateFile`, `TLS.privateKeyFile`, `TLS.password`, `TLS.method`, `TLS.ciphers`, `TLS.serverName`, `TLS.verifyServer`, `TLS.verifyClient`, `TLS.requireClientCertificate`, `TLS.negotiationTimeoutSec`, `TLS.disableSecureDlgCheck`; `account_const.h:228–242`.
 
+**Closed 2026-10-28 — the premise no longer holds.** The whole finding rests on "file paths stored
+as strings, no path validation in UI" and "users can enter invalid paths". They cannot: the three
+certificate fields are not text inputs. Each is a `CertFileRow`
+(`AccountAdvancedSettingsScreen.kt:403-423`) — a tappable row that opens `FilePickerEffect`
+(`:91-101`) and then displays the chosen file's basename (`:643-649`). A path only ever arrives
+from the platform file picker, so an unparseable or non-existent path cannot be typed in.
+
+This is the one place F21 differs from F6, the port-range validation that *was* implemented on this
+plan (2026-10-12) precisely because those fields did pass raw strings to the daemon. The
+certificate fields never had that problem.
+
+What remains of the finding is thinner than its title: a picked file could still be malformed or
+unreadable, and the daemon would reject it without UI feedback. That is a daemon-error-surfacing
+concern shared by every setting on the screen, not a TLS-specific gap, and `TLS.disableSecureDlgCheck`
+is F12's. Nothing TLS-specific left to do.
+
 ---
 
-## Status (2026-10-12)
+## Status (2026-10-28) — triaged to 3 open
+
+18 of 21 findings are resolved or closed. **F10, F17 and F19 are the only open work**, and all
+three are Jami account surface rather than SIP.
+
+| Outcome | Count | Findings |
+|---|---|---|
+| Done | 4 | F5, F6, F7, F11 |
+| Closed without work | 14 | F1, F8, F12, F15, F20 (SIP-only) · F2, F9, F16 (Android parity) · F4, F18 (self-disproved) · F21 (stale premise) · F3 (invalid) · F13, F14 (SIP-only, 2026-10-13) |
+| Open | 3 | F10, F17, F19 |
+
+Counts to 21 because F13 and F14 were closed on 2026-10-13 and are listed once.
+
+**Why the count was so misleading.** This plan carried 14 open headings into 2026-10-28 and led the
+index's "where the remaining work is concentrated" section on that basis. Reading the findings
+rather than the headings dissolved most of it: the plan is largely an enumeration of
+`account_const.h` against the settings screens, and that method cannot tell a Jami gap from a SIP
+property, a real omission from a deliberate parity choice, or a live claim from one the code has
+since overtaken.
+
+**Four premises had gone stale,** which is why each closure was checked against source first:
+
+- **F21** rests on "users can enter invalid paths". They cannot — the three certificate fields are
+  `CertFileRow` + `FilePickerEffect`, not text inputs. This is the one real difference from F6, the
+  port validation that *was* implemented here because those fields genuinely did pass raw strings
+  to the daemon.
+- **F8, F9, F16** each claim the property has "no ConfigKey mapping". All three exist
+  (`ConfigKey.kt:41`, `:26`, `:87`); only a UI control is missing, so had they been adopted the job
+  was smaller than written.
+- **F4 and F18** contain their own disproof. F4's Impact reads "None observed; this is correctly
+  implemented"; F18's reads "No functional gap… Parity maintained via different UX". Both had been
+  counted as open work since the audit.
+- **F16's title** promises trickle-ICE and ICE-restart settings its own evidence then concedes the
+  daemon does not expose.
+
+**The SIP cluster is one feature, not five findings.** F1, F8, F12, F15, F20 and
+`contacts-presence-accounts.md` F7 are all pieces of the same unbuilt SIP account screen. If SIP
+editing is ever wanted, plan them together.
+
+**Two of the closed toggles weaken security** and should not be surfaced casually if reopened:
+`SRTP.enable`/`rtpFallback` (F2) can put call media in the clear, and `TLS.disableSecureDlgCheck`
+(F12) drops a TLS dialog requirement. F7's treatment of the TLS verification toggles — expose with
+an explicit warning — is the precedent to follow.
+
+## Earlier status (2026-10-12)
 
 **Phase 1 plus F6 done** (`b53d3ec`) — the three items this plan calls medium risk. No new
 settings yet; this was the hygiene pass over the settings that already exist.
