@@ -33,3 +33,4 @@ google-services.json
 **/fastlane/README.md
 **/fastlane/Preview.html
 **/fastlane/test_output/
+gradle/config.properties
