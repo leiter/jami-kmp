@@ -331,8 +331,9 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
   subscriptions cost DHT traffic with nothing to display them; the reference Android client gets the
   same effect by deactivating proxy accounts entirely, which jami-kmp does not yet do. Required
   unifying the three independent presence subscribers behind the refcount in
-  `ContactService.subscribeBuddy` first — see mini-plan `contacts-presence-accounts.md` F2. Not yet
-  run on a device.)* —
+  `ContactService.subscribeBuddy` first — see mini-plan `contacts-presence-accounts.md` F2.
+  Verified on an Android device the same day: three background/foreground cycles with the count
+  steady at 1, no churn on rotation. iOS is written but has never been compiled.)* —
   jami-client-ios unsubscribes presence for all contacts in `sceneDidEnterBackground`
   (`presenceService.subscribeBuddies(..., subscribe: false)`, `AppDelegate.swift:340`) and
   re-subscribes in `sceneWillEnterForeground`. jami-kmp keeps presence subscriptions while in the

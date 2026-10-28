@@ -74,8 +74,23 @@ a move between activities is not mistaken for a background transition — this n
 `IOSApplicationHelper.enterBackground()` / `enterForeground()`, which the Swift `AppDelegate`
 already drives. Desktop's bridge is a no-op and macOS does not compile, so neither is wired.
 
-**Not verified on a device.** The Apple half could not be compiled on this Linux host, and neither
-platform has been exercised against a live peer — only `:shared:desktopTest`.
+**Verified on Android (2026-10-28, Pixel 2 / Android 11, account `965287c3eb08e39e` with one live
+contact).** Logcat, `ContactService` tag via `System.out`:
+
+- HOME → `suspendPresence: releasing 1 presence subscription(s)`.
+- Return to foreground → `resumePresence: restoring 1 presence subscription(s)`, followed 2 ms
+  later by `onPresenceUpdate: setting presence AVAILABLE` from the daemon. The daemon re-pushing
+  presence is what proves the subscription was actually re-established, rather than only a log line
+  being printed.
+- **Three background/foreground cycles: the count stayed at exactly 1 every time.** This is the
+  check that matters — a drifting refcount would climb (2, 3, …) or fall to 0 and stop restoring.
+- **Four rotations while foregrounded produced zero suspend/resume lines**, confirming
+  `ProcessLifecycleOwner` was the right choice over per-Activity callbacks.
+- Screen off → suspend; screen on → resume. No crashes, no ANRs.
+
+**Still unverified:** the Apple half has never been compiled, let alone run — Kotlin/Native targets
+are skipped on the Linux host this was written on, and `CLAUDE.md` records that the last iOS code
+written here needed five fixes on its first Mac build. Treat iOS as written-but-unproven.
 
 ---
 
