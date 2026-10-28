@@ -2,6 +2,9 @@ package net.jami.android
 
 import android.app.Application
 import android.util.Log
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,6 +26,7 @@ class JamiApplication : Application(), KoinComponent {
     private val hardwareService: HardwareService by inject()
     private val sendQueue: net.jami.services.SendQueueService by inject()
     private val daemonLifecycle: net.jami.services.DaemonLifecycleService by inject()
+    private val contactService: net.jami.services.ContactService by inject()
 
     override fun onCreate() {
         super.onCreate()
@@ -66,6 +70,24 @@ class JamiApplication : Application(), KoinComponent {
         CoroutineScope(Dispatchers.Default).launch {
             Log.d(TAG, "Initializing Jami daemon...")
             daemonLifecycle.ensureRunning()
+        }
+
+        // Presence costs DHT traffic for as long as the daemon lives, and on Android that is the
+        // whole time JamiDaemonService runs — proxy-enabled accounts stay registered even when
+        // setAccountsActive(false) deactivates the rest. Nothing can display presence while the
+        // app is backgrounded, so the subscriptions are released there and restored on return.
+        // ProcessLifecycleOwner is used rather than per-Activity callbacks so a rotation or a
+        // move between activities is not mistaken for a background transition.
+        ProcessLifecycleOwner.get().lifecycle.addObserver(presenceLifecycleObserver)
+    }
+
+    private val presenceLifecycleObserver = object : DefaultLifecycleObserver {
+        override fun onStart(owner: LifecycleOwner) {
+            contactService.resumePresence()
+        }
+
+        override fun onStop(owner: LifecycleOwner) {
+            contactService.suspendPresence()
         }
     }
 

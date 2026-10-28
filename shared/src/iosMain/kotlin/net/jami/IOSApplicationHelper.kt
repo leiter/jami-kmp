@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.jami.services.AccountService
+import net.jami.services.ContactService
 import net.jami.services.DaemonBridgeApi
 import net.jami.services.DaemonCallbacks
 import net.jami.services.IOSNotificationDelegate
@@ -38,6 +39,7 @@ private object JamiLifecycle : KoinComponent {
     private val accountService: AccountService by inject()
     private val hardwareService: HardwareService by inject()
     private val syncManager: SyncManager by inject()
+    private val contactService: ContactService by inject()
     private val sendQueue: net.jami.services.SendQueueService by inject()
 
     fun start() {
@@ -85,25 +87,32 @@ private object JamiLifecycle : KoinComponent {
      *
      * Requests the extra execution window iOS allows (~30s) so the daemon can finish
      * in-flight work rather than being suspended mid-operation. This is as far as the
-     * platform permits without a registered BGTask.
+     * platform permits without a registered BGTask. Also releases presence subscriptions,
+     * which [enterForeground] restores.
      */
     fun enterBackground() {
         try {
             syncManager.startBackgroundSync()
+            // Nothing can display presence once the app is suspended, and each subscription
+            // costs DHT traffic until it is released. Matches jami-client-ios, which calls
+            // subscribeBuddies(..., subscribe: false) in sceneDidEnterBackground.
+            contactService.suspendPresence()
         } catch (e: Exception) {
             Log.e(TAG, "Exception entering background: $e")
         }
     }
 
     /**
-     * Called when the app returns to the foreground: ends the background window and
+     * Called when the app returns to the foreground: ends the background window,
      * tells the daemon connectivity is available again, so accounts re-register
-     * promptly instead of waiting for their own timers.
+     * promptly instead of waiting for their own timers, and restores the presence
+     * subscriptions released by [enterBackground].
      */
     fun enterForeground() {
         try {
             syncManager.stopBackgroundSync()
             hardwareService.connectivityChanged(true)
+            contactService.resumePresence()
         } catch (e: Exception) {
             Log.e(TAG, "Exception entering foreground: $e")
         }

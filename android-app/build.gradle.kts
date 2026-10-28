@@ -31,6 +31,8 @@ kotlin {
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.androidx.lifecycle.runtime)
                 implementation(libs.androidx.lifecycle.viewmodel)
+                // ProcessLifecycleOwner: app-wide foreground/background transitions.
+                implementation(libs.androidx.lifecycle.process)
                 implementation(libs.koin.android)
                 implementation(libs.koin.compose)
                 implementation(libs.firebase.messaging)

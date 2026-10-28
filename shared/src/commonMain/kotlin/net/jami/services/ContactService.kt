@@ -16,6 +16,8 @@
  */
 package net.jami.services
 
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -64,6 +66,24 @@ class ContactService(
     // Active presence subscriptions: accountId:contactUri -> refCount
     private val activeSubscriptions = mutableMapOf<String, Int>()
     private val subscriptionMutex = Mutex()
+
+    // ---- Aggregate daemon presence subscriptions (contacts plan F2) ----
+    // Three owners subscribe independently and each keeps its own bookkeeping:
+    // ConversationFacade.subscribedBuddies (one per contact seen by a smartlist load),
+    // ConversationsViewModel.subscribedBuddies (one per conversation row, released in onCleared)
+    // and this service's own activeSubscriptions (one per observeContact collector). The daemon
+    // reference-counts subscribeBuddy, so a single buddy can hold one to three daemon refs.
+    //
+    // Suspending presence wholesale on background therefore cannot be driven from any one of
+    // those owners without either unsubscribing a buddy the others still hold, or leaving refs
+    // behind on resume. [subscribeBuddy] is the one call they all pass through, so the aggregate
+    // count lives here and only this class talks to the daemon about presence.
+    private val presenceLock = SynchronizedObject()
+    private val presenceRefs = mutableMapOf<PresenceSub, Int>()
+    private var presenceSuspended = false
+
+    /** Identifies a daemon presence subscription. Avoids parsing a composite string key back out. */
+    private data class PresenceSub(val accountId: String, val rawRingId: String)
 
     // Events
     private val _contactEvents = MutableSharedFlow<ContactEvent>()
@@ -211,11 +231,83 @@ class ContactService(
     // ==================== Presence ====================
 
     /**
-     * Subscribe to presence updates for a contact.
+     * Subscribe to or release presence updates for a contact.
+     *
+     * Reference-counted: the daemon only hears about the first subscribe and the last
+     * unsubscribe for a given buddy, so the several independent owners described above can each
+     * hold their own ref without the daemon's own refcount drifting. An unsubscribe with no
+     * matching subscribe is ignored rather than driving the daemon's count negative.
+     *
+     * While presence is suspended ([suspendPresence]) the refs are still tracked but nothing
+     * reaches the daemon; [resumePresence] re-subscribes whatever is still referenced.
      */
     fun subscribeBuddy(accountId: String, uri: Uri, subscribe: Boolean) {
-        daemonBridge.subscribeBuddy(accountId, uri.rawRingId, subscribe)
+        val key = PresenceSub(accountId, uri.rawRingId)
+        val callDaemon = synchronized(presenceLock) {
+            val count = presenceRefs[key] ?: 0
+            if (subscribe) {
+                presenceRefs[key] = count + 1
+                count == 0 && !presenceSuspended
+            } else {
+                if (count == 0) {
+                    Log.d(TAG, "subscribeBuddy: unsubscribe with no matching subscribe for $key")
+                    return
+                }
+                val remaining = count - 1
+                if (remaining == 0) presenceRefs.remove(key) else presenceRefs[key] = remaining
+                remaining == 0 && !presenceSuspended
+            }
+        }
+        if (callDaemon) daemonBridge.subscribeBuddy(accountId, uri.rawRingId, subscribe)
     }
+
+    /**
+     * Drops every live presence subscription while keeping the refs that were taken out.
+     *
+     * Called when the app leaves the foreground. Presence is only worth receiving while
+     * something can display it, and each subscription costs DHT traffic the daemon keeps
+     * servicing for as long as the process lives — on Android that is for as long as
+     * JamiDaemonService runs, and proxy-enabled accounts stay registered even across
+     * [AccountService.setAccountsActive]. jami-client-ios does the same in
+     * `sceneDidEnterBackground`.
+     *
+     * Idempotent, and pairs with [resumePresence].
+     */
+    fun suspendPresence() {
+        val toRelease = synchronized(presenceLock) {
+            if (presenceSuspended) return
+            presenceSuspended = true
+            presenceRefs.keys.toList()
+        }
+        Log.d(TAG, "suspendPresence: releasing ${toRelease.size} presence subscription(s)")
+        for (sub in toRelease) {
+            daemonBridge.subscribeBuddy(sub.accountId, sub.rawRingId, false)
+        }
+    }
+
+    /**
+     * Re-subscribes everything that is still referenced after a [suspendPresence].
+     *
+     * Called when the app returns to the foreground. Buddies whose last ref was released while
+     * suspended are not re-subscribed, and buddies first referenced while suspended are picked
+     * up here rather than being subscribed twice.
+     *
+     * Idempotent: a resume without a preceding suspend does nothing.
+     */
+    fun resumePresence() {
+        val toRestore = synchronized(presenceLock) {
+            if (!presenceSuspended) return
+            presenceSuspended = false
+            presenceRefs.keys.toList()
+        }
+        Log.d(TAG, "resumePresence: restoring ${toRestore.size} presence subscription(s)")
+        for (sub in toRestore) {
+            daemonBridge.subscribeBuddy(sub.accountId, sub.rawRingId, true)
+        }
+    }
+
+    /** True while presence is suspended for background. Visible for tests and diagnostics. */
+    val isPresenceSuspended: Boolean get() = synchronized(presenceLock) { presenceSuspended }
 
     /**
      * Handle presence update from daemon callback.
