@@ -148,6 +148,7 @@ class CallService(
     val localAudioLevel: StateFlow<Float> = _localAudioLevel.asStateFlow()
 
     private var meterEnabled = false
+    private var meterReported = false
 
     /**
      * Turn microphone metering on while something is showing it (the call screen), off when it
@@ -157,6 +158,7 @@ class CallService(
     fun setMicrophoneMeterEnabled(enabled: Boolean) {
         if (meterEnabled == enabled) return
         meterEnabled = enabled
+        if (enabled) meterReported = false
         Log.d(TAG, "setMicrophoneMeterEnabled: $enabled")
         daemonBridge.setAudioMeterState(AudioMeter.CAPTURE_ID, enabled)
         if (!enabled) _localAudioLevel.value = 0f
@@ -164,7 +166,15 @@ class CallService(
 
     /** Daemon callback: one RMS sample for ring buffer [id]. */
     internal fun onAudioMeter(id: String, level: Float) {
-        if (id == AudioMeter.CAPTURE_ID) _localAudioLevel.value = level.coerceIn(0f, 1f)
+        if (id != AudioMeter.CAPTURE_ID) return
+        _localAudioLevel.value = level.coerceIn(0f, 1f)
+        // One line per metering session, not ten a second: enough to tell "the microphone is
+        // being read" from "the meter is wired but nothing arrives", which is the only question
+        // this ever gets asked.
+        if (!meterReported && level > 0f) {
+            meterReported = true
+            Log.d(TAG, "audioMeter: first sample from the capture buffer, level=$level")
+        }
     }
 
     // ==================== Call Operations ====================

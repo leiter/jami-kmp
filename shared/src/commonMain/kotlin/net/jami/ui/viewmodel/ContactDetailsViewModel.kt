@@ -128,7 +128,7 @@ class ContactDetailsViewModel(
                 // Find the conversation first (conversationId may be a swarm ID)
                 val conversation = account.getConversations().firstOrNull { conv ->
                     conv.uri.rawRingId == contactUri.rawRingId ||
-                        conv.contact?.uri?.rawRingId == contactUri.rawRingId
+                        conv.contactOrNull?.uri?.rawRingId == contactUri.rawRingId
                 }
 
                 // Resolve the contact — prefer the conversation's contact for correct name lookup

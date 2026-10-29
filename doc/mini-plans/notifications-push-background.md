@@ -135,7 +135,11 @@ video-device half of the heading has no daemon signal at all.
 Tests: `AudioMeterTest` (7). **Device check (Pixel 7a, 2026-10-29):** entering the call screen
 logs `setMicrophoneMeterEnabled: true` and the JNI call returns cleanly; the call failed with
 code 480 (peer offline) and the dispose logged `false`, so the lifecycle is confirmed. The level
-*values* need a connected call and a second device — same blocker as clearing a status note.
+*values* need a connected call. **Still open after the 2026-10-29 two-device round:** the peer
+rang for the full 30 s and timed out unanswered three times, so no call ever connected and the
+daemon never captured. This one cannot be driven from adb — it needs someone to answer the phone.
+An `audioMeter: first sample … level=…` log (once per metering session) was added so the proof is
+one line when that happens.
 
 **Not on Apple:** `JamiBridgeWrapper.h` has neither `setAudioMeterState` nor the callback.
 

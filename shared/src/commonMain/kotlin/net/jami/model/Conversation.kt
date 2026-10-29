@@ -217,6 +217,18 @@ class Conversation(
             return contacts.firstOrNull { !it.isUser }
         }
 
+    /**
+     * The other party of a 1:1 conversation, or null when there is no single one — including for
+     * a group, where [contact] deliberately throws.
+     *
+     * Use this wherever conversations are walked as a list (search, the conversation list,
+     * pending requests): [contact]'s throw is a guard for code that already knows it holds a 1:1
+     * conversation, and a `?:` or `?.` on it does not catch anything, because it raises rather
+     * than returning null.
+     */
+    val contactOrNull: Contact?
+        get() = if (isGroup) null else contact
+
     val isGroup: Boolean
         get() = isSwarm && contacts.size > 2
 

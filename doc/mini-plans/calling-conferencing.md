@@ -201,8 +201,20 @@ the second selection. Tapping it logged
 `createConferenceWith: [61f41c6a…,3f3dad8b328eb995, d0efaeca…,3f3dad8b328eb995]`, and the daemon
 created conference `7994718995922200` and placed **two** calls, which then both failed with code
 480 because neither peer was online. So the request, the formatting and the conference creation
-are confirmed against the real daemon; the RINGING path — and with it the incoming/outgoing guard
-— needs a reachable peer, like the other two open device checks.
+are confirmed against the real daemon.
+
+**Second device, 2026-10-29 — the RINGING path.** With peace4us (`d9f8c7f0…`, the Pixel 2) and
+marco100 selected: marco100 failed 480 (no device), peace4us went CONNECTING -> RINGING and the
+**Pixel 2 rang** (`state=INCOMING`, `updateAudioState: status=RINGING`). The caller showed the
+**outgoing** UI — "Calling…" with only an end-call button — so a call the daemon placed for us is
+not mistaken for an incoming one. One reachable peer of two, so no conference was attached, which
+is the daemon's two-successful-calls rule showing itself.
+
+**What that did not prove.** The call arrived as **CONNECTING first**, and `onCallStateChanged`
+creates the `Call` on the first state it sees — at CONNECTING the direction is OUTGOING anyway, so
+the `isOurConferenceDial` branch never decided anything. The guard is unit-tested and correct, but
+on this daemon RINGING is never the first state for an outgoing call, so do not treat it as
+load-bearing without a case where it is. See `two-device-verification-2026-10-29.md`.
 
 **Not on Apple:** not in `JamiBridgeWrapper.h`; added to `apple-bridge-rebuild.md`.
 

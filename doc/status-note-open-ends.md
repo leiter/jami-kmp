@@ -77,10 +77,9 @@ option, taken on 2026-10-29.)*
 
 ## Open end 2 — what was not tested on the devices
 
-- **Clearing a note.** The `PresenceNote.CLEARED` single-space path (an empty note cannot match
-  the peer's `[\w\s]+`, so clearing publishes one space) is covered by unit tests and was **not**
-  confirmed against the peer. The run that would have shown it instead uncovered the
-  `loadAccount()` state wipe below.
+- ~~**Clearing a note.**~~ **Verified 2026-10-29** against the Pixel 2: the ✕ published
+  `note=' '` and the peer's chat header dropped the note live, with the chat open. See
+  `two-device-verification-2026-10-29.md`.
 - **Rejection of an undeliverable note on a real keyboard** — the validator is unit-tested, but
   no device run typed an emoji or an accent into the field.
 - **A second device of the same account** receiving the note through the settings sync. It cannot

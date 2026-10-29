@@ -65,11 +65,14 @@ One finding is open, in one plan.
   asks for a decision before any code: plugins are desktop-first in the reference clients, and
   nothing has established that the mobile-primary targets want them.
 
-**What is left that is not a finding.** Three checks need hardware rather than work: clearing a
-status note against a peer, a conference actually ringing (calling F10's incoming/outgoing guard),
-and the microphone level reading anything (notifications F9) — all three want a second device.
-The Apple batch in [`../apple-bridge-rebuild.md`](../apple-bridge-rebuild.md) has grown to five
-items and wants a Mac.
+**What is left that is not a finding.** A two-device round on 2026-10-29 closed two of the three
+outstanding checks — clearing a status note, and a conference actually ringing — and left one:
+**the microphone level reading anything** (notifications F9) needs a call that someone answers,
+which adb cannot do on its own. See
+[`../two-device-verification-2026-10-29.md`](../two-device-verification-2026-10-29.md), which also
+records what the conference run did *not* prove. The Apple batch in
+[`../apple-bridge-rebuild.md`](../apple-bridge-rebuild.md) has grown to five items and wants a
+Mac.
 
 **Closed plans.** `contacts-presence-accounts.md` (2026-10-28) — the real work was F2, presence
 suspended on background, which also unified three independent presence subscribers behind a single

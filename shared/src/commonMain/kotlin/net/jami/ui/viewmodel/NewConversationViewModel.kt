@@ -126,7 +126,7 @@ class NewConversationViewModel(
         val accountId = account.accountId
         val filesDir = deviceRuntimeService.getDataPath()
         val convResults = account.getConversations().mapNotNull { conversation ->
-            val contact = conversation.contact
+            val contact = conversation.contactOrNull
             val displayName = conversation.profileFlow.value.displayName?.takeIf { it.isNotBlank() }
                 ?: contact?.displayUsername
                 ?: conversation.uri.rawRingId
@@ -194,7 +194,7 @@ class NewConversationViewModel(
 
         // Filter existing conversations by query
         val convResults = account.getConversations().mapNotNull { conversation ->
-            val contact = conversation.contact
+            val contact = conversation.contactOrNull
             val displayName = conversation.profileFlow.value.displayName?.takeIf { it.isNotBlank() }
                 ?: contact?.displayUsername
                 ?: conversation.uri.rawRingId

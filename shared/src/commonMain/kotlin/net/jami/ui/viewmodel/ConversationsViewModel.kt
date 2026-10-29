@@ -290,7 +290,7 @@ class ConversationsViewModel(
                 val seen = mutableSetOf<String>()
                 val pending = mutableListOf<PendingRequestItem>()
                 for (conv in account.getPending()) {
-                    val contact = conv.contact ?: continue
+                    val contact = conv.contactOrNull ?: continue
                     val convId = conv.uri.rawRingId
                     if (seen.add(convId)) {
                         pending.add(PendingRequestItem(
@@ -333,7 +333,7 @@ class ConversationsViewModel(
                 val syncedConversations = conversations.map { item ->
                     if (item.contactId != null) {
                         val contact = account.getConversations()
-                            .mapNotNull { it.contact }
+                            .mapNotNull { it.contactOrNull }
                             .find { it.uri.rawRingId == item.contactId }
                         if (contact != null && contact.isOnline != item.isOnline) {
                             Log.d(TAG, "Re-syncing presence for ${item.contactId}: ${item.isOnline} -> ${contact.isOnline}")

@@ -82,7 +82,7 @@ class PendingRequestsViewModel(
 
                 // In-memory pending map (populated by onConversationRequestReceived while running)
                 for (conv in account.getPending()) {
-                    val contact = conv.contact ?: continue
+                    val contact = conv.contactOrNull ?: continue
                     val convId = conv.uri.rawRingId  // raw ID without scheme prefix
                     if (seen.add(convId)) {
                         pending.add(PendingRequestItem(
