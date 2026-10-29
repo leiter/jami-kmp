@@ -105,8 +105,10 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
   a reply bar above the composer (`ChatState.replyingTo`); the sent message carries `reply-to`
   (also through the durable outbox); reply bubbles quote the original ("You" for own messages),
   tap scrolls to it, and an original not in history yet is fetched once via `loadSwarmUntil`.
-  Tests: `ReplyTest`. Not done: the quote is not drawn on file-message bubbles that are replies,
-  and replying *with* a file (daemon `sendFile` replyTo) is not offered.
+  Tests: `ReplyTest`. **Completed 2026-10-29** (mini-plan messaging F4): replying *with* a file
+  now carries `reply-to` through `sendFile`'s `parent`, a retry keeps it, and the quote is drawn
+  on file bubbles. Verified on device against the swarm commit. iOS/macOS still drop the parent —
+  the Apple wrapper's `sendFile` has no such argument.
 - [ ] **Markdown** — reference renders message text with Markwon (bold, italics, code, …); KMP
   shows plain text. *Clickable links done 2026-09-18:* http(s) URLs in bubbles are `LinkAnnotation`s.
 - [ ] **Read markers** — reference shows peers' avatars at the last message each has read

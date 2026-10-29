@@ -29,6 +29,8 @@ import net.jami.services.CallService
 import net.jami.services.ContactService
 import net.jami.services.VCardService
 import net.jami.services.ConversationFacade
+import net.jami.services.ConversationFileStore
+import net.jami.services.DeviceRuntimeService
 import net.jami.services.StubDaemonBridge
 import net.jami.services.StubDeviceRuntimeService
 import net.jami.services.expect.HardwareService
@@ -123,7 +125,9 @@ fun makeConversationFacade(
     accountService: AccountService,
     callService: CallService,
     contactService: ContactService,
-    scope: CoroutineScope
+    scope: CoroutineScope,
+    deviceRuntimeService: DeviceRuntimeService = StubDeviceRuntimeService(),
+    fileStore: ConversationFileStore = RecordingFileStore(),
 ): ConversationFacade = ConversationFacade(
     historyService = StubHistoryService(),
     callService = callService,
@@ -131,12 +135,32 @@ fun makeConversationFacade(
     contactService = contactService,
     notificationService = StubNotificationService(),
     hardwareService = testHardwareService(),
-    deviceRuntimeService = StubDeviceRuntimeService(),
+    deviceRuntimeService = deviceRuntimeService,
     preferencesService = StubPreferencesService(),
     daemonBridge = stub,
     settingsRepository = SettingsRepository(stub, InMemoryClientSettingsStore(), scope),
-    scope = scope.isolated()
+    scope = scope.isolated(),
+    fileStore = fileStore,
 )
+
+/**
+ * A [ConversationFileStore] that reports success without touching the disk, so tests can reach
+ * the daemon call at the end of [ConversationFacade.sendFile].
+ */
+class RecordingFileStore(private val succeeds: Boolean = true) : ConversationFileStore {
+    val moves: MutableList<Pair<String, String>> = mutableListOf()
+    val copies: MutableList<Pair<String, String>> = mutableListOf()
+
+    override fun move(sourcePath: String, destinationPath: String): Boolean {
+        moves += sourcePath to destinationPath
+        return succeeds
+    }
+
+    override fun copy(sourcePath: String, destinationPath: String): Boolean {
+        copies += sourcePath to destinationPath
+        return succeeds
+    }
+}
 
 /**
  * Creates a SendQueueService (durable outbox) backed by an in-memory store and started, so it
@@ -170,7 +194,9 @@ data class TestServiceStack(
 
 fun makeTestServiceStack(
     stub: StubDaemonBridge = StubDaemonBridge(),
-    scope: CoroutineScope
+    scope: CoroutineScope,
+    deviceRuntimeService: DeviceRuntimeService = StubDeviceRuntimeService(),
+    fileStore: ConversationFileStore = RecordingFileStore(),
 ): TestServiceStack {
     // The services launch long-lived collectors. Handing them the TestScope directly makes
     // runTest wait on those collectors and fail every test with UncompletedCoroutinesError
@@ -180,7 +206,9 @@ fun makeTestServiceStack(
     val accountService = makeAccountService(stub, scope)
     val callService = makeCallService(stub, accountService, scope = scope)
     val contactService = makeContactService(stub, accountService, scope)
-    val conversationFacade = makeConversationFacade(stub, accountService, callService, contactService, scope)
+    val conversationFacade = makeConversationFacade(
+        stub, accountService, callService, contactService, scope, deviceRuntimeService, fileStore,
+    )
     val settingsRepository = makeSettingsRepository(stub, scope)
     val vCardService = VCardService(StubDeviceRuntimeService())
     return TestServiceStack(stub, accountService, callService, contactService, conversationFacade, settingsRepository, vCardService)

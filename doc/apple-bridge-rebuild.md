@@ -8,12 +8,21 @@
 > (`5b4a17e`) — **1096 methods, up from 875**, all 153 header-declared methods present — and the
 > Xcode iOS-simulator build links and runs. Walking the step-6 checklist on the simulator found
 > five certificate bugs, fixed in `89d1443`. `iosX64` was removed in `022e684`.
-> **Only step 8 (macOS via a shared `appleMain` source set) is outstanding**, plus three wrapper
-> passthroughs that have accumulated since: `connectivityChanged`, `setDefaultModerator` and
+> **Only step 8 (macOS via a shared `appleMain` source set) is outstanding**, plus the wrapper
+> changes that have accumulated since: `connectivityChanged`, `setDefaultModerator` and
 > `publish` (the presence status note, which also needs the presence callback to carry
-> `lineStatus` — see `status-note-open-ends.md`), so this file is kept
+> `lineStatus` — see `status-note-open-ends.md`), and one **signature** change —
+> `sendFile` needs a `parent:` argument (2026-10-29, mini-plan messaging F4). This file is kept
 > as the record of how the rebuild went and of the hazards, rather than deleted as the next
 > paragraph originally instructed.
+
+> **`sendFile` and reply-to (2026-10-29).** `JamiBridgeWrapper.h:772` declares
+> `sendFile:conversationId:filePath:displayName:` — no `parent:`. libjami's own
+> `sendFile(accountId, conversationId, path, displayName, parent)` takes five arguments, so the
+> wrapper is dropping one. `DaemonBridge.ios.kt` and `DaemonBridge.macos.kt` therefore discard
+> the reply-to and a file sent while replying arrives on Apple as an unrelated file. Add the
+> argument to both the header and `.mm` and pass it straight through; the Kotlin actuals already
+> receive it and only need the call site widened.
 
 Nine commits added ~514 lines of Objective-C++ to the JamiBridge wrapper that has never been
 compiled, because those sessions ran on Linux where Apple targets are skipped. The committed

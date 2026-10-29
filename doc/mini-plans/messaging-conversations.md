@@ -23,10 +23,40 @@ jami-kmp implements most core messaging and conversation features (message send/
 **Impact:** Chat history can appear out of order or with duplicates if the user rapidly scrolls. No visible loading indicator during history fetch.
 **Daemon support:** `loadConversation(accountId, conversationId, fromMessage, n)` returns a task ID; `loadSwarmUntil()` for date-range queries — `conversation_interface.h:94-101`
 
-### F4: File transfer replies lack file picker on reply — UX gap
+### F4: File transfer replies lack file picker on reply — UX gap — **DONE (2026-10-29)**
 **Evidence:** `ChatViewModel.kt:469-477` (`startReply()`) captures `replyToId` but does not offer a "quote file" or "include file with reply" UI. `ChatScreen.kt` message input shows reply banner but no file attachment option while replying.
 **Impact:** User can only reply with text to a file message; cannot directly re-share or attach a file in the same interaction. User must cancel reply, send the file separately, then try to remember to reply to the original message.
 **Daemon support:** `sendFile()` accepts `replyTo` parameter — `datatransfer_interface.h:106-110`; files can be nested in reply threads via the daemon
+
+**The finding named the wrong symptom.** There is no missing control: the attach, gallery, camera
+and audio buttons are all live while the reply bar is up (`MessageInputBar`, unconditional in
+`ChatScreen.kt`), and the device run confirmed the menu opens normally mid-reply. What was wrong
+is that **the reply was silently dropped**. `ChatViewModel.sendFile()` never read
+`state.replyingTo`, `ConversationFacade.sendFile()` had no `parent` parameter at all, and
+`AccountService.sendFile()`'s `parent: String = ""` had no caller that passed it — so the file
+arrived as an unrelated message and the reply bar stayed up afterwards, still pointing at the
+original. The daemon end was correct the whole time.
+
+**Implemented.** `replyTo` is taken from the composer by `takeReplyTo()` (which clears the bar, as
+`sendMessage()` does inline) and threaded through `sendFile`/`sendImage` →
+`ConversationFacade.sendFile(..., replyTo)` → `AccountService.sendFile(..., parent)` → the daemon.
+A retried transfer keeps the reply its first attempt carried. The receive half already worked:
+`ConversationFacade` sets `replyToId` on every message type, and `interactionToMessageItem` passes
+it on for `DATA_TRANSFER` — but `FileTransferMessage` never drew it, so the quote is now rendered
+on file bubbles too.
+
+**Verified on the Pixel 7a (2026-10-29).** Swiped to reply on the text message "jcjc", opened the
+attach menu *while replying*, picked a 23 KB JPEG. The reply bar closed, the new file bubble
+rendered the quote ("Sie" / "jcjc") above the filename, and the swarm commit pulled off the device
+reads `{"displayName":"0CrbVOWu_400x400.jpg","reply-to":"785f3294…","tid":…}` — where
+`785f3294…` is the commit holding `{"body":"jcjc","type":"text/plain"}`.
+
+Tests: `ReplyTest` (5 new). `ConversationFacade` gained a `ConversationFileStore` seam so the copy
+step can be faked — the file-send path had no test at all before, because it calls the real
+filesystem.
+
+**Not on Apple.** `JamiBridgeWrapper.h`'s `sendFile` has no `parent:` argument, so iOS and macOS
+drop it and a file reply arrives as a plain file. Added to `apple-bridge-rebuild.md`.
 
 ### F5: No member role promotion/demotion in UI or API — capability gap — **BLOCKED: no daemon function exists (verified 2026-10-12)**
 **Evidence:** `Conversation.kt` tracks `roles: MutableMap<String, MemberRole>` (with ADMIN, MEMBER, INVITED, LEFT, BLOCKED states), and `ContactDetailsViewModel.kt:22` exposes `memberRoles` to the UI, but there is no function in `DaemonBridge`, `AccountService`, or `ConversationFacade` to change a member's role.

@@ -74,6 +74,26 @@ import net.jami.utils.currentTimeMillis
  * - CompositeDisposable → CoroutineScope
  * - Schedulers → Dispatchers
  */
+/**
+ * The filesystem half of [ConversationFacade.sendFile]: the outgoing file is put into the
+ * conversation directory before the daemon is told about it. It is an interface so that the send
+ * path can be tested without a real filesystem — everything the daemon is handed, the reply-to
+ * parent included, is decided on the other side of this copy.
+ */
+interface ConversationFileStore {
+    fun move(sourcePath: String, destinationPath: String): Boolean
+    fun copy(sourcePath: String, destinationPath: String): Boolean
+}
+
+/** The real filesystem, used everywhere outside tests. */
+object SystemConversationFileStore : ConversationFileStore {
+    override fun move(sourcePath: String, destinationPath: String): Boolean =
+        net.jami.utils.FileUtils.moveFile(sourcePath, destinationPath)
+
+    override fun copy(sourcePath: String, destinationPath: String): Boolean =
+        net.jami.utils.FileUtils.copyFile(sourcePath, destinationPath)
+}
+
 class ConversationFacade(
     private val historyService: HistoryService,
     private val callService: CallService,
@@ -85,7 +105,8 @@ class ConversationFacade(
     private val preferencesService: PreferencesService,
     private val daemonBridge: DaemonBridgeApi,
     private val settingsRepository: net.jami.repository.SettingsRepository,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val fileStore: ConversationFileStore = SystemConversationFileStore,
 ) {
     private val _currentAccount = MutableStateFlow<Account?>(null)
     val currentAccountFlow: StateFlow<Account?> = _currentAccount.asStateFlow()
@@ -454,8 +475,12 @@ class ConversationFacade(
 
     /**
      * Send a file to a conversation.
+     *
+     * @param replyTo the swarm message this file answers, or null for a normal send. The daemon
+     *   takes it as `sendFile`'s `parent` and the peer sees the file as a reply, exactly as it
+     *   does for text (datatransfer_interface.h sendFile).
      */
-    suspend fun sendFile(conversation: Conversation, to: Uri, filePath: String) {
+    suspend fun sendFile(conversation: Conversation, to: Uri, filePath: String, replyTo: String? = null) {
         if (!deviceRuntimeService.fileExists(filePath)) {
             throw IllegalArgumentException("File not found or not readable: $filePath")
         }
@@ -470,12 +495,15 @@ class ConversationFacade(
             // Like libjamiclient's moveFile: the picker/camera/recorder hand us a copy the app made
             // in its own cache/temp dir, so move it instead of leaving a duplicate behind. Anything
             // else (e.g. a user's original file picked on desktop) is copied, never moved.
-            val moved = isAppScratchFile(filePath) && net.jami.utils.FileUtils.moveFile(filePath, destPath)
-            if (!moved && !net.jami.utils.FileUtils.copyFile(filePath, destPath)) {
+            val moved = isAppScratchFile(filePath) && fileStore.move(filePath, destPath)
+            if (!moved && !fileStore.copy(filePath, destPath)) {
                 Log.e(TAG, "sendFile: unable to store $filePath in the conversation, not sending")
                 return
             }
-            accountService.sendFile(conversation.accountId, conversation.uri.rawRingId, destPath, fileName)
+            accountService.sendFile(
+                conversation.accountId, conversation.uri.rawRingId, destPath, fileName,
+                parent = replyTo.orEmpty(),
+            )
         }
     }
 

@@ -606,6 +606,7 @@ fun ChatScreen(
                                 onDeleteFile = { viewModel.deleteLocalFile(message.id) },
                                 onDelete = { viewModel.deleteMessage(message.id) },
                                 onReply = if (canReply) ({ startReply(message.id) }) else null,
+                                onReplyQuoteClick = { viewModel.scrollToMessage(it) },
                                 onRetry = { viewModel.retryFileTransfer(message.id) },
                             )
                             else -> ChatBubble(
@@ -1444,6 +1445,7 @@ private fun FileTransferMessage(
     onDeleteFile: () -> Unit = {},
     onDelete: () -> Unit = {},
     onReply: (() -> Unit)? = null,
+    onReplyQuoteClick: (String) -> Unit = {},
     onRetry: () -> Unit = {},
 ) {
     // Asynchronously load image bytes for completed picture transfers
@@ -1546,6 +1548,15 @@ private fun FileTransferMessage(
             shape = bubbleShape,
         ) {
             Column(modifier = Modifier.padding(JamiTheme.spacing.s)) {
+                // ── Quoted original, when the file answers a message (same as ChatBubble) ──
+                message.replyTo?.let { reply ->
+                    ReplyQuote(
+                        reply = reply,
+                        textColor = contentColor,
+                        onClick = { onReplyQuoteClick(reply.messageId) },
+                        modifier = Modifier.padding(bottom = JamiTheme.spacing.xs),
+                    )
+                }
                 // ── Main row: icon + info + optional download button ──
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

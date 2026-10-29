@@ -692,6 +692,9 @@ actual class DaemonBridge() : DaemonBridgeApi {
         displayName: String,
         parent: String
     ) {
+        // `parent` (the reply-to message id) is dropped: JamiBridgeWrapper.h's sendFile has no
+        // such argument, so a file sent while replying arrives as a plain file on Apple targets.
+        // Needs a wrapper regeneration — see doc/apple-bridge-rebuild.md.
         bridge.sendFile(accountId, conversationId = conversationId, filePath = filePath, displayName = displayName)
     }
 

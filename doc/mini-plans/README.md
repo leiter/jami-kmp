@@ -5,9 +5,9 @@ Six per-area gap analyses, all audited **2026-09-25** against the daemon headers
 carries its own status marker; this file is only a roll-up, so the individual files stay
 authoritative.
 
-**Counted from the finding headings on 2026-10-28: 89 findings — 40 done, 6 partly done,
+**Counted from the finding headings on 2026-10-29: 89 findings — 41 done, 6 partly done,
 37 closed without work (invalid, blocked, already implemented, or not applicable to mobile),
-6 still open.**
+5 still open.**
 
 **2026-10-28 — two plans triaged to the bone, then two more closed.**
 `contacts-presence-accounts.md` is **closed**: F2 was implemented (presence suspended on
@@ -30,7 +30,7 @@ had gone stale — see the caveat at the end of this file.
 | Mini-plan | Findings | Done | Partly | Closed w/o work | Open |
 |---|---|---|---|---|---|
 | [`calling-conferencing.md`](calling-conferencing.md) | 16 | 11 | 2 | 2 | 1 |
-| [`messaging-conversations.md`](messaging-conversations.md) | 13 | 6 | 0 | 5 | 2 |
+| [`messaging-conversations.md`](messaging-conversations.md) | 13 | 7 | 0 | 5 | 1 |
 | [`notifications-push-background.md`](notifications-push-background.md) | 13 | 9 | 1 | 2 | 1 |
 | [`contacts-presence-accounts.md`](contacts-presence-accounts.md) | 14 | 5 | 1 | 8 | **0 — closed** |
 | [`daemon-api-surface-audit.md`](daemon-api-surface-audit.md) | 12 | 4 | 2 | 4 | 2 |
@@ -47,7 +47,7 @@ count (security-networking, 14) held only three findings worth implementing, whi
 (daemon-api-surface-audit) held the single biggest remaining feature. Sort by the sub-bullets, not
 the numbers.
 
-Six findings are open, in four plans. Two of them are the only ones with real size:
+Five findings are open, in four plans. One of them is the only one with real size:
 
 - **`daemon-api-surface-audit.md` — 2 open, one of them the biggest item left.**
   - **F3, the plugin system**, now planned in [`../plan_plugin_system.md`](../plan_plugin_system.md):
@@ -59,9 +59,10 @@ Six findings are open, in four plans. Two of them are the only ones with real si
     reference clients, and nothing has established that the mobile-primary targets want them.
   - **F2, codec configuration UI** — reordering and disabling codecs. The finding itself notes the
     reference client does not expose this either, so it is parity-neutral and low value.
-- **`messaging-conversations.md` — 2 open.** F4 (no file picker while replying, which `sendFile`'s
-  `replyTo` parameter already supports) is the most user-visible gap left anywhere in these plans.
-  F13 (per-conversation vCard exchange) needs investigation before it can be scoped.
+- **`messaging-conversations.md` — 1 open.** F13 (per-conversation vCard exchange) needs
+  investigation before it can be scoped. F4 was implemented on 2026-10-29 — and its stated
+  symptom was wrong: the attach controls were never hidden while replying, the reply was simply
+  dropped on the way to the daemon. Another case for the caveat below.
 - **`calling-conferencing.md` — 1 open.** F10, `createConfFromParticipantList`: in the bindings,
   but it needs a multi-select participant UI that does not exist yet.
 - **`notifications-push-background.md` — 1 open.** F9, audio/video device metrics. Low value.
@@ -100,6 +101,11 @@ which is the lesson that plan ends on.
   `ACCOUNT_DTMF_TYPE`, `ACCOUNT_ACTIVE_CALL_LIMIT` and `TURN_REALM` all exist (`ConfigKey.kt:41`,
   `:26`, `:87`) and only want a UI control. Two more, F4 and F18, contained their own disproof in
   their Impact sections and had been counted as open work for a month.
+  A fifth case on 2026-10-29: `messaging-conversations.md` F4 described a missing control ("no
+  file attachment option while replying") that is plainly present on screen. The underlying gap
+  was real but one layer down — the reply-to was dropped between the view model and the daemon —
+  so the finding would have been closed as invalid by anyone who checked only the sentence it
+  wrote. Read the finding's *Impact*, not its *Evidence*, when the two could come apart.
 
 - **No QA/Testing/Verification sections** in these files; that is a standing preference, not an
   oversight.

@@ -900,6 +900,12 @@ class StubDaemonBridge : DaemonBridgeApi {
     /** Recorded sendMessage() calls (edits/deletes use flag 1, reactions flag 2). */
     data class SentMessage(val accountId: String, val conversationId: String, val message: String, val replyTo: String, val flag: Int)
     val sentMessages: MutableList<SentMessage> = mutableListOf()
+    /** Recorded sendFile() calls; `parent` is the reply-to message id, empty when not a reply. */
+    data class SentFile(
+        val accountId: String, val conversationId: String, val filePath: String,
+        val displayName: String, val parent: String,
+    )
+    val sentFiles: MutableList<SentFile> = mutableListOf()
 
     /** Recorded downloadFile() calls as (conversationId, interactionId, fileId). */
     val downloadedFiles: MutableList<Triple<String, String, String>> = mutableListOf()
@@ -1142,7 +1148,9 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {}
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {}
 
-    override fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {}
+    override fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String, parent: String) {
+        sentFiles.add(SentFile(accountId, conversationId, filePath, displayName, parent))
+    }
     override fun downloadFile(accountId: String, conversationId: String, interactionId: String, fileId: String, path: String) {
         downloadedFiles.add(Triple(conversationId, interactionId, fileId))
     }

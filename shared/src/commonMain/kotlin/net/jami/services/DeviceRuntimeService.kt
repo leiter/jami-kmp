@@ -129,7 +129,9 @@ class StubDeviceRuntimeService : DeviceRuntimeService {
     override fun hasContactsPermission(): Boolean = true
     override fun hasNotificationsPermission(): Boolean = true
     override fun hasLocationPermission(): Boolean = true
-    override fun fileExists(path: String): Boolean = false
+    /** Paths a test wants [fileExists] to report; empty, as before, means nothing exists. */
+    val existingFiles: MutableSet<String> = mutableSetOf()
+    override fun fileExists(path: String): Boolean = path in existingFiles
     override fun deleteFile(path: String): Boolean = true
     override fun getLocalDeviceName(): String = "Unknown Device"
 }

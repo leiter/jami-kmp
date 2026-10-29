@@ -498,6 +498,18 @@ class ChatViewModel(
         _state.update { it.copy(replyingTo = null) }
     }
 
+    /**
+     * Consume the message the composer is replying to: returns its id and clears the banner, so
+     * the send about to happen carries it exactly once. [sendMessage] does the same inline; a
+     * file send goes through here because the picker, the camera and the recorder all land in
+     * [sendFile] and each of them must clear the banner it was started from.
+     */
+    private fun takeReplyTo(): String? {
+        val replyTo = _state.value.replyingTo?.messageId ?: return null
+        _state.update { it.copy(replyingTo = null) }
+        return replyTo
+    }
+
     /** Only committed text and file messages can be replied to (not pending sends or events). */
     fun isReplyable(item: MessageItem): Boolean =
         (item.type == MessageType.Text || item.type == MessageType.Transfer) &&
@@ -638,6 +650,7 @@ class ChatViewModel(
      * @param imagePath Absolute path to the image file.
      */
     fun sendImage(imagePath: String) {
+        val replyTo = takeReplyTo()
         scope.launch {
             val accountId = currentAccountId ?: return@launch
             val conversationId = currentConversationId ?: return@launch
@@ -648,7 +661,7 @@ class ChatViewModel(
             // Get the conversation object
             val conversation = conversationFacade.getConversation(accountId, conversationUri)
             if (conversation != null) {
-                conversationFacade.sendFile(conversation, conversationUri, imagePath)
+                conversationFacade.sendFile(conversation, conversationUri, imagePath, replyTo)
             } else {
                 Log.e("ChatViewModel", "Failed to send image: conversation not found")
             }
@@ -661,6 +674,7 @@ class ChatViewModel(
      * @param filePath Absolute path to the file.
      */
     fun sendFile(filePath: String) {
+        val replyTo = takeReplyTo()
         scope.launch {
             val accountId = currentAccountId ?: return@launch
             val conversationId = currentConversationId ?: return@launch
@@ -671,7 +685,7 @@ class ChatViewModel(
             // Get the conversation object
             val conversation = conversationFacade.getConversation(accountId, conversationUri)
             if (conversation != null) {
-                conversationFacade.sendFile(conversation, conversationUri, filePath)
+                conversationFacade.sendFile(conversation, conversationUri, filePath, replyTo)
             } else {
                 Log.e("ChatViewModel", "Failed to send file: conversation not found")
             }
@@ -831,7 +845,10 @@ class ChatViewModel(
         scope.launch {
             val accountId = currentAccountId ?: return@launch
             val conversationId = currentConversationId ?: return@launch
-            accountService.sendFile(accountId, conversationId, path, failed.text)
+            accountService.sendFile(
+                accountId, conversationId, path, failed.text,
+                parent = failed.replyTo?.messageId.orEmpty(),
+            )
         }
     }
 
