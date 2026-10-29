@@ -47,13 +47,19 @@ class DesktopDatabaseSchemaTest {
         // What the old factory left behind: the v1 tables, user_version never set.
         JdbcSqliteDriver("jdbc:sqlite:${dir.absolutePath}/jami.db").also { legacy ->
             JamiDatabase.Schema.create(legacy)
+            // Fake a v1 database: drop every table a later version added.
             legacy.execute(null, "DROP TABLE outbox_message", 0)
+            legacy.execute(null, "DROP TABLE client_setting", 0)
             legacy.close()
         }
         val driver = open()
         assertEquals(JamiDatabase.Schema.version, driver.userVersion())
         storeFor(driver).insert("acc", "conv", "after migration", null, 1L)
         assertEquals(1, storeFor(driver).all().size)
+        // The v3 table has to be there too, or settings silently stop persisting again.
+        val settings = SqlDelightClientSettingsStore(JamiDatabase(driver))
+        settings.put("acc", "KMP.Settings.UI", "{}")
+        assertEquals("{}", settings.get("acc", "KMP.Settings.UI"))
         driver.close()
     }
 

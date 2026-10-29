@@ -204,7 +204,6 @@ val jamiModule = module {
             conversationFacade = get(),
             peerServicesService = get(),
             certificateService = get(),
-            settingsRepository = get(),
             scope = get()
         )
     }
@@ -219,6 +218,7 @@ val jamiModule = module {
     single {
         SettingsRepository(
             daemonBridge = get(),
+            store = get(),
             scope = get()
         ).apply {
             // Nothing else calls observeAccount(), and without it the repository has no account
@@ -233,7 +233,7 @@ val jamiModule = module {
      */
     single {
         DraftRepository(
-            daemonBridge = get(),
+            store = get(),
             scope = get()
         )
     }

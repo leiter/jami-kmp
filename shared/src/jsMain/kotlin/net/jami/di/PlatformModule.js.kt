@@ -80,6 +80,12 @@ actual val platformModule: Module = module {
         StubHistoryService()
     }
 
+    /** Client-side settings and drafts; see ClientSettingsStore for why they are not in
+     *  daemon account details. */
+    single<net.jami.services.ClientSettingsStore> {
+        net.jami.services.InMemoryClientSettingsStore()
+    }
+
     /** Durable outbox backing SendQueueService. */
     single<net.jami.services.OutboxStore> {
         net.jami.services.InMemoryOutboxStore()

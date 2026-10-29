@@ -23,6 +23,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.TestScope
 import net.jami.model.ConfigKey
 import net.jami.repository.SettingsRepository
+import net.jami.services.InMemoryClientSettingsStore
 import net.jami.services.AccountService
 import net.jami.services.CallService
 import net.jami.services.ContactService
@@ -92,7 +93,7 @@ fun makeAccountService(
 fun makeCallService(
     stub: StubDaemonBridge = StubDaemonBridge(),
     accountService: AccountService,
-    settingsRepository: SettingsRepository = SettingsRepository(stub, CoroutineScope(SupervisorJob())),
+    settingsRepository: SettingsRepository = SettingsRepository(stub, InMemoryClientSettingsStore(), CoroutineScope(SupervisorJob())),
     scope: CoroutineScope
 ): CallService = CallService(stub, accountService, settingsRepository, scope.isolated())
 
@@ -111,7 +112,7 @@ fun makeContactService(
 fun makeSettingsRepository(
     stub: StubDaemonBridge = StubDaemonBridge(),
     scope: CoroutineScope
-): SettingsRepository = SettingsRepository(stub, scope.isolated())
+): SettingsRepository = SettingsRepository(stub, InMemoryClientSettingsStore(), scope.isolated())
 
 /**
  * Creates a ConversationFacade using all stub service implementations.
@@ -133,7 +134,7 @@ fun makeConversationFacade(
     deviceRuntimeService = StubDeviceRuntimeService(),
     preferencesService = StubPreferencesService(),
     daemonBridge = stub,
-    settingsRepository = SettingsRepository(stub, scope),
+    settingsRepository = SettingsRepository(stub, InMemoryClientSettingsStore(), scope),
     scope = scope.isolated()
 )
 

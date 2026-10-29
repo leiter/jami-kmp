@@ -163,7 +163,7 @@ class SendQueueServiceTest {
         val vmScope = viewModelScope()
         val vm = ChatViewModel(
             env.stack.conversationFacade, env.stack.accountService, StubDeviceRuntimeService(),
-            DraftRepository(env.stub, vmScope), testAudioRecorderService(), env.queue, vmScope,
+            DraftRepository(InMemoryClientSettingsStore(), vmScope), testAudioRecorderService(), env.queue, vmScope,
         )
         vm.loadConversation(CONV)
         advanceUntilIdle()
@@ -192,7 +192,7 @@ class SendQueueServiceTest {
         val vmScope = viewModelScope()
         val vm = ChatViewModel(
             env.stack.conversationFacade, env.stack.accountService, StubDeviceRuntimeService(),
-            DraftRepository(env.stub, vmScope), testAudioRecorderService(), env.queue, vmScope,
+            DraftRepository(InMemoryClientSettingsStore(), vmScope), testAudioRecorderService(), env.queue, vmScope,
         )
         vm.loadConversation(CONV)
         advanceUntilIdle()

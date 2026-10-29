@@ -91,6 +91,12 @@ actual val platformModule: Module = module {
         SqlDelightHistoryService(get())
     }
 
+    /** Client-side settings and drafts; see ClientSettingsStore for why they are not in
+     *  daemon account details. */
+    single<net.jami.services.ClientSettingsStore> {
+        net.jami.services.SqlDelightClientSettingsStore(get())
+    }
+
     /** Durable outbox backing SendQueueService. */
     single<net.jami.services.OutboxStore> {
         net.jami.services.SqlDelightOutboxStore(get())

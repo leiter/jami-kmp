@@ -118,8 +118,8 @@ class PresenceNoteTest {
     @Test
     fun settingANotePublishesItAndStoresIt() = runTest {
         val stub = StubDaemonBridge()
-        stub.accountDetails[account] = mutableMapOf()
-        val repo = SettingsRepository(stub, this)
+        val store = InMemoryClientSettingsStore()
+        val repo = SettingsRepository(stub, store, this)
         repo.observeAccount(account)
         advanceUntilIdle()
 
@@ -132,7 +132,7 @@ class PresenceNoteTest {
         )
         assertEquals("In a meeting", repo.presenceSettings.value.statusNote)
         assertTrue(
-            stub.accountDetails[account]!!.containsKey(SettingsKeys.PRESENCE),
+            store.get(account, SettingsKeys.PRESENCE) != null,
             "the note must be stored, since the daemon does not keep it"
         )
     }
@@ -140,8 +140,7 @@ class PresenceNoteTest {
     @Test
     fun anInvalidNoteIsNeitherStoredNorPublished() = runTest {
         val stub = StubDaemonBridge()
-        stub.accountDetails[account] = mutableMapOf()
-        val repo = SettingsRepository(stub, this)
+        val repo = SettingsRepository(stub, InMemoryClientSettingsStore(), this)
         repo.observeAccount(account)
         advanceUntilIdle()
 
@@ -155,8 +154,7 @@ class PresenceNoteTest {
     @Test
     fun clearingPublishesTheClearedMarkerRatherThanAnEmptyNote() = runTest {
         val stub = StubDaemonBridge()
-        stub.accountDetails[account] = mutableMapOf()
-        val repo = SettingsRepository(stub, this)
+        val repo = SettingsRepository(stub, InMemoryClientSettingsStore(), this)
         repo.observeAccount(account)
         advanceUntilIdle()
 
@@ -183,10 +181,10 @@ class PresenceNoteTest {
     @Test
     fun aStoredNoteIsRepublishedWhenSettingsLoad() = runTest {
         val stub = StubDaemonBridge()
-        stub.accountDetails[account] = mutableMapOf(
-            SettingsKeys.PRESENCE to """{"statusNote":"on holiday"}"""
-        )
-        val repo = SettingsRepository(stub, this)
+        val store = InMemoryClientSettingsStore().apply {
+            put(account, SettingsKeys.PRESENCE, """{"statusNote":"on holiday"}""")
+        }
+        val repo = SettingsRepository(stub, store, this)
 
         repo.observeAccount(account)
         advanceUntilIdle()
@@ -198,10 +196,10 @@ class PresenceNoteTest {
     @Test
     fun loadingAnAccountWithNoNotePublishesNothing() = runTest {
         val stub = StubDaemonBridge()
-        stub.accountDetails[account] = mutableMapOf(
-            SettingsKeys.PRESENCE to """{"statusNote":""}"""
-        )
-        val repo = SettingsRepository(stub, this)
+        val store = InMemoryClientSettingsStore().apply {
+            put(account, SettingsKeys.PRESENCE, """{"statusNote":""}""")
+        }
+        val repo = SettingsRepository(stub, store, this)
 
         repo.observeAccount(account)
         advanceUntilIdle()
@@ -212,8 +210,7 @@ class PresenceNoteTest {
     @Test
     fun repeatingTheSameNoteDoesNotRepublishIt() = runTest {
         val stub = StubDaemonBridge()
-        stub.accountDetails[account] = mutableMapOf()
-        val repo = SettingsRepository(stub, this)
+        val repo = SettingsRepository(stub, InMemoryClientSettingsStore(), this)
         repo.observeAccount(account)
         advanceUntilIdle()
 
@@ -287,8 +284,7 @@ class PresenceNoteTest {
     @Test
     fun presenceSettingsResetWhenTheAccountGoesAway() = runTest {
         val stub = StubDaemonBridge()
-        stub.accountDetails[account] = mutableMapOf()
-        val repo = SettingsRepository(stub, this)
+        val repo = SettingsRepository(stub, InMemoryClientSettingsStore(), this)
         repo.observeAccount(account)
         advanceUntilIdle()
         repo.updateStatusNote("away")

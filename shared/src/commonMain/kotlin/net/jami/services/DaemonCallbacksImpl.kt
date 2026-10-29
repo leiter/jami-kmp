@@ -38,7 +38,6 @@ class DaemonCallbacksImpl(
     private val conversationFacade: ConversationFacade,
     private val peerServicesService: PeerServicesService,
     private val certificateService: CertificateService,
-    private val settingsRepository: net.jami.repository.SettingsRepository,
     private val scope: CoroutineScope
 ) : DaemonCallbacks {
 
@@ -182,9 +181,6 @@ class DaemonCallbacksImpl(
 
     override fun onAccountDetailsChanged(accountId: String, details: Map<String, String>) {
         scope.launch { accountService.onAccountDetailsChanged(accountId, details) }
-        // KMP.* settings ride in the same details map, so a change made on another device
-        // arrives here. The repository filters for its own keys.
-        scope.launch { settingsRepository.onAccountDetailsChanged(accountId, details) }
     }
 
     override fun onRegistrationStateChanged(accountId: String, state: String, code: Int, detail: String) {

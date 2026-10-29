@@ -1,0 +1,9 @@
+-- v2 -> v3: client settings and drafts (see net/jami/database/ClientSettings.sq).
+-- Nothing to migrate: the previous store was daemon account details, which never persisted a
+-- single KMP.* key, so there is no old data to carry over.
+CREATE TABLE client_setting (
+    account_id TEXT NOT NULL,
+    setting_key TEXT NOT NULL,
+    setting_value TEXT NOT NULL,
+    PRIMARY KEY (account_id, setting_key)
+);

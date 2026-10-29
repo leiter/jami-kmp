@@ -38,7 +38,7 @@ class SettingsRepositoryIntegrationTest {
     @Test
     fun initialUiSettingsAreDefaults() = runTest {
         val stub = StubDaemonBridge()
-        val repo = SettingsRepository(stub, this)
+        val repo = SettingsRepository(stub, InMemoryClientSettingsStore(), this)
 
         assertEquals(Theme.SYSTEM, repo.uiSettings.value.theme)
         assertEquals(1.0f, repo.uiSettings.value.fontScale)
@@ -49,7 +49,7 @@ class SettingsRepositoryIntegrationTest {
     fun updateThemeChangesStateFlow() = runTest {
         val stub = StubDaemonBridge()
         stub.accountDetails["acc1"] = mutableMapOf()
-        val repo = SettingsRepository(stub, this)
+        val repo = SettingsRepository(stub, InMemoryClientSettingsStore(), this)
         repo.observeAccount("acc1")
 
         repo.updateTheme(Theme.DARK)
@@ -61,7 +61,7 @@ class SettingsRepositoryIntegrationTest {
     fun updateReadReceiptsChangesPrivacySettings() = runTest {
         val stub = StubDaemonBridge()
         stub.accountDetails["acc1"] = mutableMapOf()
-        val repo = SettingsRepository(stub, this)
+        val repo = SettingsRepository(stub, InMemoryClientSettingsStore(), this)
         repo.observeAccount("acc1")
 
         assertTrue(repo.privacySettings.value.readReceipts)
@@ -73,7 +73,7 @@ class SettingsRepositoryIntegrationTest {
     fun stopObservingResetsToDefaults() = runTest {
         val stub = StubDaemonBridge()
         stub.accountDetails["acc1"] = mutableMapOf()
-        val repo = SettingsRepository(stub, this)
+        val repo = SettingsRepository(stub, InMemoryClientSettingsStore(), this)
         repo.observeAccount("acc1")
         repo.updateTheme(Theme.DARK)
 
@@ -86,7 +86,7 @@ class SettingsRepositoryIntegrationTest {
     fun updateNotificationsEnabledChangesState() = runTest {
         val stub = StubDaemonBridge()
         stub.accountDetails["acc1"] = mutableMapOf()
-        val repo = SettingsRepository(stub, this)
+        val repo = SettingsRepository(stub, InMemoryClientSettingsStore(), this)
         repo.observeAccount("acc1")
 
         assertTrue(repo.notificationSettings.value.enabled)
@@ -98,7 +98,7 @@ class SettingsRepositoryIntegrationTest {
     fun updateVideoEnabledChangesCallSettings() = runTest {
         val stub = StubDaemonBridge()
         stub.accountDetails["acc1"] = mutableMapOf()
-        val repo = SettingsRepository(stub, this)
+        val repo = SettingsRepository(stub, InMemoryClientSettingsStore(), this)
         repo.observeAccount("acc1")
 
         assertTrue(repo.callSettings.value.videoEnabled)
@@ -110,7 +110,7 @@ class SettingsRepositoryIntegrationTest {
     fun muteConversationUpdatesConversationSettings() = runTest {
         val stub = StubDaemonBridge()
         stub.accountDetails["acc1"] = mutableMapOf()
-        val repo = SettingsRepository(stub, this)
+        val repo = SettingsRepository(stub, InMemoryClientSettingsStore(), this)
         repo.observeAccount("acc1")
 
         assertFalse(repo.isConversationMuted("conv123"))
@@ -122,7 +122,7 @@ class SettingsRepositoryIntegrationTest {
     fun unmuteConversationClearsMute() = runTest {
         val stub = StubDaemonBridge()
         stub.accountDetails["acc1"] = mutableMapOf()
-        val repo = SettingsRepository(stub, this)
+        val repo = SettingsRepository(stub, InMemoryClientSettingsStore(), this)
         repo.observeAccount("acc1")
 
         repo.muteConversation("conv123")
@@ -142,19 +142,19 @@ class SettingsRepositoryIntegrationTest {
     @Test
     fun followingTheAccountFlowMakesSettingsPersist() = runTest {
         val stub = StubDaemonBridge()
-        stub.accountDetails["acc1"] = mutableMapOf()
+        val store = InMemoryClientSettingsStore()
         val accounts = MutableStateFlow<Account?>(null)
         // follow() collects for as long as the repository lives, so it gets a scope that is not
         // a child of the test body's job — otherwise runTest waits for a collector that never
         // finishes.
         val repoScope = kotlinx.coroutines.CoroutineScope(coroutineContext + kotlinx.coroutines.SupervisorJob())
-        val repo = SettingsRepository(stub, repoScope)
+        val repo = SettingsRepository(stub, store, repoScope)
         repo.follow(accounts)
 
         repo.updateTheme(Theme.DARK)
         advanceUntilIdle()
-        assertFalse(
-            stub.accountDetails["acc1"]!!.keys.any { SettingsKeys.isKmpKey(it) },
+        assertTrue(
+            store.all("acc1").isEmpty(),
             "with no account there is nowhere to store settings"
         )
 
@@ -165,17 +165,35 @@ class SettingsRepositoryIntegrationTest {
         repo.updateTheme(Theme.LIGHT)
         advanceUntilIdle()
 
-        assertTrue(stub.accountDetails["acc1"]!!.containsKey(SettingsKeys.UI))
+        assertTrue(store.get("acc1", SettingsKeys.UI) != null)
+    }
+
+    /** The store is what survives a restart, so a second repository must read it back. */
+    @Test
+    fun settingsWrittenByOneSessionAreReadBackByTheNext() = runTest {
+        val stub = StubDaemonBridge()
+        val store = InMemoryClientSettingsStore()
+
+        val first = SettingsRepository(stub, store, this)
+        first.observeAccount("acc1")
+        advanceUntilIdle()
+        first.updateTheme(Theme.DARK)
+        advanceUntilIdle()
+
+        val second = SettingsRepository(stub, store, this)
+        second.observeAccount("acc1")
+        advanceUntilIdle()
+
+        assertEquals(Theme.DARK, second.uiSettings.value.theme)
     }
 
     @Test
     fun switchingAccountsDoesNotCarryTheOldAccountsSettingsOver() = runTest {
         val stub = StubDaemonBridge()
-        stub.accountDetails["acc1"] = mutableMapOf(
-            SettingsKeys.UI to """{"theme":"DARK"}"""
-        )
-        stub.accountDetails["acc2"] = mutableMapOf()
-        val repo = SettingsRepository(stub, this)
+        val store = InMemoryClientSettingsStore().apply {
+            put("acc1", SettingsKeys.UI, """{"theme":"DARK"}""")
+        }
+        val repo = SettingsRepository(stub, store, this)
 
         repo.observeAccount("acc1")
         advanceUntilIdle()

@@ -52,7 +52,7 @@ class AccountSubSettingsViewModelTest {
         )
         accountService.loadAccounts()
         advanceUntilIdle()
-        val settings = net.jami.repository.SettingsRepository(stub, scope)
+        val settings = net.jami.repository.SettingsRepository(stub, net.jami.services.InMemoryClientSettingsStore(), scope)
         return AccountSubSettingsViewModel(accountService, settings, scope)
     }
 

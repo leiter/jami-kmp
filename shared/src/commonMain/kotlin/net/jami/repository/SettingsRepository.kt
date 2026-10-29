@@ -27,18 +27,21 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.jami.model.Account
 import net.jami.model.settings.*
+import net.jami.services.ClientSettingsStore
 import net.jami.services.DaemonBridgeApi
 import net.jami.utils.Log
 
 /**
- * Repository for managing user settings stored in daemon account details.
+ * Repository for managing user settings.
  *
- * Settings are stored as JSON in daemon account details with KMP.* prefix keys.
- * This enables automatic sync across devices via DHT.
+ * Settings are JSON documents under `KMP.*` keys in [ClientSettingsStore], which keeps them on
+ * the device. They were originally written into daemon account details, reaching for cross-device
+ * sync over the DHT, but the daemon discards keys it does not recognise, so nothing persisted at
+ * all; see `doc/status-note-open-ends.md` and [ClientSettingsStore].
  *
  * ## Usage
  * ```kotlin
- * val repo = SettingsRepository(daemonBridge, scope)
+ * val repo = SettingsRepository(daemonBridge, store, scope)
  * repo.observeAccount("accountId")
  *
  * // Update settings
@@ -53,6 +56,7 @@ import net.jami.utils.Log
  */
 class SettingsRepository(
     private val daemonBridge: DaemonBridgeApi,
+    private val store: ClientSettingsStore,
     private val scope: CoroutineScope
 ) {
     private val json = Json {
@@ -152,23 +156,6 @@ class SettingsRepository(
         _callSettings.value = CallSettings()
         _fileTransferSettings.value = FileTransferSettings()
         _conversationSettings.value = emptyMap()
-    }
-
-    /**
-     * Handle account details changed event from daemon.
-     * Called by DaemonCallbacksImpl when settings are updated remotely.
-     *
-     * @param accountId Account that was updated
-     * @param details Updated account details
-     */
-    fun onAccountDetailsChanged(accountId: String, details: Map<String, String>) {
-        if (accountId != currentAccountId) return
-
-        // Only reload if KMP settings were changed
-        val hasKmpChanges = details.keys.any { SettingsKeys.isKmpKey(it) }
-        if (hasKmpChanges) {
-            loadSettings(accountId)
-        }
     }
 
     // ==================== UI Settings ====================
@@ -627,7 +614,6 @@ class SettingsRepository(
         _fileTransferSettings.value = settings.fileTransfer
         _conversationSettings.value = settings.conversations
 
-        // Save all to daemon
         scope.launch {
             try {
                 val details = mutableMapOf(
@@ -640,10 +626,7 @@ class SettingsRepository(
                     SettingsKeys.CONVERSATIONS to json.encodeToString(settings.conversations)
                 )
 
-                // Get existing account details and merge
-                val existingDetails = daemonBridge.getAccountDetails(accountId).toMutableMap()
-                existingDetails.putAll(details)
-                daemonBridge.setAccountDetails(accountId, existingDetails)
+                for ((key, value) in details) store.put(accountId, key, value)
 
                 Log.d(TAG, "Imported all settings for account $accountId")
             } catch (e: Exception) {
@@ -657,7 +640,7 @@ class SettingsRepository(
     private fun loadSettings(accountId: String) {
         scope.launch {
             try {
-                val details = daemonBridge.getAccountDetails(accountId)
+                val details = store.all(accountId)
 
                 // Load each settings group
                 details[SettingsKeys.META]?.let { jsonStr ->
@@ -725,9 +708,7 @@ class SettingsRepository(
 
         scope.launch {
             try {
-                val jsonStr = encode()
-                val details = daemonBridge.getAccountDetails(accountId).toMutableMap()
-                details[key] = jsonStr
+                store.put(accountId, key, encode())
 
                 // Update meta timestamp
                 val updatedMeta = _meta.value.copy(
@@ -735,9 +716,8 @@ class SettingsRepository(
                     lastUpdatedBy = getDeviceId()
                 )
                 _meta.value = updatedMeta
-                details[SettingsKeys.META] = json.encodeToString(updatedMeta)
+                store.put(accountId, SettingsKeys.META, json.encodeToString(updatedMeta))
 
-                daemonBridge.setAccountDetails(accountId, details)
                 Log.d(TAG, "Saved settings [$key] for account $accountId")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to save settings [$key]: ${e.message}")

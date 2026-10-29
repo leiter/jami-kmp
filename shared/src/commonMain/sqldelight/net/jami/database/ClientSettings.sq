@@ -1,0 +1,31 @@
+-- Client-side settings and drafts (doc/status-note-open-ends.md, open end 1).
+--
+-- SettingsRepository and DraftRepository originally kept these as JSON under "KMP.*" keys inside
+-- daemon account details, reaching for cross-device sync over the DHT. The daemon does not carry
+-- them: setAccountDetails parses the map into typed config and discards anything it does not
+-- recognise, so after a save config.yml holds no KMP key and a restart loads nothing. Verified on
+-- two devices on 2026-10-28. This table is the store that actually persists; the sync ambition is
+-- given up for now, as in the reference client, which keeps its preferences on the device.
+
+CREATE TABLE client_setting (
+    account_id TEXT NOT NULL,
+    setting_key TEXT NOT NULL,
+    setting_value TEXT NOT NULL,
+    PRIMARY KEY (account_id, setting_key)
+);
+
+selectForAccount:
+SELECT setting_key, setting_value FROM client_setting WHERE account_id = ?;
+
+selectOne:
+SELECT setting_value FROM client_setting WHERE account_id = ? AND setting_key = ?;
+
+upsert:
+INSERT OR REPLACE INTO client_setting(account_id, setting_key, setting_value)
+VALUES (?, ?, ?);
+
+deleteKey:
+DELETE FROM client_setting WHERE account_id = ? AND setting_key = ?;
+
+deleteForAccount:
+DELETE FROM client_setting WHERE account_id = ?;

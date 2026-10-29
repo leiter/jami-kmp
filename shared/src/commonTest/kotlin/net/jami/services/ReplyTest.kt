@@ -69,7 +69,7 @@ class ReplyTest {
         val vmScope = viewModelScope()
         val vm = ChatViewModel(
             stack.conversationFacade, stack.accountService, StubDeviceRuntimeService(),
-            DraftRepository(stub, vmScope), testAudioRecorderService(), queue, vmScope,
+            DraftRepository(InMemoryClientSettingsStore(), vmScope), testAudioRecorderService(), queue, vmScope,
         )
         vm.loadConversation(CONV)
         advanceUntilIdle()

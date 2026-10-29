@@ -63,7 +63,7 @@ class ConversationFacadeIntegrationTest {
         preferencesService: PreferencesService = StubPreferencesService()
     ): Triple<AccountService, ContactService, ConversationFacade> {
         val accountService = AccountService(stub, testHardwareService(), StubDeviceRuntimeService(), scope.testServiceScope())
-        val callService = CallService(stub, accountService, net.jami.repository.SettingsRepository(stub, scope), scope)
+        val callService = CallService(stub, accountService, net.jami.repository.SettingsRepository(stub, InMemoryClientSettingsStore(), scope), scope)
         val contactService = ContactService(scope, accountService, stub, VCardService(StubDeviceRuntimeService()))
         val facadeScope = scope.facadeScope()
         val facade = ConversationFacade(
@@ -76,7 +76,7 @@ class ConversationFacadeIntegrationTest {
             deviceRuntimeService = StubDeviceRuntimeService(),
             preferencesService = preferencesService,
             daemonBridge = stub,
-            settingsRepository = net.jami.repository.SettingsRepository(stub, facadeScope),
+            settingsRepository = net.jami.repository.SettingsRepository(stub, InMemoryClientSettingsStore(), facadeScope),
             scope = facadeScope
         )
         return Triple(accountService, contactService, facade)

@@ -44,7 +44,7 @@ class ChatViewModelTest {
         // The ViewModel's own collectors must not be children of the TestScope either, or
         // runTest waits on them and fails with UncompletedCoroutinesError after a minute.
         val vmScope = scope.viewModelScope()
-        return ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, vmScope), testAudioRecorderService(), makeSendQueue(stub, accountService, facade, scope), vmScope)
+        return ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(net.jami.services.InMemoryClientSettingsStore(), vmScope), testAudioRecorderService(), makeSendQueue(stub, accountService, facade, scope), vmScope)
     }
 
     @Test
@@ -93,7 +93,7 @@ class ChatViewModelTest {
         val contactService = makeContactService(stub, accountService, this)
         val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, viewModelScope()), testAudioRecorderService(), makeSendQueue(stub, accountService, facade, this), viewModelScope())
+        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(net.jami.services.InMemoryClientSettingsStore(), viewModelScope()), testAudioRecorderService(), makeSendQueue(stub, accountService, facade, this), viewModelScope())
         vm.updateInput("Hello")
         // Load a conversation first so currentAccountId/conversationId are set
         vm.loadConversation("conv_001")
@@ -199,7 +199,7 @@ class ChatViewModelTest {
         val contactService = makeContactService(stub, accountService, this)
         val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(stub, disposableScope()), testAudioRecorderService(), makeSendQueue(stub, accountService, facade, disposableScope()), disposableScope())
+        val vm = ChatViewModel(facade, accountService, StubDeviceRuntimeService(), net.jami.repository.DraftRepository(net.jami.services.InMemoryClientSettingsStore(), disposableScope()), testAudioRecorderService(), makeSendQueue(stub, accountService, facade, disposableScope()), disposableScope())
         vm.onCleared()
     }
 
@@ -220,7 +220,7 @@ class ChatViewModelTest {
         val vmScope = viewModelScope()
         val vm = ChatViewModel(
             facade, accountService, StubDeviceRuntimeService(),
-            net.jami.repository.DraftRepository(stub, vmScope), testAudioRecorderService(),
+            net.jami.repository.DraftRepository(net.jami.services.InMemoryClientSettingsStore(), vmScope), testAudioRecorderService(),
             makeSendQueue(stub, accountService, facade, this), vmScope
         )
         vm.loadConversation(CONVERSATION_ID)

@@ -72,8 +72,10 @@ private fun legacyVersion(driver: SqlDriver): Long {
         { c -> QueryResult.Value(c.next().value) },
         1,
     ) { bindString(0, name) }.value
+    // Newest table first: each version adds one, so the newest present names the version.
     return when {
         !hasTable("conversation") -> 0L
+        hasTable("client_setting") -> 3L
         hasTable("outbox_message") -> 2L
         else -> 1L
     }

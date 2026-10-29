@@ -55,7 +55,7 @@ class CallServiceIntegrationTest {
     ): Pair<AccountService, CallService> {
         val serviceScope = scope.serviceScope()
         val accountService = AccountService(stub, testHardwareService(), StubDeviceRuntimeService(), serviceScope)
-        val callService = CallService(stub, accountService, net.jami.repository.SettingsRepository(stub, serviceScope), serviceScope)
+        val callService = CallService(stub, accountService, net.jami.repository.SettingsRepository(stub, InMemoryClientSettingsStore(), serviceScope), serviceScope)
         return accountService to callService
     }
 

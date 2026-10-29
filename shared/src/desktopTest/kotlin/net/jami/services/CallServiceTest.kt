@@ -21,7 +21,7 @@ class CallServiceTest {
         val deviceRuntimeService = StubDeviceRuntimeService()
         val scope = CoroutineScope(Dispatchers.Default)
         val accountService = AccountService(daemonBridge, hardwareService, deviceRuntimeService, scope)
-        val settingsRepository = net.jami.repository.SettingsRepository(daemonBridge, scope)
+        val settingsRepository = net.jami.repository.SettingsRepository(daemonBridge, net.jami.services.InMemoryClientSettingsStore(), scope)
         return CallService(daemonBridge, accountService, settingsRepository, scope)
     }
 

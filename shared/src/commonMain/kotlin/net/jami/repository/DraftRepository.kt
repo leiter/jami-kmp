@@ -26,21 +26,22 @@ import kotlinx.serialization.json.Json
 import net.jami.model.settings.Draft
 import net.jami.model.settings.DraftsContainer
 import net.jami.model.settings.SettingsKeys
-import net.jami.services.DaemonBridgeApi
+import net.jami.services.ClientSettingsStore
 import net.jami.utils.Log
 
 /**
- * Repository for managing message drafts stored in daemon account details.
+ * Repository for managing message drafts.
  *
- * Drafts are stored as JSON in daemon account details with KMP.Drafts key.
- * Features:
- * - Debounced saves to avoid excessive daemon calls
+ * Drafts are JSON under the `KMP.Drafts` key in [ClientSettingsStore], which keeps them on the
+ * device. They were previously written into daemon account details for cross-device sync, and
+ * were silently lost on every restart because the daemon discards keys it does not recognise —
+ * see `doc/status-note-open-ends.md`. Features:
+ * - Debounced saves
  * - Conflict resolution via timestamps
- * - Auto-sync across devices via DHT
  *
  * ## Usage
  * ```kotlin
- * val repo = DraftRepository(daemonBridge, scope)
+ * val repo = DraftRepository(store, scope)
  * repo.observeAccount("accountId")
  *
  * // Update draft as user types
@@ -57,7 +58,7 @@ import net.jami.utils.Log
  * ```
  */
 class DraftRepository(
-    private val daemonBridge: DaemonBridgeApi,
+    private val store: ClientSettingsStore,
     private val scope: CoroutineScope
 ) {
     private val json = Json {
@@ -106,29 +107,6 @@ class DraftRepository(
         currentAccountId?.let { saveDraftsImmediately(it) }
         currentAccountId = null
         _drafts.value = DraftsContainer()
-    }
-
-    /**
-     * Handle account details changed event from daemon.
-     * Called when drafts are updated remotely.
-     *
-     * @param accountId Account that was updated
-     * @param details Updated account details
-     */
-    fun onAccountDetailsChanged(accountId: String, details: Map<String, String>) {
-        if (accountId != currentAccountId) return
-
-        // Check if drafts were changed
-        val remoteDraftsJson = details[SettingsKeys.DRAFTS] ?: return
-
-        try {
-            val remoteDrafts = json.decodeFromString<DraftsContainer>(remoteDraftsJson)
-
-            // Merge remote drafts with local, preferring newer timestamps
-            mergeDrafts(remoteDrafts)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to parse remote drafts: ${e.message}")
-        }
     }
 
     // ==================== Draft Operations ====================
@@ -253,9 +231,7 @@ class DraftRepository(
         currentAccountId?.let { accountId ->
             scope.launch {
                 try {
-                    val details = daemonBridge.getAccountDetails(accountId).toMutableMap()
-                    details.remove(SettingsKeys.DRAFTS)
-                    daemonBridge.setAccountDetails(accountId, details)
+                    store.remove(accountId, SettingsKeys.DRAFTS)
                     Log.d(TAG, "Cleared all drafts for account $accountId")
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to clear drafts: ${e.message}")
@@ -318,8 +294,7 @@ class DraftRepository(
     private fun loadDrafts(accountId: String) {
         scope.launch {
             try {
-                val details = daemonBridge.getAccountDetails(accountId)
-                val draftsJson = details[SettingsKeys.DRAFTS]
+                val draftsJson = store.get(accountId, SettingsKeys.DRAFTS)
 
                 if (draftsJson != null) {
                     _drafts.value = runCatching {
@@ -361,10 +336,7 @@ class DraftRepository(
                 val container = _drafts.value.copy(lastSynced = currentTimeMillis())
                 _drafts.value = container
 
-                val draftsJson = json.encodeToString(container)
-                val details = daemonBridge.getAccountDetails(accountId).toMutableMap()
-                details[SettingsKeys.DRAFTS] = draftsJson
-                daemonBridge.setAccountDetails(accountId, details)
+                store.put(accountId, SettingsKeys.DRAFTS, json.encodeToString(container))
 
                 Log.d(TAG, "Saved ${container.drafts.size} drafts for account $accountId")
             } catch (e: Exception) {
@@ -373,6 +345,13 @@ class DraftRepository(
         }
     }
 
+    /**
+     * Merge drafts from another source, newest timestamp winning.
+     *
+     * Unused while drafts live only on this device: its caller was the daemon
+     * account-details hook, which never delivered anything because the daemon dropped the key.
+     * Kept for whatever cross-device sync replaces it.
+     */
     private fun mergeDrafts(remoteDrafts: DraftsContainer) {
         val localDrafts = _drafts.value.drafts.toMutableMap()
         var updated = false
