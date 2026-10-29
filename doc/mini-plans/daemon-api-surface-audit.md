@@ -518,10 +518,11 @@ Three constraints that reading the daemon settled, none of them guessable:
 - **The daemon does not persist the note.** `presenceNote_` is a `JamiAccount` member, not
   config: after a restart contacts see nothing. The note is therefore stored in the `KMP.*`
   settings and published again on every load, the same shape as the CALLS branch pushing audio
-  flags back down. **That half does not work yet** — the two-device run on 2026-10-28 showed the
-  daemon dropping `KMP.*` keys from `setAccountDetails` entirely, so no client setting survives a
-  restart. See `doc/status-note-open-ends.md`; it is a `SettingsRepository` problem, not a
-  presence one.
+  flags back down. That half was broken when first written — the two-device run on
+  2026-10-28 showed the daemon dropping `KMP.*` keys from `setAccountDetails` entirely, so no
+  client setting survived a restart. Fixed on 2026-10-29 by moving the store to a SQLDelight
+  table; a cold start now republishes the stored note by itself. See
+  `doc/status-note-open-ends.md`.
 - **The peer's parser is `std::regex("<basic>([\w\s]+)</basic>")`** (`jamiaccount.cpp:4177`).
   `\w` on a `char` regex is ASCII `[A-Za-z0-9_]`, so a note with punctuation, an accent, CJK or
   an emoji does not match **at all** and the peer is told nothing — worse than no note. Notes

@@ -22,9 +22,29 @@ The status note works end to end between two real accounts over the Jami network
 Note for anyone reading logs from this run: the two devices' clocks differ by about 1.5 s, so a
 peer's arrival line can carry an earlier timestamp than the publish line that caused it.
 
-## Open end 1 — the note is not persisted, and neither is any other KMP setting
+## ~~Open end 1~~ — fixed 2026-10-29: client settings now persist
 
-**This is the significant finding, and it is not specific to the status note.**
+**Resolved.** Both repositories were moved off daemon account details onto a `client_setting`
+table in the existing SQLDelight database (`ClientSettingsStore`, schema v3, migration `2.sqm`).
+
+Verified on the Pixel 2, whose database was upgraded v2 -> v3 in place by the install:
+
+- Set "At lunch", force-stopped the app, relaunched. The cold start logged
+  `publishPresence: … note='At lunch'` straight after `Loaded settings` — the note came back from
+  storage and was republished to the daemon on its own.
+- Pulling the database shows `PRAGMA user_version = 3` and the rows
+  `('965287c3eb08e39e', 'KMP.Settings.Presence', '{"statusNote":"At lunch"}')` plus `KMP.Meta`.
+
+What was given up: the cross-device sync the original design reached for. Settings are per-device
+now, as in the reference client. `DraftRepository.mergeDrafts()` is kept, unused, for whatever
+sync replaces it.
+
+The original finding is kept below, because it explains why the mechanism was wrong and what to
+avoid repeating.
+
+### The original finding (2026-10-28)
+
+**This was the significant finding, and it was not specific to the status note.**
 
 `SettingsRepository` stores everything under `KMP.*` keys inside daemon account details
 ("stored as JSON in daemon account details … syncs across devices via DHT", per its own
@@ -51,6 +71,9 @@ daemon discarding it. A decision is needed before more is built on this mechanis
   rest of the real config keys do persist, so the mechanism, not the idea, is what is wrong.
 
 Until then, no feature should depend on a `KMP.*` value surviving a restart.
+
+*(That was the position on 2026-10-28; the store above is the "keep client settings client-side"
+option, taken on 2026-10-29.)*
 
 ## Open end 2 — what was not tested on the devices
 
