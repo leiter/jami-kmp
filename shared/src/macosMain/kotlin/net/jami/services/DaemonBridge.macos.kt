@@ -235,6 +235,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
         }
     }
 
+    // Not in JamiBridgeWrapper.h — see doc/apple-bridge-rebuild.md.
+    override fun setAudioMeterState(id: String, enabled: Boolean) {
+        Log.d(TAG, "setAudioMeterState (not exposed via JamiBridge): id=$id enabled=$enabled")
+    }
+
     override fun restartAudioLayer() {}
 
     override fun sendCallTextMessage(

@@ -215,6 +215,16 @@ class CallViewModel(
     private val _state = MutableStateFlow(CallState())
     val state: StateFlow<CallState> = _state.asStateFlow()
 
+    /**
+     * Microphone RMS level, 0..1, for the level ring on the mute button. Deliberately *not* part
+     * of [CallState]: the daemon sends about ten values a second and putting it there would
+     * recompose the whole call screen at that rate. Only the mute button collects it.
+     */
+    val micLevel: StateFlow<Float> = callService.localAudioLevel
+
+    /** Metering runs only while the call screen is on screen; see [onCleared]. */
+    fun setMicMeterEnabled(enabled: Boolean) = callService.setMicrophoneMeterEnabled(enabled)
+
     private var currentCallId: String? = null
     private var currentAccountId: String? = null
     private var currentConference: Conference? = null
@@ -1084,6 +1094,7 @@ class CallViewModel(
     }
 
     public override fun onCleared() {
+        callService.setMicrophoneMeterEnabled(false)
         durationJob?.cancel()
         confUpdatesJob?.cancel()
         callUpdatesJob?.cancel()

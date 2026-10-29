@@ -471,6 +471,12 @@ class DaemonCallbacksImpl(
         scope.launch { accountService.onVolumeChanged(device, value) }
     }
 
+    // Arrives ~10x a second per metered buffer while the meter is on, so it is handed straight to
+    // the service rather than queued through a channel like the account/conversation tasks.
+    override fun onAudioMeter(id: String, level: Float) {
+        callService.onAudioMeter(id, level)
+    }
+
     override fun onStunStatusFailure(accountId: String) {
         scope.launch { accountService.onStunStatusFailure(accountId) }
     }

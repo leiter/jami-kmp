@@ -247,6 +247,12 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun playDtmf(key: String) { bridge.playDtmf(key) }
     override fun muteRingtone(mute: Boolean) { bridge.muteRingtone(mute) }
+    // JamiBridgeWrapper.h exposes neither setAudioMeterState nor the AudioMeter callback, so the
+    // level meter stays at zero on Apple — see doc/apple-bridge-rebuild.md.
+    override fun setAudioMeterState(id: String, enabled: Boolean) {
+        Log.d(TAG, "setAudioMeterState (not exposed via JamiBridge): id=$id enabled=$enabled")
+    }
+
     override fun muteCapture(mute: Boolean) { bridge.muteCapture(mute) }
     override fun isCaptureMuted(): Boolean = bridge.isCaptureMuted()
     override fun restartAudioLayer() { Log.d(TAG, "restartAudioLayer") }

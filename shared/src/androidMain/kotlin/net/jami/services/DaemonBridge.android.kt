@@ -309,6 +309,11 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         JamiService.muteRingtone(mute)
     }
 
+    override fun setAudioMeterState(id: String, enabled: Boolean) {
+        if (!isInitialized) return
+        JamiService.setAudioMeterState(id, enabled)
+    }
+
     override fun muteCapture(mute: Boolean) {
         JamiService.muteCapture(mute)
     }
@@ -922,6 +927,10 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
 
         override fun volumeChanged(device: String, value: Int) {
             callbacks.onVolumeChanged(device, value)
+        }
+
+        override fun audioMeter(id: String, level: Float) {
+            callbacks.onAudioMeter(id, level)
         }
 
         override fun stunStatusFailure(account_id: String) {

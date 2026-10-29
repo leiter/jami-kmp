@@ -24,6 +24,12 @@
 > argument to both the header and `.mm` and pass it straight through; the Kotlin actuals already
 > receive it and only need the call site widened.
 
+> **Audio metering (2026-10-29, mini-plan notifications F9).** The wrapper exposes neither
+> `setAudioMeterState(id, state)` nor the `AudioMeter(id, level)` callback, so the microphone
+> level ring on the call screen's mute button stays dark on Apple. Both are needed: the setter as
+> a passthrough, the signal wired into the presence/configuration callback block the same way
+> `volumeChanged` is.
+
 Nine commits added ~514 lines of Objective-C++ to the JamiBridge wrapper that has never been
 compiled, because those sessions ran on Linux where Apple targets are skipped. The committed
 `.a` files are stale by the same nine commits. This describes what is waiting, what is already

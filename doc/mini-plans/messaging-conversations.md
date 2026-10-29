@@ -182,10 +182,33 @@ no new daemon function was needed:**
 - **The wording said "Remove"** for an action that blocks permanently. It now says Block, and the
   confirmation says they cannot rejoin unless unblocked.
 
-### F13: Profile vCard exchange not tied to conversation level — data model issue
+### F13: Profile vCard exchange not tied to conversation level — data model issue — **ALREADY IMPLEMENTED; evidence stale (verified 2026-10-29)**
 **Evidence:** `ConversationFacade.kt` does not handle profile vCard updates per conversation. `onProfileReceived()` callback in `DaemonBridge.kt:445` receives the vCard path but there is no code to parse it or link it to a specific conversation's contact profile.
 **Impact:** Contact profiles updated via vCard are not reflected in conversation UI. User info (name, avatar) may be stale.
 **Daemon support:** `updateProfile()` and `ProfileReceived` signal — `configurationmanager_interface.h:104-109, 428-434`
+
+**Both halves exist, and the peer half does more than the finding asks for.**
+
+*Per-contact vCard* — `DaemonCallbacksImpl:380` routes the daemon callback to
+`ContactService.onProfileReceived` (`:396`), which reads the vcf, parses it with
+`VCardUtils.parseVCard`, scales the photo to ≤512 px, and writes the resulting `Profile` to three
+places that each used to go stale on their own: this service's `profileCache`, the `Contact` in
+its cache, and the `Account`'s `getContactFromCache` copy — the one `Conversation.contact` and the
+conversation list actually hold. It then invalidates `VCardService`'s disk and memory caches, and
+handles the case the finding does not mention at all: the daemon fires the same callback with the
+account's **own** URI after a local `updateProfile()`, so the own-avatar cache is dropped too.
+`ContactEvent.ProfileUpdated` is consumed by `ConversationsViewModel:216` and
+`ContactDetailsViewModel:96`.
+
+*Per-conversation profile* — which is what the heading asks for — is a separate daemon callback,
+`onConversationProfileUpdated`, wired at `DaemonCallbacksImpl:314` →
+`ConversationFacade:1814`. The write direction is `updateConversationInfo` for both title
+(`ConversationFacade:1839`) and avatar (`:1850`), and the group title/avatar editing UI built on
+it was verified on a device (see `doc/TODO.md`).
+
+Nothing to implement. The finding was written against `DaemonBridge.kt:445`, which is the
+*declaration* of the callback — the handling is in `DaemonCallbacksImpl` and `ContactService`,
+which it did not look at.
 
 ## Three further findings resolved on inspection (verified 2026-10-12)
 

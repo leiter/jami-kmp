@@ -90,6 +90,7 @@ object NoOpDaemonCallbacks : DaemonCallbacks {
     override fun onCertificateStateChanged(accountId: String, certId: String, state: String) {}
     override fun onErrorAlert(alert: Int) {}
     override fun onVolumeChanged(device: String, value: Int) {}
+    override fun onAudioMeter(id: String, level: Float) {}
     override fun onStunStatusFailure(accountId: String) {}
     override fun onHistoryChanged() {}
     override fun onHardwareDecodingChanged(enabled: Boolean) {}

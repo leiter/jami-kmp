@@ -281,6 +281,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun playDtmf(key: String) {}
     override fun muteRingtone(mute: Boolean) {}
+    override fun setAudioMeterState(id: String, enabled: Boolean) {}
     override fun muteCapture(mute: Boolean) {}
     override fun isCaptureMuted(): Boolean = false
     override fun restartAudioLayer() {}

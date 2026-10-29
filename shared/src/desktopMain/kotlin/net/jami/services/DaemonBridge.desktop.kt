@@ -238,6 +238,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun playDtmf(key: String) { Log.d(TAG, "playDtmf (stub): $key") }
     override fun muteRingtone(mute: Boolean) { Log.d(TAG, "muteRingtone (stub): $mute") }
+    override fun setAudioMeterState(id: String, enabled: Boolean) {
+        Log.d(TAG, "setAudioMeterState (stub): id=$id enabled=$enabled")
+    }
+
     override fun muteCapture(mute: Boolean) { Log.d(TAG, "muteCapture (stub): $mute") }
     override fun setNoiseSuppression(enabled: Boolean) { Log.d(TAG, "setNoiseSuppression (stub): $enabled") }
     override fun setEchoCancellation(enabled: Boolean) { Log.d(TAG, "setEchoCancellation (stub): $enabled") }

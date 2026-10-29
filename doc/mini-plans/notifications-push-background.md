@@ -97,13 +97,47 @@ are about to start failing verification.
 
 ---
 
-### F9: Audio/video device metrics not exposed — gap
+### F9: Audio/video device metrics not exposed — gap — **DONE (2026-10-29), audio half; video half does not exist**
 **Evidence:**
 - `configurationmanager.i` line 67 declares `audioMeter(id, level)` for real-time audio level reporting
 - No handler in `DaemonBridge.createConfigurationCallback()`
 - Reference app forwards it at line 293–294, but provides no-op in `DaemonVideoCallback.audioMeter()`
 
 **Impact:** Audio input level meters (VU display during calls) cannot be rendered. Voice activity detection for "speaking" indicators missing.
+
+**Implemented as a microphone level ring on the call screen's mute button.**
+
+`setAudioMeterState(id, enabled)` was added to `DaemonBridgeApi` (it is in the bindings,
+`JamiService.java:664`) alongside the `audioMeter` callback. `CallService` exposes
+`localAudioLevel: StateFlow<Float>` and `setMicrophoneMeterEnabled()`; `CallScreen` turns metering
+on in a `DisposableEffect` and off again on dispose, because the daemon computes RMS on **every
+captured frame** while it is on (`ringbuffer.cpp:194`) and there is no reason to pay for that with
+no meter on screen.
+
+Two things the finding does not say, found in the daemon:
+
+- The id is a **ring-buffer** id, not a device id. `RingBufferPool::DEFAULT_ID` is
+  `"audiolayer_id"` — the capture buffer, so that is the microphone. An empty id meters *every*
+  buffer (`ringbufferpool.cpp:478`), which is not what a mic meter wants.
+- The signal is `AudioSignal::AudioMeter`, not a ConfigurationSignal, though SWIG puts it on
+  `ConfigurationCallback`.
+
+The value arrives about ten times a second, so it is deliberately **not** in `CallState`: it is
+its own flow, held as a `State` and read inside a lambda in the draw phase, so the level never
+recomposes anything. The ring is hidden while muted, and a small floor is subtracted because a
+quiet room does not read zero.
+
+**The "speaking indicator" half of the impact is not possible this way.** Metering a peer would
+mean metering that call's own ring buffer; the daemon reports no per-participant level, and the
+conference participant list gets its `isAudioMuted` from the conference info instead. The
+video-device half of the heading has no daemon signal at all.
+
+Tests: `AudioMeterTest` (7). **Device check (Pixel 7a, 2026-10-29):** entering the call screen
+logs `setMicrophoneMeterEnabled: true` and the JNI call returns cleanly; the call failed with
+code 480 (peer offline) and the dispose logged `false`, so the lifecycle is confirmed. The level
+*values* need a connected call and a second device — same blocker as clearing a status note.
+
+**Not on Apple:** `JamiBridgeWrapper.h` has neither `setAudioMeterState` nor the callback.
 
 ---
 

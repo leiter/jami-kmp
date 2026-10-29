@@ -91,6 +91,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
@@ -139,6 +141,16 @@ fun CallScreen(
         viewModel.initOutgoing(contactUri = contactId, hasVideo = isVideo)
     }
 
+    // The daemon computes RMS on every captured frame while metering is on, so it runs only
+    // while this screen is composed. micLevel is held as a State and read inside a lambda in the
+    // draw phase, so these ~10 values a second never recompose anything.
+    val micLevelState = viewModel.micLevel.collectAsState()
+    DisposableEffect(Unit) {
+        viewModel.setMicMeterEnabled(true)
+        onDispose { viewModel.setMicMeterEnabled(false) }
+    }
+
+
     var requestCameraPermission by remember { mutableStateOf(false) }
     var requestMicPermission by remember { mutableStateOf(false) }
 
@@ -174,6 +186,7 @@ fun CallScreen(
 
     CallScreenContent(
         state = state,
+        micLevel = { micLevelState.value },
         onAcceptAudio = { viewModel.acceptCurrent(withVideo = false) },
         onAcceptVideo = { viewModel.acceptCurrent(withVideo = true) },
         onDecline = { viewModel.refuseCurrent() },
@@ -232,6 +245,16 @@ fun IncomingCallScreen(
 
     val state by viewModel.state.collectAsState()
 
+    // The daemon computes RMS on every captured frame while metering is on, so it runs only
+    // while this screen is composed. micLevel is held as a State and read inside a lambda in the
+    // draw phase, so these ~10 values a second never recompose anything.
+    val micLevelState = viewModel.micLevel.collectAsState()
+    DisposableEffect(Unit) {
+        viewModel.setMicMeterEnabled(true)
+        onDispose { viewModel.setMicMeterEnabled(false) }
+    }
+
+
     var requestCameraPermission by remember { mutableStateOf(false) }
     var requestMicPermission by remember { mutableStateOf(false) }
 
@@ -273,6 +296,7 @@ fun IncomingCallScreen(
 
     CallScreenContent(
         state = state,
+        micLevel = { micLevelState.value },
         onAcceptAudio = { viewModel.acceptCurrent(withVideo = false) },
         onAcceptVideo = { viewModel.acceptCurrent(withVideo = true) },
         onDecline = { viewModel.refuseCurrent() },
@@ -316,6 +340,7 @@ fun IncomingCallScreen(
 @Composable
 private fun CallScreenContent(
     state: CallState,
+    micLevel: (() -> Float)? = null,
     onAcceptAudio: () -> Unit,
     onAcceptVideo: () -> Unit,
     onDecline: () -> Unit,
@@ -520,6 +545,7 @@ private fun CallScreenContent(
                             state = state,
                             onEnd = onEnd,
                             onToggleMute = onToggleMute,
+                            micLevel = micLevel,
                             onToggleSpeaker = onToggleSpeaker,
                             onToggleVideo = onToggleVideo,
                             onToggleHold = onToggleHold,
@@ -982,6 +1008,8 @@ private fun OnGoingControls(
     state: CallState,
     onEnd: () -> Unit,
     onToggleMute: () -> Unit,
+    /** Microphone level for the ring on the mute button; see [CallControlButton]. */
+    micLevel: (() -> Float)? = null,
     onToggleSpeaker: () -> Unit,
     onToggleVideo: () -> Unit,
     onToggleHold: () -> Unit,
@@ -1010,6 +1038,9 @@ private fun OnGoingControls(
                 ),
                 isActive = state.isAudioMuted,
                 onClick = onToggleMute,
+                // Nothing is being captured while muted, so the ring would sit at zero and read
+                // as "you are not being heard" twice over.
+                level = micLevel.takeUnless { state.isAudioMuted },
             )
 
             CallControlButton(
@@ -1461,12 +1492,33 @@ private fun CallControlButton(
     contentDescription: String,
     isActive: Boolean,
     onClick: () -> Unit,
+    /**
+     * 0..1, drawn as a ring around the button. A lambda, not a value: the microphone level
+     * arrives about ten times a second, and reading it here means only the draw phase re-runs —
+     * taking it as a parameter would recompose this button (and its caller) at that rate.
+     */
+    level: (() -> Float)? = null,
 ) {
     val bg = if (isActive) Color.White.copy(alpha = 0.30f) else Color.White.copy(alpha = 0.12f)
     IconButton(
         onClick = onClick,
         modifier = Modifier
             .size(56.dp)
+            .then(
+                if (level == null) Modifier else Modifier.drawBehind {
+                    // A quiet room still reads a little above zero, so the ring only starts to
+                    // show once there is something to show.
+                    val l = ((level() - 0.02f) / 0.28f).coerceIn(0f, 1f)
+                    if (l > 0f) {
+                        val width = 3.dp.toPx()
+                        drawCircle(
+                            color = Color.White.copy(alpha = 0.25f + 0.55f * l),
+                            radius = size.minDimension / 2 - width / 2,
+                            style = Stroke(width = width),
+                        )
+                    }
+                }
+            )
             .clip(CircleShape)
             .background(bg)
             .semantics { this.contentDescription = contentDescription },

@@ -85,6 +85,38 @@ class CallService(
     private val _currentConferences = MutableStateFlow<List<Conference>>(emptyList())
     val currentConferences: StateFlow<List<Conference>> = _currentConferences.asStateFlow()
 
+    // ==================== Microphone level ====================
+
+    private val _localAudioLevel = MutableStateFlow(0f)
+
+    /**
+     * RMS level of the microphone, 0..1, while [setMicrophoneMeterEnabled] is on; 0 otherwise.
+     * The daemon emits roughly ten values a second, so collectors should not do heavy work per
+     * value. Only the capture buffer is metered — a per-participant level would mean metering
+     * each call's own ring buffer as well.
+     */
+    val localAudioLevel: StateFlow<Float> = _localAudioLevel.asStateFlow()
+
+    private var meterEnabled = false
+
+    /**
+     * Turn microphone metering on while something is showing it (the call screen), off when it
+     * goes away. The daemon computes RMS on every captured frame while this is on, so it is not
+     * left running in the background.
+     */
+    fun setMicrophoneMeterEnabled(enabled: Boolean) {
+        if (meterEnabled == enabled) return
+        meterEnabled = enabled
+        Log.d(TAG, "setMicrophoneMeterEnabled: $enabled")
+        daemonBridge.setAudioMeterState(AudioMeter.CAPTURE_ID, enabled)
+        if (!enabled) _localAudioLevel.value = 0f
+    }
+
+    /** Daemon callback: one RMS sample for ring buffer [id]. */
+    internal fun onAudioMeter(id: String, level: Float) {
+        if (id == AudioMeter.CAPTURE_ID) _localAudioLevel.value = level.coerceIn(0f, 1f)
+    }
+
     // ==================== Call Operations ====================
 
     /**

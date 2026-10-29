@@ -80,6 +80,17 @@ interface DaemonBridgeApi {
     fun setNoiseSuppression(enabled: Boolean)
 
     /**
+     * Turn the daemon's RMS metering on or off for one ring buffer, or for all of them when [id]
+     * is empty (`RingBufferPool::setAudioMeterState`). While it is on, the daemon emits
+     * [DaemonCallbacks.onAudioMeter] roughly every 100 ms per metered buffer, so it is only
+     * turned on while something is showing the level.
+     *
+     * @param id a ring-buffer id: [AudioMeter.CAPTURE_ID] for the microphone, a call id for a
+     *   peer's stream, or "" for every buffer.
+     */
+    fun setAudioMeterState(id: String, enabled: Boolean)
+
+    /**
      * Noise-suppression state as the daemon reports it ("enabled"/"disabled", possibly a mode
      * name on newer daemons). Empty when the platform cannot query it.
      */
@@ -678,6 +689,15 @@ data class CallMessageSend(
     val isMixed: Boolean,
 )
 
+/** Ring-buffer ids used with [DaemonBridgeApi.setAudioMeterState]. */
+object AudioMeter {
+    /**
+     * The audio layer's own buffer, which is where captured microphone audio lands
+     * (`RingBufferPool::DEFAULT_ID` in the daemon). Metering it gives the local input level.
+     */
+    const val CAPTURE_ID = "audiolayer_id"
+}
+
 data class FileTransferInfo(
     val path: String,
     val totalSize: Long,
@@ -811,6 +831,12 @@ interface DaemonCallbacks {
     fun onErrorAlert(alert: Int)
     /** An audio device's volume was changed by the daemon. */
     fun onVolumeChanged(device: String, value: Int)
+
+    /**
+     * RMS level of one ring buffer while metering is on. [id] is the buffer, [level] is linear
+     * RMS in 0..1 (the daemon's `rmsLevel_ / RMS_SIGNAL_INTERVAL`, not dB).
+     */
+    fun onAudioMeter(id: String, level: Float)
     /** STUN resolution failed for this account — NAT traversal may be degraded. */
     fun onStunStatusFailure(accountId: String)
     /** The daemon's call history file changed. */
@@ -907,6 +933,9 @@ class StubDaemonBridge : DaemonBridgeApi {
     )
     val sentFiles: MutableList<SentFile> = mutableListOf()
 
+    /** Ring-buffer id -> whether metering was last turned on for it. */
+    val audioMeterStates: MutableMap<String, Boolean> = mutableMapOf()
+
     /** Recorded downloadFile() calls as (conversationId, interactionId, fileId). */
     val downloadedFiles: MutableList<Triple<String, String, String>> = mutableListOf()
 
@@ -961,6 +990,9 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun muteLocalMedia(accountId: String, callId: String, mediaType: String, mute: Boolean) {}
     override fun playDtmf(key: String) {}
     override fun muteRingtone(mute: Boolean) {}
+    override fun setAudioMeterState(id: String, enabled: Boolean) {
+        audioMeterStates[id] = enabled
+    }
     override fun muteCapture(mute: Boolean) {}
     override fun isCaptureMuted(): Boolean = false
     override fun restartAudioLayer() {}
