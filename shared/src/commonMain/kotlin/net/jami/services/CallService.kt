@@ -85,6 +85,56 @@ class CallService(
     private val _currentConferences = MutableStateFlow<List<Conference>>(emptyList())
     val currentConferences: StateFlow<List<Conference>> = _currentConferences.asStateFlow()
 
+    // ==================== Instant conference ====================
+
+    /**
+     * Peers we have just asked the daemon to dial for a conference, lower-cased raw ids. The
+     * daemon's `createConfFromParticipantList` returns no call ids, so the calls it places first
+     * reach us as `callStateChanged` for ids we have never seen — and that path assumes a
+     * RINGING call it does not know is *incoming*. Without this set our own outgoing calls would
+     * be shown on the incoming side.
+     */
+    private val pendingConferenceDials = mutableSetOf<String>()
+
+    /**
+     * Set with [pendingConferenceDials] and consumed by the first of those calls to appear, so the
+     * UI opens on a real call we placed. The conference itself is attached a moment later, and the
+     * call screen picks that up through the same path as adding a participant to an ongoing call.
+     */
+    private var conferenceNavPending = false
+
+    /**
+     * Dial [peerUris] at once and join them into one conference.
+     *
+     * The daemon refuses fewer than two participants outright
+     * (`Manager::createConfFromParticipantList` logs and returns), and only attaches the
+     * conference if at least two calls were created — with one reachable peer out of three you
+     * are left holding ordinary 1:1 calls, not a conference. Returns false when the request was
+     * not even sent.
+     */
+    suspend fun createConferenceWith(accountId: String, peerUris: List<Uri>): Boolean {
+        if (peerUris.size < 2) {
+            Log.w(TAG, "createConferenceWith: need at least two participants, got ${peerUris.size}")
+            return false
+        }
+        mutex.withLock {
+            peerUris.forEach { pendingConferenceDials.add(it.rawRingId.lowercase()) }
+            conferenceNavPending = true
+        }
+        // "<peer uri>,<account id>" — the daemon splits on the first comma (manager.cpp).
+        val participants = peerUris.map { "${it.rawRingId},$accountId" }
+        Log.d(TAG, "createConferenceWith: $participants")
+        daemonBridge.createConfFromParticipantList(accountId, participants)
+        return true
+    }
+
+    /**
+     * Whether a call to [peerUri] that we did not place ourselves is in fact one of our own
+     * conference dials. Consumes the entry: the daemon places exactly one call per participant.
+     */
+    private fun claimConferenceDial(peerUri: String): Boolean =
+        pendingConferenceDials.remove(Uri.fromString(peerUri).rawRingId.lowercase())
+
     // ==================== Microphone level ====================
 
     private val _localAudioLevel = MutableStateFlow(0f)
@@ -552,11 +602,21 @@ class CallService(
                     // RINGING without an existing call is always an incoming call: outgoing calls are
                     // added to `calls` by placeCall() before any callStateChanged fires, so they already
                     // exist here. Mark RINGING-created calls as INCOMING so the UI shows the right side.
-                    val callType = if (callState == CallStatus.RINGING) Call.Direction.INCOMING.value else Call.Direction.OUTGOING.value
+                    // …except for the calls createConfFromParticipantList places on our behalf:
+                    // those are ours, and the daemon hands us no ids to pre-register them with.
+                    val peerNumber = daemonBridge.getCallDetails(accountId, callId)[Call.KEY_PEER_NUMBER]
+                    val isOurConferenceDial = peerNumber != null && claimConferenceDial(peerNumber)
+                    if (isOurConferenceDial && conferenceNavPending) {
+                        conferenceNavPending = false
+                        _pendingCallNavId.value = callId
+                    }
+                    val callType = if (callState == CallStatus.RINGING && !isOurConferenceDial)
+                        Call.Direction.INCOMING.value else Call.Direction.OUTGOING.value
                     call = Call(callId, mapOf(
                         Call.KEY_ACCOUNT_ID to accountId,
                         Call.KEY_CALL_STATE to stateStr,
-                        Call.KEY_CALL_TYPE to callType.toString()
+                        Call.KEY_CALL_TYPE to callType.toString(),
+                        Call.KEY_PEER_NUMBER to (peerNumber ?: ""),
                     ))
                     call.setCallState(callState)
                     calls[callId] = call

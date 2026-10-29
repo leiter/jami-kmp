@@ -155,7 +155,7 @@ LIBJAMI_PUBLIC void sendTextMessage(const std::string& accountId,
 
 ---
 
-### F10: Conference creation from participant list not used — **gap**
+### F10: Conference creation from participant list not used — **gap** — **DONE (2026-10-29)**
 **Evidence:** `createConfFromParticipantList` exists in the daemon:
 ```cpp
 LIBJAMI_PUBLIC void createConfFromParticipantList(const std::string& accountId,
@@ -166,6 +166,45 @@ This is never called. Conferences are created implicitly by adding participants 
 **Impact:** No way to create a multi-party conference directly from a list of participants. Must start a 1:1 call and add participants one-by-one, or rely on the daemon's implicit creation when participants interact.
 
 **Daemon support:** `callmanager_interface.h:86-87`
+
+**Implemented as "call everyone selected" on the new-conversation screen.** The multi-select the
+roll-up said did not exist was already there — `NewConversationScreen` has selectable contacts for
+group creation — so the work was the call itself, not a picker. With two or more people selected a
+call button appears next to Create; it creates no conversation, which is the point of this daemon
+call: an instant meeting rather than a group chat with a call in it.
+
+**What reading `Manager::createConfFromParticipantList` (manager.cpp:1557) changed about the
+design:**
+
+- Each entry is `"<peer uri>,<account id>"`, split on the first comma. The signature's
+  `vector<string> participants` does not say this anywhere.
+- Fewer than two participants is a logged error and nothing else, so `CallService` refuses
+  early rather than sending a request that cannot work.
+- The conference is only attached if **at least two calls were created**. One reachable peer out
+  of three leaves ordinary 1:1 calls behind, not a conference. Nothing in the client can prevent
+  that; it is the daemon's rule.
+- **It returns no call ids.** This is what made the finding more than a passthrough: the calls it
+  places reach the client as `callStateChanged` for ids it has never seen, and that path assumes
+  a RINGING call it does not know is *incoming* (`CallService.kt:555`, which is correct for every
+  other case because `placeCall` registers its own calls first). Our own dials would have been
+  shown on the incoming side. `CallService` now keeps the peers it asked for in
+  `pendingConferenceDials`, matches an unknown RINGING call against them by `PEER_NUMBER`, and
+  consumes the entry so a later call to the same peer is incoming again.
+- Navigation opens on the **first** of those calls rather than the conference, because the
+  conference does not exist yet when the first call starts ringing — and once it is attached, the
+  call screen picks it up through the same path as adding a participant to an ongoing call.
+
+Tests: `InstantConferenceTest` (6).
+
+**Device check (Pixel 7a, 2026-10-29).** Selected two contacts; the call button appeared only at
+the second selection. Tapping it logged
+`createConferenceWith: [61f41c6a…,3f3dad8b328eb995, d0efaeca…,3f3dad8b328eb995]`, and the daemon
+created conference `7994718995922200` and placed **two** calls, which then both failed with code
+480 because neither peer was online. So the request, the formatting and the conference creation
+are confirmed against the real daemon; the RINGING path — and with it the incoming/outgoing guard
+— needs a reachable peer, like the other two open device checks.
+
+**Not on Apple:** not in `JamiBridgeWrapper.h`; added to `apple-bridge-rebuild.md`.
 
 ---
 

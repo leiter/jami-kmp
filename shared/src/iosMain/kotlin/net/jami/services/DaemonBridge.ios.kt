@@ -382,6 +382,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.joinParticipant(accountId, callId = selCallId, accountId2 = account2Id, callId2 = dragCallId)
         return true
     }
+    // Not in JamiBridgeWrapper.h — see doc/apple-bridge-rebuild.md.
+    override fun createConfFromParticipantList(accountId: String, participants: List<String>) {
+        Log.d(TAG, "createConfFromParticipantList (not exposed via JamiBridge): $participants")
+    }
+
     override fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean {
         bridge.addParticipantToConference(accountId, callId = callId, conferenceAccountId = account2Id, conferenceId = confId)
         return true

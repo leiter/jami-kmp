@@ -448,10 +448,25 @@ Service discovery/exposure is entirely missing from KMP. This is used by the ref
 
 **Reference:** jami-client-android calls all of these in `HardwareService.kt` for audio device switching.
 
-### F2: Codec Configuration UI — Incomplete (Category: Gap)
+### F2: Codec Configuration UI — Incomplete (Category: Gap) — **ALREADY IMPLEMENTED; evidence stale (verified 2026-10-29)**
 **Evidence:** `configurationmanager_interface.h:118–127`, KMP DaemonBridge methods `getCodecList`, `getActiveCodecList`, `setActiveCodecList`, `getCodecDetails`
 **Impact:** The daemon supports full codec enumeration and reordering of active codecs (priority order matters for negotiation), but KMP exposes no UI to reorder or disable codecs. Users cannot prefer VP9 over H.264, or disable specific audio codecs. The reference app also does not expose this in its UI (settings are daemon-side only, not user-configurable).
 **Daemon support:** Four functions are wired; `setCodecDetails` (per-codec param editing) is not called.
+
+**Both things the impact says are missing are on screen.** `AccountMediaSettingsScreen:157-193`
+lists audio and video codecs separately, each row with a toggle and up/down arrows
+(`viewModel.setCodecEnabled` / `viewModel.moveCodec`). `AccountSubSettingsViewModel:175-186`
+builds the rows from `getCodecList` + `getActiveCodecList` + `getCodecDetails` (name, type, sample
+rate), and `pushActiveCodecList` (`:299`) sends the enabled ids back **in display order** — which
+is exactly the priority the finding is worried about, since `setActiveCodecList` takes order as
+preference. So "users cannot prefer VP9 over H.264, or disable specific audio codecs" is not true;
+both work.
+
+What remains unwired is the one thing the finding's *Daemon support* line already identified:
+`setCodecDetails` (per-codec parameters — bitrate, quality). It is in the bindings
+(`JamiService.java:340`), it is not in `DaemonBridgeApi`, and the reference client does not expose
+it either. Left deliberately: a per-codec bitrate form is desktop-grade configuration with no
+mobile demand behind it, and nothing else in the plan depends on it.
 
 ### F3: Plugin System Not Ported — Major Gap (Category: Gap) — **PLANNED (2026-10-28): `doc/plan_plugin_system.md`; the audit undercounts the API and misses the handlers**
 **Evidence:** `plugin_manager_interface.h` (19 functions); jami-kmp/doc/TODO.md explicitly lists "Chat plugins: not yet ported — deprioritised."

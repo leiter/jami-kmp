@@ -126,6 +126,18 @@ interface DaemonBridgeApi {
     fun hangUpConference(accountId: String, confId: String): Boolean
     fun joinParticipant(accountId: String, selCallId: String, account2Id: String, dragCallId: String): Boolean
     fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean
+
+    /**
+     * Dial several peers at once and join them into one conference
+     * (`Manager::createConfFromParticipantList`). Each entry is `"<peer uri>,<account id>"` —
+     * the daemon splits on the first comma. It does nothing at all with fewer than two entries,
+     * and only attaches the conference if at least two of the calls were created, so a partial
+     * failure leaves ordinary 1:1 calls behind rather than a conference.
+     *
+     * Returns no call ids, so the calls it creates arrive as `callStateChanged` for ids the
+     * client has never seen — see `CallService.createConferenceWith`.
+     */
+    fun createConfFromParticipantList(accountId: String, participants: List<String>)
     fun addMainParticipant(accountId: String, confId: String): Boolean
     fun detachParticipant(accountId: String, callId: String): Boolean
     fun getParticipantList(accountId: String, confId: String): List<String>
@@ -933,6 +945,12 @@ class StubDaemonBridge : DaemonBridgeApi {
     )
     val sentFiles: MutableList<SentFile> = mutableListOf()
 
+    /** Call id -> the details the daemon would report (e.g. Call.KEY_PEER_NUMBER). */
+    val callDetails: MutableMap<String, Map<String, String>> = mutableMapOf()
+
+    /** Recorded createConfFromParticipantList() calls. */
+    val conferencesCreatedFromList: MutableList<Pair<String, List<String>>> = mutableListOf()
+
     /** Ring-buffer id -> whether metering was last turned on for it. */
     val audioMeterStates: MutableMap<String, Boolean> = mutableMapOf()
 
@@ -1034,7 +1052,8 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun getActiveTunnels(accountId: String): List<Map<String, String>> = activeTunnels
     override fun transfer(accountId: String, callId: String, to: String): Boolean = true
     override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean = true
-    override fun getCallDetails(accountId: String, callId: String): Map<String, String> = emptyMap()
+    override fun getCallDetails(accountId: String, callId: String): Map<String, String> =
+        callDetails[callId] ?: emptyMap()
     override fun toggleRecording(accountId: String, callId: String): Boolean = false
     override fun getIsRecording(accountId: String, callId: String): Boolean = false
 
@@ -1046,6 +1065,9 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun hangUpConference(accountId: String, confId: String): Boolean = true
     override fun joinParticipant(accountId: String, selCallId: String, account2Id: String, dragCallId: String): Boolean = true
     override fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean = true
+    override fun createConfFromParticipantList(accountId: String, participants: List<String>) {
+        conferencesCreatedFromList.add(accountId to participants)
+    }
     override fun addMainParticipant(accountId: String, confId: String): Boolean = true
     override fun detachParticipant(accountId: String, callId: String): Boolean = true
     override fun getParticipantList(accountId: String, confId: String): List<String> = emptyList()

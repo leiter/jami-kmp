@@ -240,6 +240,11 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "setAudioMeterState (not exposed via JamiBridge): id=$id enabled=$enabled")
     }
 
+    // Not in JamiBridgeWrapper.h — see doc/apple-bridge-rebuild.md.
+    override fun createConfFromParticipantList(accountId: String, participants: List<String>) {
+        Log.d(TAG, "createConfFromParticipantList (not exposed via JamiBridge): $participants")
+    }
+
     override fun restartAudioLayer() {}
 
     override fun sendCallTextMessage(

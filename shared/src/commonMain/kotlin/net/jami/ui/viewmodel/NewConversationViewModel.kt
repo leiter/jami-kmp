@@ -38,6 +38,7 @@ import net.jami.model.TextMessage
 import net.jami.model.Uri
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
+import net.jami.services.CallService
 import net.jami.services.ContactService
 import net.jami.services.ConversationEvent
 import net.jami.services.ConversationFacade
@@ -69,6 +70,7 @@ class NewConversationViewModel(
     private val conversationFacade: ConversationFacade,
     private val accountService: AccountService,
     private val deviceRuntimeService: DeviceRuntimeService,
+    private val callService: CallService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) : ViewModel() {
     private val scope = scope
@@ -274,6 +276,27 @@ class NewConversationViewModel(
         _state.value = _state.value.copy(
             selectedContacts = current.filter { it.uri != contact.uri }
         )
+    }
+
+    /**
+     * Call every selected contact at once and join them into one conference
+     * (mini-plan calling F10). Unlike [createConversation] this creates no conversation: the
+     * daemon dials each peer and attaches the calls to a conference, so it is an instant
+     * meeting, not a group chat with a call in it.
+     *
+     * Needs at least two contacts — the daemon does nothing with fewer. The call screen opens by
+     * itself when the first of the calls appears, so there is nothing to navigate to here.
+     *
+     * @return false when the request was not sent.
+     */
+    suspend fun startGroupCall(): Boolean {
+        val selected = _state.value.selectedContacts
+        if (selected.size < 2) return false
+        val accountId = accountService.currentAccount.value?.accountId ?: return false
+        _state.value = _state.value.copy(isLoading = true)
+        val sent = callService.createConferenceWith(accountId, selected.map { Uri.fromString(it.uri) })
+        _state.value = _state.value.copy(isLoading = false)
+        return sent
     }
 
     /**

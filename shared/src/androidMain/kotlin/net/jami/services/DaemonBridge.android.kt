@@ -427,6 +427,13 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         return JamiService.joinParticipant(accountId, selCallId, account2Id, dragCallId)
     }
 
+    override fun createConfFromParticipantList(accountId: String, participants: List<String>) {
+        if (!isInitialized) return
+        val vect = StringVect()
+        participants.forEach { vect.add(it) }
+        JamiService.createConfFromParticipantList(accountId, vect)
+    }
+
     override fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean {
         return JamiService.addParticipant(accountId, callId, account2Id, confId)
     }

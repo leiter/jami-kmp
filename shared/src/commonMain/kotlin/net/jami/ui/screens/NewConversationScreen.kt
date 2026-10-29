@@ -17,6 +17,7 @@
 package net.jami.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +30,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
@@ -181,23 +183,42 @@ fun NewConversationScreen(
                 }
             }
 
-            // Create button
-            JamiButton(
-                text = stringResource(Res.string.action_create_short),
-                onClick = {
-                    coroutineScope.launch {
-                        val conversationId = viewModel.createConversation()
-                        if (conversationId != null) {
-                            onConversationCreated(conversationId)
-                        }
-                    }
-                },
+            // Create button, plus — with two or more people selected — a button that calls them
+            // all at once instead (mini-plan calling F10). That path creates no conversation: the
+            // daemon dials each peer and joins the calls into a conference.
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(JamiTheme.spacing.l),
-                loading = state.isLoading,
-                enabled = state.selectedContacts.isNotEmpty() && !state.isLoading,
-            )
+                horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                JamiButton(
+                    text = stringResource(Res.string.action_create_short),
+                    onClick = {
+                        coroutineScope.launch {
+                            val conversationId = viewModel.createConversation()
+                            if (conversationId != null) {
+                                onConversationCreated(conversationId)
+                            }
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    loading = state.isLoading,
+                    enabled = state.selectedContacts.isNotEmpty() && !state.isLoading,
+                )
+                if (state.selectedContacts.size >= 2) {
+                    IconButton(
+                        onClick = { coroutineScope.launch { viewModel.startGroupCall() } },
+                        enabled = !state.isLoading,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Call,
+                            contentDescription = stringResource(Res.string.ab_action_audio_call),
+                        )
+                    }
+                }
+            }
         }
     }
 }

@@ -42,7 +42,7 @@ class NewConversationViewModelTest {
         // The ViewModel's own collectors must not be children of the TestScope either, or
         // runTest waits on them and fails with UncompletedCoroutinesError after a minute.
         val vmScope = scope.viewModelScope()
-        return NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), vmScope)
+        return NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), callService, vmScope)
     }
 
     @Test
@@ -157,7 +157,7 @@ class NewConversationViewModelTest {
         val contactService = makeContactService(stub, accountService, this)
         val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), viewModelScope())
+        val vm = NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), callService, viewModelScope())
         vm.search("alice")
         // Simulate daemon returning a name lookup result
         accountService.onRegisteredNameFound(TEST_ACCOUNT_ID, 0, "abc123def", "alice")
@@ -173,7 +173,7 @@ class NewConversationViewModelTest {
         val contactService = makeContactService(stub, accountService, this)
         val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
-        val vm = NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), disposableScope())
+        val vm = NewConversationViewModel(contactService, facade, accountService, StubDeviceRuntimeService(), callService, disposableScope())
         vm.onCleared()
     }
 }

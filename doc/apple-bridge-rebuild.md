@@ -30,6 +30,10 @@
 > a passthrough, the signal wired into the presence/configuration callback block the same way
 > `volumeChanged` is.
 
+> **`createConfFromParticipantList` (2026-10-29, mini-plan calling F10).** Not in the wrapper.
+> One passthrough taking an `NSArray<NSString *>` of `"<peer uri>,<account id>"` entries; the
+> Kotlin actuals log and drop today.
+
 Nine commits added ~514 lines of Objective-C++ to the JamiBridge wrapper that has never been
 compiled, because those sessions ran on Linux where Apple targets are skipped. The committed
 `.a` files are stale by the same nine commits. This describes what is waiting, what is already

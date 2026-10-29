@@ -279,6 +279,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun hangUpConference(accountId: String, confId: String): Boolean = false
     override fun joinParticipant(accountId: String, selCallId: String, account2Id: String, dragCallId: String): Boolean = false
+    override fun createConfFromParticipantList(accountId: String, participants: List<String>) {
+        Log.d(TAG, "createConfFromParticipantList (stub): $participants")
+    }
+
     override fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean = false
     override fun addMainParticipant(accountId: String, confId: String): Boolean = false
     override fun detachParticipant(accountId: String, callId: String): Boolean = false

@@ -5,9 +5,16 @@ Six per-area gap analyses, all audited **2026-09-25** against the daemon headers
 carries its own status marker; this file is only a roll-up, so the individual files stay
 authoritative.
 
-**Counted from the finding headings on 2026-10-29: 89 findings — 41 done, 6 partly done,
-37 closed without work (invalid, blocked, already implemented, or not applicable to mobile),
-5 still open.**
+**Counted from the finding headings on 2026-10-29: 89 findings — 43 done, 6 partly done,
+39 closed without work (invalid, blocked, already implemented, or not applicable to mobile),
+1 still open** — `daemon-api-surface-audit.md` F3, the plugin system, which is planned and
+waiting on a product decision.
+
+**2026-10-29 — the backlog was worked to the end.** `messaging-conversations.md` F4 implemented
+and F13 closed; `notifications-push-background.md` F9 implemented (audio half);
+`calling-conferencing.md` F10 implemented; `daemon-api-surface-audit.md` F2 closed. Three of the
+five turned out to be **already built or mis-described** — F13 and F2 were fully implemented, and
+F4 named a control that was on screen all along. Only F10 and F9 were real gaps.
 
 **2026-10-28 — two plans triaged to the bone, then two more closed.**
 `contacts-presence-accounts.md` is **closed**: F2 was implemented (presence suspended on
@@ -29,11 +36,11 @@ had gone stale — see the caveat at the end of this file.
 
 | Mini-plan | Findings | Done | Partly | Closed w/o work | Open |
 |---|---|---|---|---|---|
-| [`calling-conferencing.md`](calling-conferencing.md) | 16 | 11 | 2 | 2 | 1 |
-| [`messaging-conversations.md`](messaging-conversations.md) | 13 | 7 | 0 | 5 | 1 |
-| [`notifications-push-background.md`](notifications-push-background.md) | 13 | 9 | 1 | 2 | 1 |
+| [`calling-conferencing.md`](calling-conferencing.md) | 16 | 12 | 2 | 2 | **0 — closed** |
+| [`messaging-conversations.md`](messaging-conversations.md) | 13 | 7 | 0 | 6 | **0 — closed** |
+| [`notifications-push-background.md`](notifications-push-background.md) | 13 | 10 | 1 | 2 | **0 — closed** |
 | [`contacts-presence-accounts.md`](contacts-presence-accounts.md) | 14 | 5 | 1 | 8 | **0 — closed** |
-| [`daemon-api-surface-audit.md`](daemon-api-surface-audit.md) | 12 | 4 | 2 | 4 | 2 |
+| [`daemon-api-surface-audit.md`](daemon-api-surface-audit.md) | 12 | 4 | 2 | 5 | 1 |
 | [`security-networking.md`](security-networking.md) | 21 | 5 | 0 | 16 | **0 — closed** |
 
 "Closed without work" means the finding was disproved, found already implemented, blocked on a
@@ -47,25 +54,22 @@ count (security-networking, 14) held only three findings worth implementing, whi
 (daemon-api-surface-audit) held the single biggest remaining feature. Sort by the sub-bullets, not
 the numbers.
 
-Five findings are open, in four plans. One of them is the only one with real size:
+One finding is open, in one plan.
 
-- **`daemon-api-surface-audit.md` — 2 open, one of them the biggest item left.**
-  - **F3, the plugin system**, now planned in [`../plan_plugin_system.md`](../plan_plugin_system.md):
-    an install format, a file-management story, per-account and per-conversation state, and a
-    dynamic preference form built from daemon metadata. The plan corrects the finding (the
-    bindings hold ~20 relevant functions, three of the audit's 19 are unrelated ALSA/PulseAudio
-    device calls, and the handler API it never mentions is what makes a loaded plugin do
-    anything) and it asks for a decision before any code: plugins are desktop-first in the
-    reference clients, and nothing has established that the mobile-primary targets want them.
-  - **F2, codec configuration UI** — reordering and disabling codecs. The finding itself notes the
-    reference client does not expose this either, so it is parity-neutral and low value.
-- **`messaging-conversations.md` — 1 open.** F13 (per-conversation vCard exchange) needs
-  investigation before it can be scoped. F4 was implemented on 2026-10-29 — and its stated
-  symptom was wrong: the attach controls were never hidden while replying, the reply was simply
-  dropped on the way to the daemon. Another case for the caveat below.
-- **`calling-conferencing.md` — 1 open.** F10, `createConfFromParticipantList`: in the bindings,
-  but it needs a multi-select participant UI that does not exist yet.
-- **`notifications-push-background.md` — 1 open.** F9, audio/video device metrics. Low value.
+- **`daemon-api-surface-audit.md` — 1 open, and it is the biggest item left.**
+  **F3, the plugin system**, planned in [`../plan_plugin_system.md`](../plan_plugin_system.md):
+  an install format, a file-management story, per-account and per-conversation state, and a
+  dynamic preference form built from daemon metadata. The plan corrects the finding (the bindings
+  hold ~20 relevant functions, three of the audit's 19 are unrelated ALSA/PulseAudio device
+  calls, and the handler API it never mentions is what makes a loaded plugin do anything) and it
+  asks for a decision before any code: plugins are desktop-first in the reference clients, and
+  nothing has established that the mobile-primary targets want them.
+
+**What is left that is not a finding.** Three checks need hardware rather than work: clearing a
+status note against a peer, a conference actually ringing (calling F10's incoming/outgoing guard),
+and the microphone level reading anything (notifications F9) — all three want a second device.
+The Apple batch in [`../apple-bridge-rebuild.md`](../apple-bridge-rebuild.md) has grown to five
+items and wants a Mac.
 
 **Closed plans.** `contacts-presence-accounts.md` (2026-10-28) — the real work was F2, presence
 suspended on background, which also unified three independent presence subscribers behind a single
