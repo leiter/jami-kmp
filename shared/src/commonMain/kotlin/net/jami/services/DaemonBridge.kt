@@ -948,6 +948,9 @@ class StubDaemonBridge : DaemonBridgeApi {
     /** Call id -> the details the daemon would report (e.g. Call.KEY_PEER_NUMBER). */
     val callDetails: MutableMap<String, Map<String, String>> = mutableMapOf()
 
+    /** Recorded addConversationMember() calls as (conversationId, memberUri). */
+    val addedConversationMembers: MutableList<Pair<String, String>> = mutableListOf()
+
     /** Recorded createConfFromParticipantList() calls. */
     val conferencesCreatedFromList: MutableList<Pair<String, List<String>>> = mutableListOf()
 
@@ -1094,7 +1097,9 @@ class StubDaemonBridge : DaemonBridgeApi {
         clearedCaches += accountId to conversationId
     }
 
-    override fun addConversationMember(accountId: String, conversationId: String, uri: String) {}
+    override fun addConversationMember(accountId: String, conversationId: String, uri: String) {
+        addedConversationMembers.add(conversationId to uri)
+    }
     override fun removeConversationMember(accountId: String, conversationId: String, uri: String) {}
     override fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {}
     override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> =

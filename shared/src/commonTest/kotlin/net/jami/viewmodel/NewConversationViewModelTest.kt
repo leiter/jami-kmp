@@ -156,6 +156,53 @@ class NewConversationViewModelTest {
         assertTrue(vm.state.value.selectedContacts.isEmpty())
     }
 
+    // ==================== Group picker (reference ContactPickerFragment) ====================
+
+    /**
+     * The reference hands whatever was picked straight to startConversation, with no 1:1
+     * fallback and no title — so one picked contact still makes a swarm.
+     */
+    @Test
+    fun pickingOnePersonStillMakesASwarm() = runTest {
+        val stub = StubDaemonBridge()
+        val vm = vmWithAContactAndAGroup(stub)
+        vm.startGroupPicking()
+        advanceUntilIdle()
+
+        vm.selectContact(assertNotNull(vm.state.value.knownContacts.firstOrNull()))
+        val id = vm.createGroup()
+        advanceUntilIdle()
+
+        assertNotNull(id, "a conversation should have been started")
+        assertEquals(1, stub.addedConversationMembers.size, "the one pick was added as a member")
+    }
+
+    @Test
+    fun theGroupPickerCreatesNothingWithNobodyPicked() = runTest {
+        val stub = StubDaemonBridge()
+        val vm = vmWithAContactAndAGroup(stub)
+        vm.startGroupPicking()
+        advanceUntilIdle()
+
+        assertNull(vm.createGroup())
+        assertTrue(stub.addedConversationMembers.isEmpty())
+    }
+
+    /** The picker is a sheet over the search screen and shares this ViewModel with it. */
+    @Test
+    fun openingThePickerDoesNotWipeTheSearchBehindIt() = runTest {
+        val stub = StubDaemonBridge()
+        val vm = vmWithAContactAndAGroup(stub)
+        vm.search("bob")
+        advanceUntilIdle()
+
+        vm.startGroupPicking()
+        advanceUntilIdle()
+
+        assertEquals("bob", vm.state.value.searchQuery)
+        assertTrue(vm.state.value.knownContacts.isNotEmpty(), "and it loaded who to pick from")
+    }
+
     @Test
     fun initialStateIsEmpty() = runTest {
         val stub = StubDaemonBridge()

@@ -40,6 +40,7 @@ import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.services.CallService
 import net.jami.services.ContactService
+import net.jami.utils.Log
 import net.jami.services.ConversationEvent
 import net.jami.services.ConversationFacade
 import net.jami.services.DeviceRuntimeService
@@ -306,6 +307,41 @@ class NewConversationViewModel(
     }
 
     /**
+     * Open the group picker: clear whatever was picked before and (re)load the contacts to pick
+     * from. Deliberately narrower than [resetSearch] — the picker is a sheet over the search
+     * screen, and the two share this ViewModel, so wiping the query and its results would clear
+     * the screen behind the sheet.
+     */
+    fun startGroupPicking() {
+        _state.value = _state.value.copy(selectedContacts = emptyList())
+        scope.launch { loadAllConversations() }
+    }
+
+    /**
+     * Create a swarm with everyone picked, the way the reference picker does: its
+     * `onContactPicked` calls `createConversation(accountId, contacts)` ->
+     * `startConversation(accountId, contactIds)` for **any** number of people, so picking one
+     * person still makes a group rather than falling back to a 1:1 — and it asks for no title,
+     * which is set later from the conversation details screen.
+     *
+     * @return the new conversation id, or null when nothing was picked.
+     */
+    suspend fun createGroup(): String? {
+        val selected = _state.value.selectedContacts
+        if (selected.isEmpty()) return null
+        val accountId = accountService.currentAccount.value?.accountId ?: return null
+        return try {
+            _state.value = _state.value.copy(isLoading = true)
+            accountService.startConversation(accountId, selected.map { it.uri })
+        } catch (e: Exception) {
+            Log.e(TAG, "createGroup failed", e)
+            null
+        } finally {
+            _state.value = _state.value.copy(isLoading = false)
+        }
+    }
+
+    /**
      * Call every selected contact at once and join them into one conference
      * (mini-plan calling F10). Unlike [createConversation] this creates no conversation: the
      * daemon dials each peer and attaches the calls to a conference, so it is an instant
@@ -460,4 +496,9 @@ class NewConversationViewModel(
     public override fun onCleared() {
         scope.cancel()
     }
+
+    private companion object {
+        const val TAG = "NewConversationViewModel"
+    }
+
 }

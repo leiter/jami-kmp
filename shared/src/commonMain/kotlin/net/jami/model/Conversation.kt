@@ -226,6 +226,29 @@ class Conversation(
      * conversation, and a `?:` or `?.` on it does not catch anything, because it raises rather
      * than returning null.
      */
+    /**
+     * What to call this conversation, built the way the reference client builds it
+     * (`ConversationItemViewModel.getTitle`): the profile name when it has one; the other party
+     * for a 1:1; otherwise up to [MAX_TITLE_NAMES] member names, with `+ N` for the rest. A group
+     * with no name is therefore shown by who is in it, not by its swarm id.
+     *
+     * Safe for a group, unlike [contact].
+     */
+    val title: String
+        get() {
+            profileFlow.value.displayName?.takeIf { it.isNotBlank() }?.let { return it }
+
+            val others = contacts.filterNot { it.isUser }
+            if (others.isEmpty()) return if (mode == Mode.Syncing) "(Syncing)" else uri.rawRingId
+            if (others.size == 1) return others[0].displayUsername
+
+            val names = others.map { it.displayUsername }.filter { it.isNotEmpty() }
+            if (names.isEmpty()) return uri.rawRingId
+            val shown = names.take(MAX_TITLE_NAMES)
+            return shown.joinToString(", ") +
+                if (names.size > shown.size) " + ${names.size - shown.size}" else ""
+        }
+
     val contactOrNull: Contact?
         get() = if (isGroup) null else contact
 
@@ -802,6 +825,9 @@ class Conversation(
     }
 
     companion object {
+        /** `ConversationItemViewModel.MAX_NAMES` — how many members a group title names. */
+        const val MAX_TITLE_NAMES = 3
+
         const val KEY_PREFERENCE_CONVERSATION_COLOR = "color"
         const val KEY_PREFERENCE_CONVERSATION_SYMBOL = "symbol"
         const val KEY_PREFERENCE_CONVERSATION_NOTIFICATION = "notification"

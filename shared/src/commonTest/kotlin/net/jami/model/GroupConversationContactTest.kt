@@ -60,6 +60,30 @@ class GroupConversationContactTest {
      * The shape that crashed: a list holding one group among 1:1 conversations, walked as a list.
      * A `?:` or `?.` on `contact` catches nothing, because it raises rather than returning null.
      */
+    // ==================== Title (reference ConversationItemViewModel.getTitle) ====================
+
+    @Test
+    fun aOneToOneIsTitledByTheOtherParty() {
+        val conv = conversation(contact("me", isUser = true), contact("bbbb"))
+        assertEquals("bbbb", conv.title)
+    }
+
+    /** A group with no name is shown by who is in it, not by its swarm id. */
+    @Test
+    fun anUnnamedGroupIsTitledByItsMembers() {
+        val group = conversation(contact("me", isUser = true), contact("bbbb"), contact("cccc"))
+        assertEquals("bbbb, cccc", group.title)
+    }
+
+    @Test
+    fun aLongGroupNamesThreeMembersAndCountsTheRest() {
+        val group = conversation(
+            contact("me", isUser = true),
+            contact("aaaa"), contact("bbbb"), contact("cccc"), contact("dddd"), contact("eeee"),
+        )
+        assertEquals("aaaa, bbbb, cccc + 2", group.title)
+    }
+
     @Test
     fun walkingAMixedListDoesNotThrow() {
         val bob = contact("bbbb")

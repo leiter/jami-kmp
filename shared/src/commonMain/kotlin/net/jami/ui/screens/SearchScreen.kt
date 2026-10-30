@@ -48,6 +48,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -94,6 +96,7 @@ fun SearchScreen(
     val state by viewModel.state.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val focusRequester = remember { FocusRequester() }
+    var showGroupPicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         val pendingDeepLinkQuery = DeepLinkState.consumeQuery()
@@ -157,7 +160,10 @@ fun SearchScreen(
                 item {
                     JamiFilterChip(
                         text = stringResource(Res.string.action_new_group),
-                        onClick = onNewGroupClick,
+                        // The reference opens ContactPickerFragment as a bottom sheet from here
+                        // (HomeFragment.startNewSwarm), over the search view rather than
+                        // navigating away from it.
+                        onClick = { showGroupPicker = true },
                         leadingIcon = Icons.Default.Groups,
                     )
                 }
@@ -243,6 +249,17 @@ fun SearchScreen(
                 }
             }
         }
+    }
+
+    if (showGroupPicker) {
+        ContactPickerSheet(
+            viewModel = viewModel,
+            onDismiss = { showGroupPicker = false },
+            onCreated = { conversationId ->
+                showGroupPicker = false
+                onConversationClick(conversationId)
+            },
+        )
     }
 }
 

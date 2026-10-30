@@ -104,7 +104,7 @@ class LocationSharingViewModel(
             val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
             val conversation = conversationFacade.getConversation(account.accountId, conversationUri)
 
-            val title = conversation?.contact?.displayUsername ?: conversationId
+            val title = conversation?.title?.takeIf { it.isNotBlank() } ?: conversationId
 
             _state.value = _state.value.copy(
                 conversationId = conversationId,

@@ -323,17 +323,20 @@ class ChatViewModel(
                         ?.getConversations()
                         ?.find { it.uri.rawRingId == conversationId }
 
-                val title = conversation?.contact?.displayUsername ?: conversationId
-                val avatarBytes = conversation?.contact?.let { contact ->
+                // `contact` throws for a group, and this whole block is inside a try/catch, so
+                // reading it here used to abort the rest of loadConversation for any group chat
+                // — the header fell back to the default state. `title` handles both.
+                val title = conversation?.title?.takeIf { it.isNotBlank() } ?: conversationId
+                val avatarBytes = conversation?.contactOrNull?.let { contact ->
                     VCardUtils.loadPeerProfileFromDisk(
                         filesDir = deviceRuntimeService.getDataPath(),
                         accountId = account.accountId,
                         peerUri = contact.uri.rawRingId
                     )
                 }
-                val peerUri = conversation?.contact?.uri?.uri ?: ""
+                val peerUri = conversation?.contactOrNull?.uri?.uri ?: ""
                 val isLegacy = conversation?.isLegacy ?: false
-                Log.d(TAG, "loadConversation: id=$conversationId contact=${conversation?.contact?.uri} peerUri=$peerUri isGroup=${conversation?.isGroup} isLegacy=$isLegacy")
+                Log.d(TAG, "loadConversation: id=$conversationId contact=${conversation?.contactOrNull?.uri} peerUri=$peerUri isGroup=${conversation?.isGroup} isLegacy=$isLegacy")
                 _state.value = _state.value.copy(
                     conversationTitle = title,
                     contactAvatarBytes = avatarBytes,
@@ -361,7 +364,7 @@ class ChatViewModel(
                 loadMessagesFromHistory()
 
                 // Subscribe to presence updates for the contact
-                conversation?.contact?.let { contact ->
+                conversation?.contactOrNull?.let { contact ->
                     subscribeToPresenceUpdates(contact)
                     subscribeToProfileUpdates(account.accountId, contact)
                 }

@@ -514,9 +514,9 @@ class ConversationsViewModel(
                 }
             }
 
-            val displayName = conversation.profileFlow.value.displayName?.takeIf { it.isNotBlank() }
-                ?: contact?.displayUsername
-                ?: conversation.uri.rawRingId
+            // Conversation.title applies the reference's rule, which names a group's members
+            // instead of showing its swarm id.
+            val displayName = conversation.title
 
             // Filter by query
             if (query.isNotEmpty() && !displayName.lowercase().contains(query)) {
