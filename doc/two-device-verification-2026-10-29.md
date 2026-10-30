@@ -100,3 +100,19 @@ no `FATAL EXCEPTION` in logcat.
 `ConversationsViewModel:293` and `PendingRequestsViewModel:85` would have taken down the **home
 screen** for anyone invited to a group. Nothing in the test suite had a group in a conversation
 list, which is why 824 passing tests said nothing about it.
+
+### The seventh site, found the next day (2026-10-30)
+
+The sweep above covered the places that walk a conversation *list*. One more had the same read in
+a different shape: `ChatViewModel.loadConversation` reads `contact` for the **open** conversation,
+and that whole block sits in its own `try/catch(Exception)`. So opening a group chat was never a
+crash — it was a **silent abort** of the rest of the method, leaving the header on default state.
+
+It was parked here as "needs a device to characterise, do not guess", and that was the right call:
+it surfaced the moment a group was created through the new picker, showing a chat headed `?`. Now
+fixed via `Conversation.title`, and confirmed on the Pixel 7a:
+`loadConversation: … contact=null peerUri= isGroup=true` runs through to the end.
+
+`Account.getByContact` (`Account.kt:216`/`:221`) was the other unguarded walk identified that day,
+reached from `ConversationFacade:1158` in the incoming-call path. **Still open** — the picker work
+took priority.

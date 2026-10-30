@@ -65,6 +65,14 @@ One finding is open, in one plan.
   asks for a decision before any code: plugins are desktop-first in the reference clients, and
   nothing has established that the mobile-primary targets want them.
 
+**Work that came out of using the app, not out of these plans.** Two days of device runs turned up
+more than the findings did: a crash class where any group conversation took down every screen that
+walks a conversation list (`bbba9fb`), the contact picker showing neither your selection nor
+anybody to pick from (`c1b440b`), and group creation not following the reference client at all
+(`51084e8`). None of the six plans had a finding for any of it, because they were audited against
+the daemon API rather than against the screens. One site of the crash class is still open —
+`Account.getByContact`, see [`../KNOWN-ISSUES.md`](../KNOWN-ISSUES.md).
+
 **What is left that is not a finding.** A two-device round on 2026-10-29 closed two of the three
 outstanding checks — clearing a status note, and a conference actually ringing — and left one:
 **the microphone level reading anything** (notifications F9) needs a call that someone answers,

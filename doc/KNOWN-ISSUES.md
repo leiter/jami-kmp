@@ -130,3 +130,41 @@ Do not read these lines as a symptom of whatever you are debugging — they pred
 also *not* exclusive to a fresh install: the case that prompted this trace was a simulator whose
 data folder dated from a month earlier but had never held a `dring.yml`, because no account was
 ever created in it.
+
+## `Account.getByContact` still throws when the account holds a group
+
+**Status:** Open (found 2026-10-30)
+**Impact:** Reached from the incoming-call path; the same crash class fixed in `bbba9fb`
+**Where:** `shared/src/commonMain/kotlin/net/jami/model/Account.kt:216` and `:221`
+
+### Problem
+
+`Conversation.contact` throws by design for a group conversation
+(`Conversation.kt`: "getContact() called for group conversation of size N") — it is a guard for
+code that already knows it holds a 1:1 conversation. `getByContact` walks both conversation maps
+reading it:
+
+```kotlin
+conversations.values.find { conv -> conv.contact?.uri == contactUri }
+…
+return pending.values.find { conv -> conv.contact?.uri == contactUri }
+```
+
+The `?.` is decorative: the getter **raises** rather than returning null, so nothing catches it.
+The direct-key lookup above these lines misses for swarm conversations — they are keyed by swarm
+uri, not by a contact uri — so the walk is the normal path, not a fallback.
+
+### Why it matters more than the screens already fixed
+
+`ConversationFacade.kt:1158` calls it while populating `call.contact` before an incoming-call
+notification fires. The six sites fixed in `bbba9fb` were list-rendering; this one is in call
+handling.
+
+### Fix
+
+`conv.contactOrNull` at both lines, same as the other walks. The first test to write is the
+deterministic one — a contact with **no** conversation, with a group present: `find` must visit
+every entry before returning null, so the group is always reached, whereas "find Bob while a group
+exists" only fails depending on map iteration order.
+
+Not yet done because the contact-picker work (`51084e8`) took priority; nothing else depends on it.

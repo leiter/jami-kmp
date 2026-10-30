@@ -96,6 +96,41 @@
   `pending-*` bubble) and stays visible; retry just adds a new transfer attempt. No daemon-level
   `resendFile`/`retryDataTransfer` exists, and `jami-client-android` was checked and has no
   equivalent retry feature either — re-sending is the only available mechanism on both.
+- [x] **Group creation, resampled on the reference picker** (2026-10-30, `51084e8`) — "New Group"
+  used to navigate to the search screen and rely on a toggle plus a name field. It now opens a
+  bottom sheet over the search view, as `HomeFragment.startNewSwarm` ->
+  `ContactPickerFragment` does: **no search**, a grid of the contacts you already have, picks
+  shown as avatar chips with an X, an empty state, and one button. No group-name step, because
+  the reference has none — the name is set afterwards from conversation details. One picked
+  contact still makes a swarm rather than a 1:1, matching `ConversationFacade.kt:714`, which
+  hands whatever was picked to `startConversation` unchanged.
+  - `Conversation.title` now applies `ConversationItemViewModel.getTitle`'s rule (profile name ->
+    the other party -> up to three member names with `+ N`), so an unnamed group reads
+    "marco100, peace4us" in the list and the chat header instead of its swarm id.
+  - **Three defects found behind one symptom** ("picking a second person erased the first",
+    reported 2026-10-30). The selection was never *rendered* — it lived only in the row
+    checkmark and the buttons' `enabled`, so searching for the second person took the first out
+    of the result list and nothing else showed it. The data was never lost: `search()` does not
+    touch `selectedContacts`. Second, the browsable list did not exist: the LazyColumn rendered
+    `publicDirectoryResults` and nothing read `conversationResults`, so an empty query gave a
+    blank screen. Third, the one function that did fill a list threw on a group (below).
+  - Verified on the Pixel 7a: the sheet lists contacts in a grid, two picks show two avatar
+    chips, the button creates the swarm, adds both members and lands in the new conversation.
+- [x] **A group conversation no longer crashes the screens that list conversations**
+  (2026-10-30, `bbba9fb`) — `Conversation.contact` throws by design for a group, and six places
+  walked *all* conversations and read it anyway (`NewConversationViewModel` twice,
+  `ConversationsViewModel` twice, `ContactDetailsViewModel`, `PendingRequestsViewModel`). Three
+  of them wrote `conv.contact ?: continue` or `conv.contact?.uri`, which reads as safe and is
+  not — the getter **raises**, so neither `?:` nor `?.` catches anything. `getPending()` holds
+  group invitations, so two of those sites would have taken down the home screen for anyone
+  invited to a group. `Conversation.contactOrNull` returns null for a group and is used at every
+  walking site; `contact` keeps its throw as the 1:1 invariant guard.
+  - A seventh, different in shape: `ChatViewModel.loadConversation` read `contact` for the
+    *open* conversation inside its own `try/catch`, so opening any group chat was not a crash
+    but a **silent abort** — the header stayed on default state. Found by opening a freshly
+    created group; fixed and confirmed (`loadConversation: … contact=null isGroup=true`).
+  - No fixture anywhere put a group in a conversation list, which is why 824 passing tests said
+    nothing about any of it. `GroupConversationContactTest` and the picker fixtures now do.
 - [x] **Message long-press: share file** — Done 2026-09-18 (`c4d413f`): file/image messages have a long-press menu (Open / Save / Share / Delete file once complete, Delete on own messages), and the image viewer has Share/Save.
 
 Parity gaps found 2026-09-18 comparing chat interactions with jami-android-client

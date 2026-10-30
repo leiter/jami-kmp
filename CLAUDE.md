@@ -57,7 +57,7 @@ jami-kmp/
 │       │   ├── ui/
 │       │   │   ├── JamiApp.kt           # Root Compose entry point (all platforms)
 │       │   │   ├── navigation/          # Screen (32 routes), JamiNavigation
-│       │   │   ├── screens/             # 33 screen files
+│       │   │   ├── screens/             # 34 screen files
 │       │   │   ├── viewmodel/           # 20 ViewModels
 │       │   │   ├── components/          # Reusable components
 │       │   │   │   ├── actions/         # JamiButton, JamiIconButton, JamiFilterChip
@@ -68,7 +68,7 @@ jami-kmp/
 │       │   │   │   └── notification/    # JamiAlertDialog
 │       │   │   └── theme/               # JamiTheme, JamiColors, JamiTypography, ThemeTokens
 │       │   └── utils/        # Log, FileUtils, QRCodeUtils, HashUtils, StringUtils, …
-│       ├── commonTest/       # 70 test files (ViewModel + model + service + utility tests)
+│       ├── commonTest/       # 75 test files (ViewModel + model + service + utility tests)
 │       ├── androidMain/      # JNI bridge, Android services, SharedPreferences, JNI libs
 │       ├── iosMain/          # C interop bridge, Foundation/AVFoundation services
 │       ├── macosMain/        # C interop bridge, macOS AppKit services
@@ -136,16 +136,19 @@ All user-visible strings live in `shared/src/commonMain/composeResources/`. The 
 
 ---
 
-## Known Gaps (as of 2026-10-26)
+## Known Gaps (as of 2026-10-30)
 
 All major mobile features are implemented, including CallKit (iOS) and Telecom API/ConnectionService (Android). The remaining gaps are:
 
 - **Push notifications** — Android (FCM) and iOS (APNs + PushKit) client integration are both done (2026-07-27, see `doc/push-notifications.md`). Delivery still needs a push-capable DHT proxy holding the FCM/APNs credentials for this app, so calls and messages currently still rely on the daemon running. The iOS half now compiles and runs (it was written on a Linux host, where Apple targets are skipped, and needed five fixes on the first Mac build — see `ios_implementation_gap.md` §4.1).
 - **iOS connectivity never reaches the daemon** — `NWPathMonitor` feeds `HardwareService.connectivityChanged()`, so `_connectivityState` and `setAccountsActive()` are correct, but `DaemonBridge.ios.kt` cannot forward it: `JamiBridgeWrapper.h` exposes no `connectivityChanged` entry point, so the call is a log line. The daemon is never told to re-resolve its connections after a network change. Android is fully wired (`ConnectivityManager.NetworkCallback` → JNI). Fix is one wrapper passthrough + a `build-jamibridge.sh` rebuild. Two more calls are now waiting
-on the same rebuild, so batch them: `setDefaultModerator` and `publish` (the presence status note —
+on the same rebuild, so batch them — the list has grown to five and is kept in
+`doc/apple-bridge-rebuild.md`: `setDefaultModerator`, `publish` (the presence status note —
 Android publishes it, iOS/macOS log and drop it, and their presence callback synthesises
 `lineStatus` as `""`, so Apple can neither send nor receive a note until the wrapper is
-regenerated).
+regenerated), `sendFile`'s missing `parent` argument (a file sent as a reply arrives as a plain
+file), `setAudioMeterState` plus its `AudioMeter` callback (the microphone level ring stays dark),
+and `createConfFromParticipantList`.
 - **macOS target does not compile** — ~95 errors, mostly in `MacOSHardwareService.kt`. Since the iOS and macOS Darwin implementations are now substantively identical, the right fix is a shared `appleMain` source set. A start exists on `origin/macos-build-and-apple-source-set` (`f0f66ce`, 2026-10-01); it predates the nine wrapper commits and needs rebasing onto `main`. `build-jamibridge.sh`'s macOS stage also fails independently, on UIKit code compiled against the macOS SDK — long-standing, not caused by recent work.
 - **iOS remote video rendering** — no Metal/CALayer `SinkTarget` implementation yet; audio-only calls work fine. See `ios_implementation_gap.md`.
 - **Chat plugins** — Jami plugin system not ported to KMP. Menu item shows a "not yet supported" snackbar.
@@ -156,7 +159,7 @@ regenerated).
 
 ## Daemon Bridge
 
-The `DaemonBridge` expect class is the gateway to `libjami`. `DaemonBridgeApi` declares **231 methods**, and the Android actual calls **149 distinct `JamiService.*` entry points**:
+The `DaemonBridge` expect class is the gateway to `libjami`. `DaemonBridgeApi` declares **235 methods**, and the Android actual calls **152 distinct `JamiService.*` entry points** (counted 2026-10-30):
 
 | Platform | Implementation | Status |
 |----------|---------------|--------|
