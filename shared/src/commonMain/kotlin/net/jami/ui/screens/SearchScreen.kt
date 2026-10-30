@@ -71,6 +71,7 @@ import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.ContactItem
 import net.jami.ui.viewmodel.ConversationItem
 import net.jami.ui.viewmodel.NewConversationViewModel
+import net.jami.ui.components.content.conversationDisplayName
 
 /**
  * Search screen for finding conversations and contacts.
@@ -348,7 +349,7 @@ private fun ConversationSearchItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         JamiAvatar(
-            displayName = conversation.displayName,
+            displayName = conversationDisplayName(conversation),
             avatarBytes = conversation.avatarBytes,
             size = AvatarSize.Medium,
             showPresence = true,
@@ -360,7 +361,7 @@ private fun ConversationSearchItem(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = conversation.displayName,
+                text = conversationDisplayName(conversation),
                 style = JamiTheme.typography.titleSmall,
                 color = JamiTheme.colors.onSurface,
                 maxLines = 1,

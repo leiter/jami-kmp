@@ -237,6 +237,38 @@ class ChatViewModelTest {
         assertEquals(alice.uri.uri, vm.state.value.peerUri)
     }
 
+    /**
+     * A freshly accepted invitation has no members yet. The header must not fall back to the
+     * route argument (that is how the swarm URI ended up on screen), nor to an English literal
+     * from the model: the title comes back empty with [ChatState.isTitleSyncing] set, and the
+     * screen puts the localized "Syncing…" there.
+     */
+    @Test
+    fun aSyncingConversationReportsAnEmptyTitleAndTheSyncingFlag() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        val account = prepareAccountInService(stub, accountService)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
+
+        account.conversationStarted(
+            account.newSwarm("syncingconv", net.jami.model.Conversation.Mode.Syncing)
+        )
+
+        val vmScope = viewModelScope()
+        val vm = ChatViewModel(
+            facade, accountService, StubDeviceRuntimeService(),
+            net.jami.repository.DraftRepository(net.jami.services.InMemoryClientSettingsStore(), vmScope), testAudioRecorderService(),
+            makeSendQueue(stub, accountService, facade, this), vmScope
+        )
+        vm.loadConversation("syncingconv")
+        advanceUntilIdle()
+
+        assertEquals("", vm.state.value.conversationTitle, "no id, no English literal")
+        assertTrue(vm.state.value.isTitleSyncing)
+    }
+
     // ==================== Daemon delivery status (messaging plan F9) ====================
 
     /**

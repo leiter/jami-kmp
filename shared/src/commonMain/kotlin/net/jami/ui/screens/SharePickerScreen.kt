@@ -51,6 +51,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.text.style.TextOverflow
+import net.jami.ui.components.content.conversationDisplayName
 
 /**
  * Conversation picker shown when the user shares content into Jami from another app.
@@ -116,7 +117,7 @@ private fun ShareConversationItem(
         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
     ) {
         JamiAvatar(
-            displayName = conversation.displayName,
+            displayName = conversationDisplayName(conversation),
             avatarBytes = conversation.avatarBytes,
             size = AvatarSize.Small,
             showPresence = true,
@@ -128,7 +129,7 @@ private fun ShareConversationItem(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = conversation.displayName,
+                text = conversationDisplayName(conversation),
                 style = JamiTheme.typography.titleSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

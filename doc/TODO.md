@@ -116,6 +116,21 @@
     blank screen. Third, the one function that did fill a list threw on a group (below).
   - Verified on the Pixel 7a: the sheet lists contacts in a grid, two picks show two avatar
     chips, the button creates the swarm, adds both members and lands in the new conversation.
+- [x] **The syncing placeholder title is localized** (2026-10-30) — `Conversation.title`
+  returned the literal `"(Syncing)"` for a swarm with no members yet, as the reference does
+  (`ConversationItemViewModel.getTitle` hardcodes it untranslated). It is a model getter and
+  cannot reach Compose resources, so it now returns `""` and the new `isUnnamedSyncing` tells
+  the UI what the empty title means. `conversationDisplayName()` (new, in
+  `ui/components/content/`) resolves it for HomeScreen, SearchScreen, SharePickerScreen and the
+  chat header alike, so the lists and the header cannot drift apart.
+  - `conversation_title_syncing` is KMP-only: upstream has no title string for this state, and
+    the existing `conversation_syncing` ("Downloading conversation from peer") is a body message
+    used in a banner, not a header. Added to `values/`, `values-de/`, `values-de-rDE/`.
+  - **Test-verified only.** Seeing it live needs a conversation caught mid-sync, i.e. a fresh
+    invitation accepted while its members have not arrived; the pending invitations were
+    cancelled before that check could run. Four tests cover the model and `ChatViewModel`
+    (empty title + flag, non-syncing fallback to the swarm id, flag clearing once a member
+    joins), but nothing exercises the Compose substitution — there are no Compose UI tests here.
 - [x] **Join/invite rows name people instead of printing their Jami id**
   (2026-10-30) — a group's system messages read
   `d9f8c7f0bf768178542d402c6ae233072bfff6df ist der Unterhaltung beigetreten.`

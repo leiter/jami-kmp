@@ -382,6 +382,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_info_contact_you">You</string>
     <string name="conversation_members">Members</string>
     <string name="conversation_syncing">Downloading conversation from peer</string>
+    <!-- KMP-only: the reference hardcodes an untranslated "(Syncing)" as the title of a
+         conversation that has synced no members yet (ConversationItemViewModel.getTitle). -->
+    <string name="conversation_title_syncing">Syncing…</string>
     <string name="conversation_blocked">This contact is blocked.</string>
     <string name="conversation_ended">Conversation ended.</string>
     <string name="conversation_message_deleted">%1$s deleted a message</string>

@@ -239,7 +239,11 @@ class Conversation(
             profileFlow.value.displayName?.takeIf { it.isNotBlank() }?.let { return it }
 
             val others = contacts.filterNot { it.isUser }
-            if (others.isEmpty()) return if (mode == Mode.Syncing) "(Syncing)" else uri.rawRingId
+            // Nothing to name it by. While syncing that is expected and temporary, and the row
+            // wants "Syncing…" — but this is a model getter with no access to Compose resources,
+            // so it yields an empty title and [isUnnamedSyncing] tells the UI which string to
+            // put there. (The reference returns a hardcoded, untranslated "(Syncing)" here.)
+            if (others.isEmpty()) return if (mode == Mode.Syncing) "" else uri.rawRingId
             if (others.size == 1) return others[0].displayUsername
 
             val names = others.map { it.displayUsername }.filter { it.isNotEmpty() }
@@ -248,6 +252,16 @@ class Conversation(
             return shown.joinToString(", ") +
                 if (names.size > shown.size) " + ${names.size - shown.size}" else ""
         }
+
+    /**
+     * True when [title] has nothing to name this conversation by and the swarm is still syncing,
+     * so the UI should show its own localized "Syncing…" in place of the empty title. A freshly
+     * accepted invitation is in this state until its members arrive.
+     */
+    val isUnnamedSyncing: Boolean
+        get() = profileFlow.value.displayName.isNullOrBlank() &&
+            contacts.none { !it.isUser } &&
+            mode == Mode.Syncing
 
     val contactOrNull: Contact?
         get() = if (isGroup) null else contact

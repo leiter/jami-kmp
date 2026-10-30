@@ -151,6 +151,8 @@ data class ChatState(
     val messages: List<MessageItem> = emptyList(),
     val inputText: String = "",
     val conversationTitle: String = "",
+    /** The swarm has synced no members yet: the header shows a localized "Syncing…". */
+    val isTitleSyncing: Boolean = false,
     val contactAvatarBytes: ByteArray? = null,
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
@@ -346,7 +348,11 @@ class ChatViewModel(
                 // `contact` throws for a group, and this whole block is inside a try/catch, so
                 // reading it here used to abort the rest of loadConversation for any group chat
                 // — the header fell back to the default state. `title` handles both.
-                val title = conversation?.title?.takeIf { it.isNotBlank() } ?: conversationId
+                // A conversation with no members yet has a deliberately empty title; the
+                // screen puts the localized "Syncing…" there, so do not fall back to the id.
+                val isTitleSyncing = conversation?.isUnnamedSyncing == true
+                val title = conversation?.title?.takeIf { it.isNotBlank() }
+                    ?: if (isTitleSyncing) "" else conversationId
                 val avatarBytes = conversation?.contactOrNull?.let { contact ->
                     VCardUtils.loadPeerProfileFromDisk(
                         filesDir = deviceRuntimeService.getDataPath(),
@@ -359,6 +365,7 @@ class ChatViewModel(
                 Log.d(TAG, "loadConversation: id=$conversationId contact=${conversation?.contactOrNull?.uri} peerUri=$peerUri isGroup=${conversation?.isGroup} isLegacy=$isLegacy")
                 _state.value = _state.value.copy(
                     conversationTitle = title,
+                    isTitleSyncing = isTitleSyncing,
                     contactAvatarBytes = avatarBytes,
                     hasMoreHistory = true,
                     isLoadingMore = false,

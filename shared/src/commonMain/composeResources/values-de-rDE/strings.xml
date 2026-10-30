@@ -151,6 +151,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_type_group">Gruppe</string>
     <string name="conversation_contact_invited">%1$s wurde eingeladen, der Unterhaltung beizutreten.</string>
     <string name="conversation_contact_added">%1$s ist der Unterhaltung beigetreten.</string>
+    <string name="conversation_title_syncing">Wird synchronisiert…</string>
     <string name="conversation_contact_left">%1$shat die Unterhaltung verlassen.</string>
     <string name="conversation_contact_blocked">%1$s wurde von der Unterhaltung ausgeschlossen.</string>
     <string name="conversation_contact_unblocked">%1$swurde in der Unterhaltung entblockt.</string>

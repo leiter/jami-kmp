@@ -191,6 +191,7 @@ import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.ChatViewModel
 import net.jami.ui.viewmodel.MessageItem
 import net.jami.ui.viewmodel.MessageType
+import net.jami.ui.components.content.conversationDisplayName
 
 /**
  * Chat screen for viewing and sending messages in a conversation.
@@ -430,8 +431,11 @@ fun ChatScreen(
                                 .combinedClickable(onClick = onDetailsClick)
                                 .padding(vertical = JamiTheme.spacing.xxs),
                         ) {
+                            val headerTitle = conversationDisplayName(
+                                state.conversationTitle, state.isTitleSyncing
+                            )
                             JamiAvatar(
-                                displayName = state.conversationTitle,
+                                displayName = headerTitle,
                                 avatarBytes = state.contactAvatarBytes,
                                 size = AvatarSize.Small,
                                 showPresence = true,
@@ -440,7 +444,7 @@ fun ChatScreen(
                             Spacer(Modifier.width(JamiTheme.spacing.m))
                             Column {
                                 Text(
-                                    text = state.conversationTitle,
+                                    text = headerTitle,
                                     style = JamiTheme.typography.titleMedium,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,

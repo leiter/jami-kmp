@@ -18,6 +18,8 @@ package net.jami.model
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -82,6 +84,35 @@ class GroupConversationContactTest {
             contact("aaaa"), contact("bbbb"), contact("cccc"), contact("dddd"), contact("eeee"),
         )
         assertEquals("aaaa, bbbb, cccc + 2", group.title)
+    }
+
+    /**
+     * A just-accepted invitation has no profile name and no members yet. The reference puts a
+     * hardcoded, untranslated "(Syncing)" here; the model leaves the title empty instead and
+     * flags the state, so the UI can supply a localized string (`conversation_title_syncing`).
+     */
+    @Test
+    fun aSyncingConversationWithNoMembersHasNoTitleOfItsOwn() {
+        val syncing = Conversation("acc1", Uri(Uri.SWARM_SCHEME, "conv1"), initialMode = Conversation.Mode.Syncing)
+        assertEquals("", syncing.title)
+        assertTrue(syncing.isUnnamedSyncing)
+    }
+
+    /** Not syncing and still nobody in it: the swarm id is all there is to show. */
+    @Test
+    fun anEmptyNonSyncingConversationFallsBackToItsId() {
+        val empty = Conversation("acc1", Uri(Uri.SWARM_SCHEME, "conv1"), initialMode = Conversation.Mode.OneToOne)
+        assertEquals("conv1", empty.title)
+        assertFalse(empty.isUnnamedSyncing)
+    }
+
+    /** Once a member arrives the name takes over, and the placeholder must stop being used. */
+    @Test
+    fun aSyncingConversationWithAMemberIsNamedByThem() {
+        val syncing = Conversation("acc1", Uri(Uri.SWARM_SCHEME, "conv1"), initialMode = Conversation.Mode.Syncing)
+        syncing.addContact(contact("bbbb"), MemberRole.MEMBER)
+        assertEquals("bbbb", syncing.title)
+        assertFalse(syncing.isUnnamedSyncing)
     }
 
     @Test

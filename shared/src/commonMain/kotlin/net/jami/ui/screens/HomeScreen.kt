@@ -94,6 +94,7 @@ import net.jami.ui.viewmodel.ConversationFilter
 import net.jami.ui.viewmodel.ConversationItem
 import net.jami.ui.viewmodel.ConversationsViewModel
 import net.jami.ui.viewmodel.PendingRequestItem
+import net.jami.ui.components.content.conversationDisplayName
 
 /**
  * Main home screen displaying the conversation list.
@@ -646,8 +647,9 @@ private fun ConversationListItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Avatar with presence dot
+        val name = conversationDisplayName(conversation)
         JamiAvatar(
-            displayName = conversation.displayName,
+            displayName = name,
             avatarBytes = conversation.avatarBytes,
             size = AvatarSize.Small,
             showPresence = true,
@@ -670,7 +672,7 @@ private fun ConversationListItem(
             // Row 1: contact name, with pin / mute status indicators
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = conversation.displayName,
+                    text = name,
                     style = JamiTheme.typography.titleSmall,
                     fontWeight = if (isUnread) FontWeight.Bold else JamiTheme.typography.titleSmall.fontWeight,
                     color = JamiTheme.colors.onSurface,

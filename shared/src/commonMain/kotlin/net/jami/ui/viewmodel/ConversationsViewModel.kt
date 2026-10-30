@@ -81,6 +81,11 @@ data class ConversationItem(
     val isGroup: Boolean = false,
     val isMuted: Boolean = false,
     val isPinned: Boolean = false,
+    /**
+     * The swarm has synced no members yet, so [displayName] is empty and the row should show the
+     * localized "Syncing…" instead. See [net.jami.model.Conversation.isUnnamedSyncing].
+     */
+    val isSyncing: Boolean = false,
 )
 
 /**
@@ -551,6 +556,7 @@ class ConversationsViewModel(
                 isGroup = isGroup,
                 isMuted = settingsRepository.isConversationMuted(convId),
                 isPinned = convSettings.pinned,
+                isSyncing = conversation.isUnnamedSyncing,
             )
         }
             // Pinned conversations float to the top; within each group, most recent first.
