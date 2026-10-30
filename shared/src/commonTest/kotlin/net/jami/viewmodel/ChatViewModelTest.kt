@@ -203,6 +203,40 @@ class ChatViewModelTest {
         vm.onCleared()
     }
 
+    /**
+     * The accept-an-invitation path navigated with `conversationUri.uri`, which carries the
+     * `swarm:` scheme, while every other caller passes a bare id. `loadConversation` then built
+     * `swarm:swarm:<id>`, found nothing, and fell back to showing the route argument as the
+     * title — with no history loaded and nothing marked read. The id is now normalised, so a
+     * scheme-prefixed argument resolves to the same conversation as a bare one.
+     */
+    @Test
+    fun loadConversationAcceptsASchemePrefixedId() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        val account = prepareAccountInService(stub, accountService)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
+
+        val conv = account.newSwarm("2cb2dbae", net.jami.model.Conversation.Mode.OneToOne)
+        val alice = account.getContactFromCache(net.jami.model.Uri.fromId("alice"))
+        conv.addContact(alice, net.jami.model.MemberRole.MEMBER)
+        account.conversationStarted(conv)
+
+        val vmScope = viewModelScope()
+        val vm = ChatViewModel(
+            facade, accountService, StubDeviceRuntimeService(),
+            net.jami.repository.DraftRepository(net.jami.services.InMemoryClientSettingsStore(), vmScope), testAudioRecorderService(),
+            makeSendQueue(stub, accountService, facade, this), vmScope
+        )
+        vm.loadConversation("swarm:2cb2dbae")
+        advanceUntilIdle()
+
+        assertEquals(conv.title, vm.state.value.conversationTitle)
+        assertEquals(alice.uri.uri, vm.state.value.peerUri)
+    }
+
     // ==================== Daemon delivery status (messaging plan F9) ====================
 
     /**

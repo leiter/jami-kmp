@@ -347,7 +347,7 @@ fun HomeScreen(
                                 item = item,
                                 onAccept = {
                                     viewModel.acceptRequest(item)
-                                    onConversationClick(item.conversationUri.uri)
+                                    onConversationClick(item.conversationUri.rawRingId)
                                 },
                                 onRefuse = { viewModel.discardRequest(item) },
                                 onBlock = { viewModel.blockRequest(item) },

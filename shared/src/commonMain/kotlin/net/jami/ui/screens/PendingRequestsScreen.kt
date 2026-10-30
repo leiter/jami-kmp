@@ -104,7 +104,7 @@ fun PendingRequestsScreen(
                         item = item,
                         onAccept = {
                             viewModel.accept(item)
-                            onConversationOpened(item.conversationUri.uri)
+                            onConversationOpened(item.conversationUri.rawRingId)
                         },
                         onRefuse = { viewModel.discard(item) },
                         onBlock = { viewModel.block(item) },

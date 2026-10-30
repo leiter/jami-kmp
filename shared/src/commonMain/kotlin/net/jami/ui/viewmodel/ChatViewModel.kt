@@ -304,10 +304,16 @@ class ChatViewModel(
      *
      * @param conversationId The swarm or legacy conversation ID.
      */
-    fun loadConversation(conversationId: String) {
+    fun loadConversation(requestedConversationId: String) {
         scope.launch {
             _state.value = _state.value.copy(isLoading = true)
             try {
+                // Callers disagree about the scheme: the conversation list passes a bare id,
+                // the accept-an-invitation path passes `swarm:<id>`. Unnormalised, the latter
+                // built `swarm:swarm:<id>`, matched nothing, and left the screen showing its own
+                // route argument as the title with no history and nothing marked read.
+                // `Uri.fromString` is a no-op on an id that already has no scheme.
+                val conversationId = Uri.fromString(requestedConversationId).rawRingId
                 val account = accountService.currentAccount.value ?: return@launch
                 currentAccountId = account.accountId
                 currentConversationId = conversationId

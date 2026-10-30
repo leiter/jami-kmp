@@ -116,6 +116,18 @@
     blank screen. Third, the one function that did fill a list threw on a group (below).
   - Verified on the Pixel 7a: the sheet lists contacts in a grid, two picks show two avatar
     chips, the button creates the swarm, adds both members and lands in the new conversation.
+- [x] **Opening a just-accepted invitation no longer shows its swarm URI as the title**
+  (2026-10-30) — the accept path navigated with `conversationUri.uri`, which carries the
+  `swarm:` scheme, while every other caller passes a bare id. `ChatViewModel.loadConversation`
+  then built `swarm:swarm:<id>`, matched nothing, and fell through to showing its own route
+  argument as the header. The title was only the visible symptom: with `conversation == null`
+  the screen also loaded no history, marked nothing read and never set `isVisible`.
+  `loadConversation` now normalises the argument through `Uri.fromString(...).rawRingId` (a
+  no-op on a bare id), and the two accept sites pass `rawRingId` like everyone else
+  (`HomeScreen.kt:350`, `PendingRequestsScreen.kt:107`).
+  - Still English-only, and untouched here: `Conversation.title` returns the literal
+    `"(Syncing)"` for a swarm with no members yet. It is a model getter, so it cannot reach
+    Compose resources; the reference resolves `conversation_syncing` at the UI layer instead.
 - [x] **A second invitation from the same person no longer crashes the requests list**
   (2026-10-30) — reported from the Pixel 2 as "accepting an invitation crashes the app"; the
   crash was in fact on *rendering* the list, before any accept. Both pending-request
