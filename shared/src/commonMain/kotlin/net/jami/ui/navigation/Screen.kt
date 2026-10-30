@@ -56,11 +56,21 @@ sealed class Screen(val route: String) {
         }
     }
 
-    data class Call(val contactId: String, val isVideo: Boolean) :
-        Screen("call/$contactId/$isVideo") {
+    /**
+     * [conversationId] is the swarm conversation the call is placed from, and is what makes a
+     * group call possible: the daemon hosts a group call on the conversation itself
+     * (`swarm:<id>`), not on a peer, so the call target cannot be derived from [contactId] alone.
+     * Empty for a call placed outside a conversation.
+     */
+    data class Call(
+        val contactId: String,
+        val isVideo: Boolean,
+        val conversationId: String = ""
+    ) : Screen("call/$contactId/$isVideo?conversationId=$conversationId") {
         companion object {
-            const val ROUTE = "call/{contactId}/{isVideo}"
-            fun createRoute(contactId: String, isVideo: Boolean) = "call/$contactId/$isVideo"
+            const val ROUTE = "call/{contactId}/{isVideo}?conversationId={conversationId}"
+            fun createRoute(contactId: String, isVideo: Boolean, conversationId: String = "") =
+                "call/$contactId/$isVideo?conversationId=$conversationId"
         }
     }
 

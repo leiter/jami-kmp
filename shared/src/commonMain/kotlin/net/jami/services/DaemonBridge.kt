@@ -948,6 +948,13 @@ class StubDaemonBridge : DaemonBridgeApi {
     /** Call id -> the details the daemon would report (e.g. Call.KEY_PEER_NUMBER). */
     val callDetails: MutableMap<String, Map<String, String>> = mutableMapOf()
 
+    /** Participants the daemon reports for a conference, keyed by conference id. */
+    val participantLists: MutableMap<String, List<String>> = mutableMapOf()
+
+    /** Hang-ups handed to the daemon, as (accountId, id), so tests can tell the two apart. */
+    val hungUpCalls: MutableList<Pair<String, String>> = mutableListOf()
+    val hungUpConferences: MutableList<Pair<String, String>> = mutableListOf()
+
     /** Recorded addConversationMember() calls as (conversationId, memberUri). */
     val addedConversationMembers: MutableList<Pair<String, String>> = mutableListOf()
 
@@ -1010,7 +1017,9 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String = placeCallResult
     override fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {}
     override fun refuse(accountId: String, callId: String) {}
-    override fun hangUp(accountId: String, callId: String) {}
+    override fun hangUp(accountId: String, callId: String) {
+        hungUpCalls.add(accountId to callId)
+    }
     override fun hold(accountId: String, callId: String) {}
     override fun unhold(accountId: String, callId: String) {}
     override fun resume(accountId: String, callId: String): Boolean = true
@@ -1071,7 +1080,10 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun resumeConference(accountId: String, confId: String): Boolean = true
     override fun setActiveParticipant(accountId: String, confId: String, callId: String) {}
     override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {}
-    override fun hangUpConference(accountId: String, confId: String): Boolean = true
+    override fun hangUpConference(accountId: String, confId: String): Boolean {
+        hungUpConferences.add(accountId to confId)
+        return true
+    }
     override fun joinParticipant(accountId: String, selCallId: String, account2Id: String, dragCallId: String): Boolean = true
     override fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean = true
     override fun createConfFromParticipantList(accountId: String, participants: List<String>) {
@@ -1079,7 +1091,8 @@ class StubDaemonBridge : DaemonBridgeApi {
     }
     override fun addMainParticipant(accountId: String, confId: String): Boolean = true
     override fun detachParticipant(accountId: String, callId: String): Boolean = true
-    override fun getParticipantList(accountId: String, confId: String): List<String> = emptyList()
+    override fun getParticipantList(accountId: String, confId: String): List<String> =
+        participantLists[confId] ?: emptyList()
     override fun getConferenceDetails(accountId: String, confId: String): Map<String, String> = emptyMap()
 
     override fun getConversations(accountId: String): List<String> = conversations[accountId] ?: emptyList()

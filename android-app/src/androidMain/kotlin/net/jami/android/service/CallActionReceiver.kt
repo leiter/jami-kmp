@@ -67,7 +67,9 @@ class CallActionReceiver : BroadcastReceiver(), KoinComponent {
 
             AndroidNotificationService.ACTION_HANGUP -> {
                 Log.d(TAG, "Hangup call: callId=$callId accountId=$accountId")
-                callService.hangUp(accountId, callId)
+                // hangUpAny, not hangUp: the notification for a group call carries a conference,
+                // and hanging up one participant of it would leave the call running.
+                callService.hangUpAny(accountId, callId)
             }
 
             else -> Log.w(TAG, "Unknown action: ${intent.action}")

@@ -93,6 +93,15 @@ class Conference(
         _state.value = Call.CallStatus.fromConferenceString(state)
     }
 
+    /**
+     * Set the state directly, for the transitions the daemon reports as an event rather than as a
+     * conference state string — a conference that has been removed is over, and nothing else says
+     * so once its participants are gone.
+     */
+    fun setState(state: Call.CallStatus) {
+        _state.value = state
+    }
+
     fun addParticipant(call: Call) {
         _participants.value = _participants.value + call
     }

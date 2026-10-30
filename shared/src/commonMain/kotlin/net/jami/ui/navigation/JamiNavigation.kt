@@ -403,7 +403,9 @@ private fun MainNavigation(needsMigration: Boolean) {
                 conversationId = conversationId,
                 onBack = { navController.popBackStack() },
                 onCallClick = { contactId, isVideo ->
-                    navController.navigate(Screen.Call.createRoute(contactId, isVideo))
+                    navController.navigate(
+                        Screen.Call.createRoute(contactId, isVideo, conversationId)
+                    )
                 },
                 onDetailsClick = {
                     navController.navigate(
@@ -490,6 +492,10 @@ private fun MainNavigation(needsMigration: Boolean) {
             arguments = listOf(
                 navArgument("contactId") { type = NavType.StringType },
                 navArgument("isVideo") { type = NavType.BoolType },
+                navArgument("conversationId") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
             ),
         ) { backStackEntry ->
             val contactId = backStackEntry.extractArg("contactId")
@@ -498,6 +504,7 @@ private fun MainNavigation(needsMigration: Boolean) {
             CallScreen(
                 contactId = contactId,
                 isVideo = isVideo,
+                conversationId = backStackEntry.extractArg("conversationId"),
                 onEnd = { navController.popBackStack() },
             )
         }

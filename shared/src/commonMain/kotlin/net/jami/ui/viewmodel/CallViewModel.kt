@@ -263,17 +263,27 @@ class CallViewModel(
                 accountService.currentAccount.value?.accountId ?: return@launch
             }
             currentAccountId = resolvedAccountId
-            val peerUri = Uri.fromString(contactUri)
+            // A group call is hosted on the conversation, not on a peer: the target is
+            // `swarm:<conversationId>`, as in ConversationPresenter.goToGroupCall(), which passes
+            // conversation.uri as both the number and the conversation. There is no single peer to
+            // call, and handing the daemon a bare conversation id makes it look for devices
+            // belonging to that id and fail with "No devices found" / code 480.
+            val account = accountService.getAccount(resolvedAccountId)
+            val conversation = conversationUri
+                ?.let { account?.getSwarm(Uri.fromString(it).rawRingId) }
+            val isGroupCall = conversation?.isSwarmGroup == true
+            val peerUri = if (isGroupCall) conversation!!.uri else Uri.fromString(contactUri)
 
             // Mirror CallPresenter.initOutGoing(): only allow video if the device has a camera.
             val effectiveVideo = hasVideo && hardwareService.hasCamera()
-            Log.d(TAG, "initOutgoing: resolvedAccount=$resolvedAccountId peerUri=${peerUri.uri} scheme=${peerUri.scheme} effectiveVideo=$effectiveVideo")
+            Log.d(TAG, "initOutgoing: resolvedAccount=$resolvedAccountId peerUri=${peerUri.uri} scheme=${peerUri.scheme} isGroupCall=$isGroupCall effectiveVideo=$effectiveVideo")
 
             _state.value = _state.value.copy(
                 callMode = CallMode.Outgoing,
                 callStatus = CallStatus.SEARCHING.name,
-                peerUri = contactUri,
-                peerName = contactUri,
+                peerUri = peerUri.uri,
+                // A group has no peer to resolve a name for, so name the call by the conversation.
+                peerName = if (isGroupCall) conversation!!.title else contactUri,
                 isIncoming = false,
                 hasVideo = effectiveVideo,
                 hasLocalVideo = effectiveVideo,
@@ -281,7 +291,9 @@ class CallViewModel(
             )
 
             try {
-                val convUri = conversationUri?.let { Uri.fromString(it) }
+                // The swarm uri, not the raw id the route carries: CallService.placeCall and the
+                // Call it builds both test `isSwarm` on it.
+                val convUri = conversation?.uri ?: conversationUri?.let { Uri.fromString(it) }
                 Log.d(TAG, "initOutgoing: calling placeCall accountId=$resolvedAccountId uri=${peerUri.uri} convUri=${convUri?.uri}")
                 val call = callService.placeCall(
                     accountId = resolvedAccountId,
@@ -291,8 +303,15 @@ class CallViewModel(
                 )
                 Log.d(TAG, "initOutgoing: placeCall returned daemonId=${call.daemonId}")
                 currentCallId = call.daemonId
-                resolveContactName(resolvedAccountId, peerUri, call)
-                subscribeToConferenceUpdates(call.daemonId ?: return@launch)
+                if (!isGroupCall) resolveContactName(resolvedAccountId, peerUri, call)
+                val daemonId = call.daemonId
+                if (daemonId != null) {
+                    subscribeToConferenceUpdates(daemonId)
+                } else {
+                    // A hosted group call has no call id of its own; it is tracked through the
+                    // conference the daemon runs on the conversation.
+                    subscribeToHostedConference(call)
+                }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     callMode = CallMode.Ended(HangupReason.ERROR),
@@ -864,6 +883,27 @@ class CallViewModel(
             }
         }
         // Subscribe to video events
+        subscribeToVideoEvents()
+        subscribeToInCallMessages()
+    }
+
+    /**
+     * Track the conference the daemon hosts for a group call this device started.
+     *
+     * [CallService.placeCall] returns no call id for a hosted group call, so there is no call to
+     * subscribe to and no raw call updates to follow — everything about the call arrives as
+     * conference updates. [currentCallId] becomes the conference id, which is what the daemon
+     * takes for the in-call controls, and [handleConferenceUpdate] sets `currentConference`, so
+     * [endCall] hangs the conference up instead of silently doing nothing.
+     */
+    private fun subscribeToHostedConference(call: Call) {
+        confUpdatesJob?.cancel()
+        confUpdatesJob = scope.launch {
+            callService.hostedConfUpdates(call).collect { conf ->
+                currentCallId = conf.id
+                handleConferenceUpdate(conf)
+            }
+        }
         subscribeToVideoEvents()
         subscribeToInCallMessages()
     }

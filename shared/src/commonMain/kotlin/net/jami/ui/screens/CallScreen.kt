@@ -132,13 +132,18 @@ import org.jetbrains.compose.resources.stringResource
 fun CallScreen(
     contactId: String,
     isVideo: Boolean,
+    conversationId: String = "",
     onEnd: () -> Unit,
 ) {
     val viewModel = getViewModel<CallViewModel>()
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(contactId, isVideo) {
-        viewModel.initOutgoing(contactUri = contactId, hasVideo = isVideo)
+    LaunchedEffect(contactId, isVideo, conversationId) {
+        viewModel.initOutgoing(
+            contactUri = contactId,
+            hasVideo = isVideo,
+            conversationUri = conversationId.ifEmpty { null }
+        )
     }
 
     // The daemon computes RMS on every captured frame while metering is on, so it runs only

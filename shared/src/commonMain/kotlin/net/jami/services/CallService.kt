@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -398,6 +399,18 @@ class CallService(
         scope.launch { daemonBridge.hangUpConference(accountId, confId) }
     }
 
+    /**
+     * Hang up whatever [callOrConfId] names: a conference by its own id, the conference a call
+     * belongs to, or a plain call. Mirrors jami-client-android's hangUpAny(), which its
+     * notification end action uses — hanging up a single participant of a conference leaves the
+     * conference running, so the call never ends for the host.
+     */
+    fun hangUpAny(accountId: String, callOrConfId: String) {
+        val confId = conferences[callOrConfId]?.id ?: calls[callOrConfId]?.confId
+        if (confId != null) hangUpConference(accountId, confId)
+        else hangUp(accountId, callOrConfId)
+    }
+
     fun joinParticipant(accountId: String, selCallId: String, account2Id: String, dragCallId: String) {
         scope.launch { daemonBridge.joinParticipant(accountId, selCallId, account2Id, dragCallId) }
     }
@@ -555,6 +568,34 @@ class CallService(
             conf.id == callOrConfId ||
             conf.participants.any { it.daemonId == callOrConfId }
         }
+
+    /**
+     * Conference updates for a group call this device hosts.
+     *
+     * Hosting a group call gives back no call id — the daemon runs it as a conference on the
+     * conversation and [placeCall] returns an empty string — so the host has no call to track by
+     * id and the conference can only be found by the conversation it belongs to. Each match links
+     * [call] to it as the host call, the way jami-client-android's getConferenceHost() does, so
+     * the call state and hanging up have something to act on.
+     *
+     * The conference may not exist yet when the daemon returns from placing the call, so this
+     * keeps listening rather than resolving once.
+     */
+    fun hostedConfUpdates(call: Call): kotlinx.coroutines.flow.Flow<Conference> = flow {
+        val conversationId = call.conversationUri?.rawRingId ?: return@flow
+        conferences.values.firstOrNull { it.conversationId == conversationId }
+            ?.let { emit(linkHost(call, it)) }
+        conferenceUpdates.collect { conf ->
+            if (conf.conversationId == conversationId) emit(linkHost(call, conf))
+        }
+    }
+
+    private fun linkHost(call: Call, conference: Conference): Conference {
+        call.confId = conference.id
+        conference.hostCall = call
+        conference.confState?.let { call.setCallState(it) }
+        return conference
+    }
 
     // ==================== Call State ====================
 
@@ -895,6 +936,10 @@ class CallService(
         scope.launch {
             mutex.withLock {
                 conferences.remove(confId)?.let { conf ->
+                    // Mark it over before anyone sees it: once the participants are gone the
+                    // conference's own state is all that is left to judge it by, and without this
+                    // it still reads as CURRENT, so a call screen watching it never closes.
+                    conf.setState(CallStatus.OVER)
                     conf.removeParticipants()
                     conf.hostCall?.let { hostCall ->
                         hostCall.setCallState(CallStatus.OVER)
