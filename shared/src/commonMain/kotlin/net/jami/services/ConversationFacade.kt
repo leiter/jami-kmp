@@ -1154,8 +1154,8 @@ class ConversationFacade(
         //   3. contact service cache               — may have username from earlier lookup
         //   4. account contact cache               — bare contact, at least has the URI
         if (call.contact == null) {
-            call.contact = conversation?.contact
-                ?: account.getByContact(call.peerUri)?.contact
+            call.contact = conversation?.contactOrNull
+                ?: account.getByContact(call.peerUri)?.contactOrNull
                 ?: contactService.findContactInCache(call.account, call.peerUri)
                 ?: account.getContactFromCache(call.peerUri)
         }

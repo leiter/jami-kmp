@@ -131,8 +131,10 @@ class ContactDetailsViewModel(
                         conv.contactOrNull?.uri?.rawRingId == contactUri.rawRingId
                 }
 
-                // Resolve the contact — prefer the conversation's contact for correct name lookup
-                val resolvedContact = conversation?.contact
+                // Resolve the contact — prefer the conversation's contact for correct name lookup.
+                // contactOrNull, not contact: the match above also accepts a conversation by its
+                // own raw id, which can be a group, and Conversation.contact throws for one.
+                val resolvedContact = conversation?.contactOrNull
                 val contact = resolvedContact
                     ?: contactService.findContact(accountId, contactUri)
                 val profile = contactService.loadContactData(contact, accountId)

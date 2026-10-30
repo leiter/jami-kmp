@@ -211,14 +211,16 @@ class Account(
             // First check if there's a direct match
             conversations[contactUri.uri]?.let { return it }
 
-            // Then check conversations for matching contact
+            // Then check conversations for matching contact. This walks every conversation,
+            // groups included, so it must use contactOrNull — Conversation.contact throws for a
+            // group and a `?.` on it does not catch that.
             conversations.values.find { conv ->
-                conv.contact?.uri == contactUri
+                conv.contactOrNull?.uri == contactUri
             }?.let { return it }
 
             // Check pending conversations
             return pending.values.find { conv ->
-                conv.contact?.uri == contactUri
+                conv.contactOrNull?.uri == contactUri
             }
         }
     }
