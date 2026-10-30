@@ -213,7 +213,21 @@ class ChatViewModel(
     /** Replied-to message ids already requested from the daemon (see [replyPreview]). */
     private val requestedReplyOriginals = mutableSetOf<String>()
 
+    /** Ring ids already handed to the name service, so each is looked up at most once. */
+    private val requestedNameLookups = mutableSetOf<String>()
+
     init {
+        // A registered name resolved after a row was rendered: swap the hex id for the name.
+        scope.launch {
+            accountService.accountEvents.collect { event ->
+                if (event is AccountEvent.RegisteredNameFound &&
+                    event.state == 0 && event.name.isNotEmpty()
+                ) {
+                    applyResolvedName(event.address, event.name)
+                }
+            }
+        }
+
         // A held message was handed to the daemon by SendQueueService (the conversation went
         // live): show its bubble as "sending" and arm the no-echo watchdog.
         scope.launch {
@@ -979,8 +993,10 @@ class ChatViewModel(
      */
     private fun interactionToMessageItem(interaction: Interaction): MessageItem? {
         val id = interaction.messageId ?: interaction.id.toString()
-        // Use contact's display name/username instead of raw Jami ID
-        val author = interaction.contact?.displayUsername ?: interaction.author ?: ""
+        // Use the contact's display name/username instead of the raw Jami ID, and - this is
+        // where it matters most, since a group's join/invite rows are rebuilt from the swarm log
+        // before anything has resolved the new members - ask for the name when all we have is hex.
+        val author = displayNameFor(interaction.contact, interaction.author ?: "")
         val timestamp = interaction.timestamp  // already milliseconds
         val isOutgoing = interaction.author == null || interaction.contact?.isUser == true
 
@@ -1103,6 +1119,11 @@ class ChatViewModel(
 
     /**
      * Resolve author ID (Jami URI) to display name using conversation contacts.
+     *
+     * A member who has never been looked up has neither a profile name nor a registered one, so
+     * [Contact.displayUsername] falls back to the 40-hex id and the row reads as a wall of hex.
+     * Ask the name service once per id; [AccountEvent.RegisteredNameFound] fills the rows in
+     * when the answer arrives.
      */
     private fun resolveAuthorDisplayName(authorId: String): String {
         val accountId = currentAccountId ?: return authorId
@@ -1111,8 +1132,63 @@ class ChatViewModel(
         val conversationUri = Uri(Uri.SWARM_SCHEME, conversationId)
         val conversation = conversationFacade.getConversation(accountId, conversationUri) ?: return authorId
 
-        val contact = conversation.findContact(Uri.fromString(authorId))
-        return contact?.displayUsername ?: authorId
+        val uri = Uri.fromString(authorId)
+        // A member mentioned by an event is not necessarily in `contacts` yet (an invite names
+        // someone who has not joined), so fall back to the account cache as the history path does.
+        val contact = conversation.findContact(uri)
+            ?: accountService.getAccount(accountId)?.getContactFromCache(uri)
+        return displayNameFor(contact, authorId)
+    }
+
+    /**
+     * What to show for a message's author or a member event's subject. Both the live path and
+     * the history path go through here, so a row reads the same whether it arrived as a daemon
+     * callback or was rebuilt from the swarm log.
+     *
+     * [Contact.displayUsername] falls back to the 40-hex id when neither a profile name nor a
+     * registered one is known. Two cases then: the local user has nobody to ask - the self
+     * Contact carries no profile - so take the identity the account already holds; anyone else
+     * gets one name-service lookup, whose answer arrives as [AccountEvent.RegisteredNameFound]
+     * and is patched in by [applyResolvedName].
+     */
+    private fun displayNameFor(contact: Contact?, fallbackId: String): String {
+        val name = contact?.displayUsername ?: fallbackId
+        val rawRingId = contact?.uri?.rawRingId ?: Uri.fromString(fallbackId).rawRingId
+        if (name != rawRingId) return name
+        val accountId = currentAccountId ?: return name
+        if (contact?.isUser == true) return ownDisplayName(accountId) ?: name
+        requestNameLookup(accountId, rawRingId)
+        return name
+    }
+
+    /** What to call the local user in a system message: profile name, else registered name. */
+    private fun ownDisplayName(accountId: String): String? {
+        val account = accountService.getAccount(accountId) ?: return null
+        return account.displayName.takeIf { it.isNotBlank() }
+            ?: account.registeredName.takeIf { it.isNotBlank() }
+            ?: account.alias.takeIf { it.isNotBlank() }
+    }
+
+    /** Ask the name service for [rawRingId] at most once per ViewModel. */
+    private fun requestNameLookup(accountId: String, rawRingId: String) {
+        if (rawRingId.isEmpty()) return
+        if (!requestedNameLookups.add(rawRingId)) return
+        accountService.lookupAddress(accountId, rawRingId)
+    }
+
+    /**
+     * Replace a just-resolved id with its registered name everywhere it is on screen. The rows
+     * hold a rendered string rather than a Contact, so nothing re-reads the name by itself.
+     */
+    private fun applyResolvedName(address: String, name: String) {
+        if (name.isEmpty()) return
+        val rawRingId = Uri.fromString(address).rawRingId
+        _state.update { current ->
+            if (current.messages.none { it.author == rawRingId }) return@update current
+            current.copy(messages = current.messages.map {
+                if (it.author == rawRingId) it.copy(author = name) else it
+            })
+        }
     }
 
     /**
@@ -1167,8 +1243,14 @@ class ChatViewModel(
             }
             msg.isMember -> {
                 val action = msg.body["action"] ?: ""
+                // The sentence is about the member in body["uri"]; the commit author is whoever
+                // performed the action, which for an invite is the *inviter*. Naming the author
+                // made a live row read "alice was invited" when Alice had invited Bob, and the
+                // row then changed identity on reload because the history path (
+                // ConversationFacade.swarmMessageToInteraction) already used body["uri"].
+                val subject = msg.body["uri"]?.ifEmpty { null } ?: msg.author
                 MessageItem(
-                    id = msg.id, text = "", author = displayName,
+                    id = msg.id, text = "", author = resolveAuthorDisplayName(subject),
                     timestamp = timestampMs, isOutgoing = isOutgoing,
                     type = MessageType.System,
                     contactEventType = ContactEvent.Event.fromConversationAction(action)

@@ -116,6 +116,29 @@
     blank screen. Third, the one function that did fill a list threw on a group (below).
   - Verified on the Pixel 7a: the sheet lists contacts in a grid, two picks show two avatar
     chips, the button creates the swarm, adds both members and lands in the new conversation.
+- [x] **Join/invite rows name people instead of printing their Jami id**
+  (2026-10-30) — a group's system messages read
+  `d9f8c7f0bf768178542d402c6ae233072bfff6df ist der Unterhaltung beigetreten.`
+  `Contact.displayUsername` falls back to the 40-hex id when neither a profile name nor a
+  registered one is known, and nothing ever asked for one: the lookups in `ConversationFacade`
+  fire on registration-state changes and smartlist loads, neither of which covers the members of
+  a group you just joined. `ChatViewModel.displayNameFor` now serves both the live and the
+  history path and requests one name-service lookup per unknown id, and
+  `AccountEvent.RegisteredNameFound` patches the rendered rows (they hold a string, not a
+  `Contact`, so nothing re-reads the name by itself).
+  - **The local user is the case no lookup can fix** — you cannot resolve yourself, and the self
+    `Contact` carries no profile, so "you joined" stayed hex even after the rest worked. It now
+    comes from the account: profile name, else registered name, else alias.
+  - **A live member row was also about the wrong person.** The sentence is about
+    `body["uri"]`, but the live path named the commit *author* — for an invite, the inviter — so
+    a row read "alice was invited" when Alice had invited Bob, and changed identity on reload
+    because the history path already used `body["uri"]`.
+  - `conversation_contact_added` was missing the space before "ist" in both German files.
+    Upstream's `values-de` has it right and its `values-de-rDE` has the same typo, so
+    `values-de` was a sync error on our side and `values-de-rDE` now deliberately diverges —
+    worth reporting upstream.
+  - Verified on the Pixel 2: the three rows that printed hex now read "peace4us ist der
+    Unterhaltung beigetreten.", "marco100 wurde eingeladen…", "peace4us wurde eingeladen…".
 - [x] **Opening a just-accepted invitation no longer shows its swarm URI as the title**
   (2026-10-30) — the accept path navigated with `conversationUri.uri`, which carries the
   `swarm:` scheme, while every other caller passes a bare id. `ChatViewModel.loadConversation`

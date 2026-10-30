@@ -954,6 +954,9 @@ class StubDaemonBridge : DaemonBridgeApi {
     /** Pending conversation requests the daemon would report, as {"id", "from"} maps. */
     val conversationRequests: MutableList<Map<String, String>> = mutableListOf()
 
+    /** Addresses passed to lookupAddress(), in call order. */
+    val lookedUpAddresses: MutableList<String> = mutableListOf()
+
     /** Recorded createConfFromParticipantList() calls. */
     val conferencesCreatedFromList: MutableList<Pair<String, List<String>>> = mutableListOf()
 
@@ -1184,7 +1187,10 @@ class StubDaemonBridge : DaemonBridgeApi {
         onLookupNameCallback?.invoke(accountId, state, address, name, name)
         return true
     }
-    override fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean = true
+    override fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean {
+        lookedUpAddresses.add(address)
+        return true
+    }
     override fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean = true
     override fun searchUser(accountId: String, query: String): Boolean = true
     override fun getRecordPath(): String = recordPathValue
