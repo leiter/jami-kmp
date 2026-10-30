@@ -53,6 +53,12 @@ data class NewConversationState(
     val publicDirectoryResults: List<ContactItem> = emptyList(),
     val conversationResults: List<ConversationItem> = emptyList(),
     val selectedContacts: List<ContactItem> = emptyList(),
+    /**
+     * The people you already talk to, offered to pick from when nothing has been typed — the
+     * reference client's picker is a plain list of your contacts with no search at all
+     * (`frag_contact_picker.xml`), and without this the screen is blank until you guess a name.
+     */
+    val knownContacts: List<ContactItem> = emptyList(),
     val isGroup: Boolean = false,
     val groupName: String = "",
     val isLoading: Boolean = false
@@ -148,7 +154,27 @@ class NewConversationViewModel(
                 isRead = lastEvent?.isRead ?: true,
             )
         }.sortedByDescending { it.timestamp }
-        _state.value = _state.value.copy(conversationResults = convResults)
+
+        // The people behind those conversations, for the picker itself. Only 1:1 conversations
+        // have a single other party — a group is not someone you can add to a group — which is
+        // the same filter the reference picker applies (ContactPickerFragment: conversations
+        // whose getContact() is not already in the group).
+        val known = account.getConversations()
+            .mapNotNull { it.contactOrNull }
+            .filterNot { it.isUser }
+            .distinctBy { it.uri.uri }
+            .map { contact ->
+                ContactItem(
+                    uri = contact.uri.uri,
+                    displayName = contact.displayUsername,
+                    username = contact.username ?: "",
+                    presenceStatus = contact.presenceStatus.value,
+                    avatarUri = null,
+                )
+            }
+            .sortedBy { it.displayName.lowercase() }
+
+        _state.value = _state.value.copy(conversationResults = convResults, knownContacts = known)
     }
 
     /**
@@ -162,6 +188,7 @@ class NewConversationViewModel(
             publicDirectoryResults = emptyList(),
             conversationResults = emptyList(),
             selectedContacts = emptyList(),
+            knownContacts = emptyList(),
             isGroup = false,
             groupName = "",
             isLoading = false,

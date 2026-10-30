@@ -18,6 +18,9 @@ package net.jami.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,10 +36,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.InputChip
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -48,6 +54,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.coroutines.launch
@@ -75,7 +82,7 @@ import net.jami.ui.viewmodel.NewConversationViewModel
  * @param onBack Called when the user navigates back.
  * @param onConversationCreated Called with the new conversation ID after creation.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun NewConversationScreen(
     onBack: () -> Unit,
@@ -158,6 +165,59 @@ fun NewConversationScreen(
                 )
             }
 
+            // Who is already picked. Without this the selection is invisible: searching for the
+            // second person takes the first out of the result list, and nothing else shows it —
+            // you end up creating a group you cannot see. The reference picker has the same
+            // ChipGroup above its list (frag_contact_picker.xml).
+            if (state.selectedContacts.isNotEmpty()) {
+                FlowRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+                    horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.xs),
+                ) {
+                    state.selectedContacts.forEach { contact ->
+                        InputChip(
+                            selected = true,
+                            onClick = { viewModel.removeContact(contact) },
+                            label = { Text(contact.displayName) },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = stringResource(
+                                        Res.string.content_desc_remove_from_selection,
+                                        contact.displayName,
+                                    ),
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            },
+                        )
+                    }
+                }
+            }
+
+            // With something typed, the name-lookup results; with nothing typed, the people you
+            // already talk to — otherwise the screen is blank until you guess a name, and there
+            // is no way to browse.
+            val listedContacts =
+                if (state.searchQuery.isBlank()) state.knownContacts else state.publicDirectoryResults
+
+            if (listedContacts.isEmpty() && !state.isLoading) {
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(
+                            if (state.searchQuery.isBlank()) Res.string.no_contact_to_add
+                            else Res.string.search_no_results
+                        ),
+                        style = JamiTheme.typography.bodyMedium,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                        modifier = Modifier.padding(JamiTheme.spacing.l),
+                    )
+                }
+            } else
             // Contact list
             LazyColumn(
                 modifier = Modifier
@@ -165,7 +225,7 @@ fun NewConversationScreen(
                     .fillMaxWidth(),
             ) {
                 items(
-                    items = state.publicDirectoryResults,
+                    items = listedContacts,
                     key = { it.uri },
                 ) { contact ->
                     val isSelected = state.selectedContacts.any { it.uri == contact.uri }
