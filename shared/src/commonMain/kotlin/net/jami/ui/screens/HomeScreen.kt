@@ -342,7 +342,7 @@ fun HomeScreen(
                     }
                 } else {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(state.pendingRequestItems, key = { it.ringId }) { item ->
+                        items(state.pendingRequestItems, key = { it.conversationUri.uri }) { item ->
                             PendingRequestRow(
                                 item = item,
                                 onAccept = {

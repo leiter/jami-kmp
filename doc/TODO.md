@@ -116,6 +116,22 @@
     blank screen. Third, the one function that did fill a list threw on a group (below).
   - Verified on the Pixel 7a: the sheet lists contacts in a grid, two picks show two avatar
     chips, the button creates the swarm, adds both members and lands in the new conversation.
+- [x] **A second invitation from the same person no longer crashes the requests list**
+  (2026-10-30) — reported from the Pixel 2 as "accepting an invitation crashes the app"; the
+  crash was in fact on *rendering* the list, before any accept. Both pending-request
+  `LazyColumn`s keyed their rows by `PendingRequestItem.ringId`, the **sender**'s id, while the
+  loader de-duplicates on the **conversation** id. Two invites from one contact are therefore two
+  legitimate rows sharing a key, and Compose throws `IllegalArgumentException: Key "<ringId>" was
+  already used` out of the measure pass — so it takes the whole screen down, not just the row.
+  Both screens now key on `conversationUri.uri`, which is also what `PendingRequestItem.equals`
+  already used. `HomeScreen.kt:345`, `PendingRequestsScreen.kt:102`.
+  - Verified on the Pixel 2 with three invitations from `unitedhumans`: all three render,
+    accepting one lands in the new conversation and leaves `Requests (2)` intact, no
+    `FATAL EXCEPTION` anywhere in the run.
+  - The new `ConversationsViewModelTest` case pins the invariant (two invites from one sender
+    stay two rows, one `ringId`, two `conversationUri`s) but cannot exercise the Compose key
+    itself — there are no Compose UI tests in this module, so the fix proper rests on the
+    device check.
 - [x] **A group conversation no longer crashes the screens that list conversations**
   (2026-10-30, `bbba9fb`) — `Conversation.contact` throws by design for a group, and six places
   walked *all* conversations and read it anyway (`NewConversationViewModel` twice,

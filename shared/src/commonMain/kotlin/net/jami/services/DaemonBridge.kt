@@ -951,6 +951,9 @@ class StubDaemonBridge : DaemonBridgeApi {
     /** Recorded addConversationMember() calls as (conversationId, memberUri). */
     val addedConversationMembers: MutableList<Pair<String, String>> = mutableListOf()
 
+    /** Pending conversation requests the daemon would report, as {"id", "from"} maps. */
+    val conversationRequests: MutableList<Map<String, String>> = mutableListOf()
+
     /** Recorded createConfFromParticipantList() calls. */
     val conferencesCreatedFromList: MutableList<Pair<String, List<String>>> = mutableListOf()
 
@@ -1110,7 +1113,7 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int) {}
     override fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> = emptyList()
 
-    override fun getConversationRequests(accountId: String): List<Map<String, String>> = emptyList()
+    override fun getConversationRequests(accountId: String): List<Map<String, String>> = conversationRequests.toList()
     override fun acceptConversationRequest(accountId: String, conversationId: String) {}
     override fun declineConversationRequest(accountId: String, conversationId: String) {}
 

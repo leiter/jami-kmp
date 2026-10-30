@@ -99,7 +99,7 @@ fun PendingRequestsScreen(
             else -> LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
             ) {
-                items(state.requests, key = { it.ringId }) { item ->
+                items(state.requests, key = { it.conversationUri.uri }) { item ->
                     PendingRequestRow(
                         item = item,
                         onAccept = {

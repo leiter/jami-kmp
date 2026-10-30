@@ -184,4 +184,31 @@ class ConversationsViewModelTest {
         assertEquals("conv3", items[1].id, "Expected conv3 (middle) second")
         assertEquals("conv1", items[2].id, "Expected conv1 (oldest) third")
     }
+
+    /**
+     * Two invitations from the same person are two separate rows. They share a `ringId`
+     * (the sender), so anything that identifies a row by `ringId` collapses them — in the
+     * UI that surfaced as `IllegalArgumentException: Key "<ringId>" was already used` from
+     * the pending-requests LazyColumn the moment a second invite from a known contact
+     * arrived. Rows must be identified by `conversationUri`, which is what the loader
+     * already de-duplicates on.
+     */
+    @Test
+    fun twoRequestsFromTheSameContactStayTwoDistinctRows() = runTest {
+        val stub = StubDaemonBridge()
+        val services = makeTestServiceStack(stub, this)
+        prepareAccountInService(stub, services.accountService)
+        val sender = "66d57f55227639b58fdcc6d74ec090446ffa9bc3"
+        stub.conversationRequests += mapOf("id" to "conva", "from" to sender)
+        stub.conversationRequests += mapOf("id" to "convb", "from" to sender)
+
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), services.contactService, services.vCardService, services.settingsRepository, viewModelScope())
+        vm.loadConversations()
+        advanceUntilIdle()
+
+        val requests = vm.state.value.pendingRequestItems
+        assertEquals(2, requests.size, "Both invitations from the same contact must be listed")
+        assertEquals(1, requests.map { it.ringId }.distinct().size, "Both come from the same sender")
+        assertEquals(2, requests.map { it.conversationUri }.distinct().size, "Conversation URIs must differ")
+    }
 }
