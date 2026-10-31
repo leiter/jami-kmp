@@ -584,8 +584,9 @@ checkbox are referenced, not repeated.
 - [x] Cherry-picked `8baaf0f` (stop the per-frame NV12 copy into a no-op) and `4a2dcad` from
   `feat/ios-app-group-and-notification-extension` (2026-10-31): `doc/ios-video-pipeline.md` and
   `doc/ios-native-parity-analysis.md` are now on `main`. iOS compile green.
-- [ ] Collapse the duplicate `UIBackgroundModes` key in `ios-app/iosApp/Info.plist` and drop
-  `fetch`/`processing` (no `BGTaskScheduler` handler) — the `Info.plist` hunk of `5971f3c`.
+- [x] Collapsed the duplicate `UIBackgroundModes` key in `ios-app/iosApp/Info.plist` (2026-10-31).
+  The built bundle already carried only the second copy (`voip`, `remote-notification`, `audio`),
+  so behaviour is unchanged; the dead first copy, with its unhandled `fetch`/`processing`, is gone.
 - [ ] Video pipeline: outgoing `getNewFrame`/`publishFrame`, incoming `SinkTarget` →
   `AVSampleBufferDisplayLayer`, then encoder controls and PiP (`ios_implementation_gap.md` §5). L.
 - [ ] Notification Service Extension + App Group, so message pushes display while suspended —

@@ -158,10 +158,10 @@ The Xcode project had **no entitlements file and no capabilities at all**. Now:
   *(Corrected 2026-10-31: this list previously also named `BGTaskSchedulerPermittedIdentifiers`
   and an App Group. Neither is on `main` — the App Group lives on the unmerged
   `feat/ios-app-group-and-notification-extension` branch, `5971f3c`.)*
-- **Open defect:** `Info.plist` declares `UIBackgroundModes` **twice** (lines ~126 and ~154). The
-  first copy lists `fetch` and `processing`, but no `BGTaskScheduler` task is registered anywhere,
-  so they are claims App Review may question. `5971f3c` collapses them into the second,
-  commented key (`voip`, `remote-notification`, `audio`).
+- **Fixed 2026-10-31:** `Info.plist` declared `UIBackgroundModes` twice. The first copy listed
+  `fetch` and `processing` with no `BGTaskScheduler` task registered. The build already kept only
+  the second, commented key (`voip`, `remote-notification`, `audio`) — confirmed with `plutil` on
+  the built `.app` — so removing the first changes nothing at runtime.
 - `CXProviderConfiguration.localizedName` is set, so the system call UI names the app.
 - `AppDelegate.swift` has scene-phase handling.
 
