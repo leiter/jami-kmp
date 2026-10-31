@@ -149,8 +149,8 @@ and have moved to the list after them.
   `HardwareService.isMeteredNetwork()` (Android: `NET_CAPABILITY_NOT_METERED`, which also
   catches a metered Wi-Fi link and a phone hotspot; iOS: `nw_path_is_expensive`; desktop:
   always unmetered). Manual downloads are untouched — asking for a file is the user
-  overriding the setting. **The iOS half is unbuilt**: Apple targets are skipped on a Linux
-  host, so `nw_path_is_expensive` has not been through a compiler.
+  overriding the setting. The iOS half (`nw_path_is_expensive`) compiles since 2026-10-31
+  (`:shared:compileKotlinIosSimulatorArm64` on a Mac); the cellular branch is still a device check.
 - **Conversation sort order** (B15) — applied in `ConversationsViewModel.conversationComparator()`.
   Pinned conversations stay on top under every mode, as in the reference client; each mode ends
   with a timestamp tiebreak so the order is total and therefore stable across reloads.
@@ -213,7 +213,9 @@ Built on a Mac and run in the simulator; the Obj-C++ wrapper `.a` files were reb
 (1096 methods, all 153 header-declared ones present) and the Xcode simulator link is green.
 
 - C interop bridge to libjami — working
-- Core messaging, calling (audio + video), profile management
+- Core messaging, audio calling (1:1 and conference), profile management. **Video is not
+  functional**: remote frames are never rendered and outgoing camera frames are captured, copied
+  and dropped (`captureVideoFrame` is an empty stub) — see `ios_implementation_gap.md` §5
 - Notification system with settings enforcement
 - QR camera scanning (AVFoundation)
 - Location sharing (MapKit)
@@ -226,6 +228,12 @@ Built on a Mac and run in the simulator; the Obj-C++ wrapper `.a` files were reb
 - Missing: `connectivityChanged` passthrough — `JamiBridgeWrapper.h` still exposes no entry point,
   so the daemon is never told to re-resolve connections after a network change
 - Missing: call recording (`toggleRecording` / `getIsRecording` return `false`)
+- Missing, waiting on the same wrapper rebuild as `connectivityChanged` (full list in
+  `doc/apple-bridge-rebuild.md`): presence status note send/receive, default moderators,
+  reply-to on file sends, microphone level ring, conference from a contact list
+- Kotlin side compiles for Apple as of 2026-10-31 (`989ba1b`): the seven Linux-written commits
+  touching `iosMain` since the last Mac session type-check and the Xcode simulator app links;
+  none has been exercised on a simulator yet
 - `iosX64` was removed from the build (2026-10-14): the simulator libraries are arm64-only, so that
   target could never link. Declared Apple targets are iosArm64, iosSimulatorArm64, macosArm64, macosX64
 

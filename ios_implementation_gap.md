@@ -232,7 +232,7 @@ peer, **Bluetooth and wired-headset routing**, **call audio surviving background
 **screen-recording blocking**. These ship on code review.
 
 To make the §2.1 callbacks verifiable without peers: `StubDaemonBridge.init(callbacks)`
-(`DaemonBridge.kt:480`) still discards its callbacks. Have it retain them, and each callback gets
+(`DaemonBridge.kt:976`) still discards its callbacks. Have it retain them, and each callback gets
 a test that fires it and asserts the service reacts. **Not yet done.**
 
 ### 4.1 Defects found on the first Mac build
@@ -264,7 +264,10 @@ simulator side is scripted would close this off.
   returns `false`, `captureVideoFrame`/`captureVideoPacket` empty. `IOSCameraService` copies every
   NV12 frame into a fresh `ByteArray` and hands it to the empty TODO — **outgoing video is
   captured, copied and discarded every frame**; an early return would stop burning battery until
-  the pipeline lands. `VideoSurface.ios.kt` creates an `AVSampleBufferDisplayLayer` nothing ever
+  the pipeline lands. *(Still true on `main` as of 2026-10-31, `IOSCameraService.kt:566`. That
+  early return already exists as `8baaf0f` on the unmerged
+  `feat/ios-app-group-and-notification-extension` branch, together with a full plan,
+  `doc/ios-video-pipeline.md`, and `doc/ios-native-parity-analysis.md` — neither doc is on `main`.)* `VideoSurface.ios.kt` creates an `AVSampleBufferDisplayLayer` nothing ever
   enqueues into. Needs a `libjami::SinkTarget` in ObjC++ feeding a Metal texture. Multi-week.
 - **Encoder controls** — `setParameters`, `requestKeyFrame`, `setBitrate`,
   `updatePreviewVideoSurface`. Deliberately left as no-ops: they feed the dead capture path above
@@ -311,13 +314,14 @@ existing pattern, because it blocked all desktop verification.
 
 ---
 
-## 7. Open UI defect from the first simulator run
+## 7. UI defect from the first simulator run — **fixed**
 
-**A button label overflows in German.** On the Welcome screen the third button,
-"Verbindung von einem anderen Gerät aus herstellen", is clipped — the second line's descenders are
-cut off by the button bounds. Observed at the default iPhone 17 Pro size with the simulator set to
-`de-DE`. It is the first screen a German user sees, and the same risk applies to every other long
-locale, so the fix belongs in the button component rather than in that one call site.
+**A button label overflowed in German.** On the Welcome screen the third button,
+"Verbindung von einem anderen Gerät aus herstellen", was clipped at the default iPhone 17 Pro size
+with the simulator set to `de-DE`. Fixed in the component, as intended: `JamiButton` now uses
+`heightIn(min = minTouchTarget)` instead of a fixed height, and the label wraps
+(`weight(1f, fill = false)` + `TextAlign.Center`). Verified in the simulator at `de-DE`; see
+`doc/TODO.md`, "iOS — after the first simulator run".
 
 Not a defect: `E/IOSPushServiceManager: Remote notification registration failed: no valid
 aps-environment entitlement` in the simulator log. That is an artifact of building with
@@ -351,3 +355,19 @@ What changed since §4.1, and what each item means for the sections above.
   (§3.2 — the wrapper still exposes no entry point), call recording on iOS, and the macOS target
   (§6). `build-jamibridge.sh`'s macOS stage also fails on its own, on UIKit code compiled against
   the macOS SDK; that dates to `93df547a` (April) and is not caused by the nine wrapper commits.
+
+---
+
+## 9. Re-audit on a Mac — 2026-10-31
+
+- **The Kotlin side compiles for Apple.** `:shared:compileKotlinIosSimulatorArm64` passed at
+  `989ba1b` (48 warnings, 0 errors). Seven commits touching `iosMain` since `5b4a17e` were written
+  on Linux and had never been through the Kotlin/Native compiler; they now type-check, **and the
+  Xcode simulator app build links** (`xcodebuild … -destination 'platform=iOS Simulator,name=iPhone
+  17 Pro' CODE_SIGNING_ALLOWED=NO build` → `BUILD SUCCEEDED`). None has run on a simulator yet.
+- **The wrapper is unchanged since `5b4a17e`**, so the committed `.a` files are current. What has
+  grown is the list of calls the wrapper does not expose: seven now, plus a misnamed
+  `getActiveCalls` — see `doc/apple-bridge-rebuild.md`. Call recording was previously tracked only
+  in `doc/TODO.md`; it belongs in the same rebuild.
+- §7 (German button clipping) was already fixed in `JamiButton` and is now marked so.
+- Consolidated open-task list: `doc/TODO.md`, "Open iOS tasks — consolidated 2026-10-31".

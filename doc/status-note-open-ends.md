@@ -101,13 +101,14 @@ Neither Apple target can send or receive a status note.
 - **`publish` is not in `JamiBridgeWrapper.h`.** The iOS and macOS actuals log and drop the call.
   It joins `connectivityChanged` and `setDefaultModerator` in waiting for a wrapper regeneration
   and a `build-jamibridge.sh` rebuild on a Mac — see `apple-bridge-rebuild.md`.
-- **The receive half is also blind.** `DaemonBridge.ios.kt:1364` and `DaemonBridge.macos.kt:1063`
+- **The receive half is also blind.** `DaemonBridge.ios.kt:1385` and `DaemonBridge.macos.kt:1063`
   synthesise the buddy notification themselves and pass `""` for `lineStatus`, so even a note
   that arrived could not be displayed. The wrapper's presence callback has to carry the line
   status before the Apple side can show anything.
 - **macOS still does not compile** (~95 errors, the `appleMain` source set work on
   `origin/macos-build-and-apple-source-set`), so the macOS half cannot even be built to check.
-- The presence suspend/resume from the contacts plan F2 is in the same position: written in
-  `IOSApplicationHelper`, never compiled.
+- The presence suspend/resume from the contacts plan F2 is written in `IOSApplicationHelper`;
+  it **compiles** on Apple since 2026-10-31 (`:shared:compileKotlinIosSimulatorArm64` green at
+  `989ba1b`) but has not been exercised on a simulator.
 
 Batch all of this into one Mac session rather than paying the rebuild cost three times.
