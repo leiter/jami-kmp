@@ -153,9 +153,15 @@ The Xcode project had **no entitlements file and no capabilities at all**. Now:
   inferred. **That was never confirmed and should not be repeated as fact:** the first simulator
   run (locale `de-DE`) rendered the UI in German. Whether the plist key was what fixed it cannot
   be attributed without a comparison build against the old bundle.
-- `NSPhotoLibraryAddUsageDescription`, `BGTaskSchedulerPermittedIdentifiers`,
-  `ITSAppUsesNonExemptEncryption = false`, and an `iosApp.entitlements` with `aps-environment`
-  + App Group.
+- `NSPhotoLibraryAddUsageDescription`, `ITSAppUsesNonExemptEncryption = false`, and an
+  `iosApp.entitlements` with `aps-environment` (from `$(APS_ENVIRONMENT)`, `043fdfb`).
+  *(Corrected 2026-10-31: this list previously also named `BGTaskSchedulerPermittedIdentifiers`
+  and an App Group. Neither is on `main` — the App Group lives on the unmerged
+  `feat/ios-app-group-and-notification-extension` branch, `5971f3c`.)*
+- **Open defect:** `Info.plist` declares `UIBackgroundModes` **twice** (lines ~126 and ~154). The
+  first copy lists `fetch` and `processing`, but no `BGTaskScheduler` task is registered anywhere,
+  so they are claims App Review may question. `5971f3c` collapses them into the second,
+  commented key (`voip`, `remote-notification`, `audio`).
 - `CXProviderConfiguration.localizedName` is set, so the system call UI names the app.
 - `AppDelegate.swift` has scene-phase handling.
 
@@ -264,10 +270,9 @@ simulator side is scripted would close this off.
   returns `false`, `captureVideoFrame`/`captureVideoPacket` empty. `IOSCameraService` copies every
   NV12 frame into a fresh `ByteArray` and hands it to the empty TODO — **outgoing video is
   captured, copied and discarded every frame**; an early return would stop burning battery until
-  the pipeline lands. *(Still true on `main` as of 2026-10-31, `IOSCameraService.kt:566`. That
-  early return already exists as `8baaf0f` on the unmerged
-  `feat/ios-app-group-and-notification-extension` branch, together with a full plan,
-  `doc/ios-video-pipeline.md`, and `doc/ios-native-parity-analysis.md` — neither doc is on `main`.)* `VideoSurface.ios.kt` creates an `AVSampleBufferDisplayLayer` nothing ever
+  the pipeline lands. *(Done 2026-10-31: `8baaf0f` cherry-picked from
+  `feat/ios-app-group-and-notification-extension`; capture now only emits the preview
+  `FrameEvent`. The implementation plan is `doc/ios-video-pipeline.md`.)* `VideoSurface.ios.kt` creates an `AVSampleBufferDisplayLayer` nothing ever
   enqueues into. Needs a `libjami::SinkTarget` in ObjC++ feeding a Metal texture. Multi-week.
 - **Encoder controls** — `setParameters`, `requestKeyFrame`, `setBitrate`,
   `updatePreviewVideoSurface`. Deliberately left as no-ops: they feed the dead capture path above

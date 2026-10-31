@@ -581,13 +581,17 @@ checkbox are referenced, not repeated.
 - [ ] `StubDaemonBridge` retains callbacks (item above)
 
 **Feature gaps**
-- [ ] Merge `8baaf0f` (stop the per-frame NV12 copy into a no-op) from
-  `feat/ios-app-group-and-notification-extension`, and bring `doc/ios-video-pipeline.md` +
-  `doc/ios-native-parity-analysis.md` to `main` — the branch is 106 commits behind.
+- [x] Cherry-picked `8baaf0f` (stop the per-frame NV12 copy into a no-op) and `4a2dcad` from
+  `feat/ios-app-group-and-notification-extension` (2026-10-31): `doc/ios-video-pipeline.md` and
+  `doc/ios-native-parity-analysis.md` are now on `main`. iOS compile green.
+- [ ] Collapse the duplicate `UIBackgroundModes` key in `ios-app/iosApp/Info.plist` and drop
+  `fetch`/`processing` (no `BGTaskScheduler` handler) — the `Info.plist` hunk of `5971f3c`.
 - [ ] Video pipeline: outgoing `getNewFrame`/`publishFrame`, incoming `SinkTarget` →
   `AVSampleBufferDisplayLayer`, then encoder controls and PiP (`ios_implementation_gap.md` §5). L.
 - [ ] Notification Service Extension + App Group, so message pushes display while suspended —
-  scaffold on the same branch (`5971f3c`). Only useful once a push-capable proxy exists.
+  scaffold still only on the branch (`5971f3c`, not cherry-picked: it moves the daemon's working
+  directory into the shared container, which needs the group registered on the App ID first).
+  Only useful once a push-capable proxy exists.
 - [ ] Screen sharing (ReplayKit) — nothing exists.
 - [ ] Screenshot blocking is weaker than Android (`ios_implementation_gap.md` §3.3) — consider a
   platform-specific summary string.
