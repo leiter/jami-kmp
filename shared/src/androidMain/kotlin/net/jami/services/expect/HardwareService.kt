@@ -9,6 +9,7 @@ import android.media.AudioManager.OnAudioFocusChangeListener
 import android.media.projection.MediaProjection
 import android.net.ConnectivityManager
 import android.net.Network
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
@@ -150,6 +151,18 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     actual val bluetoothEvents: Flow<BluetoothEvent> = _bluetoothEvents.asSharedFlow()
     actual val audioState: StateFlow<AudioState> = _audioState.asStateFlow()
     actual val connectivityState: Flow<Boolean> = _connectivityState.asStateFlow()
+
+    /**
+     * Metered check for the auto-download settings. `NET_CAPABILITY_NOT_METERED` is the right
+     * signal rather than `TRANSPORT_CELLULAR`: it also catches a Wi-Fi link the user has marked
+     * metered, and a phone hotspot, which is what the "mobile data" toggle is really about.
+     */
+    actual fun isMeteredNetwork(): Boolean {
+        val cm = connectivityManager ?: return false
+        val network = cm.activeNetwork ?: return false
+        val caps = cm.getNetworkCapabilities(network) ?: return false
+        return !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+    }
 
     actual fun getAudioState(conf: Conference): Flow<AudioState> = audioState
 

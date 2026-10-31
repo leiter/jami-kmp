@@ -1,13 +1,20 @@
 # Manual Test Plan — Candidate Bug Confirmation (2026-09-10)
 
-> **Status 2026-10-26 — still a work order; no verdict has been filled in.** The code evidence for
-> B10–B16 was re-checked statically on that date and every one of those hypotheses still holds in
-> the source: notification sound/vibration are set on the builder (inert from API 26) while the
+> **Status 2026-10-31 — still a work order; no verdict has been filled in.** The code evidence for
+> B10–B16 was re-checked statically on 2026-10-26 and every one of those hypotheses held in the
+> source: notification sound/vibration are set on the builder (inert from API 26) while the
 > channels hardcode theirs; quiet hours still gates `shouldShowCallNotification()`;
 > `autoDownloadWifi`/`autoDownloadMobile`, `blockUnknownContacts`, `conversationSort` and
-> `compactMode` still have no consumer outside the settings screen. That is static evidence, not a
+> `compactMode` had no consumer outside the settings screen. That is static evidence, not a
 > device verdict — the point of this document is the device run, which is still owed.
 > B1–B9 and B17–B22 were not re-checked.
+>
+> **On 2026-10-31 three of them were implemented** rather than waiting for the verdict, since
+> reading the code was already conclusive about the cause: **B13** (auto-download by network
+> type), **B15** (conversation sort order) and **B16** (compact mode). Their repro steps below
+> still stand, but they now test the *fix*: "Suspected actual" is what the build before
+> 2026-10-31 did, and "Expected (no bug)" is what the current build should do. B10–B12 and B14
+> are unchanged and still owed a verdict as written.
 
 **Purpose.** This document is a work order, not a bug list. Every entry below is a
 *hypothesis* derived from reading the source, not an observed failure. Each one has a
@@ -599,6 +606,16 @@ metered connections regardless of the toggle.
 
 **Suspected actual.** It downloads immediately without asking.
 
+**Fixed 2026-10-31.** `ConversationFacade.autoDownloadAllowedOnCurrentNetwork()` now gates all
+three auto-accept sites (the two in `onDataTransferEvent`, including the `totalSize == 0L` race
+branch, and the one in `onMessageReceived`) on the two toggles. The network type comes from the
+new `HardwareService.isMeteredNetwork()`: on Android `NET_CAPABILITY_NOT_METERED`, which also
+treats a metered Wi-Fi link or a phone hotspot as mobile; on iOS `nw_path_is_expensive`, captured
+in the path-monitor callback; on desktop always unmetered. Manual downloads are deliberately not
+gated. Covered by two tests in `ConversationReviewFixesTest` (Wi-Fi branch only — the desktop
+`HardwareService` always reports unmetered, so the cellular branch is what the device run below
+is for). **The iOS side has never been compiled** — Apple targets are skipped on a Linux host.
+
 **Second case — the size bypass.** With max auto-accept set to **5 MB**, send a 50 MB
 file from B while A's app is cold-starting (kill A's app, send, then launch A). If the
 `transfer == null` race branch is hit, the oversized file auto-downloads anyway. This
@@ -669,6 +686,13 @@ to `conversationSort` exists in any ViewModel other than `AppSettingsViewModel`.
 **Suspected actual.** The order is unchanged (still most-recent-first, pinned on top).
 Repeat with **Unread first** for the same result.
 
+**Fixed 2026-10-31.** `ConversationsViewModel.conversationComparator()` reads the setting.
+Pinned conversations still come first under every mode — pinning is an override, not one sort
+option among three — and each mode ends with a timestamp tiebreak so the order is total and does
+not reshuffle between reloads. The setting is DHT-synced, so the ViewModel also watches it and
+re-sorts the loaded list in place rather than going back to the daemon. Four tests in
+`ConversationsViewModelTest`.
+
 ```
 VERDICT:
 Build/commit:
@@ -696,6 +720,13 @@ list and chat screen before and after. Take screenshots to compare row heights p
 **Expected (no bug).** Visibly tighter rows.
 
 **Suspected actual.** Pixel-identical layout.
+
+**Fixed 2026-10-31 — conversation list only.** `ConversationsState.isCompactMode` mirrors the
+setting and `ConversationListItem` drops its vertical padding from `spacing.m` to `spacing.xs`
+and removes the gap between the name line and the preview line. The chat screen named in the
+repro is **not** affected, so compare the conversation list; whether chat bubbles should tighten
+too is still open. One test in `ConversationsViewModelTest` covers the state plumbing; the
+density itself is visual and wants the screenshots.
 
 ```
 VERDICT:

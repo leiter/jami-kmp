@@ -1,7 +1,7 @@
 # Jami KMP - Implementation Status
 
-**Last Updated:** 2026-10-26 (structural counts re-measured, messaging caveat retired,
-"partially implemented" section reconciled against the code)
+**Last Updated:** 2026-10-31 (three "stored but not applied" settings now applied:
+conversation sort order, compact mode, and auto-download by network type)
 **Version:** In Development
 **Primary Platforms:** Android, iOS
 
@@ -49,9 +49,10 @@
 - Location sharing with OpenStreetMap (Android + iOS with MapKit)
 - Camera capture integration
 - Message search and filtering
-- Conversation list ordering: pinned first, then last activity (the alphabetical and
-  unread-first choices in Settings are stored but not applied — see "Settings stored but not
-  applied" below)
+- Conversation list ordering: pinned first, then the user's **Conversation sort** choice —
+  last activity, alphabetical, or unread first. The setting is DHT-synced, so a change made on
+  another device re-sorts the open list without a reload (2026-10-31; was stored but unread
+  before, B15)
 - Group conversation management: add/remove members, leave conversation, rename group, change group avatar, admin role badges
 - Link detection in chat messages
 - Conversation media gallery (3-column grid of shared images/videos)
@@ -91,7 +92,7 @@
 - Call settings: auto-answer with configurable delay, video preference
 - Per-conversation settings: mute, pin, custom notifications
 - Draft persistence per conversation
-- App appearance settings (theme applied; compact mode and sort order stored only — see below)
+- App appearance settings (theme, compact mode and conversation sort order all applied)
 - System settings: start on boot, run in background (LocalPrefs)
 - Debug logs viewer (`DebugLogsScreen`, Advanced → Debug logs) with share/export; logcat capture on Android
 - Call recordings browser (`RecordingsScreen`) — list and play daemon-written recordings (Android)
@@ -104,7 +105,7 @@
 ### Testing
 - 97 test files (70 in commonTest; the rest in desktopTest 9, iosTest 5, macosTest 4, jsTest 4,
   androidUnitTest 4, androidInstrumentedTest 1)
-- `:shared:desktopTest` — **769 tests, 0 failures** (last run 2026-10-26)
+- `:shared:desktopTest` — **870 tests, 0 failures** (last run 2026-10-31)
 - ViewModel tests, model tests, service integration tests, utility tests
 - `runTest` + `advanceUntilIdle` pattern throughout
 - `TestFixtures.kt` with stub `DaemonBridgeApi` for isolated ViewModel testing
@@ -126,9 +127,10 @@
 
 ### Settings stored but not applied
 
-Flagged by reading the code on 2026-10-26, and still true then. These are hypotheses from
-`doc/manual-test-plan-2026-09-10.md` (B10–B16) that have **not been given a device verdict**, but
-the static evidence for each still holds:
+Flagged by reading the code on 2026-10-26. These are hypotheses from
+`doc/manual-test-plan-2026-09-10.md` (B10–B16) that have **not been given a device verdict**. The
+static evidence still holds for the three below; B13, B15 and B16 were implemented on 2026-10-31
+and have moved to the list after them.
 
 - **Notification sound / vibration toggles** (B10, B11) — `AndroidNotificationService` sets them on
   the `Notification.Builder`, which Android ignores from API 26 on; the channels hardcode
@@ -137,18 +139,28 @@ the static evidence for each still holds:
   custom sound", and `null` means *use the default*.
 - **Quiet hours suppresses incoming calls** (B12) — `NotificationGuard.shouldShowCallNotification()`
   includes `!isInQuietHours(settings)`, so a call during quiet hours shows no notification.
-- **Auto-download on Wi-Fi / mobile data** (B13) — `autoDownloadWifi` / `autoDownloadMobile` have no
-  consumer; the auto-accept decision checks the size limit only, never the network type.
 - **Block unknown contacts** (B14) — `blockUnknownContacts` is written and read back into the
   settings screen, and nowhere else.
-- **Conversation sort order** (B15) — `ConversationsViewModel` sorts with a hardcoded
-  `pinned desc, timestamp desc` comparator and never reads `conversationSort`.
-- **Compact mode** (B16) — `compactMode` is stored and rendered as a toggle; no composable reads it.
+
+**Closed 2026-10-31** (code written; a device verdict is still owed, as it is for the three above):
+
+- **Auto-download on Wi-Fi / mobile data** (B13) — `ConversationFacade` now gates every
+  auto-accept site on `autoDownloadWifi` / `autoDownloadMobile`, chosen by
+  `HardwareService.isMeteredNetwork()` (Android: `NET_CAPABILITY_NOT_METERED`, which also
+  catches a metered Wi-Fi link and a phone hotspot; iOS: `nw_path_is_expensive`; desktop:
+  always unmetered). Manual downloads are untouched — asking for a file is the user
+  overriding the setting. **The iOS half is unbuilt**: Apple targets are skipped on a Linux
+  host, so `nw_path_is_expensive` has not been through a compiler.
+- **Conversation sort order** (B15) — applied in `ConversationsViewModel.conversationComparator()`.
+  Pinned conversations stay on top under every mode, as in the reference client; each mode ends
+  with a timestamp tiebreak so the order is total and therefore stable across reloads.
+- **Compact mode** (B16) — `ConversationsState.isCompactMode` mirrors the setting and
+  `ConversationListItem` drops most of its vertical padding and its inter-line gap when it is on.
 
 ### File transfers
 - Sending in swarm conversations, download, and the transfer UI — done
-- Auto-accept is enforced in `ConversationFacade.onDataTransferEvent()` against the size limit
-- The Wi-Fi / mobile-data auto-download toggles are stored but never consulted (B13 above)
+- Auto-accept is enforced in `ConversationFacade` against both the size limit and the
+  Wi-Fi / mobile-data toggles (2026-10-31, B13 above)
 
 ### Account settings
 - Profile editing, media, messages, advanced — done

@@ -42,6 +42,7 @@ import platform.AVFAudio.AVAudioSessionRouteChangeNotification
 import platform.AVFAudio.AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
 import platform.AVFAudio.setActive
 import platform.Network.nw_path_get_status
+import platform.Network.nw_path_is_expensive
 import platform.Network.nw_path_monitor_create
 import platform.Network.nw_path_monitor_set_queue
 import platform.Network.nw_path_monitor_set_update_handler
@@ -93,6 +94,8 @@ actual class HardwareService : KoinComponent {
     private var speakerphoneOn = false
     private var routeObserver: Any? = null
     private var pathMonitor: nw_path_monitor_t = null
+    /** Last value reported by the path monitor; see [isMeteredNetwork]. */
+    private var isExpensivePath = false
     private var audioSessionActive = false
     private var logging = false
     private var screenShareSession: Any? = null
@@ -103,6 +106,15 @@ actual class HardwareService : KoinComponent {
     actual val bluetoothEvents: Flow<BluetoothEvent> = _bluetoothEvents.asSharedFlow()
     actual val audioState: StateFlow<AudioState> = _audioState.asStateFlow()
     actual val connectivityState: Flow<Boolean> = _connectivityState.asStateFlow()
+
+    /**
+     * Metered check for the auto-download settings. `nw_path_is_expensive` is Apple's own
+     * cellular/hotspot/tethered signal — the same one URLSession's `allowsExpensiveNetworkAccess`
+     * gates on. It is captured in the path-monitor update handler because a path object is only
+     * valid inside its callback; without [startConnectivityMonitoring] running this stays false,
+     * i.e. the Wi-Fi toggle applies.
+     */
+    actual fun isMeteredNetwork(): Boolean = isExpensivePath
 
     init {
         logging = userDefaults.boolForKey(LOGGING_ENABLED_KEY)
@@ -432,6 +444,7 @@ actual class HardwareService : KoinComponent {
         nw_path_monitor_set_queue(monitor, dispatch_get_main_queue())
         nw_path_monitor_set_update_handler(monitor) { path ->
             val connected = path != null && nw_path_get_status(path) == nw_path_status_satisfied
+            isExpensivePath = path != null && nw_path_is_expensive(path)
             if (_connectivityState.value != connected) {
                 Log.d(tag, "Connectivity changed: connected=$connected")
                 connectivityChanged(connected)

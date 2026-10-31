@@ -427,6 +427,7 @@ fun HomeScreen(
                             Surface(color = JamiTheme.colors.surface) {
                                 ConversationListItem(
                                     conversation = conversation,
+                                    compact = state.isCompactMode,
                                     onClick = { onConversationClick(conversation.id) },
                                     onTogglePin = { viewModel.toggleConversationPin(conversation.id) },
                                     onToggleMute = { viewModel.toggleConversationMute(conversation.id) },
@@ -624,6 +625,12 @@ private fun AccountPickerRow(
 @Composable
 private fun ConversationListItem(
     conversation: ConversationItem,
+    /**
+     * Compact density, from the `compactMode` UI setting: the row loses most of its vertical
+     * padding and the gap between its two text lines, so noticeably more conversations fit on
+     * screen. The content itself is unchanged, so nothing becomes unreachable in either mode.
+     */
+    compact: Boolean = false,
     onClick: () -> Unit,
     onTogglePin: () -> Unit = {},
     onToggleMute: () -> Unit = {},
@@ -642,7 +649,7 @@ private fun ConversationListItem(
             )
             .padding(
                 horizontal = JamiTheme.spacing.l,
-                vertical = JamiTheme.spacing.m,
+                vertical = if (compact) JamiTheme.spacing.xs else JamiTheme.spacing.m,
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -700,7 +707,9 @@ private fun ConversationListItem(
                 }
             }
 
-            Spacer(Modifier.height(JamiTheme.spacing.xxs))
+            if (!compact) {
+                Spacer(Modifier.height(JamiTheme.spacing.xxs))
+            }
 
             // Row 2: [timestamp]  [message preview]  [badge]
             Row(

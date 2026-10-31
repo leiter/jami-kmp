@@ -20,6 +20,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.services.StubDaemonBridge
 import net.jami.services.StubDeviceRuntimeService
+import net.jami.model.settings.ConversationSort
 import net.jami.ui.viewmodel.ConversationsViewModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -210,5 +211,133 @@ class ConversationsViewModelTest {
         assertEquals(2, requests.size, "Both invitations from the same contact must be listed")
         assertEquals(1, requests.map { it.ringId }.distinct().size, "Both come from the same sender")
         assertEquals(2, requests.map { it.conversationUri }.distinct().size, "Conversation URIs must differ")
+    }
+
+    /**
+     * Helper for the sort tests: three 1:1 swarms whose ids double as their display names
+     * (Conversation.title falls back to the swarm id when no member has a name), with
+     * timestamps deliberately in the opposite order to the alphabet — so a test can only
+     * pass by actually honouring the sort setting.
+     */
+    private suspend fun seedNamedConversations(account: net.jami.model.Account) {
+        // name -> timestamp, reverse-alphabetical by recency: charlie newest, alice oldest.
+        listOf("alice" to 1000L, "bob" to 2000L, "charlie" to 3000L).forEach { (name, ts) ->
+            val conv = account.newSwarm(name, net.jami.model.Conversation.Mode.OneToOne)
+            val msg = net.jami.model.TextMessage(null, account.accountId, null, conv, name)
+            msg.timestamp = ts
+            // Incoming: getLastEventSummary prefixes outgoing messages through Compose's
+            // suspending getString, which never completes under runTest.
+            msg.isIncoming = true
+            conv.addElement(msg)
+            conv.lastEvent = msg
+            account.conversationStarted(conv)
+        }
+    }
+
+    private fun List<net.jami.ui.viewmodel.ConversationItem>.seeded() =
+        filter { it.id in listOf("alice", "bob", "charlie") }.map { it.id }
+
+    /**
+     * B15: `conversationSort` was stored and shown in Settings but `ConversationsViewModel`
+     * sorted with a hardcoded `pinned desc, timestamp desc` comparator, so picking
+     * "alphabetical" changed nothing.
+     */
+    @Test
+    fun alphabeticalSortOrdersConversationsByName() = runTest {
+        val stub = StubDaemonBridge()
+        val services = makeTestServiceStack(stub, this)
+        prepareAccountInService(stub, services.accountService)
+        advanceUntilIdle()
+        seedNamedConversations(services.accountService.getAccount(TEST_ACCOUNT_ID)!!)
+        services.settingsRepository.updateConversationSort(ConversationSort.ALPHABETICAL)
+
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), services.contactService, services.vCardService, services.settingsRepository, viewModelScope())
+        vm.loadConversations()
+        advanceUntilIdle()
+
+        assertEquals(listOf("alice", "bob", "charlie"), vm.state.value.conversations.seeded())
+    }
+
+    /** The default sort is unchanged by the B15 fix: most recent activity first. */
+    @Test
+    fun lastActivitySortRemainsTheDefault() = runTest {
+        val stub = StubDaemonBridge()
+        val services = makeTestServiceStack(stub, this)
+        prepareAccountInService(stub, services.accountService)
+        advanceUntilIdle()
+        seedNamedConversations(services.accountService.getAccount(TEST_ACCOUNT_ID)!!)
+
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), services.contactService, services.vCardService, services.settingsRepository, viewModelScope())
+        vm.loadConversations()
+        advanceUntilIdle()
+
+        assertEquals(listOf("charlie", "bob", "alice"), vm.state.value.conversations.seeded())
+    }
+
+    /**
+     * Unread-first sorts on "has unread messages", then falls back to recency inside each
+     * group. All three seeded conversations end up unread, so the fallback is what the
+     * order shows — the point being that the mode is a total order, not a partial one that
+     * reshuffles equal rows between reloads.
+     */
+    @Test
+    fun unreadFirstSortKeepsRecencyWithinTheUnreadGroup() = runTest {
+        val stub = StubDaemonBridge()
+        val services = makeTestServiceStack(stub, this)
+        prepareAccountInService(stub, services.accountService)
+        advanceUntilIdle()
+        seedNamedConversations(services.accountService.getAccount(TEST_ACCOUNT_ID)!!)
+        services.settingsRepository.updateConversationSort(ConversationSort.UNREAD_FIRST)
+
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), services.contactService, services.vCardService, services.settingsRepository, viewModelScope())
+        vm.loadConversations()
+        advanceUntilIdle()
+
+        assertEquals(listOf("charlie", "bob", "alice"), vm.state.value.conversations.seeded())
+    }
+
+    /**
+     * The setting is DHT-synced, so it can change while the list is on screen (from this
+     * device's Settings screen or another device). That must re-sort what is already loaded,
+     * without a daemon round-trip.
+     */
+    @Test
+    fun changingTheSortSettingResortsTheLoadedList() = runTest {
+        val stub = StubDaemonBridge()
+        val services = makeTestServiceStack(stub, this)
+        prepareAccountInService(stub, services.accountService)
+        advanceUntilIdle()
+        seedNamedConversations(services.accountService.getAccount(TEST_ACCOUNT_ID)!!)
+
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), services.contactService, services.vCardService, services.settingsRepository, viewModelScope())
+        vm.loadConversations()
+        advanceUntilIdle()
+        assertEquals(listOf("charlie", "bob", "alice"), vm.state.value.conversations.seeded())
+
+        services.settingsRepository.updateConversationSort(ConversationSort.ALPHABETICAL)
+        advanceUntilIdle()
+
+        assertEquals(listOf("alice", "bob", "charlie"), vm.state.value.conversations.seeded())
+    }
+
+    /**
+     * B16: `compactMode` was stored and rendered as a toggle, but no composable read it.
+     * The list density now comes from this state field, which mirrors the synced setting.
+     */
+    @Test
+    fun compactModeSettingReachesTheListState() = runTest {
+        val stub = StubDaemonBridge()
+        val services = makeTestServiceStack(stub, this)
+        val vm = ConversationsViewModel(services.accountService, services.conversationFacade, StubDeviceRuntimeService(), services.contactService, services.vCardService, services.settingsRepository, viewModelScope())
+        advanceUntilIdle()
+        assertFalse(vm.state.value.isCompactMode, "Compact mode is off by default")
+
+        services.settingsRepository.updateCompactMode(true)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.isCompactMode)
+
+        services.settingsRepository.updateCompactMode(false)
+        advanceUntilIdle()
+        assertFalse(vm.state.value.isCompactMode)
     }
 }

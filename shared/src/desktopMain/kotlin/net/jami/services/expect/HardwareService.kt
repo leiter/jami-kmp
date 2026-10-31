@@ -38,6 +38,9 @@ actual class HardwareService {
     actual val audioState: StateFlow<AudioState> = _audioState.asStateFlow()
     actual val connectivityState: Flow<Boolean> = _connectivityState.asStateFlow()
 
+    /** Desktop links are treated as unmetered; the JVM exposes no metered-network signal. */
+    actual fun isMeteredNetwork(): Boolean = false
+
     init {
         logging = prefs.getBoolean(LOGGING_ENABLED_KEY, false)
     }

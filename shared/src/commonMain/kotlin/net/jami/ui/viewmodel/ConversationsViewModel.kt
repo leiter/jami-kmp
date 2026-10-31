@@ -25,7 +25,10 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -35,6 +38,7 @@ import net.jami.model.DataTransfer
 import net.jami.model.Interaction
 import net.jami.model.TextMessage
 import net.jami.model.Uri
+import net.jami.model.settings.ConversationSort
 import net.jami.repository.SettingsRepository
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
@@ -102,6 +106,12 @@ data class ConversationsState(
     val isAccountOnline: Boolean = false,
     val accounts: List<AccountItem> = emptyList(),
     val activeFilter: ConversationFilter = ConversationFilter.ALL,
+    /**
+     * Mirrors the DHT-synced `compactMode` UI setting: the conversation list renders at a
+     * tighter density when true. The setting was stored and shown in Settings but read by
+     * nothing (B16 in `doc/manual-test-plan-2026-09-10.md`).
+     */
+    val isCompactMode: Boolean = false,
 )
 
 /**
@@ -245,6 +255,27 @@ class ConversationsViewModel(
                     loadConversations()
                 }
             }
+        }
+
+        // Compact mode is DHT-synced too, so mirror it into the state for the list to read.
+        scope.launch {
+            settingsRepository.uiSettings
+                .map { it.compactMode }
+                .distinctUntilChanged()
+                .collect { compact ->
+                    _state.value = _state.value.copy(isCompactMode = compact)
+                }
+        }
+
+        // The sort preference is DHT-synced, so it can change from another device as well as
+        // from this one's Settings screen. Re-sort the cached list rather than reloading:
+        // nothing about the items changed, only their order.
+        scope.launch {
+            settingsRepository.uiSettings
+                .map { it.conversationSort }
+                .distinctUntilChanged()
+                .drop(1) // the current value is already reflected by the initial load
+                .collect { resortCachedConversations() }
         }
 
         // React to presence changes: match on contactId (ring ID), not conversation swarm ID.
@@ -559,10 +590,50 @@ class ConversationsViewModel(
                 isSyncing = conversation.isUnnamedSyncing,
             )
         }
-            // Pinned conversations float to the top; within each group, most recent first.
+            // Pinned conversations always float to the top; the order within each group comes
+            // from the user's `conversationSort` preference.
             // Note: ConversationFacade also sorts by timestamp, but we keep this as the
-            // authoritative ordering for the list (pin-awareness lives only here).
-            .sortedWith(compareByDescending<ConversationItem> { it.isPinned }.thenByDescending { it.timestamp })
+            // authoritative ordering for the list (pin- and preference-awareness live only here).
+            .sortedWith(conversationComparator())
+    }
+
+    /**
+     * Ordering for the conversation list.
+     *
+     * Pinned conversations come first under every sort mode — matching the reference client,
+     * where pinning is an override rather than one sort option among others. The remaining
+     * order follows [UiSettings.conversationSort], which used to be stored and displayed in
+     * Settings but never read here (B15 in `doc/manual-test-plan-2026-09-10.md`).
+     *
+     * Every mode ends with a timestamp tiebreak so the order is total and therefore stable:
+     * two conversations with the same name, or both unread, keep a predictable position
+     * instead of shuffling between reloads.
+     */
+    private fun conversationComparator(): Comparator<ConversationItem> {
+        val pinnedFirst = compareByDescending<ConversationItem> { it.isPinned }
+        return when (settingsRepository.uiSettings.value.conversationSort) {
+            ConversationSort.LAST_ACTIVITY ->
+                pinnedFirst.thenByDescending { it.timestamp }
+            ConversationSort.ALPHABETICAL ->
+                pinnedFirst
+                    .thenBy { it.displayName.lowercase() }
+                    .thenByDescending { it.timestamp }
+            ConversationSort.UNREAD_FIRST ->
+                pinnedFirst
+                    .thenByDescending { it.unreadCount > 0 }
+                    .thenByDescending { it.timestamp }
+        }
+    }
+
+    /**
+     * Re-sort the cached list in place. Used when the sort preference changes: the items
+     * themselves are unchanged, so there is no reason to go back to the daemon.
+     */
+    private fun resortCachedConversations() {
+        cachedConversations = cachedConversations.sortedWith(conversationComparator())
+        _state.value = _state.value.copy(
+            conversations = applyFilter(cachedConversations, _state.value.activeFilter)
+        )
     }
 
     /**

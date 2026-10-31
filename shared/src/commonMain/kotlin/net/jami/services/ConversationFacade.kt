@@ -1556,10 +1556,33 @@ class ConversationFacade(
             status != Interaction.TransferStatus.TRANSFER_AWAITING_HOST) return
         val messageId = transfer.messageId ?: return
         val fileId = transfer.fileId?.takeIf { it.isNotEmpty() } ?: return
+        if (!autoDownloadAllowedOnCurrentNetwork()) return
         val maxSize = settingsRepository.fileTransferSettings.value.maxAutoAcceptSize
         if (transfer.canAutoAccept(maxSize.toInt())) {
             acceptFileTransfer(conversation, messageId, fileId)
         }
+    }
+
+    /**
+     * Whether an incoming file may be downloaded unattended over the link that is up now.
+     *
+     * The `autoDownloadWifi` / `autoDownloadMobile` toggles were stored and shown in Settings
+     * but consulted nowhere: the auto-accept decision looked only at the size limit, so a file
+     * downloaded itself on mobile data however the user had set them (B13 in
+     * `doc/manual-test-plan-2026-09-10.md`). An unmetered link is governed by `autoDownloadWifi`,
+     * a metered one (cellular, or a phone hotspot) by `autoDownloadMobile`.
+     *
+     * Checked at every auto-accept site. Manual downloads never come through here — asking for
+     * a file explicitly is the user overriding this setting, not violating it.
+     */
+    private fun autoDownloadAllowedOnCurrentNetwork(): Boolean {
+        val settings = settingsRepository.fileTransferSettings.value
+        val metered = hardwareService.isMeteredNetwork()
+        val allowed = if (metered) settings.autoDownloadMobile else settings.autoDownloadWifi
+        if (!allowed) {
+            Log.d(TAG, "auto-download disabled for this network type (metered=$metered)")
+        }
+        return allowed
     }
 
     /**
@@ -2009,7 +2032,7 @@ class ConversationFacade(
                          newStatus == Interaction.TransferStatus.FILE_AVAILABLE) &&
                         transfer.isIncoming) {
                         val maxSize = settingsRepository.fileTransferSettings.value.maxAutoAcceptSize
-                        if (transfer.canAutoAccept(maxSize.toInt())) {
+                        if (autoDownloadAllowedOnCurrentNetwork() && transfer.canAutoAccept(maxSize.toInt())) {
                             acceptFileTransfer(conversation, interactionId, fileId)
                         }
                     }
@@ -2030,7 +2053,7 @@ class ConversationFacade(
                     val totalSize = info?.totalSize ?: 0L
                     val maxSize = settingsRepository.fileTransferSettings.value.maxAutoAcceptSize
                     // Accept when size is unknown (0) or within the limit
-                    if (totalSize == 0L || totalSize <= maxSize) {
+                    if (autoDownloadAllowedOnCurrentNetwork() && (totalSize == 0L || totalSize <= maxSize)) {
                         acceptFileTransfer(conversation, interactionId, fileId)
                     }
                 }

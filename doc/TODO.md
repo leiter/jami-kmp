@@ -256,6 +256,31 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
   on Android and is a no-op elsewhere. (This item was left unchecked long after the screen landed.)
 - [ ] **App shortcuts** — Reference `AndroidManifest.xml` declares conversation shortcuts. Not in KMP manifest.
 
+### Settings that were stored but applied nowhere (2026-10-31)
+
+Three of the B10–B16 cluster in `doc/manual-test-plan-2026-09-10.md`. Still owed a device
+verdict — the plan entries were rewritten to test the fix rather than confirm the bug.
+
+- [x] **Conversation sort order (B15)** — `ConversationsViewModel.conversationComparator()` reads
+  `UiSettings.conversationSort` (last activity / alphabetical / unread first) instead of the old
+  hardcoded `pinned desc, timestamp desc`. Pinned rows stay on top under every mode, and every
+  mode ends with a timestamp tiebreak so the order is total and stable. The setting is DHT-synced,
+  so a change from another device re-sorts the loaded list in place.
+- [x] **Compact mode (B16)** — `ConversationsState.isCompactMode` mirrors the setting;
+  `ConversationListItem` drops its vertical padding (`spacing.m` → `spacing.xs`) and the gap
+  between its two text lines. **Conversation list only** — whether chat bubbles should tighten
+  too is still open.
+- [x] **Auto-download on Wi-Fi / mobile data (B13)** — `ConversationFacade`'s new
+  `autoDownloadAllowedOnCurrentNetwork()` gates all three auto-accept sites on
+  `autoDownloadWifi` / `autoDownloadMobile`, picked by the new `HardwareService.isMeteredNetwork()`
+  (Android `NET_CAPABILITY_NOT_METERED`, iOS `nw_path_is_expensive`, desktop always unmetered).
+  Manual downloads stay ungated. **The iOS actual has not been compiled** — Apple targets are
+  skipped on a Linux host, so `nw_path_is_expensive` needs a Mac build before it is trusted.
+- Test-fixture fix that fell out of this: `makeTestServiceStack` gave `ConversationFacade` and
+  `CallService` their own `SettingsRepository` instances, so a test that changed a setting through
+  `stack.settingsRepository` was writing where no service read. The stack now shares one. Any
+  earlier test that looked like it covered settings-driven service behaviour did not.
+
 ## Bug Fixes (2026-08-07)
 
 - [x] **Biometric authentication completely non-functional** — `BiometricService` (Koin singleton, built with `androidContext()` before any Activity exists) cast `context as? FragmentActivity` at every `BiometricPrompt` call site, which could never succeed. Fixed by giving `MainActivity` (now a `FragmentActivity`) ownership of the prompt host; `BiometricLockScreen` was already fully wired but could never actually launch a prompt in production.

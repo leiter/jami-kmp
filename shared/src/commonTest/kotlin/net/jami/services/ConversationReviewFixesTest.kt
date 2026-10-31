@@ -320,4 +320,43 @@ class ConversationReviewFixesTest {
             stack.stub.sentMessages.filter { it.flag == 1 },
         )
     }
+
+    // ==================== Auto-download by network type (B13) ====================
+
+    /**
+     * B13: `autoDownloadWifi` / `autoDownloadMobile` had no consumer — the auto-accept
+     * decision looked only at the size limit, so an incoming file downloaded itself whatever
+     * the user had set. The desktop HardwareService reports an unmetered link, so this
+     * exercises the Wi-Fi toggle.
+     */
+    @Test
+    fun incomingFileIsNotAutoAcceptedWhenTheWifiToggleIsOff() = runTest {
+        val stack = setUp()
+        stack.settingsRepository.updateAutoDownload(mobile = false, wifi = false)
+
+        stack.conversationFacade.onMessageReceived(ACC, CONV, fileMessage("m1", "f1", BOB))
+        settle()
+
+        val transfer = assertIs<DataTransfer>(stack.conversation().getMessage("m1"))
+        assertEquals(TransferStatus.FILE_AVAILABLE, transfer.transferStatus)
+        assertFalse(
+            Triple(CONV, "m1", "f1") in stack.stub.downloadedFiles,
+            "Auto-download is off for this network type, so nothing should have been requested",
+        )
+    }
+
+    /** The same file is auto-accepted once the network type is allowed again. */
+    @Test
+    fun incomingFileIsAutoAcceptedWhenTheWifiToggleIsOn() = runTest {
+        val stack = setUp()
+        stack.settingsRepository.updateAutoDownload(mobile = false, wifi = true)
+
+        stack.conversationFacade.onMessageReceived(ACC, CONV, fileMessage("m1", "f1", BOB))
+        settle()
+
+        assertTrue(
+            Triple(CONV, "m1", "f1") in stack.stub.downloadedFiles,
+            "An incoming file within the size limit on an allowed network is auto-accepted",
+        )
+    }
 }

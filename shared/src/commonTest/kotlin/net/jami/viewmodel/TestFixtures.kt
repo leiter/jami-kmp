@@ -128,6 +128,7 @@ fun makeConversationFacade(
     scope: CoroutineScope,
     deviceRuntimeService: DeviceRuntimeService = StubDeviceRuntimeService(),
     fileStore: ConversationFileStore = RecordingFileStore(),
+    settingsRepository: SettingsRepository = SettingsRepository(stub, InMemoryClientSettingsStore(), scope),
 ): ConversationFacade = ConversationFacade(
     historyService = StubHistoryService(),
     callService = callService,
@@ -138,7 +139,7 @@ fun makeConversationFacade(
     deviceRuntimeService = deviceRuntimeService,
     preferencesService = StubPreferencesService(),
     daemonBridge = stub,
-    settingsRepository = SettingsRepository(stub, InMemoryClientSettingsStore(), scope),
+    settingsRepository = settingsRepository,
     scope = scope.isolated(),
     fileStore = fileStore,
 )
@@ -204,12 +205,17 @@ fun makeTestServiceStack(
     // drives them — but gives them their own Job so runTest does not await them. Same
     // reasoning as viewModelScope() above.
     val accountService = makeAccountService(stub, scope)
-    val callService = makeCallService(stub, accountService, scope = scope)
+    // One SettingsRepository for the whole stack. Each service used to build its own, so a
+    // test that changed a setting through `stack.settingsRepository` was writing to an
+    // instance no service read — the facade and the call service kept their own defaults, and
+    // any settings-driven behaviour was untestable while looking covered.
+    val settingsRepository = makeSettingsRepository(stub, scope)
+    val callService = makeCallService(stub, accountService, settingsRepository, scope)
     val contactService = makeContactService(stub, accountService, scope)
     val conversationFacade = makeConversationFacade(
         stub, accountService, callService, contactService, scope, deviceRuntimeService, fileStore,
+        settingsRepository,
     )
-    val settingsRepository = makeSettingsRepository(stub, scope)
     val vCardService = VCardService(StubDeviceRuntimeService())
     return TestServiceStack(stub, accountService, callService, contactService, conversationFacade, settingsRepository, vCardService)
 }

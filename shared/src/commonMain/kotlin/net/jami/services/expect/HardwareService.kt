@@ -29,6 +29,16 @@ expect class HardwareService {
     val audioState: StateFlow<AudioState>
     val connectivityState: Flow<Boolean>
 
+    /**
+     * True when the active network is metered — cellular, or a Wi-Fi link the system reports
+     * as metered (a phone hotspot). False when there is no connection at all, so callers
+     * treat "offline" like "unmetered" and leave the real failure to the transfer itself.
+     *
+     * Read by the auto-download file-transfer settings, which differ between Wi-Fi and
+     * mobile data.
+     */
+    fun isMeteredNetwork(): Boolean
+
     fun getAudioState(conf: Conference): Flow<AudioState>
     fun updateAudioState(
         conference: Conference?,
