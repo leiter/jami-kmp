@@ -18,6 +18,7 @@ import net.jami.services.AndroidPictureInPictureManager
 import net.jami.services.BiometricService
 import net.jami.services.CallService
 import net.jami.services.NotificationService
+import net.jami.services.ScreenShareService
 import net.jami.services.expect.HardwareService
 import net.jami.ui.JamiApp
 import net.jami.ui.navigation.DeepLinkState
@@ -94,12 +95,12 @@ class MainActivity : FragmentActivity() {
         when (requestCode) {
             REQUEST_SCREEN_SHARE -> {
                 if (resultCode == RESULT_OK && data != null) {
-                    val mediaProjection = (getSystemService(MEDIA_PROJECTION_SERVICE) as? MediaProjectionManager)
-                        ?.getMediaProjection(resultCode, data)
-                    if (mediaProjection != null) {
-                        hardwareService.setPendingScreenShareProjection(mediaProjection)
-                        Log.d(TAG, "Screen share permission granted, projection stored")
-                    }
+                    // The consent token is NOT redeemed here. From API 34 getMediaProjection()
+                    // requires a foreground service of type mediaProjection to be running
+                    // already, and startForegroundService() is asynchronous — so the service
+                    // takes the result and redeems it itself, after it is in the foreground.
+                    ScreenShareService.start(this, resultCode, data)
+                    Log.d(TAG, "Screen share permission granted, handed to ScreenShareService")
                 } else {
                     Log.w(TAG, "Screen share permission denied")
                 }

@@ -27,6 +27,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
     <!-- Auto-start after device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -162,11 +163,21 @@
              a subset of what is declared here, so dataSync must be present.
              mediaProjection is intentionally omitted — it requires an active capture session
              at startForeground() time (API 34+), which a regular call does not have.
-             Screen sharing acquires its own projection token on demand via MainActivity. -->
+             Screen sharing has its own service for that type, declared below. -->
         <service
             android:name=".service.CallNotificationService"
             android:exported="false"
             android:foregroundServiceType="microphone|phoneCall|camera|dataSync" />
+
+        <!-- Screen sharing. The mediaProjection type lives here rather than on
+             CallNotificationService above, which starts for every call and has no capture
+             session to back the type with. From API 34 the platform will not redeem a
+             screen-capture consent token unless a service of this type is already running, so
+             this one starts first and then redeems the token itself — see ScreenShareService. -->
+        <service
+            android:name="net.jami.services.ScreenShareService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
 
         <!-- Broadcast receiver for notification Answer / Decline / Hang Up actions -->
         <receiver

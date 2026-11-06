@@ -227,20 +227,25 @@ Differences against the reference client that remain:
 | `ACCESS_WIFI_STATE` / `CHANGE_WIFI_STATE` | declared | not declared | No observed use in KMP |
 | `READ_PROFILE` | declared | not declared | Legacy; profile comes via the daemon |
 | `BLUETOOTH` (maxSdkVersion 30) | declared | not declared | KMP declares only the modern `BLUETOOTH_CONNECT`; audio routing on API ≤30 is worth a check |
-| `FOREGROUND_SERVICE_MEDIA_PROJECTION` | declared | **not declared** | See below |
+| `FOREGROUND_SERVICE_MEDIA_PROJECTION` | declared | declared (2026-11-05) | Backed by `ScreenShareService`; see below |
 
-### Flagged, not reproduced: screen sharing and `mediaProjection`
+### Screen sharing and `mediaProjection` — addressed 2026-11-05, device check still owed
 
-Screen sharing *is* implemented on Android (`MainActivity` runs the `MediaProjectionManager`
+Screen sharing is implemented on Android (`MainActivity` runs the `MediaProjectionManager`
 consent flow, `CameraService.startScreenSharing()` wires the `VirtualDisplay` to the daemon's
-`Surface`), and `compileSdk`/`targetSdk` are 36. But:
+`Surface`), and `compileSdk`/`targetSdk` are 36. From API 34 the platform will not redeem a
+screen-capture consent token unless a foreground service of type `mediaProjection` is already
+running — `getMediaProjection()` throws `SecurityException` otherwise — and neither the
+permission nor such a service existed, while the token was redeemed straight out of
+`onActivityResult`. So screen sharing could not have worked on any Android 14+ device.
 
-- `FOREGROUND_SERVICE_MEDIA_PROJECTION` is not declared, and
-- no service in the manifest lists `mediaProjection` among its `foregroundServiceType` values —
-  the call service is `microphone|phoneCall|camera|dataSync`.
+Now: `FOREGROUND_SERVICE_MEDIA_PROJECTION` is declared and
+`net.jami.services.ScreenShareService` carries the type. The consent result is handed to that
+service, which enters the foreground **first** and only then redeems the token, because
+`startForegroundService()` is asynchronous and the activity cannot know when `startForeground()`
+has run. The type was deliberately not added to `CallNotificationService`: that service starts
+for every call with no capture session to back the type with.
 
-From API 34 onward the platform requires a foreground service of type `mediaProjection` to be
-running before `MediaProjectionManager.getMediaProjection()` is used, and throws otherwise. This
-was read off the manifest and the source; **it has not been reproduced on a device**, so it is
-recorded as a candidate defect rather than a confirmed one. Confirming it needs one screen-share
-attempt on an Android 14+ device.
+**The original diagnosis was read off the manifest and source and was never reproduced, and the
+fix has not been run on a device either** — it is compiled and the manifest merges. One
+screen-share attempt on an Android 14+ device settles both.

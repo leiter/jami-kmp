@@ -227,6 +227,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_group_calls">Calls</string>
     <string name="notif_inprogress_group_call">Call in progress</string>
     <string name="notif_background_service">Jami is currently running in the background</string>
+    <string name="notif_screen_sharing">Sharing your screen</string>
     <string name="notif_mark_as_read">Mark as read</string>
     <string name="notif_dismiss">Dismiss</string>
     <string name="notif_reply">Reply</string>

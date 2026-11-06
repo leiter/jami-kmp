@@ -1,7 +1,7 @@
 # Jami KMP - Implementation Status
 
-**Last Updated:** 2026-10-31 (three "stored but not applied" settings now applied:
-conversation sort order, compact mode, and auto-download by network type)
+**Last Updated:** 2026-11-05 (screen sharing given the `mediaProjection` foreground service
+Android 14+ requires)
 **Version:** In Development
 **Primary Platforms:** Android, iOS
 
@@ -24,7 +24,9 @@ conversation sort order, compact mode, and auto-download by network type)
 - DTMF dialpad
 - On-hold / resume
 - Conference calls: participant grid, moderator controls (mute/kick/video/lock)
-- Screen sharing (Android: VirtualDisplay → Surface → daemon)
+- Screen sharing (Android: VirtualDisplay → Surface → daemon, held up by a dedicated
+  `mediaProjection` foreground service — required from API 34, added 2026-11-05, not yet
+  run on a device)
 - Picture-in-Picture (Android: PictureInPictureParams with auto-enter)
 - Foreground auto-navigation to call screen (SharedFlow-based, avoids StateFlow dedup bug)
 - Mic / camera permission banners in-call with re-request flow
@@ -105,7 +107,7 @@ conversation sort order, compact mode, and auto-download by network type)
 ### Testing
 - 97 test files (70 in commonTest; the rest in desktopTest 9, iosTest 5, macosTest 4, jsTest 4,
   androidUnitTest 4, androidInstrumentedTest 1)
-- `:shared:desktopTest` — **870 tests, 0 failures** (last run 2026-10-31)
+- `:shared:desktopTest` — **871 tests, 0 failures** (last run 2026-11-05)
 - ViewModel tests, model tests, service integration tests, utility tests
 - `runTest` + `advanceUntilIdle` pattern throughout
 - `TestFixtures.kt` with stub `DaemonBridgeApi` for isolated ViewModel testing

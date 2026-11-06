@@ -131,9 +131,10 @@ also *not* exclusive to a fresh install: the case that prompted this trace was a
 data folder dated from a month earlier but had never held a `dring.yml`, because no account was
 ever created in it.
 
-## `Account.getByContact` still throws when the account holds a group
+## `Account.getByContact` threw when the account holds a group
 
-**Status:** Open (found 2026-10-30)
+**Status:** Fixed in `69ab199` (2026-10-30); the note below was left saying "not yet done"
+and was corrected 2026-11-05
 **Impact:** Reached from the incoming-call path; the same crash class fixed in `bbba9fb`
 **Where:** `shared/src/commonMain/kotlin/net/jami/model/Account.kt:216` and `:221`
 
@@ -162,9 +163,12 @@ handling.
 
 ### Fix
 
-`conv.contactOrNull` at both lines, same as the other walks. The first test to write is the
-deterministic one — a contact with **no** conversation, with a group present: `find` must visit
-every entry before returning null, so the group is always reached, whereas "find Bob while a group
-exists" only fails depending on map iteration order.
+Both walks read `conv.contactOrNull`, same as the other sites. `AccountGroupLookupTest` covers
+all three paths:
 
-Not yet done because the contact-picker work (`51084e8`) took priority; nothing else depends on it.
+- a group member looked up with only the group present — the deterministic case, since `find`
+  must visit every entry before returning null, so the group is always reached (whereas "find Bob
+  while a group exists" only fails depending on map iteration order);
+- a real 1:1 still found with a group in the list;
+- the same lookup against a pending **group invitation**, which exercises the second changed line
+  (added 2026-11-05 — the original fix tested only the `conversations` map).

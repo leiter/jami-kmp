@@ -443,14 +443,20 @@ verdict — the plan entries were rewritten to test the fix rather than confirm 
 
 ## Candidate defects found while reconciling the docs (2026-10-26) — read-only, not reproduced
 
-- [ ] **Screen sharing may be broken on Android 14+: no `mediaProjection` foreground service.**
-  `FOREGROUND_SERVICE_MEDIA_PROJECTION` is not declared in `android-app/src/androidMain/AndroidManifest.xml`,
-  and no service lists `mediaProjection` among its `foregroundServiceType` values (the call service
-  is `microphone|phoneCall|camera|dataSync`). From API 34 the platform requires such a service to be
-  running before `MediaProjectionManager.getMediaProjection()`. `targetSdk` is 36 and screen sharing
-  is implemented (`MainActivity` consent flow → `CameraService.startScreenSharing()`). **Read off the
-  manifest and source only — not reproduced on a device.** One screen-share attempt on an Android 14+
-  device settles it. See `Permissions.md` → "Flagged, not reproduced".
+- [x] **Screen sharing was broken on Android 14+: no `mediaProjection` foreground service**
+  (fixed 2026-11-05). `FOREGROUND_SERVICE_MEDIA_PROJECTION` was undeclared, no service carried
+  the `mediaProjection` type, and `MainActivity.onActivityResult` redeemed the consent token
+  directly — which from API 34 throws `SecurityException` unless such a service is already
+  running. `targetSdk` is 36, so this could not have worked on any recent device.
+  New `net.jami.services.ScreenShareService` holds the type; `MainActivity` now hands it the
+  consent result and the service enters the foreground before redeeming the token, since
+  `startForegroundService()` is asynchronous and the activity cannot know when `startForeground()`
+  has run. It stops itself on `MediaProjection.Callback.onStop` (covering both the system-UI stop
+  and `CameraService.closeCamera()`), with a 60 s guard for consent that `startCapture` never
+  consumes. The type was **not** added to `CallNotificationService`: that service starts for every
+  call with no capture session to back it, as its own manifest comment says.
+  **Neither the defect nor the fix has been run on a device** — one screen-share attempt on an
+  Android 14+ device settles both. See `Permissions.md`.
 
 ## Open Decisions
 

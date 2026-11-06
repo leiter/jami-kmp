@@ -549,6 +549,13 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
         }
     }
 
+    /**
+     * True while a granted projection is waiting for [startCapture] to pick it up. Android-only,
+     * read by [net.jami.services.ScreenShareService] to tell a share that never started from one
+     * that is running, since only the former should take its foreground service down.
+     */
+    fun isScreenShareProjectionPending(): Boolean = pendingScreenShareProjection != null
+
     // ==================== Network connectivity ====================
 
     // Serialises the JNI connectivityChanged() call off the main thread, mirroring the

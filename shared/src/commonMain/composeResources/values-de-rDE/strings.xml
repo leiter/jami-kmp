@@ -72,6 +72,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_group_calls">Anrufe</string>
     <string name="notif_inprogress_group_call">Anruf läuft</string>
     <string name="notif_background_service">Jami läuft derzeit im Hintergrund</string>
+    <string name="notif_screen_sharing">Bildschirm wird geteilt</string>
     <string name="notif_mark_as_read">Als gelesen markieren</string>
     <string name="notif_dismiss">Abweisen</string>
     <string name="notif_reply">Antworten</string>
