@@ -66,4 +66,17 @@ class AccountGroupLookupTest {
         account.conversationStarted(oneToOne)
         assertEquals(oneToOne, account.getByContact(bob.uri))
     }
+
+    @Test
+    fun aGroupInvitationDoesNotThrowWhileWalkingPendingRequests() {
+        val account = Account("acc1")
+        val bob = contact("bbbb")
+        account.addPendingConversation(
+            conversation("groupInvite", contact("me", isUser = true), bob, contact("cccc"))
+        )
+        assertNull(
+            account.getByContact(bob.uri),
+            "a pending group invitation is not a 1:1 conversation with bob"
+        )
+    }
 }
