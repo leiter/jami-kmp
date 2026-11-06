@@ -596,6 +596,15 @@ class AndroidNotificationService(
 
     // ==================== Trust Request Notifications ====================
 
+    /**
+     * Mirrors the reference client: one pending request names the sender and offers Accept and
+     * Decline inline, several collapse into a count, and an empty pending set cancels the
+     * notification. Deduplication lives in [ConversationFacade], which only calls this when a
+     * request has not been notified before.
+     *
+     * Not yet ported from the reference: the Block action and the sender's avatar as the large
+     * icon (the avatar needs a bitmap decode off the main thread).
+     */
     override fun showIncomingTrustRequestNotification(account: Account) {
         // Check settings before showing
         if (!notificationGuard.shouldShowRequestNotification()) {
@@ -604,6 +613,12 @@ class AndroidNotificationService(
         }
 
         val notifId = NOTIF_TRUST_REQUEST_BASE + account.accountId.hashCode()
+        val pending = account.getPending().toList()
+        if (pending.isEmpty()) {
+            notificationManager.cancel(notifId)
+            Log.d(TAG, "No pending requests left; cancelled notification for ${account.accountId}")
+            return
+        }
 
         val builder = NotificationCompat.Builder(context, CHANNEL_REQUESTS)
             .setSmallIcon(smallIcon)
@@ -612,11 +627,68 @@ class AndroidNotificationService(
             .setCategory(NotificationCompat.CATEGORY_SOCIAL)
             .setAutoCancel(true)
 
+        val piFlags = PendingIntent.FLAG_UPDATE_CURRENT or
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        val tapIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
+            putExtra(KEY_ACCOUNT_ID, account.accountId)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+        builder.setContentIntent(PendingIntent.getActivity(context, notifId, tapIntent, piFlags))
+
+        val single = pending.singleOrNull()
+        if (single != null) {
+            val conversationId = single.uri.rawRingId
+            builder.setContentText(single.title.ifEmpty { single.uri.rawRingId })
+            createRequestActionPendingIntent(
+                account.accountId, conversationId, ACTION_ACCEPT_REQUEST, notifId + 1
+            )?.let {
+                builder.addAction(smallIcon, runBlocking { getString(Res.string.accept) }, it)
+            }
+            createRequestActionPendingIntent(
+                account.accountId, conversationId, ACTION_DECLINE_REQUEST, notifId + 2
+            )?.let {
+                builder.addAction(smallIcon, runBlocking { getString(Res.string.decline) }, it)
+            }
+        } else {
+            builder.setContentText(
+                runBlocking { getString(Res.string.invitation_message, pending.size) }
+            )
+        }
+
         // Apply sound/vibration settings
         applySoundAndVibration(builder)
 
         notificationManager.notify(notifId, builder.build())
-        Log.d(TAG, "Showing trust request notification for account: ${account.accountId}")
+        Log.d(TAG, "Showing trust request notification for account: ${account.accountId}, ${pending.size} pending")
+    }
+
+    /**
+     * Accept / decline for a single pending request, delivered to `NotificationActionReceiver`.
+     * The notification id travels with it so the receiver can clear the notification once the
+     * daemon has the answer.
+     */
+    private fun createRequestActionPendingIntent(
+        accountId: String,
+        conversationId: String,
+        action: String,
+        requestCode: Int
+    ): PendingIntent? {
+        val receiverClass = try {
+            Class.forName("net.jami.android.service.NotificationActionReceiver")
+        } catch (e: Exception) {
+            null
+        } ?: return null
+
+        val intent = Intent(context, receiverClass).apply {
+            this.action = action
+            putExtra(KEY_ACCOUNT_ID, accountId)
+            putExtra(KEY_CONVERSATION_ID, conversationId)
+            putExtra(KEY_NOTIFICATION_ID, NOTIF_TRUST_REQUEST_BASE + accountId.hashCode())
+            setPackage(context.packageName)
+        }
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        return PendingIntent.getBroadcast(context, requestCode, intent, flags)
     }
 
     override fun cancelTrustRequestNotification(accountId: String) {
@@ -854,6 +926,8 @@ class AndroidNotificationService(
         const val ACTION_VIEW_CALL = "net.jami.action.VIEW_CALL"
         const val ACTION_REPLY_MESSAGE = "net.jami.action.REPLY_MESSAGE"
         const val ACTION_MARK_READ = "net.jami.action.MARK_READ"
+        const val ACTION_ACCEPT_REQUEST = "net.jami.action.ACCEPT_REQUEST"
+        const val ACTION_DECLINE_REQUEST = "net.jami.action.DECLINE_REQUEST"
 
         // Intent extras
         const val KEY_CALL_ID = NotificationService.KEY_CALL_ID

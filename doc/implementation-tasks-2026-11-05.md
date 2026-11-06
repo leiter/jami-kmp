@@ -70,6 +70,12 @@ on 2026-10-31.
   treats a banned peer as not a contact. `DHT.PublicInCalls` is deliberately left alone.
   Covered by `BlockUnknownContactsTest`. **A device check is still owed**, and
   `doc/manual-test-plan-2026-09-10.md` B14 was rewritten to test the fix.
+  Two findings from this work were closed straight after it, neither of them on this list:
+  `showIncomingTrustRequestNotification` was implemented on all five platforms and called from
+  none (so a contact request raised no notification at all — now driven from
+  `ConversationFacade`, deduped, with Accept/Decline actions on Android), and
+  `PrivacySettings.allowContactRequests`/`blockedContacts` were dead in both directions and were
+  removed. See `doc/TODO.md`.
 
 - **B4 — build and run the iOS half of B13.** `HardwareService.isMeteredNetwork()` uses
   `nw_path_is_expensive` on iOS; Apple targets are skipped on the Linux host, so that actual

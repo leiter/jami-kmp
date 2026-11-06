@@ -17,7 +17,8 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 /**
- * Receives REPLY_MESSAGE / MARK_READ / ANSWER_CALL / DECLINE_CALL broadcast intents from notifications.
+ * Receives REPLY_MESSAGE / MARK_READ / ANSWER_CALL / DECLINE_CALL / ACCEPT_REQUEST /
+ * DECLINE_REQUEST broadcast intents from notifications.
  * Resolves [DaemonBridge] and [CallService] via Koin and dispatches the appropriate action.
  *
  * Mirrors the notification action handling pattern from MessageNotificationReceiver
@@ -54,6 +55,23 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
                     return
                 }
                 handleMarkRead(context, accountId, conversationId, intent, pendingResult)
+            }
+
+            AndroidNotificationService.ACTION_ACCEPT_REQUEST,
+            AndroidNotificationService.ACTION_DECLINE_REQUEST -> {
+                val conversationId = intent.getStringExtra(AndroidNotificationService.KEY_CONVERSATION_ID) ?: run {
+                    Log.w(TAG, "NotificationActionReceiver: missing conversationId in intent for request action")
+                    pendingResult.finish()
+                    return
+                }
+                handleRequestAction(
+                    context,
+                    accountId,
+                    conversationId,
+                    accept = intent.action == AndroidNotificationService.ACTION_ACCEPT_REQUEST,
+                    intent = intent,
+                    pendingResult = pendingResult
+                )
             }
 
             AndroidNotificationService.ACTION_ANSWER -> {
@@ -130,6 +148,40 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
                 if (notifId != -1) cancelNotification(context, notifId)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to mark conversation as read", e)
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
+    /**
+     * Accept or decline a contact request straight from its notification.
+     *
+     * Goes to the daemon rather than through [net.jami.services.ConversationFacade]: the daemon
+     * answers either way with `conversationReady` or `conversationRequestDeclined`, which the
+     * facade already handles by moving the conversation out of its pending set and refreshing
+     * this very notification. Doing it this way keeps the receiver out of the facade's state.
+     */
+    private fun handleRequestAction(
+        context: Context,
+        accountId: String,
+        conversationId: String,
+        accept: Boolean,
+        intent: Intent,
+        pendingResult: PendingResult
+    ) {
+        val notifId = intent.getIntExtra(AndroidNotificationService.KEY_NOTIFICATION_ID, -1)
+        Log.d(TAG, "${if (accept) "Accepting" else "Declining"} request $conversationId")
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                if (accept) {
+                    daemonBridge.acceptConversationRequest(accountId, conversationId)
+                } else {
+                    daemonBridge.declineConversationRequest(accountId, conversationId)
+                }
+                if (notifId != -1) cancelNotification(context, notifId)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to answer contact request $conversationId", e)
             } finally {
                 pendingResult.finish()
             }

@@ -53,8 +53,21 @@ class SettingsPreferencesService(private val settings: Settings) : PreferencesSe
     }
 
     override fun removeRequestPreferences(accountId: String, contactId: String) {
-        settings.remove("req_${accountId}:${contactId}")
+        settings.remove(requestKey(accountId, contactId))
     }
+
+    override fun hasRequestBeenNotified(accountId: String, contactId: String): Boolean =
+        settings.getBoolean(requestKey(accountId, contactId), false)
+
+    override fun setRequestNotified(accountId: String, contactId: String) {
+        settings.setBoolean(requestKey(accountId, contactId), true)
+    }
+
+    /**
+     * Persisted rather than held in memory so that relaunching the app does not re-notify a
+     * request the user has already seen and chosen to leave pending.
+     */
+    private fun requestKey(accountId: String, contactId: String) = "req_${accountId}:${contactId}"
 
     override fun getMaxFileAutoAccept(accountId: String): Int =
         settings.getInt("max_file_auto_accept_$accountId", DEFAULT_MAX_FILE_AUTO_ACCEPT)

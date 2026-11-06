@@ -55,6 +55,28 @@ interface PreferencesService {
     fun removeRequestPreferences(accountId: String, contactId: String)
 
     /**
+     * Whether a notification has already been shown for this pending request.
+     *
+     * The pending set is republished on every change, so without this the same request would
+     * be re-notified each time another one arrives or is answered. Cleared by
+     * [removeRequestPreferences] when the request is accepted or discarded, so a later request
+     * from the same peer notifies again. Mirrors the reference client's
+     * `loadRequestsPreferences`/`saveRequestPreferences` pair.
+     *
+     * @param accountId The account ID
+     * @param contactId The contact ID (raw ring ID)
+     */
+    fun hasRequestBeenNotified(accountId: String, contactId: String): Boolean
+
+    /**
+     * Record that a notification has been shown for this pending request.
+     *
+     * @param accountId The account ID
+     * @param contactId The contact ID (raw ring ID)
+     */
+    fun setRequestNotified(accountId: String, contactId: String)
+
+    /**
      * Get the maximum file size for auto-accept.
      *
      * @param accountId The account ID
@@ -93,6 +115,7 @@ interface PreferencesService {
  */
 class StubPreferencesService : PreferencesService {
     private val conversationPrefs = mutableMapOf<String, MutableMap<String, String>>()
+    private val notifiedRequests = mutableSetOf<String>()
 
     override fun getConversationPreferences(accountId: String, conversationUri: Uri): Map<String, String> {
         val key = "$accountId:${conversationUri.uri}"
@@ -104,7 +127,16 @@ class StubPreferencesService : PreferencesService {
         conversationPrefs.getOrPut(key) { mutableMapOf() }.putAll(preferences)
     }
 
-    override fun removeRequestPreferences(accountId: String, contactId: String) {}
+    override fun removeRequestPreferences(accountId: String, contactId: String) {
+        notifiedRequests.remove("$accountId:$contactId")
+    }
+
+    override fun hasRequestBeenNotified(accountId: String, contactId: String): Boolean =
+        "$accountId:$contactId" in notifiedRequests
+
+    override fun setRequestNotified(accountId: String, contactId: String) {
+        notifiedRequests.add("$accountId:$contactId")
+    }
 
     override fun getMaxFileAutoAccept(accountId: String): Int = 20 * 1024 * 1024 // 20MB default
 

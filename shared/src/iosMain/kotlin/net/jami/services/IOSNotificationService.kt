@@ -405,10 +405,23 @@ class IOSNotificationService(
         }
 
         val identifier = "request_${account.accountId}"
+        val pending = account.getPending().toList()
+        if (pending.isEmpty()) {
+            cancelTrustRequestNotification(account.accountId)
+            Log.d(TAG, "No pending requests left; cancelled notification for ${account.accountId}")
+            return
+        }
 
         val content = UNMutableNotificationContent().apply {
             setTitle(runBlocking { getString(Res.string.new_invitation_request_title) })
-            setBody(account.displayUsername)
+            // The sender, or a count when there is more than one. This was
+            // account.displayUsername — the *local* account's own name, which told the user
+            // nothing about who was asking.
+            setBody(runBlocking {
+                val single = pending.singleOrNull()
+                if (single != null) single.title.ifEmpty { single.uri.rawRingId }
+                else getString(Res.string.invitation_message, pending.size)
+            })
             setCategoryIdentifier(CATEGORY_REQUEST)
             // Apply sound based on settings
             if (notificationGuard.shouldVibrate()) {

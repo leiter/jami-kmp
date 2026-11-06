@@ -640,6 +640,7 @@ class ConversationFacade(
     private fun acceptRequest(accountId: String, contactUri: Uri) {
         preferencesService.removeRequestPreferences(accountId, contactUri.rawRingId)
         accountService.acceptTrustRequest(accountId, contactUri)
+        accountService.getAccount(accountId)?.let { refreshTrustRequestNotification(it) }
     }
 
     /**
@@ -648,6 +649,42 @@ class ConversationFacade(
     fun discardRequest(accountId: String, contactUri: Uri) {
         preferencesService.removeRequestPreferences(accountId, contactUri.rawRingId)
         accountService.discardTrustRequest(accountId, contactUri)
+        accountService.getAccount(accountId)?.let { refreshTrustRequestNotification(it) }
+    }
+
+    /**
+     * Bring the account's contact-request notification in line with its pending set.
+     *
+     * Nothing used to call [NotificationService.showIncomingTrustRequestNotification]: it was
+     * implemented on all five platforms and invoked from none, so an incoming contact request
+     * was completely silent — it appeared in the app's pending list and nowhere else. The
+     * reference client subscribes to the account's pending set and renotifies on every change;
+     * this is the same thing, called from each place the pending set moves.
+     *
+     * Called after the "block unknown contacts" gate in [onConversationRequestReceived], so a
+     * withheld request stays silent too.
+     */
+    private fun refreshTrustRequestNotification(account: Account) {
+        val pending = account.getPending()
+        if (pending.isEmpty()) {
+            notificationService.cancelTrustRequestNotification(account.accountId)
+            return
+        }
+
+        // Only notify when at least one request has not been notified before. The pending set
+        // is republished whenever any request arrives or is answered, so without this the user
+        // would get a fresh notification for requests they have already seen and left pending.
+        var hasNewRequest = false
+        for (conversation in pending) {
+            val key = conversation.contactOrNull?.uri?.rawRingId ?: conversation.uri.rawRingId
+            if (!preferencesService.hasRequestBeenNotified(account.accountId, key)) {
+                hasNewRequest = true
+                preferencesService.setRequestNotified(account.accountId, key)
+            }
+        }
+        if (!hasNewRequest) return
+
+        notificationService.showIncomingTrustRequestNotification(account)
     }
 
     // ==================== Conversation Management ====================
@@ -1477,6 +1514,7 @@ class ConversationFacade(
         }
 
         account.addPendingConversation(conversation)
+        refreshTrustRequestNotification(account)
         scope.launch {
             _conversationEvents.emit(ConversationEvent.ConversationRequestReceived(accountId, conversationId, metadata))
         }
@@ -1516,6 +1554,7 @@ class ConversationFacade(
 
         val account = accountService.getAccount(accountId) ?: return
         account.removePendingConversation(Uri(Uri.SWARM_SCHEME, conversationId))
+        refreshTrustRequestNotification(account)
     }
 
     /**

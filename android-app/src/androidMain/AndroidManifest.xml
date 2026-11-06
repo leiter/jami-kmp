@@ -190,13 +190,17 @@
             </intent-filter>
         </receiver>
 
-        <!-- Broadcast receiver for message notification Reply / Mark Read actions -->
+        <!-- Broadcast receiver for message notification Reply / Mark Read actions and for the
+             contact-request notification's Accept / Decline actions. The intent filter is
+             belt and braces: every PendingIntent targets this class explicitly. -->
         <receiver
             android:name=".service.NotificationActionReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="net.jami.action.REPLY_MESSAGE" />
                 <action android:name="net.jami.action.MARK_READ" />
+                <action android:name="net.jami.action.ACCEPT_REQUEST" />
+                <action android:name="net.jami.action.DECLINE_REQUEST" />
             </intent-filter>
         </receiver>
 

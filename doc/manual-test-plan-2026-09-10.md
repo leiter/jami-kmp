@@ -690,10 +690,15 @@ non-contacts are handled identically whether it is on or off.
 **Suspected actual (the build before 2026-11-06).** A receives the request and the
 notification exactly as if the setting were off, and C's call rings.
 
-**Also worth noting while testing.** An incoming trust request produces **no notification on
-any platform**, with or without this setting: `showIncomingTrustRequestNotification` is
-implemented on all five platforms and called from none. That is a separate gap, not part of
-B14.
+**Also worth testing here, fixed the same day.** An incoming contact request used to produce
+**no notification on any platform** — `showIncomingTrustRequestNotification` was implemented
+on all five platforms and called from none. It is now driven from `ConversationFacade`. So with
+**Block unknown contacts OFF**, step 2 should raise a notification titled "New invitation" whose
+body is the sender's name, with **Accept** and **Decline** buttons that work from the
+notification shade without opening the app; a second request from another peer collapses the two
+into "You have 2 contact requests"; answering the last one takes the notification down; and the
+same request does not re-notify when another one arrives. With the setting **ON**, a withheld
+request raises nothing, which is the first bullet above.
 
 ```
 VERDICT:

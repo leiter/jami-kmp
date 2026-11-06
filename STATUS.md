@@ -84,6 +84,10 @@ Android 14+ requires)
   requests). Quiet hours silence calls rather than hiding them (B12, 2026-11-06)
 - "Block unknown contacts" is enforced on incoming calls and conversation requests
   (B14, 2026-11-06)
+- Contact requests raise a notification. `showIncomingTrustRequestNotification` was implemented
+  on all five platforms and called from none, so an incoming request was completely silent;
+  `ConversationFacade` now drives it from every change to the account's pending set, deduped
+  through the `req_` preference key, with Accept/Decline actions on Android (2026-11-06)
 - Per-type notification control (calls / messages / requests) and quiet hours via NotificationGuard
 - Full-screen intents for incoming calls (Android)
 - Incoming call notification with Answer / Decline actions

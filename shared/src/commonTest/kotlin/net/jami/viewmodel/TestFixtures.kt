@@ -35,6 +35,8 @@ import net.jami.services.StubDaemonBridge
 import net.jami.services.StubDeviceRuntimeService
 import net.jami.services.expect.HardwareService
 import net.jami.services.StubHistoryService
+import net.jami.services.NotificationService
+import net.jami.services.PreferencesService
 import net.jami.services.StubNotificationService
 import net.jami.services.StubPreferencesService
 
@@ -129,20 +131,45 @@ fun makeConversationFacade(
     deviceRuntimeService: DeviceRuntimeService = StubDeviceRuntimeService(),
     fileStore: ConversationFileStore = RecordingFileStore(),
     settingsRepository: SettingsRepository = SettingsRepository(stub, InMemoryClientSettingsStore(), scope),
+    notificationService: NotificationService = StubNotificationService(),
+    preferencesService: PreferencesService = StubPreferencesService(),
 ): ConversationFacade = ConversationFacade(
     historyService = StubHistoryService(),
     callService = callService,
     accountService = accountService,
     contactService = contactService,
-    notificationService = StubNotificationService(),
+    notificationService = notificationService,
     hardwareService = testHardwareService(),
     deviceRuntimeService = deviceRuntimeService,
-    preferencesService = StubPreferencesService(),
+    preferencesService = preferencesService,
     daemonBridge = stub,
     settingsRepository = settingsRepository,
     scope = scope.isolated(),
     fileStore = fileStore,
 )
+
+/**
+ * A [NotificationService] that records what it was asked to show, so tests can assert on
+ * notifications without a platform. Everything it does not record is delegated to
+ * [StubNotificationService].
+ */
+class RecordingNotificationService(
+    private val delegate: NotificationService = StubNotificationService()
+) : NotificationService by delegate {
+    /** One entry per shown contact-request notification, in order, by account id. */
+    val shownTrustRequests: MutableList<String> = mutableListOf()
+
+    /** One entry per cancelled contact-request notification, in order, by account id. */
+    val cancelledTrustRequests: MutableList<String> = mutableListOf()
+
+    override fun showIncomingTrustRequestNotification(account: net.jami.model.Account) {
+        shownTrustRequests += account.accountId
+    }
+
+    override fun cancelTrustRequestNotification(accountId: String) {
+        cancelledTrustRequests += accountId
+    }
+}
 
 /**
  * A [ConversationFileStore] that reports success without touching the disk, so tests can reach
@@ -190,7 +217,11 @@ data class TestServiceStack(
     val contactService: ContactService,
     val conversationFacade: ConversationFacade,
     val settingsRepository: SettingsRepository,
-    val vCardService: VCardService
+    val vCardService: VCardService,
+    /** The same instance the facade notifies, so tests can assert on what it was told. */
+    val notificationService: RecordingNotificationService,
+    /** Shared with the facade, so request-notification dedupe is testable. */
+    val preferencesService: PreferencesService,
 )
 
 fun makeTestServiceStack(
@@ -212,12 +243,17 @@ fun makeTestServiceStack(
     val settingsRepository = makeSettingsRepository(stub, scope)
     val callService = makeCallService(stub, accountService, settingsRepository, scope)
     val contactService = makeContactService(stub, accountService, scope)
+    val notificationService = RecordingNotificationService()
+    val preferencesService = StubPreferencesService()
     val conversationFacade = makeConversationFacade(
         stub, accountService, callService, contactService, scope, deviceRuntimeService, fileStore,
-        settingsRepository,
+        settingsRepository, notificationService, preferencesService,
     )
     val vCardService = VCardService(StubDeviceRuntimeService())
-    return TestServiceStack(stub, accountService, callService, contactService, conversationFacade, settingsRepository, vCardService)
+    return TestServiceStack(
+        stub, accountService, callService, contactService, conversationFacade, settingsRepository,
+        vCardService, notificationService, preferencesService,
+    )
 }
 
 // ==================== Convenience: pre-loaded test account ====================

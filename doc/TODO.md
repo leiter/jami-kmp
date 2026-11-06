@@ -256,6 +256,56 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
   on Android and is a no-op elsewhere. (This item was left unchecked long after the screen landed.)
 - [ ] **App shortcuts** — Reference `AndroidManifest.xml` declares conversation shortcuts. Not in KMP manifest.
 
+### Contact requests raised no notification at all (2026-11-06)
+
+Still owed a device verdict.
+
+- [x] **`showIncomingTrustRequestNotification` was never called** — it was implemented on all
+  five platforms (Android, iOS, macOS, desktop, web) and invoked from nowhere in production,
+  the only reference being a test. An incoming contact request appeared in the app's pending
+  list and nowhere else: no notification, no sound, nothing while the app was backgrounded.
+  - `ConversationFacade.refreshTrustRequestNotification()` now drives it from every place the
+    account's pending set moves — a request arriving, one being declined from another device,
+    and our own accept/discard. The reference client gets the same effect by subscribing to the
+    account's pending subject; this is the same thing without an Rx subject to subscribe to.
+  - Called **after** the "block unknown contacts" gate, so a withheld request stays silent.
+  - **Dedupe:** the pending set is republished on every change, so without a guard the user
+    would be re-notified about requests they had already seen and left pending. Two methods on
+    `PreferencesService` — `hasRequestBeenNotified` / `setRequestNotified` — persist a flag
+    under the same `req_<account>:<contact>` key that `removeRequestPreferences` already
+    cleared on accept and discard, which is exactly the reference's
+    `loadRequestsPreferences`/`saveRequestPreferences` pair. Persisted rather than in memory, so
+    relaunching does not re-notify; cleared on accept/discard, so a later request from the same
+    peer notifies again.
+  - **Android content**, resampled from `NotificationServiceImpl`: one pending request names the
+    sender and carries working **Accept** and **Decline** actions (new `ACCEPT_REQUEST` /
+    `DECLINE_REQUEST` in `NotificationActionReceiver`, going straight to the daemon — it answers
+    with `conversationReady` or `conversationRequestDeclined`, which the facade already handles);
+    several collapse into `invitation_message` ("You have N contact requests"); an empty pending
+    set cancels. Tapping opens the app. **Not ported:** the reference's Block action and the
+    sender's avatar as the large icon (that needs a bitmap decode off the main thread).
+  - **iOS** had `setBody(account.displayUsername)` — the *local* account's own name, which told
+    the user nothing about who was asking. Now the sender's name, or the count.
+  - macOS, desktop and web still show a generic, **hardcoded English** body ("You have a new
+    contact request"). Pre-existing in those three files and left alone; they are secondary
+    targets and macOS does not compile.
+  - Covered by `TrustRequestNotificationTest` (6 tests), using a new
+    `RecordingNotificationService` test double. `makeConversationFacade` and
+    `makeTestServiceStack` now take the notification and preferences services instead of
+    hardcoding stubs, and the stack exposes both — the same reason the stack was made to share
+    one `SettingsRepository` on 2026-10-31.
+
+### Two privacy settings that were dead in both directions (2026-11-06)
+
+- [x] **Removed `PrivacySettings.allowContactRequests` and `PrivacySettings.blockedContacts`**,
+  plus `SettingsRepository.blockContact()`/`unblockContact()`. Nothing wrote them, nothing read
+  them, and neither had a UI control, so no behaviour changed. Both duplicated something that
+  already works: `blockUnknownContacts` for the first, and the daemon's own ban list — which is
+  what `BlockedContactsScreen` lists, via `ContactService.removeContact(ban = true)` — for the
+  second. Removed rather than left for someone to "fix" into a second, divergent block list.
+  Settings JSON is decoded with `ignoreUnknownKeys`, so stored values carrying the old keys
+  still load. A comment in `SettingsModels.kt` records what went and why.
+
 ### "Block unknown contacts" was enforced nowhere (B14, 2026-11-06)
 
 Still owed a device verdict.
@@ -285,11 +335,8 @@ Still owed a device verdict.
   - `DHT.PublicInCalls` (the reference client's per-account "allow calls from unknown contacts",
     already exposed in Account → Call settings) is left alone, rather than driven from this
     app-level switch: two masters for one behaviour would be worse than none.
-  - Covered by `BlockUnknownContactsTest` (8 tests). Noticed in passing and **not** fixed:
-    `showIncomingTrustRequestNotification` is implemented on all five platforms and called from
-    none, so an incoming request is silent whatever this setting says; and
-    `PrivacySettings.allowContactRequests` and `blockedContacts` have no consumer either,
-    though neither is surfaced in the UI, so neither promises the user anything yet.
+  - Covered by `BlockUnknownContactsTest` (8 tests). Two things noticed in passing were fixed
+    straight after, in the two entries above this one.
 
 ### Quiet hours hid incoming calls (B12, 2026-11-06)
 
