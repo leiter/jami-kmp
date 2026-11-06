@@ -38,14 +38,17 @@ routing of a call to it.
   the old 1:1 swarm `52c33a0bdf3038c4026ad0903dd6488022593b53` and sent **no trust request** —
   A's `convRequests` stayed empty (1 byte) throughout. B's message parked at "Waiting to sync",
   which is the durable outbox doing its job on a `Bootstrap with 0 device(s)` swarm.
-- [ ] **A throwaway account cannot be made without registering a public username.** On the
-  account-creation screen, "Konto erstellen" stays **disabled** until a username is entered, so
-  there is no local-only account. The reference client allows creating an account without
-  registering a name. That is both a parity gap worth its own entry and the reason the stranger
-  half of B14 was not attempted — registering a name on the public directory is permanent and
-  was not something to do unasked. Decide between: making the username optional (parity fix,
-  preferred), registering one throwaway name with the user's agreement, or having B remove its
-  contact A first (destroys that conversation's history, so only with the user's agreement).
+- [x] **A throwaway account cannot be made without registering a public username.** Fixed
+  2026-11-07 (the parity fix, as preferred). `CreateAccountScreen`'s Create button required a
+  non-empty username and `AccountCreationViewModel.createAccount()` refused an empty one with
+  `USERNAME_REQUIRED`, so no local-only account could be made — while the reference client's
+  wizard offers "Skip choosing username" (`JamiAccountCreationPresenter.registerUsernameChanged`
+  clears the name and revalidates). The username is now optional: blank is allowed and shows
+  "Optional" as supporting text, a typed name must still be free and settled before Create
+  enables. `AccountService.createJamiAccount` already handled this — it falls back to a
+  generated alias and sets no `ACCOUNT_REGISTERED_NAME` — so nothing registers on the public
+  directory. Covered by `createAccountWithoutUsernameSucceedsAndRegistersNoName`; not yet
+  exercised on a device.
 
 **New bug found while setting up, not yet written up as its own entry:**
 

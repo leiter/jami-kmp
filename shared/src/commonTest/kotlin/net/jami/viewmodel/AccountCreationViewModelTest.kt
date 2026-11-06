@@ -19,6 +19,7 @@ package net.jami.viewmodel
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import net.jami.model.ConfigKey
 import net.jami.services.StubDaemonBridge
 import net.jami.ui.viewmodel.AccountCreationViewModel
 import kotlin.test.Test
@@ -114,6 +115,23 @@ class AccountCreationViewModelTest {
         advanceUntilIdle()
         assertTrue(vm.state.value.isCreated)
         assertFalse(vm.state.value.isLoading)
+    }
+
+    @Test
+    fun createAccountWithoutUsernameSucceedsAndRegistersNoName() = runTest {
+        val stub = StubDaemonBridge()
+        stub.addAccountResult = TEST_ACCOUNT_ID
+        val accountService = makeAccountService(stub, this)
+        val vm = AccountCreationViewModel(accountService, viewModelScope())
+        // No username typed at all: the public directory must not be touched, and the
+        // account must still be created (the wizard's "Skip choosing username").
+        vm.createAccount()
+        advanceUntilIdle()
+        assertTrue(vm.state.value.isCreated)
+        assertNull(vm.state.value.error)
+        assertFalse(vm.state.value.isRegistering)
+        val details = stub.addedAccountDetails.single()
+        assertFalse(details.containsKey(ConfigKey.ACCOUNT_REGISTERED_NAME.key))
     }
 
     @Test

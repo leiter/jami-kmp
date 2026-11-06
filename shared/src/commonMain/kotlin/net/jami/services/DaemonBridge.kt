@@ -988,7 +988,12 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun isRunning(): Boolean = running
     override fun connectivityChanged() {}
 
-    override fun addAccount(details: Map<String, String>): String = addAccountResult
+    /** Every `addAccount` call's details, in order — lets a test assert on what was sent. */
+    val addedAccountDetails = mutableListOf<Map<String, String>>()
+    override fun addAccount(details: Map<String, String>): String {
+        addedAccountDetails.add(details)
+        return addAccountResult
+    }
     override fun removeAccount(accountId: String) {}
     override fun getAccountDetails(accountId: String): Map<String, String> = accountDetails[accountId] ?: emptyMap()
     override fun setAccountDetails(accountId: String, details: Map<String, String>) { accountDetails[accountId] = details }

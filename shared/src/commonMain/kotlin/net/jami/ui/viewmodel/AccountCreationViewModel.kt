@@ -180,7 +180,11 @@ class AccountCreationViewModel(
      * Create a new Jami account with the current form values.
      *
      * Mirrors official jami-android-client AccountWizardPresenter:
-     * - username is mandatory and must be available
+     * - username is optional (its wizard step offers "Skip choosing username"); when left
+     *   empty no name is registered on the public directory and the account is local-only,
+     *   reachable by its 40-hex id. [AccountService.createJamiAccount] already handles an
+     *   empty username: it falls back to a generated alias and sets no registered name.
+     * - a username that *is* given must be available
      * - password is optional but must be >= 6 chars if set
      * - calls addAccount immediately and navigates to profile setup
      * - username is embedded in the account details (ACCOUNT_REGISTERED_NAME)
@@ -189,13 +193,7 @@ class AccountCreationViewModel(
     fun createAccount() {
         val current = _state.value
 
-        // Username is mandatory
-        if (current.username.isEmpty()) {
-            _state.value = current.copy(error = AccountCreationError.USERNAME_REQUIRED)
-            return
-        }
-
-        // Username must be available (or at least not known-taken)
+        // Username is optional; one that is given must be available (or at least not known-taken)
         if (current.usernameAvailable == false) {
             _state.value = current.copy(error = AccountCreationError.USERNAME_TAKEN)
             return

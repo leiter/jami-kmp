@@ -75,6 +75,7 @@ import jami_kmp.shared.generated.resources.error_username_taken
 import net.jami.ui.viewmodel.AccountCreationError
 import net.jami.ui.viewmodel.UsernameCheckError
 import jami_kmp.shared.generated.resources.prompt_choose_username
+import jami_kmp.shared.generated.resources.wizard_status_optional
 import jami_kmp.shared.generated.resources.prompt_confirm_password
 import jami_kmp.shared.generated.resources.prompt_password_optional
 import androidx.compose.material3.Tab
@@ -201,7 +202,7 @@ fun CreateAccountScreen(
                 )
             } else {
 
-            // Username field with availability check (mandatory)
+            // Username field with availability check (optional — blank registers no public name)
             OutlinedTextField(
                 value = state.username,
                 onValueChange = { viewModel.setUsername(it) },
@@ -244,6 +245,8 @@ fun CreateAccountScreen(
                         }
                         ({ Text(msg, color = JamiTheme.colors.error) })
                     }
+                    state.username.isEmpty() ->
+                        ({ Text(stringResource(Res.string.wizard_status_optional)) })
                     else -> null
                 },
                 isError = state.usernameAvailable == false,
@@ -318,9 +321,9 @@ fun CreateAccountScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.xl))
 
-            // Create button — requires: username set, not taken, not checking, password valid
+            // Create button — a username is optional; one that is typed must be free and
+            // settled (not mid-lookup). Password validity is checked in the ViewModel.
             val canCreate = !state.isLoading
-                && state.username.isNotEmpty()
                 && !state.usernameCheckInProgress
                 && state.usernameAvailable != false
                 && (state.password.isEmpty() || state.password.length >= 6)
