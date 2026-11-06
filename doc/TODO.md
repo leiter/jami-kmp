@@ -1,5 +1,69 @@
 # TODO
 
+## POSTPONED: device verification of the 2026-11-06 fixes
+
+Started on the Pixel pair on 2026-11-06 at ~22:10 and **stopped at the user's request before
+any verdict was reached**. Nothing below is verified; resume from here rather than from scratch.
+
+**Devices.** A = Pixel 7a `37281JEHN03065`, Android 17 / SDK 37 (the subject: its SDK is what
+makes A2 testable at all). B = Pixel 2 `FA7AJ1A06417`, Android 11 / SDK 30. Both had
+`net.jami.android` reinstalled from `android-app/build/outputs/apk/standard/debug/` built at
+commit `cbdfddf`. Always target adb by serial.
+
+**Accounts as found** (unchanged; nothing was deleted): A = `unitedhumans`,
+`66d57f55227639b58fdcc6d74ec090446ffa9bc3`, account dir `3f3dad8b328eb995`. B =
+`d9f8c7f0bf768178542d402c6ae233072bfff6df`, account dir `965287c3eb08e39e`. Decode the daemon's
+`files/<accountdir>/contacts` (MessagePack) to read contact state; A lists B as
+`confirmed: false, removed: 1793627642`, i.e. removed.
+
+**The one thing that was actually confirmed.** The `jami_calls_silent` channel (B2) **is created
+on-device** on Android 17 — `adb -s <serial> shell dumpsys notification --noredact | grep -oE
+"mId='jami[a-z_0-9]*'"` lists it beside `jami_calls`. That is the channel existing, not the
+routing of a call to it.
+
+**Blockers found, each of which needs solving before the run can work:**
+
+- [ ] **The app's own log lines are invisible on modern Android.** `net.jami.utils.Log` is
+  `println`, and Android routes app stdout to `/dev/null` from (somewhere before) SDK 37 —
+  zero `System.out` lines on the Pixel 7a, while the Pixel 2 on SDK 30 shows them all. So every
+  logcat discriminator quoted in `doc/manual-test-plan-2026-09-10.md` (B12, B14) is
+  unobservable on the subject device, and `setprop log.redirect-stdio true` is refused on a
+  production build. **This also means `LogCapture.captureRecentLogs` — the in-app "Debug logs"
+  screen — shows only the daemon's native logs on modern Android, never the KMP layer's.**
+  Fix `Log` to call `android.util.Log` through an expect/actual before attempting the run
+  again; it makes the whole plan observable and is worth doing on its own merits.
+- [ ] **The existing pair cannot produce a fresh contact request.** A removed B, but B never
+  removed A, so B still holds A as a contact: opening "a new conversation" with A on B reused
+  the old 1:1 swarm `52c33a0bdf3038c4026ad0903dd6488022593b53` and sent **no trust request** —
+  A's `convRequests` stayed empty (1 byte) throughout. B's message parked at "Waiting to sync",
+  which is the durable outbox doing its job on a `Bootstrap with 0 device(s)` swarm.
+- [ ] **A throwaway account cannot be made without registering a public username.** On the
+  account-creation screen, "Konto erstellen" stays **disabled** until a username is entered, so
+  there is no local-only account. The reference client allows creating an account without
+  registering a name. That is both a parity gap worth its own entry and the reason the stranger
+  half of B14 was not attempted — registering a name on the public directory is permanent and
+  was not something to do unasked. Decide between: making the username optional (parity fix,
+  preferred), registering one throwaway name with the user's agreement, or having B remove its
+  contact A first (destroys that conversation's history, so only with the user's agreement).
+
+**New bug found while setting up, not yet written up as its own entry:**
+
+- [ ] **Calling from a not-yet-live 1:1 conversation silently places no call.** On B, the call
+  button in the chat with A produced
+  `CallViewModel: initOutgoing: ... peerUri=swarm:2cb2dbaee7f6515c5c1c47de74ed745cfd02ba8d
+  scheme=swarm: isGroupCall=true` → `DaemonBridge: placeCall ← JNI: callId=''` → `CallService:
+  placeCall: daemon returned callId=''`. A 1:1 conversation that is still syncing is taken for
+  a group, the call is placed against the `swarm:` URI, the daemon refuses it with an empty
+  call id, and the UI sits on "Calling…" forever with no error shown. Same family as F4 (the
+  non-live 1:1 message path) but on the call path. Reproduced once, at 22:20 on 2026-11-06.
+
+**Still owed a verdict** (all code-complete, all untested on hardware): A2 screen sharing on
+Android 14+ (needs the Pixel 7a and an answered call), B2 quiet hours silencing rather than
+hiding a call, B3/B14 blocking a stranger's call and request, the contact-request notification
+with its Accept/Decline actions, A3's register-username dialog surviving a details change, and
+the older I4 (durable outbox through the UI) and I5 (microphone level ring).
+
+
 ## Calling
 
 - [x] **Screen sharing not transmitted** — Fixed: `CameraService.startScreenSharing()` now wires `VirtualDisplay` output through a `Surface` obtained from `JamiService.addVideoDevice`; `HardwareService.startCapture("desktop")` is called by the daemon after the media renegotiation completes.
