@@ -1016,7 +1016,11 @@ class StubDaemonBridge : DaemonBridgeApi {
 
     override fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String = placeCallResult
     override fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {}
-    override fun refuse(accountId: String, callId: String) {}
+    /** Every refuse() that reached the "daemon", in order. */
+    val refusedCalls = mutableListOf<Pair<String, String>>()
+    override fun refuse(accountId: String, callId: String) {
+        refusedCalls.add(accountId to callId)
+    }
     override fun hangUp(accountId: String, callId: String) {
         hungUpCalls.add(accountId to callId)
     }

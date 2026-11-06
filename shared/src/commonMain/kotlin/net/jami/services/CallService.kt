@@ -699,9 +699,25 @@ class CallService(
         mediaList: List<Map<String, String>>
     ) {
         scope.launch {
+            val (peerUri, _) = Uri.fromStringWithName(from)
+
+            // "Block unknown contacts": refuse before the call is registered or announced.
+            // Enforced here rather than further downstream because _callUpdates has several
+            // independent consumers — the notification (via ConversationFacade), the call UI,
+            // Android's Telecom ConnectionService, iOS CallKit — and a stranger's call must not
+            // reach any of them. Refusing rather than staying silent is deliberate: ignoring
+            // the call would leave the caller listening to ringback until the daemon times out.
+            if (settingsRepository.privacySettings.value.blockUnknownContacts &&
+                !daemonBridge.isConfirmedContact(accountId, peerUri)
+            ) {
+                Log.w(TAG, "onIncomingCall: refusing call from a non-contact (block unknown contacts is on)")
+                daemonBridge.refuse(accountId, callId)
+                daemonBridge.hangUp(accountId, callId)
+                return@launch
+            }
+
             mutex.withLock {
                 val medias = mediaList.map { Media(it) }
-                val (peerUri, _) = Uri.fromStringWithName(from)
                 val call = addCall(accountId, callId, peerUri, Direction.INCOMING, medias)
                 _callUpdates.emit(call)
                 updateCurrentCalls()

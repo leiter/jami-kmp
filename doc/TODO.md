@@ -256,6 +256,41 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
   on Android and is a no-op elsewhere. (This item was left unchecked long after the screen landed.)
 - [ ] **App shortcuts** — Reference `AndroidManifest.xml` declares conversation shortcuts. Not in KMP manifest.
 
+### "Block unknown contacts" was enforced nowhere (B14, 2026-11-06)
+
+Still owed a device verdict.
+
+- [x] **Block unknown contacts (B14)** — the setting had four references in the whole tree: the
+  model field, the repository writer, the `AppSettingsState` mirror and the toggle. The screen
+  promises "Only accept messages from your contacts" and nothing enforced it. Now enforced on
+  both surfaces a stranger can reach:
+  - **Incoming calls** — `CallService.onIncomingCall` refuses (and hangs up) a call from a
+    non-contact before `addCall`/`_callUpdates`. Enforced there rather than downstream because
+    `callUpdates` has four independent consumers: the notification via `ConversationFacade`, the
+    call UI, Android Telecom and iOS CallKit. Refusing rather than ignoring is deliberate —
+    silence would leave the caller on ringback until the daemon times out.
+  - **Conversation requests** — `ConversationFacade.onConversationRequestReceived` drops a
+    request from a non-contact before it reaches the pending map or the event stream, and the
+    new `ConversationFacade.getConversationRequests()` filters the daemon poll that
+    `PendingRequestsViewModel` and `ConversationsViewModel` do on launch. Both VMs were switched
+    from `accountService.getConversationRequests()` to the facade's; without the second half the
+    block would hold only until the next launch. A request with no `from` is withheld too.
+  - Requests are **withheld, not declined**. The daemon keeps them, so turning the setting off
+    shows them again; auto-declining would destroy a request the user never saw.
+  - The predicate is `DaemonBridgeApi.isConfirmedContact` (`services/UnknownContacts.kt`), which
+    asks the daemon's contact list. `ContactService`'s cache is not usable for this:
+    `getContactFromCache` mints a placeholder `Contact` for any URI the app merely sees —
+    including the stranger now calling — so a cache hit does not mean "contact". A banned peer
+    is listed by the daemon with `banned=true` and does not count as one either.
+  - `DHT.PublicInCalls` (the reference client's per-account "allow calls from unknown contacts",
+    already exposed in Account → Call settings) is left alone, rather than driven from this
+    app-level switch: two masters for one behaviour would be worse than none.
+  - Covered by `BlockUnknownContactsTest` (8 tests). Noticed in passing and **not** fixed:
+    `showIncomingTrustRequestNotification` is implemented on all five platforms and called from
+    none, so an incoming request is silent whatever this setting says; and
+    `PrivacySettings.allowContactRequests` and `blockedContacts` have no consumer either,
+    though neither is surfaced in the UI, so neither promises the user anything yet.
+
 ### Quiet hours hid incoming calls (B12, 2026-11-06)
 
 Still owed a device verdict.

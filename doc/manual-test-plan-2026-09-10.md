@@ -14,8 +14,9 @@
 > type), **B15** (conversation sort order) and **B16** (compact mode). Their repro steps below
 > still stand, but they now test the *fix*: "Suspected actual" is what the build before
 > 2026-10-31 did, and "Expected (no bug)" is what the current build should do. **B12 was
-> implemented the same way on 2026-11-06** and its entry has been rewritten below. B10, B11 and
-> B14 are unchanged and still owed a verdict as written.
+> implemented the same way on 2026-11-06**, as was **B14** (block unknown contacts), and both
+> entries have been rewritten below. B10 and B11 are unchanged and still owed a verdict as
+> written.
 
 **Purpose.** This document is a work order, not a bug list. Every entry below is a
 *hypothesis* derived from reading the source, not an observed failure. Each one has a
@@ -649,6 +650,8 @@ Notes:
 
 ### B14 — "Block unknown contacts" has no effect
 
+**Implemented 2026-11-06** — this entry now tests the fix. See the note at the top.
+
 **Severity if confirmed:** Medium — a privacy control that does not work.
 
 **Hypothesis.** `blockUnknownContacts` is written by
@@ -664,11 +667,33 @@ non-contacts are handled identically whether it is on or off.
 1. On A: **Settings → Privacy → Block unknown contacts → ON**.
 2. From a third account C that A has never contacted, send A a contact request and a
    message.
+3. From C, also place a call to A.
+4. Force-stop A and relaunch it, then look at the conversation list and the pending
+   requests screen again.
+5. Turn the setting back OFF on A and reopen the pending requests screen.
+6. With the setting ON again, have B — a confirmed contact of A — send a request-bearing
+   message and place a call.
 
-**Expected (no bug).** A receives nothing, or the request is auto-declined.
+**Expected (no bug), i.e. the build from 2026-11-06 on.**
+- Step 2: nothing appears on A — no notification, no row in the conversation list, no row
+  in pending requests. Logcat: `"onConversationRequestReceived: dropping request from a
+  non-contact"`.
+- Step 3: C's call is **refused**, so C hears the call end rather than ringback until
+  timeout. A shows no incoming-call UI and no notification. Logcat:
+  `"onIncomingCall: refusing call from a non-contact"`.
+- Step 4: still nothing. The daemon poll that the request screens do on launch is filtered
+  by the same predicate, so the block survives a restart.
+- Step 5: C's request **reappears**. Nothing was declined on C's behalf — the daemon kept
+  the request, so turning the setting off is enough to see it.
+- Step 6: B gets through normally. The setting blocks strangers, not everyone.
 
-**Suspected actual.** A receives the request and the notification exactly as if the
-setting were off.
+**Suspected actual (the build before 2026-11-06).** A receives the request and the
+notification exactly as if the setting were off, and C's call rings.
+
+**Also worth noting while testing.** An incoming trust request produces **no notification on
+any platform**, with or without this setting: `showIncomingTrustRequestNotification` is
+implemented on all five platforms and called from none. That is a separate gap, not part of
+B14.
 
 ```
 VERDICT:

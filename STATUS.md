@@ -82,6 +82,8 @@ Android 14+ requires)
 - iOS/macOS: UNUserNotificationCenter integration
 - NotificationGuard: quiet hours with midnight wraparound, per-type control (calls, messages,
   requests). Quiet hours silence calls rather than hiding them (B12, 2026-11-06)
+- "Block unknown contacts" is enforced on incoming calls and conversation requests
+  (B14, 2026-11-06)
 - Per-type notification control (calls / messages / requests) and quiet hours via NotificationGuard
 - Full-screen intents for incoming calls (Android)
 - Incoming call notification with Answer / Decline actions
@@ -140,10 +142,20 @@ and have moved to the list after them.
   `enableVibration(...)` and the default sound, and only `CHANNEL_CALLS` is ever recreated (for the
   ringtone). `NotificationGuard.getSoundUri()` also returns `null` both for "sound off" and "no
   custom sound", and `null` means *use the default*.
-- **Block unknown contacts** (B14) — `blockUnknownContacts` is written and read back into the
-  settings screen, and nowhere else.
-
 **Closed 2026-11-06** (code written; a device verdict is still owed):
+
+- **Block unknown contacts** (B14) — enforced on the two surfaces a stranger can reach:
+  `CallService.onIncomingCall` refuses a call from a non-contact before the call is registered
+  or announced (so neither the notification, the call UI, Telecom nor CallKit sees it, and the
+  caller is told rather than left on ringback), and `ConversationFacade` withholds a
+  conversation request from a non-contact — both when it arrives and in the daemon poll the
+  request screens do on launch, so the block survives a restart. Requests are *withheld, not
+  declined*: the daemon keeps them, so turning the setting off reveals them again. The
+  predicate (`DaemonBridgeApi.isConfirmedContact`) asks the daemon's contact list rather than a
+  client cache, and treats a banned peer as not a contact. The per-account daemon setting
+  `DHT.PublicInCalls` ("Allow incoming calls from unknown contacts", Account → Call settings)
+  is deliberately left alone — it is the reference client's mechanism and separately
+  user-editable, and writing one from the other would give the same behaviour two masters.
 
 - **Quiet hours suppresses incoming calls** (B12) — quiet hours no longer hide a call, they
   silence it. `shouldShowCallNotification()` dropped the `!isInQuietHours` term, and a new

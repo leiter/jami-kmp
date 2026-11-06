@@ -96,7 +96,9 @@ class PendingRequestsViewModel(
 
                 // Daemon poll: catches requests that arrived before the app started
                 // (startup race: onConversationRequestReceived may be dropped if account wasn't ready)
-                val daemonRequests = accountService.getConversationRequests(account.accountId)
+                // Through the facade, not AccountService: the facade applies the
+                // "block unknown contacts" filter.
+                val daemonRequests = conversationFacade.getConversationRequests(account.accountId)
                 for (req in daemonRequests) {
                     val convId = req["id"] ?: continue
                     val fromId = req["from"] ?: continue

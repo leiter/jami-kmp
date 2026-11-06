@@ -1444,6 +1444,17 @@ class ConversationFacade(
             return
         }
 
+        // "Block unknown contacts": a request from someone who is not already a contact never
+        // reaches the pending list or the conversation list. Dropped rather than declined — the
+        // daemon keeps the request, so turning the setting off shows it again (the daemon poll
+        // in [getConversationRequests] is filtered by the same predicate), where declining it
+        // here would destroy a request the user never got to see.
+        if (isRequestFromBlockedUnknown(accountId, metadata["from"])) {
+            Log.w(TAG, "onConversationRequestReceived: dropping request from a non-contact " +
+                "(block unknown contacts is on): $conversationId")
+            return
+        }
+
         val conversation = account.getSwarm(conversationId)
             ?: account.newSwarm(conversationId, Conversation.Mode.Request)
         conversation.setMode(Conversation.Mode.Request)
@@ -1469,6 +1480,32 @@ class ConversationFacade(
         scope.launch {
             _conversationEvents.emit(ConversationEvent.ConversationRequestReceived(accountId, conversationId, metadata))
         }
+    }
+
+    /**
+     * Conversation requests the daemon is holding for [accountId], with requests from unknown
+     * senders removed while the "block unknown contacts" privacy setting is on.
+     *
+     * The pending-request screens poll the daemon as well as reading the in-memory pending map,
+     * to catch requests that arrived before the app started. Both of them go through here, so
+     * the setting survives a restart: filtering only [onConversationRequestReceived] would hide
+     * a stranger's request until the next launch and then show it.
+     */
+    fun getConversationRequests(accountId: String): List<Map<String, String>> {
+        val requests = accountService.getConversationRequests(accountId)
+        if (!settingsRepository.privacySettings.value.blockUnknownContacts) return requests
+        return requests.filterNot { isRequestFromBlockedUnknown(accountId, it["from"]) }
+    }
+
+    /**
+     * Whether a request from [fromId] must be withheld under the "block unknown contacts"
+     * setting. A request with no sender is withheld too when the setting is on: there is no
+     * way to establish that it came from a contact.
+     */
+    private fun isRequestFromBlockedUnknown(accountId: String, fromId: String?): Boolean {
+        if (!settingsRepository.privacySettings.value.blockUnknownContacts) return false
+        val senderUri = fromId?.takeIf { it.isNotEmpty() }?.let { Uri.fromId(it) } ?: return true
+        return !daemonBridge.isConfirmedContact(accountId, senderUri)
     }
 
     /**

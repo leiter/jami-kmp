@@ -8,7 +8,7 @@ against source, so premises older than 2026-10 should be checked before coding (
 mini-plans roll-up records four findings whose evidence had gone stale).
 
 Current HEAD when assembled: `989ba1b` "Apply three settings that were only ever stored".
-A1 and A2 were closed on 2026-11-05, A3 and B2 on 2026-11-06.
+A1 and A2 were closed on 2026-11-05, A3, B2 and B3 on 2026-11-06.
 
 ---
 
@@ -59,8 +59,17 @@ on 2026-10-31.
   **A device check is still owed**, and `doc/manual-test-plan-2026-09-10.md` B12 was rewritten
   to test the fix.
 
-- **B3 (B14) — `blockUnknownContacts` is written and read back by the settings screen and
-  used nowhere else.** Needs enforcement on the incoming trust-request / incoming-call path.
+- **B3 (B14) — ~~`blockUnknownContacts` is written and read back by the settings screen and
+  used nowhere else~~.** Fixed 2026-11-06. Premise confirmed against source first: four
+  references in the tree, none of them enforcement. Enforced on both surfaces a stranger can
+  reach — `CallService.onIncomingCall` refuses the call before it is registered or announced,
+  and `ConversationFacade` withholds a conversation request both on arrival and in the daemon
+  poll the request screens do on launch (so it survives a restart). Withheld, not declined: the
+  daemon keeps the request, so turning the setting off reveals it. Predicate:
+  `DaemonBridgeApi.isConfirmedContact`, which asks the daemon rather than a client cache and
+  treats a banned peer as not a contact. `DHT.PublicInCalls` is deliberately left alone.
+  Covered by `BlockUnknownContactsTest`. **A device check is still owed**, and
+  `doc/manual-test-plan-2026-09-10.md` B14 was rewritten to test the fix.
 
 - **B4 — build and run the iOS half of B13.** `HardwareService.isMeteredNetwork()` uses
   `nw_path_is_expensive` on iOS; Apple targets are skipped on the Linux host, so that actual

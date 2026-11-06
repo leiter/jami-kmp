@@ -337,7 +337,9 @@ class ConversationsViewModel(
                         ))
                     }
                 }
-                val daemonRequests = accountService.getConversationRequests(accountId)
+                // Through the facade, not AccountService: the facade applies the
+                // "block unknown contacts" filter.
+                val daemonRequests = conversationFacade.getConversationRequests(accountId)
                 for (req in daemonRequests) {
                     val convId = req["id"] ?: continue
                     val fromId = req["from"] ?: continue
