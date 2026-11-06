@@ -90,6 +90,50 @@ class CallViewModelTest {
         assertEquals("jami:abc123", vm.state.value.peerUri)
     }
 
+    /**
+     * A still-cloning 1:1 was taken for a group, so the call went to `swarm:<conversationId>`,
+     * which the daemon refuses with an empty call id — the screen then waited on "Calling…"
+     * forever (device, 2026-11-06). The chat screen also falls back to the conversation id when
+     * it has no peer uri yet, so the peer is re-resolved from the conversation's own member.
+     */
+    @Test
+    fun initOutgoingOnASyncingOneToOneCallsThePeerNotTheSwarm() = runTest {
+        val stub = StubDaemonBridge()
+        stub.placeCallResult = "call_sync"
+        val (vm, _, accountService) = makeVm(stub, viewModelScope())
+        val account = prepareAccountInService(stub, accountService)
+        val conv = account.newSwarm(SYNC_CONV_ID, net.jami.model.Conversation.Mode.Syncing)
+        conv.requestMode = net.jami.model.Conversation.Mode.OneToOne
+        conv.addContact(net.jami.model.Contact(net.jami.model.Uri.fromString(PEER_ID)))
+        vm.initOutgoing(
+            contactUri = "swarm:$SYNC_CONV_ID",
+            hasVideo = false,
+            conversationUri = "swarm:$SYNC_CONV_ID",
+        )
+        advanceUntilIdle()
+        assertEquals(net.jami.model.Uri.fromString(PEER_ID).uri, vm.state.value.peerUri)
+        assertFalse(vm.state.value.peerUri.startsWith("swarm:"), "a 1:1 is never called on its swarm")
+        vm.onCleared()
+    }
+
+    /** With no peer to resolve, the call fails visibly instead of hanging on "Calling…". */
+    @Test
+    fun initOutgoingWithNoResolvablePeerFails() = runTest {
+        val stub = StubDaemonBridge()
+        val (vm, _, accountService) = makeVm(stub, viewModelScope())
+        val account = prepareAccountInService(stub, accountService)
+        val conv = account.newSwarm(SYNC_CONV_ID, net.jami.model.Conversation.Mode.Syncing)
+        conv.requestMode = net.jami.model.Conversation.Mode.OneToOne
+        vm.initOutgoing(
+            contactUri = "swarm:$SYNC_CONV_ID",
+            hasVideo = false,
+            conversationUri = "swarm:$SYNC_CONV_ID",
+        )
+        advanceUntilIdle()
+        assertIs<CallMode.Ended>(vm.state.value.callMode)
+        vm.onCleared()
+    }
+
     @Test
     fun initOutgoingWithNoAccountDoesNotSetPeerUri() = runTest {
         val stub = StubDaemonBridge()
@@ -260,5 +304,10 @@ class CallViewModelTest {
         assertNull(stats.videoCodec)
         assertNull(stats.videoBitrate)
         assertTrue(stats.isAudioOnly)
+    }
+
+    private companion object {
+        const val SYNC_CONV_ID = "52c33a0bdf3038c4026ad0903dd6488022593b53"
+        const val PEER_ID = "d9f8c7f0bf768178542d402c6ae233072bfff6df"
     }
 }

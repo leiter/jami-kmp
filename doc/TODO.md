@@ -50,16 +50,24 @@ routing of a call to it.
   directory. Covered by `createAccountWithoutUsernameSucceedsAndRegistersNoName`; not yet
   exercised on a device.
 
-**New bug found while setting up, not yet written up as its own entry:**
+**New bug found while setting up — fixed 2026-11-07:**
 
-- [ ] **Calling from a not-yet-live 1:1 conversation silently places no call.** On B, the call
+- [x] **Calling from a not-yet-live 1:1 conversation silently placed no call.** On B, the call
   button in the chat with A produced
   `CallViewModel: initOutgoing: ... peerUri=swarm:2cb2dbaee7f6515c5c1c47de74ed745cfd02ba8d
   scheme=swarm: isGroupCall=true` → `DaemonBridge: placeCall ← JNI: callId=''` → `CallService:
-  placeCall: daemon returned callId=''`. A 1:1 conversation that is still syncing is taken for
-  a group, the call is placed against the `swarm:` URI, the daemon refuses it with an empty
-  call id, and the UI sits on "Calling…" forever with no error shown. Same family as F4 (the
-  non-live 1:1 message path) but on the call path. Reproduced once, at 22:20 on 2026-11-06.
+  placeCall: daemon returned callId=''`, and the UI sat on "Calling…" forever with no error.
+  Cause: `Conversation.isSwarmGroup` read `Mode.Syncing` as "not OneToOne, therefore a group".
+  `Syncing` is not a shape — it means the swarm's git repo has not been cloned yet, and the
+  daemon's real mode is kept in `requestMode` while it lasts (`ConversationFacade` sets it) —
+  so a still-cloning 1:1 was called on `swarm:<conversationId>`, which no device answers.
+  Three changes: `isSwarmGroup` now judges a `Syncing` conversation by `requestMode` (unknown
+  means 1:1, as the facade already assumes); `CallViewModel.initOutgoing` re-resolves the peer
+  from the conversation's own member when the uri it was handed is a `swarm:` one (the chat
+  screen falls back to the conversation id before it knows a peer) and fails visibly when there
+  is none; and a hosted group call that the daemon never starts now fails after the 15s grace
+  period instead of waiting forever. Covered by `SyncingConversationShapeTest` plus two
+  `CallViewModelTest` cases; not yet re-run on the pair.
 
 **Still owed a verdict** (all code-complete, all untested on hardware): A2 screen sharing on
 Android 14+ (needs the Pixel 7a and an answered call), B2 quiet hours silencing rather than

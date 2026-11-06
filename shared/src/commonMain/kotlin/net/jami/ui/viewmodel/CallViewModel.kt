@@ -272,7 +272,26 @@ class CallViewModel(
             val conversation = conversationUri
                 ?.let { account?.getSwarm(Uri.fromString(it).rawRingId) }
             val isGroupCall = conversation?.isSwarmGroup == true
-            val peerUri = if (isGroupCall) conversation!!.uri else Uri.fromString(contactUri)
+            // A 1:1 must be called on its peer, never on the conversation: the daemon answers a
+            // `swarm:` target with an empty call id (there is no device behind a conversation id)
+            // and nothing then reaches the UI. The chat screen falls back to the conversation id
+            // when it has no peer uri yet, so re-resolve it from the conversation's own member
+            // before trusting it.
+            val requestedPeer = Uri.fromString(contactUri)
+            val peerUri = when {
+                isGroupCall -> conversation!!.uri
+                contactUri.isNotEmpty() && !requestedPeer.isSwarm -> requestedPeer
+                else -> conversation?.contactOrNull?.uri ?: run {
+                    Log.w(TAG, "initOutgoing: no peer to call — contactUri='$contactUri' " +
+                        "conversationUri=$conversationUri mode=${conversation?.mode}")
+                    _state.value = _state.value.copy(
+                        callMode = CallMode.Ended(HangupReason.ERROR),
+                        callStatus = CallStatus.FAILURE.name,
+                        hangupReason = HangupReason.ERROR,
+                    )
+                    return@launch
+                }
+            }
 
             // Mirror CallPresenter.initOutGoing(): only allow video if the device has a camera.
             val effectiveVideo = hasVideo && hardwareService.hasCamera()
@@ -311,6 +330,11 @@ class CallViewModel(
                     // A hosted group call has no call id of its own; it is tracked through the
                     // conference the daemon runs on the conversation.
                     subscribeToHostedConference(call)
+                    // ...which also means nothing fails if the daemon never hosts one — a swarm
+                    // with no reachable device bootstraps with 0 peers and simply never answers.
+                    // Without this the screen waits on "Calling…" with no error, so give up
+                    // after the same grace period the video fallback uses.
+                    watchHostedConferenceStart()
                 }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
@@ -896,6 +920,30 @@ class CallViewModel(
      * takes for the in-call controls, and [handleConferenceUpdate] sets `currentConference`, so
      * [endCall] hangs the conference up instead of silently doing nothing.
      */
+    /**
+     * Fail an outgoing hosted group call that the daemon never actually starts.
+     *
+     * [subscribeToHostedConference] waits for a conference that only appears once some device
+     * joins; on a swarm with no reachable device it never does, and the call screen would sit
+     * on "Calling…" indefinitely.
+     */
+    private fun watchHostedConferenceStart() {
+        hostedConfWatchdogJob?.cancel()
+        hostedConfWatchdogJob = scope.launch {
+            delay(FALLBACK_TIMEOUT_MS)
+            if (currentConference != null) return@launch
+            if (_state.value.callMode != CallMode.Outgoing) return@launch
+            Log.w(TAG, "hosted conference never started after ${FALLBACK_TIMEOUT_MS}ms — failing the call")
+            _state.value = _state.value.copy(
+                callMode = CallMode.Ended(HangupReason.ERROR),
+                callStatus = CallStatus.FAILURE.name,
+                hangupReason = HangupReason.ERROR,
+            )
+        }
+    }
+
+    private var hostedConfWatchdogJob: Job? = null
+
     private fun subscribeToHostedConference(call: Call) {
         confUpdatesJob?.cancel()
         confUpdatesJob = scope.launch {
@@ -1142,6 +1190,7 @@ class CallViewModel(
         videoLossJob?.cancel()
         inCallMessagesJob?.cancel()
         callStatsJob?.cancel()
+        hostedConfWatchdogJob?.cancel()
         hardwareService.cameraCleanup()
         scope.cancel()
     }

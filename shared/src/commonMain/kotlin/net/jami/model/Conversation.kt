@@ -278,6 +278,14 @@ class Conversation(
     val isSwarmGroup: Boolean
         get() = isSwarm && when (mode) {
             Mode.Request -> request?.mode != Mode.OneToOne
+            // `Syncing` is not a shape, it is "the repo has not been cloned yet": the daemon's
+            // real mode is kept in [requestMode] while it lasts, so judge by that, exactly as
+            // the `Request` branch judges by the request's mode. Reading `Syncing` itself as
+            // "not OneToOne" made every still-cloning 1:1 a group, which sent a call to
+            // `swarm:<id>` — the daemon answers that with an empty call id and the UI waits
+            // on "Calling…" forever. Unknown means 1:1, which is also what the facade
+            // assumes when the daemon reports no mode.
+            Mode.Syncing -> (requestMode ?: Mode.OneToOne) != Mode.OneToOne
             else -> mode != Mode.OneToOne
         }
 
