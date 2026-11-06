@@ -247,29 +247,10 @@ class SettingsRepository(
         }
     }
 
-    /**
-     * Block a contact.
-     */
-    fun blockContact(contactUri: String) {
-        val current = _privacySettings.value
-        if (contactUri !in current.blockedContacts) {
-            updatePrivacySettings(current.copy(
-                blockedContacts = current.blockedContacts + contactUri
-            ))
-        }
-    }
-
-    /**
-     * Unblock a contact.
-     */
-    fun unblockContact(contactUri: String) {
-        val current = _privacySettings.value
-        if (contactUri in current.blockedContacts) {
-            updatePrivacySettings(current.copy(
-                blockedContacts = current.blockedContacts - contactUri
-            ))
-        }
-    }
+    // blockContact()/unblockContact() used to live here, maintaining
+    // PrivacySettings.blockedContacts. Nothing called either one, and blocking a contact for
+    // real goes through the daemon (ContactService.removeContact(ban = true)), which is what
+    // BlockedContactsScreen lists. Removed with the field, 2026-11-06.
 
     /**
      * Update link preview setting.

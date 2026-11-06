@@ -110,12 +110,17 @@ data class PrivacySettings(
     val readReceipts: Boolean = true,
     /** Show typing indicators */
     val typingIndicators: Boolean = true,
-    /** Block messages from unknown contacts */
+    /**
+     * Only accept calls and conversation requests from confirmed contacts. Enforced in
+     * `CallService.onIncomingCall` and `ConversationFacade`; see `UnknownContacts.kt`.
+     */
     val blockUnknownContacts: Boolean = false,
-    /** List of blocked contact URIs */
-    val blockedContacts: List<String> = emptyList(),
-    /** Allow contact requests */
-    val allowContactRequests: Boolean = true,
+    // `blockedContacts` and `allowContactRequests` used to live here. Both were dead in each
+    // direction — no writer, no reader, no UI control — and both duplicated something that
+    // already works: the daemon's own ban list (what BlockedContactsScreen shows) and
+    // `blockUnknownContacts` respectively. Removed 2026-11-06 rather than left for someone to
+    // "fix" into a second, divergent block list. Settings JSON is parsed with
+    // `ignoreUnknownKeys`, so stored values carrying the old keys still load.
     /** Show link previews in messages */
     val showLinkPreviews: Boolean = true
 )
