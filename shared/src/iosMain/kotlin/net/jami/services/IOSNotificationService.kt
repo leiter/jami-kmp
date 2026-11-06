@@ -156,8 +156,10 @@ class IOSNotificationService(
         val content = UNMutableNotificationContent().apply {
             setTitle(runBlocking { getString(Res.string.notif_current_call) })
             setCategoryIdentifier(CATEGORY_CALL)
-            // Apply sound based on settings
-            if (notificationGuard.shouldVibrate()) {
+            // Apply sound based on settings. Silent during quiet hours — the notification
+            // is still delivered, so the call can be seen and answered.
+            if (notificationGuard.shouldVibrate() &&
+                !notificationGuard.shouldSilenceCallNotification()) {
                 setSound(UNNotificationSound.defaultSound())
             }
         }
@@ -232,8 +234,10 @@ class IOSNotificationService(
             setTitle(title)
             setBody(conference.getDisplayName())
             setCategoryIdentifier(CATEGORY_CALL)
-            // Apply sound based on settings
-            if (notificationGuard.shouldVibrate()) {
+            // Apply sound based on settings. Silent during quiet hours — the notification
+            // is still delivered, so the call can be seen and answered.
+            if (notificationGuard.shouldVibrate() &&
+                !notificationGuard.shouldSilenceCallNotification()) {
                 setSound(UNNotificationSound.defaultSound())
             }
             setUserInfo(buildMap<Any?, Any?> {

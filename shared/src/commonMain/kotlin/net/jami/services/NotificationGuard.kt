@@ -39,14 +39,30 @@ class NotificationGuard(
 ) {
     /**
      * Check if call notifications should be shown.
-     * Enforces: enabled, callNotifications, quiet hours.
+     * Enforces: enabled, callNotifications.
+     *
+     * Quiet hours deliberately do **not** suppress a call notification. They used to, which
+     * meant an incoming call during quiet hours produced no notification at all on either
+     * platform — the user could not receive calls during that window, and nothing told them
+     * why. Quiet hours now silence the call instead: see [shouldSilenceCallNotification].
+     * Blocking a call outright is the job of the system's own Do Not Disturb, which users
+     * already understand and which the calls channel is free to be excluded from.
      */
     fun shouldShowCallNotification(): Boolean {
         val settings = settingsRepository.notificationSettings.value
         return settings.enabled &&
-               settings.callNotifications &&
-               !isInQuietHours(settings)
+               settings.callNotifications
     }
+
+    /**
+     * Whether a call notification should be posted without sound or vibration.
+     *
+     * True during quiet hours. The notification itself is still shown — on Android via a
+     * sound-free channel, since from API 26 the channel owns the sound and no builder call
+     * can override it — so the user can still see and answer the call.
+     */
+    fun shouldSilenceCallNotification(): Boolean =
+        isInQuietHours(settingsRepository.notificationSettings.value)
 
     /**
      * Check if message notifications should be shown.

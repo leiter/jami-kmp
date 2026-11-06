@@ -127,6 +127,22 @@ class AndroidNotificationService(
                     enableVibration(true)
                     setBypassDnd(true)
                 },
+                // The same channel without sound or vibration, used for calls that arrive
+                // during the user's quiet hours. A separate channel is the only way to do
+                // this: from API 26 the channel owns the sound, so no builder call can mute
+                // a notification posted to CHANNEL_CALLS. Importance stays HIGH so the call
+                // still gets its heads-up banner and full-screen intent — quiet hours are
+                // about silence, not about hiding the call. Does not bypass DND: a user who
+                // has both set has asked for quiet twice.
+                NotificationChannel(
+                    CHANNEL_CALLS_SILENT,
+                    runBlocking { getString(Res.string.notif_channel_incoming_calls_silent) },
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    setShowBadge(true)
+                    enableVibration(false)
+                    setSound(null, null)
+                },
                 // v2: recreated at IMPORTANCE_HIGH (was IMPORTANCE_DEFAULT — no heads-up banners)
                 NotificationChannel(
                     CHANNEL_MESSAGES,
@@ -168,6 +184,15 @@ class AndroidNotificationService(
     }
 
     // ==================== Call Notifications ====================
+
+    /**
+     * The channel every call notification is posted to: the silent one during quiet hours,
+     * the ringing one otherwise. Read per notification rather than cached, so a call that
+     * arrives either side of the quiet-hours boundary gets the right treatment.
+     */
+    private fun callsChannel(): String =
+        if (notificationGuard.shouldSilenceCallNotification()) CHANNEL_CALLS_SILENT
+        else CHANNEL_CALLS
 
     /**
      * Delete and recreate [CHANNEL_CALLS] with a new ringtone URI when the setting changes.
@@ -216,7 +241,7 @@ class AndroidNotificationService(
 
         // Create a simple ongoing call notification
         // In a full implementation, this would include call actions and caller info
-        val builder = NotificationCompat.Builder(context, CHANNEL_CALLS)
+        val builder = NotificationCompat.Builder(context, callsChannel())
             .setSmallIcon(smallIcon)
             .setContentTitle(runBlocking { getString(Res.string.notif_current_call) })
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -304,7 +329,7 @@ class AndroidNotificationService(
             else -> ""
         }
 
-        val builder = NotificationCompat.Builder(context, CHANNEL_CALLS)
+        val builder = NotificationCompat.Builder(context, callsChannel())
             .setSmallIcon(smallIcon)
             .setContentTitle(title)
             .setContentText(text)
@@ -405,7 +430,7 @@ class AndroidNotificationService(
         val title = runBlocking { getString(Res.string.notif_missed_incoming_call) }
         val peerName = call.getBestName()
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_CALLS)
+        val notification = NotificationCompat.Builder(context, callsChannel())
             .setSmallIcon(smallIcon)
             .setContentTitle(title)
             .setContentText(peerName)
@@ -430,7 +455,7 @@ class AndroidNotificationService(
         val conversationName = conversation.getBestName()
         val contentText = runBlocking { getString(Res.string.notif_inprogress_group_call) }
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_CALLS)
+        val notification = NotificationCompat.Builder(context, callsChannel())
             .setSmallIcon(smallIcon)
             .setContentTitle(conversationName)
             .setContentText(contentText)
@@ -751,6 +776,14 @@ class AndroidNotificationService(
      * Respects user preferences from NotificationSettings.
      */
     private fun applySoundAndVibration(builder: NotificationCompat.Builder) {
+        // Quiet hours: the notification is posted to CHANNEL_CALLS_SILENT, and these
+        // builder calls would be the one thing still able to make noise on pre-O devices,
+        // where there are no channels at all.
+        if (notificationGuard.shouldSilenceCallNotification()) {
+            builder.setSilent(true)
+            return
+        }
+
         // Apply custom sound URI if set
         val soundUri = notificationGuard.getSoundUri()
         if (soundUri != null) {
@@ -795,6 +828,8 @@ class AndroidNotificationService(
         // Notification channels
         // _v2 suffix forces channel recreation when importance level changed
         const val CHANNEL_CALLS = "jami_calls"
+        /** [CHANNEL_CALLS] without sound or vibration, for calls during quiet hours. */
+        const val CHANNEL_CALLS_SILENT = "jami_calls_silent"
         const val CHANNEL_MESSAGES = "jami_messages_v2"   // was DEFAULT, now HIGH
         const val CHANNEL_FILE_TRANSFER = "jami_file_transfer"
         const val CHANNEL_SERVICE = "jami_service_v2"     // was MIN, now LOW

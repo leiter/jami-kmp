@@ -7,7 +7,8 @@ Each task names the file or doc that carries its evidence; nothing here was re-d
 against source, so premises older than 2026-10 should be checked before coding (the
 mini-plans roll-up records four findings whose evidence had gone stale).
 
-Current HEAD: `989ba1b` "Apply three settings that were only ever stored".
+Current HEAD when assembled: `989ba1b` "Apply three settings that were only ever stored".
+A1 and A2 were closed on 2026-11-05, A3 and B2 on 2026-11-06.
 
 ---
 
@@ -26,10 +27,12 @@ Current HEAD: `989ba1b` "Apply three settings that were only ever stored".
   the type with, as its own manifest comment already argued. **A device check is still owed on
   both the defect and the fix.**
 
-- **A3 — `AccountSettingsViewModel.loadAccount()` constructs a fresh state.**
-  Any field it does not list is reset on every `AccountEvent.DetailsChanged`, including the
-  one our own `setAccountDetails` triggers. The status-note fields were patched through by
-  hand; change the assignment to a `copy()` so the next field added cannot blank itself.
+- **A3 — ~~`AccountSettingsViewModel.loadAccount()` constructs a fresh state~~.**
+  Fixed 2026-11-06. Premise confirmed against source first: it listed 15 of the state's 22
+  fields, so `linkDeviceState` and the six `registerName*` fields were reset on every
+  `AccountEvent.DetailsChanged` — the register-username dialog closed itself mid-typing. Now a
+  `copy()`, and the status-note fields no longer need carrying through by hand. Regression test:
+  `AccountSettingsViewModelTest.loadAccountDoesNotCloseTheRegisterNameDialog`.
   (`doc/status-note-open-ends.md` open end 3)
 
 ## B. Settings stored but applied nowhere
@@ -44,10 +47,17 @@ on 2026-10-31.
   channel ids). Also `NotificationGuard.getSoundUri()` returns `null` both for "sound off"
   and "no custom sound", and `null` means *use the default* — the two cases need separating.
 
-- **B2 (B12) — quiet hours suppresses incoming calls.**
-  `NotificationGuard.shouldShowCallNotification()` includes `!isInQuietHours(settings)`, so a
-  call during quiet hours shows no notification at all. Decide the intended semantics
-  (calls exempt, or a per-type quiet-hours switch) and apply it.
+- **B2 (B12) — ~~quiet hours suppresses incoming calls~~.**
+  Fixed 2026-11-06. Premise confirmed against source first (the term was in the conjunction,
+  and both platforms early-return on it at four call sites). Semantics chosen: quiet hours
+  *silence* a call rather than hiding it, and blocking a call outright is left to the system's
+  own Do Not Disturb. `shouldShowCallNotification()` lost the quiet-hours term; a new
+  `shouldSilenceCallNotification()` sends Android's call notifications to `CHANNEL_CALLS_SILENT`
+  (a separate channel because from API 26 the channel owns the sound; `IMPORTANCE_HIGH` is kept
+  so the heads-up banner and full-screen intent survive) and drops the sound on iOS. Messages
+  and requests keep the old suppression. Covered by the new `NotificationGuardTest`.
+  **A device check is still owed**, and `doc/manual-test-plan-2026-09-10.md` B12 was rewritten
+  to test the fix.
 
 - **B3 (B14) — `blockUnknownContacts` is written and read back by the settings screen and
   used nowhere else.** Needs enforcement on the incoming trust-request / incoming-call path.

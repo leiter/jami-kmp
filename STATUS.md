@@ -80,7 +80,8 @@ Android 14+ requires)
 ### Notifications
 - Android: full notification channel setup (calls, messages, file transfer, background service)
 - iOS/macOS: UNUserNotificationCenter integration
-- NotificationGuard: quiet hours with midnight wraparound, per-type control (calls, messages, requests)
+- NotificationGuard: quiet hours with midnight wraparound, per-type control (calls, messages,
+  requests). Quiet hours silence calls rather than hiding them (B12, 2026-11-06)
 - Per-type notification control (calls / messages / requests) and quiet hours via NotificationGuard
 - Full-screen intents for incoming calls (Android)
 - Incoming call notification with Answer / Decline actions
@@ -139,12 +140,22 @@ and have moved to the list after them.
   `enableVibration(...)` and the default sound, and only `CHANNEL_CALLS` is ever recreated (for the
   ringtone). `NotificationGuard.getSoundUri()` also returns `null` both for "sound off" and "no
   custom sound", and `null` means *use the default*.
-- **Quiet hours suppresses incoming calls** (B12) — `NotificationGuard.shouldShowCallNotification()`
-  includes `!isInQuietHours(settings)`, so a call during quiet hours shows no notification.
 - **Block unknown contacts** (B14) — `blockUnknownContacts` is written and read back into the
   settings screen, and nowhere else.
 
-**Closed 2026-10-31** (code written; a device verdict is still owed, as it is for the three above):
+**Closed 2026-11-06** (code written; a device verdict is still owed):
+
+- **Quiet hours suppresses incoming calls** (B12) — quiet hours no longer hide a call, they
+  silence it. `shouldShowCallNotification()` dropped the `!isInQuietHours` term, and a new
+  `shouldSilenceCallNotification()` drives the choice of channel on Android: calls arriving in
+  the window go to `CHANNEL_CALLS_SILENT`, which is `CHANNEL_CALLS` without sound or vibration
+  and without `setBypassDnd`. A separate channel is the only way — from API 26 the channel owns
+  the sound, so no builder call can mute one posted to `CHANNEL_CALLS`. Importance stays
+  `HIGH`, so the heads-up banner and full-screen intent survive. iOS drops the notification
+  sound on the same condition. Messages and requests keep the old suppression, and blocking a
+  call outright is left to the system's own Do Not Disturb.
+
+**Closed 2026-10-31** (code written; a device verdict is still owed, as it is for the two above):
 
 - **Auto-download on Wi-Fi / mobile data** (B13) — `ConversationFacade` now gates every
   auto-accept site on `autoDownloadWifi` / `autoDownloadMobile`, chosen by

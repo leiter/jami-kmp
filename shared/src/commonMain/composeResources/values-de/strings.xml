@@ -66,6 +66,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_channel_calls">Anrufe</string>
     <string name="notif_channel_missed_calls">Entgangene Anrufe</string>
     <string name="notif_channel_incoming_calls">Eingehende Anrufe</string>
+    <string name="notif_channel_incoming_calls_silent">Eingehende Anrufe (Ruhezeiten)</string>
     <string name="notif_channel_messages">Nachrichten</string>
     <string name="notif_channel_requests">Anfragen</string>
     <string name="notif_channel_file_transfer">Dateitransfer</string>

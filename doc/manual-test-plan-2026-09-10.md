@@ -13,8 +13,9 @@
 > reading the code was already conclusive about the cause: **B13** (auto-download by network
 > type), **B15** (conversation sort order) and **B16** (compact mode). Their repro steps below
 > still stand, but they now test the *fix*: "Suspected actual" is what the build before
-> 2026-10-31 did, and "Expected (no bug)" is what the current build should do. B10–B12 and B14
-> are unchanged and still owed a verdict as written.
+> 2026-10-31 did, and "Expected (no bug)" is what the current build should do. **B12 was
+> implemented the same way on 2026-11-06** and its entry has been rewritten below. B10, B11 and
+> B14 are unchanged and still owed a verdict as written.
 
 **Purpose.** This document is a work order, not a bug list. Every entry below is a
 *hypothesis* derived from reading the source, not an observed failure. Each one has a
@@ -530,6 +531,8 @@ Notes:
 
 ### B12 — Quiet hours suppresses incoming call notifications
 
+**Implemented 2026-11-06** — this entry now tests the fix. See the note at the top.
+
 **Severity if confirmed:** High — silently missed calls.
 
 **Hypothesis.** `shouldShowCallNotification()` includes `!isInQuietHours(settings)` in
@@ -548,14 +551,26 @@ gates on `!isInQuietHours`.
 2. Background A's app, or lock the screen.
 3. From B, place a call to A.
 
-**Expected (no bug).** A rings / shows the incoming-call notification. Quiet hours
-should affect messages only.
+**Expected (no bug), i.e. the build from 2026-11-06 on.** A shows the incoming-call
+notification, with its heads-up banner and full-screen intent, but **makes no sound and
+does not vibrate**. The call can be answered from it. On Android the notification is posted
+to the `jami_calls_silent` channel rather than `jami_calls`; verify with
+`adb shell dumpsys notification --noredact | grep -A2 jami_calls_silent`, and in
+**Settings → Apps → Jami → Notifications**, where the channel appears as
+"Incoming calls (quiet hours)".
 
-**Suspected actual.** Nothing appears on A. B hears ringing until timeout. Logcat on
-A shows the call arriving at `CallService` but no notification posted.
+**Suspected actual (the build before 2026-11-06).** Nothing appears on A. B hears ringing
+until timeout. Logcat on A shows the call arriving at `CallService` but no notification
+posted, and `"Call notifications disabled in settings"` from `AndroidNotificationService`.
 
-**Second half of the test.** Turn Quiet hours OFF and repeat step 3 immediately. If
-the call now shows, the causal link is established and this is CONFIRMED.
+**Second half of the test.** Turn Quiet hours OFF and repeat step 3 immediately. The call
+should now ring normally, on the `jami_calls` channel. Then set **Notifications → Calls**
+to OFF with quiet hours off and repeat: *that* switch should still suppress the
+notification entirely, since only quiet hours changed meaning.
+
+**Third part — messages are unchanged.** With quiet hours ON, have B send A a text
+message. A should get no notification at all: quiet hours still suppress messages and
+contact requests outright, and only calls were given the silent treatment.
 
 **Escalation.** If CONFIRMED, also check whether an in-app full-screen call UI still
 appears when A's app is in the *foreground* — that determines whether calls are
@@ -1001,7 +1016,8 @@ For each CONFIRMED verdict, capture:
 4. Build commit (`git rev-parse --short HEAD`) and device/OS.
 
 **Triage note.** B1, B12, and B3 are the entries that can cause a user to lose a
-message or miss a call. If any of the three confirms, treat it as ahead of everything
+message or miss a call (B12 was fixed on 2026-11-06, so its test is now a check on the
+fix rather than a hunt for the defect). If any of the three confirms, treat it as ahead of everything
 else in this document regardless of how many low-severity items also confirm.
 
 If a test yields REJECTED, record it anyway — a rejected hypothesis removes a

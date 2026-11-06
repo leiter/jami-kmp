@@ -256,6 +256,35 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
   on Android and is a no-op elsewhere. (This item was left unchecked long after the screen landed.)
 - [ ] **App shortcuts** — Reference `AndroidManifest.xml` declares conversation shortcuts. Not in KMP manifest.
 
+### Quiet hours hid incoming calls (B12, 2026-11-06)
+
+Still owed a device verdict.
+
+- [x] **Quiet hours suppresses incoming calls (B12)** — `NotificationGuard` dropped
+  `!isInQuietHours(settings)` from `shouldShowCallNotification()`; quiet hours now *silence* a
+  call instead of hiding it, via the new `shouldSilenceCallNotification()`. On Android the call
+  is posted to `CHANNEL_CALLS_SILENT` — `CHANNEL_CALLS` without sound or vibration and without
+  `setBypassDnd` — because from API 26 the channel owns the sound and no builder call can mute a
+  notification posted to a sounding channel. Importance stays `HIGH` so the heads-up banner and
+  full-screen intent survive: quiet hours are about silence, not about hiding the call.
+  `applySoundAndVibration()` also calls `setSilent(true)` and returns early, which covers pre-O
+  devices where there are no channels at all. iOS drops `UNNotificationSound` on the same
+  condition (its `RINGING` branch is already skipped in favour of CallKit). Messages and contact
+  requests keep the old suppression, and blocking a call outright is left to the system's Do Not
+  Disturb. Covered by `NotificationGuardTest`.
+
+### The register-name dialog closed itself (A3, 2026-11-06)
+
+- [x] **`AccountSettingsViewModel.loadAccount()` built a fresh state** — it constructed a new
+  `AccountSettingsState` listing 15 of the 22 fields, so the seven it omitted (`linkDeviceState`
+  and the whole `registerName*` group) reset to their defaults on every
+  `AccountEvent.DetailsChanged` — including the event our own `setAccountDetails` triggers. In
+  the app that closed the register-username dialog while the user was typing in it, and dropped
+  the link-device sheet back to `Init`. Now a `copy()`, so a field added to the state later
+  cannot blank itself by being forgotten here; the status-note fields that had been carried
+  through by hand no longer need to be. Covered by
+  `AccountSettingsViewModelTest.loadAccountDoesNotCloseTheRegisterNameDialog`.
+
 ### Settings that were stored but applied nowhere (2026-10-31)
 
 Three of the B10–B16 cluster in `doc/manual-test-plan-2026-09-10.md`. Still owed a device
