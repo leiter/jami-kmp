@@ -245,4 +245,34 @@ class AccountSettingsViewModelTest {
         assertEquals("typing this", vm.state.value.statusNote)
         assertEquals("from elsewhere", vm.state.value.publishedStatusNote)
     }
+
+    /**
+     * loadAccount() runs on every AccountEvent.DetailsChanged, including the one our own
+     * setAccountDetails triggers. It used to build a fresh AccountSettingsState, so every field
+     * it did not list — the whole registerName* group among them — was reset. In the app that
+     * closed the register-username dialog while the user was typing in it.
+     */
+    @Test
+    fun loadAccountDoesNotCloseTheRegisterNameDialog() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        prepareAccountInService(stub, accountService)
+        val repo = makeSettingsRepository(stub, this)
+        val vm = AccountSettingsViewModel(accountService, repo, scope = viewModelScope())
+        advanceUntilIdle()
+
+        vm.openRegisterNameDialog()
+        vm.setRegisterNameInput("alice")
+        advanceUntilIdle()
+        assertTrue(vm.state.value.registerNameDialogOpen)
+
+        vm.loadAccount()
+        advanceUntilIdle()
+
+        assertTrue(
+            vm.state.value.registerNameDialogOpen,
+            "a details change must not close the dialog the user is typing in"
+        )
+        assertEquals("alice", vm.state.value.registerNameInput)
+    }
 }

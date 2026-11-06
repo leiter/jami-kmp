@@ -392,7 +392,14 @@ class AccountSettingsViewModel(
                     biometricService?.isEnabled(accountId) ?: false
                 else false
 
-                _state.value = AccountSettingsState(
+                // copy() rather than a fresh AccountSettingsState: loadAccount() runs on every
+                // AccountEvent.DetailsChanged — including the one our own setAccountDetails
+                // triggers — so any field a fresh state did not list was reset moments after the
+                // user set it. That silently blanked linkDeviceState and the whole registerName*
+                // group (closing the register-username dialog mid-typing), and had already been
+                // worked around by hand for the status note. With copy(), a field added to the
+                // state later cannot blank itself by being forgotten here.
+                _state.value = _state.value.copy(
                     displayName = displayName,
                     username = username,
                     identityHash = identityHash,
@@ -408,14 +415,6 @@ class AccountSettingsViewModel(
                     isSip = account.isSip,
                     sipHostname = account.host,
                     sipUsername = account.username,
-                    // This builds a *fresh* state, so anything not listed here is reset to its
-                    // default. loadAccount() runs on every AccountEvent.DetailsChanged — which
-                    // includes the one our own setAccountDetails triggers — so a field left out
-                    // is wiped moments after the user sets it. The status note is carried over
-                    // rather than re-read, to keep an edit that has not been committed yet.
-                    statusNote = _state.value.statusNote,
-                    publishedStatusNote = _state.value.publishedStatusNote,
-                    statusNoteError = _state.value.statusNoteError,
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)
