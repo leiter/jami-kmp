@@ -7,8 +7,9 @@ import android.os.Process
  *
  * Filters by PID rather than the "Jami" tag: the daemon's native (libjami) layer logs each
  * line under its own source-filename tag via `__android_log_write`, never under "Jami" —
- * a tag filter silently excludes all daemon-level logs. PID scoping picks up both the app's
- * own "Jami"-tagged logs and every daemon log line in one pass.
+ * a tag filter silently excludes all daemon-level logs. PID scoping picks up both the KMP
+ * layer's own logs (per-class tags, via `net.jami.utils.Log`) and every daemon log line in
+ * one pass.
  */
 actual fun captureRecentLogs(maxLines: Int): String = try {
     val pid = Process.myPid().toString()

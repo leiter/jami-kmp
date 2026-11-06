@@ -23,15 +23,16 @@ routing of a call to it.
 
 **Blockers found, each of which needs solving before the run can work:**
 
-- [ ] **The app's own log lines are invisible on modern Android.** `net.jami.utils.Log` is
-  `println`, and Android routes app stdout to `/dev/null` from (somewhere before) SDK 37 —
-  zero `System.out` lines on the Pixel 7a, while the Pixel 2 on SDK 30 shows them all. So every
-  logcat discriminator quoted in `doc/manual-test-plan-2026-09-10.md` (B12, B14) is
-  unobservable on the subject device, and `setprop log.redirect-stdio true` is refused on a
-  production build. **This also means `LogCapture.captureRecentLogs` — the in-app "Debug logs"
-  screen — shows only the daemon's native logs on modern Android, never the KMP layer's.**
-  Fix `Log` to call `android.util.Log` through an expect/actual before attempting the run
-  again; it makes the whole plan observable and is worth doing on its own merits.
+- [x] **The app's own log lines are invisible on modern Android.** Fixed 2026-11-07.
+  `net.jami.utils.Log` was `println`, and Android routes app stdout to `/dev/null` on the
+  Pixel 7a (SDK 37) while the Pixel 2 (SDK 30) still shows it — so every logcat discriminator
+  in `doc/manual-test-plan-2026-09-10.md` was unobservable on the subject device, and the
+  in-app "Debug logs" screen showed only the daemon's native logs. `Log` now delegates to an
+  internal `platformLog` expect/actual: `android.util.Log` on Android, `NSLog` on iOS/macOS,
+  `println` on Desktop/Web. Verified on the Pixel 7a — `D/ContactService`, `D/ConversationsVM`
+  and `D/AppViewModel` lines now appear under the app's PID, which is also what
+  `LogCapture.captureRecentLogs` reads, so the Debug-logs screen gains the KMP layer for free.
+
 - [ ] **The existing pair cannot produce a fresh contact request.** A removed B, but B never
   removed A, so B still holds A as a contact: opening "a new conversation" with A on B reused
   the old 1:1 swarm `52c33a0bdf3038c4026ad0903dd6488022593b53` and sent **no trust request** —

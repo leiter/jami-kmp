@@ -19,9 +19,8 @@ package net.jami.utils
 /**
  * Simple logging utility for Jami KMP.
  *
- * Uses expect/actual for platform-specific implementations.
- * This is a simplified version - full implementation would use
- * platform logging (Logcat on Android, NSLog on iOS, etc.)
+ * Writes through [platformLog] to the facility the platform's tooling reads:
+ * logcat on Android, NSLog on iOS/macOS, stdout on Desktop/Web.
  */
 object Log {
     var level: Level = Level.DEBUG
@@ -35,47 +34,21 @@ object Log {
         NONE(5)
     }
 
-    fun v(tag: String, message: String) {
-        if (level.value <= Level.VERBOSE.value) {
-            println("V/$tag: $message")
-        }
-    }
+    fun v(tag: String, message: String) = log(Level.VERBOSE, tag, message)
 
-    fun d(tag: String, message: String) {
-        if (level.value <= Level.DEBUG.value) {
-            println("D/$tag: $message")
-        }
-    }
+    fun d(tag: String, message: String) = log(Level.DEBUG, tag, message)
 
-    fun i(tag: String, message: String) {
-        if (level.value <= Level.INFO.value) {
-            println("I/$tag: $message")
-        }
-    }
+    fun i(tag: String, message: String) = log(Level.INFO, tag, message)
 
-    fun w(tag: String, message: String) {
-        if (level.value <= Level.WARN.value) {
-            println("W/$tag: $message")
-        }
-    }
+    fun w(tag: String, message: String) = log(Level.WARN, tag, message)
 
-    fun w(tag: String, message: String, throwable: Throwable?) {
-        if (level.value <= Level.WARN.value) {
-            println("W/$tag: $message")
-            throwable?.printStackTrace()
-        }
-    }
+    fun w(tag: String, message: String, throwable: Throwable?) = log(Level.WARN, tag, message, throwable)
 
-    fun e(tag: String, message: String) {
-        if (level.value <= Level.ERROR.value) {
-            println("E/$tag: $message")
-        }
-    }
+    fun e(tag: String, message: String) = log(Level.ERROR, tag, message)
 
-    fun e(tag: String, message: String, throwable: Throwable?) {
-        if (level.value <= Level.ERROR.value) {
-            println("E/$tag: $message")
-            throwable?.printStackTrace()
-        }
+    fun e(tag: String, message: String, throwable: Throwable?) = log(Level.ERROR, tag, message, throwable)
+
+    private fun log(at: Level, tag: String, message: String, throwable: Throwable? = null) {
+        if (level.value <= at.value) platformLog(at, tag, message, throwable)
     }
 }
