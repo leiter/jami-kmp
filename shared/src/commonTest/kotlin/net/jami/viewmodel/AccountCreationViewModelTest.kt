@@ -134,6 +134,30 @@ class AccountCreationViewModelTest {
         assertFalse(details.containsKey(ConfigKey.ACCOUNT_REGISTERED_NAME.key))
     }
 
+    /**
+     * Profile setup writes to the current account, so a newly created account that never becomes
+     * current means the display name and avatar land on the previously selected account — seen
+     * on a device 2026-11-07, where creating a second account renamed the first one.
+     */
+    @Test
+    fun createAccountMakesTheNewAccountCurrent() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        prepareAccountInService(stub, accountService)
+        assertEquals(TEST_ACCOUNT_ID, accountService.currentAccount.value?.accountId)
+
+        val newId = "new_account_id"
+        stub.addAccountResult = newId
+        stub.accountIds = listOf(TEST_ACCOUNT_ID, newId)
+        stub.accountDetails[newId] = mapOf(ConfigKey.ACCOUNT_TYPE.key to "RING")
+
+        val vm = AccountCreationViewModel(accountService, viewModelScope())
+        vm.createAccount()
+        advanceUntilIdle()
+        assertTrue(vm.state.value.isCreated)
+        assertEquals(newId, accountService.currentAccount.value?.accountId)
+    }
+
     @Test
     fun nameRegistrationEndedSuccessClearsRegistering() = runTest {
         val stub = StubDaemonBridge()

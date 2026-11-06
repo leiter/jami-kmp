@@ -401,6 +401,30 @@ class AccountService(
     }
 
     /**
+     * Make the account with [accountId] the current one, by id rather than by instance.
+     *
+     * An account that has just been created is not in [accounts] yet — the list is rebuilt when
+     * the daemon's account-added signal arrives — so the list is reloaded once before giving up.
+     * Without this, everything that writes to "the current account" (profile setup, first of
+     * all) keeps writing to the account that was selected before.
+     *
+     * @return true when the account was found and is now current.
+     */
+    fun setCurrentAccountById(accountId: String): Boolean {
+        val account = getAccount(accountId) ?: run {
+            loadAccounts()
+            getAccount(accountId)
+        }
+        if (account == null) {
+            Log.w(TAG, "setCurrentAccountById: no account $accountId after reload")
+            return false
+        }
+        setCurrentAccount(account)
+        _currentAccount.value = account
+        return true
+    }
+
+    /**
      * Set the order of accounts.
      */
     fun setAccountOrder(accountIds: List<String>) {

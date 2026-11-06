@@ -219,6 +219,10 @@ class AccountCreationViewModel(
                     password = current.password
                 )
                 createdAccountId = accountId
+                // Profile setup writes to the *current* account, so the new one has to become
+                // current before we navigate there — otherwise the display name and avatar land
+                // on whichever account was selected before.
+                accountService.setCurrentAccountById(accountId)
                 Log.d(TAG, "addAccount returned accountId='$accountId' — navigating to profile setup")
                 // The chosen username is registered on the name server by AccountService once the
                 // new account reaches the REGISTERED state (createJamiAccount recorded it as a
@@ -292,7 +296,8 @@ class AccountCreationViewModel(
                     net.jami.model.ConfigKey.ACCOUNT_PASSWORD.key to password,
                 )
                 if (port.isNotBlank()) details["Account.localPort"] = port
-                accountService.addAccount(details)
+                val accountId = accountService.addAccount(details)
+                if (accountId.isNotEmpty()) accountService.setCurrentAccountById(accountId)
                 _state.value = _state.value.copy(isLoading = false, isCreated = true)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
