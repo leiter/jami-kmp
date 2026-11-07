@@ -303,17 +303,31 @@ raise them again.*
 
 ## Additions to existing sections
 
-- **I6 — no test fixture anywhere puts a group in a conversation list.**
-  `shared/src/commonTest/kotlin/net/jami/viewmodel/TestFixtures.kt` has no group helper, which
-  is precisely why the suite said nothing while six `conversation.contact` call sites threw for
-  groups (fixed since; `Account.getByContact` and the `ChatViewModel` sites all use
-  `contactOrNull` today). Add a group to the shared fixtures so the suite enforces this instead
-  of future greps having to.
+- **I6 — DONE 2026-11-07.** `TestFixtures` gained `groupConversation()`, `oneToOneConversation()`
+  and `seedMixedConversationList()`, which puts a group *and* a 1:1 in one account's list — the
+  shape that broke on a device, where anything walking the list meets the group first. The new
+  `GroupInConversationListTest` drives that list through `ConversationsViewModel.loadConversations`
+  (both rows load, the group row is flagged as one), through `Account.getByContact` (the 1:1 is
+  still found with a group ahead of it, and a group member is not mistaken for a 1:1 peer) and
+  through the facade. `AccountGroupLookupTest` already covered the model accessor; this covers
+  the layer above it, which is where the 918 green tests had been silent.
 
-- **I7 — `ConversationFacade.conversationEvents` is a `MutableSharedFlow` with no replay**
-  (`ConversationFacade.kt:114`), the same shape as the `accountEvents` bug fixed in
-  `doc/TODO.md`'s 2026-08-17 entry: a collector that subscribes late misses events already
-  emitted. Deliberately deferred at the time as scope creep; still open, still unrecorded.
+- **I7 — DONE 2026-11-07.** `conversationEvents` now backfills `ConversationReady` to each new
+  subscriber, exactly as `AccountService.accountEvents` has since 2026-08-17. The facade keeps
+  the set of conversations that have reached ready (dropped again on removal) and replays them
+  through `onSubscription`.
+
+  This was not only latent. Two call sites awaited that event with no way to win the race:
+  `NewConversationViewModel.startConversation` subscribes only *after*
+  `ConversationFacade.startConversation` has thrown, and `CommandHandler` does the same in the
+  harness — so a conversation that went ready in between left the first hanging on
+  `isLoading = true` forever and the second burning its 30 s timeout.
+
+  Deliberately narrow, as in the account case: only `ConversationReady` is replayed, because
+  "this conversation is live" is durable, while a received message or a member join is one-shot
+  and replaying it would be actively wrong. `ConversationReadyBackfillTest` has four tests —
+  two prove the backfill (both fail without it, checked by disabling it), two prove its limits
+  (a removed conversation is not announced, and nothing but `ConversationReady` is replayed).
 
 - **I8 — the SELinux reinstall-race fix was validated on device B (Pixel 2) only.** Whether the
   Pixel 7a is equally exposed was never checked. `doc/TODO.md`'s 2026-08-17 infra entry does not

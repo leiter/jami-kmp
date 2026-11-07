@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import net.jami.model.Account
@@ -112,7 +113,46 @@ class ConversationFacade(
     val currentAccountFlow: StateFlow<Account?> = _currentAccount.asStateFlow()
 
     private val _conversationEvents = MutableSharedFlow<ConversationEvent>()
-    val conversationEvents: SharedFlow<ConversationEvent> = _conversationEvents.asSharedFlow()
+
+    /**
+     * Conversations that have already reached [ConversationEvent.ConversationReady], so a
+     * collector attaching afterwards can be told. Keyed `accountId:conversationId`; an entry is
+     * dropped when the conversation is removed.
+     */
+    private val readyConversations = mutableSetOf<String>()
+
+    private fun readyKey(accountId: String, conversationId: String) = "$accountId:$conversationId"
+
+    /**
+     * A collector that attaches after a conversation has already gone live would otherwise never
+     * hear about it: [_conversationEvents] has no replay, and `ConversationReady` fires from the
+     * daemon's own cloning/loading, which routinely completes before any UI subscriber exists.
+     *
+     * Two call sites awaited exactly that event with no way to win the race —
+     * `NewConversationViewModel.startConversation` falls back to
+     * `conversationEvents.filterIsInstance<ConversationReady>().first()` only *after*
+     * `startConversation` has thrown, and `CommandHandler` does the same in the harness. If the
+     * conversation became ready in between, the first hung on `isLoading = true` forever and the
+     * second burned its 30 s timeout.
+     *
+     * Backfilling closes it: a new subscriber is first told about every conversation already
+     * known to be ready, then relays the live stream. This is the same fix, and the same
+     * reasoning, as `AccountService.accountEvents` (see that property and `doc/TODO.md`'s
+     * 2026-08-17 entry).
+     *
+     * Deliberately narrow, as there: only `ConversationReady` is backfilled, because "this
+     * conversation is live" is a durable fact. Replaying one-shot events — a received message, a
+     * member join, a conversation request — to a late subscriber would be actively wrong.
+     */
+    val conversationEvents: Flow<ConversationEvent> = _conversationEvents.asSharedFlow()
+        .onSubscription {
+            val known = synchronized(loadCoordLock) { readyConversations.toList() }
+            for (key in known) {
+                val accountId = key.substringBefore(':')
+                val conversationId = key.substringAfter(':')
+                emit(ConversationEvent.ConversationReady(accountId, conversationId))
+            }
+        }
 
     private val _conversationList = MutableStateFlow(ConversationList())
     val conversationList: StateFlow<ConversationList> = _conversationList.asStateFlow()
@@ -923,6 +963,7 @@ class ConversationFacade(
                 Log.i(TAG, "loadSmartlist: removing $convId, no longer listed by the daemon")
                 account.removeSwarm(convId)
                 forget(primedPreviews, "${account.accountId}:$convId")
+                forget(readyConversations, readyKey(account.accountId, convId))
                 // Launched, not awaited: _conversationEvents is unbuffered and loadSmartlist can
                 // run from inside a subscriber (send path), which would then wait on itself.
                 scope.launch {
@@ -1369,6 +1410,7 @@ class ConversationFacade(
         if (!title.isNullOrEmpty()) conversation.setProfile(Profile(title, null))
 
         account.conversationStarted(conversation)
+        synchronized(loadCoordLock) { readyConversations.add(readyKey(account.accountId, conversationId)) }
         _conversationEvents.emit(ConversationEvent.ConversationReady(account.accountId, conversationId))
         return conversation
     }
@@ -1447,6 +1489,7 @@ class ConversationFacade(
             }
         }
 
+        synchronized(loadCoordLock) { readyConversations.add(readyKey(accountId, conversationId)) }
         _conversationEvents.emit(ConversationEvent.ConversationReady(accountId, conversationId))
         Log.d(TAG, "onConversationReady: loaded conversation $conversationId")
     }
@@ -1465,6 +1508,7 @@ class ConversationFacade(
         // Remove from swarm conversations
         account.removeSwarm(conversationId)
         forget(primedPreviews, "$accountId:$conversationId")
+        forget(readyConversations, readyKey(accountId, conversationId))
         scope.launch {
             _conversationEvents.emit(ConversationEvent.ConversationRemoved(accountId, conversationId))
         }

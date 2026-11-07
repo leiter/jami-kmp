@@ -277,3 +277,67 @@ fun prepareAccountInService(
     return accountService.getAccount(accountId)
         ?: net.jami.model.Account(accountId, mutableMapOf(ConfigKey.ACCOUNT_TYPE.key to "RING", ConfigKey.ACCOUNT_DISPLAYNAME.key to displayName))
 }
+
+// ==================== Convenience: a group in the conversation list ====================
+
+/**
+ * A swarm group conversation with [memberCount] members (the user plus others).
+ *
+ * No shared fixture held a group before 2026-11-07, which is exactly why a suite of 918 tests
+ * stayed green while six call sites read [net.jami.model.Conversation.contact] — an accessor
+ * that *throws* for a group — on every conversation in a list. The crash was found by opening
+ * the app on a device instead (`bbba9fb`, `69ab199`). Put a group in the list whenever a test
+ * walks one, so the suite enforces this rather than a future grep having to.
+ */
+fun groupConversation(
+    accountId: String = TEST_ACCOUNT_ID,
+    conversationId: String = "group1",
+    memberCount: Int = 3,
+    mode: net.jami.model.Conversation.Mode = net.jami.model.Conversation.Mode.InvitesOnly,
+): net.jami.model.Conversation {
+    require(memberCount >= 3) { "a group needs more than two members; $memberCount is a 1:1" }
+    val members = buildList {
+        add(net.jami.model.Contact(net.jami.model.Uri.fromString("me"), isUser = true))
+        repeat(memberCount - 1) { i ->
+            add(net.jami.model.Contact(net.jami.model.Uri.fromString("peer$i")))
+        }
+    }
+    return net.jami.model.Conversation(
+        accountId,
+        net.jami.model.Uri(net.jami.model.Uri.SWARM_SCHEME, conversationId),
+        members.toMutableList(),
+        mode,
+    )
+}
+
+/** A plain 1:1 swarm conversation with [peerId], for lists that should hold both shapes. */
+fun oneToOneConversation(
+    accountId: String = TEST_ACCOUNT_ID,
+    conversationId: String = "oneToOne1",
+    peerId: String = "bbbb",
+): net.jami.model.Conversation = net.jami.model.Conversation(
+    accountId,
+    net.jami.model.Uri(net.jami.model.Uri.SWARM_SCHEME, conversationId),
+    mutableListOf(
+        net.jami.model.Contact(net.jami.model.Uri.fromString("me"), isUser = true),
+        net.jami.model.Contact(net.jami.model.Uri.fromString(peerId)),
+    ),
+    net.jami.model.Conversation.Mode.OneToOne,
+)
+
+/**
+ * Puts a group *and* a 1:1 into [account]'s conversation list, the shape that broke on a device:
+ * anything walking the list meets the group first.
+ */
+fun seedMixedConversationList(
+    account: net.jami.model.Account,
+    groupId: String = "group1",
+    oneToOneId: String = "oneToOne1",
+    peerId: String = "bbbb",
+): Pair<net.jami.model.Conversation, net.jami.model.Conversation> {
+    val group = groupConversation(account.accountId, groupId)
+    val oneToOne = oneToOneConversation(account.accountId, oneToOneId, peerId)
+    account.conversationStarted(group)
+    account.conversationStarted(oneToOne)
+    return group to oneToOne
+}
