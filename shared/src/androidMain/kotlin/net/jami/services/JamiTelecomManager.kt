@@ -89,6 +89,14 @@ class JamiTelecomManager(
      * placeCall() is asynchronous — the connection may be created after CURRENT/OVER fires.
      */
     private val pendingConnectionState = mutableMapOf<String, Call.CallStatus>()
+    /**
+     * daemon call ID → whether it was reported to Telecom as incoming.
+     *
+     * An incoming call's direction can be corrected after the first RINGING update (the
+     * daemon's CONNECTING state change precedes its incomingCall signal), and a call reported
+     * on the wrong side never produces an answerable UI, so the correction has to be acted on.
+     */
+    private val reportedIncoming = mutableMapOf<String, Boolean>()
 
     val phoneAccountHandle: PhoneAccountHandle? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
@@ -136,14 +144,30 @@ class JamiTelecomManager(
 
         when (call.callStatus) {
             Call.CallStatus.RINGING -> {
-                if (!callToAccount.containsKey(callId)) {
+                // Report once per call — unless the call turns out to be incoming after it was
+                // reported as outgoing. That happens on every incoming call whose CONNECTING
+                // state change reaches CallService before the daemon's incomingCall signal:
+                // Telecom was asked for an outgoing connection it had never been asked to
+                // place, onCreateOutgoingConnection failed, and the call could not be answered
+                // at all. Re-reporting is safe while no Connection exists yet.
+                val alreadyReported = callToAccount.containsKey(callId)
+                val misreportedAsOutgoing = alreadyReported &&
+                    call.isIncoming &&
+                    reportedIncoming[callId] == false &&
+                    !callToConnection.containsKey(callId)
+                if (!alreadyReported || misreportedAsOutgoing) {
                     callToAccount[callId] = accountId
                     if (call.isIncoming) {
                         val displayName = call.contact?.displayName?.takeIf { it.isNotBlank() }
                             ?: call.contact?.username?.takeIf { it.isNotBlank() }
                             ?: call.peerUri.rawRingId.take(12).ifEmpty { call.peerUri.uri }
+                        reportedIncoming[callId] = true
+                        if (misreportedAsOutgoing) {
+                            Log.w(TAG, "call $callId was reported as outgoing; re-reporting as incoming")
+                        }
                         reportIncomingCall(callId, accountId, displayName, call.hasVideo())
                     } else {
+                        reportedIncoming[callId] = false
                         reportOutgoingCall(callId, accountId, call.peerUri.uri, call.hasVideo())
                     }
                 }
@@ -172,6 +196,7 @@ class JamiTelecomManager(
                     pendingConnectionState[callId] = Call.CallStatus.OVER
                 }
                 callToAccount.remove(callId)
+                reportedIncoming.remove(callId)
             }
             else -> { /* CONNECTING / SEARCHING / INACTIVE — no Telecom action needed */ }
         }

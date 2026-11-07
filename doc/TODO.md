@@ -78,11 +78,20 @@ routing of a call to it.
   posted. With the setting **off** and a restart, the same request surfaced as "Requests (1)"
   with the pending-invitation banner, so the filtering is setting-driven and the startup poll
   path works. Observable only because of the logging fix above.
-- [ ] **The contact-request notification still has no verdict.** The startup poll surfaces a
-  request but does not notify (by design — the notification hangs off the live event). A fresh
-  live request was prepared on B (conversation `d2a8a8a2…`) but never reached A: the Pixel 7a is
-  in **airplane mode** (Wi-Fi only) and its daemon logged no DHT activity for two minutes. Redo
-  with A's radio on; everything else is in place.
+- [x] **The contact-request notification works.** Verified on hardware 2026-11-07 09:00. A
+  fresh request from B's throwaway reached A and produced
+  `ConversationFacade: onConversationRequestReceived: 46814601…` →
+  `AndroidNotificationService: Showing trust request notification … 1 pending`, a live record on
+  `channel=jami_requests` with `actions=2`, and a shade entry reading **"Neue Einladung"** with
+  **Annehmen / Ablehnen**. Tapping Annehmen accepted it (the daemon fetched the conversation and
+  the notification cleared), so both actions work.
+
+  Two corrections to what the earlier run concluded. The Pixel 7a's **airplane mode was never
+  the cause** — Wi-Fi is connected and `bootstrap.jami.net` answers in 87 ms; the earlier
+  invites did arrive, just later than the two minutes that were waited. The real obstacle is the
+  one already recorded above: **two accounts that are already contacts cannot produce a trust
+  request**, so a fresh one needs the contact dropped on *both* sides first. With that done the
+  request landed within 20 s of restarting the sender.
 
 **Two bugs found during that run, both fixed:**
 
@@ -121,6 +130,61 @@ routing of a call to it.
   the input in both states; keeping the input and holding the message is the better behaviour,
   it just has to say so. Computed before the suspending history load, so it is right from the
   moment the screen appears. Three new tests in `SendQueueServiceTest`.
+
+**Device run of 2026-11-07 (second session, 06:40–09:10). Everything below was verified on the
+Pixel pair with the build at that commit.**
+
+- [x] **The composer notice for a held message**, in both wordings: "Waiting for the invitation
+  to be accepted…" while B's invite to A was unanswered, and the reference's "Downloading
+  conversation from peer" after the contact was deleted and the conversation fell back to
+  syncing. The bubble appeared with its clock glyph, the log read `SendQueueService: held
+  message 3 for d2a8a8a2… until it is live`, and the moment A accepted,
+  `conversation d2a8a8a2… is live; sending 1 held message(s)` fired, the notice disappeared and
+  the message was delivered. **That also closes the UI-driven verification the durable outbox
+  (F4) had been owed since 2026-09-18** — the `send-before-member-join` e2e scenario bypasses
+  the outbox, this did not.
+- [x] **The details screen leaves when its contact is deleted**, on both devices (Android 11 and
+  Android 17): the screen closed by itself and the daemon logged
+  `removeContact: 66d57f55… (banned: false)`.
+- [x] **Lock-screen notification visibility reaches the notification.** With the setting on
+  Secret, two newly posted message notifications came out `vis=SECRET` while the ones posted
+  before the change stayed `vis=PRIVATE`.
+- [x] **The proximity wake lock.** Answering an audio call acquired
+  `PROXIMITY_SCREEN_OFF_WAKE_LOCK 'jami:callProximity' ACQUIRE_CAUSES_WAKEUP ON_AFTER_RELEASE`,
+  and hanging up released it (`REL jami:callProximity`, none held afterwards). The
+  speaker-on/off half was **not** exercised — the taps did not land on the speaker button, and
+  no `toggleSpeakerphone` log appeared, so that path is still unverified.
+
+**The run's own find — incoming calls could not be answered at all (fixed, verified):**
+
+- [x] **An incoming call was reported to Telecom as outgoing, so it had no answerable UI.**
+  B called A twice and both rang out as missed, with no ringtone and no call screen. A's log:
+  `CallService: onCallStateChanged: state=INCOMING` → `HardwareService: updateAudioState:
+  status=RINGING incoming=false` → `JamiTelecomManager: placeCall` →
+  `JamiConnectionService: onCreateOutgoingConnection: missing callId or accountId`.
+  Cause: an incoming call's **first** daemon state change is CONNECTING, which arrives before
+  the incomingCall signal and already carries a peer number, so `CallService.addCall` created
+  the call as OUTGOING and then kept it — its replace condition only looked at an empty peerUri,
+  never at the direction. `JamiTelecomManager` had meanwhile latched the call as outgoing and
+  would not re-report it. Both halves fixed: `addCall` now lets the caller's direction win, and
+  the Telecom layer re-reports a call as incoming if it was reported as outgoing and no
+  Connection exists yet. Covered by
+  `aStateChangeBeforeTheIncomingSignalDoesNotMakeTheCallOutgoing`. **Verified on the device
+  after the fix:** `updateAudioState: status=RINGING incoming=true`, the incoming-call screen
+  with Accept/Decline, a 1 min 24 s answered call, and the proximity lock above.
+
+**Smaller things seen on 2026-11-07, not addressed:**
+
+- A long-ish message's timestamp overlaps the text in the bubble ("held-test-064206:43"): the
+  transparent trailing spacer that reserves room for the overlay is not wide enough.
+- The conversation-details screen shows "Unknown" as the display name with the registered name
+  as the subtitle, and a "?" avatar, for a peer the chat screen renders with name and avatar.
+- The chat screen stays open on a conversation whose contact was just deleted (the details
+  screen now leaves, but it pops back *into* that chat). The reference closes the whole
+  conversation.
+- `avc: denied { link }` from libgit2 on the Pixel 2 during swarm writes — benign here (the
+  repo was created and synced), but it is the SELinux hard-link restriction, worth knowing
+  before blaming it for a stall.
 
 **Still owed a verdict**
 

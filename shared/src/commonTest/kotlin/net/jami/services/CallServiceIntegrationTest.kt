@@ -28,6 +28,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -123,6 +124,35 @@ class CallServiceIntegrationTest {
         val call = callService.getCall("call_005")
         assertNotNull(call)
         assertTrue(call.isIncoming)
+    }
+
+    /**
+     * The daemon announces an incoming call twice: a CONNECTING state change first, then the
+     * incomingCall signal. The state change creates the call, and because `getCallDetails`
+     * already returns a peer number for it, the call was kept as OUTGOING when the signal
+     * arrived — the direction was never corrected.
+     *
+     * On Android that fed Telecom the outgoing path for a call it had never placed, so the
+     * call rang in the daemon with no answerable UI and timed out as missed (Pixel 7a /
+     * Android 17, 2026-11-07).
+     */
+    @Test
+    fun aStateChangeBeforeTheIncomingSignalDoesNotMakeTheCallOutgoing() = runTest {
+        val stub = StubDaemonBridge()
+        val (accountService, callService) = makeServices(stub, this)
+        stub.callDetails["call_in"] = mapOf(Call.KEY_PEER_NUMBER to "jami:peer456")
+
+        // The daemon's own order: CONNECTING, then the incomingCall signal.
+        callService.onCallStateChanged("acc1", "call_in", "CONNECTING", 0)
+        advanceUntilIdle()
+        assertFalse(callService.getCall("call_in")!!.isIncoming, "outgoing until told otherwise")
+
+        callService.onIncomingCall("acc1", "call_in", "jami:peer456", emptyList())
+        advanceUntilIdle()
+
+        val call = callService.getCall("call_in")
+        assertNotNull(call)
+        assertTrue(call.isIncoming, "the incomingCall signal is authoritative about direction")
     }
 
     @Test

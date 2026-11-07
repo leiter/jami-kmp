@@ -1008,7 +1008,19 @@ class CallService(
         val existing = calls[callId]
         // If callStateChanged created the call first (race) it has an empty peerUri and may have
         // wrong direction. Replace it so onIncomingCall's richer info wins.
-        val call = if (existing != null && !existing.peerUri.isEmpty) {
+        //
+        // The direction check is not redundant with the peerUri one. An incoming call's first
+        // daemon state change is CONNECTING, which arrives *before* the incomingCall signal and
+        // carries a peer number of its own (getCallDetails), so the call was created as
+        // OUTGOING with a non-empty peerUri and this method then kept it — the direction was
+        // never corrected. On Android that made Telecom take the outgoing path
+        // (placeCall → onCreateOutgoingConnection, which fails for a call it never placed), so
+        // an incoming call rang in the daemon with no answerable UI and no ringtone, and timed
+        // out as missed (seen on a Pixel 7a / Android 17, 2026-11-07). The caller of this
+        // method knows the real direction; let it win.
+        val directionMatches = existing != null &&
+            existing.isIncoming == (direction == Direction.INCOMING)
+        val call = if (existing != null && !existing.peerUri.isEmpty && directionMatches) {
             existing
         } else {
             Call(
