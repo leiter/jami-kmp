@@ -92,8 +92,11 @@ enum class ConnectivityMode {
 }
 
 /**
- * Notification visibility on the lock screen.
- * Values match Android NotificationCompat.VISIBILITY_*.
+ * Notification visibility on the lock screen, as chosen in app settings.
+ *
+ * These are *not* the platform's own values — Android's VISIBILITY_SECRET is -1, not 2 — so
+ * `AndroidNotificationService.applyUserVisibility` maps them explicitly. Android-only: iOS has
+ * no per-notification lock-screen visibility.
  */
 object NotificationVisibility {
     const val PRIVATE = 0

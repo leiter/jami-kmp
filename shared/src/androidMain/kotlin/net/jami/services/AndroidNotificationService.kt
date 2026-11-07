@@ -35,6 +35,7 @@ import net.jami.model.*
 import net.jami.repository.SettingsRepository
 import net.jami.ui.platform.LocalPrefKeys
 import net.jami.ui.platform.LocalPrefs
+import net.jami.model.settings.NotificationVisibility
 import net.jami.utils.Log
 import org.jetbrains.compose.resources.getString
 
@@ -243,6 +244,7 @@ class AndroidNotificationService(
         // In a full implementation, this would include call actions and caller info
         val builder = NotificationCompat.Builder(context, callsChannel())
             .setSmallIcon(smallIcon)
+            .applyUserVisibility()
             .setContentTitle(runBlocking { getString(Res.string.notif_current_call) })
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_CALL)
@@ -331,6 +333,7 @@ class AndroidNotificationService(
 
         val builder = NotificationCompat.Builder(context, callsChannel())
             .setSmallIcon(smallIcon)
+            .applyUserVisibility()
             .setContentTitle(title)
             .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -432,6 +435,7 @@ class AndroidNotificationService(
 
         val notification = NotificationCompat.Builder(context, callsChannel())
             .setSmallIcon(smallIcon)
+            .applyUserVisibility()
             .setContentTitle(title)
             .setContentText(peerName)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -457,6 +461,7 @@ class AndroidNotificationService(
 
         val notification = NotificationCompat.Builder(context, callsChannel())
             .setSmallIcon(smallIcon)
+            .applyUserVisibility()
             .setContentTitle(conversationName)
             .setContentText(contentText)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -546,6 +551,7 @@ class AndroidNotificationService(
 
         val builder = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
             .setSmallIcon(smallIcon)
+            .applyUserVisibility()
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setAutoCancel(true)
@@ -565,6 +571,7 @@ class AndroidNotificationService(
         val summaryNotificationId = NOTIF_MESSAGE_GROUP_SUMMARY_BASE + conversationKey.hashCode()
         val summaryBuilder = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
             .setSmallIcon(smallIcon)
+            .applyUserVisibility()
             .setContentText(senderName)
             .setGroup(groupKey)
             .setGroupSummary(true) // This is the group summary
@@ -622,6 +629,7 @@ class AndroidNotificationService(
 
         val builder = NotificationCompat.Builder(context, CHANNEL_REQUESTS)
             .setSmallIcon(smallIcon)
+            .applyUserVisibility()
             .setContentTitle(runBlocking { getString(Res.string.new_invitation_request_title) })
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_SOCIAL)
@@ -712,6 +720,7 @@ class AndroidNotificationService(
 
         val notification = NotificationCompat.Builder(context, CHANNEL_FILE_TRANSFER)
             .setSmallIcon(smallIcon)
+            .applyUserVisibility()
             .setContentTitle(info.displayName)
             .setContentText("${info.bytesProgress} / ${info.totalSize} bytes")
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -774,6 +783,7 @@ class AndroidNotificationService(
 
         val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
             .setSmallIcon(smallIcon)
+            .applyUserVisibility()
             .setContentTitle(runBlocking { getString(Res.string.notif_location_title, contact.displayName ?: contact.uri.uri) })
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
@@ -842,6 +852,27 @@ class AndroidNotificationService(
     }
 
     // ==================== Private Helpers ====================
+
+    /**
+     * Apply the user's lock-screen visibility choice (App settings → Notifications).
+     *
+     * The preference was stored and shown in the settings UI but never reached a notification:
+     * every one of them was posted at the platform default, so "Hide content on the lock screen"
+     * did nothing. Applied to the notifications that carry contact content — calls, messages,
+     * requests, transfers, location — and not to the foreground-service ones, which carry none
+     * and are pinned to [NotificationCompat.VISIBILITY_PRIVATE] already.
+     *
+     * [NotificationVisibility]'s own constants are not the platform's (SECRET is 2 here, -1
+     * there), so the mapping is explicit.
+     */
+    private fun NotificationCompat.Builder.applyUserVisibility(): NotificationCompat.Builder =
+        setVisibility(
+            when (LocalPrefs.getInt(LocalPrefKeys.NOTIFICATION_VISIBILITY, NotificationVisibility.PRIVATE)) {
+                NotificationVisibility.PUBLIC -> NotificationCompat.VISIBILITY_PUBLIC
+                NotificationVisibility.SECRET -> NotificationCompat.VISIBILITY_SECRET
+                else -> NotificationCompat.VISIBILITY_PRIVATE
+            }
+        )
 
     /**
      * Apply sound and vibration settings to notification builder.
