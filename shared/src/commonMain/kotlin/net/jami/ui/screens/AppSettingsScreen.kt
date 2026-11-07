@@ -49,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import net.jami.ui.platform.AppPermission
 import net.jami.ui.platform.PermissionRequesterEffect
+import net.jami.ui.platform.rememberBatteryOptimizationState
 import net.jami.ui.platform.RingtoneLauncherEffect
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
@@ -101,6 +102,11 @@ fun AppSettingsScreen(
     // during onboarding (e.g. account created via link/import, not the fresh-account wizard).
     // Request it here instead of assuming it was already handled, so the toggle doesn't
     // silently no-op — see doc/TODO.md "Sync system contacts" bug writeup.
+    // Android's Doze freezes and eventually kills the daemon process unless the app is exempt
+    // from battery optimisation, which no foreground service can substitute for. Reports false
+    // on every other platform, where the rows below are simply not shown.
+    val battery = rememberBatteryOptimizationState()
+
     var requestContactsPermission by remember { mutableStateOf(false) }
     PermissionRequesterEffect(AppPermission.Contacts, requestContactsPermission) { granted ->
         requestContactsPermission = false
@@ -499,8 +505,24 @@ fun AppSettingsScreen(
                 label = stringResource(Res.string.pref_persistNotification_title),
                 description = stringResource(Res.string.pref_persistNotification_summary),
                 checked = state.isRunInBackground,
-                onCheckedChange = { viewModel.toggleRunInBackground() },
+                onCheckedChange = { checked ->
+                    viewModel.toggleRunInBackground()
+                    // Turning this on is the moment the exemption starts to matter, and the one
+                    // moment the user has said they want Jami alive in the background — so ask
+                    // then, instead of hoping they find the row below.
+                    if (checked && !battery.isExempt) battery.request()
+                },
             )
+            if (battery.isSupported) {
+                NavigationRow(
+                    label = stringResource(Res.string.pref_batteryOptimization_title),
+                    description = stringResource(
+                        if (battery.isExempt) Res.string.pref_batteryOptimization_summary_granted
+                        else Res.string.pref_batteryOptimization_summary_denied
+                    ),
+                    onClick = { battery.request() },
+                )
+            }
             JamiToggle(
                 label = stringResource(Res.string.pref_systemDialer_title),
                 description = stringResource(Res.string.pref_systemDialer_summary),

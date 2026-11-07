@@ -68,6 +68,10 @@
     <string name="pref_persistNotification_title">Run in the background</string>
     <string name="pref_persistNotification_summary">Allow running in the background to receive calls and messages.</string>
 
+    <string name="pref_batteryOptimization_title">Unrestricted battery usage</string>
+    <string name="pref_batteryOptimization_summary_granted">Allowed. Jami can stay connected while the screen is off.</string>
+    <string name="pref_batteryOptimization_summary_denied">Not allowed. The system may stop Jami in the background, so calls and messages can be missed.</string>
+
     <string name="pref_newGroup_title">Enable group chat</string>
     <string name="pref_newGroup_summary">Enable creating groups in Jami.</string>
 

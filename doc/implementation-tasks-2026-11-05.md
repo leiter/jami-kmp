@@ -130,8 +130,20 @@ on 2026-10-31.
 
 ## E. App settings / platform integration
 
-- **E1 — battery-optimisation exemption prompt.** No `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`
-  intent in KMP; the reference prompts for whitelisting.
+- **E1 — ~~battery-optimisation exemption prompt~~.** Done 2026-11-08. Premise confirmed first:
+  no `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` anywhere — and the reference client does not prompt
+  either, so this was written from scratch rather than resampled. A new
+  `rememberBatteryOptimizationState()` expect/actual (`ui/platform/BatteryOptimization.kt`)
+  reports `isSupported`/`isExempt` and launches the system request; the Android actual re-reads
+  `PowerManager.isIgnoringBatteryOptimizations()` on every `ON_RESUME` (the Activity result is
+  `RESULT_CANCELED` even on a grant), goes through `PendingActivityResultTracker` like the other
+  system-Activity launchers, and falls back to the settings list and then the app-details page
+  for ROMs without the dialog. The other four source sets report `isSupported = false` /
+  `isExempt = true`, so no caller nags where there is nothing to grant. Surfaced in two places:
+  an explained dialog at the end of `AccountSummaryScreen`'s onboarding permission chain (queued
+  behind the notifications-denied dialog), and a status row in `AppSettingsScreen`'s System
+  section, which is also prompted from when "Run in the background" is switched on.
+  **A device check is still owed.**
 - **E2 — language selector.** `UiSettings` already carries a `language` field, so this is UI
   wiring in `AppSettingsScreen` plus applying the locale.
 - **E3 — "display name in notifications" privacy toggle.** Reference lets users hide contact
@@ -413,7 +425,7 @@ in `AccountAdvancedSettingsScreen`, connectivity mode, video bitrate, "place sys
 ## Confirmed already recorded — no action
 
 Checked against source and found both true and already written down, so the screenshots carrying
-them add nothing: haptics on answer/decline (D2), battery-optimisation exemption (E1), language
+them add nothing: haptics on answer/decline (D2), language
 selector (E2), app shortcuts (E4), @mentions (C1), Markdown (C2), read markers (C3), the
 six-emoji reaction picker (C4), Robolectric for the four excluded Android tests (I1),
 `StubDaemonBridge` discarding its callbacks (I2), outbox device verification (I4), the microphone

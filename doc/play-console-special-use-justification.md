@@ -110,3 +110,46 @@ API 34), so switching the runtime constant needs no manifest change.
 - Foreground service types, including the `specialUse` declaration requirements and the note
   that the subtype values "are reviewed during the app submission process":
   <https://developer.android.com/develop/background-work/services/fg-service-types>
+
+---
+
+# `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` justification
+
+Added 2026-11-08, when the exemption prompt was implemented (task E1). This permission is
+separate from the foreground-service declaration above and is reviewed under its own policy,
+but the argument is the same one, so it lives here rather than in a second document.
+
+## Why the app asks
+
+A foreground service does not exempt a process from Doze or App Standby. With the screen off
+and the device unplugged, the system freezes the app's network access in Doze maintenance
+windows and, on most vendor ROMs, eventually kills the process outright. For Jami that is not
+a delayed sync — it is a missed call, because the daemon's reachability *is* the delivery
+mechanism (see "Why this is necessary" above). The exemption is what makes "Run in the
+background" mean what it says.
+
+## Where it is requested
+
+- `AccountSummaryScreen`, the last step of the onboarding permission chain, behind an
+  in-app dialog that explains the reason before the system dialog appears.
+- `AppSettingsScreen` → System → "Unrestricted battery usage", which shows the current state
+  and is also prompted from when the user switches "Run in the background" on.
+
+Both go through `rememberBatteryOptimizationState()`
+(`shared/src/commonMain/kotlin/net/jami/ui/platform/BatteryOptimization.kt`). The app never
+asks more than once per entry point, never blocks a flow on a refusal, and — since no app can
+revoke its own exemption — sends an already-exempt user to the system list rather than
+pretending to toggle it off.
+
+## Policy position
+
+Google Play restricts `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` to a published list of acceptable
+use cases, of which the relevant one here is VoIP / real-time communication that must stay
+reachable in the background. Jami is a VoIP and messaging app with no push backend of its own,
+which is the strongest form of that case. **Check the current wording of the policy page before
+submitting** — this list has been revised more than once:
+<https://support.google.com/googleplay/android-developer/answer/9888170>
+
+If the permission is nevertheless rejected, the app still functions: the prompt is removed, the
+settings row hides itself (the same code path as the non-Android platforms, where
+`isSupported` is false), and delivery falls back to whatever the foreground service survives.

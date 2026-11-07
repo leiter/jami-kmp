@@ -43,6 +43,7 @@ import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.components.notification.JamiAlertDialog
 import net.jami.ui.platform.AppPermission
 import net.jami.ui.platform.PermissionRequesterEffect
+import net.jami.ui.platform.rememberBatteryOptimizationState
 import net.jami.ui.theme.JamiTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,6 +56,11 @@ fun AccountSummaryScreen(
     var requestNotif by remember { mutableStateOf(false) }
     var requestContacts by remember { mutableStateOf(false) }
     var showNotifDeniedDialog by remember { mutableStateOf(false) }
+    var batteryDialogPending by remember { mutableStateOf(false) }
+
+    // isExempt is true wherever the platform has nothing of the kind to grant, so the dialog
+    // below is Android-only without a platform check here.
+    val battery = rememberBatteryOptimizationState()
 
     LaunchedEffect(Unit) { requestNotif = true }
 
@@ -66,6 +72,11 @@ fun AccountSummaryScreen(
 
     PermissionRequesterEffect(AppPermission.Contacts, requestContacts) {
         requestContacts = false
+        // Last of the three, and the one with the most teeth on Android: notifications alone do
+        // not keep the daemon alive, Doze kills the process a few minutes after the screen goes
+        // off. Explained in our own dialog first — the system one gives no reason, and a refusal
+        // there is remembered.
+        if (!battery.isExempt) batteryDialogPending = true
     }
 
     if (showNotifDeniedDialog) {
@@ -76,6 +87,22 @@ fun AccountSummaryScreen(
             dismissText = null,
             onConfirm = { showNotifDeniedDialog = false },
             onDismiss = { showNotifDeniedDialog = false },
+        )
+    }
+
+    // Queued behind the notifications-denied dialog: the contacts result can arrive while that
+    // one is still up, and two stacked dialogs would hide one another.
+    if (batteryDialogPending && !showNotifDeniedDialog) {
+        JamiAlertDialog(
+            title = stringResource(Res.string.permission_dialog_battery_title),
+            body = stringResource(Res.string.permission_dialog_battery_message),
+            confirmText = stringResource(Res.string.permission_dialog_battery_confirm),
+            dismissText = stringResource(Res.string.permission_dialog_battery_dismiss),
+            onConfirm = {
+                batteryDialogPending = false
+                battery.request()
+            },
+            onDismiss = { batteryDialogPending = false },
         )
     }
 

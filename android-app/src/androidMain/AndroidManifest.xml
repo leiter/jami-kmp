@@ -29,6 +29,13 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
+    <!-- Battery-optimisation exemption. Needed to show the one-tap system dialog
+         (ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS); without the exemption Doze freezes and
+         then kills the daemon process while the screen is off, dropping incoming calls and
+         messages. Jami qualifies for the Play Store's VoIP exception to the restricted-permission
+         policy — justification in doc/play-console-special-use-justification.md. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <!-- Auto-start after device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
