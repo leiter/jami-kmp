@@ -251,35 +251,38 @@ follows is only what no file carried.
 
 ## M. Repository and document hygiene
 
-- **M1 — `main` is 25 commits ahead of `origin/main` and 5 behind.** Every fix from the
-  2026-11-06/07 device sessions exists only on this machine, and origin carries five commits
-  that have never been merged here. Reconcile and push; this is the whole stabilization effort
-  sitting undefended.
+*M1–M3 were written against local `main` before it was brought up to date. Merging
+`origin/main` on 2026-11-07 answered most of them; what each one actually turned out to be is
+recorded below rather than deleted, because the screenshots that raised them will otherwise
+raise them again.*
 
-- **M2 — the iOS parity analysis is stranded on two unmerged branches.**
-  `doc/ios-native-parity-analysis.md` is not on `main` and nothing references it; it lives on
-  `docs/ios-native-parity-analysis` (`93d946b`) and on
-  `feat/ios-app-group-and-notification-extension`, which is three commits ahead of `main` and
-  also carries real work — App Group entitlement, Info.plist/bundle fixes, a notification
-  service extension scaffold, removal of the dead per-frame video copy, and a video-pipeline
-  plan. Decide whether to merge that branch or close it; leaving it is how the analysis got
-  lost. Its findings not covered by section F: no Notification Service Extension (a terminated
-  app gets no notification at all from a message push), no Share Extension, duplicate
-  `UIBackgroundModes` key in Info.plist with `aps-environment = development`, `processing`/`fetch`
-  declared without `BGTaskScheduler` identifiers, `HardwareService` self-activating
-  `AVAudioSession` instead of overriding CallKit's `didActivateAudioSession`, and
-  `IOSNotificationService` using `runBlocking` for string resources on the main thread.
+- **M1 — resolved 2026-11-07.** `main` had drifted 25 ahead of `origin/main` and 5 behind: the
+  whole 2026-11-06/07 device-session effort sat only on this machine, while origin carried the
+  2026-10-31 iOS reconciliation. Merged clean (`ort`, no conflicts; `doc/TODO.md` and `STATUS.md`
+  auto-merged). **Still unpushed — 27 commits ahead.** Pushing is the half that actually defends
+  the work.
 
-- **M3 — `ios_implementation_gap.md` is stale and is what everyone reads instead.** It predates
-  the 2026-09-08 commit wave (`ed6673a`, `94a1b76`, `707f849`, `de04740`), so its §2.1/§3.1/§3.2
-  are largely closed in code — yet `CLAUDE.md`, `README.md`, `STATUS.md` and three plan docs all
-  cite it as current. Reconcile it against M2's analysis or mark it superseded the way
-  `doc/gap-analysis-medium-opportunities.md` already is.
+- **M2 — mostly already done; what remains is deliberate.** `doc/ios-native-parity-analysis.md`
+  and `doc/ios-video-pipeline.md` are on `main` — `4a2dcad` and `8baaf0f` were cherry-picked off
+  `feat/ios-app-group-and-notification-extension` on 2026-10-31, and `doc/TODO.md:1138` records
+  it. The duplicate `UIBackgroundModes` key in `Info.plist` was fixed the same day (`938e572`).
+  What is still only on the branch is `5971f3c`, the App Group entitlement plus the Notification
+  Service Extension scaffold, and it is held back **on purpose**: it moves the daemon's working
+  directory into the shared container, which needs the group registered on the App ID first, and
+  it is only useful once a push-capable proxy exists (G1). Merge it when those two are true, not
+  before. The iOS gaps themselves now live in `doc/ios-native-parity-analysis.md`; read that
+  rather than the list a screenshot once carried.
 
-- **M4 — five stale local branches.** `daemon-from-source-reconcile`,
-  `docs/ios-native-parity-analysis`, `feat/ios-app-group-and-notification-extension`,
-  `fix/settings-stored-but-unapplied`, `stability/phase1-daemon-connectivity`. The middle two
-  are M2; the others look merged or superseded, but nothing says so.
+- **M3 — withdrawn.** `ios_implementation_gap.md` was stale when the screenshot said so, but it
+  has been reconciled against the code twice since (2026-10-26, then 2026-10-31 for the iOS
+  bundle claims). `CLAUDE.md`, `README.md` and `STATUS.md` can keep citing it.
+
+- **M4 — five local branches, three of them now dead weight.** `daemon-from-source-reconcile`,
+  `fix/settings-stored-but-unapplied` and `stability/phase1-daemon-connectivity` are **fully
+  merged into `main`** (zero unmerged commits each) and can be deleted.
+  `docs/ios-native-parity-analysis` holds one commit whose content reached `main` by cherry-pick,
+  so it is deletable too once someone confirms the file matches. `feat/ios-app-group-and-
+  notification-extension` keeps its three commits for the reason in M2 — leave it.
 
 ## Additions to existing sections
 
