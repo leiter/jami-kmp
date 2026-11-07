@@ -10,6 +10,7 @@ import net.jami.repository.DraftRepository
 import net.jami.testAudioRecorderService
 import net.jami.ui.viewmodel.ChatViewModel
 import net.jami.ui.viewmodel.DeliveryStatus
+import net.jami.ui.viewmodel.MessageHold
 import net.jami.viewmodel.TestServiceStack
 import net.jami.viewmodel.makeSendQueue
 import net.jami.viewmodel.makeTestServiceStack
@@ -17,6 +18,7 @@ import net.jami.viewmodel.viewModelScope
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -182,6 +184,56 @@ class SendQueueServiceTest {
         // Still pending until the daemon echoes it back; SEND_TIMEOUT_MS later it would be FAILED.
         val bubble = vm.state.value.messages.single { it.text == "hello" }
         assertTrue(bubble.deliveryStatus == DeliveryStatus.SENDING || bubble.deliveryStatus == DeliveryStatus.FAILED)
+    }
+
+    /**
+     * The hold itself is invisible: the bubble carries a clock glyph and nothing else, which is
+     * indistinguishable from "sending" (seen on a device 2026-11-07 — the sender had no
+     * indication at all). The composer now says which of the two reasons applies, and stops
+     * saying it the moment the conversation can deliver.
+     */
+    @Test
+    fun theComposerSaysTheInviteHasNotBeenAcceptedYet() = runTest {
+        val env = setUp(peerRole = "invited")
+        val vmScope = viewModelScope()
+        val vm = ChatViewModel(
+            env.stack.conversationFacade, env.stack.accountService, StubDeviceRuntimeService(),
+            DraftRepository(InMemoryClientSettingsStore(), vmScope), testAudioRecorderService(), env.queue, vmScope,
+        )
+        vm.loadConversation(CONV)
+        advanceUntilIdle()
+        assertEquals(MessageHold.AWAITING_PEER, vm.state.value.messageHold)
+
+        env.peerJoins()
+        advanceUntilIdle()
+        assertNull(vm.state.value.messageHold)
+    }
+
+    @Test
+    fun theComposerSaysTheConversationIsStillSyncing() = runTest {
+        val env = setUp(peerRole = "member")
+        env.stack.conversationFacade.getConversation(ACC, convUri)!!.setMode(Conversation.Mode.Syncing)
+        val vmScope = viewModelScope()
+        val vm = ChatViewModel(
+            env.stack.conversationFacade, env.stack.accountService, StubDeviceRuntimeService(),
+            DraftRepository(InMemoryClientSettingsStore(), vmScope), testAudioRecorderService(), env.queue, vmScope,
+        )
+        vm.loadConversation(CONV)
+        advanceUntilIdle()
+        assertEquals(MessageHold.SYNCING, vm.state.value.messageHold)
+    }
+
+    @Test
+    fun theComposerSaysNothingWhenTheConversationIsLive() = runTest {
+        val env = setUp(peerRole = "member")
+        val vmScope = viewModelScope()
+        val vm = ChatViewModel(
+            env.stack.conversationFacade, env.stack.accountService, StubDeviceRuntimeService(),
+            DraftRepository(InMemoryClientSettingsStore(), vmScope), testAudioRecorderService(), env.queue, vmScope,
+        )
+        vm.loadConversation(CONV)
+        advanceUntilIdle()
+        assertNull(vm.state.value.messageHold)
     }
 
     @Test

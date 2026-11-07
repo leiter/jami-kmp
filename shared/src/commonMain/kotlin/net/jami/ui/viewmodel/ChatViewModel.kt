@@ -125,6 +125,23 @@ data class ReplyPreview(
 enum class DeliveryStatus { SENDING, DELIVERED, READ, FAILED, WAITING_TO_SYNC }
 
 /**
+ * Why a message sent into this conversation right now cannot be delivered yet.
+ *
+ * libjami drops a message committed into a swarm with no peer device (finding F4), so such a
+ * send is held in the durable outbox instead ([net.jami.services.SendQueueService]). That is
+ * invisible on its own — the bubble carries a small clock glyph and nothing else — so the
+ * composer says which of the two reasons applies. The reference client refuses the send
+ * outright and shows the same two states as a banner.
+ */
+enum class MessageHold {
+    /** The swarm's git repo is still being cloned from the peer. */
+    SYNCING,
+
+    /** A 1:1 whose peer the daemon still lists as only invited: they have not accepted yet. */
+    AWAITING_PEER,
+}
+
+/**
  * A grouped emoji reaction: one entry per distinct emoji with an aggregated count.
  */
 data class ReactionGroup(
@@ -184,6 +201,11 @@ data class ChatState(
      * shown once as a snackbar and then cleared via [ChatViewModel.clearConversationError].
      */
     val conversationError: String? = null,
+    /**
+     * Set while a message sent now would be held in the durable outbox rather than delivered.
+     * The composer shows a one-line notice; null means the conversation is live.
+     */
+    val messageHold: MessageHold? = null,
 )
 
 /**
@@ -242,6 +264,7 @@ class ChatViewModel(
                     })
                 }
                 armSendWatchdog(bubbleId)
+                refreshMessageHold()
             }
         }
 
@@ -302,6 +325,14 @@ class ChatViewModel(
                                 })
                             }
                         }
+                    }
+                    // The conversation may have become able to take messages (or stopped being
+                    // able to): re-evaluate the composer notice.
+                    is ConversationEvent.ConversationReady -> {
+                        if (event.conversationId == convId) refreshMessageHold()
+                    }
+                    is ConversationEvent.MemberEvent -> {
+                        if (event.conversationId == convId) refreshMessageHold()
                     }
                     is ConversationEvent.ReactionAdded -> {
                         if (event.conversationId == convId) rebuildMessageReactions(event.messageId)
@@ -373,6 +404,9 @@ class ChatViewModel(
                     peerUri = peerUri,
                     isLegacy = isLegacy,
                 )
+                // Before the history load below, which suspends until the daemon answers:
+                // the composer notice must be right from the moment the screen appears.
+                refreshMessageHold()
 
                 // Mark conversation as visible and read all pending messages.
                 // Mirrors Android ConversationPresenter.resume().
@@ -584,6 +618,7 @@ class ChatViewModel(
                     if (current.messages.any { it.id == id }) current
                     else current.copy(messages = current.messages + heldBubble(entry))
                 }
+                refreshMessageHold()
             }
             return
         }
@@ -601,6 +636,29 @@ class ChatViewModel(
         _state.update { it.copy(messages = it.messages + optimisticItem) }
 
         dispatchSend(accountId, conversationUri, optimisticId, text, replyTo)
+    }
+
+    /**
+     * Re-evaluate whether this conversation can take a message, for the composer notice.
+     *
+     * Asks [net.jami.services.SendQueueService] rather than deciding again here, so the notice
+     * and the hold cannot disagree; the mode only picks the wording.
+     */
+    private fun refreshMessageHold() {
+        val accountId = currentAccountId ?: return
+        val conversationId = currentConversationId ?: return
+        val uri = Uri(Uri.SWARM_SCHEME, conversationId)
+        val hold = if (!sendQueue.shouldHold(accountId, uri)) {
+            null
+        } else if (conversationFacade.getConversation(accountId, uri)?.mode == Conversation.Mode.OneToOne) {
+            // Live 1:1 whose peer is still only invited — the swarm exists, they have not joined.
+            MessageHold.AWAITING_PEER
+        } else {
+            MessageHold.SYNCING
+        }
+        if (_state.value.messageHold != hold) {
+            _state.update { it.copy(messageHold = hold) }
+        }
     }
 
     private fun outboxBubbleId(entryId: Long) = "outbox-$entryId"
@@ -989,6 +1047,7 @@ class ChatViewModel(
             val inFlight = _state.value.messages.filter { it.id.startsWith("pending-") }
             val held = sendQueue.queued(accountId, conversationId).map { heldBubble(it) }
             _state.value = _state.value.copy(messages = withSeparators + inFlight + held, isLoading = false)
+            refreshMessageHold()
         } else {
             _state.value = _state.value.copy(isLoading = false)
         }

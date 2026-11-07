@@ -50,6 +50,7 @@ import kotlinx.datetime.toLocalDateTime
 import net.jami.model.ContactEvent
 import net.jami.model.Interaction
 import net.jami.ui.viewmodel.DeliveryStatus
+import net.jami.ui.viewmodel.MessageHold
 import net.jami.ui.viewmodel.ReactionGroup
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.DoneAll
@@ -793,6 +794,40 @@ fun ChatScreen(
                     Text(
                         text = stringResource(Res.string.chat_sip_call_only),
                         style = JamiTheme.typography.bodyMedium,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                    )
+                }
+            }
+            // Messages sent while the swarm has no peer device are held in the durable outbox
+            // instead of being handed to the daemon, which would drop them. Say so: the held
+            // bubble's clock glyph on its own is indistinguishable from "sending".
+            val messageHold = state.messageHold
+            if (!state.isSearchActive && !state.isLegacy && messageHold != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(JamiTheme.colors.surfaceVariant)
+                        .padding(
+                            horizontal = JamiTheme.spacing.m,
+                            vertical = JamiTheme.spacing.s,
+                        ),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Schedule,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = JamiTheme.colors.onSurfaceVariant,
+                    )
+                    Text(
+                        text = stringResource(
+                            when (messageHold) {
+                                MessageHold.SYNCING -> Res.string.conversation_syncing
+                                MessageHold.AWAITING_PEER -> Res.string.conversation_awaiting_peer
+                            }
+                        ),
+                        style = JamiTheme.typography.bodySmall,
                         color = JamiTheme.colors.onSurfaceVariant,
                     )
                 }
