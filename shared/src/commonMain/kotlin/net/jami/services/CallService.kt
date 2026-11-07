@@ -562,12 +562,40 @@ class CallService(
     /**
      * Returns a flow of Conference updates filtered to a specific call/conference id.
      * Mirrors Android's getConfUpdates(call) reactive chain.
+     *
+     * The flow is seeded with [conferenceFor], because `conferences` is only ever filled by the
+     * daemon's conference signals and a plain 1:1 call never produces one. Without the seed a
+     * 1:1 call had no `Conference` at all for its whole lifetime, and every caller that needs one
+     * silently did nothing — the speaker button among them.
      */
-    fun getConfUpdates(callOrConfId: String): kotlinx.coroutines.flow.Flow<Conference> =
+    fun getConfUpdates(callOrConfId: String): kotlinx.coroutines.flow.Flow<Conference> = flow {
+        conferenceFor(callOrConfId)?.let { emit(it) }
         conferenceUpdates.filter { conf ->
             conf.id == callOrConfId ||
             conf.participants.any { it.daemonId == callOrConfId }
-        }
+        }.collect { emit(it) }
+    }
+
+    /**
+     * The conference a call or conference id belongs to, wrapping a plain call in a
+     * single-participant one when the daemon has not made a real conference for it.
+     *
+     * This is jami-client-android's `addConference(call)` (CallService.kt:531), which its
+     * `getConfUpdates(call)` goes through for exactly the same reason. The wrapper is keyed the
+     * way the reference keys it — `confId ?: callId` — so `onConferenceCreated` replaces it when
+     * a real conference appears (it removes each participant's call-id entry), and the
+     * `CallStatus.OVER` branch of `onCallStateChanged` already drops it with the call.
+     *
+     * It is deliberately not pushed into [_conferenceUpdates]: that flow replays, and a simple
+     * call's wrapper is of no interest to anything but the screen showing that call.
+     */
+    private suspend fun conferenceFor(callOrConfId: String): Conference? = mutex.withLock {
+        conferences[callOrConfId]?.let { return@withLock it }
+        val call = calls[callOrConfId] ?: return@withLock null
+        val confId = call.confId ?: call.daemonId ?: return@withLock null
+        conferences.getOrPut(confId) { Conference(call) }
+            .also { updateCurrentConferences() }
+    }
 
     /**
      * Conference updates for a group call this device hosts.

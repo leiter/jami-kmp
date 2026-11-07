@@ -528,8 +528,19 @@ class CallViewModel(
         // Without a conference there is nothing to switch, and updating the state anyway
         // desynced it from the hardware permanently: the next toggle re-read
         // isSpeakerphoneOn() (still false) and set "on" again, so it never flipped back.
-        val conf = currentConference ?: return
+        //
+        // This used to be reachable on every 1:1 call, because CallService only held a
+        // Conference once the daemon announced one and a 1:1 call never is one — the button did
+        // nothing and said nothing, which is what made it so slow to find on the device. The
+        // conference is now seeded by CallService.getConfUpdates, so the warning below should
+        // never appear; it is here so that if it does, the log says so.
+        val conf = currentConference
+        if (conf == null) {
+            Log.w(TAG, "toggleSpeaker: no conference for call $currentCallId — ignoring the tap")
+            return
+        }
         val newState = !hardwareService.isSpeakerphoneOn()
+        Log.d(TAG, "toggleSpeaker: $newState (conf=${conf.id})")
         hardwareService.toggleSpeakerphone(conf, newState)
         _state.value = _state.value.copy(isSpeakerOn = newState)
     }

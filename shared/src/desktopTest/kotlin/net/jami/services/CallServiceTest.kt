@@ -119,6 +119,56 @@ class CallServiceTest {
     }
 
     @Test
+    fun aPlainOneToOneCallStillGetsAConference() = runTest {
+        // The daemon announces a conference only for real conferences, so a 1:1 call used to
+        // have none for its whole lifetime — and everything in CallViewModel that needs one
+        // (the speaker toggle above all) returned silently. getConfUpdates now seeds a
+        // single-participant conference, the way the reference's addConference() does.
+        val service = createTestCallService()
+        service.onIncomingCall(
+            accountId = "account1",
+            callId = "call123",
+            from = "jami:peer123",
+            mediaList = listOf(
+                mapOf(
+                    "MEDIA_TYPE" to "MEDIA_TYPE_AUDIO",
+                    "LABEL" to "audio_0",
+                    "ENABLED" to "true",
+                    "MUTED" to "false"
+                )
+            )
+        )
+        service.callUpdates.first()
+
+        val conf = service.getConfUpdates("call123").first()
+        assertEquals("call123", conf.id)
+        assertTrue(conf.isSimpleCall)
+        assertEquals("call123", conf.participants.single().daemonId)
+        // Keyed by the call id, so the CallStatus.OVER branch drops it with the call and
+        // onConferenceCreated replaces it if a real conference turns up later.
+        assertNotNull(service.getConference("call123"))
+    }
+
+    @Test
+    fun theSeededConferenceIsDroppedWhenTheCallEnds() = runTest {
+        val service = createTestCallService()
+        service.onIncomingCall(
+            accountId = "account1",
+            callId = "call123",
+            from = "jami:peer123",
+            mediaList = emptyList()
+        )
+        service.callUpdates.first()
+        service.getConfUpdates("call123").first()
+        assertNotNull(service.getConference("call123"))
+
+        service.onCallStateChanged("account1", "call123", "OVER", 0)
+        service.callUpdates.first { it.callStatus == Call.CallStatus.OVER }
+
+        assertEquals(null, service.getConference("call123"))
+    }
+
+    @Test
     fun testGetCallsForAccount() = runTest {
         val service = createTestCallService()
 

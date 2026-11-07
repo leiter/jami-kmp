@@ -152,8 +152,42 @@ Pixel pair with the build at that commit.**
 - [x] **The proximity wake lock.** Answering an audio call acquired
   `PROXIMITY_SCREEN_OFF_WAKE_LOCK 'jami:callProximity' ACQUIRE_CAUSES_WAKEUP ON_AFTER_RELEASE`,
   and hanging up released it (`REL jami:callProximity`, none held afterwards). The
-  speaker-on/off half was **not** exercised — the taps did not land on the speaker button, and
-  no `toggleSpeakerphone` log appeared, so that path is still unverified.
+  speaker-on/off half failed: the lock stayed held across two taps and no `toggleSpeakerphone`
+  line was ever logged. That was not a missed tap — see the find below.
+
+**The run's own find — the speaker button was dead on every 1:1 call (fixed 2026-11-07,
+not yet re-run on the pair):**
+
+- [x] **A 1:1 call never had a `Conference`, so `CallViewModel.toggleSpeaker()` returned on its
+  first line.** `CallService.conferences` was only ever filled by the daemon's conference
+  signals (`onConferenceCreated` / `onConferenceChanged`), and a plain 1:1 call is not a
+  conference as far as the daemon is concerned — so `getConfUpdates` had nothing to emit,
+  `handleConferenceUpdate` never ran, and `currentConference` stayed null for the whole call.
+  `toggleSpeaker` needs one only to hand to `toggleSpeakerphone(conf, enabled)`, and bailed
+  instead. Nothing was logged on either side of the bail, which is the whole reason this read
+  as "the taps did not land".
+
+  The hardware layer was never at fault: `HardwareService.android.kt:259` already releases the
+  proximity lock on speaker-on and takes it again on speaker-off, which is what the earlier
+  entry was trying to confirm.
+
+  Fixed the way the reference does it. jami-client-android wraps a plain call in a
+  single-participant `Conference` on subscription — `getConfUpdates(call)` → `getConference(call)`
+  → `addConference(call)` (`CallService.kt:531`) — and KMP's `Conference(call)` constructor and
+  `isSimpleCall` flag were already there for it, just never used. `getConfUpdates` now seeds
+  itself from a new `conferenceFor()`, keyed `confId ?: callId` as the reference keys it, so
+  `onConferenceCreated` replaces the wrapper if a real conference turns up and the
+  `CallStatus.OVER` branch already drops it with the call. It is deliberately **not** pushed
+  into `_conferenceUpdates`, which replays. `toggleSpeaker` also logs both the toggle and the
+  bail now, so a dead speaker button can never again be silent in the log.
+
+  Worth knowing: the same null made nine other `CallViewModel` methods no-ops in a 1:1 call,
+  though all nine are conference moderation (`muteAllParticipants`, `removeParticipant`,
+  `setParticipantModerator`, …) and have no 1:1 meaning. `endCall` and `toggleHold` already
+  handled the null explicitly, which is why neither of them ever showed the problem.
+
+  Covered by `aPlainOneToOneCallStillGetsAConference` and
+  `theSeededConferenceIsDroppedWhenTheCallEnds` (desktop suite now 915).
 
 **The run's own find — incoming calls could not be answered at all (fixed, verified):**
 
