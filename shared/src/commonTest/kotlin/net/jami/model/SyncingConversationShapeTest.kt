@@ -27,37 +27,65 @@ import kotlin.test.assertTrue
  * with an empty call id, so the call screen waited on "Calling…" with no error (found on a
  * device 2026-11-06).
  *
- * While syncing, the daemon's real mode is kept in [Conversation.requestMode].
+ * The first attempt at this judged a syncing conversation by [Conversation.requestMode], on the
+ * assumption that it holds the daemon's real mode. A device run on 2026-11-07 disproved that: a
+ * 1:1 stuck cloning reported `requestMode=InvitesOnly`, because the daemon cannot know a mode it
+ * has not cloned yet. Membership is judged instead — it comes from `getConversationMembers`,
+ * not from the uncloned repo.
  */
 class SyncingConversationShapeTest {
 
     private fun contact(id: String, isUser: Boolean = false) =
         Contact(Uri.fromString(id), isUser = isUser)
 
-    private fun syncingConversation(realMode: Conversation.Mode?) =
-        Conversation(
-            "acc1",
-            Uri(Uri.SWARM_SCHEME, "conv1"),
-            mutableListOf(contact("me", isUser = true), contact("bbbb")),
-            Conversation.Mode.Syncing,
-        ).also { it.requestMode = realMode }
+    private fun syncingConversation(
+        realMode: Conversation.Mode?,
+        members: List<Contact> = listOf(contact("me", isUser = true), contact("bbbb")),
+    ) = Conversation(
+        "acc1",
+        Uri(Uri.SWARM_SCHEME, "conv1"),
+        members.toMutableList(),
+        Conversation.Mode.Syncing,
+    ).also { it.requestMode = realMode }
 
     @Test
     fun aSyncingOneToOneIsNotAGroup() {
         assertFalse(syncingConversation(Conversation.Mode.OneToOne).isSwarmGroup)
     }
 
+    /**
+     * The regression this file exists for, in the shape the device actually produced it:
+     * two members, and a mode the daemon invented because it had nothing to read it from.
+     */
+    @Test
+    fun aSyncingOneToOneIsNotAGroupEvenWhenTheDaemonClaimsInvitesOnly() {
+        assertFalse(syncingConversation(Conversation.Mode.InvitesOnly).isSwarmGroup)
+        assertFalse(syncingConversation(Conversation.Mode.AdminInvitesOnly).isSwarmGroup)
+        assertFalse(syncingConversation(Conversation.Mode.Public).isSwarmGroup)
+    }
+
     @Test
     fun aSyncingGroupIsStillAGroup() {
-        assertTrue(syncingConversation(Conversation.Mode.InvitesOnly).isSwarmGroup)
-        assertTrue(syncingConversation(Conversation.Mode.AdminInvitesOnly).isSwarmGroup)
-        assertTrue(syncingConversation(Conversation.Mode.Public).isSwarmGroup)
+        val members = listOf(
+            contact("me", isUser = true), contact("bbbb"), contact("cccc"),
+        )
+        assertTrue(syncingConversation(Conversation.Mode.InvitesOnly, members).isSwarmGroup)
+        // Membership decides even when the mode is missing entirely.
+        assertTrue(syncingConversation(null, members).isSwarmGroup)
     }
 
     /** An unknown mode means 1:1, which is what the facade assumes when the daemon reports none. */
     @Test
     fun aSyncingConversationOfUnknownModeIsNotAGroup() {
         assertFalse(syncingConversation(null).isSwarmGroup)
+    }
+
+    /** With no members loaded yet there is nothing to judge by, so the claimed mode wins. */
+    @Test
+    fun aSyncingConversationWithNoMembersFallsBackToTheClaimedMode() {
+        assertTrue(syncingConversation(Conversation.Mode.InvitesOnly, emptyList()).isSwarmGroup)
+        assertFalse(syncingConversation(Conversation.Mode.OneToOne, emptyList()).isSwarmGroup)
+        assertFalse(syncingConversation(null, emptyList()).isSwarmGroup)
     }
 
     /** The settled modes are unchanged. */

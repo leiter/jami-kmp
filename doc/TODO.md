@@ -222,6 +222,72 @@ third-session block below:**
   before blaming it for a stall. Seen again on 2026-11-07 on the Pixel 2 when the daemon
   rewrote `profile.vcf`: it falls back to a symlink and carries on.
 
+**Device run of 2026-11-07 (fifth session, 16:45–17:25, driven jointly: the user operated the
+UI, the model read the logs).**
+
+- [x] **The speaker button and the proximity lock — verified, after the fix below.** On an
+  audio call A→B: `CallViewModel: toggleSpeaker: true (conf=5185414353139926)` →
+  `HardwareService: toggleSpeakerphone: true` → `REL jami:callProximity`; the second tap gave
+  `toggleSpeaker: false` → `ACQ jami:callProximity`; hang-up released it with none held
+  afterwards. The user confirmed the audio audibly switched to the loudspeaker and back. The
+  conference id *is* the call id, which is the seeded wrapper's key — so the new path is what
+  ran. This closes the half the second session could not exercise.
+
+- [x] **The non-live 1:1 call — the addressing half is verified; the fix of 2026-11-06 was
+  wrong and has been replaced.** Tested on B's conversation `2cb2dbae…`, the very one named in
+  the original report, which is still permanently stuck cloning (`Clone failed. Re-clone in
+  5s`). First run, with the old fix in place, reproduced the bug exactly:
+  `peerUri=swarm:2cb2dbae… isGroupCall=true` → `placeCall ← JNI: callId=''`. After the fix:
+  `peerUri=66d57f55… scheme=null isGroupCall=false` → `daemonId=4983077485835589` →
+  `jamiaccount.cpp: New outgoing call with jami:66d57f55…`. The daemon placed a real call to
+  the real peer.
+  - **Why the old fix failed.** It judged a `Syncing` conversation by `requestMode`, assuming
+    that holds the daemon's real mode. It does not: the daemon cannot know a mode before it has
+    cloned the repo that states it. Measured: `mode=Syncing requestMode=InvitesOnly
+    contacts=[peer, me]` on a 1:1. Membership is now the discriminator, which is both what
+    `Conversation.isGroup` already used and what jami-client-android's `isGroup()` uses — and
+    it is why `ChatViewModel` logged `isGroup=false` for the same conversation in the same
+    second that `CallViewModel` called it a group.
+  - **Also confirmed:** the 15 s watchdog works. Before the shape fix the call failed visibly
+    with `hosted conference never started after 15000ms`, instead of sitting on "Calling…".
+  - **Not verified:** that the call is *answerable* on the far side from a syncing
+    conversation. Every attempt was refused or mishandled by A for the unrelated reasons below.
+
+**Found during that run — five things, none of them fixed:**
+
+- [ ] **An incoming call is still reported to Telecom as outgoing** — the same failure
+  `c77dbec` addressed this morning, reproducing on the Pixel 7a at 17:21 with that fix present.
+  Daemon: `New incoming call from d9f8c7f0…` → `Create a new [INCOMING] SIP call` →
+  `onCallStateChanged: CONNECTING` (before the incoming signal, as before) → `INCOMING`.
+  Client: `updateAudioState: status=CONNECTING incoming=false`, then `status=RINGING
+  incoming=false`, `JamiTelecomManager: placeCall`, `createConnection … isIncoming: false`,
+  and 30 s later `BUSY` → `OVER code=486`. No ringtone, no answerable UI.
+  `Call.isIncoming` stayed false for the call's whole life, so neither
+  `ConversationFacade`'s `incomingCall` flag nor `JamiTelecomManager`'s `misreportedAsOutgoing`
+  re-report (which needs `call.isIncoming == true`) ever fired. `addCall`'s direction-wins fix
+  is present and reads correctly, so the question is why `onIncomingCall`'s replacement never
+  reached the state the RINGING handler saw — a different trigger from the one `c77dbec` fixed,
+  not a regression of it. **This blocks any end-to-end verification of incoming calls on A.**
+- [ ] **A refused incoming call still drives the Telecom outgoing path.** With "Block unknown
+  contacts" on, `onIncomingCall` refuses and returns before registering the call — but
+  `JamiTelecomManager: placeCall` still fired 16 ms later, ending in
+  `JamiConnectionService: onCreateOutgoingConnection: missing callId or accountId`. Refusing
+  should tell the Telecom layer to stand down.
+- [ ] **Re-adding a contact leaves the adder waiting forever.** A re-added B; A's UI stayed on
+  "waiting for confirmation" and B was shown nothing to accept, because B had never removed A.
+  This is the blocker already recorded at the top of this file, reached from the other
+  direction — and it has a sharper consequence than "no invitation appears": with **Block
+  unknown contacts** on, A then refuses calls from a peer it is actively syncing swarms with
+  (`onIncomingCall: refusing call from a non-contact`). A device that is git-syncing with a
+  peer should not treat that peer as a stranger.
+- [ ] **A holds a conversation with itself.** `231af38e…` on A has A's own fingerprint in both
+  `admins/` and `invited/`, no members, and never syncs; messages into it log `Message sent:
+  failure`. Origin unknown — it predates this run.
+- [ ] **Nothing stops a call to your own account.** Calling from that self-conversation placed
+  a real call to A's own id: `account_manager: Found 1 device(s) for 66d57f55…` → `Ask
+  a08f24eb… for a new SIP channel` (its own device) → `No channeled socket with this peer` →
+  `FAILURE code=500` in 300 ms, with nothing said in the UI.
+
 **Device run of 2026-11-07 (third session, 10:20–10:55). Driven jointly: the user operated the
 UI, the model read the logs and took the screenshots. Everything below was verified on the
 Pixel pair.**

@@ -296,6 +296,9 @@ class CallViewModel(
             // Mirror CallPresenter.initOutGoing(): only allow video if the device has a camera.
             val effectiveVideo = hasVideo && hardwareService.hasCamera()
             Log.d(TAG, "initOutgoing: resolvedAccount=$resolvedAccountId peerUri=${peerUri.uri} scheme=${peerUri.scheme} isGroupCall=$isGroupCall effectiveVideo=$effectiveVideo")
+            Log.d(TAG, "initOutgoing: conv=${conversation?.uri?.uri} isSwarm=${conversation?.isSwarm} " +
+                "mode=${conversation?.mode} requestMode=${conversation?.requestMode} " +
+                "request=${conversation?.request?.mode} contacts=${conversation?.contacts?.map { it.uri.uri }}")
 
             _state.value = _state.value.copy(
                 callMode = CallMode.Outgoing,

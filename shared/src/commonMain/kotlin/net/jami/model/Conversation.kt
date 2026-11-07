@@ -278,14 +278,24 @@ class Conversation(
     val isSwarmGroup: Boolean
         get() = isSwarm && when (mode) {
             Mode.Request -> request?.mode != Mode.OneToOne
-            // `Syncing` is not a shape, it is "the repo has not been cloned yet": the daemon's
-            // real mode is kept in [requestMode] while it lasts, so judge by that, exactly as
-            // the `Request` branch judges by the request's mode. Reading `Syncing` itself as
-            // "not OneToOne" made every still-cloning 1:1 a group, which sent a call to
-            // `swarm:<id>` — the daemon answers that with an empty call id and the UI waits
-            // on "Calling…" forever. Unknown means 1:1, which is also what the facade
-            // assumes when the daemon reports no mode.
-            Mode.Syncing -> (requestMode ?: Mode.OneToOne) != Mode.OneToOne
+            // `Syncing` is not a shape, it is "the repo has not been cloned yet". Reading it
+            // as "not OneToOne, therefore a group" sent a 1:1 call to `swarm:<id>` — the daemon
+            // answers that with an empty call id and the UI waits on "Calling…" forever.
+            //
+            // [requestMode] is not the answer either, though it was tried first: the daemon
+            // cannot know a conversation's mode before it has cloned the repo that states it,
+            // and on a still-cloning 1:1 it reports mode 2 (InvitesOnly), which is exactly what
+            // `requestMode` then holds. Measured on a device 2026-11-07 on a 1:1 stuck cloning:
+            // `mode=Syncing requestMode=InvitesOnly contacts=[peer, me]`.
+            //
+            // Membership is the signal that does survive: it comes from
+            // `getConversationMembers`, not from the uncloned repo. A swarm whose member list
+            // is the user plus at most one peer is a 1:1 — the same rule as [isGroup] and as
+            // jami-client-android's own `isGroup()`. With no members loaded there is nothing to
+            // judge by, so fall back to the mode the daemon claims.
+            Mode.Syncing ->
+                if (contacts.isNotEmpty()) contacts.size > 2
+                else (requestMode ?: Mode.OneToOne) != Mode.OneToOne
             else -> mode != Mode.OneToOne
         }
 
