@@ -250,8 +250,10 @@ UI, the model read the logs).**
     second that `CallViewModel` called it a group.
   - **Also confirmed:** the 15 s watchdog works. Before the shape fix the call failed visibly
     with `hosted conference never started after 15000ms`, instead of sitting on "Calling…".
-  - **Not verified:** that the call is *answerable* on the far side from a syncing
-    conversation. Every attempt was refused or mishandled by A for the unrelated reasons below.
+  - **Answerable end to end, verified 17:50** once the incoming-direction bug below was fixed:
+    B placed the call from `2cb2dbae…`, A rang (`addNewIncomingCall displayName=peace4us`,
+    `RINGING isIncoming=true`, Connection registered), the user answered, audio flowed both
+    ways, and the hang-up was clean on both sides. No misreport and no re-report anywhere.
 
 **Found during that run — five things, none of them fixed:**
 
