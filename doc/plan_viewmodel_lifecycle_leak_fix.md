@@ -1,6 +1,15 @@
 # Plan: Fix ViewModel Lifecycle Leak (migrate to `androidx.lifecycle.ViewModel`)
 
-**Status:** Proposed — no code written yet
+**Status: IMPLEMENTED.** Verified in source 2026-11-07: all 20 ViewModels in
+`shared/src/commonMain/kotlin/net/jami/ui/viewmodel` extend `androidx.lifecycle.ViewModel`,
+each overrides `onCleared()` and cancels its scope there, and `getViewModel()` resolves through
+`koinViewModel()` on every platform rather than `koinInject()` — so the stores now clear them.
+The plan text below describes the bug as it was and is kept for that history. One deviation
+from the plan as written: the ViewModels still take a constructor-injected
+`CoroutineScope(SupervisorJob() + Dispatchers.Default)` and cancel it in `onCleared()` instead
+of using `viewModelScope`. The leak is closed either way, and the injected scope is what the
+tests drive, so this is deliberate rather than unfinished.
+
 **Date:** 2026-06-26
 **Scope:** Self-contained. Lives entirely within the current `:shared` module; does **not**
 depend on the module split or the Qt/IPC effort. (It also satisfies the ViewModel-migration

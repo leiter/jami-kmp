@@ -229,6 +229,16 @@ has since landed under other names. Treat each as a read-the-source check first:
   Deprioritised — keep it that way, or fund the separate module.
 - **K4 — `QRCodeUtils.js.kt`** returns null; only worth doing if K2 keeps the web target.
 
+- **K5 — Qt/QML client via a headless JVM core-host. DORMANT (decided 2026-11-07).**
+  `doc/plan_ui_logic_separation_qt_ipc.md` proposed splitting `:core` / `:presentation` /
+  `:ui-compose`, hosting the ViewModels in a headless JVM process and driving a Qt client over
+  HTTP+WebSocket. No code was ever written for it, and its §5 ended in four unanswered
+  decisions — chief among them whether the Compose desktop app becomes an IPC client too. Parked
+  with K2 and K3 rather than left open: reopening means answering §5 first. The plan body is
+  still accurate, and the one §5 decision that *was* answered — adopting
+  `androidx.lifecycle.ViewModel` — already shipped on its own merits (see below), so a restart
+  would begin from Phase 1, not Phase 2.
+
 ---
 
 # Addendum — recovered from session screenshots, 2026-11-07
@@ -342,12 +352,18 @@ in `AccountAdvancedSettingsScreen`, connectivity mode, video bitrate, "place sys
   the advanced screen and specific to SIP: registration expiry, local/published address+port,
   SRTP key exchange and the 13 TLS keys.
 
-- **N2 — `doc/plan_ui_logic_separation_qt_ipc.md` ends in four open decisions that nobody
-  answered.** §5 "Open decisions to confirm before Phase 1" has blocked the whole plan since it
-  was written; the most consequential is whether the Compose desktop app becomes an IPC client
-  or stays in-process. Only `plan_viewmodel_lifecycle_leak_fix.md` references the plan, and
-  section K does not list it among the decisions. Either answer §5 or mark the plan dormant the
-  way K2/K3 are.
+- **N2 — resolved 2026-11-07: the Qt/IPC plan is now dormant.** Its §5 had blocked Phase 1
+  since 2026-06-26 and nobody was going to answer it, so the plan is parked as **K5** above,
+  alongside the Web/JS and Desktop-JVM decisions, and says so at its head.
+
+  Checking it turned up something better than the finding: **§5's one answered decision had
+  already been implemented and both plan documents still claimed otherwise.** All 20 ViewModels
+  extend `androidx.lifecycle.ViewModel`, override `onCleared()` and cancel their scope, and
+  every platform's `getViewModel()` goes through `koinViewModel()` — so the coroutine-scope leak
+  described in `doc/plan_viewmodel_lifecycle_leak_fix.md` is closed. That file said "Proposed —
+  no code written yet" as of this morning and now records the verification, including the one
+  deliberate deviation: the ViewModels keep a constructor-injected scope cancelled in
+  `onCleared()` rather than using `viewModelScope`, because that scope is what the tests drive.
 
 - **N3 — two documents a session claimed to have written do not exist.**
   `VIDEO_CALL_ROADMAP.md` and `ROADMAP_IMPLEMENTATION_SUMMARY.md` (reported created alongside

@@ -1,6 +1,19 @@
 # Plan: Separate UI from Business Logic to Support Qt (JVM logic + IPC)
 
-**Status:** Proposed — no code written yet
+**Status: DORMANT (2026-11-07).** No code was written for the module split, the headless
+host or the IPC protocol, and none will be until someone wants a Qt/QML client. The four
+decisions in §5 blocked Phase 1 from the day this was written and were never answered; rather
+than leave them open indefinitely, the plan is parked alongside the Web/JS and Desktop-JVM
+decisions (`doc/implementation-tasks-2026-11-05.md` K2, K3, now K5). Reopening it means
+answering §5 first — the plan body is still accurate and needs no rework.
+
+**Its one decision that was answered has shipped.** §5 item 5 (adopt
+`androidx.lifecycle.ViewModel`) was carried out independently, because it fixed a live
+coroutine-scope leak on the Compose side that had nothing to do with Qt: all 20 ViewModels now
+extend `ViewModel`, override `onCleared()` and cancel their scope, and every platform's
+`getViewModel()` resolves through `koinViewModel()`. Verified in source 2026-11-07. So Phase 2's
+ViewModel migration is already done should this ever restart.
+
 **Date:** 2026-06-26
 **Goal:** Make the Jami business + presentation logic reusable by UI frameworks that
 are not Jetpack/Compose-compatible (specifically **Qt/QML**), while keeping the
