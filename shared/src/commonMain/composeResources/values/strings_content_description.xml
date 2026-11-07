@@ -84,6 +84,7 @@
 
     <!-- Accessibility pass, 2026-11-07: state descriptions, list-row actions and labels
          that were hardcoded English at their call site. -->
+    <string name="content_desc_message_read_by">Read by %1$s</string>
     <string name="content_desc_state_muted">Muted</string>
     <string name="content_desc_state_pinned">Pinned</string>
     <string name="content_desc_state_pinned_muted">Pinned, muted</string>

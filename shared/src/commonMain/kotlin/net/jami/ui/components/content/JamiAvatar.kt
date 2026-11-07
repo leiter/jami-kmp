@@ -49,6 +49,8 @@ import kotlin.math.abs
  * Avatar size presets.
  */
 enum class AvatarSize {
+    /** Glyph-sized, for the read markers at the end of a chat bubble. */
+    Tiny,
     Small, Medium, Large, XLarge
 }
 
@@ -87,6 +89,7 @@ fun JamiAvatar(
     contentDescription: String? = null,
 ) {
     val avatarDp = when (size) {
+        AvatarSize.Tiny -> JamiTheme.sizes.avatarTiny
         AvatarSize.Small -> JamiTheme.sizes.avatarSmall
         AvatarSize.Medium -> JamiTheme.sizes.avatarMedium
         AvatarSize.Large -> JamiTheme.sizes.avatarLarge
@@ -94,6 +97,7 @@ fun JamiAvatar(
     }
 
     val initialsStyle = when (size) {
+        AvatarSize.Tiny -> JamiTheme.typography.avatarInitialsSmall
         AvatarSize.Small -> JamiTheme.typography.avatarInitialsSmall
         AvatarSize.Medium -> JamiTheme.typography.avatarInitialsMedium
         AvatarSize.Large -> JamiTheme.typography.avatarInitialsLarge
@@ -101,6 +105,7 @@ fun JamiAvatar(
     }
 
     val presenceDotSize = when (size) {
+        AvatarSize.Tiny -> JamiTheme.sizes.presenceDotSmall
         AvatarSize.Small -> JamiTheme.sizes.presenceDotSmall
         AvatarSize.Medium -> JamiTheme.sizes.presenceDotMedium
         AvatarSize.Large -> JamiTheme.sizes.presenceDotLarge

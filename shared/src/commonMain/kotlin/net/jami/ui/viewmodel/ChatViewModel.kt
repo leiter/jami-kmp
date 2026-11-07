@@ -101,7 +101,43 @@ data class MessageItem(
     val isEdited: Boolean = false,
     /** The message this one replies to, quoted above the bubble; null when it is not a reply. */
     val replyTo: ReplyPreview? = null,
+    /**
+     * This is the newest message the peers have acknowledged receiving
+     * ([net.jami.model.Conversation.lastSent]). Only this one shows a delivered tick; the
+     * reference client leaves every older delivered message unmarked.
+     */
+    val isLastSent: Boolean = false,
+    /**
+     * The peers whose read position is exactly this message
+     * ([net.jami.model.Conversation.lastDisplayedMessages]). Rendered as their avatars beside
+     * the bubble, which is how the reference — and every other modern messenger — shows who
+     * has read how far. Empty on every other message, including older ones they have read.
+     */
+    val seenBy: List<SeenBy> = emptyList(),
 )
+
+/**
+ * A peer parked at a message because it is the last one they have read.
+ *
+ * [avatarBytes] is a `ByteArray`, so equality is written out by hand: the data class default
+ * compares it by identity, and Compose would then redraw every bubble on each state update.
+ */
+class SeenBy(
+    val uri: String,
+    val displayName: String,
+    val avatarBytes: ByteArray?,
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is SeenBy) return false
+        return uri == other.uri &&
+            displayName == other.displayName &&
+            (avatarBytes?.contentEquals(other.avatarBytes) ?: (other.avatarBytes == null))
+    }
+
+    override fun hashCode(): Int =
+        (uri.hashCode() * 31 + displayName.hashCode()) * 31 + (avatarBytes?.contentHashCode() ?: 0)
+}
 
 /**
  * A quoted original message: shown above a reply bubble and in the composer while replying.
@@ -1062,7 +1098,10 @@ class ChatViewModel(
             // bubbles, and messages still held in the durable outbox (restored after a restart).
             val inFlight = _state.value.messages.filter { it.id.startsWith("pending-") }
             val held = sendQueue.queued(accountId, conversationId).map { heldBubble(it) }
-            _state.value = _state.value.copy(messages = withSeparators + inFlight + held, isLoading = false)
+            _state.value = _state.value.copy(
+                messages = applyReadMarkers(withSeparators) + inFlight + held,
+                isLoading = false,
+            )
             refreshMessageHold()
         } else {
             _state.value = _state.value.copy(isLoading = false)
@@ -1579,9 +1618,11 @@ class ChatViewModel(
                 // with SENDING). It must still not undo a delivery that already happened.
                 if (old == DeliveryStatus.DELIVERED || old == DeliveryStatus.READ) return@update current
             } else if (deliveryRank(newStatus) <= deliveryRank(old)) return@update current
-            current.copy(messages = current.messages.toMutableList().also {
+            // A status change can move lastSent or a read position, so the markers are
+            // recomputed across the list, not just on the message that changed.
+            current.copy(messages = applyReadMarkers(current.messages.toMutableList().also {
                 it[idx] = it[idx].copy(deliveryStatus = newStatus)
-            })
+            }))
         }
     }
 
@@ -1589,6 +1630,49 @@ class ChatViewModel(
         DeliveryStatus.WAITING_TO_SYNC, DeliveryStatus.FAILED, DeliveryStatus.SENDING -> 0
         DeliveryStatus.DELIVERED -> 1
         DeliveryStatus.READ -> 2
+    }
+
+    /** Peer avatars for the read markers, read from disk once per peer per conversation. */
+    private val peerAvatarCache = mutableMapOf<String, ByteArray?>()
+
+    /**
+     * Stamp the two conversation-level read-marker facts onto a freshly built message list.
+     *
+     * Neither can be derived from an interaction on its own: which message is
+     * [net.jami.model.Conversation.lastSent], and which message each peer's read position sits
+     * at, both change as new messages arrive — when message N becomes the last sent, N-1 has to
+     * lose its tick. So this runs over the whole list whenever the list or a status changes,
+     * rather than inside [interactionToMessageItem].
+     *
+     * Mirrors `ConversationAdapter.configureDisplayIndicator` in the reference client.
+     */
+    private fun applyReadMarkers(items: List<MessageItem>): List<MessageItem> {
+        val accountId = currentAccountId ?: return items
+        val conversationId = currentConversationId ?: return items
+        val conversation = conversationFacade
+            .getConversation(accountId, Uri(Uri.SWARM_SCHEME, conversationId)) ?: return items
+
+        val lastSent = conversation.lastSent
+        // messageId -> the peers parked there. The model already excludes our own URI.
+        val readers = mutableMapOf<String, MutableList<SeenBy>>()
+        for ((peerKey, messageId) in conversation.lastDisplayedMessages) {
+            val contact = conversation.findContact(Uri.fromString(peerKey))
+            if (contact?.isUser == true) continue
+            val rawRingId = contact?.uri?.rawRingId ?: Uri.fromString(peerKey).rawRingId
+            val avatar = peerAvatarCache.getOrPut(rawRingId) {
+                runCatching {
+                    VCardUtils.loadPeerProfileFromDisk(
+                        filesDir = deviceRuntimeService.getDataPath(),
+                        accountId = accountId,
+                        peerUri = rawRingId,
+                    )
+                }.getOrNull()
+            }
+            readers.getOrPut(messageId) { mutableListOf() }
+                .add(SeenBy(rawRingId, displayNameFor(contact, peerKey), avatar))
+        }
+
+        return applyReadMarkersTo(items, lastSent, readers)
     }
 
     private fun aggregateStatus(statusMap: Map<String, Interaction.MessageStates>): DeliveryStatus {
@@ -1632,3 +1716,55 @@ class ChatViewModel(
         private const val SEND_TIMEOUT_MS = 20_000L
     }
 }
+
+/**
+ * The read-marker pass itself, separated from reading the conversation so it can be tested.
+ *
+ * [lastSent] is the newest message the peers have acknowledged, [readers] maps a message id to
+ * the peers whose read position sits on it. Incoming messages are untouched.
+ */
+internal fun applyReadMarkersTo(
+    items: List<MessageItem>,
+    lastSent: String?,
+    readers: Map<String, List<SeenBy>>,
+): List<MessageItem> {
+    if (lastSent == null && readers.isEmpty()) return items
+    return items.map { item ->
+        if (!item.isOutgoing) item
+        else item.copy(isLastSent = item.id == lastSent, seenBy = readers[item.id].orEmpty())
+    }
+}
+
+/**
+ * What an outgoing bubble shows at its trailing edge, following
+ * `ConversationAdapter.configureDisplayIndicator` in the reference client.
+ *
+ * The point of the rule is that an indicator marks *how far the peers have got*, so it appears
+ * at most twice in a conversation — a tick on the last sent message and avatars at each peer's
+ * read position — instead of once per message, which is what jami-kmp showed until 2026-11-08.
+ */
+internal enum class DeliveryIndicatorKind {
+    /** Nothing: an older delivered or read message, behind someone else's marker. */
+    None,
+    Sending,
+    /** Double tick, only on [MessageItem.isLastSent]. */
+    Delivered,
+    Failed,
+    WaitingToSync,
+    /** One avatar per peer in [MessageItem.seenBy]. */
+    SeenBy,
+}
+
+internal fun deliveryIndicatorFor(message: MessageItem): DeliveryIndicatorKind = when {
+    !message.isOutgoing -> DeliveryIndicatorKind.None
+    // Avatars win over any tick: they say strictly more.
+    message.seenBy.isNotEmpty() -> DeliveryIndicatorKind.SeenBy
+    message.deliveryStatus == DeliveryStatus.FAILED -> DeliveryIndicatorKind.Failed
+    message.deliveryStatus == DeliveryStatus.WAITING_TO_SYNC -> DeliveryIndicatorKind.WaitingToSync
+    message.deliveryStatus == DeliveryStatus.SENDING -> DeliveryIndicatorKind.Sending
+    message.deliveryStatus == DeliveryStatus.DELIVERED && message.isLastSent ->
+        DeliveryIndicatorKind.Delivered
+    // Delivered-but-older, and read-but-not-a-marker, both show nothing.
+    else -> DeliveryIndicatorKind.None
+}
+

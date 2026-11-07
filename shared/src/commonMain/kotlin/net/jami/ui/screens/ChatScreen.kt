@@ -49,6 +49,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import net.jami.model.ContactEvent
 import net.jami.model.Interaction
+import net.jami.ui.viewmodel.DeliveryIndicatorKind
+import net.jami.ui.viewmodel.deliveryIndicatorFor
 import net.jami.ui.viewmodel.DeliveryStatus
 import net.jami.ui.viewmodel.MessageHold
 import net.jami.ui.viewmodel.ReactionGroup
@@ -205,6 +207,78 @@ import net.jami.ui.viewmodel.ChatViewModel
 import net.jami.ui.viewmodel.MessageItem
 import net.jami.ui.viewmodel.MessageType
 import net.jami.ui.components.content.conversationDisplayName
+
+/**
+ * The delivery indicator at the end of an outgoing bubble.
+ *
+ * Follows `ConversationAdapter.configureDisplayIndicator` in the reference client rather than
+ * ticking every message, which is what jami-kmp did until 2026-11-08 and what made a screenful
+ * of sent messages a column of identical double ticks:
+ *
+ *  1. nobody has it yet -> a single tick;
+ *  2. delivered but unread -> a double tick **only on the last sent message**, nothing on the
+ *     older ones;
+ *  3. read, and this is where a peer's read position sits -> that peer's avatar, one per peer;
+ *  4. read but not anyone's read position -> nothing.
+ *
+ * Failure and waiting-to-sync keep their own glyphs: the reference surfaces those separately,
+ * and the clock belongs to this client's durable outbox, which the reference has no equivalent
+ * of.
+ */
+@Composable
+private fun DeliveryIndicator(message: MessageItem, timeColor: Color) {
+    when (deliveryIndicatorFor(message)) {
+        DeliveryIndicatorKind.None -> Unit
+
+        DeliveryIndicatorKind.SeenBy -> {
+            val names = message.seenBy.joinToString(", ") { it.displayName }
+            val readBy = stringResource(Res.string.content_desc_message_read_by, names)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(1.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.semantics(mergeDescendants = true) {
+                    contentDescription = readBy
+                },
+            ) {
+                message.seenBy.forEach { peer ->
+                    JamiAvatar(
+                        displayName = peer.displayName,
+                        avatarBytes = peer.avatarBytes,
+                        size = AvatarSize.Tiny,
+                        contentDescription = null,
+                    )
+                }
+            }
+        }
+
+        DeliveryIndicatorKind.Sending -> StatusGlyph(
+            Icons.Default.Done, timeColor, Res.string.content_desc_message_sending,
+        )
+        DeliveryIndicatorKind.Delivered -> StatusGlyph(
+            Icons.Default.DoneAll, timeColor, Res.string.content_desc_message_delivered,
+        )
+        DeliveryIndicatorKind.Failed -> StatusGlyph(
+            Icons.Default.Warning, JamiTheme.colors.error, Res.string.content_desc_message_failed,
+        )
+        DeliveryIndicatorKind.WaitingToSync -> StatusGlyph(
+            Icons.Default.Schedule, timeColor, Res.string.content_desc_message_pending_sync,
+        )
+    }
+}
+
+@Composable
+private fun StatusGlyph(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    tint: Color,
+    description: org.jetbrains.compose.resources.StringResource,
+) {
+    Icon(
+        imageVector = icon,
+        contentDescription = stringResource(description),
+        modifier = Modifier.size(12.dp),
+        tint = tint,
+    )
+}
 
 /** Inline-placeholder id reserving room for the timestamp overlay at the end of a bubble. */
 private const val OVERLAY_SPACER_ID = "timestampOverlaySpacer"
@@ -1160,26 +1234,8 @@ private fun ChatBubble(
                         // keeps the link annotations reachable.
                         modifier = Modifier.semantics { contentDescription = message.text },
                     )
-                    // Timestamp (+ checkmark for outgoing) overlaid at bottom-right.
+                    // Timestamp (+ delivery indicator for outgoing) overlaid at bottom-right.
                     if (isOutgoing) {
-                        val (checkIcon, checkTint) = when (message.deliveryStatus) {
-                            DeliveryStatus.READ      -> Icons.Default.DoneAll to JamiTheme.colors.primary
-                            DeliveryStatus.DELIVERED -> Icons.Default.DoneAll to timeColor
-                            DeliveryStatus.SENDING   -> Icons.Default.Done    to timeColor
-                            DeliveryStatus.FAILED    -> Icons.Default.Warning to JamiTheme.colors.error
-                            DeliveryStatus.WAITING_TO_SYNC -> Icons.Default.Schedule to timeColor
-                        }
-                        // The tick / warning / clock glyph is the only delivery cue in the bubble,
-                        // so it has to be spoken — otherwise sent and failed are indistinguishable.
-                        val statusDescription = stringResource(
-                            when (message.deliveryStatus) {
-                                DeliveryStatus.READ -> Res.string.content_desc_message_read
-                                DeliveryStatus.DELIVERED -> Res.string.content_desc_message_delivered
-                                DeliveryStatus.SENDING -> Res.string.content_desc_message_sending
-                                DeliveryStatus.FAILED -> Res.string.content_desc_message_failed
-                                DeliveryStatus.WAITING_TO_SYNC -> Res.string.content_desc_message_pending_sync
-                            }
-                        )
                         Row(
                             modifier = Modifier.align(Alignment.BottomEnd),
                             verticalAlignment = Alignment.CenterVertically,
@@ -1190,12 +1246,7 @@ private fun ChatBubble(
                                 style = JamiTheme.typography.labelSmall,
                                 color = timeColor,
                             )
-                            Icon(
-                                imageVector = checkIcon,
-                                contentDescription = statusDescription,
-                                modifier = Modifier.size(12.dp),
-                                tint = checkTint,
-                            )
+                            DeliveryIndicator(message, timeColor)
                         }
                     } else {
                         Text(

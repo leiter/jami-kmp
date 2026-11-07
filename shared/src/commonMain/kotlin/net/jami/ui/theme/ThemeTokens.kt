@@ -65,6 +65,8 @@ data class JamiSizes(
     val iconMedium: Dp = 24.dp,
     val iconLarge: Dp = 32.dp,
     val iconButton: Dp = 18.dp,
+    /** Read markers in a chat bubble: a row of peer avatars, so they must stay glyph-sized. */
+    val avatarTiny: Dp = 14.dp,
     val avatarSmall: Dp = 32.dp,
     val avatarMedium: Dp = 48.dp,
     val avatarLarge: Dp = 64.dp,

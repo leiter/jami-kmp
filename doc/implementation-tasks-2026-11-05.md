@@ -87,10 +87,28 @@ on 2026-10-31.
   mention system in the chat UI or view model.
 - **C2 — Markdown in message bodies.** Reference renders with Markwon (bold, italics, code);
   KMP shows plain text. Clickable http(s) links already landed 2026-09-18.
-- **C3 — read markers.** Reference shows peers' avatars at the last message each has read
-  (`Conversation.lastDisplayedMessages`) and a status icon only on the last sent message
-  (`lastSent`); KMP puts a tick on every outgoing message and no avatars.
-  `Conversation.updateSwarmInteraction` already records both fields, so this is UI-layer work.
+- **C3 — DONE 2026-11-08.** The indicator now follows
+  `ConversationAdapter.configureDisplayIndicator`, so it appears at most twice in a
+  conversation instead of once per message: a delivered double tick **only** on
+  `Conversation.lastSent`, and each peer's avatar parked at the message their
+  `lastDisplayedMessages` entry points to. Delivered-but-older and read-but-not-a-marker both
+  render nothing; avatars win over a tick on the same message. Failure and waiting-to-sync keep
+  their own glyphs — the reference surfaces failure separately and the clock belongs to this
+  client's durable outbox.
+
+  `MessageItem` gained `isLastSent` and `seenBy`; neither can be derived from an interaction
+  alone, because both move as new messages arrive, so `applyReadMarkers` runs over the whole
+  list from `loadMessagesFromHistory` and from `updateDeliveryStatus`. The daemon chain was
+  already in place: `onAccountMessageStatusChanged` awaits `Conversation.updateSwarmInteraction`
+  — which is what maintains both fields — before emitting `MessageStatusChanged`, so the view
+  model always recomputes against current model state. Peer avatars are cached per peer per
+  conversation rather than re-read from disk per message. New `AvatarSize.Tiny` (14 dp) and a
+  "Read by %1$s" description, since avatars replacing a spoken status would otherwise be silent.
+
+  13 tests in `ReadMarkerTest` cover the four cases, the list pass and `SeenBy`'s hand-written
+  `ByteArray` equality. **Not yet seen on hardware:** avatars only appear once a peer actually
+  reports DISPLAYED, so the visible half needs the two phones.
+
 - **C4 — full emoji picker for reactions.** KMP offers six fixed emojis; reference has a
   "more" button opening a full picker.
 - **C5 — video recording in chat.** Menu item shows a "coming soon" snackbar; needs a
