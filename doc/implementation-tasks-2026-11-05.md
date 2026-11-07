@@ -133,8 +133,17 @@ on 2026-10-31.
 
 ## D. Calls
 
-- **D1 — proximity sensor.** `proximityEnabled` exists in `SettingsModels.kt`;
-  `PROXIMITY_SCREEN_OFF_WAKE_LOCK` is never acquired in the Android `HardwareService`.
+- **D1 — ~~proximity sensor~~.** Done 2026-11-08, and the premise was half stale: Android had
+  already grown `updateProximityLock()` with a real `PROXIMITY_SCREEN_OFF_WAKE_LOCK`, gated on
+  the setting, called from `updateAudioState`, `toggleSpeakerphone` and `closeAudioState`.
+  **iOS had nothing** — `UIDevice.proximityMonitoringEnabled` appeared nowhere, so an iPhone
+  lit its screen against the user's cheek for every call and the setting was read on one
+  platform only. iOS now turns monitoring on at the same three points and off at the end of
+  the call (left on, it blanks the screen whenever anything comes near the phone).
+  The rule itself moved to `ProximityPolicy.shouldBlankScreen()` in common code so the two
+  actuals cannot drift apart unnoticed — that difference is invisible until someone is holding
+  both phones. `ProximityPolicyTest` states all eight input combinations.
+  **Not compiled:** the iOS half, like every Apple change made on this host.
 - **D2 — haptic feedback on answer/decline.** No `Vibrator` / `HapticFeedbackConstants`
   anywhere in the call flow.
 - **D3 — Bluetooth headset routing.** `toggleSpeaker()` exists; the 3-way

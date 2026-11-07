@@ -224,7 +224,13 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
      */
     @Synchronized
     private fun updateProximityLock(isAudioOnly: Boolean) {
-        val wanted = isAudioOnly && settingsRepository.callSettings.value.proximityEnabled
+        // isAudioOnly already carries the speaker check at both call sites; the policy takes
+        // it separately so the two platforms cannot drift apart on the rule itself.
+        val wanted = net.jami.services.ProximityPolicy.shouldBlankScreen(
+            isAudioOnly = isAudioOnly,
+            onSpeaker = false,
+            settingEnabled = settingsRepository.callSettings.value.proximityEnabled,
+        )
         try {
             if (!wanted) {
                 proximityWakeLock?.let { if (it.isHeld) it.release() }

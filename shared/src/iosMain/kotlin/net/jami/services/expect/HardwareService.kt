@@ -16,7 +16,9 @@ import net.jami.model.Call
 import net.jami.model.Conference
 import net.jami.services.CameraState
 import net.jami.services.DaemonBridgeApi
+import net.jami.repository.SettingsRepository
 import net.jami.services.IOSCameraService
+import net.jami.services.ProximityPolicy
 import net.jami.utils.Log
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -53,6 +55,7 @@ import platform.darwin.dispatch_get_main_queue
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSOperationQueue
 import platform.Foundation.NSUserDefaults
+import platform.UIKit.UIDevice
 import platform.UIKit.UIView
 
 private val STATE_INTERNAL = AudioState(AudioOutput(AudioOutputType.INTERNAL))
@@ -77,6 +80,7 @@ actual class HardwareService : KoinComponent {
 
     private val daemonBridge: DaemonBridgeApi by inject()
     private val cameraService: IOSCameraService by inject()
+    private val settingsRepository: SettingsRepository by inject()
 
     private val tag = "HardwareService"
     private val userDefaults = NSUserDefaults.standardUserDefaults
@@ -141,10 +145,36 @@ actual class HardwareService : KoinComponent {
         val ended = state == Call.CallStatus.HUNGUP || state == Call.CallStatus.FAILURE || state == Call.CallStatus.OVER
         if (ended) { closeAudioState(); return }
         when (state) {
-            Call.CallStatus.CURRENT -> { activateAudioSession(); speakerphoneOn = isOngoingVideo; updateAudioOutput() }
+            Call.CallStatus.CURRENT -> {
+                activateAudioSession()
+                speakerphoneOn = isOngoingVideo
+                updateAudioOutput()
+                updateProximityMonitoring(isAudioOnly = !isOngoingVideo)
+            }
             Call.CallStatus.RINGING, Call.CallStatus.CONNECTING -> activateAudioSession()
             else -> {}
         }
+    }
+
+    /**
+     * Blank the screen while the phone is held to the ear, the iOS half of Android's
+     * `PROXIMITY_SCREEN_OFF_WAKE_LOCK`. UIKit does the blanking itself once proximity
+     * monitoring is on; there is no wake lock to hold.
+     *
+     * Same gate as Android: audio-only, not on speaker, and only while the user leaves
+     * `CallSettings.proximityEnabled` on — it was read on Android and nowhere else, so an iOS
+     * user turning the setting off changed nothing.
+     *
+     * Always turned off again at the end of a call: monitoring left on blanks the screen
+     * whenever anything comes near the phone, which looks like a dead device.
+     */
+    private fun updateProximityMonitoring(isAudioOnly: Boolean) {
+        val wanted = ProximityPolicy.shouldBlankScreen(
+            isAudioOnly = isAudioOnly,
+            onSpeaker = speakerphoneOn,
+            settingEnabled = settingsRepository.callSettings.value.proximityEnabled,
+        )
+        UIDevice.currentDevice.setProximityMonitoringEnabled(wanted)
     }
 
     private fun activateAudioSession() {
@@ -169,9 +199,21 @@ actual class HardwareService : KoinComponent {
         }
     }
 
-    actual fun closeAudioState() { abandonAudioFocus() }
+    actual fun closeAudioState() {
+        updateProximityMonitoring(isAudioOnly = false)
+        abandonAudioFocus()
+    }
     actual fun isSpeakerphoneOn(): Boolean = speakerphoneOn
-    actual fun toggleSpeakerphone(conf: Conference, enabled: Boolean) { speakerphoneOn = enabled; updateAudioOutput() }
+    actual fun toggleSpeakerphone(conf: Conference, enabled: Boolean) {
+        speakerphoneOn = enabled
+        updateAudioOutput()
+        // On speaker the phone is away from the ear: give the screen back, and take it again
+        // when the user switches back to the earpiece. Mirrors the Android actual, including
+        // its video check — a video call never blanks the screen.
+        updateProximityMonitoring(
+            isAudioOnly = !enabled && conf.participants.none { it.hasActiveVideo() },
+        )
+    }
 
     private fun updateAudioOutput() {
         try {
