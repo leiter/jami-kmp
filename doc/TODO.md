@@ -102,12 +102,25 @@ routing of a call to it.
   `contact_list.cpp [Contacts] removeContact: 66d57f55… (banned: false)` and the conversation
   disappears.
 
-**Smaller things seen, not yet addressed:**
+**Two smaller things seen in that run — both fixed 2026-11-07:**
 
-- The contact-details screen does not navigate back after the contact is deleted; it stays open
-  on a conversation that no longer exists. The reference pops back to the list.
-- A message typed into a 1:1 whose peer has not joined stays invisible in the chat (it is in the
-  durable outbox). Expected from the outbox design, but the sender gets no indication at all.
+- [x] **The contact-details screen stayed open on a conversation it had just deleted**, so the
+  delete looked like it had done nothing. `ContactDetailsState.isGone` is now set after delete,
+  block, unblock, leave *and* on a `ContactEvent.ContactRemoved` for the loaded peer (a removal
+  made on another device), and the screen pops back on it. The reference finishes the activity
+  after every one of those actions (`ConversationActionsFragment`). A state flag rather than a
+  one-shot event, so acting on it twice cannot pop twice. Three new
+  `ContactDetailsViewModelTest` cases.
+- [x] **A message held in the durable outbox told the sender nothing.** The held bubble carries
+  a clock glyph and nothing else, which is indistinguishable from "sending". The composer now
+  shows a one-line notice while the conversation cannot deliver — `ChatState.messageHold`, asked
+  of `SendQueueService.shouldHold` so the notice and the hold cannot disagree, with the mode
+  picking the wording: `conversation_syncing` ("Downloading conversation from peer", the
+  reference's own string) while the swarm is cloning, and a new `conversation_awaiting_peer`
+  while a 1:1's peer is still only invited. The reference refuses the send outright and hides
+  the input in both states; keeping the input and holding the message is the better behaviour,
+  it just has to say so. Computed before the suspending history load, so it is right from the
+  moment the screen appears. Three new tests in `SendQueueServiceTest`.
 
 **Still owed a verdict**
 
@@ -342,7 +355,17 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
 
 ## Calls — Missing Features
 
-- [ ] **Proximity sensor (screen off during calls)** — Setting `proximityEnabled` exists in `SettingsModels.kt` but `PROXIMITY_SCREEN_OFF_WAKE_LOCK` is never acquired in the Android `HardwareService`.
+- [x] **Proximity sensor (screen off during calls)** — Fixed 2026-11-07. `proximityEnabled` was
+  stored in `CallSettings` (defaulting to on), offered by no screen and read by nothing, so the
+  screen stayed lit against the user's ear for every audio call. `HardwareService.android` now
+  holds a `PROXIMITY_SCREEN_OFF_WAKE_LOCK` (`ACQUIRE_CAUSES_WAKEUP or ON_AFTER_RELEASE`, not
+  reference-counted, as `CallFragment.handleCallWakelock` does) while a call is `CURRENT`,
+  audio-only and not on speaker; it is released when the call ends and when the speaker goes on,
+  and re-taken when it goes off. Guarded by `isWakeLockLevelSupported` and given a 4 h timeout as
+  a safety net against a missed release. A toggle was added to App settings → Calls
+  (`pref_proximity_title`), with `SettingsRepository.updateProximityEnabled` persisting it;
+  covered by `toggleProximityPersistsToCallSettings`. **Android only** — not yet verified on a
+  device, and iOS has `AVAudioSession`'s own proximity handling, not this.
 - [ ] **Haptic feedback on call answer/decline** — No `Vibrator` / `HapticFeedbackConstants` calls in the call flow.
 - [ ] **Bluetooth headset routing** — `toggleSpeaker()` backend exists; full 3-way routing (earpiece / speaker / BT) may not be fully wired through `AudioManager`.
 
@@ -477,6 +500,21 @@ Still owed a device verdict.
   cannot blank itself by being forgotten here; the status-note fields that had been carried
   through by hand no longer need to be. Covered by
   `AccountSettingsViewModelTest.loadAccountDoesNotCloseTheRegisterNameDialog`.
+
+### Lock-screen notification visibility was stored but applied nowhere (2026-11-07)
+
+- [x] **Fixed.** App settings → Notifications offered Private / Public / Secret, persisted the
+  choice in `LocalPrefKeys.NOTIFICATION_VISIBILITY`, and no notification ever read it: every one
+  was posted at the platform default, so "hide content on the lock screen" did nothing.
+  `AndroidNotificationService.applyUserVisibility()` now applies it to the notifications that
+  carry contact content — calls, missed calls, group calls, messages (and their group summary),
+  requests, file transfers, location sharing — and deliberately not to the foreground-service
+  ones, which carry none and are pinned to `VISIBILITY_PRIVATE`. `NotificationVisibility`'s
+  constants are **not** the platform's (`SECRET` is 2 here, -1 there), which is why the mapping
+  is explicit; the doc comment claiming they matched was wrong and has been corrected.
+  Android-only (iOS has no per-notification lock-screen visibility), so it is not covered by the
+  desktop suite — needs a device check: lock the phone, send a message, and look at the
+  notification under each of the three settings.
 
 ### Settings that were stored but applied nowhere (2026-10-31)
 

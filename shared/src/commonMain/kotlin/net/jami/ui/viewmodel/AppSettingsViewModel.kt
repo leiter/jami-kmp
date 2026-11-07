@@ -70,6 +70,8 @@ data class AppSettingsState(
     val isEchoCancellation: Boolean = true,
     /** Automatic gain control — normalises mic level; separate from echo cancellation. */
     val isAutomaticGainControl: Boolean = false,
+    /** Android only: blank the screen during an audio call when the phone is held to the ear. */
+    val isProximityEnabled: Boolean = true,
     val isAutoAnswer: Boolean = false,
     /** Custom ringtone URI; empty string means system default. */
     val ringtone: String = "",
@@ -184,6 +186,7 @@ class AppSettingsViewModel(
                     isNoiseSuppression = c.noiseSuppression,
                     isEchoCancellation = c.echoCancellation,
                     isAutomaticGainControl = c.automaticGainControl,
+                    isProximityEnabled = c.proximityEnabled,
                     isAutoAnswer = c.autoAnswer,
                     ringtone = c.ringtone,
                 )}
@@ -319,6 +322,12 @@ class AppSettingsViewModel(
         val new = !_state.value.isAutomaticGainControl
         _state.update { it.copy(isAutomaticGainControl = new) }
         settingsRepository.updateAutomaticGainControl(new)
+    }
+
+    fun toggleProximity() {
+        val new = !_state.value.isProximityEnabled
+        _state.update { it.copy(isProximityEnabled = new) }
+        settingsRepository.updateProximityEnabled(new)
     }
 
     fun toggleAutoAnswer() {

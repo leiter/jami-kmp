@@ -376,6 +376,12 @@ fun AppSettingsScreen(
                 onCheckedChange = { viewModel.toggleAutomaticGainControl() },
             )
             JamiToggle(
+                label = stringResource(Res.string.pref_proximity_title),
+                description = stringResource(Res.string.pref_proximity_summary),
+                checked = state.isProximityEnabled,
+                onCheckedChange = { viewModel.toggleProximity() },
+            )
+            JamiToggle(
                 label = stringResource(Res.string.pref_auto_answer),
                 description = stringResource(Res.string.pref_auto_answer_description),
                 checked = state.isAutoAnswer,

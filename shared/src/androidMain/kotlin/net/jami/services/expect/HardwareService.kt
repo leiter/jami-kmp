@@ -13,6 +13,7 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.PowerManager
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.TextureView
@@ -56,6 +57,11 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     private val settingsRepository: SettingsRepository by inject()
     private var currentFocusRequest: AudioFocusRequest? = null
     private var mShouldSpeakerphone = false
+    private val powerManager: PowerManager by lazy {
+        context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    }
+    /** Held while an audio-only call is current and the proximity setting is on. */
+    private var proximityWakeLock: PowerManager.WakeLock? = null
     private val mHasSpeakerPhone: Boolean by lazy { hasSpeakerphone() }
     private var logging = false
 
@@ -190,6 +196,7 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
                     audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
                     mShouldSpeakerphone = isOngoingVideo || isSpeakerphoneOn()
                     setAudioRouting(mShouldSpeakerphone)
+                    updateProximityLock(isAudioOnly = !isOngoingVideo && !mShouldSpeakerphone)
                 }
                 state == CallStatus.HOLD || state == CallStatus.INACTIVE -> { /* no-op */ }
                 else -> {}
@@ -202,6 +209,45 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     actual fun closeAudioState() {
         daemonBridge.muteRingtone(true)
         abandonAudioFocus()
+        updateProximityLock(isAudioOnly = false)
+    }
+
+    /**
+     * Blank the screen while the phone is held to the ear, as the reference client does
+     * (`CallFragment.handleCallWakelock`) — but only when the user has left the proximity
+     * setting on. `CallSettings.proximityEnabled` existed and was persisted; nothing ever read
+     * it, so the screen stayed lit against the user's cheek for the whole call.
+     *
+     * Acquired only for an audio-only call that is not on speaker: with video or speakerphone
+     * the user is looking at the screen or holding the phone away, and blanking it would be
+     * wrong. Reference-counting is off so a second acquire cannot leave the lock held.
+     */
+    @Synchronized
+    private fun updateProximityLock(isAudioOnly: Boolean) {
+        val wanted = isAudioOnly && settingsRepository.callSettings.value.proximityEnabled
+        try {
+            if (!wanted) {
+                proximityWakeLock?.let { if (it.isHeld) it.release() }
+                proximityWakeLock = null
+                return
+            }
+            if (!powerManager.isWakeLockLevelSupported(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK)) {
+                Log.d(TAG, "updateProximityLock: no proximity wake lock on this device")
+                return
+            }
+            val lock = proximityWakeLock ?: powerManager.newWakeLock(
+                PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK or
+                    PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                    PowerManager.ON_AFTER_RELEASE,
+                PROXIMITY_LOCK_TAG,
+            ).also {
+                it.setReferenceCounted(false)
+                proximityWakeLock = it
+            }
+            if (!lock.isHeld) lock.acquire(PROXIMITY_LOCK_TIMEOUT_MS)
+        } catch (e: Exception) {
+            Log.e(TAG, "updateProximityLock failed", e)
+        }
     }
 
     actual fun isSpeakerphoneOn(): Boolean =
@@ -215,6 +261,11 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
         JamiService.setAudioPlugin(JamiService.getCurrentAudioOutputPlugin())
         mShouldSpeakerphone = enabled
         if (mHasSpeakerPhone && enabled) routeToSpeaker() else resetAudio()
+        // On speaker the phone is away from the ear: give the screen back (and take it again
+        // when the user switches back to the earpiece).
+        updateProximityLock(
+            isAudioOnly = !enabled && conf.participants.none { it.hasActiveVideo() },
+        )
     }
 
     @Synchronized
@@ -622,5 +673,13 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
 
     companion object {
         private const val TAG = "HardwareService"
+        private const val PROXIMITY_LOCK_TAG = "jami:callProximity"
+
+        /**
+         * A safety net, not a policy: the lock is released when the call ends. Without a
+         * timeout a missed release would blank the screen until the process dies. Four hours
+         * is longer than any plausible call.
+         */
+        private const val PROXIMITY_LOCK_TIMEOUT_MS = 4L * 60 * 60 * 1000
     }
 }

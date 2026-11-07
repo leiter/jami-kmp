@@ -451,6 +451,17 @@ class SettingsRepository(
         }
     }
 
+    /**
+     * Update the proximity-sensor setting. Read by the platform call layer when a call goes
+     * current (Android: a PROXIMITY_SCREEN_OFF_WAKE_LOCK); the daemon has no say in it.
+     */
+    fun updateProximityEnabled(enabled: Boolean) {
+        val current = _callSettings.value
+        if (current.proximityEnabled != enabled) {
+            updateCallSettings(current.copy(proximityEnabled = enabled))
+        }
+    }
+
     private fun updateCallSettings(settings: CallSettings) {
         _callSettings.value = settings
         saveSettings(SettingsKeys.CALLS) { json.encodeToString(settings) }

@@ -94,6 +94,7 @@ class AppSettingsViewModelTest {
         assertTrue(vm.state.value.isHardwareAcceleration)
         assertTrue(vm.state.value.isNoiseSuppression)
         assertTrue(vm.state.value.isEchoCancellation)
+        assertTrue(vm.state.value.isProximityEnabled)
         assertFalse(vm.state.value.isAutoAnswer)
         // File Transfers
         assertEquals(30, vm.state.value.maxAutoAcceptMb)
@@ -102,6 +103,30 @@ class AppSettingsViewModelTest {
         // System
         assertFalse(vm.state.value.isStartOnBoot)
         assertFalse(vm.state.value.isRunInBackground)
+    }
+
+    /**
+     * `CallSettings.proximityEnabled` was stored and defaulted to on, but nothing read it and
+     * no screen offered it — the screen stayed lit against the ear for every audio call. The
+     * Android call layer reads it when a call goes current.
+     */
+    @Test
+    fun toggleProximityPersistsToCallSettings() = runTest {
+        val stub = StubDaemonBridge()
+        val scope = viewModelScope()
+        val repo = makeSettingsRepository(stub, scope)
+        val accountService = makeAccountService(stub, scope)
+        val contactService = makeContactService(stub, accountService, scope)
+        val syncService = SystemContactsSyncService(contactService, testSystemContactsService())
+        val vm = AppSettingsViewModel(repo, accountService, contactService, syncService, scope)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.isProximityEnabled)
+
+        vm.toggleProximity()
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.isProximityEnabled)
+        assertFalse(repo.callSettings.value.proximityEnabled)
     }
 
     // ==================== Appearance toggles ====================
