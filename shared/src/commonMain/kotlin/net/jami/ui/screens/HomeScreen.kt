@@ -71,15 +71,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
+import androidx.compose.ui.platform.testTag
+import net.jami.ui.TestTags
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.content.AvatarSize
@@ -173,10 +181,19 @@ fun HomeScreen(
                 shape = RoundedCornerShape(JamiTheme.radius.full),
                 color = JamiTheme.colors.surfaceVariant,
             ) {
+                val searchDesc = stringResource(Res.string.content_desc_search_conversations)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onSearchClick() }
+                        // The row is itself tappable and contains two more controls. Without a
+                        // role and a label of its own it was an unnamed node that a reader had
+                        // to guess at, sandwiched between the avatar and the overflow button.
+                        .semantics {
+                            role = Role.Button
+                            contentDescription = searchDesc
+                        }
+                        .testTag(TestTags.SEARCH_BAR)
                         .padding(
                             start = JamiTheme.spacing.m,
                         ),
@@ -293,10 +310,17 @@ fun HomeScreen(
 
             // Pending requests banner — hidden when the Requests filter chip is active
             if (state.pendingRequests > 0 && state.activeFilter != ConversationFilter.REQUESTS) {
+                val invitationsText = pluralStringResource(
+                    Res.plurals.content_desc_pending_invitations,
+                    state.pendingRequests,
+                    state.pendingRequests,
+                )
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onRequestsClick() }
+                        .semantics(mergeDescendants = true) { role = Role.Button }
+                        .testTag(TestTags.PENDING_REQUESTS_BANNER)
                         .padding(
                             horizontal = JamiTheme.spacing.l,
                             vertical = JamiTheme.spacing.xs,
@@ -314,7 +338,9 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "${state.pendingRequests} pending invitation${if (state.pendingRequests > 1) "s" else ""}",
+                            // Was an English string built with a trailing "s" in source, which
+                            // neither translated nor pluralised correctly in any locale.
+                            text = invitationsText,
                             style = JamiTheme.typography.titleSmall,
                             color = JamiTheme.colors.primary,
                             modifier = Modifier.weight(1f),
@@ -639,6 +665,40 @@ private fun ConversationListItem(
 ) {
     // Long-press opens a per-row action menu (pin / mute / block / delete).
     var menuExpanded by remember { mutableStateOf(false) }
+
+    // Accessibility (2026-11-07). The row was a clickable whose children were each announced
+    // separately — name, mute icon, pin icon, timestamp, preview and badge all as siblings of
+    // the control itself — and its long-press menu was unreachable without a long-press
+    // gesture, which a screen reader does not perform. Merging gives one node with one label;
+    // the four menu entries are published as custom actions so they can be invoked from the
+    // reader's action list. Pin/mute are state, so they go in stateDescription, not the label.
+    val rowName = conversationDisplayName(conversation)
+    val unreadSpeech = if (conversation.unreadCount > 0)
+        pluralStringResource(Res.plurals.content_desc_unread_count, conversation.unreadCount, conversation.unreadCount)
+    else null
+    val rowDescription = listOfNotNull(
+        rowName,
+        unreadSpeech,
+        conversation.lastMessage.takeIf { it.isNotBlank() },
+        formatTimestamp(conversation.timestamp).takeIf { it.isNotEmpty() },
+    ).joinToString(", ")
+    val rowState = when {
+        conversation.isPinned && conversation.isMuted ->
+            stringResource(Res.string.content_desc_state_pinned_muted)
+        conversation.isPinned -> stringResource(Res.string.content_desc_state_pinned)
+        conversation.isMuted -> stringResource(Res.string.content_desc_state_muted)
+        else -> null
+    }
+    val actionPin = stringResource(
+        if (conversation.isPinned) Res.string.conversation_action_unpin
+        else Res.string.conversation_action_pin
+    )
+    val actionMute = stringResource(
+        if (conversation.isMuted) Res.string.content_desc_unmute else Res.string.content_desc_mute
+    )
+    val actionBlock = stringResource(Res.string.conversation_action_block_this)
+    val actionDelete = stringResource(Res.string.ic_delete_menu)
+
     Box {
     Row(
         modifier = Modifier
@@ -647,6 +707,18 @@ private fun ConversationListItem(
                 onClick = onClick,
                 onLongClick = { menuExpanded = true },
             )
+            .testTag(TestTags.CONVERSATION_ROW)
+            .semantics(mergeDescendants = true) {
+                role = Role.Button
+                contentDescription = rowDescription
+                rowState?.let { stateDescription = it }
+                customActions = listOf(
+                    CustomAccessibilityAction(actionPin) { onTogglePin(); true },
+                    CustomAccessibilityAction(actionMute) { onToggleMute(); true },
+                    CustomAccessibilityAction(actionBlock) { onBlock(); true },
+                    CustomAccessibilityAction(actionDelete) { onDelete(); true },
+                )
+            }
             .padding(
                 horizontal = JamiTheme.spacing.l,
                 vertical = if (compact) JamiTheme.spacing.xs else JamiTheme.spacing.m,
@@ -654,7 +726,7 @@ private fun ConversationListItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Avatar with presence dot
-        val name = conversationDisplayName(conversation)
+        val name = rowName
         JamiAvatar(
             displayName = name,
             avatarBytes = conversation.avatarBytes,
@@ -691,7 +763,9 @@ private fun ConversationListItem(
                     Spacer(Modifier.width(JamiTheme.spacing.xs))
                     Icon(
                         imageVector = Icons.Default.NotificationsOff,
-                        contentDescription = stringResource(Res.string.content_desc_mute),
+                        // The row's stateDescription says "Muted"; labelling the icon with the
+                        // *action* ("Mute") made the indicator announce the opposite of the state.
+                        contentDescription = null,
                         tint = JamiTheme.colors.onSurfaceVariant,
                         modifier = Modifier.size(16.dp),
                     )
@@ -700,7 +774,7 @@ private fun ConversationListItem(
                     Spacer(Modifier.width(JamiTheme.spacing.xs))
                     Icon(
                         imageVector = Icons.Default.PushPin,
-                        contentDescription = stringResource(Res.string.conversation_action_pin),
+                        contentDescription = null,
                         tint = JamiTheme.colors.onSurfaceVariant,
                         modifier = Modifier.size(16.dp),
                     )

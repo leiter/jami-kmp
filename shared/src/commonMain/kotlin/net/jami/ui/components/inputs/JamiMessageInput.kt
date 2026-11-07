@@ -147,7 +147,7 @@ fun JamiMessageInput(
             JamiIconButton(
                 icon = Icons.Default.ThumbUp,
                 onClick = onSend,
-                contentDescription = "Send thumbs up",
+                contentDescription = stringResource(Res.string.content_desc_send_thumbs_up),
                 tint = JamiTheme.colors.primary,
             )
         }

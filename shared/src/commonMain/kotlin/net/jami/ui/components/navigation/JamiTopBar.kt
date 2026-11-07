@@ -26,8 +26,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import net.jami.ui.components.actions.JamiIconButton
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.content_desc_back
 import net.jami.ui.theme.JamiTheme
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Top bar style presets.
@@ -85,6 +90,9 @@ fun JamiTopBar(
                     Text(
                         text = title,
                         style = JamiTheme.typography.titleMedium,
+                        // No screen title was a heading, so a screen reader offered no
+                        // structural navigation anywhere in the app.
+                        modifier = Modifier.semantics { heading() },
                     )
                 },
                 modifier = modifier,
@@ -93,7 +101,7 @@ fun JamiTopBar(
                         JamiIconButton(
                             icon = Icons.AutoMirrored.Filled.ArrowBack,
                             onClick = onNavigateBack,
-                            contentDescription = "Navigate back",
+                            contentDescription = stringResource(Res.string.content_desc_back),
                         )
                     }
                 },
@@ -113,6 +121,9 @@ fun JamiTopBar(
                     Text(
                         text = title,
                         style = JamiTheme.typography.titleMedium,
+                        // No screen title was a heading, so a screen reader offered no
+                        // structural navigation anywhere in the app.
+                        modifier = Modifier.semantics { heading() },
                     )
                 },
                 modifier = modifier,
@@ -121,7 +132,7 @@ fun JamiTopBar(
                         JamiIconButton(
                             icon = Icons.AutoMirrored.Filled.ArrowBack,
                             onClick = onNavigateBack,
-                            contentDescription = "Navigate back",
+                            contentDescription = stringResource(Res.string.content_desc_back),
                         )
                     }
                 },

@@ -140,7 +140,7 @@ fun MediaViewerScreen(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(Res.string.content_desc_back),
                 tint = Color.White,
                 modifier = Modifier.size(24.dp),
             )

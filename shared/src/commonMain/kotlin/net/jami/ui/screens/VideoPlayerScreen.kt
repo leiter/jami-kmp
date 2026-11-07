@@ -23,6 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import net.jami.ui.components.video.VideoPlayerView
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.content_desc_back
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun VideoPlayerScreen(
@@ -49,7 +52,7 @@ fun VideoPlayerScreen(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(Res.string.content_desc_back),
                 tint = Color.White,
                 modifier = Modifier.size(24.dp),
             )

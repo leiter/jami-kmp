@@ -52,6 +52,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlin.math.ceil
 import kotlin.math.sqrt
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.content_desc_participant_muted
+import jami_kmp.shared.generated.resources.content_desc_participant_video_off
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Represents a participant in a video conference.
@@ -384,7 +388,7 @@ private fun ParticipantOverlay(
                 if (participant.isMuted) {
                     Icon(
                         imageVector = Icons.Default.MicOff,
-                        contentDescription = "Muted",
+                        contentDescription = stringResource(Res.string.content_desc_participant_muted),
                         modifier = Modifier.size(16.dp),
                         tint = Color.Red
                     )
@@ -392,7 +396,7 @@ private fun ParticipantOverlay(
                 if (!participant.isVideoEnabled) {
                     Icon(
                         imageVector = Icons.Default.VideocamOff,
-                        contentDescription = "Video off",
+                        contentDescription = stringResource(Res.string.content_desc_participant_video_off),
                         modifier = Modifier.size(16.dp),
                         tint = Color.White
                     )

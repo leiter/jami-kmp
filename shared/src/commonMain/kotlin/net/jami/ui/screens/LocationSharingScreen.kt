@@ -162,7 +162,7 @@ fun LocationSharingScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.MyLocation,
-                            contentDescription = "Center on my location",
+                            contentDescription = stringResource(Res.string.content_desc_center_on_my_location),
                             tint = JamiTheme.colors.onSurface,
                         )
                     }

@@ -150,8 +150,14 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
@@ -182,6 +188,7 @@ import androidx.compose.ui.text.font.FontWeight
 import net.jami.ui.viewmodel.ReplyPreview
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
+import net.jami.ui.TestTags
 import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.content.AvatarSize
@@ -444,6 +451,13 @@ fun ChatScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .combinedClickable(onClick = onDetailsClick)
+                                // Tapping the header opens conversation details, but the row
+                                // announced its avatar, name and status note as three loose
+                                // nodes beside an unnamed control. Merge and name it.
+                                .semantics(mergeDescendants = true) {
+                                    role = Role.Button
+                                    heading()
+                                }
                                 .padding(vertical = JamiTheme.spacing.xxs),
                         ) {
                             val headerTitle = conversationDisplayName(
@@ -739,7 +753,7 @@ fun ChatScreen(
                     }
                     IconButton(
                         onClick = { viewModel.cancelReply() },
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(48.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -935,7 +949,15 @@ private fun TypingIndicator() {
         Surface(
             color = bubbleColor,
             shape = bubbleShape,
-            modifier = Modifier.semantics { contentDescription = description },
+            // A description alone meant the bubble could only be found by exploring the
+            // screen. As a polite live region the reader announces it when it appears, which
+            // is the entire point of a typing indicator.
+            modifier = Modifier
+                .testTag(TestTags.TYPING_INDICATOR)
+                .semantics {
+                    contentDescription = description
+                    liveRegion = LiveRegionMode.Polite
+                },
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = JamiTheme.spacing.m, vertical = JamiTheme.spacing.s),
@@ -1661,11 +1683,11 @@ private fun FileTransferMessage(
                     if (showDownload) {
                         IconButton(
                             onClick = onAccept,
-                            modifier = Modifier.size(32.dp),
+                            modifier = Modifier.size(48.dp),
                         ) {
                             Icon(
                                 imageVector = Icons.Default.FileDownload,
-                                contentDescription = "Download",
+                                contentDescription = stringResource(Res.string.file_download_button),
                                 tint = contentColor,
                             )
                         }
@@ -1726,7 +1748,7 @@ private fun FileTransferMessage(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "Play video",
+                                contentDescription = stringResource(Res.string.control_play),
                                 tint = androidx.compose.ui.graphics.Color.White,
                                 modifier = Modifier.size(36.dp),
                             )
@@ -1850,11 +1872,11 @@ private fun MessageInputBar(
                 Box {
                     IconButton(
                         onClick = { showMenu = true },
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(48.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Message options",
+                            contentDescription = stringResource(Res.string.content_desc_message_options),
                             tint = JamiTheme.colors.onSurfaceVariant,
                             modifier = Modifier.size(20.dp),
                         )
@@ -1959,11 +1981,12 @@ private fun MessageInputBar(
                 // Camera button
                 IconButton(
                     onClick = onTakePicture,
-                    modifier = Modifier.size(40.dp),
+                    // 48dp is the Material minimum touch target; the icon inside stays 20dp.
+                    modifier = Modifier.size(48.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.PhotoCamera,
-                        contentDescription = "Take photo",
+                        contentDescription = stringResource(Res.string.content_desc_take_photo),
                         tint = JamiTheme.colors.onSurfaceVariant,
                         modifier = Modifier.size(20.dp),
                     )
@@ -1977,6 +2000,10 @@ private fun MessageInputBar(
                     modifier = Modifier
                         .weight(1f)
                         .padding(vertical = 8.dp)
+                        // The placeholder is drawn in decorationBox and disappears as soon as
+                        // there is text, so the field was unnamed exactly while in use.
+                        .semantics { contentDescription = writeAMessage }
+                        .testTag(TestTags.MESSAGE_INPUT)
                         .focusRequester(focusRequester),
                     textStyle = JamiTheme.typography.bodyLarge.copy(
                         color = JamiTheme.colors.onSurface,
@@ -2004,7 +2031,7 @@ private fun MessageInputBar(
                     // Send button (visible when text is present)
                     IconButton(
                         onClick = onSend,
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(48.dp),
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,

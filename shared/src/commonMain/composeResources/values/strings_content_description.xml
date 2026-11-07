@@ -81,4 +81,20 @@
     <string name="account_status_note_save">Publish status</string>
     <string name="account_status_note_clear">Clear status</string>
     <string name="content_desc_remove_from_selection">Remove %1$s from the selection</string>
+
+    <!-- Accessibility pass, 2026-11-07: state descriptions, list-row actions and labels
+         that were hardcoded English at their call site. -->
+    <string name="content_desc_state_muted">Muted</string>
+    <string name="content_desc_state_pinned">Pinned</string>
+    <string name="content_desc_state_pinned_muted">Pinned, muted</string>
+    <string name="content_desc_search_conversations">Search conversations</string>
+    <string name="content_desc_message_options">Message options</string>
+    <string name="content_desc_enter_code_manually">Enter code manually</string>
+    <string name="content_desc_center_on_my_location">Centre on my location</string>
+    <string name="content_desc_participant_muted">Microphone off</string>
+    <string name="content_desc_participant_video_off">Camera off</string>
+    <plurals name="content_desc_pending_invitations">
+        <item quantity="one">%d pending invitation</item>
+        <item quantity="other">%d pending invitations</item>
+    </plurals>
 </resources>

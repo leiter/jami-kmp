@@ -250,14 +250,21 @@ follows is only what no file carried.
 
 ## L. Accessibility
 
-- **L1 — the F11 audit was run on 2026-09-30 and its results were never written down.** They
-  are now in `doc/accessibility-audit-2026-09-30.md`, re-verified on 2026-11-07. Headline:
-  conversation rows are unmerged and their long-press menu is unreachable by a screen reader;
-  mute/pin indicators announce the *action* instead of the state; the typing indicator, incoming
-  messages and call-state transitions have no `liveRegion`; the compose `BasicTextField` is
-  unnamed once text is entered; no screen title is a heading. Repo-wide there are three
-  `semantics`/`liveRegion` uses and **zero `testTag`s**, so none of it is test-covered.
-  `doc/stabilization-findings-2026-09-04.md` F11 should now point at that file.
+- **L1 — DONE 2026-11-07.** The F11 audit had been run on 2026-09-30 and its results never
+  written down; they are now in `doc/accessibility-audit-2026-09-30.md`, and the open list in it
+  is implemented. Conversation rows are merged nodes with `Role.Button`, a composed label,
+  pin/mute as `stateDescription` and the four long-press entries as custom actions; the search
+  row and chat header are named; the typing indicator and call-status line are polite live
+  regions; the composer field is labelled; screen titles are headings; five chat touch targets
+  went to 48 dp; and all 15 hardcoded English `contentDescription`s are resources, including the
+  pending-invitations banner, whose text was assembled in source as `"$n pending invitation" +
+  "s"` and could neither translate nor pluralise. `net.jami.ui.TestTags` now exists. Desktop
+  suite 918/918, Android and desktop both compile.
+
+  **Left open, recorded at the end of the audit file:** incoming messages and the recording
+  banner are still not live regions; no compose UI test exercises any of this, because
+  `compose-ui-test-junit4` sits in the version catalog unwired (the neighbour of I1); and touch
+  targets outside the chat composer were not swept.
 
 ## M. Repository and document hygiene
 

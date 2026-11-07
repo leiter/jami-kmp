@@ -79,7 +79,7 @@ fun QrScanScreen(
                     IconButton(onClick = { manualMode = !manualMode }) {
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Enter manually",
+                            contentDescription = stringResource(Res.string.content_desc_enter_code_manually),
                         )
                     }
                 },

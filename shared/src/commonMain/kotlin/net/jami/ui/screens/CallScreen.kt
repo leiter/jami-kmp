@@ -90,6 +90,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import net.jami.ui.TestTags
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -684,6 +688,7 @@ private fun AudioCallBackground(
     state: CallState,
     modifier: Modifier = Modifier
 ) {
+    val callerAvatarDesc = stringResource(Res.string.content_desc_peer_avatar)
     Box(
         modifier = modifier.background(JamiColors.DarkBackground),
         contentAlignment = Alignment.Center
@@ -698,7 +703,7 @@ private fun AudioCallBackground(
                     .size(120.dp)
                     .clip(CircleShape)
                     .background(Color.White.copy(alpha = 0.15f))
-                    .semantics { contentDescription = "Caller avatar" },
+                    .semantics { contentDescription = callerAvatarDesc },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -742,6 +747,10 @@ private fun AudioCallBackground(
                         text = statusText,
                         style = JamiTheme.typography.bodyLarge,
                         color = Color.White.copy(alpha = 0.75f),
+                        // Ringing -> connected -> on hold changed silently before this.
+                        modifier = Modifier
+                            .testTag(TestTags.CALL_STATUS)
+                            .semantics { liveRegion = LiveRegionMode.Polite },
                     )
                     Icon(
                         imageVector = Icons.Default.Videocam,
@@ -756,6 +765,9 @@ private fun AudioCallBackground(
                     style = JamiTheme.typography.bodyLarge,
                     color = if (state.callMode is CallMode.OnHold) Color.Yellow.copy(alpha = 0.9f)
                     else Color.White.copy(alpha = 0.75f),
+                    modifier = Modifier
+                        .testTag(TestTags.CALL_STATUS)
+                        .semantics { liveRegion = LiveRegionMode.Polite },
                 )
             }
 
@@ -1129,7 +1141,7 @@ private fun OnGoingControls(
             ) {
                 CallControlButton(
                     icon = Icons.Default.Cameraswitch,
-                    contentDescription = "Switch camera",
+                    contentDescription = stringResource(Res.string.view_switch_camera),
                     isActive = false,
                     onClick = onSwitchCamera,
                 )
