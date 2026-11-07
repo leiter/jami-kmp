@@ -99,6 +99,7 @@ import net.jami.model.MemberRole
 import net.jami.ui.components.actions.JamiIconButton
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
+import net.jami.ui.components.notification.JamiAlertDialog
 import net.jami.ui.platform.FilePickerEffect
 import net.jami.ui.theme.JamiTheme
 import androidx.compose.foundation.text.KeyboardActions
@@ -503,6 +504,11 @@ private fun DetailsTabContent(
     onRemoveMember: (String) -> Unit = {},
     onUnbanMember: (String) -> Unit = {},
 ) {
+    // Deleting a contact is irreversible and takes the conversation history with it, so it
+    // asks first — the same guard the conversation list already puts on its own delete. The
+    // button here fired straight through on a device (2026-11-07): one tap, contact gone.
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -655,7 +661,7 @@ private fun DetailsTabContent(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 JamiIconButton(
                     icon = Icons.Default.Delete,
-                    onClick = onDeleteClick,
+                    onClick = { showDeleteConfirm = true },
                     contentDescription = stringResource(Res.string.delete_contact),
                     tint = JamiTheme.colors.error,
                 )
@@ -668,6 +674,21 @@ private fun DetailsTabContent(
         }
 
         Spacer(Modifier.height(JamiTheme.spacing.xxl))
+    }
+
+    if (showDeleteConfirm) {
+        JamiAlertDialog(
+            title = stringResource(Res.string.conversation_action_remove_this_title),
+            body = stringResource(Res.string.conversation_action_remove_this_message),
+            confirmText = stringResource(Res.string.ic_delete_menu),
+            dismissText = stringResource(Res.string.action_cancel),
+            isDestructive = true,
+            onConfirm = {
+                showDeleteConfirm = false
+                onDeleteClick()
+            },
+            onDismiss = { showDeleteConfirm = false },
+        )
     }
 }
 

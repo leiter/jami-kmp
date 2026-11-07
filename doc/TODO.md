@@ -231,9 +231,20 @@ Pixel pair.**
 
 **Smaller things seen in that run, not addressed:**
 
-- "Kontakt löschen" on the details screen deletes immediately, with **no confirmation dialog**.
-  It is a destructive, non-obvious action (it drops the conversation with it) and the reference
-  asks first.
+- ~~"Kontakt löschen" on the details screen deletes immediately, with **no confirmation
+  dialog**.~~ **Fixed and verified on hardware 2026-11-07 (fourth session, 12:05–12:15, driven
+  jointly).** The button now opens a `JamiAlertDialog` (`conversation_action_remove_this_title`
+  / `_message`, destructive styling), the same guard the conversation list already had on its
+  own delete. A throwaway contact was re-established A→B for the test — B auto-confirmed the
+  trust request because B had never removed A, so no invitation card appeared, which is
+  correct. Cancel: no `removeContact` in the log at all and the contact still in A's `contacts`
+  file. Confirm: the full chain in 18 ms — `contact_list.cpp removeContact: 9045ef4c…` →
+  `ConversationFacade: onConversationRemoved: 8f856248…` → `ChatViewModel: … leaving the chat`
+  → `conversationrepository.cpp Erasing …/conversations/8f856248…/`, landing on the list.
+  - `action_cancel` turned out to have **no translation in any locale** (it is a KMP-only key,
+    absent from the Android client), so a German dialog read "Cancel" next to German body text.
+    German was added (`Abbrechen`); the other 30-odd locales still fall back to English for
+    this key and for the other six dialogs that use it.
 - When a peer's profile name goes blank, the message notification falls back to the raw swarm
   id — `android.title=String (46814601762c: 46814601762c)`, the conversation id twice, once as
   the title and once as the sender. The details screen kept the last known name at the same
@@ -247,6 +258,21 @@ Pixel pair.**
   swarm" and "is a swarm *group*" as the `Mode.Syncing` bug fixed on 2026-11-06.
 - B's account switcher lists the current account as "Jami" with a green "J" avatar while the
   home screen's top-left avatar for the same account is a magenta "M".
+
+**Seen on 2026-11-07 while setting up the delete-confirmation test, not addressed:**
+
+- **A deleted conversation leaves a dead duplicate on the peer.** A deleted its side of
+  `46814601762c…`; B never removed A, so B kept that conversation in its `convInfo` with
+  `removed` unset. When A re-added B, the daemon created a *new* conversation
+  (`8f856248…`) and repointed B's contact record at it, leaving B's list showing the same
+  peer twice — one live thread and one that no longer exists on the other side. Whether the
+  stale entry should be pruned when the peer's contact record moves to another conversation
+  is a client question (the daemon keeps both).
+- **`ChatViewModel.loadConversation` runs once more after the conversation was removed**:
+  141 ms after "leaving the chat" the log shows `loadConversation: id=8f856248… contact=null
+  peerUri= isGroup=null`, i.e. the screen re-loads the conversation it has just been told to
+  leave, during the pop. Harmless (the screen is going away and the load finds nothing) but
+  it is wasted work on a `LaunchedEffect(conversationId)` that should not re-fire.
 
 **Still owed a verdict**
 
