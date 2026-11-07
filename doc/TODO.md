@@ -255,7 +255,10 @@ UI, the model read the logs).**
 
 **Found during that run — five things, none of them fixed:**
 
-- [ ] **An incoming call is still reported to Telecom as outgoing** — the same failure
+- [x] **An incoming call is still reported to Telecom as outgoing — fixed 2026-11-07 (fifth
+  session).** The original of this entry follows; the cause and the fix are at the end of it.
+
+- [ ] ~~An incoming call is still reported to Telecom as outgoing~~ — the same failure
   `c77dbec` addressed this morning, reproducing on the Pixel 7a at 17:21 with that fix present.
   Daemon: `New incoming call from d9f8c7f0…` → `Create a new [INCOMING] SIP call` →
   `onCallStateChanged: CONNECTING` (before the incoming signal, as before) → `INCOMING`.
@@ -267,7 +270,38 @@ UI, the model read the logs).**
   re-report (which needs `call.isIncoming == true`) ever fired. `addCall`'s direction-wins fix
   is present and reads correctly, so the question is why `onIncomingCall`'s replacement never
   reached the state the RINGING handler saw — a different trigger from the one `c77dbec` fixed,
-  not a regression of it. **This blocks any end-to-end verification of incoming calls on A.**
+  not a regression of it.
+
+  **Cause, found by instrumenting the three decision points.** The daemon delivers
+  `CONNECTING`, `INACTIVE` and `INCOMING` for the same call within 2 ms, and
+  `onCallStateChanged` dispatches each into its own coroutine that then competes for the
+  mutex. **Whichever one wins creates the call**, and the old rule read the direction off that
+  winner's state string — `INCOMING`/`RINGING` wins, correct; `CONNECTING` wins, `OUTGOING`.
+  That is the intermittency exactly: correct at 17:32 and 17:47, broken at 17:21. `c77dbec`
+  did not address this; it added a *repair* in `JamiTelecomManager` that re-reports the call
+  once the incomingCall signal corrects the direction — but the repair needs a further RINGING
+  update to arrive before Telecom has built the connection, so it narrows the window instead
+  of closing it. Seen winning that race at 17:32 (`was reported as outgoing; re-reporting as
+  incoming`) and losing it at 17:21.
+
+  **Fix.** The direction was never a thing to infer: the client either placed the call or it
+  did not. `CallService` now records the ids the daemon returns from `placeCall` in
+  `locallyPlacedCalls`, and the creation path marks anything else INCOMING whatever the state
+  string says. The `createConfFromParticipantList` dials stay OUTGOING through the existing
+  `claimConferenceDial`. The re-report stays as a safety net but should have nothing to repair.
+
+  **Device evidence.** Five incoming calls on the pair, foreground / backgrounded / screen off
+  / answered / during bootstrap: all correct, with `addNewIncomingCall` as the first and only
+  Telecom report and no re-report. The 17:47 call exercised the creation path itself
+  (`onCallStateChanged: creating … as INCOMING`). **Honest limit:** in that run the winning
+  state was `INCOMING`, which the old rule would also have got right, so the device has not
+  reproduced the `CONNECTING`-wins ordering since the fix. That case is covered
+  deterministically by `aStateChangeBeforeTheIncomingSignalDoesNotMakeTheCallOutgoing`, whose
+  assertion was inverted — it asserted "outgoing until told otherwise", which is the broken
+  assumption — plus the new `aCallThisClientPlacedStaysOutgoingWhateverItsFirstState` for the
+  symmetric case.
+
+  **This had blocked end-to-end verification of incoming calls on A.**
 - [ ] **A refused incoming call still drives the Telecom outgoing path.** With "Block unknown
   contacts" on, `onIncomingCall` refuses and returns before registering the call — but
   `JamiTelecomManager: placeCall` still fired 16 ms later, ending in

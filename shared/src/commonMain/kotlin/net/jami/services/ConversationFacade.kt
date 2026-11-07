@@ -1178,6 +1178,7 @@ class ConversationFacade(
 
         val newState = call.callStatus
         val incomingCall = newState == CallStatus.RINGING && call.isIncoming
+        Log.d(TAG, "onCallStateChange: callId=${call.daemonId} status=$newState isIncoming=${call.isIncoming} incomingCall=$incomingCall")
         val account = accountService.getAccount(call.account) ?: return
         val contact = call.contact
         val conversationUri = call.conversationUri

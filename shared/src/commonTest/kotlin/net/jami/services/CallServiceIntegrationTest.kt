@@ -145,7 +145,14 @@ class CallServiceIntegrationTest {
         // The daemon's own order: CONNECTING, then the incomingCall signal.
         callService.onCallStateChanged("acc1", "call_in", "CONNECTING", 0)
         advanceUntilIdle()
-        assertFalse(callService.getCall("call_in")!!.isIncoming, "outgoing until told otherwise")
+        // Incoming from the first state change, not merely by the time the signal lands. This
+        // assertion used to read "outgoing until told otherwise", and that assumption is what
+        // made the Pixel 7a report every incoming call to Telecom as outgoing: its first state
+        // change is CONNECTING, and the correction afterwards is a race the call can lose.
+        assertTrue(
+            callService.getCall("call_in")!!.isIncoming,
+            "a call this client never placed is incoming, whatever its first state",
+        )
 
         callService.onIncomingCall("acc1", "call_in", "jami:peer456", emptyList())
         advanceUntilIdle()
@@ -153,6 +160,22 @@ class CallServiceIntegrationTest {
         val call = callService.getCall("call_in")
         assertNotNull(call)
         assertTrue(call.isIncoming, "the incomingCall signal is authoritative about direction")
+    }
+
+    @Test
+    fun aCallThisClientPlacedStaysOutgoingWhateverItsFirstState() = runTest {
+        val stub = StubDaemonBridge()
+        stub.placeCallResult = "call_out"
+        val (accountService, callService) = makeServices(stub, this)
+        stub.callDetails["call_out"] = mapOf(Call.KEY_PEER_NUMBER to "jami:peer456")
+
+        callService.placeCall("acc1", Uri.fromString("jami:peer456"), hasVideo = false)
+        advanceUntilIdle()
+        // RINGING on an outgoing call is ringback, not an incoming call.
+        callService.onCallStateChanged("acc1", "call_out", "RINGING", 0)
+        advanceUntilIdle()
+
+        assertFalse(callService.getCall("call_out")!!.isIncoming, "we placed this one")
     }
 
     @Test

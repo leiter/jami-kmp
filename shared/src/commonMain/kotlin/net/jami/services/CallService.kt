@@ -58,6 +58,14 @@ class CallService(
 ) {
     private val calls = mutableMapOf<String, Call>()
     private val conferences = mutableMapOf<String, Conference>()
+
+    /**
+     * Ids of calls this client placed, recorded the moment the daemon returns one.
+     *
+     * The direction of a call is not something to infer from its state: we either placed it or
+     * we did not. See [onCallStateChanged] for what inferring it cost.
+     */
+    private val locallyPlacedCalls = mutableSetOf<String>()
     // Serializes all daemon callback coroutines — prevents concurrent LinkedHashMap mutation
     private val mutex = Mutex()
 
@@ -211,6 +219,8 @@ class CallService(
 
         val callId = daemonBridge.placeCall(accountId, contactUri.uri, mediaAttributes)
         Log.d(TAG, "placeCall: daemon returned callId='$callId'")
+        // Before addCall, so a state change that beats us here still finds the call marked ours.
+        if (callId.isNotEmpty()) locallyPlacedCalls.add(callId)
 
         return if (callId.isEmpty()) {
             // For swarm calls, may return empty ID initially
@@ -677,20 +687,36 @@ class CallService(
                 if (call != null) {
                     call.setCallState(callState)
                 } else if (callState != CallStatus.OVER && callState != CallStatus.FAILURE) {
-                    // New call - create it.
-                    // RINGING without an existing call is always an incoming call: outgoing calls are
-                    // added to `calls` by placeCall() before any callStateChanged fires, so they already
-                    // exist here. Mark RINGING-created calls as INCOMING so the UI shows the right side.
-                    // …except for the calls createConfFromParticipantList places on our behalf:
-                    // those are ours, and the daemon hands us no ids to pre-register them with.
+                    // New call - create it. A call that is not in `calls` yet is one we did
+                    // not place: placeCall() records its id in [locallyPlacedCalls] and adds it
+                    // the moment the daemon returns one. So the direction is known, not guessed.
+                    //
+                    // This used to read the direction off the state — INCOMING only when the
+                    // first state was RINGING, OUTGOING otherwise — and that is wrong on any
+                    // device where an incoming call's first state change is CONNECTING, which
+                    // is what the Pixel 7a does. The call was then created OUTGOING, Telecom was
+                    // asked for an outgoing connection it had never been asked to place, and the
+                    // call could not be answered at all: no ringtone, no UI, BUSY after 30 s
+                    // (2026-11-07). `JamiTelecomManager` re-reports such a call once the
+                    // incomingCall signal corrects the direction, but that is a repair with a
+                    // window — it needs a further RINGING update to arrive before Telecom has
+                    // built the connection. Observed both winning and losing that race on the
+                    // same pair within ten minutes. Not inferring the direction removes the race
+                    // rather than narrowing it; the re-report stays as a safety net.
+                    //
+                    // The exception is the calls createConfFromParticipantList places on our
+                    // behalf: those are ours, and the daemon hands us no ids to pre-register.
                     val peerNumber = daemonBridge.getCallDetails(accountId, callId)[Call.KEY_PEER_NUMBER]
                     val isOurConferenceDial = peerNumber != null && claimConferenceDial(peerNumber)
                     if (isOurConferenceDial && conferenceNavPending) {
                         conferenceNavPending = false
                         _pendingCallNavId.value = callId
                     }
-                    val callType = if (callState == CallStatus.RINGING && !isOurConferenceDial)
-                        Call.Direction.INCOMING.value else Call.Direction.OUTGOING.value
+                    val wePlacedIt = isOurConferenceDial || callId in locallyPlacedCalls
+                    val callType = if (wePlacedIt) Call.Direction.OUTGOING.value
+                        else Call.Direction.INCOMING.value
+                    Log.d(TAG, "onCallStateChanged: creating $callId as " +
+                        "${if (wePlacedIt) "OUTGOING" else "INCOMING"} (state=$stateStr)")
                     call = Call(callId, mapOf(
                         Call.KEY_ACCOUNT_ID to accountId,
                         Call.KEY_CALL_STATE to stateStr,
@@ -708,6 +734,7 @@ class CallService(
                     if (call.callStatus == CallStatus.OVER) {
                         calls.remove(call.daemonId)
                         conferences.remove(call.daemonId)
+                        call.daemonId?.let { locallyPlacedCalls.remove(it) }
                         call.daemonId?.let { clearInCallMessages(it) }
                         updateCurrentCalls()
                     }
@@ -728,6 +755,7 @@ class CallService(
     ) {
         scope.launch {
             val (peerUri, _) = Uri.fromStringWithName(from)
+            Log.d(TAG, "onIncomingCall: callId=$callId from=$from existing=${calls[callId]?.let { "isIncoming=" + it.isIncoming + " status=" + it.callStatus }}")
 
             // "Block unknown contacts": refuse before the call is registered or announced.
             // Enforced here rather than further downstream because _callUpdates has several
@@ -1048,6 +1076,9 @@ class CallService(
         // method knows the real direction; let it win.
         val directionMatches = existing != null &&
             existing.isIncoming == (direction == Direction.INCOMING)
+        Log.d(TAG, "addCall: callId=$callId direction=$direction existing=${existing?.let {
+            "isIncoming=" + it.isIncoming + " peerEmpty=" + it.peerUri.isEmpty + " status=" + it.callStatus
+        }} directionMatches=$directionMatches")
         val call = if (existing != null && !existing.peerUri.isEmpty && directionMatches) {
             existing
         } else {
@@ -1066,6 +1097,7 @@ class CallService(
             }
         }
         call.setMediaList(mediaList)
+        Log.d(TAG, "addCall: result callId=$callId isIncoming=${call.isIncoming} status=${call.callStatus}")
         return call
     }
 
