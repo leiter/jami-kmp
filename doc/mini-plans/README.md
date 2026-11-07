@@ -54,7 +54,9 @@ count (security-networking, 14) held only three findings worth implementing, whi
 (daemon-api-surface-audit) held the single biggest remaining feature. Sort by the sub-bullets, not
 the numbers.
 
-One finding is open, in one plan.
+**Re-verified against source and the SWIG bindings on 2026-11-07.** One finding is open, in
+one plan — and of the six marked *partly done*, four have remainders that cannot be built at
+all, one reduces to the Apple batch, and one is real but diagnostics-only. Detail below.
 
 - **`daemon-api-surface-audit.md` — 1 open, and it is the biggest item left.**
   **F3, the plugin system**, planned in [`../plan_plugin_system.md`](../plan_plugin_system.md):
@@ -65,13 +67,30 @@ One finding is open, in one plan.
   asks for a decision before any code: plugins are desktop-first in the reference clients, and
   nothing has established that the mobile-primary targets want them.
 
+### The six "partly done" findings, re-checked 2026-11-07
+
+| Finding | What is left | Verdict |
+|---|---|---|
+| calling F2 | per-participant **video** mute | **Impossible** — no such call in libjami; the audio half is wired |
+| calling F9 | `getCallList`, `getConferenceList`, `currentMediaList`, proactive `getConferenceInfos` | **Real and buildable** — all four are in the bindings and called from no Kotlin. Diagnostics only |
+| notifications F2 | iOS/macOS config signals | **Apple batch** — Android is now complete; the certificate signals landed with F6 and `audioMeter` with F9, so that caveat in the heading is stale. None of the 14 exist in `DaemonBridge.ios.kt` or `.macos.kt` |
+| contacts F5 | `getConversationConnectivity`, `getConversationTrackedMembers` | **Impossible** — neither is in `JamiService.java`. `getConnectionList`, the third, *is* now used (`DebugLogsViewModel` plus all three bridges), so this finding is further along than its heading says |
+| daemon F10 | `getNativeVersion`, `getAudioProcessingParams` | **Impossible** — absent from the bindings. `monitor` is wired (`DebugLogsViewModel`) |
+| daemon F11 | remaining audio-processing params | **Impossible by the same route** — `getAudioProcessingParams` is not in the bindings; the echo-cancellation mis-mapping that mattered is fixed and `echoCancel` round-trips through `SettingsRepository` |
+
+So the honest open list is **F3 (plugins, awaiting a product decision)**, **calling F9** if anyone
+wants call/stream introspection, and the **Apple half of notifications F2**, which is gated on the
+same Mac session as everything else in `../apple-bridge-rebuild.md`.
+
 **Work that came out of using the app, not out of these plans.** Two days of device runs turned up
 more than the findings did: a crash class where any group conversation took down every screen that
 walks a conversation list (`bbba9fb`), the contact picker showing neither your selection nor
 anybody to pick from (`c1b440b`), and group creation not following the reference client at all
 (`51084e8`). None of the six plans had a finding for any of it, because they were audited against
-the daemon API rather than against the screens. One site of the crash class is still open —
-`Account.getByContact`, see [`../KNOWN-ISSUES.md`](../KNOWN-ISSUES.md).
+the daemon API rather than against the screens. The last site of that crash class,
+`Account.getByContact`, was fixed in `69ab199` (2026-10-30) and re-verified on 2026-11-07 — it
+uses `contactOrNull` throughout, as do the `ChatViewModel` walks. This paragraph said it was
+still open until then; see [`../KNOWN-ISSUES.md`](../KNOWN-ISSUES.md).
 
 **What is left that is not a finding.** A two-device round on 2026-10-29 closed two of the three
 outstanding checks — clearing a status note, and a conference actually ringing — and left one:
@@ -79,8 +98,9 @@ outstanding checks — clearing a status note, and a conference actually ringing
 which adb cannot do on its own. See
 [`../two-device-verification-2026-10-29.md`](../two-device-verification-2026-10-29.md), which also
 records what the conference run did *not* prove. The Apple batch in
-[`../apple-bridge-rebuild.md`](../apple-bridge-rebuild.md) has grown to five items and wants a
-Mac.
+[`../apple-bridge-rebuild.md`](../apple-bridge-rebuild.md) has grown to **seven** items (CLAUDE.md
+carries the current list; call recording and the notifications-F2 config signals joined it after
+this file last counted five) and wants a Mac.
 
 **Closed plans.** `contacts-presence-accounts.md` (2026-10-28) — the real work was F2, presence
 suspended on background, which also unified three independent presence subscribers behind a single
