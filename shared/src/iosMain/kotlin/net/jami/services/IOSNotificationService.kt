@@ -143,6 +143,23 @@ class IOSNotificationService(
 
     // ==================== Call Notifications ====================
 
+    /**
+     * Gives [content] the sound the user asked for, or no sound at all when they turned it off.
+     *
+     * Reading `shouldVibrate()` here, as every call site used to, meant the sound toggle did
+     * nothing on iOS while the vibration toggle silenced notifications — vibration is not a
+     * notification's to control on this platform. A custom sound URI is an Android
+     * `content://` ringtone and means nothing to `UNNotificationSound`, so a user who picked
+     * one gets the default rather than silence.
+     */
+    private fun applySound(content: UNMutableNotificationContent) {
+        when (notificationGuard.notificationSound()) {
+            NotificationSound.Silent -> Unit
+            NotificationSound.Default,
+            is NotificationSound.Custom -> content.setSound(UNNotificationSound.defaultSound())
+        }
+    }
+
     override fun showCallNotification(notifId: Int): Any? {
         // Check settings before showing
         if (!notificationGuard.shouldShowCallNotification()) {
@@ -157,10 +174,11 @@ class IOSNotificationService(
             setTitle(runBlocking { getString(Res.string.notif_current_call) })
             setCategoryIdentifier(CATEGORY_CALL)
             // Apply sound based on settings. Silent during quiet hours — the notification
-            // is still delivered, so the call can be seen and answered.
-            if (notificationGuard.shouldVibrate() &&
-                !notificationGuard.shouldSilenceCallNotification()) {
-                setSound(UNNotificationSound.defaultSound())
+            // is still delivered, so the call can be seen and answered. The sound setting
+            // decides this, not the vibration one: on iOS vibration follows the ring/silent
+            // switch and the system's haptic settings, and a notification cannot ask for it.
+            if (!notificationGuard.shouldSilenceCallNotification()) {
+                applySound(this)
             }
         }
 
@@ -235,10 +253,11 @@ class IOSNotificationService(
             setBody(conference.getDisplayName())
             setCategoryIdentifier(CATEGORY_CALL)
             // Apply sound based on settings. Silent during quiet hours — the notification
-            // is still delivered, so the call can be seen and answered.
-            if (notificationGuard.shouldVibrate() &&
-                !notificationGuard.shouldSilenceCallNotification()) {
-                setSound(UNNotificationSound.defaultSound())
+            // is still delivered, so the call can be seen and answered. The sound setting
+            // decides this, not the vibration one: on iOS vibration follows the ring/silent
+            // switch and the system's haptic settings, and a notification cannot ask for it.
+            if (!notificationGuard.shouldSilenceCallNotification()) {
+                applySound(this)
             }
             setUserInfo(buildMap<Any?, Any?> {
                 put(KEY_ACCOUNT_ID, conference.accountId)
@@ -352,10 +371,9 @@ class IOSNotificationService(
             setTitle(senderName)
             setBody(lastMessage)
             setCategoryIdentifier(CATEGORY_MESSAGE)
-            // Apply sound based on settings
-            if (notificationGuard.shouldVibrate()) {
-                setSound(UNNotificationSound.defaultSound())
-            }
+            // Apply sound based on settings — the sound setting, not the vibration one; see
+            // applySound().
+            applySound(this)
             setBadge(platform.Foundation.NSNumber(int = 1))
             setUserInfo(mapOf<Any?, Any?>(
                 KEY_ACCOUNT_ID to conversation.accountId,
@@ -423,10 +441,9 @@ class IOSNotificationService(
                 else getString(Res.string.invitation_message, pending.size)
             })
             setCategoryIdentifier(CATEGORY_REQUEST)
-            // Apply sound based on settings
-            if (notificationGuard.shouldVibrate()) {
-                setSound(UNNotificationSound.defaultSound())
-            }
+            // Apply sound based on settings — the sound setting, not the vibration one; see
+            // applySound().
+            applySound(this)
             setUserInfo(buildMap<Any?, Any?> {
                 put(KEY_ACCOUNT_ID, account.accountId)
                 account.getPending().singleOrNull()?.let { put(KEY_CONVERSATION_ID, it.uri.uri) }

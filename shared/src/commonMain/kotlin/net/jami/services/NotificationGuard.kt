@@ -111,8 +111,26 @@ class NotificationGuard(
     }
 
     /**
+     * What the sound settings add up to: off, the platform default, or a chosen URI.
+     *
+     * Prefer this to [getSoundUri], which cannot express "off" — see [NotificationSound].
+     */
+    fun notificationSound(): NotificationSound {
+        val settings = settingsRepository.notificationSettings.value
+        return when {
+            !settings.soundEnabled -> NotificationSound.Silent
+            settings.soundUri.isNotEmpty() -> NotificationSound.Custom(settings.soundUri)
+            else -> NotificationSound.Default
+        }
+    }
+
+    /**
      * Get notification sound URI.
      * Returns custom sound if set, null for system default.
+     *
+     * **Ambiguous — use [notificationSound] instead.** `null` here means both "the user turned
+     * sound off" and "no custom sound chosen", which are opposite instructions to a platform
+     * that reads a null sound as *play the default*.
      *
      * @return Sound URI string or null for default
      */

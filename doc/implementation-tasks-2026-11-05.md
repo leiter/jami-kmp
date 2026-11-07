@@ -40,12 +40,29 @@ A1 and A2 were closed on 2026-11-05, A3, B2 and B3 on 2026-11-06.
 Static evidence from `doc/manual-test-plan-2026-09-10.md` B10–B14; B13/B15/B16 were closed
 on 2026-10-31.
 
-- **B1 (B10/B11) — notification sound and vibration toggles do nothing.**
-  `AndroidNotificationService` sets them on the `Notification.Builder`, which Android ignores
-  from API 26; channels hardcode `enableVibration(...)` and the default sound, and only
-  `CHANNEL_CALLS` is ever recreated. Needs channel recreation on change (or per-setting
-  channel ids). Also `NotificationGuard.getSoundUri()` returns `null` both for "sound off"
-  and "no custom sound", and `null` means *use the default* — the two cases need separating.
+- **B1 (B10/B11) — ~~notification sound and vibration toggles do nothing~~.** Fixed 2026-11-08.
+  Per-setting channel ids, not recreation: a channel recreated under an id it has held before
+  comes back with its *old* settings, which is how the platform preserves a user's own edits —
+  so delete-and-recreate could never have worked either, and the ringtone setting was broken
+  the same way (only the first ringtone a device ever saw was used). `NotificationChannelIds`
+  (commonMain, so it is testable without a device) derives an id per settings combination;
+  `ensureChannelVariant()` creates the matching channel on demand and deletes the stale
+  siblings, including the legacy un-suffixed one, so system settings keeps showing one entry
+  per channel. Messages, requests and calls are variant channels now and left
+  `createNotificationChannels()`; the builder path stays for pre-O, where it is the only place
+  the settings can be applied.
+
+  The `getSoundUri()` ambiguity is now `NotificationGuard.notificationSound()`, returning
+  `Silent` / `Default` / `Custom(uri)`. The old accessor is kept and documented as ambiguous.
+  That ambiguity had a second victim: iOS decided a notification's **sound** by reading
+  `shouldVibrate()`, so the sound toggle did nothing there and the vibration toggle silenced
+  notifications — vibration is not a notification's to control on iOS. Four call sites now go
+  through one `applySound()`.
+
+  Nine tests: four in `NotificationGuardTest` for the three sound cases and off-beats-custom,
+  five in the new `NotificationChannelIdsTest` for id uniqueness, stability and sibling
+  matching. **Device check owed:** that a channel really goes silent, and that the ringtone
+  now changes.
 
 - **B2 (B12) — ~~quiet hours suppresses incoming calls~~.**
   Fixed 2026-11-06. Premise confirmed against source first (the term was in the conjunction,

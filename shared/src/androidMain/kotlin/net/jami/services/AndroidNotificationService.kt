@@ -107,6 +107,14 @@ class AndroidNotificationService(
     private val activeTransferNotifications = mutableMapOf<String, Int>() // fileId -> notifId
     private var currentCallNotificationId: Int? = null
 
+    /**
+     * The variant channel id currently live for each base channel id, so the common case —
+     * settings unchanged since the last notification — costs nothing. Process-local: an empty
+     * map only means the next notification re-checks against the system, which is cheap and
+     * idempotent.
+     */
+    private val liveChannelVariants = mutableMapOf<String, String>()
+
     private var pendingScreenshareCallback: (() -> Unit)? = null
     private var pendingScreenshareConfId: String? = null
 
@@ -119,15 +127,9 @@ class AndroidNotificationService(
     private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channels = listOf(
-                NotificationChannel(
-                    CHANNEL_CALLS,
-                    runBlocking { getString(Res.string.notif_channel_incoming_calls) },
-                    NotificationManager.IMPORTANCE_HIGH
-                ).apply {
-                    setShowBadge(true)
-                    enableVibration(true)
-                    setBypassDnd(true)
-                },
+                // CHANNEL_CALLS itself is not here: its sound is the user's chosen ringtone,
+                // so it is built on demand by callsChannel() under an id that encodes the
+                // ringtone. See ensureChannelVariant().
                 // The same channel without sound or vibration, used for calls that arrive
                 // during the user's quiet hours. A separate channel is the only way to do
                 // this: from API 26 the channel owns the sound, so no builder call can mute
@@ -143,15 +145,6 @@ class AndroidNotificationService(
                     setShowBadge(true)
                     enableVibration(false)
                     setSound(null, null)
-                },
-                // v2: recreated at IMPORTANCE_HIGH (was IMPORTANCE_DEFAULT — no heads-up banners)
-                NotificationChannel(
-                    CHANNEL_MESSAGES,
-                    runBlocking { getString(Res.string.notif_channel_messages) },
-                    NotificationManager.IMPORTANCE_HIGH
-                ).apply {
-                    setShowBadge(true)
-                    enableVibration(true)
                 },
                 NotificationChannel(
                     CHANNEL_FILE_TRANSFER,
@@ -170,19 +163,92 @@ class AndroidNotificationService(
                     description = runBlocking { getString(Res.string.notif_channel_background_service_descr) }
                     setShowBadge(false)
                     enableVibration(false)
-                },
-                NotificationChannel(
-                    CHANNEL_REQUESTS,
-                    runBlocking { getString(Res.string.notif_channel_requests) },
-                    NotificationManager.IMPORTANCE_DEFAULT
-                ).apply {
-                    setShowBadge(true)
-                    enableVibration(true)
                 }
             )
             notificationManager.createNotificationChannels(channels)
         }
     }
+
+    /**
+     * The id of the channel to post to for [base], creating it first if the user's current
+     * sound and vibration settings call for a channel this device has not seen.
+     *
+     * Android fixes a channel's sound and vibration when the channel is created and ignores
+     * every later change — the `Notification.Builder` calls have been inert since API 26, and
+     * deleting the channel does not help either: recreated under an id it has held before, it
+     * comes back with its old settings. That is why [CHANNEL_MESSAGES] and [CHANNEL_REQUESTS]
+     * are no longer in [createNotificationChannels] and are built here instead, under an id
+     * that encodes the settings ([NotificationChannelIds]).
+     *
+     * Stale siblings — including the plain, un-suffixed channel earlier versions created — are
+     * deleted, so the system settings screen shows one entry per base channel, not a pile. The
+     * user's own edits to a channel survive, because the same settings always map back to the
+     * same id.
+     */
+    private fun ensureChannelVariant(
+        base: String,
+        name: String,
+        importance: Int,
+        sound: NotificationSound,
+        vibrate: Boolean,
+        showBadge: Boolean,
+        soundUsage: Int,
+        bypassDnd: Boolean = false,
+    ): String {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return base
+        val id = NotificationChannelIds.variant(base, sound, vibrate)
+        if (liveChannelVariants[base] == id) return id
+
+        notificationManager.notificationChannels
+            .filter { it.id != id && NotificationChannelIds.isVariantOf(base, it.id) }
+            .forEach { notificationManager.deleteNotificationChannel(it.id) }
+
+        val channel = NotificationChannel(id, name, importance).apply {
+            setShowBadge(showBadge)
+            enableVibration(vibrate)
+            if (bypassDnd) setBypassDnd(true)
+            when (sound) {
+                // Silent is the whole point of the fix: a null sound means *default* to the
+                // platform, so "sound off" has to be said with setSound(null, null).
+                NotificationSound.Silent -> setSound(null, null)
+                // Left alone: a channel's own default is the platform default sound.
+                NotificationSound.Default -> Unit
+                is NotificationSound.Custom -> setSound(
+                    AndroidUri.parse(sound.uri),
+                    AudioAttributes.Builder()
+                        .setUsage(soundUsage)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build(),
+                )
+            }
+        }
+        notificationManager.createNotificationChannel(channel)
+        liveChannelVariants[base] = id
+        Log.d(TAG, "Notification channel $base now posting to $id")
+        return id
+    }
+
+    /** The channel messages are posted to under the user's current sound/vibration settings. */
+    private fun messagesChannel(): String = ensureChannelVariant(
+        base = CHANNEL_MESSAGES,
+        name = runBlocking { getString(Res.string.notif_channel_messages) },
+        importance = NotificationManager.IMPORTANCE_HIGH,
+        sound = notificationGuard.notificationSound(),
+        vibrate = notificationGuard.shouldVibrate(),
+        showBadge = true,
+        soundUsage = AudioAttributes.USAGE_NOTIFICATION,
+    )
+
+    /** The channel contact requests are posted to, under the same settings. */
+    private fun requestsChannel(): String = ensureChannelVariant(
+        base = CHANNEL_REQUESTS,
+        name = runBlocking { getString(Res.string.notif_channel_requests) },
+        importance = NotificationManager.IMPORTANCE_DEFAULT,
+        sound = notificationGuard.notificationSound(),
+        vibrate = notificationGuard.shouldVibrate(),
+        showBadge = true,
+        soundUsage = AudioAttributes.USAGE_NOTIFICATION,
+    )
 
     // ==================== Call Notifications ====================
 
@@ -190,40 +256,28 @@ class AndroidNotificationService(
      * The channel every call notification is posted to: the silent one during quiet hours,
      * the ringing one otherwise. Read per notification rather than cached, so a call that
      * arrives either side of the quiet-hours boundary gets the right treatment.
+     *
+     * The ringing channel carries the user's ringtone, which Android will not let us change
+     * on an existing channel — nor on a deleted and recreated one, which comes back with its
+     * old sound. So the ringtone is part of the channel id and a new ringtone means a new
+     * channel; [ensureChannelVariant] deletes the one it replaces. This is what makes the
+     * ringtone setting take effect at all: the previous delete-and-recreate under the same id
+     * silently kept the first ringtone the device ever saw.
      */
-    private fun callsChannel(): String =
-        if (notificationGuard.shouldSilenceCallNotification()) CHANNEL_CALLS_SILENT
-        else CHANNEL_CALLS
-
-    /**
-     * Delete and recreate [CHANNEL_CALLS] with a new ringtone URI when the setting changes.
-     * Channel sound can only be set at creation time on Android O+, so we delete + recreate.
-     * The last applied ringtone is persisted in [LocalPrefs] to avoid redundant channel churn.
-     */
-    private fun refreshCallsChannel(ringtoneUri: String) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        val lastApplied = LocalPrefs.getString(LocalPrefKeys.LAST_APPLIED_RINGTONE, "")
-        if (ringtoneUri == lastApplied) return
-        notificationManager.deleteNotificationChannel(CHANNEL_CALLS)
-        val channel = NotificationChannel(
-            CHANNEL_CALLS,
-            runBlocking { getString(Res.string.notif_channel_incoming_calls) },
-            NotificationManager.IMPORTANCE_HIGH
-        ).apply {
-            setShowBadge(true)
-            enableVibration(true)
-            setBypassDnd(true)
-            if (ringtoneUri.isNotBlank()) {
-                val sound = AndroidUri.parse(ringtoneUri)
-                val attrs = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-                setSound(sound, attrs)
-            }
-        }
-        notificationManager.createNotificationChannel(channel)
-        LocalPrefs.setString(LocalPrefKeys.LAST_APPLIED_RINGTONE, ringtoneUri)
+    private fun callsChannel(): String {
+        if (notificationGuard.shouldSilenceCallNotification()) return CHANNEL_CALLS_SILENT
+        val ringtone = runBlocking { settingsRepository.callSettings.first().ringtone }
+        return ensureChannelVariant(
+            base = CHANNEL_CALLS,
+            name = runBlocking { getString(Res.string.notif_channel_incoming_calls) },
+            importance = NotificationManager.IMPORTANCE_HIGH,
+            sound = if (ringtone.isBlank()) NotificationSound.Default
+                    else NotificationSound.Custom(ringtone),
+            vibrate = true,
+            showBadge = true,
+            soundUsage = AudioAttributes.USAGE_NOTIFICATION_RINGTONE,
+            bypassDnd = true,
+        )
     }
 
     override fun showCallNotification(notifId: Int): Any? {
@@ -232,10 +286,6 @@ class AndroidNotificationService(
             Log.d(TAG, "Call notifications disabled in settings")
             return null
         }
-
-        // Recreate the calls channel if the ringtone setting has changed
-        val currentRingtone = runBlocking { settingsRepository.callSettings.first().ringtone }
-        refreshCallsChannel(currentRingtone)
 
         currentCallNotificationId = notifId
         activeCallNotifications.add(notifId)
@@ -549,7 +599,7 @@ class AndroidNotificationService(
             .setConversationTitle(senderName) // Or conversation.displayName for groups
             .addMessage(lastMessage, System.currentTimeMillis(), Person.Builder().setName(senderName).build())
 
-        val builder = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
+        val builder = NotificationCompat.Builder(context, messagesChannel())
             .setSmallIcon(smallIcon)
             .applyUserVisibility()
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -569,7 +619,7 @@ class AndroidNotificationService(
 
         // Create and update the group summary notification
         val summaryNotificationId = NOTIF_MESSAGE_GROUP_SUMMARY_BASE + conversationKey.hashCode()
-        val summaryBuilder = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
+        val summaryBuilder = NotificationCompat.Builder(context, messagesChannel())
             .setSmallIcon(smallIcon)
             .applyUserVisibility()
             .setContentText(senderName)
@@ -627,7 +677,7 @@ class AndroidNotificationService(
             return
         }
 
-        val builder = NotificationCompat.Builder(context, CHANNEL_REQUESTS)
+        val builder = NotificationCompat.Builder(context, requestsChannel())
             .setSmallIcon(smallIcon)
             .applyUserVisibility()
             .setContentTitle(runBlocking { getString(Res.string.new_invitation_request_title) })
@@ -781,7 +831,7 @@ class AndroidNotificationService(
     ) {
         val notifId = NOTIF_LOCATION_BASE + contact.uri.uri.hashCode()
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
+        val notification = NotificationCompat.Builder(context, messagesChannel())
             .setSmallIcon(smallIcon)
             .applyUserVisibility()
             .setContentTitle(runBlocking { getString(Res.string.notif_location_title, contact.displayName ?: contact.uri.uri) })
@@ -839,7 +889,7 @@ class AndroidNotificationService(
     override fun testPushNotification(accountId: String) {
         val notifId = NOTIF_TEST_PUSH
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
+        val notification = NotificationCompat.Builder(context, messagesChannel())
             .setSmallIcon(smallIcon)
             .setContentTitle("Push Test")
             .setContentText("Push notification working for account: $accountId")
@@ -887,16 +937,22 @@ class AndroidNotificationService(
             return
         }
 
-        // Apply custom sound URI if set
-        val soundUri = notificationGuard.getSoundUri()
-        if (soundUri != null) {
-            builder.setSound(android.net.Uri.parse(soundUri))
+        // From API 26 the channel owns both, and every call below is ignored — the settings
+        // reach those devices through the channel id instead (ensureChannelVariant). This is
+        // the pre-O path, where the builder is the only place the settings can be applied.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) return
+
+        when (val sound = notificationGuard.notificationSound()) {
+            // A null sound means *default* here too, so silence has to be explicit.
+            NotificationSound.Silent -> builder.setSound(null)
+            NotificationSound.Default -> Unit
+            is NotificationSound.Custom -> builder.setSound(AndroidUri.parse(sound.uri))
         }
 
-        // Apply vibration if enabled
-        if (notificationGuard.shouldVibrate()) {
-            builder.setVibrate(longArrayOf(0, 250, 250, 250))
-        }
+        builder.setVibrate(
+            if (notificationGuard.shouldVibrate()) longArrayOf(0, 250, 250, 250)
+            else longArrayOf(0)
+        )
 
         // LED color is handled differently - it's set on notification directly, not builder
         // Android handles LED through notification channels for API 26+

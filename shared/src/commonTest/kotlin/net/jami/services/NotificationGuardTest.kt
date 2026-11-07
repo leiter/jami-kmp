@@ -19,7 +19,9 @@ package net.jami.services
 import kotlinx.coroutines.test.runTest
 import net.jami.viewmodel.makeSettingsRepository
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -93,7 +95,61 @@ class NotificationGuardTest {
         assertFalse(guard.shouldShowCallNotification())
     }
 
+    // ==================== Sound: three cases, not a nullable string ====================
+
+    /**
+     * The regression these three exist for: `getSoundUri()` returns `null` both for "sound
+     * off" and for "no custom sound", and `null` tells Android to play the default — so
+     * turning sound off played a sound.
+     */
+    @Test
+    fun soundOffIsSilentAndNotTheDefault() = runTest {
+        val repo = makeSettingsRepository(scope = this)
+        val guard = NotificationGuard(repo)
+
+        repo.updateNotificationSoundEnabled(false)
+
+        assertEquals(NotificationSound.Silent, guard.notificationSound())
+        assertNull(guard.getSoundUri(), "the old accessor cannot tell this case from the next")
+    }
+
+    @Test
+    fun soundOnWithNoCustomUriIsTheDefault() = runTest {
+        val repo = makeSettingsRepository(scope = this)
+        val guard = NotificationGuard(repo)
+
+        repo.updateNotificationSoundEnabled(true)
+
+        assertEquals(NotificationSound.Default, guard.notificationSound())
+        assertNull(guard.getSoundUri())
+    }
+
+    @Test
+    fun soundOnWithACustomUriCarriesIt() = runTest {
+        val repo = makeSettingsRepository(scope = this)
+        val guard = NotificationGuard(repo)
+
+        repo.updateNotificationSoundEnabled(true)
+        repo.updateNotificationSound(CUSTOM_SOUND)
+
+        assertEquals(NotificationSound.Custom(CUSTOM_SOUND), guard.notificationSound())
+    }
+
+    /** Turning sound off outranks a custom URI that is still stored. */
+    @Test
+    fun soundOffWinsOverAStoredCustomUri() = runTest {
+        val repo = makeSettingsRepository(scope = this)
+        val guard = NotificationGuard(repo)
+
+        repo.updateNotificationSound(CUSTOM_SOUND)
+        repo.updateNotificationSoundEnabled(false)
+
+        assertEquals(NotificationSound.Silent, guard.notificationSound())
+    }
+
     private companion object {
+        const val CUSTOM_SOUND = "content://media/internal/audio/media/42"
+
         /** Midnight to midnight — in quiet hours whatever the clock says. */
         const val ALL_DAY_START = 0
         const val ALL_DAY_END = 24 * 60
