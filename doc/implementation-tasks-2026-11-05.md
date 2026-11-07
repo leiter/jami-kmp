@@ -228,3 +228,115 @@ has since landed under other names. Treat each as a read-the-source check first:
   `VideoSurface.desktop.kt` and `OsmMapView` desktop/macOS stubs all sit behind it.
   Deprioritised — keep it that way, or fund the separate module.
 - **K4 — `QRCodeUtils.js.kt`** returns null; only worth doing if K2 keeps the web target.
+
+---
+
+# Addendum — recovered from session screenshots, 2026-11-07
+
+Thirty-nine screenshots of earlier sessions (2026-08-08 … 2026-11-07) were read back and each
+claim re-checked against the current source before being written down here. Most of what they
+contained is already in sections A–K above or in `doc/TODO.md`, and was confirmed as such. What
+follows is only what no file carried.
+
+## L. Accessibility
+
+- **L1 — the F11 audit was run on 2026-09-30 and its results were never written down.** They
+  are now in `doc/accessibility-audit-2026-09-30.md`, re-verified on 2026-11-07. Headline:
+  conversation rows are unmerged and their long-press menu is unreachable by a screen reader;
+  mute/pin indicators announce the *action* instead of the state; the typing indicator, incoming
+  messages and call-state transitions have no `liveRegion`; the compose `BasicTextField` is
+  unnamed once text is entered; no screen title is a heading. Repo-wide there are three
+  `semantics`/`liveRegion` uses and **zero `testTag`s**, so none of it is test-covered.
+  `doc/stabilization-findings-2026-09-04.md` F11 should now point at that file.
+
+## M. Repository and document hygiene
+
+- **M1 — `main` is 25 commits ahead of `origin/main` and 5 behind.** Every fix from the
+  2026-11-06/07 device sessions exists only on this machine, and origin carries five commits
+  that have never been merged here. Reconcile and push; this is the whole stabilization effort
+  sitting undefended.
+
+- **M2 — the iOS parity analysis is stranded on two unmerged branches.**
+  `doc/ios-native-parity-analysis.md` is not on `main` and nothing references it; it lives on
+  `docs/ios-native-parity-analysis` (`93d946b`) and on
+  `feat/ios-app-group-and-notification-extension`, which is three commits ahead of `main` and
+  also carries real work — App Group entitlement, Info.plist/bundle fixes, a notification
+  service extension scaffold, removal of the dead per-frame video copy, and a video-pipeline
+  plan. Decide whether to merge that branch or close it; leaving it is how the analysis got
+  lost. Its findings not covered by section F: no Notification Service Extension (a terminated
+  app gets no notification at all from a message push), no Share Extension, duplicate
+  `UIBackgroundModes` key in Info.plist with `aps-environment = development`, `processing`/`fetch`
+  declared without `BGTaskScheduler` identifiers, `HardwareService` self-activating
+  `AVAudioSession` instead of overriding CallKit's `didActivateAudioSession`, and
+  `IOSNotificationService` using `runBlocking` for string resources on the main thread.
+
+- **M3 — `ios_implementation_gap.md` is stale and is what everyone reads instead.** It predates
+  the 2026-09-08 commit wave (`ed6673a`, `94a1b76`, `707f849`, `de04740`), so its §2.1/§3.1/§3.2
+  are largely closed in code — yet `CLAUDE.md`, `README.md`, `STATUS.md` and three plan docs all
+  cite it as current. Reconcile it against M2's analysis or mark it superseded the way
+  `doc/gap-analysis-medium-opportunities.md` already is.
+
+- **M4 — five stale local branches.** `daemon-from-source-reconcile`,
+  `docs/ios-native-parity-analysis`, `feat/ios-app-group-and-notification-extension`,
+  `fix/settings-stored-but-unapplied`, `stability/phase1-daemon-connectivity`. The middle two
+  are M2; the others look merged or superseded, but nothing says so.
+
+## Additions to existing sections
+
+- **I6 — no test fixture anywhere puts a group in a conversation list.**
+  `shared/src/commonTest/kotlin/net/jami/viewmodel/TestFixtures.kt` has no group helper, which
+  is precisely why the suite said nothing while six `conversation.contact` call sites threw for
+  groups (fixed since; `Account.getByContact` and the `ChatViewModel` sites all use
+  `contactOrNull` today). Add a group to the shared fixtures so the suite enforces this instead
+  of future greps having to.
+
+- **I7 — `ConversationFacade.conversationEvents` is a `MutableSharedFlow` with no replay**
+  (`ConversationFacade.kt:114`), the same shape as the `accountEvents` bug fixed in
+  `doc/TODO.md`'s 2026-08-17 entry: a collector that subscribes late misses events already
+  emitted. Deliberately deferred at the time as scope creep; still open, still unrecorded.
+
+- **I8 — the SELinux reinstall-race fix was validated on device B (Pixel 2) only.** Whether the
+  Pixel 7a is equally exposed was never checked. `doc/TODO.md`'s 2026-08-17 infra entry does not
+  say which device proved it.
+
+- **I9 — the sender-side conversation-resolution fix (`66c5aef`) has only ever been tested in
+  one direction.** Every passing run has B initiate the contact request *and* send first. The
+  fix in `onContactAdded` should be symmetric, but that has never been demonstrated — a scenario
+  variant that swaps which role sends `SendContactRequest` closes it in roughly one test run.
+
+- **I10 — the JNI reconciliation plan's device checklist was never explicitly signed off.** The
+  plan lives outside the repo at `~/.claude/plans/polished-dancing-puppy.md`; its code changes
+  (`NetworkServiceCallback` wiring, `updateProfile` arity, `unholdConference` →
+  `resumeConference`, `cancelMessage` removal) are the reason the daemon was rebuilt at all, but
+  step 6 — app starts without `UnsatisfiedLinkError`, profile save works, hold/resume works —
+  was never checked off. Either verify it or copy the checklist into `doc/` so it stops being
+  invisible.
+
+- **Two `daemon-api-surface-audit.md` findings are dead and can be closed.**
+  `reloadConversationsAndRequests` (messaging F8) and `createMediaPlayer` (daemon-audit F9) do
+  not exist in the SWIG bindings at all — zero hits across `JamiService.java` and every
+  `DaemonBridge` actual — so there is nothing to wire. Closing both takes the mini-plan backlog
+  to six open findings.
+
+## Confirmed already recorded — no action
+
+Checked against source and found both true and already written down, so the screenshots carrying
+them add nothing: haptics on answer/decline (D2), battery-optimisation exemption (E1), language
+selector (E2), app shortcuts (E4), @mentions (C1), Markdown (C2), read markers (C3), the
+six-emoji reaction picker (C4), Robolectric for the four excluded Android tests (I1),
+`StubDaemonBridge` discarding its callbacks (I2), outbox device verification (I4), the microphone
+level ring (I5), the `AboutViewModel` copyright claim (J2, still blocked on J1), plugins (K1),
+and the file-picker/biometric-lock race (`doc/TODO.md`).
+
+Fixed since the screenshot that reported them, verified in source today: the `Interaction`
+`MessageStates` enum skew (codes are explicit now, `FAILURE`/`CANCELLED` both map to
+`DeliveryStatus.FAILED`); `Account.getByContact` and the `ChatViewModel` group walks
+(`contactOrNull` throughout); replying with a file (`ChatViewModel.sendFile` takes
+`takeReplyTo()` through to the daemon's `parent`); the desktop database startup
+(`DatabaseDriverFactory.desktop.kt` tracks `PRAGMA user_version` and migrates); the settings and
+drafts storage layer (`ClientSettings.sq`); retry for failed file transfers; the long-press
+menu and Share/Save on file and image messages; and `AppSettingsViewModelTest` compiling.
+
+One residual worth knowing rather than fixing: `ConversationFacade.blockConversation` (`:735`)
+still reads `conversation.contact` rather than `contactOrNull`, inside a `try/catch` that falls
+back to `removeConversation` — so blocking a group aborts quietly instead of crashing.

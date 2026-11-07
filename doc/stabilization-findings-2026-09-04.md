@@ -410,6 +410,9 @@ authoritative from the daemon. So a DB is not what makes the reference resolve r
   reliable automated UI testing. CLAUDE.md's Feature-Completeness list requires content descriptions / focus
   order. Worth an audit pass adding `Modifier.semantics { contentDescription = … }` / `stateDescription` to
   icon buttons, conversation rows, and the message input controls.
+- **The audit pass was run on 2026-09-30** — results in `doc/accessibility-audit-2026-09-30.md`,
+  re-verified against source 2026-11-07. Two findings are fixed; the rest are open and tracked
+  as L1 in `doc/implementation-tasks-2026-11-05.md`.
 
 ### Observed, needs fresh repro (possibly stale test data from Aug/Sep manual sessions)
 - **F8 — message ordering vs. timestamp:** in one chat, bubbles under "August 13, 2026" appear in an order
