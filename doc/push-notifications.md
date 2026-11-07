@@ -97,15 +97,18 @@ ID directly — the proxy just has to be configured with it.
 
 Also outstanding on iOS:
 
-- **the code is uncompiled** (see status above);
-- the **Push Notifications capability** must be enabled on the App ID in the developer portal,
-  and `aps-environment` in `iosApp.entitlements` flipped from `development` to `production` for
-  TestFlight/App Store builds;
+- ~~the code is uncompiled~~ — compiled and run since 2026-09-08 (see status above);
+- the **Push Notifications capability** must be enabled on the App ID in the developer portal.
+  The `aps-environment` half is done (`043fdfb`, 2026-09-08): the entitlement reads
+  `$(APS_ENVIRONMENT)`, which is `development` by default and `production` for Release on
+  `iphoneos`;
 - `iosApp.entitlements` is referenced by `CODE_SIGN_ENTITLEMENTS` but is not in the Xcode file
   navigator — signing works, but adding it to the project would make it visible;
 - there is **no Notification Service Extension**, so a message push cannot be decrypted and
   displayed while the app is suspended — only VoIP/call wake-up works. The upstream iOS client
-  has `jamiNotificationExtension` for this.
+  has `jamiNotificationExtension` for this. A scaffold (App Group + extension target) exists on
+  the unmerged branch `feat/ios-app-group-and-notification-extension` (`5971f3c`, 2026-09-10),
+  106 commits behind `main` as of 2026-10-31.
 
 **4. Which token the daemon gets (iOS).** The daemon holds one token, but iOS has two:
 the APNs token (messages/sync) and the PushKit VoIP token (the only channel allowed to wake a

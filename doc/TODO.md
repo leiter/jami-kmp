@@ -822,8 +822,9 @@ verdict — the plan entries were rewritten to test the fix rather than confirm 
   `autoDownloadAllowedOnCurrentNetwork()` gates all three auto-accept sites on
   `autoDownloadWifi` / `autoDownloadMobile`, picked by the new `HardwareService.isMeteredNetwork()`
   (Android `NET_CAPABILITY_NOT_METERED`, iOS `nw_path_is_expensive`, desktop always unmetered).
-  Manual downloads stay ungated. **The iOS actual has not been compiled** — Apple targets are
-  skipped on a Linux host, so `nw_path_is_expensive` needs a Mac build before it is trusted.
+  Manual downloads stay ungated. The iOS actual (`nw_path_is_expensive`) **compiles** since
+  2026-10-31 (`:shared:compileKotlinIosSimulatorArm64` on a Mac at `989ba1b`); the cellular
+  branch is still a device check.
 - Test-fixture fix that fell out of this: `makeTestServiceStack` gave `ConversationFacade` and
   `CallService` their own `SettingsRepository` instances, so a test that changed a setting through
   `stack.settingsRepository` was writing where no service read. The stack now shares one. Any
@@ -1028,7 +1029,8 @@ verdict — the plan entries were rewritten to test the fix rather than confirm 
   unifying the three independent presence subscribers behind the refcount in
   `ContactService.subscribeBuddy` first — see mini-plan `contacts-presence-accounts.md` F2.
   Verified on an Android device the same day: three background/foreground cycles with the count
-  steady at 1, no churn on rotation. iOS is written but has never been compiled.)* —
+  steady at 1, no churn on rotation. iOS is written and compiles since 2026-10-31, not yet
+  exercised on a simulator.)* —
   jami-client-ios unsubscribes presence for all contacts in `sceneDidEnterBackground`
   (`presenceService.subscribeBuddies(..., subscribe: false)`, `AppDelegate.swift:340`) and
   re-subscribes in `sceneWillEnterForeground`. jami-kmp keeps presence subscriptions while in the
@@ -1097,7 +1099,62 @@ code compiled against the macOS SDK (long-standing, dates to `93df547a`).
 - [ ] **Shared `appleMain` source set** — the iOS and macOS Darwin implementations are now
   substantively identical, and macOS does not compile (~95 errors). One copy would fix both.
   Start from `origin/macos-build-and-apple-source-set` (`f0f66ce`, 2026-10-01) rather than from
-  scratch; it predates the nine wrapper commits and needs rebasing onto `main` first.
+  scratch; it predates the nine wrapper commits and needs rebasing onto `main` first
+  (70 commits behind as of 2026-10-31).
+
+### Open iOS tasks — consolidated 2026-10-31
+
+One list, gathered from this file, `ios_implementation_gap.md`, `doc/apple-bridge-rebuild.md`,
+`doc/push-notifications.md`, `doc/status-note-open-ends.md` and a re-audit of
+`DaemonBridge.ios.kt` against `JamiBridgeWrapper.h` at `989ba1b`. Items above that already have a
+checkbox are referenced, not repeated.
+
+**Verification owed (no code change expected)**
+- [ ] Simulator walk of the Linux-written `iosMain` work since `5b4a17e` — it compiles
+  (`:shared:compileKotlinIosSimulatorArm64` and the Xcode simulator app link both green 2026-10-31)
+  but none of it has run on Apple:
+  presence suspend/resume on background (`3573ee7`), settings + drafts in SQLDelight (`d50391d`),
+  `nw_path_is_expensive` auto-download gate (`989ba1b`), and this week's group-call host/end path
+  (`93e52cd`) and contact-picker group creation (`51084e8`) as they render on iOS.
+
+**Wrapper batch — one `JamiBridgeWrapper.{h,mm}` change + one `build-jamibridge.sh` run**
+(details and hazards: `doc/apple-bridge-rebuild.md`)
+- [ ] `connectivityChanged` (item above)
+- [ ] `setDefaultModerator` / `getDefaultModerators`
+- [ ] `publish` + presence callback carrying `lineStatus` (`status-note-open-ends.md` open end 4)
+- [ ] `sendFile` `parent:` argument
+- [ ] `setAudioMeterState` + `AudioMeter` signal
+- [ ] `createConfFromParticipantList`
+- [ ] Call recording: `toggleRecording` / `getIsRecording` + `RecordingStateChanged` (item in
+  "Calling" above, `doc/plan_call_recording.md`)
+- [ ] *(low)* a correctly named per-conversation `getActiveCalls` — the wrapper's existing
+  `getActiveCalls:` wraps `getCallList`; the iOS actual returns `emptyList()`. No caller today.
+
+**Build hygiene**
+- [ ] Script the device-side symlinks (item above)
+- [ ] `StubDaemonBridge` retains callbacks (item above)
+
+**Feature gaps**
+- [x] Cherry-picked `8baaf0f` (stop the per-frame NV12 copy into a no-op) and `4a2dcad` from
+  `feat/ios-app-group-and-notification-extension` (2026-10-31): `doc/ios-video-pipeline.md` and
+  `doc/ios-native-parity-analysis.md` are now on `main`. iOS compile green.
+- [x] Collapsed the duplicate `UIBackgroundModes` key in `ios-app/iosApp/Info.plist` (2026-10-31).
+  The built bundle already carried only the second copy (`voip`, `remote-notification`, `audio`),
+  so behaviour is unchanged; the dead first copy, with its unhandled `fetch`/`processing`, is gone.
+- [ ] Video pipeline: outgoing `getNewFrame`/`publishFrame`, incoming `SinkTarget` →
+  `AVSampleBufferDisplayLayer`, then encoder controls and PiP (`ios_implementation_gap.md` §5). L.
+- [ ] Notification Service Extension + App Group, so message pushes display while suspended —
+  scaffold still only on the branch (`5971f3c`, not cherry-picked: it moves the daemon's working
+  directory into the shared container, which needs the group registered on the App ID first).
+  Only useful once a push-capable proxy exists.
+- [ ] Screen sharing (ReplayKit) — nothing exists.
+- [ ] Screenshot blocking is weaker than Android (`ios_implementation_gap.md` §3.3) — consider a
+  platform-specific summary string.
+
+**Release / infrastructure**
+- [ ] Push Notifications capability on the App ID; self-hosted `dhtnode --proxyserver` with
+  APNs credentials (`doc/push-notifications.md`).
+- [ ] macOS / `appleMain` (item above) — secondary platform, must not block iOS.
 
 ## Licensing & Copyright Attribution (2026-10-01)
 

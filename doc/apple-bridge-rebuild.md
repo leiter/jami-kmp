@@ -34,6 +34,31 @@
 > One passthrough taking an `NSArray<NSString *>` of `"<peer uri>,<account id>"` entries; the
 > Kotlin actuals log and drop today.
 
+> **Two more, found by re-auditing `DaemonBridge.ios.kt` against the header (2026-10-31).**
+> Both were documented elsewhere or not at all, but belong in the same rebuild:
+> - **Call recording** — `toggleRecording` / `getIsRecording` return `false`
+>   (`DaemonBridge.ios.kt:318-319`) because the wrapper has no recording entry point; it also
+>   needs the `RecordingStateChanged` signal. Was tracked only in `doc/TODO.md` and
+>   `doc/plan_call_recording.md`.
+> - **`getActiveCalls(accountId, conversationId)`** — the wrapper's `getActiveCalls:` takes only
+>   an account id and calls `libjami::getCallList` (a list of call ids), which is a different
+>   function from libjami's per-conversation `getActiveCalls` returning maps. The iOS actual
+>   therefore returns `emptyList()`. Nothing in `commonMain` calls it today (the "join ongoing
+>   call" banner is fed by the `onActiveCallsChanged` signal), so this is low priority, but the
+>   name collision makes it a trap: add a correctly named passthrough rather than reuse it.
+>
+> The batch is now **seven**: `connectivityChanged`, `setDefaultModerator`, `publish` (+ presence
+> `lineStatus`), `sendFile parent:`, `setAudioMeterState` + `AudioMeter`,
+> `createConfFromParticipantList`, recording (+ `RecordingStateChanged`) — plus the low-priority
+> `getActiveCalls` fix.
+>
+> **Kotlin side compiles on Apple (2026-10-31).** `:shared:compileKotlinIosSimulatorArm64` was run
+> on a Mac at `989ba1b` and passed, so the seven Linux-written commits that touched `iosMain` since
+> `5b4a17e` (presence suspend/resume, status-note publish, settings DB, `sendFile` parent, audio
+> meter, conference-from-list, `nw_path_is_expensive`) type-check, and the Xcode simulator app link
+> is green (`BUILD SUCCEEDED`, iPhone 17 Pro destination). The wrapper itself is unchanged
+> since `5b4a17e`, so the committed `.a` files are **not** stale.
+
 Nine commits added ~514 lines of Objective-C++ to the JamiBridge wrapper that has never been
 compiled, because those sessions ran on Linux where Apple targets are skipped. The committed
 `.a` files are stale by the same nine commits. This describes what is waiting, what is already
@@ -255,8 +280,8 @@ bundled headers and all 89 resolve. The plausible failure modes, in order:
 8. **Then macOS — but do not start it from scratch.** There is already a branch:
    `origin/macos-build-and-apple-source-set`, one commit (`f0f66ce`, "Make the macOS target
    build, and share Darwin code via appleMain", 2026-10-01). Continue that rather than
-   re-deriving it. It predates all nine wrapper commits, so it needs rebasing onto `main`
-   before it can even be evaluated:
+   re-deriving it. It predates all nine wrapper commits — and as of 2026-10-31 it is **70
+   commits behind `main`** — so it needs rebasing before it can even be evaluated:
    ```bash
    git log --oneline origin/macos-build-and-apple-source-set
    git rev-list --left-right --count main...origin/macos-build-and-apple-source-set
