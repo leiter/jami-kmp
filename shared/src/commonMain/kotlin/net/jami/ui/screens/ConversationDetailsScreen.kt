@@ -279,12 +279,18 @@ fun ConversationDetailsScreen(
 
             val canEditGroup = state.isSwarm && state.isAdmin
             val headerAvatarBytes = if (state.isSwarm) state.groupAvatarBytes else state.avatarBytes
-            val headerName = if (state.isSwarm) state.groupTitle.ifEmpty { state.displayName } else state.displayName
+            // Never blank: a nameless peer falls back to its registered name and then to its
+            // id, the same chain Contact.displayUsername and the chat header use. The literals
+            // "Unknown" and "?" that used to stand in here were untranslated and said nothing
+            // about who was being looked at (seen on a device 2026-11-07).
+            val headerName = (if (state.isSwarm) state.groupTitle.ifEmpty { state.displayName } else state.displayName)
+                .ifBlank { state.username }
+                .ifBlank { state.identityHash }
 
             // Avatar — tappable for group admins to change the group photo
             Box(contentAlignment = Alignment.BottomEnd) {
                 JamiAvatar(
-                    displayName = headerName.ifEmpty { "?" },
+                    displayName = headerName,
                     avatarBytes = headerAvatarBytes,
                     size = AvatarSize.XLarge,
                     modifier = if (canEditGroup) {
@@ -319,7 +325,7 @@ fun ConversationDetailsScreen(
                     .let { if (canEditGroup) it.clickable { showGroupTitleDialog = true } else it },
             ) {
                 Text(
-                    text = headerName.ifEmpty { "Unknown" },
+                    text = headerName,
                     style = JamiTheme.typography.titleLarge,
                     color = JamiTheme.colors.onSurface,
                     maxLines = 1,

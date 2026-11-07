@@ -206,6 +206,16 @@ data class ChatState(
      * The composer shows a one-line notice; null means the conversation is live.
      */
     val messageHold: MessageHold? = null,
+    /**
+     * The conversation this screen is open on no longer exists — its contact was deleted or
+     * blocked, the group was left, or it was removed from another device. The host navigates
+     * back when this turns true; a state flag rather than an event, so acting on it twice is
+     * harmless. Matches [net.jami.ui.viewmodel.ContactDetailsState.isGone]: deleting a contact
+     * closed the details screen but left the chat underneath it open on a conversation the
+     * daemon had already dropped (seen on a device 2026-11-07). The reference closes the whole
+     * conversation.
+     */
+    val isGone: Boolean = false,
 )
 
 /**
@@ -333,6 +343,12 @@ class ChatViewModel(
                     }
                     is ConversationEvent.MemberEvent -> {
                         if (event.conversationId == convId) refreshMessageHold()
+                    }
+                    is ConversationEvent.ConversationRemoved -> {
+                        if (event.conversationId == convId) {
+                            Log.d(TAG, "conversation $convId was removed; leaving the chat")
+                            _state.update { it.copy(isGone = true) }
+                        }
                     }
                     is ConversationEvent.ReactionAdded -> {
                         if (event.conversationId == convId) rebuildMessageReactions(event.messageId)

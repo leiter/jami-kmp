@@ -404,7 +404,9 @@ class ContactService(
                     // (same as VCardService disk cache, keeps memory footprint small).
                     val scaledPhoto = vcard.photo?.let { scaleImageBytes(it, 512) }
                     val profile = Profile(
-                        displayName = vcard.formattedName,
+                        // An empty FN is a nameless vCard, not a name: stored as "" it would
+                        // satisfy every `?:` fallback downstream and blank out the UI.
+                        displayName = vcard.formattedName?.takeIf { it.isNotBlank() },
                         avatar = scaledPhoto
                     )
                     val cacheKey = "$accountId:${uri.uri}"

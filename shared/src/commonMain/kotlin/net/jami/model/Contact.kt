@@ -201,8 +201,14 @@ class Contact(
     val isJami: Boolean
         get() = uri.isJami
 
+    /**
+     * A blank name is no name. A peer whose vCard carries an empty `FN` used to give this a
+     * non-null `""`, which won every `?:` fallback below it and left screens that read it
+     * directly with an empty title (the details screen then printed "Unknown").
+     */
     val displayName: String?
-        get() = _loadedProfile.value.displayName ?: _customProfile.value.displayName
+        get() = _loadedProfile.value.displayName?.takeIf { it.isNotBlank() }
+            ?: _customProfile.value.displayName?.takeIf { it.isNotBlank() }
 
     val displayUri: String
         get() = uri.toString()

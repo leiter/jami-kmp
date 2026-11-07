@@ -173,18 +173,80 @@ Pixel pair with the build at that commit.**
   after the fix:** `updateAudioState: status=RINGING incoming=true`, the incoming-call screen
   with Accept/Decline, a 1 min 24 s answered call, and the proximity lock above.
 
-**Smaller things seen on 2026-11-07, not addressed:**
+**Smaller things seen on 2026-11-07 — the first three were fixed the same day, see the
+third-session block below:**
 
-- A long-ish message's timestamp overlaps the text in the bubble ("held-test-064206:43"): the
-  transparent trailing spacer that reserves room for the overlay is not wide enough.
-- The conversation-details screen shows "Unknown" as the display name with the registered name
-  as the subtitle, and a "?" avatar, for a peer the chat screen renders with name and avatar.
-- The chat screen stays open on a conversation whose contact was just deleted (the details
+- [x] A long-ish message's timestamp overlaps the text in the bubble ("held-test-064206:43").
+- [x] The conversation-details screen shows "Unknown" as the display name with the registered
+  name as the subtitle, and a "?" avatar, for a peer the chat screen renders with name and
+  avatar.
+- [x] The chat screen stays open on a conversation whose contact was just deleted (the details
   screen now leaves, but it pops back *into* that chat). The reference closes the whole
   conversation.
 - `avc: denied { link }` from libgit2 on the Pixel 2 during swarm writes — benign here (the
   repo was created and synced), but it is the SELinux hard-link restriction, worth knowing
-  before blaming it for a stall.
+  before blaming it for a stall. Seen again on 2026-11-07 on the Pixel 2 when the daemon
+  rewrote `profile.vcf`: it falls back to a symlink and carries on.
+
+**Device run of 2026-11-07 (third session, 10:20–10:55). Driven jointly: the user operated the
+UI, the model read the logs and took the screenshots. Everything below was verified on the
+Pixel pair.**
+
+- [x] **The timestamp no longer overlaps the bubble text.** The room for the overlay was
+  reserved with two trailing *spaces*, and trailing whitespace is dropped when a line is
+  measured — so the 12 dp tick had no reserved width at all. It is now an inline placeholder
+  (a glyph box the layout cannot trim), `spacing.xs + 14 dp` on outgoing messages, applied to
+  the normal and the search-result bubble. On the device, messages of 25/27/29/31 characters:
+  at 27 the text ends, a clear gap follows, and `10:28 ✓✓` sits inside the bubble; from 29 the
+  overlay wraps to its own line instead of printing on top of the text.
+- [x] **The details screen never shows "Unknown" again**, verified three ways against B's
+  throwaway account: with no profile at all it shows the 40-hex id (as the chat and the list
+  do); when a vCard arrives it shows the name; and when the peer *clears* its name the last
+  known name is kept rather than blanked. A blank `FN` is no longer stored as a name
+  (`ContactService.onProfileReceived`), `Contact.displayName` treats blank as absent, and the
+  header falls back name → registered name → id instead of the untranslated literals
+  "Unknown" / "?".
+- [x] **The chat screen leaves when its conversation is deleted.** `ChatState.isGone`, set on
+  `ConversationEvent.ConversationRemoved` for the open conversation. On the device, one tap on
+  "Kontakt löschen" closed *both* screens and landed on the conversation list, 16 ms end to
+  end: `contact_list.cpp removeContact: 9045ef4c… (banned: false)` →
+  `ConversationFacade: onConversationRemoved: 46814601762c…` →
+  `ChatViewModel: conversation 46814601762c… was removed; leaving the chat`.
+
+**The run's own find — a profile arriving while the details screen is open was ignored
+(fixed, verified):**
+
+- [x] **`refreshContact()` opened with `findContactInCache(...) ?: return`.** That cache is
+  filled lazily and is keyed by the *full* URI string, while this screen resolves its peer from
+  the conversation's member list — so for a peer that was not in it, every `ProfileUpdated`
+  was dropped on the first line. On the device the vCard arrived at 10:37:03 and the open
+  screen kept showing the hex; closing and reopening it showed the name, which is what gave
+  the cause away. The refresh now works from the profile alone and each field falls back to
+  what is already displayed. Verified after the fix: with the screen open, B's rename to
+  "Testname2" changed the header and the avatar initial live, with no reopen.
+  - Two related things were fixed in the same pass and are covered by tests but were not
+    separately exercised on hardware: a presence ping (which carries no profile) used to
+    overwrite the resolved name with `contact.displayUsername`, demoting a named peer to its
+    40-hex id, and the avatar was never refreshed at all.
+
+**Smaller things seen in that run, not addressed:**
+
+- "Kontakt löschen" on the details screen deletes immediately, with **no confirmation dialog**.
+  It is a destructive, non-obvious action (it drops the conversation with it) and the reference
+  asks first.
+- When a peer's profile name goes blank, the message notification falls back to the raw swarm
+  id — `android.title=String (46814601762c: 46814601762c)`, the conversation id twice, once as
+  the title and once as the sender. The details screen kept the last known name at the same
+  moment, so the two disagree.
+- A peer's profile **name** is not re-read from disk at startup; only the avatar is
+  (`VCardUtils.loadPeerProfileFromDisk`). After a reinstall or restart a peer whose name was
+  known shows its hex id again until a new vCard arrives.
+- The details screen of a **1:1** swarm shows the group UI — a "Members" list with an
+  Administrator badge and "Gruppe verlassen" — because that section is gated on
+  `state.isSwarm` rather than on the conversation being a group. Same confusion between "is a
+  swarm" and "is a swarm *group*" as the `Mode.Syncing` bug fixed on 2026-11-06.
+- B's account switcher lists the current account as "Jami" with a green "J" avatar while the
+  home screen's top-left avatar for the same account is a magenta "M".
 
 **Still owed a verdict**
 

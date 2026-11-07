@@ -89,6 +89,14 @@ class ContactDetailsViewModel(
     private var currentContactUri: Uri? = null
     private var currentAccountId: String? = null
 
+    /**
+     * The profile [loadContact] resolved, kept so that a later refresh cannot undo it. A
+     * presence ping carries no profile, and the contact cache does not always hold one
+     * (`setCustomProfile` writes only the service's profile cache), so refreshing from the
+     * contact alone used to demote a named peer to its 40-hex id.
+     */
+    private var currentProfile: Profile? = null
+
     init {
         // Observe contact updates for real-time changes
         scope.launch {
@@ -100,7 +108,11 @@ class ContactDetailsViewModel(
                         }
                     }
                     is ContactEvent.ProfileUpdated -> {
+                        // Hand the profile over: it is the newest name and avatar there is, and
+                        // the contact cache does not always carry it (setCustomProfile writes
+                        // only the service's profile cache).
                         if (event.uri == currentContactUri) {
+                            currentProfile = event.profile
                             refreshContact()
                         }
                     }
@@ -151,6 +163,7 @@ class ContactDetailsViewModel(
                 // was reached from a conversation. Keep the resolved peer from here on.
                 currentContactUri = contact.uri
                 val profile = contactService.loadContactData(contact, accountId)
+                currentProfile = profile
 
                 // Load avatar from VCard on disk (same path as NewConversationViewModel)
                 val filesDir = deviceRuntimeService.getDataPath()
@@ -176,7 +189,8 @@ class ContactDetailsViewModel(
                 val groupProfile = if (isSwarm) conversation!!.profileFlow.value else Profile.EMPTY_PROFILE
 
                 _state.value = ContactDetailsState(
-                    displayName = profile.displayName ?: contact.displayUsername,
+                    displayName = profile.displayName?.takeIf { it.isNotBlank() }
+                        ?: contact.displayUsername,
                     username = contact.username ?: "",
                     identityHash = contact.primaryNumber,
                     avatarBytes = avatarBytes ?: profile.avatar,
@@ -343,15 +357,28 @@ class ContactDetailsViewModel(
 
     /**
      * Refresh the displayed contact from the cache (presence/profile changes).
+     *
+     * Names come from [currentProfile] first; the avatar is only ever replaced by a newer one,
+     * never cleared — [loadContact] reads it from the vCard on disk, which no refresh re-reads.
+     *
+     * The contact may be missing from [ContactService]'s cache: that cache is filled lazily and
+     * is keyed by the full URI string, while the peer this screen was opened on comes from the
+     * conversation's own member list. Bailing out when it is absent is what kept a vCard that
+     * arrived while the screen was open from ever being shown — the name only appeared after
+     * closing and reopening the screen (seen on a device 2026-11-07). The profile alone is
+     * enough to update the header, so each field now falls back to what is already displayed.
      */
     private fun refreshContact() {
         val contactUri = currentContactUri ?: return
         val accountId = currentAccountId ?: return
-        val contact = contactService.findContactInCache(accountId, contactUri) ?: return
-        _state.value = _state.value.copy(
-            displayName = contact.displayUsername,
-            username = contact.username ?: "",
-            isBlocked = contact.status == Contact.Status.BLOCKED,
+        val contact = contactService.findContactInCache(accountId, contactUri)
+        val current = _state.value
+        _state.value = current.copy(
+            displayName = currentProfile?.displayName?.takeIf { it.isNotBlank() }
+                ?: contact?.displayUsername ?: current.displayName,
+            username = contact?.username ?: current.username,
+            avatarBytes = currentProfile?.avatar ?: current.avatarBytes,
+            isBlocked = contact?.let { it.status == Contact.Status.BLOCKED } ?: current.isBlocked,
         )
     }
 

@@ -61,6 +61,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -152,7 +154,10 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
@@ -193,6 +198,9 @@ import net.jami.ui.viewmodel.ChatViewModel
 import net.jami.ui.viewmodel.MessageItem
 import net.jami.ui.viewmodel.MessageType
 import net.jami.ui.components.content.conversationDisplayName
+
+/** Inline-placeholder id reserving room for the timestamp overlay at the end of a bubble. */
+private const val OVERLAY_SPACER_ID = "timestampOverlaySpacer"
 
 /**
  * Chat screen for viewing and sending messages in a conversation.
@@ -288,6 +296,12 @@ fun ChatScreen(
     // Location permission state
     var requestLocationPermission by remember { mutableStateOf(false) }
     var locationPermissionGranted by remember { mutableStateOf(false) }
+
+    // The conversation was deleted (here, from the details screen, or on another device):
+    // there is nothing left to show, so leave rather than sit on a dead swarm.
+    LaunchedEffect(state.isGone) {
+        if (state.isGone) onBack()
+    }
 
     // Load conversation on first composition
     LaunchedEffect(conversationId) {
@@ -1004,6 +1018,11 @@ private fun ChatBubble(
     val clipboardManager = LocalClipboardManager.current
     val timeText = formatMessageTime(message.timestamp)
     val timeFontSize = JamiTheme.typography.labelSmall.fontSize
+    // Width the trailing placeholder reserves for the overlay beyond the timestamp itself:
+    // a small gap, plus the 12 dp tick box and the row's 2 dp spacing on outgoing messages.
+    val overlayReserve = with(LocalDensity.current) {
+        (JamiTheme.spacing.xs + if (isOutgoing) 14.dp else 0.dp).toSp()
+    }
     val retrySendLabel = stringResource(Res.string.content_desc_retry_send)
 
     Column(
@@ -1074,6 +1093,12 @@ private fun ChatBubble(
                     // Message text with an invisible trailing spacer whose width
                     // matches the timestamp (+ checkmark for outgoing) so the last
                     // text line always has room for the overlay next to it.
+                    //
+                    // The gap and the checkmark are reserved with an inline placeholder, not
+                    // with spaces: trailing whitespace is dropped when a line is measured, so
+                    // the two spaces that used to stand for the 12 dp tick reserved nothing and
+                    // the overlay printed on top of the last word (seen on a device 2026-11-07,
+                    // "held-test-064206:43").
                     Text(
                         text = buildAnnotatedString {
                             // http(s) URLs are clickable (jami-android-client autolinks message text).
@@ -1092,9 +1117,19 @@ private fun ChatBubble(
                             }
                             append(text.substring(last))
                             withStyle(SpanStyle(color = Color.Transparent, fontSize = timeFontSize)) {
-                                if (isOutgoing) append("  $timeText  ") else append("  $timeText")
+                                append(timeText)
                             }
+                            appendInlineContent(OVERLAY_SPACER_ID, " ")
                         },
+                        inlineContent = mapOf(
+                            OVERLAY_SPACER_ID to InlineTextContent(
+                                Placeholder(
+                                    width = overlayReserve,
+                                    height = timeFontSize,
+                                    placeholderVerticalAlign = PlaceholderVerticalAlign.TextBottom,
+                                ),
+                            ) { },
+                        ),
                         style = JamiTheme.typography.bodyMedium,
                         color = textColor,
                         // The transparent trailing spacer is a layout device, but it is still in the
@@ -2085,6 +2120,9 @@ private fun SearchResultItem(
     val bubbleShape = RoundedCornerShape(JamiTheme.radius.m)
     val timeText = formatMessageTime(message.timestamp)
     val timeFontSize = JamiTheme.typography.labelSmall.fontSize
+    // Only a timestamp overlays this bubble; see the main bubble for why this is a placeholder
+    // and not spaces.
+    val overlayReserve = with(LocalDensity.current) { JamiTheme.spacing.xs.toSp() }
     val highlightColor = JamiTheme.colors.accent.copy(alpha = 0.45f)
 
     Box(
@@ -2110,9 +2148,19 @@ private fun SearchResultItem(
                     text = buildAnnotatedString {
                         append(highlightQueryInText(message.text, query, highlightColor))
                         withStyle(SpanStyle(color = Color.Transparent, fontSize = timeFontSize)) {
-                            append("  $timeText")
+                            append(timeText)
                         }
+                        appendInlineContent(OVERLAY_SPACER_ID, " ")
                     },
+                    inlineContent = mapOf(
+                        OVERLAY_SPACER_ID to InlineTextContent(
+                            Placeholder(
+                                width = overlayReserve,
+                                height = timeFontSize,
+                                placeholderVerticalAlign = PlaceholderVerticalAlign.TextBottom,
+                            ),
+                        ) { },
+                    ),
                     style = JamiTheme.typography.bodyMedium,
                     color = textColor,
                 )

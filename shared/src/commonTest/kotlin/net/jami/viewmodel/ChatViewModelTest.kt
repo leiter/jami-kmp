@@ -192,6 +192,76 @@ class ChatViewModelTest {
         assertFalse(vm.state.value.isLoadingMore)
     }
 
+    /**
+     * Deleting a contact closed the details screen but left the chat underneath it open on a
+     * conversation the daemon had already dropped (seen on a device 2026-11-07). The removal
+     * reaches the open chat as a ConversationRemoved event, whatever caused it — this screen,
+     * the details screen, or another device.
+     */
+    @Test
+    fun removingTheConversationMarksTheChatGone() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        val account = prepareAccountInService(stub, accountService)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
+
+        // Without this the smartlist prune drops the conversation as unlisted by the daemon
+        // and emits the very ConversationRemoved under test.
+        stub.conversations[account.accountId] = listOf("1ead1ead")
+        val conv = account.newSwarm("1ead1ead", net.jami.model.Conversation.Mode.OneToOne)
+        conv.addContact(
+            account.getContactFromCache(net.jami.model.Uri.fromId("alice")),
+            net.jami.model.MemberRole.MEMBER,
+        )
+        account.conversationStarted(conv)
+
+        val vmScope = viewModelScope()
+        val vm = ChatViewModel(
+            facade, accountService, StubDeviceRuntimeService(),
+            net.jami.repository.DraftRepository(net.jami.services.InMemoryClientSettingsStore(), vmScope), testAudioRecorderService(),
+            makeSendQueue(stub, accountService, facade, this), vmScope
+        )
+        vm.loadConversation("1ead1ead")
+        advanceUntilIdle()
+        assertFalse(vm.state.value.isGone)
+
+        facade.onConversationRemoved(account.accountId, "1ead1ead")
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.isGone)
+    }
+
+    /** Another conversation being removed is none of this screen's business. */
+    @Test
+    fun removingAnotherConversationLeavesTheChatOpen() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        val account = prepareAccountInService(stub, accountService)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
+
+        stub.conversations[account.accountId] = listOf("1ead1ead", "beefbeef")
+        account.conversationStarted(account.newSwarm("1ead1ead", net.jami.model.Conversation.Mode.OneToOne))
+        account.conversationStarted(account.newSwarm("beefbeef", net.jami.model.Conversation.Mode.OneToOne))
+
+        val vmScope = viewModelScope()
+        val vm = ChatViewModel(
+            facade, accountService, StubDeviceRuntimeService(),
+            net.jami.repository.DraftRepository(net.jami.services.InMemoryClientSettingsStore(), vmScope), testAudioRecorderService(),
+            makeSendQueue(stub, accountService, facade, this), vmScope
+        )
+        vm.loadConversation("1ead1ead")
+        advanceUntilIdle()
+
+        facade.onConversationRemoved(account.accountId, "beefbeef")
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.isGone)
+    }
+
     @Test
     fun onClearedDoesNotThrow() = runTest {
         val stub = StubDaemonBridge()

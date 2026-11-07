@@ -205,6 +205,105 @@ class ContactDetailsViewModelTest {
         assertTrue(vm.state.value.isGone)
     }
 
+    /**
+     * A peer whose vCard carries an empty `FN` gave the screen a non-null, blank display name,
+     * which won every fallback and left the header printing "Unknown" over a "?" avatar for
+     * someone the chat screen rendered with a name (seen on a device 2026-11-07). A blank name
+     * is no name.
+     */
+    @Test
+    fun aBlankProfileNameFallsBackToTheContactsOwnName() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
+        val account = prepareAccountInService(stub, accountService)
+        val conv = account.newSwarm(SWARM_ID, net.jami.model.Conversation.Mode.OneToOne)
+        conv.addContact(net.jami.model.Contact(net.jami.model.Uri.fromString(PEER_ID)))
+        account.conversationStarted(conv)
+        // What a nameless vCard leaves in the profile cache.
+        contactService.setCustomProfile(
+            account.accountId,
+            net.jami.model.Uri.fromString(PEER_ID),
+            net.jami.model.Profile("", null),
+        )
+
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), viewModelScope())
+        vm.loadContact("swarm:$SWARM_ID")
+        advanceUntilIdle()
+
+        assertEquals(net.jami.model.Uri.fromString(PEER_ID).rawRingId, vm.state.value.displayName)
+    }
+
+    /**
+     * A presence ping carries no profile. Refreshing from the contact cache alone used to
+     * overwrite the resolved name, so a named peer became its 40-hex id as soon as it came
+     * online.
+     */
+    @Test
+    fun aPresenceUpdateDoesNotDemoteTheResolvedName() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
+        val account = prepareAccountInService(stub, accountService)
+        val conv = account.newSwarm(SWARM_ID, net.jami.model.Conversation.Mode.OneToOne)
+        conv.addContact(net.jami.model.Contact(net.jami.model.Uri.fromString(PEER_ID)))
+        account.conversationStarted(conv)
+        contactService.onContactAdded(account.accountId, PEER_ID, confirmed = true)
+        contactService.setCustomProfile(
+            account.accountId,
+            net.jami.model.Uri.fromString(PEER_ID),
+            net.jami.model.Profile("Alice", null),
+        )
+
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), viewModelScope())
+        vm.loadContact("swarm:$SWARM_ID")
+        advanceUntilIdle()
+        assertEquals("Alice", vm.state.value.displayName)
+
+        contactService.onPresenceUpdate(account.accountId, PEER_ID, status = 1)
+        advanceUntilIdle()
+
+        assertEquals("Alice", vm.state.value.displayName)
+    }
+
+    /**
+     * A vCard that arrives while the screen is open must show up without reopening it. The
+     * peer is not necessarily in ContactService's cache — it is filled lazily, and this screen
+     * resolves its peer from the conversation's members — so the refresh must work from the
+     * profile alone (found on a device 2026-11-07: the name appeared only after a reopen).
+     */
+    @Test
+    fun aProfileArrivingWhileOpenUpdatesTheHeaderWithNoCachedContact() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
+        val account = prepareAccountInService(stub, accountService)
+        val conv = account.newSwarm(SWARM_ID, net.jami.model.Conversation.Mode.OneToOne)
+        conv.addContact(net.jami.model.Contact(net.jami.model.Uri.fromString(PEER_ID)))
+        account.conversationStarted(conv)
+
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), viewModelScope())
+        vm.loadContact("swarm:$SWARM_ID")
+        advanceUntilIdle()
+        // Nothing put this peer in ContactService's cache, which is exactly the device case.
+        assertEquals(null, contactService.findContactInCache(account.accountId, net.jami.model.Uri.fromString(PEER_ID)))
+
+        contactService.setCustomProfile(
+            account.accountId,
+            net.jami.model.Uri.fromString(PEER_ID),
+            net.jami.model.Profile("Testname", null),
+        )
+        advanceUntilIdle()
+
+        assertEquals("Testname", vm.state.value.displayName)
+    }
+
     @Test
     fun onClearedDoesNotThrow() = runTest {
         val stub = StubDaemonBridge()
