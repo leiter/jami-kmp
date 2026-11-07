@@ -137,6 +137,13 @@ class ContactDetailsViewModel(
                 val resolvedContact = conversation?.contactOrNull
                 val contact = resolvedContact
                     ?: contactService.findContact(accountId, contactUri)
+                // [uri] is whatever the caller had — opened from a conversation it is the swarm
+                // id, not the peer. Every action below (block, remove, call, start conversation)
+                // addresses the *contact*, and handing the daemon a conversation id asks it to
+                // act on a contact that does not exist: it does nothing and says nothing, so
+                // "Delete contact" and "Block contact" were silently dead whenever this screen
+                // was reached from a conversation. Keep the resolved peer from here on.
+                currentContactUri = contact.uri
                 val profile = contactService.loadContactData(contact, accountId)
 
                 // Load avatar from VCard on disk (same path as NewConversationViewModel)

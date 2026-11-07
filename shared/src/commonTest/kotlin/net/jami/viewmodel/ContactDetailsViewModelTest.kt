@@ -96,6 +96,33 @@ class ContactDetailsViewModelTest {
         // No crash — no account set
     }
 
+    /**
+     * Opened from a conversation, this screen is handed the swarm id, not the peer. Acting on
+     * that id asks the daemon to remove a contact that does not exist — it does nothing and
+     * reports nothing, which is why "Delete contact" was silently dead on a device (2026-11-07).
+     */
+    @Test
+    fun removeContactLoadedBySwarmIdActsOnThePeer() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
+        val account = prepareAccountInService(stub, accountService)
+        val conv = account.newSwarm(SWARM_ID, net.jami.model.Conversation.Mode.OneToOne)
+        conv.addContact(net.jami.model.Contact(net.jami.model.Uri.fromString(PEER_ID)))
+        account.conversationStarted(conv)
+
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), viewModelScope())
+        vm.loadContact("swarm:$SWARM_ID")
+        advanceUntilIdle()
+        vm.removeContact()
+        advanceUntilIdle()
+
+        val (_, uri, _) = stub.removedContacts.single()
+        assertEquals(net.jami.model.Uri.fromString(PEER_ID).uri, uri)
+    }
+
     @Test
     fun onClearedDoesNotThrow() = runTest {
         val stub = StubDaemonBridge()
@@ -105,5 +132,10 @@ class ContactDetailsViewModelTest {
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
         val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), disposableScope())
         vm.onCleared()
+    }
+
+    private companion object {
+        const val SWARM_ID = "716e83d1500cb93a8a6b816ebc72d177f009e98e"
+        const val PEER_ID = "66d57f55227639b58fdcc6d74ec090446ffa9bc3"
     }
 }

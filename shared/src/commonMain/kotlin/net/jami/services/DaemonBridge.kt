@@ -1188,7 +1188,11 @@ class StubDaemonBridge : DaemonBridgeApi {
     }
 
     override fun addContact(accountId: String, uri: String) {}
-    override fun removeContact(accountId: String, uri: String, ban: Boolean) {}
+    /** Every removeContact() that reached the "daemon", in order: (accountId, uri, ban). */
+    val removedContacts = mutableListOf<Triple<String, String, Boolean>>()
+    override fun removeContact(accountId: String, uri: String, ban: Boolean) {
+        removedContacts.add(Triple(accountId, uri, ban))
+    }
     override fun getContacts(accountId: String): List<Map<String, String>> = contacts[accountId] ?: emptyList()
     override fun getContactDetails(accountId: String, uri: String): Map<String, String> = emptyMap()
     /** Every presence call that actually reached the "daemon", in order. */
