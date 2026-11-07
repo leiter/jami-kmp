@@ -159,6 +159,12 @@ fun ConversationDetailsScreen(
         viewModel.loadContact(conversationId)
     }
 
+    // The contact was deleted, blocked, left, or removed from another device: there is nothing
+    // left to show here, so leave — the screen used to stay open on a deleted conversation.
+    LaunchedEffect(state.isGone) {
+        if (state.isGone) onBack()
+    }
+
     // Group avatar picker — admins only, mirrors AccountSettingsScreen's own-profile avatar flow
     FilePickerEffect(show = showGroupAvatarPicker, mimeTypes = listOf("image/*")) { path ->
         showGroupAvatarPicker = false

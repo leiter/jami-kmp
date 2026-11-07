@@ -60,6 +60,12 @@ data class ContactDetailsState(
     val groupTitle: String = "",
     /** Group avatar, editable by admins. Falls back to [avatarBytes] when unset. */
     val groupAvatarBytes: ByteArray? = null,
+    /**
+     * The contact or conversation this screen was opened on no longer exists — it was deleted,
+     * blocked, left, or removed from another device. The host navigates back when this turns
+     * true; it is a state flag rather than an event so that acting on it twice is harmless.
+     */
+    val isGone: Boolean = false,
 )
 
 /**
@@ -99,9 +105,9 @@ class ContactDetailsViewModel(
                         }
                     }
                     is ContactEvent.ContactRemoved -> {
-                        if (event.contact.uri == currentContactUri) {
-                            // Contact was removed, UI should navigate back
-                        }
+                        // Also covers a removal made on another device: the daemon's
+                        // contactRemoved signal reaches ContactService, which re-emits it here.
+                        if (event.contact.uri == currentContactUri) markGone()
                     }
                     else -> { /* Other events */ }
                 }
@@ -213,6 +219,9 @@ class ContactDetailsViewModel(
                 contactService.removeContact(accountId, contactUri, ban = true)
             }
             _state.value = _state.value.copy(isBlocked = !isCurrentlyBlocked)
+            // The reference finishes this screen after every one of these actions (block,
+            // unblock, delete, leave): what it showed is no longer what the contact is.
+            markGone()
         }
     }
 
@@ -224,6 +233,7 @@ class ContactDetailsViewModel(
             val accountId = currentAccountId ?: return@launch
             val contactUri = currentContactUri ?: return@launch
             contactService.removeContact(accountId, contactUri, ban = false)
+            markGone()
         }
     }
 
@@ -248,6 +258,7 @@ class ContactDetailsViewModel(
         val swarmId = _state.value.swarmId.takeIf { it.isNotEmpty() } ?: return
         scope.launch {
             conversationFacade.removeConversation(accountId, Uri(Uri.SWARM_SCHEME, swarmId))
+            markGone()
         }
     }
 
@@ -317,6 +328,17 @@ class ContactDetailsViewModel(
         val swarmId = _state.value.swarmId.takeIf { it.isNotEmpty() } ?: return
         conversationFacade.updateConversationAvatar(accountId, swarmId, avatarBytes)
         _state.value = _state.value.copy(groupAvatarBytes = avatarBytes)
+    }
+
+    /**
+     * Mark the subject of this screen as gone, so the host navigates back.
+     *
+     * Without this the screen stayed open on a conversation that had just been deleted — the
+     * delete appeared to do nothing, and every action on it afterwards addressed a contact the
+     * daemon no longer had.
+     */
+    private fun markGone() {
+        _state.value = _state.value.copy(isGone = true)
     }
 
     /**

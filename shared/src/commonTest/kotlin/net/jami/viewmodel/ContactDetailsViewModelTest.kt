@@ -25,6 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class ContactDetailsViewModelTest {
 
@@ -121,6 +122,87 @@ class ContactDetailsViewModelTest {
 
         val (_, uri, _) = stub.removedContacts.single()
         assertEquals(net.jami.model.Uri.fromString(PEER_ID).uri, uri)
+    }
+
+    /**
+     * The screen stayed open on a conversation it had just deleted (seen on a device
+     * 2026-11-07): the delete looked like it had done nothing. The reference pops back after
+     * delete, block, unblock and leave alike.
+     */
+    @Test
+    fun removingTheContactMarksTheScreenGone() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
+        val account = prepareAccountInService(stub, accountService)
+        val conv = account.newSwarm(SWARM_ID, net.jami.model.Conversation.Mode.OneToOne)
+        conv.addContact(net.jami.model.Contact(net.jami.model.Uri.fromString(PEER_ID)))
+        account.conversationStarted(conv)
+
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), viewModelScope())
+        vm.loadContact("swarm:$SWARM_ID")
+        advanceUntilIdle()
+        assertFalse(vm.state.value.isGone)
+
+        vm.removeContact()
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.isGone)
+    }
+
+    @Test
+    fun blockingTheContactMarksTheScreenGone() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
+        val account = prepareAccountInService(stub, accountService)
+        val conv = account.newSwarm(SWARM_ID, net.jami.model.Conversation.Mode.OneToOne)
+        conv.addContact(net.jami.model.Contact(net.jami.model.Uri.fromString(PEER_ID)))
+        account.conversationStarted(conv)
+
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), viewModelScope())
+        vm.loadContact("swarm:$SWARM_ID")
+        advanceUntilIdle()
+
+        vm.blockContact()
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.isGone)
+        val (_, uri, banned) = stub.removedContacts.single()
+        assertEquals(net.jami.model.Uri.fromString(PEER_ID).uri, uri)
+        assertTrue(banned)
+    }
+
+    /** Removed on another device: the daemon signal reaches this screen as a ContactEvent. */
+    @Test
+    fun aRemoteRemovalMarksTheScreenGone() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
+        val account = prepareAccountInService(stub, accountService)
+        val conv = account.newSwarm(SWARM_ID, net.jami.model.Conversation.Mode.OneToOne)
+        conv.addContact(net.jami.model.Contact(net.jami.model.Uri.fromString(PEER_ID)))
+        account.conversationStarted(conv)
+
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), viewModelScope())
+        vm.loadContact("swarm:$SWARM_ID")
+        advanceUntilIdle()
+        assertFalse(vm.state.value.isGone)
+
+        // The daemon's own signals are what drive this path; the contact has to be known to
+        // the cache for ContactService to re-emit a removal at all.
+        contactService.onContactAdded(account.accountId, PEER_ID, confirmed = true)
+        advanceUntilIdle()
+        contactService.onContactRemoved(account.accountId, PEER_ID, banned = false)
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.isGone)
     }
 
     @Test
