@@ -973,9 +973,41 @@ class StubDaemonBridge : DaemonBridgeApi {
     /** Recorded downloadFile() calls as (conversationId, interactionId, fileId). */
     val downloadedFiles: MutableList<Triple<String, String, String>> = mutableListOf()
 
+    /**
+     * The callbacks the stack handed to [init], kept so a test can play the daemon.
+     *
+     * They used to be dropped on the floor, which made all 60-odd daemon callbacks reachable
+     * only with a live peer on a device: everything downstream of them — the conversation
+     * routing in `DaemonCallbacksImpl`, registration-state handling, incoming calls, swarm
+     * message arrival — was untestable, and was therefore untested.
+     *
+     * Retained whether or not [initSucceeds] is set: the stub does not model a failed init
+     * losing them, because a test that fails init and then fires events is asking for
+     * something the daemon would never do anyway.
+     */
+    var callbacks: DaemonCallbacks? = null
+        private set
+
+    /**
+     * Plays the daemon: runs [event] against the callbacks the stack registered.
+     *
+     * ```kotlin
+     * stub.fireDaemonEvent { onRegistrationStateChanged(accountId, "REGISTERED", 0, "") }
+     * ```
+     *
+     * Fails loudly rather than silently doing nothing when nothing has registered yet — a
+     * dropped event in a test looks exactly like a feature that does not work.
+     */
+    fun fireDaemonEvent(event: DaemonCallbacks.() -> Unit) {
+        val target = callbacks
+            ?: error("No DaemonCallbacks registered: call init() (or DaemonLifecycleService) first")
+        target.event()
+    }
+
     override fun init(callbacks: DaemonCallbacks): Boolean {
         initCalls++
         if (initThrows) throw IllegalStateException("native library not loaded")
+        this.callbacks = callbacks
         return initSucceeds
     }
     override fun start(): Boolean {

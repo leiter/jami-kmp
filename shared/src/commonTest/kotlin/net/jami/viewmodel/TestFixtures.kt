@@ -31,6 +31,10 @@ import net.jami.services.VCardService
 import net.jami.services.ConversationFacade
 import net.jami.services.ConversationFileStore
 import net.jami.services.DeviceRuntimeService
+import net.jami.services.CertificateService
+import net.jami.services.DaemonCallbacks
+import net.jami.services.DaemonCallbacksImpl
+import net.jami.services.PeerServicesService
 import net.jami.services.StubDaemonBridge
 import net.jami.services.StubDeviceRuntimeService
 import net.jami.services.expect.HardwareService
@@ -254,6 +258,34 @@ fun makeTestServiceStack(
         stub, accountService, callService, contactService, conversationFacade, settingsRepository,
         vCardService, notificationService, preferencesService,
     )
+}
+
+/**
+ * Registers a real [net.jami.services.DaemonCallbacksImpl] over [stack], the way
+ * `DaemonLifecycleService` does in the app, and hands it to the stub.
+ *
+ * After this, `stack.stub.fireDaemonEvent { … }` plays the daemon against the real routing
+ * code: the per-conversation channels, the registration-state handling, all of it. Before the
+ * stub kept its callbacks (2026-11-08) none of that could run without a device and a peer.
+ *
+ * Remember that the callbacks are channel-based and asynchronous — `advanceUntilIdle()` after
+ * firing, or the assertion runs before the event has been routed.
+ */
+fun connectDaemonCallbacks(
+    stack: TestServiceStack,
+    scope: CoroutineScope,
+): DaemonCallbacks {
+    val callbacks = DaemonCallbacksImpl(
+        accountService = stack.accountService,
+        callService = stack.callService,
+        contactService = stack.contactService,
+        conversationFacade = stack.conversationFacade,
+        peerServicesService = PeerServicesService(stack.stub),
+        certificateService = CertificateService(stack.stub),
+        scope = scope,
+    )
+    stack.stub.init(callbacks)
+    return callbacks
 }
 
 // ==================== Convenience: pre-loaded test account ====================

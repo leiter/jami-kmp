@@ -233,8 +233,16 @@ has since landed under other names. Treat each as a read-the-source check first:
 - **I1 — Robolectric for the Android unit tests**, so `HardwareServiceTest`,
   `AppSettingsViewModelTest`, `AppViewModelTest` and `CallViewModelTest` run against the
   Android actuals instead of desktop only.
-- **I2 — let `StubDaemonBridge` retain its callbacks.** `init(callbacks)` discards them, so
-  none of the 15 daemon callbacks on the iOS bridge can be exercised without a live peer.
+- **I2 — ~~let `StubDaemonBridge` retain its callbacks~~.** Done 2026-11-08. `init()` keeps
+  them, and `fireDaemonEvent { … }` plays the daemon against whatever the stack registered,
+  failing loudly if nothing has. `connectDaemonCallbacks()` in `TestFixtures` wires a real
+  `DaemonCallbacksImpl` over a test stack the way `DaemonLifecycleService` does in the app, so
+  a test now drives the production routing — the per-conversation channels included — rather
+  than calling service internals directly. `StubDaemonEventsTest` is the pattern, with five
+  tests: registration reaching the account model, channel ordering, `ConversationReady`
+  reaching the facade on both an early and a late subscriber, and firing before `init()`
+  failing loudly. The callback coverage this unlocks is not written yet; it is now writable
+  without a device.
 - **I3 — harden the harness "no competing daemon" precondition.** Add `cx.ring.debug` (and
   consider `com.savoirfairelinux.ring`) to `COMPETING_APP_IDS`; re-assert the force-stop just
   before the first cross-device step rather than once per run; add a pre-run
