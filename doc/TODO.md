@@ -69,12 +69,47 @@ routing of a call to it.
   period instead of waiting forever. Covered by `SyncingConversationShapeTest` plus two
   `CallViewModelTest` cases; not yet re-run on the pair.
 
-**Still owed a verdict** (all code-complete, all untested on hardware): A2 screen sharing on
-Android 14+ (needs the Pixel 7a and an answered call), B2 quiet hours silencing rather than
-hiding a call, B3/B14 blocking a stranger's call and request, the contact-request notification
-with its Accept/Decline actions, A3's register-username dialog surviving a details change, and
-the older I4 (durable outbox through the UI) and I5 (microphone level ring).
+**Device run of 2026-11-07 (Pixel pair, continued from the postponed run above).**
 
+- [x] **B3 verified on hardware.** A local-only throwaway account on B (now possible thanks to
+  the optional-username fix) sent A a genuine stranger request. With **Block unknown contacts
+  on**, A dropped it — `W/ConversationFacade: onConversationRequestReceived: dropping request
+  from a non-contact (block unknown contacts is on): 716e83d1…` — and no notification was
+  posted. With the setting **off** and a restart, the same request surfaced as "Requests (1)"
+  with the pending-invitation banner, so the filtering is setting-driven and the startup poll
+  path works. Observable only because of the logging fix above.
+- [ ] **The contact-request notification still has no verdict.** The startup poll surfaces a
+  request but does not notify (by design — the notification hangs off the live event). A fresh
+  live request was prepared on B (conversation `d2a8a8a2…`) but never reached A: the Pixel 7a is
+  in **airplane mode** (Wi-Fi only) and its daemon logged no DHT activity for two minutes. Redo
+  with A's radio on; everything else is in place.
+
+**Two bugs found during that run, both fixed:**
+
+- [x] **A newly created account did not become current** (`54aa5f9` → fixed in a follow-up
+  commit). Profile setup writes to the current account, so the display name typed right after
+  creating an account was written onto the *previously selected* account — on B, creating the
+  throwaway renamed the existing `peace4us` account, and the new account stayed nameless. The
+  account only became current after an app restart. `AccountService.setCurrentAccountById` now
+  selects by id (reloading the list once, since a just-created account is not in `accounts`
+  yet) and `AccountCreationViewModel` calls it for both Jami and SIP before navigating.
+  The overwritten profile name was restored on the device.
+- [x] **"Delete contact" and "Block contact" were silently dead.** Opened from a conversation,
+  `ContactDetailsViewModel.loadContact()` kept the *swarm id* as `currentContactUri`, so every
+  action addressed `swarm:<conversationId>` — the daemon has no contact under that id, did
+  nothing and said nothing. The screen itself showed the right peer, which is why it looked
+  functional. It now keeps the resolved peer. Verified on the device: tapping delete produces
+  `contact_list.cpp [Contacts] removeContact: 66d57f55… (banned: false)` and the conversation
+  disappears.
+
+**Smaller things seen, not yet addressed:**
+
+- The contact-details screen does not navigate back after the contact is deleted; it stays open
+  on a conversation that no longer exists. The reference pops back to the list.
+- A message typed into a 1:1 whose peer has not joined stays invisible in the chat (it is in the
+  durable outbox). Expected from the outbox design, but the sender gets no indication at all.
+
+**Still owed a verdict**
 
 ## Calling
 
