@@ -321,6 +321,40 @@ raise them again.*
   `DaemonBridge` actual — so there is nothing to wire. Closing both takes the mini-plan backlog
   to six open findings.
 
+## Second screenshot pass (the 18 older ones, 2026-04-14 … 2026-08-07)
+
+Read back and checked the same way. Almost all of it shipped: media gallery, group admin,
+hardware-accel codec toggle, daemon debug logs, the Requests filter chip, CallKit, Telecom API,
+attended call transfer (`CallScreen` → `CallViewModel.attendedTransfer`), system-contacts-sync
+toggle, ringtone picker, codec list in `AccountSubSettingsViewModel`, STUN and video port range
+in `AccountAdvancedSettingsScreen`, connectivity mode, video bitrate, "place system calls",
+`supportsPictureInPicture` in the manifest, the draggable local video preview,
+`ScreenShareService` with its `MediaProjection` handling, and the `e2eList` Gradle task.
+`strings_kmp.xml` is gone — that cleanup was carried out. Three things were not:
+
+- **N1 — SIP is complete up to account creation and absent after it.** `CreateAccountScreen`
+  has the full SIP form and `AccountCreationViewModel.createSipAccount()` works, but there is no
+  SIP account-settings screen (server credentials cannot be edited after creation; the settings
+  screen shows the Jami-centric view regardless of `account.isSip`), `HomeScreen` /
+  `ConversationsViewModel` have no SIP awareness, `ChatScreen` makes no distinction for a
+  call-only contact, and there is no dialer for starting a SIP call by URI or number. H4 covers
+  only the creation wizard, so the post-creation half has never been tracked. Also missing from
+  the advanced screen and specific to SIP: registration expiry, local/published address+port,
+  SRTP key exchange and the 13 TLS keys.
+
+- **N2 — `doc/plan_ui_logic_separation_qt_ipc.md` ends in four open decisions that nobody
+  answered.** §5 "Open decisions to confirm before Phase 1" has blocked the whole plan since it
+  was written; the most consequential is whether the Compose desktop app becomes an IPC client
+  or stays in-process. Only `plan_viewmodel_lifecycle_leak_fix.md` references the plan, and
+  section K does not list it among the decisions. Either answer §5 or mark the plan dormant the
+  way K2/K3 are.
+
+- **N3 — two documents a session claimed to have written do not exist.**
+  `VIDEO_CALL_ROADMAP.md` and `ROADMAP_IMPLEMENTATION_SUMMARY.md` (reported created alongside
+  `8fb0467` and `7a4b0d3`) appear in no commit on any branch and are referenced by no file. The
+  surviving video-call document is `docs/refine-video-call.md`, which sections D4/D5 already
+  draw from. Nothing to recover — noted so the claim is not chased again.
+
 ## Confirmed already recorded — no action
 
 Checked against source and found both true and already written down, so the screenshots carrying
