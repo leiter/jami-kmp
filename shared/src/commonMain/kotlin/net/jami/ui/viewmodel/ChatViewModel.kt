@@ -57,6 +57,7 @@ import net.jami.services.DeviceRuntimeService
 import net.jami.services.LocationUpdate
 import net.jami.utils.Log
 import net.jami.utils.VCardUtils
+import net.jami.ui.utils.Mentions
 
 /**
  * Type of message content.
@@ -230,6 +231,14 @@ data class ChatState(
     val peerUri: String = "",
     /** True for SIP/legacy conversations that do not support messaging. */
     val isLegacy: Boolean = false,
+    /**
+     * Display names of this conversation's members, for @mentions: what the composer offers
+     * and what the bubbles highlight. Empty outside a group, where a mention has no one to
+     * disambiguate between.
+     */
+    val memberNames: List<String> = emptyList(),
+    /** Members matching the mention being typed; empty when the user is not typing one. */
+    val mentionSuggestions: List<String> = emptyList(),
     /** The message the next sent text replies to (composer reply bar); null when not replying. */
     val replyingTo: ReplyPreview? = null,
     /**
@@ -378,7 +387,10 @@ class ChatViewModel(
                         if (event.conversationId == convId) refreshMessageHold()
                     }
                     is ConversationEvent.MemberEvent -> {
-                        if (event.conversationId == convId) refreshMessageHold()
+                        if (event.conversationId == convId) {
+                            refreshMessageHold()
+                            refreshMemberNames()
+                        }
                     }
                     is ConversationEvent.ConversationRemoved -> {
                         if (event.conversationId == convId) {
@@ -449,6 +461,7 @@ class ChatViewModel(
                 _state.value = _state.value.copy(
                     conversationTitle = title,
                     isTitleSyncing = isTitleSyncing,
+                    memberNames = groupMemberNames(conversation),
                     contactAvatarBytes = avatarBytes,
                     hasMoreHistory = true,
                     isLoadingMore = false,
@@ -890,13 +903,57 @@ class ChatViewModel(
      * @param text New input text.
      */
     fun updateInput(text: String) {
-        _state.value = _state.value.copy(inputText = text)
+        _state.value = _state.value.copy(
+            inputText = text,
+            mentionSuggestions = mentionSuggestionsFor(text),
+        )
         val accountId = currentAccountId ?: return
         val conversationId = currentConversationId ?: return
         conversationFacade.setIsComposing(accountId, Uri(Uri.SWARM_SCHEME, conversationId), text.isNotEmpty())
 
         // Save draft (with debouncing handled by DraftRepository)
         draftRepository.updateDraft(conversationId, text)
+    }
+
+    /**
+     * Completes the mention being typed with [name], and closes the suggestion list.
+     *
+     * The mention goes out as the literal text `@name`: a swarm message has no mention field,
+     * so this is what every other client will show, which is also why it reads correctly
+     * there as the plain text the author typed.
+     */
+    fun insertMention(name: String) {
+        updateInput(Mentions.complete(_state.value.inputText, name))
+    }
+
+    /** Members who match what has been typed after an `@`, or none if that is not happening. */
+    private fun mentionSuggestionsFor(text: String): List<String> {
+        val members = _state.value.memberNames
+        if (members.isEmpty()) return emptyList()
+        val query = Mentions.trailingQuery(text) ?: return emptyList()
+        return Mentions.suggestions(query, members)
+    }
+
+    /**
+     * Every member of a group, by the name the rest of the UI calls them.
+     *
+     * Empty for a 1:1 conversation: there is one other person and naming them adds nothing.
+     */
+    private fun groupMemberNames(conversation: Conversation?): List<String> {
+        if (conversation?.mode?.isGroup != true) return emptyList()
+        return conversation.contacts
+            .filterNot { it.isUser }
+            .map { displayNameFor(it, it.uri.uri) }
+            .filter { it.isNotBlank() }
+            .distinct()
+    }
+
+    private fun refreshMemberNames() {
+        val accountId = currentAccountId ?: return
+        val conversationId = currentConversationId ?: return
+        val conversation =
+            conversationFacade.getConversation(accountId, Uri(Uri.SWARM_SCHEME, conversationId))
+        _state.update { it.copy(memberNames = groupMemberNames(conversation)) }
     }
 
     /**

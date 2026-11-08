@@ -67,6 +67,8 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -737,6 +739,7 @@ fun ChatScreen(
                                 onRemoveReaction = { emoji -> viewModel.removeReaction(message.id, emoji) },
                                 loadEditHistory = { viewModel.getEditHistory(message.id) },
                                 onRetry = { viewModel.retryMessage(message.id) },
+                                memberNames = state.memberNames,
                             )
                         }
                         }
@@ -938,6 +941,14 @@ fun ChatScreen(
                     )
                 }
             }
+            // @mention suggestions, between the composer and the thread so the list grows
+            // towards the text being typed rather than away from it.
+            if (state.mentionSuggestions.isNotEmpty() && !state.isSearchActive) {
+                MentionSuggestions(
+                    names = state.mentionSuggestions,
+                    onSelect = { viewModel.insertMention(it) },
+                )
+            }
             if (!state.isSearchActive && !state.isLegacy) {
                 MessageInputBar(
                     value = state.inputText,
@@ -1097,6 +1108,8 @@ private fun ChatBubble(
     /** Null when the message cannot be replied to (e.g. a send that is still pending). */
     onReply: (() -> Unit)? = null,
     onReplyQuoteClick: (String) -> Unit = {},
+    /** Group members, so `@name` can be told apart from an email address. Empty in a 1:1. */
+    memberNames: List<String> = emptyList(),
 ) {
     val isOutgoing = message.isOutgoing
     var editHistory by remember { mutableStateOf<List<Pair<Long, String>>?>(null) }
@@ -1202,18 +1215,30 @@ private fun ChatBubble(
                     // "held-test-064206:43").
                     Text(
                         text = buildAnnotatedString {
-                            // http(s) URLs are clickable (jami-android-client autolinks message text).
+                            // http(s) URLs are clickable (jami-android-client autolinks message
+                            // text), and @mentions of this conversation's members are
+                            // emphasised. One pass over the two sets of ranges, which cannot
+                            // overlap: a URL contains no space and a mention starts at one.
                             val text = message.text
+                            val urls = net.jami.ui.utils.findUrlRanges(text)
+                            val mentions = net.jami.ui.utils.Mentions.findRanges(text, memberNames)
                             var last = 0
-                            for (range in net.jami.ui.utils.findUrlRanges(text)) {
+                            for (range in (urls + mentions).sortedBy { it.first }) {
+                                if (range.first < last) continue
                                 append(text.substring(last, range.first))
-                                val url = text.substring(range.first, range.last + 1)
-                                withLink(
-                                    LinkAnnotation.Url(
-                                        url,
-                                        TextLinkStyles(SpanStyle(textDecoration = TextDecoration.Underline)),
-                                    )
-                                ) { append(url) }
+                                val piece = text.substring(range.first, range.last + 1)
+                                if (range in urls) {
+                                    withLink(
+                                        LinkAnnotation.Url(
+                                            piece,
+                                            TextLinkStyles(SpanStyle(textDecoration = TextDecoration.Underline)),
+                                        )
+                                    ) { append(piece) }
+                                } else {
+                                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                                        append(piece)
+                                    }
+                                }
                                 last = range.last + 1
                             }
                             append(text.substring(last))
@@ -2569,4 +2594,30 @@ private fun Modifier.swipeToReply(
             }
         }
         .offset { IntOffset(offset.value.roundToInt(), 0) }
+}
+
+/**
+ * The members matching the `@` being typed, as chips above the composer.
+ *
+ * A row rather than a popup: a popup over the thread hides the message being replied to, and
+ * on a phone the keyboard already owns the bottom half of the screen.
+ */
+@Composable
+private fun MentionSuggestions(
+    names: List<String>,
+    onSelect: (String) -> Unit,
+) {
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = JamiTheme.spacing.s, vertical = JamiTheme.spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.xs),
+    ) {
+        items(names, key = { it }) { name ->
+            SuggestionChip(
+                onClick = { onSelect(name) },
+                label = { Text(name) },
+            )
+        }
+    }
 }

@@ -100,8 +100,20 @@ on 2026-10-31.
 
 ## C. Chat parity with jami-android-client
 
-- **C1 — @mentions in group chat.** Reference parses and highlights `@username`; KMP has no
-  mention system in the chat UI or view model.
+- **C1 — ~~@mentions in group chat~~.** Done 2026-11-08, and the premise was wrong: **neither
+  reference client implements mentions** (no match for "mention" in either tree), so there is
+  no wire format to match and none to invent — a swarm message is text. A mention therefore
+  *is* the literal `@name`, which every other client renders as the plain text the author
+  typed. `Mentions` (commonMain, 13 tests) recognises one only against the conversation's
+  actual members, longest name first and case-insensitively: matching any `@word` would light
+  up email addresses and handles from other services. The composer offers matching members as
+  chips above the input and completes with a trailing space; bubbles embolden recognised
+  mentions in the same pass that linkifies URLs. Three more tests cover the view model.
+
+  **Known gap, not a decision:** suggestions appear only for a mention being typed at the end
+  of the text. The composer holds a `String`, not a `TextFieldValue`, so there is no caret to
+  consult; `@` in the middle of an already-written line completes nothing. Making it
+  caret-aware is a larger change to `MessageInputBar` than this task.
 - **C2 — Markdown in message bodies.** Reference renders with Markwon (bold, italics, code);
   KMP shows plain text. Clickable http(s) links already landed 2026-09-18.
 - **C3 — DONE 2026-11-08.** The indicator now follows
