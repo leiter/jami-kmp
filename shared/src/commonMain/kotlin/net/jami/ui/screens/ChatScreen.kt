@@ -69,6 +69,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.SuggestionChip
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import net.jami.ui.utils.MessageBody
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -1215,33 +1218,36 @@ private fun ChatBubble(
                     // "held-test-064206:43").
                     Text(
                         text = buildAnnotatedString {
-                            // http(s) URLs are clickable (jami-android-client autolinks message
-                            // text), and @mentions of this conversation's members are
-                            // emphasised. One pass over the two sets of ranges, which cannot
-                            // overlap: a URL contains no space and a mention starts at one.
-                            val text = message.text
-                            val urls = net.jami.ui.utils.findUrlRanges(text)
-                            val mentions = net.jami.ui.utils.Mentions.findRanges(text, memberNames)
-                            var last = 0
-                            for (range in (urls + mentions).sortedBy { it.first }) {
-                                if (range.first < last) continue
-                                append(text.substring(last, range.first))
-                                val piece = text.substring(range.first, range.last + 1)
-                                if (range in urls) {
+                            // Inline Markdown, clickable http(s) URLs (jami-android-client
+                            // autolinks message text too) and @mentions of this
+                            // conversation's members, all cut by MessageBody in one pass —
+                            // Markdown removes its delimiters, so doing the three in sequence
+                            // would mean re-deriving every offset twice.
+                            for (token in MessageBody.tokenize(message.text, memberNames)) {
+                                val style = SpanStyle(
+                                    fontWeight = if (token.bold || token.mention) FontWeight.Bold
+                                                 else null,
+                                    fontStyle = if (token.italic) FontStyle.Italic else null,
+                                    fontFamily = if (token.code) FontFamily.Monospace else null,
+                                    textDecoration = if (token.strikethrough)
+                                        TextDecoration.LineThrough else null,
+                                )
+                                val url = token.url
+                                if (url != null) {
                                     withLink(
                                         LinkAnnotation.Url(
-                                            piece,
-                                            TextLinkStyles(SpanStyle(textDecoration = TextDecoration.Underline)),
+                                            url,
+                                            TextLinkStyles(
+                                                style.merge(
+                                                    SpanStyle(textDecoration = TextDecoration.Underline)
+                                                )
+                                            ),
                                         )
-                                    ) { append(piece) }
+                                    ) { append(token.text) }
                                 } else {
-                                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                                        append(piece)
-                                    }
+                                    withStyle(style) { append(token.text) }
                                 }
-                                last = range.last + 1
                             }
-                            append(text.substring(last))
                             withStyle(SpanStyle(color = Color.Transparent, fontSize = timeFontSize)) {
                                 append(timeText)
                             }

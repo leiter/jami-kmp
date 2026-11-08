@@ -114,8 +114,18 @@ on 2026-10-31.
   of the text. The composer holds a `String`, not a `TextFieldValue`, so there is no caret to
   consult; `@` in the middle of an already-written line completes nothing. Making it
   caret-aware is a larger change to `MessageInputBar` than this task.
-- **C2 — Markdown in message bodies.** Reference renders with Markwon (bold, italics, code);
-  KMP shows plain text. Clickable http(s) links already landed 2026-09-18.
+- **C2 — ~~Markdown in message bodies~~.** Done 2026-11-08. Markwon is Android-only, so this
+  is a small common renderer rather than a dependency: `**bold**`, `*italic*`, `_italic_`,
+  `~~strikethrough~~` and `` `code` ``, inline only — headings, lists and tables are a
+  document's furniture and a bubble is one paragraph, which is where the reference's Markwon
+  config stops too. Code is verbatim (no nested markup, no link, no mention), everything else
+  nests, and an unmatched delimiter stays as typed: "2 * 3 * 4" is arithmetic, and eating
+  someone's asterisks is worse than printing them.
+
+  Markdown removes its delimiters, so every offset after the first `**` shifts — which is why
+  `MessageBody.tokenize()` produces the final runs for Markdown, links and mentions in one
+  pass instead of three range passes that would each have to re-derive those offsets. The
+  bubble just draws tokens now. 12 tests.
 - **C3 — DONE 2026-11-08.** The indicator now follows
   `ConversationAdapter.configureDisplayIndicator`, so it appears at most twice in a
   conversation instead of once per message: a delivered double tick **only** on
