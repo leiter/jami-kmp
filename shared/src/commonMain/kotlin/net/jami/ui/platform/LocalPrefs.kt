@@ -68,4 +68,7 @@ object LocalPrefKeys {
      * synchronously.
      */
     const val APP_LANGUAGE = "local_app_language"
+
+    /** Recently used reaction emoji, most recent first, unit-separator delimited. */
+    const val RECENT_EMOJI = "local_recent_emoji"
 }

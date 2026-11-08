@@ -68,6 +68,7 @@ import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -202,6 +203,9 @@ import net.jami.ui.platform.FileSaveResult
 import net.jami.ui.platform.FileSaverEffect
 import net.jami.ui.platform.ImageCaptureEffect
 import net.jami.ui.platform.PermissionRequesterEffect
+import net.jami.ui.components.inputs.EmojiCatalog
+import net.jami.ui.components.inputs.EmojiPickerDialog
+import net.jami.ui.components.inputs.RecentEmoji
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.ChatViewModel
 import net.jami.ui.viewmodel.MessageItem
@@ -1111,6 +1115,7 @@ private fun ChatBubble(
 
     var showMenu by remember { mutableStateOf(false) }
     var showEmojiPicker by remember { mutableStateOf(false) }
+    var showFullEmojiPicker by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
     val timeText = formatMessageTime(message.timestamp)
     val timeFontSize = JamiTheme.typography.labelSmall.fontSize
@@ -1322,6 +1327,16 @@ private fun ChatBubble(
                 )
             }
 
+            if (showFullEmojiPicker) {
+                EmojiPickerDialog(
+                    onSelect = { emoji ->
+                        showFullEmojiPicker = false
+                        onReact(emoji)
+                    },
+                    onDismiss = { showFullEmojiPicker = false },
+                )
+            }
+
             // Emoji quick-reaction picker
             DropdownMenu(
                 expanded = showEmojiPicker,
@@ -1330,17 +1345,32 @@ private fun ChatBubble(
                 Row(
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    listOf("👍", "❤️", "😂", "😮", "😢", "👏").forEach { emoji ->
+                    EmojiCatalog.quick.forEach { emoji ->
                         Text(
                             text = emoji,
                             modifier = Modifier
                                 .clickable {
+                                    RecentEmoji.record(emoji)
                                     onReact(emoji)
                                     showEmojiPicker = false
                                 }
                                 .padding(6.dp),
                             fontSize = 22.sp,
+                        )
+                    }
+                    // The reference client's "more" button: six emoji are a shortcut, not the
+                    // vocabulary. Opens the full catalogue, with recents and search.
+                    IconButton(
+                        onClick = {
+                            showEmojiPicker = false
+                            showFullEmojiPicker = true
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = stringResource(Res.string.emoji_picker_title),
                         )
                     }
                 }

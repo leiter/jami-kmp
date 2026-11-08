@@ -229,6 +229,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_inprogress_group_call">Call in progress</string>
     <string name="notif_background_service">Jami is currently running in the background</string>
     <string name="notif_screen_sharing">Sharing your screen</string>
+    <string name="emoji_picker_title">Add a reaction</string>
+    <string name="emoji_picker_search">Search emoji</string>
+    <string name="emoji_picker_recent">Recent</string>
+
     <string name="notif_hidden_message_title">New message</string>
     <string name="notif_hidden_request_title">New contact request</string>
     <string name="notif_mark_as_read">Mark as read</string>
