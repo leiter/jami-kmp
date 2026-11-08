@@ -648,8 +648,11 @@ private fun AccountPickerRow(
  * last message preview, and unread badge.
  */
 @OptIn(ExperimentalFoundationApi::class)
+// internal, not private: the accessibility semantics below — merged node, role, state
+// description and four custom actions — are what ConversationRowSemanticsTest asserts on, and
+// a test cannot compose a private function.
 @Composable
-private fun ConversationListItem(
+internal fun ConversationListItem(
     conversation: ConversationItem,
     /**
      * Compact density, from the `compactMode` UI setting: the row loses most of its vertical

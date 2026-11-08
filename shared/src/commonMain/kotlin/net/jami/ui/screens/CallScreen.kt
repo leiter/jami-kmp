@@ -871,7 +871,17 @@ private fun CallInfoOverlay(
             // Someone on the other side is recording this call.
             if (state.isRemoteRecording) {
                 Spacer(Modifier.height(JamiTheme.spacing.xs))
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    // Assertive, not polite: being recorded is the one thing on this screen a
+                    // user may want to act on immediately, and it appeared silently before.
+                    // Merged, so the red dot and the sentence are announced as one.
+                    modifier = Modifier
+                        .testTag(TestTags.RECORDING_BANNER)
+                        .semantics(mergeDescendants = true) {
+                            liveRegion = LiveRegionMode.Assertive
+                        },
+                ) {
                     Icon(
                         imageVector = Icons.Default.FiberManualRecord,
                         contentDescription = null,

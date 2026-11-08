@@ -158,6 +158,18 @@ kotlin {
             }
         }
 
+        // Compose UI tests on the JVM, where they need no device. compose-ui-test-junit4 has
+        // been in the version catalog since the TestTags landed and was wired only for
+        // instrumented tests, so the accessibility semantics it exists to protect had no
+        // regression guard that CI could run.
+        val desktopTest by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+                implementation(compose.uiTest)
+            }
+        }
+
         val androidInstrumentedTest by getting {
             dependencies {
                 implementation(libs.compose.ui.test.junit4)

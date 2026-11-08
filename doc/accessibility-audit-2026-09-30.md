@@ -50,19 +50,31 @@ on why none of this is yet protected by a test.
 - **`TestTags` exists** (`net/jami/ui/TestTags.kt`) with six tags on the nodes whose semantics
   are worth protecting. The repo had none.
 
+## Closed 2026-11-08
+
+- **Incoming messages and the recording banner are live regions now.** The remote-recording
+  banner is **assertive** — being recorded is the one thing on that screen worth interrupting
+  for — and merged, so the red dot and the sentence are one announcement. Only the *newest
+  incoming* message is a live region, and politely: making every bubble one would read the
+  whole history out again on each scroll or history page.
+- **Compose UI tests run.** `compose.uiTest` is wired into the `desktopTest` source set — the
+  JVM, so no device — and `ConversationRowSemanticsTest` is the first UI test in the
+  repository: one merged node per row, the name in the description, pinned/muted as
+  `stateDescription`, and four custom actions. `ConversationListItem` became `internal` for
+  it. The catalog entry was there all along but wired only for *instrumented* tests, which is
+  why nothing CI can run had ever touched this.
+- **Touch targets swept outside the composer.** Two sites under 48 dp, both the same camera
+  badge over an avatar (`ConversationDetailsScreen`, `AccountSettingsScreen`):
+  `minimumInteractiveComponentSize()` now gives them a 48 dp hit area without changing what
+  is drawn. Nothing else clickable in `ui/screens` or `ui/components` measures under 48.
+
 ## Still open
 
-- **Incoming messages and the recording banner are not live regions.** The typing indicator and
-  call status are; these two still change silently.
-- **No compose UI test runs against any of this.** `compose-ui-test-junit4` is in the version
-  catalog but is not wired into `shared/build.gradle.kts`, so the new tags are for manual and
-  automated sweeps only. Wiring it up is the natural follow-up — I1's Robolectric item is the
-  neighbouring piece of the same gap.
 - **Menu toggles carry no `Role.Switch`.** Pin and mute are `DropdownMenuItem`s rather than
   switches, and their state is now on the row, so this is arguably resolved by a different
   route than the audit imagined — but a reader still hears them as plain menu entries.
-- **Touch targets outside the chat composer** were not swept; only the sites the audit named
-  were measured.
+- **Only the conversation row has a UI test.** The live regions, the chat header and the
+  composer label are now testable the same way and are not tested yet.
 
 ## Closed before this pass
 

@@ -44,4 +44,10 @@ object TestTags {
 
     /** The call-state line on the call screen — a polite live region. */
     const val CALL_STATUS = "call_status"
+
+    /** "X is recording this call" — an assertive live region. */
+    const val RECORDING_BANNER = "recording_banner"
+
+    /** The newest incoming message bubble — a polite live region. */
+    const val INCOMING_MESSAGE = "incoming_message"
 }

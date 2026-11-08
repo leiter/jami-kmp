@@ -700,12 +700,28 @@ fun ChatScreen(
                     reverseLayout = true,
                     verticalArrangement = Arrangement.spacedBy(JamiTheme.spacing.xs),
                 ) {
+                    // The newest message that arrived from the peer. Only that one is a live
+                    // region: making every bubble one would have a screen reader read the
+                    // whole history out again on each scroll or history page.
+                    val newestIncomingId = state.messages.lastOrNull { !it.isOutgoing }?.id
                     items(
                         items = state.messages.reversed(),
                         key = { it.id },
                     ) { message ->
                         val canReply = viewModel.isReplyable(message)
-                        Box(Modifier.swipeToReply(enabled = canReply) { startReply(message.id) }) {
+                        val announces = message.id == newestIncomingId
+                        Box(
+                            Modifier
+                                .swipeToReply(enabled = canReply) { startReply(message.id) }
+                                .then(
+                                    if (!announces) Modifier
+                                    else Modifier
+                                        .testTag(TestTags.INCOMING_MESSAGE)
+                                        // Polite: a message is worth hearing, but not worth
+                                        // cutting off whatever the reader is in the middle of.
+                                        .semantics { liveRegion = LiveRegionMode.Polite }
+                                )
+                        ) {
                         when (message.type) {
                             MessageType.DateSeparator -> DateSeparatorItem(message.text)
                             MessageType.System        -> SystemMessage(message)

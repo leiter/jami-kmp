@@ -54,6 +54,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -301,6 +302,10 @@ fun ConversationDetailsScreen(
                 if (canEditGroup) {
                     Box(
                         modifier = Modifier
+                            // Drawn at 28 dp, touched at 48: the badge keeps its size while
+                            // the hit area meets the minimum. Found by the touch-target sweep
+                            // the 2026-09-30 audit left open.
+                            .minimumInteractiveComponentSize()
                             .size(28.dp)
                             .background(JamiTheme.colors.primary, RoundedCornerShape(50))
                             .clickable { showGroupAvatarPicker = true },
