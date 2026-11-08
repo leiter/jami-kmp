@@ -76,6 +76,27 @@ class BlockUnknownContactsTest {
         assertNotNull(stack.callService.getCall(CALL_ID))
     }
 
+    /**
+     * The identifier key is read as "id" with "uri" accepted as a fallback, so a daemon build
+     * that supplies the other spelling is not treated as a list of strangers. Pinned because
+     * getting this key wrong is silent: it does not fail, it refuses every caller.
+     */
+    @Test
+    fun aContactsCallGoesThroughWhenTheDaemonKeysTheContactByUri() = runTest {
+        val stack = makeTestServiceStack(scope = this)
+        prepareAccountInService(stack.stub, stack.accountService)
+        stack.stub.contacts[TEST_ACCOUNT_ID] = listOf(
+            mapOf("uri" to PEER_ID, "confirmed" to "true", "banned" to "false")
+        )
+        stack.settingsRepository.updateBlockUnknownContacts(true)
+
+        stack.callService.onIncomingCall(TEST_ACCOUNT_ID, CALL_ID, "jami:$PEER_ID", emptyList())
+        advanceUntilIdle()
+
+        assertTrue(stack.stub.refusedCalls.isEmpty())
+        assertNotNull(stack.callService.getCall(CALL_ID))
+    }
+
     @Test
     fun aStrangersCallGoesThroughWithTheSettingOff() = runTest {
         val stack = makeTestServiceStack(scope = this)
@@ -184,7 +205,22 @@ class BlockUnknownContactsTest {
         const val STRANGER_ID = "fedcba9876543210fedcba9876543210fedcba98"
         const val STRANGER = "jami:$STRANGER_ID"
 
-        fun confirmedContact(id: String): Map<String, String> =
-            mapOf("uri" to id, "confirmed" to "true", "banned" to "false")
+        /**
+         * The shape the daemon actually returns from `getContacts`, transcribed from a real
+         * account's contact list on a device (Pixel 7a, 2026-11-08) rather than invented.
+         *
+         * The identifier is keyed **"id"**. This fixture used to say "uri", matching the
+         * production code's own mistake, so every test here passed while the feature was
+         * totally broken on a device: `isConfirmedContact` never found a contact, and the
+         * setting refused calls from confirmed contacts with SIP 603. "uri" is a conversation
+         * *member* key, not a contact key — see [isConfirmedContact].
+         */
+        fun confirmedContact(id: String): Map<String, String> = mapOf(
+            "id" to id,
+            "confirmed" to "true",
+            "banned" to "false",
+            "added" to "1762531860",
+            "conversationId" to "b54fc4f5fd4c7c98f43fe429be3f1223ddc4df50",
+        )
     }
 }

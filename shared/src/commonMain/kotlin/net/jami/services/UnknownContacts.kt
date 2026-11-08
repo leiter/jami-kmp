@@ -39,7 +39,14 @@ internal fun DaemonBridgeApi.isConfirmedContact(accountId: String, uri: Uri): Bo
     val wanted = uri.rawRingId
     if (wanted.isEmpty()) return false
     return getContacts(accountId).any { contact ->
-        val listed = contact["uri"]?.let { Uri.fromString(it).rawRingId } ?: return@any false
+        // "id", not "uri": the daemon keys a *contact* map by "id" and only a conversation
+        // *member* map by "uri". Reading "uri" here always found null, so every contact fell
+        // through the elvis below and the function could never return true — which turned
+        // "block unknown contacts" into "block everyone", refusing calls from confirmed
+        // contacts with SIP 603 and hiding their conversation requests. "uri" is still
+        // accepted so a daemon that supplies it is not rejected.
+        val listed = (contact["id"] ?: contact["uri"])
+            ?.let { Uri.fromString(it).rawRingId } ?: return@any false
         listed.equals(wanted, ignoreCase = true) &&
             contact["confirmed"]?.toBoolean() == true &&
             contact["banned"]?.toBoolean() != true
