@@ -24,6 +24,7 @@ import net.jami.database.JamiDatabase
 import net.jami.services.*
 import net.jami.services.AndroidPictureInPictureManager
 import net.jami.services.CameraService
+import net.jami.services.AndroidRingtoneInstaller
 import net.jami.services.DaemonBridgeApi
 import net.jami.services.JamiTelecomManager
 import net.jami.services.PictureInPictureManager
@@ -54,6 +55,13 @@ actual val platformModule: Module = module {
 
     single { DaemonBridge(androidContext()) }
     single<DaemonBridgeApi> { get<DaemonBridge>() }
+
+    /**
+     * Installs the bundled ringtones and points accounts at them. Without it the daemon uses
+     * a path compiled into libjami for the official client, which does not exist here, so no
+     * ringtone ever plays. See [net.jami.services.AndroidRingtoneInstaller].
+     */
+    single { AndroidRingtoneInstaller(androidContext(), get()) }
 
     // ==================== Database ====================
 

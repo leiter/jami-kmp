@@ -28,6 +28,7 @@ class JamiApplication : Application(), KoinComponent {
     private val daemonLifecycle: net.jami.services.DaemonLifecycleService by inject()
     private val contactService: net.jami.services.ContactService by inject()
     private val shortcutPublisher: net.jami.services.ConversationShortcutPublisher by inject()
+    private val ringtoneInstaller: net.jami.services.AndroidRingtoneInstaller by inject()
 
     override fun onCreate() {
         super.onCreate()
@@ -66,6 +67,11 @@ class JamiApplication : Application(), KoinComponent {
             // returns. This guarantees daemonAccountsReady is set so AppViewModel can
             // exit Loading state regardless.
             accountService.loadAccountsFromDaemon(isConnected = true)
+            // Accounts exist now, so their ringtone path can be repaired. Must follow the
+            // load: the daemon only lists an account once it has one. See
+            // AndroidRingtoneInstaller — libjami's built-in default points into the official
+            // client's data directory, so without this no ringtone can play.
+            ringtoneInstaller.repairAccounts()
             // Accounts exist now, so a push token can actually be applied to them.
             // Safe when Firebase is unconfigured — this just clears the daemon token.
             PushServiceManager.applyCurrentMode()
@@ -73,6 +79,10 @@ class JamiApplication : Application(), KoinComponent {
             // daemon so video negotiation can proceed.
             hardwareService.initVideo()
         }
+        // Before the daemon starts, so the files are already there when it loads accounts and
+        // resolves their ringtone paths. Cheap after the first run: it only stats the files.
+        ringtoneInstaller.install()
+
         // A daemon that could not start while the device was offline gets another chance as soon
         // as there is a network.
         daemonLifecycle.observeConnectivity(hardwareService.connectivityState)
