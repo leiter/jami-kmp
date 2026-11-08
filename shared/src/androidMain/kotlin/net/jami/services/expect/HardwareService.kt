@@ -31,6 +31,7 @@ import net.jami.model.Call.CallStatus
 import net.jami.model.Conference
 import net.jami.model.VideoDevices
 import net.jami.repository.SettingsRepository
+import net.jami.services.NotificationGuard
 import net.jami.services.CameraService
 import net.jami.services.DaemonBridge
 import net.jami.utils.Log
@@ -55,6 +56,7 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     private val daemonBridge: DaemonBridge by inject()
     private val cameraService: CameraService by inject()
     private val settingsRepository: SettingsRepository by inject()
+    private val notificationGuard: NotificationGuard by inject()
     private var currentFocusRequest: AudioFocusRequest? = null
     private var mShouldSpeakerphone = false
     private val powerManager: PowerManager by lazy {
@@ -146,9 +148,26 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
         }
     }
 
-    private fun muteRingtoneForRingerMode() {
-        val shouldMute = audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL
-        Log.d(TAG, "muteRingtoneForRingerMode: ringerMode=${audioManager.ringerMode} mute=$shouldMute")
+    /**
+     * Mutes the daemon's ringtone when the device or the user's settings say the call must
+     * arrive quietly.
+     *
+     * Quiet hours are checked here, not only on the notification, because the daemon is what
+     * actually rings: the incoming-call channel is deliberately silent (see
+     * `AndroidNotificationService.callsChannel`), so a quiet-hours call would otherwise ring
+     * at full volume with only its *notification* silenced — the opposite of the setting. It
+     * is deliberately a mute and not a suppression: the call is still shown and answerable,
+     * which is the behaviour [net.jami.services.NotificationGuard] documents.
+     */
+    private fun muteRingtoneIfSilenced() {
+        val ringerSilent = audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL
+        val quietHours = notificationGuard.shouldSilenceCallNotification()
+        val shouldMute = ringerSilent || quietHours
+        Log.d(
+            TAG,
+            "muteRingtoneIfSilenced: ringerMode=${audioManager.ringerMode} " +
+                "quietHours=$quietHours mute=$shouldMute"
+        )
         daemonBridge.muteRingtone(shouldMute)
     }
 
@@ -184,7 +203,7 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
                     getFocus(RINGTONE_REQUEST)
                     if (incomingCall) {
                         audioManager.mode = AudioManager.MODE_RINGTONE
-                        muteRingtoneForRingerMode()
+                        muteRingtoneIfSilenced()
                         setAudioRouting(true)
                     } else {
                         setAudioRouting(isOngoingVideo)

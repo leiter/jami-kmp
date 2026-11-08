@@ -194,6 +194,7 @@ class AndroidNotificationService(
         showBadge: Boolean,
         soundUsage: Int,
         bypassDnd: Boolean = false,
+        vibrationPattern: LongArray? = null,
     ): String {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return base
         val id = NotificationChannelIds.variant(base, sound, vibrate)
@@ -206,6 +207,8 @@ class AndroidNotificationService(
         val channel = NotificationChannel(id, name, importance).apply {
             setShowBadge(showBadge)
             enableVibration(vibrate)
+            // Only meaningful with vibration on; a null pattern leaves the platform default.
+            if (vibrate && vibrationPattern != null) this.vibrationPattern = vibrationPattern
             if (bypassDnd) setBypassDnd(true)
             when (sound) {
                 // Silent is the whole point of the fix: a null sound means *default* to the
@@ -253,27 +256,38 @@ class AndroidNotificationService(
     // ==================== Call Notifications ====================
 
     /**
-     * The channel every call notification is posted to: the silent one during quiet hours,
-     * the ringing one otherwise. Read per notification rather than cached, so a call that
-     * arrives either side of the quiet-hours boundary gets the right treatment.
+     * The channel every call notification is posted to: one that vibrates, or during quiet
+     * hours one that does not. Read per notification rather than cached, so a call arriving
+     * either side of the quiet-hours boundary gets the right treatment.
      *
-     * The ringing channel carries the user's ringtone, which Android will not let us change
-     * on an existing channel — nor on a deleted and recreated one, which comes back with its
-     * old sound. So the ringtone is part of the channel id and a new ringtone means a new
-     * channel; [ensureChannelVariant] deletes the one it replaces. This is what makes the
-     * ringtone setting take effect at all: the previous delete-and-recreate under the same id
-     * silently kept the first ringtone the device ever saw.
+     * **Neither makes a sound.** The daemon rings, playing `Account.ringtonePath`, and the
+     * channel only vibrates — the same split as jami-client-android, whose `incoming_call2`
+     * channel is likewise `setSound(null, null)` with a vibration pattern. An earlier version
+     * put the user's ringtone in the channel instead, which was the only thing ringing while
+     * the daemon's ringtone path was broken; once that was fixed every call rang twice.
+     *
+     * Still routed through [ensureChannelVariant] rather than created once up front, and that
+     * matters for the upgrade: a device that already has the sounded `jami_calls__sdef_v1`
+     * gets a new id for the silent configuration, so the old one is deleted rather than
+     * reused. Recreating a channel under an id it has held before brings its old sound back,
+     * which is the whole reason this indirection exists.
+     *
+     * Quiet hours silence the daemon too — see `HardwareService.muteRingtoneIfSilenced()`.
+     * Without that, a silent channel would leave a quiet-hours call ringing at full volume.
      */
     private fun callsChannel(): String {
         if (notificationGuard.shouldSilenceCallNotification()) return CHANNEL_CALLS_SILENT
-        val ringtone = runBlocking { settingsRepository.callSettings.first().ringtone }
         return ensureChannelVariant(
             base = CHANNEL_CALLS,
             name = runBlocking { getString(Res.string.notif_channel_incoming_calls) },
             importance = NotificationManager.IMPORTANCE_HIGH,
-            sound = if (ringtone.isBlank()) NotificationSound.Default
-                    else NotificationSound.Custom(ringtone),
+            // Silent on purpose. The *daemon* rings, playing Account.ringtonePath, exactly as
+            // jami-client-android does (its incoming_call2 channel is setSound(null, null) too).
+            // Carrying a sound here as well made every call ring twice: the daemon's tune
+            // looping under the notification's blip.
+            sound = NotificationSound.Silent,
             vibrate = true,
+            vibrationPattern = CALL_VIBRATION_PATTERN,
             showBadge = true,
             soundUsage = AudioAttributes.USAGE_NOTIFICATION_RINGTONE,
             bypassDnd = true,
@@ -1015,6 +1029,12 @@ class AndroidNotificationService(
 
         // Notification channels
         // _v2 suffix forces channel recreation when importance level changed
+        /**
+         * Wait, buzz, pause — repeated by the platform while the call rings. Taken from
+         * jami-client-android, where the incoming-call channel carries the same pattern; a
+         * call should feel different from a message, which uses the default short buzz.
+         */
+        val CALL_VIBRATION_PATTERN = longArrayOf(0, 1000, 1000)
         const val CHANNEL_CALLS = "jami_calls"
         /** [CHANNEL_CALLS] without sound or vibration, for calls during quiet hours. */
         const val CHANNEL_CALLS_SILENT = "jami_calls_silent"
