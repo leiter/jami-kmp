@@ -183,9 +183,11 @@ on 2026-10-31.
   held rather than read. Both `CallScreenContent` call sites (incoming and in-call).
 - **D3 — Bluetooth headset routing.** `toggleSpeaker()` exists; the 3-way
   earpiece/speaker/BT route is not fully wired through `AudioManager`.
-- **D4 — incoming video call screen (`docs/refine-video-call.md` P2).** Add the live camera
-  preview while a video call is ringing and a separate "accept audio only" button, matching
-  `initIncomingCallDisplay`.
+- **D4 — ~~incoming video call screen~~. Already done; premise stale (checked 2026-11-08).**
+  `CallScreen` starts the local preview while a video call rings (requesting camera permission
+  first) and draws it at `CallScreen.kt:503`/`:529`, and `IncomingControls` already offers the
+  audio-only accept beside the video one, exactly as `initIncomingCallDisplay` does. **No work
+  left** beyond seeing it on a device.
 - **D5 — ~~expose `videoEnabled` in call settings (P2)~~ and ~~gate outgoing calls (P3)~~.**
   Done 2026-11-08, and most of it was already there: the toggle is in `AppSettingsScreen`'s
   Calls section and `CallViewModel.initOutgoing()` already refused video without a camera.
@@ -302,7 +304,11 @@ on 2026-10-31.
 `doc/gap-analysis-medium-opportunities.md` is marked superseded (2026-03-19) and much of it
 has since landed under other names. Treat each as a read-the-source check first:
 
-- **H1** Conversation search and history pagination (`onMessagesFound`, `loadMore()`).
+- **H1 — ~~conversation search and history pagination~~. Already done; premise stale
+  (checked 2026-11-08).** `ChatViewModel.loadMore()` pages history with `hasMoreHistory` /
+  `isLoadingMore`, `ChatScreen` drives it from a `snapshotFlow` on the scroll position, and
+  `onMessagesFound` is wired from `DaemonCallbacksImpl` into the facade and feeds the
+  in-conversation search the screen already has. **No work left.**
 - **H2** Name-registration state machine (in-progress → success/failure) for the creation wizard.
 - **H3** Presence streamed onto the `Contact` model as a `StateFlow` + availability indicators.
 - **H4** Account wizard presenter parity (SIP creation, device linking/import, profile step).
