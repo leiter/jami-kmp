@@ -206,8 +206,10 @@ class BlockUnknownContactsTest {
         const val STRANGER = "jami:$STRANGER_ID"
 
         /**
-         * The shape the daemon actually returns from `getContacts`, transcribed from a real
-         * account's contact list on a device (Pixel 7a, 2026-11-08) rather than invented.
+         * The shape the daemon actually returns from `getContacts`, taken from a real
+         * account's contact store on a device (2026-11-08) rather than invented — the *keys*
+         * and value formats are real, the values themselves are synthetic on purpose, since
+         * a live account's identifiers do not belong in a repository.
          *
          * The identifier is keyed **"id"**. This fixture used to say "uri", matching the
          * production code's own mistake, so every test here passed while the feature was
@@ -220,7 +222,7 @@ class BlockUnknownContactsTest {
             "confirmed" to "true",
             "banned" to "false",
             "added" to "1762531860",
-            "conversationId" to "b54fc4f5fd4c7c98f43fe429be3f1223ddc4df50",
+            "conversationId" to "aaaaaaaa1111bbbb2222cccc3333dddd44445555",
         )
     }
 }
