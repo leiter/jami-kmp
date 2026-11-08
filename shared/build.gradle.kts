@@ -147,6 +147,17 @@ kotlin {
             }
         }
 
+        // Android JVM unit tests. Robolectric gives the Android actuals a real Context,
+        // SharedPreferences and AudioManager, which is what kept four common test classes
+        // running on the desktop target only — see the Robolectric* subclasses in
+        // src/androidUnitTest.
+        val androidUnitTest by getting {
+            dependencies {
+                implementation(libs.robolectric)
+                implementation(libs.kotlin.test.junit)
+            }
+        }
+
         val androidInstrumentedTest by getting {
             dependencies {
                 implementation(libs.compose.ui.test.junit4)
@@ -227,6 +238,8 @@ android {
     // common tests can construct Android service actuals (e.g. HardwareService's placeholder Context).
     testOptions {
         unitTests.isReturnDefaultValues = true
+        // Robolectric needs the merged resources and manifest to build its Context.
+        unitTests.isIncludeAndroidResources = true
     }
 
     // Include SWIG-generated Java sources and native libraries

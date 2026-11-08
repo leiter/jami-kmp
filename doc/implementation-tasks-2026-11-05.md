@@ -319,9 +319,22 @@ has since landed under other names. Treat each as a read-the-source check first:
 
 ## I. Test and harness infrastructure
 
-- **I1 — Robolectric for the Android unit tests**, so `HardwareServiceTest`,
-  `AppSettingsViewModelTest`, `AppViewModelTest` and `CallViewModelTest` run against the
-  Android actuals instead of desktop only.
+- **I1 — Robolectric: wired, one of four classes crossed over (2026-11-08).** Robolectric
+  4.14.1 is in the Android unit-test source set (pinned to SDK 34: it ships a prebuilt runtime
+  per API level and lags the compileSdk), `testOptions.unitTests.isIncludeAndroidResources`
+  is on, and `ensurePlatformTestKoin()` now starts a real `Settings` over Robolectric's
+  SharedPreferences. `AppSettingsViewModelTest` runs against the **Android** actuals through
+  an empty subclass — JUnit runs inherited test methods — so the `LocalPrefs` path that ships
+  to a phone is covered for the first time. The subclass starts Koin from a `TestRule`, not a
+  setup method: the parent's own setup resets `LocalPrefs` and runs first.
+
+  The other three are still excluded, with the reason recorded next to the subclass rather
+  than left failing: `HardwareServiceTest` resolves `DaemonBridge` from Koin and that is the
+  JNI class, so binding it would load `libjami-core-jni.so` (it wants the bridge behind an
+  interface first); `AppViewModelTest` and `CallViewModelTest` never leave `Loading` /
+  `Outgoing` under Robolectric although `advanceUntilIdle()` returns, so something in the
+  Android path is off the test scheduler. **Both findings are new** — until now neither could
+  be observed, because the classes did not run on this target at all.
 - **I2 — ~~let `StubDaemonBridge` retain its callbacks~~.** Done 2026-11-08. `init()` keeps
   them, and `fireDaemonEvent { … }` plays the daemon against whatever the stack registered,
   failing loudly if nothing has. `connectDaemonCallbacks()` in `TestFixtures` wires a real

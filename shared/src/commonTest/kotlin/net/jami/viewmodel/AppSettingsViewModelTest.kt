@@ -34,7 +34,12 @@ import kotlin.test.BeforeTest
 import net.jami.ui.platform.LocalPrefs
 import net.jami.ui.platform.LocalPrefKeys
 
-class AppSettingsViewModelTest {
+/*
+ * Open so src/androidUnitTest can re-run these same tests under Robolectric, against the
+ * Android actuals rather than the desktop ones (see the Robolectric* subclasses there).
+ * JUnit runs inherited @Test methods, so the subclass needs no body.
+ */
+open class AppSettingsViewModelTest {
 
     /**
      * Resets the device-local preferences these tests read and write.
