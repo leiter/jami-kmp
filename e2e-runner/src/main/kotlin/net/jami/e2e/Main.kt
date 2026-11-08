@@ -43,6 +43,17 @@ private const val INSTALL_SETTLE_MS = 3_000L
  * `--list`, or `--list-account-states`.
  * Exit code: 0 = pass, 1 = fail, 2 = usage error.
  */
+/**
+ * Written at the start of a run and deleted when it finishes.
+ *
+ * Finding it at startup means the previous run was killed or timed out somewhere in the
+ * middle, which is precisely the state that strands an account on a device: the harness diffs
+ * the accounts flow from connect time, so a leftover account is invisible in the next
+ * timeline while still skewing the daemon, and its registration makes the next
+ * `ensureNoAccounts` precondition fail fast. The next run clears app data when it sees this.
+ */
+private val RUN_MARKER = java.io.File("harness-memory/.run-in-progress")
+
 fun main(args: Array<String>) {
     if (args.isEmpty() || args[0] == "--list") {
         printScenarios()
@@ -118,10 +129,21 @@ fun main(args: Array<String>) {
         // time, that account is invisible in the next timeline while still skewing the daemon, and
         // its lingering registration makes the next `ensureNoAccounts` precondition fail fast.
         // `pm clear` also relabels the data dir, so give restorecon the same settle window.
-        if (runConfig.freshStart) {
+        // A run that died mid-scenario leaves a marker behind (see finishMarker below). The
+        // next run clears the harness app's data before touching anything, because that is
+        // exactly the state -PfreshStart exists for — and a human who has just watched a run
+        // time out is not reliably the one who remembers to pass it. Fixtures are not wiped
+        // on an ordinary clean run: reusing them by state is the whole account strategy.
+        val previousRunDied = RUN_MARKER.exists()
+        if (previousRunDied) {
+            println("previous run did not finish (${RUN_MARKER.path}) — clearing harness app data")
+        }
+        if (runConfig.freshStart || previousRunDied) {
             controllers.forEach { it.clearAppData() }
             delay(INSTALL_SETTLE_MS)
         }
+        RUN_MARKER.parentFile?.mkdirs()
+        RUN_MARKER.writeText("$stamp $scenarioId\n")
 
         // Precondition: the standard jami-kmp app and jami-android-client must not be running —
         // both drive a real daemon against the real DHT, and left running they're a source of
@@ -130,6 +152,9 @@ fun main(args: Array<String>) {
         controllers.forEach { it.stopCompetingApps() }
 
         // Bring every device up first (these adb calls return immediately).
+        // (Competing apps were stopped just above; they are stopped again after every agent
+        // has connected, below — the window between the two is where a notification tap or a
+        // vendor restart service can bring one back.)
         controllers.forEach { ctrl ->
             ctrl.adbReverse(HARNESS_PORT)
             ctrl.startApp()
@@ -153,6 +178,12 @@ fun main(args: Array<String>) {
             roleControllers[conn.role] = ctrl
         }
 
+        // Re-assert the precondition immediately before the scenario's first step rather than
+        // only once at the top of the run: starting the harness app, waiting for up to two
+        // agents to connect and the settle delays above are all time in which a competing
+        // Jami can be restarted — by a notification, by the user, or by a vendor keep-alive.
+        controllers.forEach { it.stopCompetingApps() }
+
         val ctx = ScenarioContextImpl(conns, roleControllers, ledger, runDir, memory, server, runConfig)
         val result = try {
             scenario.run(ctx)
@@ -169,6 +200,12 @@ fun main(args: Array<String>) {
 
     controllers.forEach { it.adbReverseRemove(HARNESS_PORT) }
     server.stop()
+
+    // Reached only when the run completed — pass or fail, but not a timeout, a kill or a
+    // crash. Its absence is what tells the next run that the devices may be in a state
+    // nobody cleaned up. Deleted after teardown so a stranded account cannot survive into
+    // the next scenario unnoticed.
+    RUN_MARKER.delete()
 
     ledger.print()
     println(if (verdict.pass) "PASS — ${verdict.reason}" else "FAIL — ${verdict.reason}")

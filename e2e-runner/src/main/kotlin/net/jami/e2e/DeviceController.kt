@@ -31,7 +31,12 @@ const val AGENT_SERVICE = "net.jami.android.harness.HarnessAgentService"
  * locks, sockets, notifications) and confusing manual-testing crosstalk. Force-stopped as a
  * precondition before every harness run — see [DeviceController.stopCompetingApps].
  */
-val COMPETING_APP_IDS = listOf("net.jami.android", "cx.ring")
+val COMPETING_APP_IDS = listOf(
+    "net.jami.android",          // the standard (non-harness) jami-kmp build
+    "cx.ring",                   // jami-android-client, release
+    "cx.ring.debug",             // …and its debug build, which is what a lab device has
+    "com.savoirfairelinux.ring", // the old application id, still installed on older devices
+)
 
 /**
  * Thin wrapper over `adb`/`am` to install/reverse/launch on one device.

@@ -345,11 +345,20 @@ has since landed under other names. Treat each as a read-the-source check first:
   reaching the facade on both an early and a late subscriber, and firing before `init()`
   failing loudly. The callback coverage this unlocks is not written yet; it is now writable
   without a device.
-- **I3 — harden the harness "no competing daemon" precondition.** Add `cx.ring.debug` (and
-  consider `com.savoirfairelinux.ring`) to `COMPETING_APP_IDS`; re-assert the force-stop just
-  before the first cross-device step rather than once per run; add a pre-run
-  `pm clear net.jami.android.harness` / account wipe so a timed-out run cannot poison the next
-  scenario.
+- **I3 — ~~harden the harness "no competing daemon" precondition~~.** Done 2026-11-08, all
+  three parts. `COMPETING_APP_IDS` gained `cx.ring.debug` (what a lab device actually has) and
+  `com.savoirfairelinux.ring` (the old application id, still installed on older devices). The
+  force-stop is re-asserted immediately before the scenario's first step as well as at the top
+  of the run — starting the app, waiting for up to two agents and the settle delays are all
+  time in which a notification tap or a vendor keep-alive can restart a competing Jami.
+
+  The `pm clear` is **conditional, deliberately**: an unconditional wipe would destroy the
+  fixture-reuse-by-state strategy the whole account registry rests on. Instead a
+  `harness-memory/.run-in-progress` marker is written at the start of a run and deleted after
+  teardown, so a run that was killed or timed out leaves it behind and the *next* run clears
+  app data on its own — which is exactly the state `-PfreshStart` exists for, and a human who
+  has just watched a run time out is not reliably the one who remembers to pass it.
+  **Unverified on devices:** this is harness code and only a run proves it.
 - **I4 — device verification owed on the durable outbox.** The `send-before-member-join` e2e
   scenario bypasses `SendQueueService`, so the UI-driven path has never been checked.
 - **I5 — microphone level ring.** Needs a call someone answers, which adb cannot do alone.
