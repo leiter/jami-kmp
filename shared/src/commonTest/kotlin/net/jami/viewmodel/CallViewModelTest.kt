@@ -47,7 +47,10 @@ class CallViewModelTest {
         val accountService = makeAccountService(stub, scope)
         val contactService = makeContactService(stub, accountService, scope)
         val callService = makeCallService(stub, accountService, scope = scope)
-        val vm = CallViewModel(callService, accountService, contactService, testHardwareService(), StubDeviceRuntimeService(), scope)
+        val vm = CallViewModel(
+            callService, accountService, contactService, testHardwareService(),
+            StubDeviceRuntimeService(), makeSettingsRepository(stub, scope), scope,
+        )
         return Triple(vm, callService, accountService)
     }
 
@@ -309,5 +312,30 @@ class CallViewModelTest {
     private companion object {
         const val SYNC_CONV_ID = "52c33a0bdf3038c4026ad0903dd6488022593b53"
         const val PEER_ID = "d9f8c7f0bf768178542d402c6ae233072bfff6df"
+    }
+
+    /**
+     * "Enable video" was offered in app settings and consulted by nothing, so turning it off
+     * still placed video calls and still lit the camera.
+     */
+    @Test
+    fun turningVideoOffKeepsAnOutgoingCallAudioOnly() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val settings = makeSettingsRepository(stub, this)
+        prepareAccountInService(stub, accountService)
+        settings.updateVideoEnabled(false)
+
+        val vm = CallViewModel(
+            callService, accountService, contactService, testHardwareService(),
+            StubDeviceRuntimeService(), settings, viewModelScope(),
+        )
+        vm.initOutgoing(TEST_ACCOUNT_ID, contactUri = "bob", hasVideo = true)
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.hasVideo, "the setting is off, so there is no video")
+        assertFalse(vm.state.value.hasLocalVideo)
     }
 }

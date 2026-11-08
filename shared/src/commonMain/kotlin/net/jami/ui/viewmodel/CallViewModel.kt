@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import net.jami.services.AccountService
+import net.jami.repository.SettingsRepository
 import net.jami.services.CallService
 import net.jami.services.ContactService
 import net.jami.services.DeviceRuntimeService
@@ -202,6 +203,7 @@ class CallViewModel(
     private val contactService: ContactService,
     private val hardwareService: HardwareService,
     private val deviceRuntimeService: DeviceRuntimeService,
+    private val settingsRepository: SettingsRepository,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) : ViewModel() {
     private val scope = scope
@@ -293,8 +295,12 @@ class CallViewModel(
                 }
             }
 
-            // Mirror CallPresenter.initOutGoing(): only allow video if the device has a camera.
-            val effectiveVideo = hasVideo && hardwareService.hasCamera()
+            // Mirror CallPresenter.initOutGoing(): video only if the device has a camera —
+            // and only if the user has left "Enable video" on. That setting was offered in
+            // app settings and consulted by nothing, so turning it off still placed video
+            // calls and still lit the camera.
+            val videoAllowed = settingsRepository.callSettings.value.videoEnabled
+            val effectiveVideo = hasVideo && videoAllowed && hardwareService.hasCamera()
             Log.d(TAG, "initOutgoing: resolvedAccount=$resolvedAccountId peerUri=${peerUri.uri} scheme=${peerUri.scheme} isGroupCall=$isGroupCall effectiveVideo=$effectiveVideo")
             Log.d(TAG, "initOutgoing: conv=${conversation?.uri?.uri} isSwarm=${conversation?.isSwarm} " +
                 "mode=${conversation?.mode} requestMode=${conversation?.requestMode} " +

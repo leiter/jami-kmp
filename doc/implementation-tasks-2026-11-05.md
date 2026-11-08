@@ -186,8 +186,12 @@ on 2026-10-31.
 - **D4 — incoming video call screen (`docs/refine-video-call.md` P2).** Add the live camera
   preview while a video call is ringing and a separate "accept audio only" button, matching
   `initIncomingCallDisplay`.
-- **D5 — expose `videoEnabled` in call settings (P2)** and **gate outgoing calls on
-  `videoEnabled` + `hasCamera()` (P3)**, matching `CallPresenter.initOutGoing():98`.
+- **D5 — ~~expose `videoEnabled` in call settings (P2)~~ and ~~gate outgoing calls (P3)~~.**
+  Done 2026-11-08, and most of it was already there: the toggle is in `AppSettingsScreen`'s
+  Calls section and `CallViewModel.initOutgoing()` already refused video without a camera.
+  What was missing is the setting itself being consulted — it was offered and read by
+  nothing, so turning video off still placed video calls and still lit the camera. Now
+  `effectiveVideo = hasVideo && videoAllowed && hasCamera()`, with a regression test.
 
 ## E. App settings / platform integration
 
