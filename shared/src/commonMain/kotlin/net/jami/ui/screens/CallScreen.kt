@@ -117,6 +117,7 @@ import net.jami.ui.components.video.VideoParticipant
 
 import net.jami.ui.composables.VideoRenderer
 import net.jami.ui.theme.JamiColors
+import net.jami.utils.Log
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.CallMode
 import net.jami.ui.viewmodel.CallPickerItem
@@ -206,14 +207,17 @@ fun CallScreen(
         micLevel = { micLevelState.value },
         onAcceptAudio = {
             haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+            Log.d("CallScreen", "haptic: Confirm")
             viewModel.acceptCurrent(withVideo = false)
         },
         onAcceptVideo = {
             haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+            Log.d("CallScreen", "haptic: Confirm")
             viewModel.acceptCurrent(withVideo = true)
         },
         onDecline = {
             haptics.performHapticFeedback(HapticFeedbackType.Reject)
+            Log.d("CallScreen", "haptic: Reject")
             viewModel.refuseCurrent()
         },
         // Only tell the ViewModel to end the call; navigation is driven exclusively by
@@ -221,6 +225,7 @@ fun CallScreen(
         // here AND in onEnded causes a double-pop that removes the Home screen too.
         onEnd = {
             haptics.performHapticFeedback(HapticFeedbackType.Reject)
+            Log.d("CallScreen", "haptic: Reject")
             viewModel.endCall()
         },
         onToggleMute = { viewModel.toggleMute() },
@@ -334,18 +339,22 @@ fun IncomingCallScreen(
         micLevel = { micLevelState.value },
         onAcceptAudio = {
             haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+            Log.d("CallScreen", "haptic: Confirm")
             viewModel.acceptCurrent(withVideo = false)
         },
         onAcceptVideo = {
             haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+            Log.d("CallScreen", "haptic: Confirm")
             viewModel.acceptCurrent(withVideo = true)
         },
         onDecline = {
             haptics.performHapticFeedback(HapticFeedbackType.Reject)
+            Log.d("CallScreen", "haptic: Reject")
             viewModel.refuseCurrent()
         },
         onEnd = {
             haptics.performHapticFeedback(HapticFeedbackType.Reject)
+            Log.d("CallScreen", "haptic: Reject")
             viewModel.endCall()
         },
         onToggleMute = { viewModel.toggleMute() },

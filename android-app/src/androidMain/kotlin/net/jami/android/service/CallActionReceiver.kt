@@ -2,6 +2,7 @@ package net.jami.android.service
 
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.os.Build
 import android.content.Intent
 import net.jami.services.AndroidNotificationService
 import net.jami.services.CallService
@@ -36,6 +37,8 @@ class CallActionReceiver : BroadcastReceiver(), KoinComponent {
                 Log.w(TAG, "CallActionReceiver: no accountId for callId=$callId")
                 return
             }
+
+        confirmActionHaptic(context, intent.action)
 
         when (intent.action) {
             AndroidNotificationService.ACTION_ANSWER -> {
@@ -79,5 +82,54 @@ class CallActionReceiver : BroadcastReceiver(), KoinComponent {
     companion object {
         private const val TAG = "CallActionReceiver"
         const val ACTION_VIEW_CALL = "net.jami.action.VIEW_CALL"
+    }
+
+    /**
+     * A short haptic when a call is answered or declined from the notification.
+     *
+     * The in-call screen gets this for free from Compose's LocalHapticFeedback, but the
+     * notification's buttons are handled here, outside any composition — so answering from
+     * the shade, which is how a call is normally answered, gave no feedback at all while
+     * hanging up inside the app did.
+     *
+     * Uses a predefined effect rather than a raw pattern so it matches the platform's own
+     * confirm/reject feel, and checks the user's haptic setting by hand, which is the one
+     * thing LocalHapticFeedback was doing for us.
+     */
+    private fun confirmActionHaptic(context: Context, action: String?) {
+        val confirm = when (action) {
+            AndroidNotificationService.ACTION_ANSWER -> true
+            AndroidNotificationService.ACTION_DECLINE -> false
+            else -> return
+        }
+        try {
+            val enabled = android.provider.Settings.System.getInt(
+                context.contentResolver,
+                android.provider.Settings.System.HAPTIC_FEEDBACK_ENABLED,
+                1,
+            ) != 0
+            if (!enabled) return
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE)
+                    as android.os.VibratorManager).defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                context.getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
+            }
+            if (!vibrator.hasVibrator()) return
+            val effect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                android.os.VibrationEffect.createPredefined(
+                    if (confirm) android.os.VibrationEffect.EFFECT_CLICK
+                    else android.os.VibrationEffect.EFFECT_DOUBLE_CLICK
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                android.os.VibrationEffect.createOneShot(if (confirm) 20L else 40L, 128)
+            }
+            vibrator.vibrate(effect)
+            Log.d(TAG, "Notification action haptic: action=$action confirm=$confirm")
+        } catch (e: Exception) {
+            Log.w(TAG, "Unable to play the notification action haptic", e)
+        }
     }
 }

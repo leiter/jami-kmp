@@ -139,7 +139,10 @@ actual val platformModule: Module = module {
             context = androidContext(),
             settingsRepository = get(),
             notificationGuard = get(),
-            telecomManager = get()
+            telecomManager = get(),
+            contactService = get(),
+            accountService = get(),
+            vCardService = get()
         )
     }
 

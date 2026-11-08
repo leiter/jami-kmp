@@ -27,6 +27,8 @@ import android.net.Uri as AndroidUri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
+import androidx.core.graphics.drawable.IconCompat
+import android.graphics.BitmapFactory
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import kotlinx.coroutines.flow.first
@@ -87,7 +89,13 @@ class AndroidNotificationService(
     private val settingsRepository: SettingsRepository,
     private val notificationGuard: NotificationGuard,
     private val telecomManager: JamiTelecomManager,
+    private val contactService: ContactService,
+    private val accountService: AccountService,
+    private val vCardService: VCardService,
 ) : NotificationService {
+
+    /** The last fully-built call notification, reused by the call foreground service. */
+    private var lastCallNotification: android.app.Notification? = null
 
     private val notificationManager: NotificationManager by lazy {
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -231,6 +239,66 @@ class AndroidNotificationService(
         return id
     }
 
+    // ==================== Caller identity ====================
+
+    /**
+     * The contact's avatar as a notification icon, or null when there is none to show.
+     *
+     * Decodes on the calling thread, which is acceptable here because the bytes are the
+     * already-downscaled profile picture held in memory (ContactService caps it at 512 px) —
+     * not a file read. Adaptive, so the platform masks it to a circle in the notification.
+     */
+    private fun avatarIcon(bytes: ByteArray?): IconCompat? {
+        if (bytes == null || bytes.isEmpty()) return null
+        return try {
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                ?.let { IconCompat.createWithAdaptiveBitmap(it) }
+        } catch (e: Exception) {
+            Log.w(TAG, "Unable to decode an avatar for a notification", e)
+            null
+        }
+    }
+
+    /**
+     * The peer as a [Person]: their name and picture.
+     *
+     * Resolved through [ContactService] rather than from the [Call]'s own contact. A call from
+     * someone not yet in the cache gets a bare placeholder Contact created for it, carrying
+     * neither display name nor username, so the notification showed a truncated hash — a real
+     * call from "peace4us" announced itself as "d9f8c7f0bf76". The cached contact knows both,
+     * and knows the avatar too.
+     *
+     * [fallbackName] is used when the contact has no name at all, so the caller decides
+     * whether that is a hash or a privacy placeholder.
+     */
+    private fun callerPerson(accountId: String, uri: Uri, fallbackName: String): Person {
+        // The *account's* contact store first, not ContactService's. They are different
+        // caches: Account.contacts is filled from the daemon's contact list, names, usernames
+        // and profiles included, while ContactService.getContactFromCache creates a bare
+        // placeholder for any URI it is merely asked about — which is what a call does. Asking
+        // the latter returned an empty Contact, so a call from "peace4us" announced itself as
+        // "d9f8c7f0bf76" even though every other screen had the name.
+        val contact = runCatching { accountService.getAccount(accountId)?.getContactFromCache(uri) }
+            .getOrNull()
+            ?: runCatching { contactService.findContactInCache(accountId, uri) }.getOrNull()
+        val name = contact?.displayName?.takeIf { it.isNotBlank() }
+            ?: contact?.username?.takeIf { it.isNotBlank() }
+            ?: fallbackName
+        // The contact's in-memory profile only carries a picture if a vCard happened to
+        // arrive this session; the conversation list reads the peer's vcf from disk instead,
+        // which is why every other screen had the avatar and the notification did not.
+        // VCardService caches in memory after the first read, so this is not a disk hit per
+        // notification.
+        val avatar = contact?.let { it.customProfile.avatar ?: it.loadedProfile.avatar }
+            ?: runCatching { vCardService.loadPeerAvatar(accountId, uri.rawRingId) }.getOrNull()
+        return Person.Builder()
+            .setName(name)
+            .setKey(uri.rawRingId)
+            .apply { avatarIcon(avatar)?.let { setIcon(it) } }
+            .setImportant(true)
+            .build()
+    }
+
     /** The channel messages are posted to under the user's current sound/vibration settings. */
     private fun messagesChannel(): String = ensureChannelVariant(
         base = CHANNEL_MESSAGES,
@@ -304,8 +372,16 @@ class AndroidNotificationService(
         currentCallNotificationId = notifId
         activeCallNotifications.add(notifId)
 
-        // Create a simple ongoing call notification
-        // In a full implementation, this would include call actions and caller info
+        // Prefer the real call notification when one has been built — it carries CallStyle,
+        // the caller's name and avatar, and the Answer/Decline actions. The builder below is
+        // only a placeholder for the window before the first call state arrives, since
+        // startForeground() needs *some* notification immediately.
+        lastCallNotification?.let {
+            notificationManager.notify(notifId, it)
+            Log.d(TAG, "Showing call notification: $notifId (reusing the call notification)")
+            return it
+        }
+
         val builder = NotificationCompat.Builder(context, callsChannel())
             .setSmallIcon(smallIcon)
             .applyUserVisibility()
@@ -337,6 +413,7 @@ class AndroidNotificationService(
         }
         activeCallNotifications.clear()
         currentCallNotificationId = null
+        lastCallNotification = null
     }
 
     override fun removeCallNotification() {
@@ -364,7 +441,12 @@ class AndroidNotificationService(
             return
         }
 
-        val notifId = conference.id.hashCode()
+        // One id for the call, shared with the foreground service, and that is load-bearing
+        // rather than tidiness: from API 34 the platform only honours CallStyle on a
+        // foreground service's *own* notification. Posted under its own id it was stripped
+        // back to a plain notification with no Answer or Decline, while the service's stub
+        // sat beside it — the two notifications users saw for one call.
+        val notifId = NOTIF_CALL_BASE
         currentCallNotificationId = notifId
         activeCallNotifications.add(notifId)
 
@@ -429,6 +511,15 @@ class AndroidNotificationService(
         val declineLabel = getString(Res.string.action_call_decline)
         val hangUpLabel  = getString(Res.string.action_call_hangup)
 
+        // The peer as a Person, for CallStyle. Falls back to the title when names are hidden,
+        // so the privacy setting is not leaked by the style's own caller label.
+        val callerUri = conference.firstCall?.peerUri
+        val caller = if (showNames && callerUri != null) {
+            callerPerson(accountId, callerUri, peerName)
+        } else {
+            Person.Builder().setName(title).build()
+        }
+
         when {
             state == Call.CallStatus.RINGING && isIncoming -> {
                 val fullScreenIntent = Intent(context, Class.forName("net.jami.android.MainActivity")).apply {
@@ -440,14 +531,24 @@ class AndroidNotificationService(
                 builder.setFullScreenIntent(
                     PendingIntent.getActivity(context, 100, fullScreenIntent, piFlags), true
                 )
-                builder.addAction(
-                    smallIcon, answerLabel,
-                    createCallActionPendingIntent(callId, accountId, ACTION_ANSWER, 101)
-                )
-                builder.addAction(
-                    smallIcon, declineLabel,
-                    createCallActionPendingIntent(callId, accountId, ACTION_DECLINE, 102)
-                )
+                // CallStyle, as jami-client-android uses. Without it the Answer and Decline
+                // actions are ordinary notification actions, which Android hides until the
+                // user expands the notification — so an incoming call offered no way to
+                // answer it from the shade. CallStyle also gives the caller's name and
+                // avatar their proper treatment and ranks the notification as a call.
+                val declinePi = createCallActionPendingIntent(callId, accountId, ACTION_DECLINE, 102)
+                val answerPi = createCallActionPendingIntent(callId, accountId, ACTION_ANSWER, 101)
+                if (declinePi != null && answerPi != null) {
+                    builder.setStyle(
+                        NotificationCompat.CallStyle.forIncomingCall(caller, declinePi, answerPi)
+                    )
+                } else {
+                    // No CallActionReceiver on the classpath (the shared module without the
+                    // Android host). Keep the plain actions rather than a style with no way
+                    // to act on it.
+                    answerPi?.let { builder.addAction(smallIcon, answerLabel, it) }
+                    declinePi?.let { builder.addAction(smallIcon, declineLabel, it) }
+                }
             }
 
             state == Call.CallStatus.RINGING -> {
@@ -458,10 +559,12 @@ class AndroidNotificationService(
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 }
                 builder.setContentIntent(PendingIntent.getActivity(context, 104, tapIntent, piFlags))
-                builder.addAction(
-                    smallIcon, hangUpLabel,
-                    createCallActionPendingIntent(callId, accountId, ACTION_HANGUP, 103)
-                )
+                val hangUpPi = createCallActionPendingIntent(callId, accountId, ACTION_HANGUP, 103)
+                if (hangUpPi != null) {
+                    builder.setStyle(NotificationCompat.CallStyle.forOngoingCall(caller, hangUpPi))
+                } else {
+                    builder.addAction(smallIcon, hangUpLabel, null)
+                }
             }
 
             state == Call.CallStatus.CURRENT || state == Call.CallStatus.HOLD -> {
@@ -472,18 +575,26 @@ class AndroidNotificationService(
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 }
                 builder.setContentIntent(PendingIntent.getActivity(context, 104, tapIntent, piFlags))
-                builder.addAction(
-                    smallIcon, hangUpLabel,
-                    createCallActionPendingIntent(callId, accountId, ACTION_HANGUP, 103)
-                )
+                val hangUpPi = createCallActionPendingIntent(callId, accountId, ACTION_HANGUP, 103)
+                if (hangUpPi != null) {
+                    builder.setStyle(NotificationCompat.CallStyle.forOngoingCall(caller, hangUpPi))
+                } else {
+                    builder.addAction(smallIcon, hangUpLabel, null)
+                }
             }
         }
 
         // Apply sound/vibration settings
         applySoundAndVibration(builder)
 
-        notificationManager.notify(notifId, builder.build())
-        Log.d(TAG, "Showing call notification for conference: ${conference.id}")
+        val built = builder.build()
+        // Kept so CallNotificationService can start itself in the foreground with *this*
+        // notification instead of its placeholder. Either order is possible — the service
+        // may start before or after this runs — and whichever is second must not replace a
+        // rich notification with a bare one.
+        lastCallNotification = built
+        notificationManager.notify(notifId, built)
+        Log.d(TAG, "Showing call notification for conference: ${conference.id} (id=$notifId)")
     }
 
     override fun preparePendingScreenshare(conference: Conference, callback: () -> Unit) {
@@ -630,13 +741,18 @@ class AndroidNotificationService(
             .addAction(markReadAction)
 
         if (notificationGuard.shouldShowNames()) {
+            // The sender carries their avatar, so the shade shows the contact's picture
+            // instead of the generic placeholder. Same resolution path as a call's caller.
+            val sender = conversation.contact
+                ?.let { callerPerson(conversation.accountId, it.uri, senderName) }
+                ?: Person.Builder().setName(senderName).build()
             builder.setStyle(
                 NotificationCompat.MessagingStyle(selfUser)
                     .setConversationTitle(senderName) // Or conversation.displayName for groups
                     .addMessage(
                         lastMessage,
                         System.currentTimeMillis(),
-                        Person.Builder().setName(senderName).build(),
+                        sender,
                     )
             )
         } else {

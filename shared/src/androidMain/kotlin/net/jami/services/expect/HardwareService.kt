@@ -252,7 +252,12 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
         )
         try {
             if (!wanted) {
-                proximityWakeLock?.let { if (it.isHeld) it.release() }
+                proximityWakeLock?.let {
+                    if (it.isHeld) {
+                        it.release()
+                        Log.d(TAG, "updateProximityLock: released")
+                    }
+                }
                 proximityWakeLock = null
                 return
             }
@@ -269,7 +274,13 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
                 it.setReferenceCounted(false)
                 proximityWakeLock = it
             }
-            if (!lock.isHeld) lock.acquire(PROXIMITY_LOCK_TIMEOUT_MS)
+            if (!lock.isHeld) {
+                lock.acquire(PROXIMITY_LOCK_TIMEOUT_MS)
+                // Logged because the acquire is otherwise invisible: only the failure paths
+                // said anything, so a working proximity blank and a silently skipped one
+                // looked identical in a bug report.
+                Log.d(TAG, "updateProximityLock: acquired (screen blanks near the ear)")
+            }
         } catch (e: Exception) {
             Log.e(TAG, "updateProximityLock failed", e)
         }
