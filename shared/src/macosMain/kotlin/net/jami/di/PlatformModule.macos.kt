@@ -87,6 +87,11 @@ actual val platformModule: Module = module {
      * Uses UNUserNotificationCenter for desktop notifications.
      * Enforces NotificationSettings via NotificationGuard.
      */
+    // No launcher shortcuts on this platform; the publisher writes to a sink.
+    single<net.jami.services.ConversationShortcutService> {
+        net.jami.services.NoConversationShortcuts
+    }
+
     single<NotificationService> {
         MacOSNotificationService(
             settingsRepository = get(),

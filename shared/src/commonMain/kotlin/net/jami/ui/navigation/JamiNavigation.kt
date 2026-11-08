@@ -290,6 +290,17 @@ private fun MainNavigation(needsMigration: Boolean) {
     }
 
     // Navigate to Search, pre-filled, when a deep link (ring:/jami:/sip:/tel:) arrives.
+    // A launcher shortcut names a conversation the user is already in, so it opens the chat
+    // rather than the search box the untrusted deep-link path below lands on.
+    val openConversationId by OpenConversationState.conversationId.collectAsState()
+    LaunchedEffect(openConversationId) {
+        val id = openConversationId ?: return@LaunchedEffect
+        OpenConversationState.consume()
+        navController.navigate(Screen.Chat(id).route) {
+            launchSingleTop = true
+        }
+    }
+
     val navigateToSearch by DeepLinkState.navigateToSearch.collectAsState()
     LaunchedEffect(navigateToSearch) {
         if (navigateToSearch) {

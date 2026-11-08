@@ -27,6 +27,7 @@ class JamiApplication : Application(), KoinComponent {
     private val sendQueue: net.jami.services.SendQueueService by inject()
     private val daemonLifecycle: net.jami.services.DaemonLifecycleService by inject()
     private val contactService: net.jami.services.ContactService by inject()
+    private val shortcutPublisher: net.jami.services.ConversationShortcutPublisher by inject()
 
     override fun onCreate() {
         super.onCreate()
@@ -57,6 +58,9 @@ class JamiApplication : Application(), KoinComponent {
             // Listen before accounts load, so messages held in the durable outbox are sent
             // once the first smartlist load finds their conversation live.
             sendQueue.start()
+            // Launcher shortcuts follow the smartlist, so this only has to be subscribed
+            // once the facade exists; it publishes nothing until conversations load.
+            shortcutPublisher.start()
             // Explicitly load accounts now — accountsChanged may not fire on a fresh
             // install (no accounts) or may fire asynchronously after JamiService.init()
             // returns. This guarantees daemonAccountsReady is set so AppViewModel can

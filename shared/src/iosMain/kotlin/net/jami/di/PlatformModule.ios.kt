@@ -110,6 +110,11 @@ actual val platformModule: Module get() = try {
      * Uses UNUserNotificationCenter for local notifications.
      * Enforces NotificationSettings via NotificationGuard.
      */
+    // No launcher shortcuts on this platform; the publisher writes to a sink.
+    single<net.jami.services.ConversationShortcutService> {
+        net.jami.services.NoConversationShortcuts
+    }
+
     single<NotificationService> {
         IOSNotificationService(
             settingsRepository = get(),

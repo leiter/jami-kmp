@@ -255,6 +255,19 @@ val jamiModule = module {
     }
 
     /**
+     * Keeps the launcher's recent-conversation shortcuts in step with the smartlist. Started
+     * explicitly at app start, like the send queue; a no-op wherever the platform has no
+     * launcher shortcuts.
+     */
+    single {
+        ConversationShortcutPublisher(
+            conversationFacade = get(),
+            service = get(),
+            scope = get()
+        )
+    }
+
+    /**
      * Picture-in-Picture manager for video call PiP support.
      */
     single {

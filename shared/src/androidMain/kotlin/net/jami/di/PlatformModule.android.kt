@@ -117,6 +117,15 @@ actual val platformModule: Module = module {
      * Uses NotificationManager and NotificationCompat for system notifications.
      * Enforces NotificationSettings via NotificationGuard.
      */
+    /**
+     * Launcher shortcuts for recent conversations: the long-press menu on the app icon and
+     * the direct-share row. Android is the only platform that has them, so it is the only
+     * one that binds anything but [net.jami.services.NoConversationShortcuts].
+     */
+    single<net.jami.services.ConversationShortcutService> {
+        net.jami.services.AndroidConversationShortcuts(androidContext())
+    }
+
     single<NotificationService> {
         AndroidNotificationService(
             context = androidContext(),

@@ -230,8 +230,18 @@ on 2026-10-31.
   being nobody's name. Android, iOS and Desktop. **macOS is not covered:** that service reads
   no notification setting at all, guard or otherwise, which is a larger pre-existing gap on a
   target that does not currently compile (F4).
-- **E4 — conversation app shortcuts.** Declared in the reference `AndroidManifest.xml`, not
-  in the KMP manifest.
+- **E4 — ~~conversation app shortcuts~~.** Done 2026-11-08. Dynamic, not manifest-declared:
+  which conversations matter changes constantly, which is the point of the feature. A
+  `ConversationShortcutPublisher` follows the smartlist — already ordered by recency — and
+  republishes only when the four it offers actually change, because the smartlist re-emits on
+  every message and a launcher asked to rewrite unchanged shortcuts hits a rate limit.
+  `AndroidConversationShortcuts` publishes them with adaptive avatar icons; every other
+  platform binds `NoConversationShortcuts`.
+
+  It also needed a way in: `DeepLinkState` deliberately only pre-fills the search box, because
+  an external `jami:` link is not trusted enough to act on. A shortcut is not external — the
+  user picked a conversation they are already in — so `OpenConversationState` was added
+  beside it and opens the chat. 3 tests.
 
 ## F. Apple platforms
 

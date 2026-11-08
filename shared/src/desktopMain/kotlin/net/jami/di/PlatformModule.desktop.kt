@@ -80,6 +80,11 @@ actual val platformModule: Module = module {
      * Desktop notification service.
      * Uses Java AWT SystemTray for desktop notifications.
      */
+    // No launcher shortcuts on this platform; the publisher writes to a sink.
+    single<net.jami.services.ConversationShortcutService> {
+        net.jami.services.NoConversationShortcuts
+    }
+
     single<NotificationService> {
         DesktopNotificationService(get())
     }

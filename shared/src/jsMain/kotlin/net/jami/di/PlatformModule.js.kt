@@ -68,6 +68,11 @@ actual val platformModule: Module = module {
      * Web notification service.
      * Uses Web Notifications API for browser notifications.
      */
+    // No launcher shortcuts on this platform; the publisher writes to a sink.
+    single<net.jami.services.ConversationShortcutService> {
+        net.jami.services.NoConversationShortcuts
+    }
+
     single<NotificationService> {
         WebNotificationService()
     }

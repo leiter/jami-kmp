@@ -21,6 +21,8 @@ import net.jami.services.NotificationService
 import net.jami.services.ScreenShareService
 import net.jami.services.expect.HardwareService
 import net.jami.ui.JamiApp
+import net.jami.services.AndroidConversationShortcuts
+import net.jami.ui.navigation.OpenConversationState
 import net.jami.ui.platform.AppLanguage
 import net.jami.ui.navigation.DeepLinkState
 import net.jami.ui.navigation.ShareState
@@ -206,6 +208,16 @@ class MainActivity : FragmentActivity() {
      */
     private fun handleDeepLinkIntent(intent: Intent?) {
         if (intent?.action != Intent.ACTION_VIEW && intent?.action != Intent.ACTION_DIAL) return
+        // A launcher shortcut carries the conversation id as an extra. Unlike an external
+        // link, it names a conversation the user is already in, so it opens the chat instead
+        // of pre-filling the search box.
+        val shortcutConversation =
+            intent.getStringExtra(AndroidConversationShortcuts.EXTRA_CONVERSATION_ID)
+        if (!shortcutConversation.isNullOrBlank()) {
+            Log.d(TAG, "Shortcut opened conversation $shortcutConversation")
+            OpenConversationState.request(shortcutConversation)
+            return
+        }
         val data = intent.data ?: return
         // Strip the URI scheme (e.g. "jami:1234abcd" -> "1234abcd", "ring://1234abcd" ->
         // "1234abcd", "sip:alice@example.com" -> "alice@example.com") down to the bare
