@@ -30,6 +30,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_human_state_unhold">Kwụsị</string>
     <string name="call_human_state_over">Ọ ga - agwụ.</string>
     <string name="call_moderator">Onye na-eduzi</string>
-    <string name="call_muted">N\'enweghị isi</string>
+    <string name="call_muted">N'enweghị isi</string>
     <string name="call_handRaised">Aka e weliri elu</string>
 </resources>

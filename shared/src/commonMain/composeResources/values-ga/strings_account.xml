@@ -141,7 +141,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_tv_about">Maidir le Jami</string>
     <string name="tv_about_version">An leagan</string>
     <string name="tv_about_license">Ceadúnas</string>
-    <string name="tv_about_author">Cearta d\'ealaíontóirí</string>
+    <string name="tv_about_author">Cearta d'ealaíontóirí</string>
     <string name="tv_about_credits">Crídeanna</string>
     <string name="account_link_device">Déan nasc ó ghléas eile</string>
     <string name="account_link_button">Déan nasc ó líonra</string>

@@ -21,7 +21,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="ic_blacklist_menu">אנשי קשר חסומים</string>
     <string name="add_ring_account_title">הוספת חשבון</string>
     <string name="add_sip_account_title">הוסף חשבון SIP</string>
-    <string name="ring_account_default_name">חשבון ג\'מי %1$s</string>
+    <string name="ring_account_default_name">חשבון ג'מי %1$s</string>
     <string name="prompt_alias">כינוי</string>
     <string name="prompt_hostname">שם מארח</string>
     <string name="prompt_username">שם משתמש</string>
@@ -36,7 +36,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_wait_update">עדכון חשבון</string>
     <string name="dialog_wait_update_details">אנא חכו עד שהחשבון החדש שלכם יחדש...</string>
     <string name="account_type_ip2ip">חשבון IP</string>
-    <string name="help_ring">חשבון ג\'מי מאפשר לך להגיע לאנשים בצורה בטוחה בזוג לשוג דרך רשת מופצת לחלוטין.</string>
+    <string name="help_ring">חשבון ג'מי מאפשר לך להגיע לאנשים בצורה בטוחה בזוג לשוג דרך רשת מופצת לחלוטין.</string>
     <string name="help_sip_title">הוסף חשבון SIP</string>
     <string name="empty_account_list">אין חשבון רשום</string>
     <string name="normal_accounts_titles">חשבונות</string>
@@ -121,10 +121,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_export_file">חשבון גיבוי</string>
     <string name="account_export_file_summary">גיבוי חשבון במכשיר שלך כדי לשחזר אותו מאוחר יותר.</string>
     <string name="account_enter_password">הכניסו סיסמה</string>
-    <string name="account_contact_me">התקשר אליי על ג\'מי!</string>
+    <string name="account_contact_me">התקשר אליי על ג'מי!</string>
     <string name="update_account">עדכון חשבון</string>
-    <string name="account_migration">חשבון ג\'מי שלך יכול להיות מעודכן. אנא הכניסי את הסיסמה שלך.</string>
-    <string name="ring_account">חשבון ג\'מי</string>
+    <string name="account_migration">חשבון ג'מי שלך יכול להיות מעודכן. אנא הכניסי את הסיסמה שלך.</string>
+    <string name="ring_account">חשבון ג'מי</string>
     <string name="sip_account">חשבון SIP</string>
     <string name="ring_account_identity">זהות</string>
     <string name="account_migration_title_dialog">מיגרת חשבונות</string>
@@ -174,7 +174,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_status_error">שגיאה</string>
     <string name="account_creation_home">ברוך בואך אל Jami</string>
     <string name="account_creation_profile">יצירת הפרופיל שלך</string>
-    <string name="account_creation_ring">ליצור חשבון ג\'מי שלך</string>
+    <string name="account_creation_ring">ליצור חשבון ג'מי שלך</string>
     <string name="account_revoke_device_hint">הכניסו סיסמה כדי לאשר</string>
     <string name="enter_password">הכניסו סיסמה</string>
     <string name="revoke_device_title">מכשיר ביטול</string>

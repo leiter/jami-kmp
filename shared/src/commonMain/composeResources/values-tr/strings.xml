@@ -70,8 +70,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_mark_as_read">Okundu olarak işaretle</string>
     <string name="notif_dismiss">Reddet</string>
     <string name="notif_reply">Yanıtla</string>
-    <string name="notif_incoming_file_transfer_title">%1$s\'dan gelen dosya</string>
-    <string name="notif_outgoing_file_transfer_title">%1$s\'e dosya gönderme</string>
+    <string name="notif_incoming_file_transfer_title">%1$s'dan gelen dosya</string>
+    <string name="notif_outgoing_file_transfer_title">%1$s'e dosya gönderme</string>
     <string name="notif_incoming_picture">%1$s görsel</string>
     <string name="notif_sync_title">Veri eşzamanlanıyor…</string>
     <string name="notif_location_title">Konumunuz %1$s ile paylaşılıyor </string>
@@ -156,7 +156,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="block_contact_dialog_title">%1$s Engellensin mi?</string>
     <string name="block_contact_dialog_message">Engellemeyi kaldırana kadar %1$s seninle iletişim kuramayacak.</string>
     <string name="block_contact_completed">%1$s engellendi.</string>
-    <string name="unblock_contact_dialog_title">%1$s\'i bloklamayı açıyor musun?</string>
+    <string name="unblock_contact_dialog_title">%1$s'i bloklamayı açıyor musun?</string>
     <string name="unblock_contact_dialog_message">%1$s tekrar sizinle iletişime geçebilir.</string>
     <string name="unblock_contact_completed">%1$s engellenmedi.</string>
     <string name="conversation_contact_is_typing">Kişi yazıyor…</string>
@@ -183,7 +183,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="prompt_hint_username">Kullanıcı adı</string>
     <string name="help_password_choose">Jami hesabını korumak için anımsayacağın güçlü parola seç.</string>
     <string name="help_password_enter">Ana Jami hesabının parolasını gir.</string>
-    <string name="help_server_enter">Yönetim sunucusunun URL\'sini gir.</string>
+    <string name="help_server_enter">Yönetim sunucusunun URL'sini gir.</string>
     <string name="wizard_next">İleri</string>
     <string name="wizard_back">Geri</string>
     <string name="wizard_skip">Atla</string>

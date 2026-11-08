@@ -35,8 +35,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_systemContacts_summary">ਕਾਲ ਕਰਨ ਵਾਲੇ ਦੇ ਵੇਰਵੇ ਦਿਖਾਉਣ ਲਈ ਸਿਸਟਮ ਸੰਪਰਕ ਵਰਤੋ।</string>
     <string name="pref_systemDialer_title">Jami ਵਰਤ ਕੇ ਸਿਸਟਮ ਕਾਲਾਂ ਕਰੋ</string>
     <string name="pref_systemDialer_summary">ਸਿਸਟਮ ਕਾਲਾਂ ਕਰਨ ਲਈ Jami ਵਰਤੋ, ਜਦੋਂ ਵੀ ਸੰਭਵ ਹੋਵੇ।</string>
-    <string name="pref_startOnBoot_title">ਸਿਸਟਮ ਸ਼ੁਰੂ ਹੋਣ \'ਤੇ Jami ਸ਼ੁਰੂ ਕਰੋ</string>
-    <string name="pref_startOnBoot_summary">ਸਿਸਟਮ ਸ਼ੁਰੂ ਹੋਣ \'ਤੇ Jami ਨੂੰ ਬੈਕਗ੍ਰਾਊਂਡ ਵਿੱਚ ਚਲਾਓ।</string>
+    <string name="pref_startOnBoot_title">ਸਿਸਟਮ ਸ਼ੁਰੂ ਹੋਣ 'ਤੇ Jami ਸ਼ੁਰੂ ਕਰੋ</string>
+    <string name="pref_startOnBoot_summary">ਸਿਸਟਮ ਸ਼ੁਰੂ ਹੋਣ 'ਤੇ Jami ਨੂੰ ਬੈਕਗ੍ਰਾਊਂਡ ਵਿੱਚ ਚਲਾਓ।</string>
     <string name="pref_clearHistory_title">ਇਤਿਹਾਸ ਮਿਟਾਓ</string>
     <string name="pref_blackList_title">ਬੰਦਸ਼ ਸੂਚੀ</string>
     <string name="pref_blackList_summary">ਆਪਣੀ ਬੰਦਸ਼ ਸੂਚੀ ਵੇਖੋ।</string>

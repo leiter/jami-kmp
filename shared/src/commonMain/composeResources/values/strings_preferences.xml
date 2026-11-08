@@ -73,7 +73,7 @@
     <string name="pref_language_restart_required">Applied the next time Jami starts.</string>
 
     <string name="pref_namesInNotifications_title">Show names in notifications</string>
-    <string name="pref_namesInNotifications_summary">Include the contact\'s name and the message in notifications. Off, a notification says only that something arrived.</string>
+    <string name="pref_namesInNotifications_summary">Include the contact's name and the message in notifications. Off, a notification says only that something arrived.</string>
 
     <string name="pref_batteryOptimization_title">Unrestricted battery usage</string>
     <string name="pref_batteryOptimization_summary_granted">Allowed. Jami can stay connected while the screen is off.</string>

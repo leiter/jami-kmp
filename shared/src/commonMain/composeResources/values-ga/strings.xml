@@ -25,7 +25,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="description">Is bogearraí saor in aisce é Jami do chumarsáid uilethréimhseach a thugann urram do shaoirseanna agus do phríobháideacht a úsáideoirí.</string>
     <string name="credits">Crídeanna</string>
     <string name="pip_title">Comhdháil Jami</string>
-    <string name="call_service_description">Tá an tseirbhís seo riachtanach chun do ghlaoí a choinneáil ag rith i d\'ard-scéal.</string>
+    <string name="call_service_description">Tá an tseirbhís seo riachtanach chun do ghlaoí a choinneáil ag rith i d'ard-scéal.</string>
     <string name="data_transfer_service_description">Tá an tseirbhís seo riachtanach chun fógraí leanúnacha a thaispeáint le linn aistriú comhaid.</string>
     <string name="media">Meáin</string>
     <string name="error_no_network">Ní bheidh aon nasc líonra</string>

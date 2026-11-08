@@ -48,7 +48,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="menu_item_account_settings">Tiliasetukset</string>
     <string name="menu_item_extension_list">Laajennusten asetukset</string>
     <string name="menu_item_share">Jaa tunnukseni</string>
-    <string name="menu_item_about">Tietoja Jami\'sta</string>
+    <string name="menu_item_about">Tietoja Jami'sta</string>
     <string name="video_setting_title">Videoasetukset</string>
     <string name="dial_number">Valitse numero</string>
     <string name="invitation_card_title">Kutsut vastaanotettu</string>

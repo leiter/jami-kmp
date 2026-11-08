@@ -18,7 +18,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 <resources>
     <string name="ic_delete_menu">ਮਿਟਾਓ</string>
     <string name="ic_advanced_menu">ਉੱਨਤ ਸੈਟਿੰਗਾਂ</string>
-    <string name="ic_blacklist_menu">ਸੰਪਰਕ ਜਿਨ੍ਹਾਂ \'ਤੇ ਬੰਦਸ਼ ਹੈ</string>
+    <string name="ic_blacklist_menu">ਸੰਪਰਕ ਜਿਨ੍ਹਾਂ 'ਤੇ ਬੰਦਸ਼ ਹੈ</string>
     <string name="account_selection">ਖਾਤਾ ਚੁਣੋ</string>
     <string name="add_ring_account_title">ਖਾਤਾ ਜੋੜੋ</string>
     <string name="add_sip_account_title">SIP ਖਾਤਾ ਜੋੜੋ</string>
@@ -61,8 +61,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_optionnal_category">ਮਰਜ਼ੀ ਵਾਲੀਆਂ ਸੈਟਿੰਗਾਂ</string>
     <string name="account_useragent_label">ਵਰਤੋਂਕਾਰ ਏਜੰਟ</string>
     <string name="account_autoanswer_label">ਸਵੈ-ਜਵਾਬ</string>
-    <string name="account_rendezvous_label">ਤੈਅ ਸਮੇਂ \'ਤੇ ਇਕੱਠ ਵਾਲਾ ਮੋਡ</string>
-    <string name="account_rendezvous_summary">ਤੈਅ ਸਮੇਂ \'ਤੇ ਇਕੱਠ ਵਾਲੇ ਮੋਡ ਵਿੱਚ, ਆਉਂਦੀਆਂ ਕਾਲਾਂ ਨੂੰ ਸਭਾ ਵਾਲੇ ਕਮਰੇ ਵਿੱਚ ਜੋੜਿਆ ਜਾਵੇਗਾ।</string>
+    <string name="account_rendezvous_label">ਤੈਅ ਸਮੇਂ 'ਤੇ ਇਕੱਠ ਵਾਲਾ ਮੋਡ</string>
+    <string name="account_rendezvous_summary">ਤੈਅ ਸਮੇਂ 'ਤੇ ਇਕੱਠ ਵਾਲੇ ਮੋਡ ਵਿੱਚ, ਆਉਂਦੀਆਂ ਕਾਲਾਂ ਨੂੰ ਸਭਾ ਵਾਲੇ ਕਮਰੇ ਵਿੱਚ ਜੋੜਿਆ ਜਾਵੇਗਾ।</string>
     <string name="account_upnp_label">UPnP ਚਾਲੂ ਕਰੋ</string>
     <string name="account_proxy_field">ਪ੍ਰੌਕਸੀ</string>
     <string name="account_audio_label">ਅਵਾਜ਼</string>
@@ -103,7 +103,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_sip_proxy_label">ਪ੍ਰੌਕਸੀ</string>
     <string name="account_peer_discovery_label">ਸਥਾਨਕ ਸਾਥੀ ਦੀ ਭਾਲ</string>
     <string name="account_peer_discovery_enable_label">ਸਥਾਨਕ ਸਾਥੀ ਦੀ ਭਾਲ ਚਾਲੂ ਕਰੋ</string>
-    <string name="account_peer_discovery_enable_summary">ਸਾਡੇ ਸਥਾਨਕ ਨੈੱਟਵਰਕ \'ਤੇ ਪੇਸ਼ ਕੀਤੀਆਂ ਹੋਰਾਂ DHT ਗੰਢਾਂ ਨਾਲ ਜੁੜੋ</string>
+    <string name="account_peer_discovery_enable_summary">ਸਾਡੇ ਸਥਾਨਕ ਨੈੱਟਵਰਕ 'ਤੇ ਪੇਸ਼ ਕੀਤੀਆਂ ਹੋਰਾਂ DHT ਗੰਢਾਂ ਨਾਲ ਜੁੜੋ</string>
     <string name="account_credentials_label">ਵਰਤੋਂਕਾਰ ਨਾਂ/ਪਾਸਵਰਡ</string>
     <string name="account_credentials_edit">ਵਰਤੋਂਕਾਰ ਨਾਂ/ਪਾਸਵਰਡ ਦਾ ਸੰਪਾਦਨ ਕਰੋ</string>
     <string name="account_credentials_add">ਵਰਤੋਂਕਾਰ ਨਾਂ/ਪਾਸਵਰਡ ਸ਼ਾਮਲ ਕਰੋ</string>
@@ -117,7 +117,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_account_wait_title">ਕਿਰਪਾ ਕਰਕੇ ਉਡੀਕ ਕਰੋ…</string>
     <string name="export_account_wait_message">ਖਾਤਾ ਜਾਣਕਾਰੀ ਨਿਰਯਾਤ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ</string>
     <string name="account_export_file">ਬੈਕਅੱਪ ਖਾਤਾ</string>
-    <string name="account_export_file_summary">ਆਪਣੇ ਡੀਵਾਈਸ \'ਤੇ ਖਾਤੇ ਦਾ ਬੈਕਅੱਪ ਲਓ ਤਾਂ ਕਿ ਬਾਅਦ ਵਿੱਚ ਮੁੜ-ਬਹਾਲ ਕਰ ਸਕੋ।</string>
+    <string name="account_export_file_summary">ਆਪਣੇ ਡੀਵਾਈਸ 'ਤੇ ਖਾਤੇ ਦਾ ਬੈਕਅੱਪ ਲਓ ਤਾਂ ਕਿ ਬਾਅਦ ਵਿੱਚ ਮੁੜ-ਬਹਾਲ ਕਰ ਸਕੋ।</string>
     <string name="account_enter_password">ਪਾਸਵਰਡ ਦਾਖਲ ਕਰੋ</string>
     <string name="update_account">ਖਾਤਾ ਅੱਪਡੇਟ ਕਰੋ</string>
     <string name="account_migration">ਤੁਹਾਡਾ Jami ਖਾਤਾ ਅੱਪਡੇਟ ਕੀਤਾ ਜਾ ਸਕਦਾ ਹੈ।\nਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਪਾਸਵਰਡ ਦਾਖਲ ਕਰੋ।</string>

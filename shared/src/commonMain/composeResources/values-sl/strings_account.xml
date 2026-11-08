@@ -157,8 +157,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_export_file_summary">Varnostno kopiranje računa za kasnejšo obnovitev.</string>
     <string name="account_export_end_decryption_message">Nepravilno geslo. Poskusite znova s pravim geslom.</string>
     <string name="account_enter_password">Vnesite geslo</string>
-    <string name="account_share_body">Kontaktiraj me z uporabo \'%1$s\' na Jami razpršeni komunikacijski platformi: %2$s</string>
-    <string name="account_share_body_with_username">Kontaktiraj me z uporabo \'%1$s\' ali mojim javnim uporabniškim imenom \'%2$s\' na razpršeni komunikacijski platformi Jami: %3$s </string>
+    <string name="account_share_body">Kontaktiraj me z uporabo '%1$s' na Jami razpršeni komunikacijski platformi: %2$s</string>
+    <string name="account_share_body_with_username">Kontaktiraj me z uporabo '%1$s' ali mojim javnim uporabniškim imenom '%2$s' na razpršeni komunikacijski platformi Jami: %3$s </string>
     <string name="account_contact_me">Poišči me na Jami-ju!</string>
     <string name="update_account">Posodobi račun</string>
     <string name="account_migration">Vaš Jami račun je mogoče posodobiti.\nVnesite geslo.</string>

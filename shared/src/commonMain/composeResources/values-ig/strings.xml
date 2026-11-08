@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 -->
 <resources>
     <string name="section_license">Akwụkwọ ikike</string>
-    <string name="copyright_section">Ihe e dere n\'akwụkwọ</string>
+    <string name="copyright_section">Ihe e dere n'akwụkwọ</string>
     <string name="contribute_section">Nye aka</string>
     <string name="version_section">Version</string>
     <string name="website_chooser_title">Lee ebe nrụọrụ weebụ site na iji...</string>
@@ -25,8 +25,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="description">Jami bụ ngwanrọ na-enweghị ihe ọ bụla maka nkwukọrịta zuru ụwa ọnụ nke na-akwanyere nnwere onwe na nzuzo nke ndị ọrụ ya ùgwù.</string>
     <string name="credits">Ihe ndị e ji akwụ ụgwọ</string>
     <string name="pip_title">Nzukọ Jami</string>
-    <string name="call_service_description">Ọrụ a dị mkpa iji mee ka oku gị na-agba ọsọ na mbara ala. Ọ na-agba ọsọ naanị n\'oge oku.</string>
-    <string name="data_transfer_service_description">Ọrụ a dị mkpa iji gosipụta ọkwa na-adịgide adịgide n\'oge nnyefe faịlụ. Ọ na-agba naanị n\'oge nnyefe faịlụ.</string>
+    <string name="call_service_description">Ọrụ a dị mkpa iji mee ka oku gị na-agba ọsọ na mbara ala. Ọ na-agba ọsọ naanị n'oge oku.</string>
+    <string name="data_transfer_service_description">Ọrụ a dị mkpa iji gosipụta ọkwa na-adịgide adịgide n'oge nnyefe faịlụ. Ọ na-agba naanị n'oge nnyefe faịlụ.</string>
     <string name="media">Ndị mgbasa ozi</string>
     <string name="error_no_network">Enweghị njikọ netwọk</string>
     <string name="error_account_offline">Akaụntụ ahụ adịghị</string>
@@ -41,8 +41,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="video_setting_title">Ntọala nke Ihe Nlereanya</string>
     <string name="notif_missed_incoming_call">Ọ dịghị onye na-akpọ gị</string>
     <string name="notif_missed_outgoing_call">Ọ dịghị onye na-akpọ gị</string>
-    <string name="notif_incoming_call">N\'ọhịa</string>
-    <string name="notif_outgoing_call">N\'imepụta oku</string>
+    <string name="notif_incoming_call">N'ọhịa</string>
+    <string name="notif_outgoing_call">N'imepụta oku</string>
     <string name="notif_channel_calls">Ọ na-akpọ</string>
     <string name="notif_channel_messages">Ozi</string>
     <string name="notif_channel_file_transfer">Nyefe faịlụ</string>
@@ -68,17 +68,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="ringtone_error_title">Njehie</string>
     <string name="title_activity_qrcode">Kesaa akaụntụ m</string>
     <string name="clear_history">Ọ dị ọcha</string>
-    <string name="conversation_details">Ihe ndị e kwuru n\'okwu ahụ</string>
+    <string name="conversation_details">Ihe ndị e kwuru n'okwu ahụ</string>
     <string name="contact_details">Ihe ndị a ga-eji kparịta ụka</string>
     <string name="leave_conversation">Hapụ mkparịta ụka ahụ</string>
     <string name="conversation_action_history_clear">Akụkọ ihe mere eme doro anya</string>
     <string name="remove_conversation">Wepụ mkparịta ụka ahụ</string>
     <string name="conversation_action_block_this">Njikọ na-ekpuchi</string>
-    <string name="conversation_action_incoming_call">N\'ọhịa</string>
+    <string name="conversation_action_incoming_call">N'ọhịa</string>
     <string name="conversation_members">Ndị otu</string>
-    <string name="conversation_type_private">Ndị mmadụ n\'onwe ha</string>
+    <string name="conversation_type_private">Ndị mmadụ n'onwe ha</string>
     <string name="today">Taa</string>
-    <string name="yesterday">N\'ụbọchị gara aga</string>
+    <string name="yesterday">N'ụbọchị gara aga</string>
     <string name="prompt_new_password_repeat">Nyochaa paswọọdụ ọhụrụ</string>
     <string name="account_create_title">Mepụta akaụntụ Jami</string>
     <string name="prompt_hint_username">Aha njirimara</string>
@@ -120,7 +120,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="tv_media_preview">Nlele</string>
     <string name="tv_dialog_send">Zie</string>
     <string name="wizard_status_recommended">A Na-atụ aro ya</string>
-    <string name="wizard_status_optional">N\'enweghị Mmasị</string>
+    <string name="wizard_status_optional">N'enweghị Mmasị</string>
     <string name="wizard_status_required">Ihe a chọrọ</string>
     <string name="wizard_username_info">Họrọ aha njirimara maka akaụntụ gị</string>
     <string name="wizard_password_skip">Mepụta akaụntụ</string>
@@ -144,12 +144,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="jami_id_choose_username">Họrọ aha njirimara</string>
     <string name="welcome_jami_title">Mmadụ Bịa na Jami</string>
     <string name="details">Ihe ndị ọzọ</string>
-    <string name="Private">Ndị mmadụ n\'onwe ha</string>
+    <string name="Private">Ndị mmadụ n'onwe ha</string>
     <string name="mute_conversation">Mkparịta ụka nkịtị</string>
     <string name="donation_card_not_now">Ọbụghị ugbu a</string>
     <string name="export_side_step1_code_connect">Jikọọ</string>
     <string name="export_side_step2_cancel">Kagbụo</string>
     <string name="export_side_step2_confirm">Kwado</string>
     <string name="import_side_step1_share">Ịkekọrịta</string>
-    <string name="import_side_step2_password_import">Ịba n\'ime</string>
+    <string name="import_side_step2_password_import">Ịba n'ime</string>
 </resources>

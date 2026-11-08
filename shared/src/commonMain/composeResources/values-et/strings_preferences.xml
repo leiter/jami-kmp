@@ -29,7 +29,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_mobileData_title">Mobiilne andmeside</string>
     <string name="pref_mobileData_summary">Lisaks WiFi võrkudele luba, et Jami kasutab 3G/LTE võrke</string>
     <string name="pref_pushNotifications_title">Tõuketeavitused</string>
-    <string name="pref_pushNotifications_summary">Kõnede ja sõnumite taustateavituste jaoks kasuta Google\'i servereid</string>
+    <string name="pref_pushNotifications_summary">Kõnede ja sõnumite taustateavituste jaoks kasuta Google'i servereid</string>
     <string name="pref_unifiedPush_summary">Kõnede ja sõnumite taustateavituste jaoks kasuta UnifiedPushi teenust</string>
     <string name="pref_video_advanced_title">Täiendavad videoseadistused</string>
     <string name="pref_video_advanced_summary">Muuda video bitikiirust, resolutsiooni ning proovi katselisi seadistusi</string>
@@ -77,7 +77,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notification_public">Avalik\n(näita teavitusi ja nende sisu nutiseadme lukustusvaates)\n</string>
     <string name="notification_private">Privaatne \n(näita teavitusi, aga peida nende sisu nutiseadme lukustusvaates) \n</string>
     <string name="notification_secret">Salajane\n(ära näita nutiseadme lukustusvaates ei teavitusi ega nende sisu)</string>
-    <string name="connectivity_google_services_title">Google\'i teenused</string>
+    <string name="connectivity_google_services_title">Google'i teenused</string>
     <string name="connectivity_google_services_description">Kasuta tõuketeavituste jaoks Google Firebase teenust ja DHT proksiserverit.</string>
     <string name="connectivity_local_node_title">Kohalik DHT sõlm</string>
     <string name="connectivity_local_node_description">Teiste Jami seadmete ja kontaktidega ühenduse loomiseks kasuta kohalikku DHT sõlme.</string>

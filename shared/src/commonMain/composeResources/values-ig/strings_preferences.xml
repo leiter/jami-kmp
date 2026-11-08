@@ -44,7 +44,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_systemDialer_title">Mee oku na sistemụ site na iji Jami</string>
     <string name="pref_systemDialer_summary">Jiri Jami mee ka ndị ọrụ na-akpọ gị mgbe ọ bụla o kwere omume.</string>
     <string name="pref_startOnBoot_title">Malite Jami na mmalite</string>
-    <string name="pref_startOnBoot_summary">Mee ka Jami nọrọ n\'azụ mgbe usoro ahụ malitere.</string>
+    <string name="pref_startOnBoot_summary">Mee ka Jami nọrọ n'azụ mgbe usoro ahụ malitere.</string>
     <string name="pref_clearHistory_title">Akụkọ ihe mere eme doro anya</string>
     <string name="pref_notification_title">Nkwupụta nke ọkwa</string>
     <string name="pref_notification_summary">Tinye ngwa ngosi ngosi na mkpọchi ihuenyo.</string>

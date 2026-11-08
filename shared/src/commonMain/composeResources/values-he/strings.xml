@@ -22,7 +22,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="version_section">גרסה</string>
     <string name="website_chooser_title">צפו באתר באמצעות...</string>
     <string name="license">תוכנת זו מסופקת "כפי שהיא", ללא אחריות של כל סוג. לפרטים, ראה GNU General Public License גרסה 3 או מאוחר יותר&lt;/u&gt;</string>
-    <string name="description">ג\'אמי היא תוכנה חופשית לתקשורת אוניברסלית שמכבדת את החירות והפרטיות של המשתמשים שלה.</string>
+    <string name="description">ג'אמי היא תוכנה חופשית לתקשורת אוניברסלית שמכבדת את החירות והפרטיות של המשתמשים שלה.</string>
     <string name="credits">שבחים</string>
     <string name="pip_title">ימי</string>
     <string name="call_service_description">שירות זה הכרחי כדי לשמור על השיחות שלך פועלות בקודם. הוא פועל רק במהלך השיחות.</string>

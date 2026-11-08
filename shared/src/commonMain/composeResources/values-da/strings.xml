@@ -171,7 +171,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="prompt_hint_username">Brugernavn</string>
     <string name="help_password_choose">Vælg et stærkt kodeord som du kan huske, til at beskytte din Jami-konto.</string>
     <string name="help_password_enter">Indtast kodeordet til din overordnede Jami-konto</string>
-    <string name="help_server_enter">Skriv URL\'en af management serveren.</string>
+    <string name="help_server_enter">Skriv URL'en af management serveren.</string>
     <string name="wizard_next">Næste</string>
     <string name="wizard_back">Tilbage</string>
     <string name="wizard_skip">Spring over</string>

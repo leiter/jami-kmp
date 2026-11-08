@@ -74,8 +74,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_optionnal_category">Configuración opcional</string>
     <string name="account_useragent_label">Agente de usuario</string>
     <string name="account_autoanswer_label">Respuesta automática</string>
-    <string name="account_rendezvous_label">Modo \'Punto de encuentro\'</string>
-    <string name="account_rendezvous_summary">En modo \'Punto de encuentro\' las llamadas entrantes se añadirán a una sala de conferencias.</string>
+    <string name="account_rendezvous_label">Modo 'Punto de encuentro'</string>
+    <string name="account_rendezvous_summary">En modo 'Punto de encuentro' las llamadas entrantes se añadirán a una sala de conferencias.</string>
     <string name="account_upnp_label">Activar UPnP</string>
     <string name="account_proxy_field">Proxy</string>
     <string name="account_preferences_extension_tab">Extensiones</string>

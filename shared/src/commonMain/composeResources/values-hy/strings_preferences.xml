@@ -42,7 +42,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_systemContacts_title">Օգտագործել համակարգային կոնտակտներ</string>
     <string name="pref_systemContacts_summary">Օգտագործեք համակարգի կոնտակտները զանգահարողի մանրամասները ցույց տալու համար:</string>
     <string name="pref_systemDialer_title">Համակարգային զանգեր կատարեք Jami- ի միջոցով</string>
-    <string name="pref_systemDialer_summary">Օգտագործեք Ջամի\' հնարավորության դեպքում համակարգային զանգեր կատարելու համար:</string>
+    <string name="pref_systemDialer_summary">Օգտագործեք Ջամի' հնարավորության դեպքում համակարգային զանգեր կատարելու համար:</string>
     <string name="pref_startOnBoot_title">Սկսեք Jami- ն սկսելու համար</string>
     <string name="pref_startOnBoot_summary">Ջամիին հուշում է համակարգի սկսման ժամանակ:</string>
     <string name="pref_clearHistory_title">Հստակ պատմություն</string>
