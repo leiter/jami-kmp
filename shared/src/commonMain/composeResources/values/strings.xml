@@ -841,6 +841,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="debug_logs_empty">No logs captured.</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_license">Licensed under the GNU General Public License v3.0</string>
+    <string name="about_modification">Jami KMP is an unofficial client: a modified version of the official Jami Android client, modified in 2025–2026. It is not produced, endorsed or supported by Savoir-faire Linux Inc. or the Jami project.</string>
     <string name="permission_dialog_open_settings">Open settings</string>
     <string name="edited_message_label">edited</string>
 

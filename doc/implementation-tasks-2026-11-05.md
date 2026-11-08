@@ -366,19 +366,28 @@ has since landed under other names. Treat each as a read-the-source check first:
 
 ## J. Licensing and attribution (GPLv3)
 
-- **J1 — BLOCKED: decide the copyright holder name/entity.** Nothing else in this section can
-  be written first, and it must not be guessed from a git config.
-- **J2 — fix `AboutViewModel.kt:39`.** `COPYRIGHT = "Copyright (C) 2004-2025 Savoir-faire
-  Linux Inc."` is rendered in the About screen, so the running app tells users this is an SFL
-  product; GPLv3 §5(d) makes it a compliance matter. Becomes a two-line attribution.
-  `AboutViewModelTest.kt:37` asserts on the constant and changes in the same commit.
-  Highest priority after J1 — the only item users see.
-- **J3 — declare the modification (§5(a)).** No file states that it was modified or when. Add
-  a "part of Jami KMP, a modified cross-platform port of jami-client-android; modified 2026"
-  line to the header block.
+- **J1 — BLOCKED: decide the copyright holder name/entity.** It must not be guessed from a
+  git config. **Narrowed 2026-11-08:** it no longer blocks the whole section. J2 and J3 turned
+  out not to need it — GPLv3 obliges this project to *preserve* upstream's notices and to
+  *state that it modified* the work; asserting a copyright of its own is optional, and only
+  J4/J5 do that. Those two are what still wait on the name.
+- **J2 — DONE (2026-11-08).** The compliance problem was not that the SFL line was present —
+  §4/§5(b) require keeping it — but that it was the *only* attribution the running app
+  showed, so the About screen read as a claim that this is an SFL product. Fixed by adding
+  `about_modification` beside it: an explicit statement of modification plus the disclaimer of
+  endorsement §5(d) permits. `COPYRIGHT` is therefore unchanged and `AboutViewModelTest.kt:37`
+  needed no edit; a KDoc on the constant records why it must stay verbatim.
+- **J3 — DONE (2026-11-08) at the work level; per-file headers folded into J4.** §5(a) asks
+  for a prominent notice that the work is modified and when, which the About screen and the
+  README's "Statement of modification" now both carry. A per-file "modified" line was *not*
+  added, because stamping it onto files original to this port would be a false statement —
+  deciding which files are derived is exactly J4's classification step, so the two cannot be
+  separated.
 - **J4 — classify the ~341 `.kt` and 477 `.xml` files derived vs. original and add our line**
-  below SFL's where derived, alone where original. Keep every SFL notice (§4/§5(b)).
-- **J5 — consider an `AUTHORS` file** separating upstream from this port's contributors.
+  below SFL's where derived, alone where original. Keep every SFL notice (§4/§5(b)). Carries
+  J3's per-file "modified in <year>" line too, since that needs the same classification.
+  Still blocked on J1.
+- **J5 — consider an `AUTHORS` file** separating upstream from this port's contributors. Blocked on J1.
 
 ## K. Decisions before any code
 
@@ -565,7 +574,7 @@ them add nothing: haptics on answer/decline (D2), language
 selector (E2), app shortcuts (E4), @mentions (C1), Markdown (C2), read markers (C3), the
 six-emoji reaction picker (C4), Robolectric for the four excluded Android tests (I1),
 `StubDaemonBridge` discarding its callbacks (I2), outbox device verification (I4), the microphone
-level ring (I5), the `AboutViewModel` copyright claim (J2, still blocked on J1), plugins (K1),
+level ring (I5), per-file attribution (J4/J5, still blocked on J1), plugins (K1),
 and the file-picker/biometric-lock race (`doc/TODO.md`).
 
 Fixed since the screenshot that reported them, verified in source today: the `Interaction`

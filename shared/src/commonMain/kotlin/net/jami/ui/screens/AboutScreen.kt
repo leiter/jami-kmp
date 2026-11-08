@@ -130,6 +130,20 @@ fun AboutScreen(
 
             Spacer(Modifier.height(JamiTheme.spacing.m))
 
+            // Statement of modification, required by GPLv3 §5(a), and the disclaimer of
+            // endorsement §5(d) allows. Without it the copyright line above is the only
+            // attribution the running app shows, which reads as "this is a Savoir-faire
+            // Linux product" — it is not. The README carries the same statement for the
+            // source distribution.
+            Text(
+                text = stringResource(Res.string.about_modification),
+                style = JamiTheme.typography.bodySmall,
+                color = JamiTheme.colors.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+
+            Spacer(Modifier.height(JamiTheme.spacing.m))
+
             // License
             Text(
                 text = stringResource(Res.string.about_license),

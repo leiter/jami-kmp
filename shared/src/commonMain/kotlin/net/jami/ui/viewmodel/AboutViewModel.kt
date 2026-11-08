@@ -36,6 +36,13 @@ data class AboutState(
 ) {
     companion object {
         const val VERSION = "1.0.0"
+        /**
+         * Upstream's notice, kept verbatim: GPLv3 §4/§5(b) require it to be preserved,
+         * so this is not the place to record anything about this port. The About screen
+         * pairs it with `about_modification`, which states that this build is a modified,
+         * unofficial client — on its own this line reads as a claim of authorship by
+         * Savoir-faire Linux.
+         */
         const val COPYRIGHT = "Copyright (C) 2004-2025 Savoir-faire Linux Inc."
         const val DESCRIPTION =
             "Jami is free software for universal communication that respects the " +

@@ -343,5 +343,15 @@ This matches upstream Jami. Jami and `libjami` are developed by
 [Savoir-faire Linux](https://savoirfairelinux.com) and the Jami community.
 
 **This is an unofficial, third-party client.** It is not produced, endorsed or supported by
-Savoir-faire Linux or the Jami project. The copyright-attribution work this implies is tracked
-in [`doc/TODO.md`](doc/TODO.md) → "Licensing & Copyright Attribution" and is still open.
+Savoir-faire Linux or the Jami project.
+
+**Statement of modification (GPLv3 §5(a)).** Jami KMP is a modified version of the official
+Jami Android client (`jami-client-android`), modified in 2025–2026. Upstream's copyright
+notices are preserved throughout; this project asserts no copyright over upstream's work. The
+same statement is shown in the app's About screen, so a user who only ever sees the binary is
+told as much as a reader of the source.
+
+Per-file attribution for the files original to this port is still open — see
+[`doc/TODO.md`](doc/TODO.md) → "Licensing & Copyright Attribution". It is blocked on naming a
+copyright holder for them, which is a decision for this project's authors, not a detail to be
+inferred from a git history.
