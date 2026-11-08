@@ -175,8 +175,12 @@ on 2026-10-31.
   actuals cannot drift apart unnoticed — that difference is invisible until someone is holding
   both phones. `ProximityPolicyTest` states all eight input combinations.
   **Not compiled:** the iOS half, like every Apple change made on this host.
-- **D2 — haptic feedback on answer/decline.** No `Vibrator` / `HapticFeedbackConstants`
-  anywhere in the call flow.
+- **D2 — ~~haptic feedback on answer/decline~~.** Done 2026-11-08. Compose's own
+  `LocalHapticFeedback` rather than the reference's `Vibrator`: multiplatform, no
+  `VIBRATE`-permission question, and the user's system haptic setting is obeyed without
+  asking. `HapticFeedbackType.Confirm` on both accepts, `Reject` on decline and hang-up —
+  two sensations that can be told apart by feel, which is the point when a ringing phone is
+  held rather than read. Both `CallScreenContent` call sites (incoming and in-call).
 - **D3 — Bluetooth headset routing.** `toggleSpeaker()` exists; the 3-way
   earpiece/speaker/BT route is not fully wired through `AudioManager`.
 - **D4 — incoming video call screen (`docs/refine-video-call.md` P2).** Add the live camera

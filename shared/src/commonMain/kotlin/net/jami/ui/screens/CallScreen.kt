@@ -90,6 +90,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -193,16 +195,34 @@ fun CallScreen(
         }
     )
 
+    // Answering and declining are the two taps in this app that commit to something hard to
+    // undo while the user is often not looking — a ringing phone is held, not read. Compose's
+    // own haptics rather than a Vibrator: no permission, the system's haptic setting is obeyed
+    // for free, and Confirm and Reject are distinguishable by feel, which is the whole point.
+    val haptics = LocalHapticFeedback.current
+
     CallScreenContent(
         state = state,
         micLevel = { micLevelState.value },
-        onAcceptAudio = { viewModel.acceptCurrent(withVideo = false) },
-        onAcceptVideo = { viewModel.acceptCurrent(withVideo = true) },
-        onDecline = { viewModel.refuseCurrent() },
+        onAcceptAudio = {
+            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+            viewModel.acceptCurrent(withVideo = false)
+        },
+        onAcceptVideo = {
+            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+            viewModel.acceptCurrent(withVideo = true)
+        },
+        onDecline = {
+            haptics.performHapticFeedback(HapticFeedbackType.Reject)
+            viewModel.refuseCurrent()
+        },
         // Only tell the ViewModel to end the call; navigation is driven exclusively by
         // onEnded (fired by LaunchedEffect when callMode = Ended). Calling popBackStack()
         // here AND in onEnded causes a double-pop that removes the Home screen too.
-        onEnd = { viewModel.endCall() },
+        onEnd = {
+            haptics.performHapticFeedback(HapticFeedbackType.Reject)
+            viewModel.endCall()
+        },
         onToggleMute = { viewModel.toggleMute() },
         onToggleSpeaker = { viewModel.toggleSpeaker() },
         onToggleVideo = { viewModel.toggleVideo() },
@@ -303,13 +323,31 @@ fun IncomingCallScreen(
         }
     )
 
+    // Answering and declining are the two taps in this app that commit to something hard to
+    // undo while the user is often not looking — a ringing phone is held, not read. Compose's
+    // own haptics rather than a Vibrator: no permission, the system's haptic setting is obeyed
+    // for free, and Confirm and Reject are distinguishable by feel, which is the whole point.
+    val haptics = LocalHapticFeedback.current
+
     CallScreenContent(
         state = state,
         micLevel = { micLevelState.value },
-        onAcceptAudio = { viewModel.acceptCurrent(withVideo = false) },
-        onAcceptVideo = { viewModel.acceptCurrent(withVideo = true) },
-        onDecline = { viewModel.refuseCurrent() },
-        onEnd = { viewModel.endCall() },
+        onAcceptAudio = {
+            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+            viewModel.acceptCurrent(withVideo = false)
+        },
+        onAcceptVideo = {
+            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+            viewModel.acceptCurrent(withVideo = true)
+        },
+        onDecline = {
+            haptics.performHapticFeedback(HapticFeedbackType.Reject)
+            viewModel.refuseCurrent()
+        },
+        onEnd = {
+            haptics.performHapticFeedback(HapticFeedbackType.Reject)
+            viewModel.endCall()
+        },
         onToggleMute = { viewModel.toggleMute() },
         onToggleSpeaker = { viewModel.toggleSpeaker() },
         onToggleVideo = { viewModel.toggleVideo() },
