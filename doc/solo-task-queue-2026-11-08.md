@@ -1,4 +1,9 @@
-# Solo task queue — assembled 2026-11-08
+# Solo task queue — assembled 2026-11-08, **worked through the same day**
+
+**Status: all sixteen are closed.** Twelve were implemented, four turned out to be already
+done or stale on inspection (D1 half, D4, D5 half, H1), and one landed partially with its
+remainder written down (I1). Each item below carries what actually happened. The device list
+at the bottom is unchanged and has grown by the new work's own device checks.
 
 Everything here can be taken from premise to committed code **without devices, without a Mac,
 and without a decision from you**. Each line names where the evidence sits and what "done"
@@ -124,3 +129,46 @@ owed on work that is already committed:
 | I8 | whether the Pixel 7a shares the Pixel 2's SELinux reinstall race |
 | I9 | the role-swapped direction of `66c5aef` — one scenario variant, no code |
 | B1, D1, D2, D4 | the device halves of the tier-1/2 items above, once written |
+
+
+---
+
+# What happened, 2026-11-08
+
+Worked top to bottom in one session. Desktop suite 999 tests, Android unit tests 919, both
+green; `:android-app:assembleDebug` and `:e2e-runner:compileKotlin` clean. iOS and macOS
+changes are uncompiled, as every Apple change made on this host is.
+
+| # | Item | Outcome | Commit |
+|---|---|---|---|
+| 1 | B1 notification sound/vibration | Fixed via per-setting channel ids; also fixed the ringtone, broken the same way, and iOS reading `shouldVibrate()` to decide *sound* | `11ada3b` |
+| 2 | I2 stub callbacks | Retained, plus `fireDaemonEvent` and a `TestFixtures` wiring over the real `DaemonCallbacksImpl` | `333795c` |
+| 3 | D1 proximity | **Premise half stale** — Android already had it; iOS had nothing. Rule moved to a shared `ProximityPolicy` | `084fa1a` |
+| 4 | E3 names in notifications | New setting; reference has only lock-screen visibility, which KMP already had | `b59976c` |
+| 5 | E2 language selector | Set below the UI toolkit per platform (`LocalComposeEnvironment` is internal); locale list generated | `fe5043d` |
+| 6 | C4 emoji picker | 639 emoji, generated; recents, search, categories | `7e41471` |
+| 7 | C1 @mentions | **Premise wrong** — neither reference client has mentions. Literal `@name`, matched against members only | `d40c6ac` |
+| 8 | C2 Markdown | Inline only; one tokenizer for Markdown + links + mentions, because delimiters shift offsets | `adede5c` |
+| 9 | E4 app shortcuts | Dynamic, from the smartlist; needed a new `OpenConversationState` route | `ce17110` |
+| 10 | D2 haptics | Compose haptics, not `Vibrator`: no permission, obeys the system setting | `a112a72` |
+| 11 | D5 video gating | **Half already done**; the setting was read by nothing, now it gates | `eab16b9` |
+| 12 | D4, H1 | **Already implemented**; premises stale | `a710d74` |
+| 13 | I1 Robolectric | Wired; one of four classes crossed over, the other three blocked for reasons now recorded | `ac242d7` |
+| 14 | Compose UI tests + L1 leftovers | First UI test in the repo; both live regions; touch-target sweep found and fixed two sites | `b270171` |
+| 15 | I3 harness precondition | All three parts; the `pm clear` is conditional on a run marker, not unconditional | `155b183` |
+
+**Four premises on the task list were wrong or stale** (C1, D1, D4, E3, H1, half of D5). Each
+is corrected in `doc/implementation-tasks-2026-11-05.md` where it sits, rather than silently
+skipped — the same failure mode the 2026-11-07 screenshot pass was written to stop.
+
+**New findings worth someone's time**, none of which could be seen before today:
+
+- `AppViewModelTest` and `CallViewModelTest` never leave `Loading` / `Outgoing` under
+  Robolectric although `advanceUntilIdle()` returns — something in the Android path is off the
+  test scheduler.
+- `HardwareServiceTest` cannot run on Android until `DaemonBridge` is behind an interface:
+  binding it in a unit test loads `libjami-core-jni.so`.
+- `MessageInputBar` holds a `String`, not a `TextFieldValue`, so @mention completion works
+  only at the end of the text.
+- The macOS notification service consults no notification setting at all — not the new one,
+  not the existing ones.
