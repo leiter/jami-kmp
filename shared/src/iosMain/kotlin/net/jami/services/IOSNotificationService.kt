@@ -144,6 +144,15 @@ class IOSNotificationService(
     // ==================== Call Notifications ====================
 
     /**
+     * The text a notification may carry, given the "show names in notifications" setting.
+     *
+     * Off, every notification says only that something arrived: no contact name, no message
+     * body. Unlike iOS's own lock-screen previews setting, this applies wherever the
+     * notification is seen.
+     */
+    private fun hiddenNames(): Boolean = !notificationGuard.shouldShowNames()
+
+    /**
      * Gives [content] the sound the user asked for, or no sound at all when they turned it off.
      *
      * Reading `shouldVibrate()` here, as every call site used to, meant the sound toggle did
@@ -249,8 +258,8 @@ class IOSNotificationService(
         }
 
         val content = UNMutableNotificationContent().apply {
-            setTitle(title)
-            setBody(conference.getDisplayName())
+            setTitle(if (hiddenNames()) runBlocking { getString(Res.string.notif_incoming_call) } else title)
+            if (!hiddenNames()) setBody(conference.getDisplayName())
             setCategoryIdentifier(CATEGORY_CALL)
             // Apply sound based on settings. Silent during quiet hours — the notification
             // is still delivered, so the call can be seen and answered. The sound setting
@@ -301,7 +310,7 @@ class IOSNotificationService(
 
         val content = UNMutableNotificationContent().apply {
             setTitle(runBlocking { getString(Res.string.notif_missed_incoming_call) })
-            setBody(call.getDisplayName())
+            if (!hiddenNames()) setBody(call.getDisplayName())
             setSound(UNNotificationSound.defaultSound())
         }
 
@@ -368,8 +377,12 @@ class IOSNotificationService(
         val senderName = conversation.getDisplayName()
 
         val content = UNMutableNotificationContent().apply {
-            setTitle(senderName)
-            setBody(lastMessage)
+            if (hiddenNames()) {
+                setTitle(runBlocking { getString(Res.string.notif_hidden_message_title) })
+            } else {
+                setTitle(senderName)
+                setBody(lastMessage)
+            }
             setCategoryIdentifier(CATEGORY_MESSAGE)
             // Apply sound based on settings — the sound setting, not the vibration one; see
             // applySound().
@@ -437,8 +450,13 @@ class IOSNotificationService(
             // nothing about who was asking.
             setBody(runBlocking {
                 val single = pending.singleOrNull()
-                if (single != null) single.title.ifEmpty { single.uri.rawRingId }
-                else getString(Res.string.invitation_message, pending.size)
+                when {
+                    // Names hidden: the count is not a name, so it still goes out.
+                    hiddenNames() && single != null ->
+                        getString(Res.string.notif_hidden_request_title)
+                    single != null -> single.title.ifEmpty { single.uri.rawRingId }
+                    else -> getString(Res.string.invitation_message, pending.size)
+                }
             })
             setCategoryIdentifier(CATEGORY_REQUEST)
             // Apply sound based on settings — the sound setting, not the vibration one; see

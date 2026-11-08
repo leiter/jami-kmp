@@ -125,7 +125,16 @@ data class PrivacySettings(
     // "fix" into a second, divergent block list. Settings JSON is parsed with
     // `ignoreUnknownKeys`, so stored values carrying the old keys still load.
     /** Show link previews in messages */
-    val showLinkPreviews: Boolean = true
+    val showLinkPreviews: Boolean = true,
+    /**
+     * Put the contact's name and the message text in notifications.
+     *
+     * Off, a notification says only that something arrived — everywhere, not just on the lock
+     * screen, which is what `UiSettings.notificationVisibility` governs. The two are
+     * independent on purpose: one hides content from someone glancing at a locked phone, this
+     * one hides it from anyone who can see the shade at all.
+     */
+    val showNamesInNotifications: Boolean = true
 )
 
 /**

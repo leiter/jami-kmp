@@ -172,8 +172,18 @@ on 2026-10-31.
   **A device check is still owed.**
 - **E2 — language selector.** `UiSettings` already carries a `language` field, so this is UI
   wiring in `AppSettingsScreen` plus applying the locale.
-- **E3 — "display name in notifications" privacy toggle.** Reference lets users hide contact
-  names from notifications; absent from `AppSettingsScreen`.
+- **E3 — ~~"display name in notifications" privacy toggle~~.** Done 2026-11-08. The reference
+  has no such toggle after all — what it has is notification *visibility* (public / private /
+  secret), which KMP already implements as `applyUserVisibility()`. That setting only governs
+  a locked screen, so this is a KMP addition rather than parity:
+  `PrivacySettings.showNamesInNotifications`, surfaced in the Privacy section and enforced
+  through `NotificationGuard.shouldShowNames()`. Off, a message notification drops the
+  `MessagingStyle` entirely and says "New message" (keeping reply and mark-read, which reveal
+  nothing), a call notification falls back to its call-type label, and a single contact
+  request says "New contact request" — while the *count* of several requests still goes out,
+  being nobody's name. Android, iOS and Desktop. **macOS is not covered:** that service reads
+  no notification setting at all, guard or otherwise, which is a larger pre-existing gap on a
+  target that does not currently compile (F4).
 - **E4 — conversation app shortcuts.** Declared in the reference `AndroidManifest.xml`, not
   in the KMP manifest.
 

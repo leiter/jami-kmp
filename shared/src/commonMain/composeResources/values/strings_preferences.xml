@@ -68,6 +68,9 @@
     <string name="pref_persistNotification_title">Run in the background</string>
     <string name="pref_persistNotification_summary">Allow running in the background to receive calls and messages.</string>
 
+    <string name="pref_namesInNotifications_title">Show names in notifications</string>
+    <string name="pref_namesInNotifications_summary">Include the contact\'s name and the message in notifications. Off, a notification says only that something arrived.</string>
+
     <string name="pref_batteryOptimization_title">Unrestricted battery usage</string>
     <string name="pref_batteryOptimization_summary_granted">Allowed. Jami can stay connected while the screen is off.</string>
     <string name="pref_batteryOptimization_summary_denied">Not allowed. The system may stop Jami in the background, so calls and messages can be missed.</string>

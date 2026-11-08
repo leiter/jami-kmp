@@ -262,6 +262,16 @@ class SettingsRepository(
         }
     }
 
+    /**
+     * Update whether notifications name the contact and quote the message.
+     */
+    fun updateShowNamesInNotifications(enabled: Boolean) {
+        val current = _privacySettings.value
+        if (current.showNamesInNotifications != enabled) {
+            updatePrivacySettings(current.copy(showNamesInNotifications = enabled))
+        }
+    }
+
     // ==================== Presence Settings ====================
 
     /**

@@ -147,6 +147,32 @@ class NotificationGuardTest {
         assertEquals(NotificationSound.Silent, guard.notificationSound())
     }
 
+    // ==================== Names in notifications ====================
+
+    @Test
+    fun namesAreShownByDefault() = runTest {
+        val repo = makeSettingsRepository(scope = this)
+        assertTrue(NotificationGuard(repo).shouldShowNames())
+    }
+
+    /**
+     * Independent of the lock-screen visibility setting on purpose: this one hides the name
+     * from anyone who can see the notification shade at all, not only from a locked phone.
+     */
+    @Test
+    fun turningNamesOffIsReportedToTheNotificationServices() = runTest {
+        val repo = makeSettingsRepository(scope = this)
+        val guard = NotificationGuard(repo)
+
+        repo.updateShowNamesInNotifications(false)
+
+        assertFalse(guard.shouldShowNames())
+        assertTrue(
+            guard.shouldShowMessageNotification(),
+            "hiding the name must not stop the notification: the user still wants to know"
+        )
+    }
+
     private companion object {
         const val CUSTOM_SOUND = "content://media/internal/audio/media/42"
 

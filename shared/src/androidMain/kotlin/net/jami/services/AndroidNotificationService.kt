@@ -362,7 +362,16 @@ class AndroidNotificationService(
 
         // Title carries the peer name; content text is the call type label.
         // Mirrors NotificationServiceImpl: notif_*_call_title (%s) + notif_*_call.
+        val showNames = notificationGuard.shouldShowNames()
         val title = when {
+            // Names hidden: the title falls back to the call-type label the content text
+            // already carries, so the notification says a call is happening and not with whom.
+            !showNames -> when {
+                state == Call.CallStatus.RINGING && isIncoming ->
+                    getString(Res.string.notif_incoming_call)
+                state == Call.CallStatus.RINGING -> getString(Res.string.notif_outgoing_call)
+                else -> getString(Res.string.notif_current_call)
+            }
             state == Call.CallStatus.RINGING && isIncoming ->
                 getString(Res.string.notif_incoming_call_title, peerName)
             state == Call.CallStatus.RINGING ->
@@ -595,10 +604,6 @@ class AndroidNotificationService(
         ).build()
 
         // Build the individual message notification
-        val messagingStyle = NotificationCompat.MessagingStyle(selfUser)
-            .setConversationTitle(senderName) // Or conversation.displayName for groups
-            .addMessage(lastMessage, System.currentTimeMillis(), Person.Builder().setName(senderName).build())
-
         val builder = NotificationCompat.Builder(context, messagesChannel())
             .setSmallIcon(smallIcon)
             .applyUserVisibility()
@@ -607,9 +612,26 @@ class AndroidNotificationService(
             .setAutoCancel(true)
             .setGroup(groupKey) // Assign to conversation group
             .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN) // Children notifications can alert
-            .setStyle(messagingStyle)
             .addAction(replyAction)
             .addAction(markReadAction)
+
+        if (notificationGuard.shouldShowNames()) {
+            builder.setStyle(
+                NotificationCompat.MessagingStyle(selfUser)
+                    .setConversationTitle(senderName) // Or conversation.displayName for groups
+                    .addMessage(
+                        lastMessage,
+                        System.currentTimeMillis(),
+                        Person.Builder().setName(senderName).build(),
+                    )
+            )
+        } else {
+            // Names hidden: say that something arrived and nothing else. No MessagingStyle at
+            // all — it exists to show who said what. The actions stay: quick reply reveals
+            // nothing, and marking read without opening the app is exactly what a user who
+            // hides names wants.
+            builder.setContentTitle(runBlocking { getString(Res.string.notif_hidden_message_title) })
+        }
 
         // Apply sound/vibration settings
         applySoundAndVibration(builder)
@@ -622,7 +644,10 @@ class AndroidNotificationService(
         val summaryBuilder = NotificationCompat.Builder(context, messagesChannel())
             .setSmallIcon(smallIcon)
             .applyUserVisibility()
-            .setContentText(senderName)
+            .setContentText(
+                if (notificationGuard.shouldShowNames()) senderName
+                else runBlocking { getString(Res.string.notif_hidden_message_title) }
+            )
             .setGroup(groupKey)
             .setGroupSummary(true) // This is the group summary
             .setAutoCancel(true)
@@ -696,7 +721,11 @@ class AndroidNotificationService(
         val single = pending.singleOrNull()
         if (single != null) {
             val conversationId = single.uri.rawRingId
-            builder.setContentText(single.title.ifEmpty { single.uri.rawRingId })
+            builder.setContentText(
+                if (notificationGuard.shouldShowNames())
+                    single.title.ifEmpty { single.uri.rawRingId }
+                else runBlocking { getString(Res.string.notif_hidden_request_title) }
+            )
             createRequestActionPendingIntent(
                 account.accountId, conversationId, ACTION_ACCEPT_REQUEST, notifId + 1
             )?.let {

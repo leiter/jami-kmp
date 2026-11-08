@@ -16,7 +16,11 @@
  */
 package net.jami.services
 
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.notif_hidden_message_title
+import kotlinx.coroutines.runBlocking
 import net.jami.model.*
+import org.jetbrains.compose.resources.getString
 import net.jami.utils.Log
 import java.awt.SystemTray
 import java.awt.TrayIcon
@@ -58,7 +62,9 @@ private fun Conversation.getLastMessage(): String? =
  * - Windows: Windows.UI.Notifications via jna
  * - macOS: UNUserNotificationCenter via JNI
  */
-class DesktopNotificationService : NotificationService {
+class DesktopNotificationService(
+    private val notificationGuard: NotificationGuard,
+) : NotificationService {
 
     private var trayIcon: TrayIcon? = null
     private val isSupported: Boolean = SystemTray.isSupported()
@@ -232,9 +238,13 @@ class DesktopNotificationService : NotificationService {
         val lastMessage = conversation.getLastMessage() ?: return
         val senderName = conversation.getDisplayName()
 
+        // Names hidden: tell the user something arrived and nothing more. Same setting as on
+        // the phones, because a desktop tray popup is read over a shoulder just as easily.
+        val showNames = notificationGuard.shouldShowNames()
         showTrayNotification(
-            title = senderName,
-            message = lastMessage,
+            title = if (showNames) senderName
+                    else runBlocking { getString(Res.string.notif_hidden_message_title) },
+            message = if (showNames) lastMessage else "",
             type = MessageType.INFO
         )
 

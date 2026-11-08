@@ -87,6 +87,16 @@ class NotificationGuard(
     }
 
     /**
+     * Whether a notification may name the contact and quote the message.
+     *
+     * False means the platform services post a generic title and no body: the user is told
+     * something arrived, not what or from whom. Distinct from the lock-screen visibility
+     * setting, which only governs what a locked phone shows.
+     */
+    fun shouldShowNames(): Boolean =
+        settingsRepository.privacySettings.value.showNamesInNotifications
+
+    /**
      * Check if current time falls within quiet hours.
      * Handles midnight wraparound (e.g., 23:00 to 07:00).
      *

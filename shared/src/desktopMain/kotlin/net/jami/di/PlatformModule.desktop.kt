@@ -81,7 +81,7 @@ actual val platformModule: Module = module {
      * Uses Java AWT SystemTray for desktop notifications.
      */
     single<NotificationService> {
-        DesktopNotificationService()
+        DesktopNotificationService(get())
     }
 
     /**

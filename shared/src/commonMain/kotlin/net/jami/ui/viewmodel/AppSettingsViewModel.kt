@@ -54,6 +54,7 @@ data class AppSettingsState(
     val isBlockUnknown: Boolean = false,
     val isScreenshotBlocking: Boolean = false,
     val isLinkPreview: Boolean = true,
+    val isNamesInNotifications: Boolean = true,
 
     // --- Notifications ---
     val isPushNotifications: Boolean = true,
@@ -163,6 +164,7 @@ class AppSettingsViewModel(
                     isTypingIndicators = p.typingIndicators,
                     isBlockUnknown = p.blockUnknownContacts,
                     isLinkPreview = p.showLinkPreviews,
+                    isNamesInNotifications = p.showNamesInNotifications,
                 )}
             }
         }
@@ -252,6 +254,16 @@ class AppSettingsViewModel(
         val new = !_state.value.isLinkPreview
         _state.update { it.copy(isLinkPreview = new) }
         settingsRepository.updateShowLinkPreviews(new)
+    }
+
+    /**
+     * Whether notifications may name the contact and quote the message — everywhere, not only
+     * on the lock screen, which is what the notification-visibility setting governs.
+     */
+    fun toggleNamesInNotifications() {
+        val new = !_state.value.isNamesInNotifications
+        _state.update { it.copy(isNamesInNotifications = new) }
+        settingsRepository.updateShowNamesInNotifications(new)
     }
 
     // ==================== Notifications ====================

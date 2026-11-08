@@ -217,6 +217,12 @@ fun AppSettingsScreen(
                 checked = state.isLinkPreview,
                 onCheckedChange = { viewModel.toggleLinkPreview() },
             )
+            JamiToggle(
+                label = stringResource(Res.string.pref_namesInNotifications_title),
+                description = stringResource(Res.string.pref_namesInNotifications_summary),
+                checked = state.isNamesInNotifications,
+                onCheckedChange = { viewModel.toggleNamesInNotifications() },
+            )
 
             HorizontalDivider()
 
