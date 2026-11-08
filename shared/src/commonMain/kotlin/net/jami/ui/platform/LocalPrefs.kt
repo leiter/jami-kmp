@@ -59,4 +59,13 @@ object LocalPrefKeys {
     const val PLACE_SYSTEM_CALLS = "local_place_system_calls"
     const val SYSTEM_CONTACTS_SYNC = "local_system_contacts_sync"
     const val LAST_APPLIED_RINGTONE = "local_last_applied_ringtone"
+
+    /**
+     * The app's display language as a BCP-47 tag, empty for the device's own.
+     *
+     * Local rather than part of the synced `UiSettings` *as well as* in it: Android reads it
+     * from `attachBaseContext`, before Koin or any repository exists, and needs an answer
+     * synchronously.
+     */
+    const val APP_LANGUAGE = "local_app_language"
 }

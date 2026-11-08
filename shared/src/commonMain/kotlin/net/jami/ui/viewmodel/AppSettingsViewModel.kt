@@ -36,6 +36,7 @@ import net.jami.services.AccountService
 import net.jami.services.ContactService
 import net.jami.services.PushConfigNotifier
 import net.jami.services.SystemContactsSyncService
+import net.jami.ui.platform.AppLanguage
 import net.jami.ui.platform.LocalPrefKeys
 import net.jami.ui.platform.LocalPrefs
 
@@ -47,6 +48,8 @@ data class AppSettingsState(
     val isDarkTheme: Boolean = false,
     val isCompactMode: Boolean = false,
     val conversationSort: ConversationSort = ConversationSort.LAST_ACTIVITY,
+    /** BCP-47 tag of the chosen display language; empty means the device's own. */
+    val language: String = "",
 
     // --- Privacy ---
     val isReadReceipts: Boolean = true,
@@ -154,6 +157,7 @@ class AppSettingsViewModel(
                     isDarkTheme = ui.theme == Theme.DARK,
                     isCompactMode = ui.compactMode,
                     conversationSort = ui.conversationSort,
+                    language = ui.language,
                 )}
             }
         }
@@ -211,6 +215,21 @@ class AppSettingsViewModel(
         val new = !_state.value.isDarkTheme
         _state.update { it.copy(isDarkTheme = new) }
         settingsRepository.updateTheme(if (new) Theme.DARK else Theme.LIGHT)
+    }
+
+    /**
+     * Sets the app's display language, or clears it back to the device's with an empty tag.
+     *
+     * The setting was stored and read by nothing until 2026-11-08, so 95 shipped translations
+     * could not be chosen from inside the app. Applied through [AppLanguage], which is where
+     * the platforms differ: Android 33+ recreates the activity in the new language, everyone
+     * else picks it up at the next launch.
+     */
+    fun setLanguage(languageTag: String) {
+        if (_state.value.language == languageTag) return
+        _state.update { it.copy(language = languageTag) }
+        settingsRepository.updateLanguage(languageTag)
+        AppLanguage.apply(languageTag)
     }
 
     fun toggleCompactMode() {

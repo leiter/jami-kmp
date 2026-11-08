@@ -170,8 +170,23 @@ on 2026-10-31.
   behind the notifications-denied dialog), and a status row in `AppSettingsScreen`'s System
   section, which is also prompted from when "Run in the background" is switched on.
   **A device check is still owed.**
-- **E2 — language selector.** `UiSettings` already carries a `language` field, so this is UI
-  wiring in `AppSettingsScreen` plus applying the locale.
+- **E2 — ~~language selector~~.** Done 2026-11-08. The field existed and was read by nothing,
+  so the 95 shipped translations could not be chosen from inside the app. Not UI wiring alone:
+  Compose resources pick a translation from `Locale.current`, and the one hook for overriding
+  that, `LocalComposeEnvironment`, is `internal` to the resources library — so the language is
+  set below the UI toolkit instead, per platform, which also makes strings fetched outside
+  composition (every notification) follow. Android 33+ uses `LocaleManager` plus a generated
+  `locales_config.xml`, so the choice also appears in system Settings and the activity is
+  recreated in the new language; below 33 `MainActivity.attachBaseContext` wraps the context
+  from `LocalPrefs`. Desktop sets the default `Locale` at startup, Apple writes
+  `AppleLanguages`, Web stores only — all three say "applied the next time Jami starts" in the
+  picker, through `AppLanguage.appliesImmediately`, rather than looking broken.
+
+  `ShippedLocales` and `locales_config.xml` are both generated from the resource folders by
+  `scripts/generate_shipped_locales.py`: a hand-written list drifts in both directions and
+  both are invisible — a translation nobody can pick, or an entry that picks nothing. Each
+  language is named in itself ("polski", not "Polish"). `ShippedLocalesTest` holds the
+  generator to BCP-47.
 - **E3 — ~~"display name in notifications" privacy toggle~~.** Done 2026-11-08. The reference
   has no such toggle after all — what it has is notification *visibility* (public / private /
   secret), which KMP already implements as `applyUserVisibility()`. That setting only governs

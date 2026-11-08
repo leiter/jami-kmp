@@ -31,6 +31,11 @@ class JamiApplication : Application(), KoinComponent {
     override fun onCreate() {
         super.onCreate()
 
+        // The app-language object needs a Context to reach LocaleManager, and this is the
+        // first moment one exists. Before Koin, because AppLanguage is not injected: the
+        // activity's attachBaseContext asks it for the stored language before Koin is up.
+        net.jami.ui.platform.AppLanguage.applicationContext = applicationContext
+
         // Initialize Koin
         initKoin {
             androidContext(this@JamiApplication)

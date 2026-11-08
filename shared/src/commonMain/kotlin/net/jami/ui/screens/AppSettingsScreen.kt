@@ -17,6 +17,10 @@
 package net.jami.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,7 +39,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -47,6 +54,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import net.jami.ui.platform.AppLanguage
+import net.jami.ui.platform.ShippedLocales
 import net.jami.ui.platform.AppPermission
 import net.jami.ui.platform.PermissionRequesterEffect
 import net.jami.ui.platform.rememberBatteryOptimizationState
@@ -107,10 +117,23 @@ fun AppSettingsScreen(
     // on every other platform, where the rows below are simply not shown.
     val battery = rememberBatteryOptimizationState()
 
+    var showLanguagePicker by remember { mutableStateOf(false) }
+
     var requestContactsPermission by remember { mutableStateOf(false) }
     PermissionRequesterEffect(AppPermission.Contacts, requestContactsPermission) { granted ->
         requestContactsPermission = false
         if (granted) viewModel.toggleSystemContactsSync()
+    }
+
+    if (showLanguagePicker) {
+        LanguagePickerDialog(
+            selected = state.language,
+            onSelect = { tag ->
+                showLanguagePicker = false
+                viewModel.setLanguage(tag)
+            },
+            onDismiss = { showLanguagePicker = false },
+        )
     }
 
     Scaffold(
@@ -185,6 +208,14 @@ fun AppSettingsScreen(
                     onClick = { viewModel.setConversationSort(ConversationSort.UNREAD_FIRST) },
                 )
             }
+
+            NavigationRow(
+                label = stringResource(Res.string.pref_language_title),
+                description = if (state.language.isEmpty())
+                    stringResource(Res.string.pref_language_system_default)
+                else AppLanguage.displayName(state.language),
+                onClick = { showLanguagePicker = true },
+            )
 
             HorizontalDivider()
 
@@ -700,4 +731,67 @@ private fun RingtoneRow(
             tint = JamiTheme.colors.onSurfaceVariant,
         )
     }
+}
+
+/**
+ * Picks the app's display language from the translations this build actually ships.
+ *
+ * The list is [ShippedLocales], generated from the resource folders, so it cannot drift from
+ * what exists; each language is named in itself ("polski", not "Polish"), which is what
+ * someone looking for their own language scans for. "System default" is first and is how the
+ * choice is cleared.
+ *
+ * Where the platform cannot change the language of a running app — everywhere except
+ * Android 13+ — the dialog says so rather than leaving the user tapping a setting that
+ * appears to do nothing.
+ */
+@Composable
+private fun LanguagePickerDialog(
+    selected: String,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val options = remember { listOf("") + ShippedLocales.tags }
+    val systemDefault = stringResource(Res.string.pref_language_system_default)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.pref_language_title)) },
+        text = {
+            Column {
+                if (!AppLanguage.appliesImmediately) {
+                    Text(
+                        text = stringResource(Res.string.pref_language_restart_required),
+                        style = JamiTheme.typography.bodySmall,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = JamiTheme.spacing.s),
+                    )
+                }
+                LazyColumn {
+                    items(options, key = { it }) { tag ->
+                        val label = if (tag.isEmpty()) systemDefault
+                                    else AppLanguage.displayName(tag)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .selectable(
+                                    selected = tag == selected,
+                                    role = Role.RadioButton,
+                                    onClick = { onSelect(tag) },
+                                )
+                                .padding(vertical = JamiTheme.spacing.s),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = tag == selected, onClick = null)
+                            Spacer(Modifier.width(JamiTheme.spacing.s))
+                            Text(text = label, style = JamiTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) }
+        },
+    )
 }

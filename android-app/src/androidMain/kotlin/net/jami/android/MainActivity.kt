@@ -21,6 +21,7 @@ import net.jami.services.NotificationService
 import net.jami.services.ScreenShareService
 import net.jami.services.expect.HardwareService
 import net.jami.ui.JamiApp
+import net.jami.ui.platform.AppLanguage
 import net.jami.ui.navigation.DeepLinkState
 import net.jami.ui.navigation.ShareState
 import net.jami.utils.Log
@@ -36,6 +37,16 @@ class MainActivity : FragmentActivity() {
     private val hardwareService: HardwareService by inject()
     private val pipManager: AndroidPictureInPictureManager by inject()
     private val biometricService: BiometricService by inject()
+
+    /**
+     * Applies the user's chosen app language on API < 33, before anything reads a resource.
+     *
+     * From API 33 the platform has already applied the per-app locale by this point and
+     * [AppLanguage.wrapContext] returns the context untouched.
+     */
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(AppLanguage.wrapContext(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
