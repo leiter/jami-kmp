@@ -23,6 +23,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import net.jami.model.Account
 import net.jami.model.Call
 import net.jami.utils.Log
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -99,6 +100,8 @@ class CallKitManagerWrapper(private val delegate: CallKitManager) : CallKitManag
 @OptIn(ExperimentalForeignApi::class)
 class CallKitManager(
     private val callService: CallService,
+    private val accountService: AccountService,
+    private val contactService: ContactService,
 ) : NSObject(), CXProviderDelegateProtocol {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -132,42 +135,71 @@ class CallKitManager(
 
     private var pendingPush: PendingPushCall? = null
 
-    /** The `ringtoneSound` the provider is configured with right now; see [applyRingtoneForNow]. */
-    private var currentRingtoneSound: String = IOSCallRinging.ringtoneSoundNow()
+    /**
+     * What the provider is configured with right now; see [applyConfigurationForNow]. Both
+     * halves can change between two calls — quiet hours by the clock, the names setting by
+     * the user — so the configuration is rebuilt per call rather than once.
+     */
+    private data class Configured(val ringtoneSound: String, val includeInRecents: Boolean)
+
+    private var configured = configurationForNow()
+
+    private fun configurationForNow() = Configured(
+        ringtoneSound = IOSCallRinging.ringtoneSoundNow(),
+        // Phone → Recents lists the caller's name long after the call. With names hidden that
+        // is exactly the leak the setting exists to stop, so such calls stay out of it.
+        includeInRecents = IOSCallRinging.showNamesNow(),
+    )
 
     /**
-     * Built here rather than once, because quiet hours swap [ringtoneSound] per call.
-     *
      * localizedName is shown on the lock screen and in the system call UI; the no-argument
      * initialiser leaves it blank, so the incoming-call screen had no app name on it.
      */
-    private fun providerConfiguration(ringtoneSound: String) =
-        CXProviderConfiguration(localizedName = "Jami").apply {
+    private fun providerConfiguration(c: Configured) =
+        CXProviderConfiguration(localizedName = APP_NAME).apply {
             supportsVideo = true
             maximumCallsPerCallGroup = 1u
             supportedHandleTypes = setOf(CXHandleTypeGeneric)
             // CallKit rings, not the daemon (IOSCallRinging): the file must be in the main
             // bundle, which is why both sounds are resources of the app target.
-            this.ringtoneSound = ringtoneSound
+            ringtoneSound = c.ringtoneSound
+            includesCallsInRecents = c.includeInRecents
         }
 
     /**
-     * Swap in the silent ringtone inside quiet hours, and back out of it after, right before a
-     * call is reported. CallKit reads the configuration when a call is reported, so changing it
-     * here affects exactly the call about to ring. Called from both the daemon path and the
-     * PushKit path, which is why the window comes from [IOSCallRinging.ringtoneSoundNow] and not
-     * from the settings repository.
+     * Swap in the silent ringtone inside quiet hours, and keep calls out of Recents while names
+     * are hidden, right before a call is reported. CallKit reads the configuration when a call
+     * is reported, so changing it here affects exactly the call about to ring. Called from both
+     * the daemon path and the PushKit path, which is why it reads [IOSCallRinging]'s mirror and
+     * not the settings repository.
      */
-    private fun applyRingtoneForNow() {
-        val sound = IOSCallRinging.ringtoneSoundNow()
-        if (sound == currentRingtoneSound) return
-        provider.configuration = providerConfiguration(sound)
-        currentRingtoneSound = sound
-        Log.d(TAG, "CallKit ringtone now $sound")
+    private fun applyConfigurationForNow() {
+        val wanted = configurationForNow()
+        if (wanted == configured) return
+        provider.configuration = providerConfiguration(wanted)
+        configured = wanted
+        Log.d(TAG, "CallKit configuration now $wanted")
+    }
+
+    /**
+     * The name CallKit may show for [name]: the name itself, or just the app's name while
+     * "show names in notifications" is off. The incoming-call screen sits on the lock screen
+     * like any notification, so it follows the same setting — Android's CallStyle notification
+     * does the same (e5af1df). Applied to the handle as well as the caller name, since CallKit
+     * falls back to showing the handle.
+     */
+    private fun presentedName(name: String): String =
+        if (IOSCallRinging.showNamesNow()) name else APP_NAME
+
+    private fun callUpdate(name: String, hasVideo: Boolean) = CXCallUpdate().apply {
+        val shown = presentedName(name)
+        remoteHandle = CXHandle(type = CXHandleTypeGeneric, value = shown)
+        localizedCallerName = shown
+        this.hasVideo = hasVideo
     }
 
     init {
-        provider = CXProvider(configuration = providerConfiguration(currentRingtoneSound))
+        provider = CXProvider(configuration = providerConfiguration(configured))
         provider.setDelegate(this, queue = null)
         observeCallUpdates()
     }
@@ -188,9 +220,11 @@ class CallKitManager(
             Call.CallStatus.RINGING -> {
                 if (call.isIncoming && !callToUuid.containsKey(callId)) {
                     callToAccount[callId] = accountId
-                    val displayName = call.contact?.displayName?.takeIf { it.isNotBlank() }
-                        ?: call.contact?.username?.takeIf { it.isNotBlank() }
-                        ?: call.peerUri.rawRingId.take(12).ifEmpty { call.peerUri.uri }
+                    val displayName = resolveCallerName(
+                        account = accountService.getAccount(accountId),
+                        contactService = contactService,
+                        call = call,
+                    ) ?: call.peerUri.rawRingId.take(12).ifEmpty { call.peerUri.uri }
                     // A VoIP push may already have put this call on screen; take that UUID over
                     // rather than reporting a second incoming call for the same ring.
                     if (!adoptPendingPush(call, callId, accountId, displayName)) {
@@ -227,13 +261,9 @@ class CallKitManager(
         callToUuid[callId] = uuid
         uuidToCall[uuid.UUIDString] = callId
 
-        val update = CXCallUpdate().apply {
-            remoteHandle = CXHandle(type = CXHandleTypeGeneric, value = displayName)
-            localizedCallerName = displayName
-            this.hasVideo = hasVideo
-        }
+        val update = callUpdate(displayName, hasVideo)
 
-        applyRingtoneForNow()
+        applyConfigurationForNow()
         provider.reportNewIncomingCallWithUUID(uuid, update = update) { error ->
             if (error != null) {
                 Log.e(TAG, "reportNewIncomingCall failed: ${error.localizedDescription}")
@@ -266,17 +296,13 @@ class CallKitManager(
         val uuid = NSUUID()
         val name = displayName.takeIf { it.isNotBlank() }
             ?: peerId.take(12).takeIf { it.isNotBlank() }
-            ?: "Jami"
+            ?: APP_NAME
         val pending = PendingPushCall(peerId = peerId, uuid = uuid)
         pendingPush = pending
 
-        val update = CXCallUpdate().apply {
-            remoteHandle = CXHandle(type = CXHandleTypeGeneric, value = name)
-            localizedCallerName = name
-            this.hasVideo = hasVideo
-        }
+        val update = callUpdate(name, hasVideo)
 
-        applyRingtoneForNow()
+        applyConfigurationForNow()
         provider.reportNewIncomingCallWithUUID(uuid, update = update) { error ->
             if (error != null) {
                 Log.e(TAG, "reportNewIncomingCall (push) failed: ${error.localizedDescription}")
@@ -324,14 +350,7 @@ class CallKitManager(
         Log.d(TAG, "Pending push call adopted by $callId uuid=${uuid.UUIDString}")
 
         // Replace the placeholder's guessed caller name with what the daemon actually resolved.
-        provider.reportCallWithUUID(
-            uuid,
-            updated = CXCallUpdate().apply {
-                remoteHandle = CXHandle(type = CXHandleTypeGeneric, value = displayName)
-                localizedCallerName = displayName
-                hasVideo = call.hasVideo()
-            }
-        )
+        provider.reportCallWithUUID(uuid, updated = callUpdate(displayName, call.hasVideo()))
 
         // The user may have already tapped answer or decline on the placeholder, before the
         // daemon had a call to act on. Apply that decision now.
@@ -358,7 +377,7 @@ class CallKitManager(
         uuidToCall[uuid.UUIDString] = callId
         callToAccount[callId] = accountId
 
-        val handle = CXHandle(type = CXHandleTypeGeneric, value = displayName)
+        val handle = CXHandle(type = CXHandleTypeGeneric, value = presentedName(displayName))
         val startAction = CXStartCallAction(callUUID = uuid, handle = handle).apply {
             video = hasVideo
         }
@@ -493,3 +512,31 @@ private const val TAG = "CallKitManager"
  * Generous, because the daemon has to reconnect to the DHT from a cold background process.
  */
 private const val PUSH_CALL_TIMEOUT_MS = 25_000L
+
+/** The app's name: the provider's `localizedName`, and the caller shown while names are hidden. */
+private const val APP_NAME = "Jami"
+
+/**
+ * The caller's name for CallKit, or null when no contact knows one (the caller then falls back
+ * to a short hash).
+ *
+ * Not `call.contact`'s alone: for an incoming call that is usually a bare placeholder created
+ * for the peer URI, with neither display name nor username, which is why CallKit announced a
+ * named contact as "d9f8c7f0bf76". Same order as Android's `callerPerson()` (e5af1df), which was
+ * verified on a device: the *account's* contact store first — filled from the daemon's contact
+ * list, names and profiles included — then the 1:1 conversation's peer, then ContactService's
+ * cache, then the call's own contact. The first one with a name wins, not merely the first that
+ * exists, since every one of them can be an empty placeholder.
+ */
+internal fun resolveCallerName(account: Account?, contactService: ContactService, call: Call): String? =
+    sequenceOf(
+        { account?.getContactFromCache(call.peerUri) },
+        { account?.getByContact(call.peerUri)?.contactOrNull },
+        { contactService.findContactInCache(call.account, call.peerUri) },
+        { call.contact },
+    )
+        .mapNotNull { lookup -> runCatching { lookup() }.getOrNull() }
+        .firstNotNullOfOrNull { contact ->
+            contact.displayName?.takeIf { it.isNotBlank() }
+                ?: contact.username?.takeIf { it.isNotBlank() }
+        }

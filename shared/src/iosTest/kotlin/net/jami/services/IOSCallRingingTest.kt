@@ -43,6 +43,7 @@ class IOSCallRingingTest {
         LocalPrefs.setBoolean(IOSCallRinging.KEY_QUIET_ENABLED, false)
         LocalPrefs.setInt(IOSCallRinging.KEY_QUIET_START, NotificationSettings().quietHoursStart)
         LocalPrefs.setInt(IOSCallRinging.KEY_QUIET_END, NotificationSettings().quietHoursEnd)
+        LocalPrefs.setBoolean(IOSCallRinging.KEY_SHOW_NAMES, true)
     }
 
     private fun ringing(stub: StubDaemonBridge, scope: kotlinx.coroutines.CoroutineScope, store: ClientSettingsStore = InMemoryClientSettingsStore()) =
@@ -111,6 +112,12 @@ class IOSCallRingingTest {
         repo.updateQuietHours(enabled = false)
         testScheduler.advanceUntilIdle()
         assertFalse(LocalPrefs.getBoolean(IOSCallRinging.KEY_QUIET_ENABLED, true))
+
+        // The names setting rides the same mirror, for the same PushKit reason.
+        assertEquals(true, IOSCallRinging.showNamesNow())
+        repo.updateShowNamesInNotifications(false)
+        testScheduler.advanceUntilIdle()
+        assertFalse(IOSCallRinging.showNamesNow())
         scope.cancel()
     }
 }

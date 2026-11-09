@@ -4,7 +4,7 @@
 green after binding `SettingsRepository` in `shared/src/iosTest/.../PlatformTestKoin.ios.kt` (the
 proximity change, 084fa1a, made the iOS `HardwareService` inject it); Xcode Debug build for the
 iPhone 17 Pro simulator links and the app launches to the conversation list with the account
-online. T1 decisions taken (see T1); T1 implementation is next. Derived from reading `git diff 938e572..HEAD` (938e572 = 2026-10-31,
+online. **T1 done** (747e5e7). **T2 done** (see T2). T3 is next. Derived from reading `git diff 938e572..HEAD` (938e572 = 2026-10-31,
 the last iOS commit; HEAD = `e5af1df`, 2026-11-08). That range is 233 files / ~60 commits, almost
 all Android-side or shared Compose work. This file lists what iOS needs to keep up.
 
@@ -108,6 +108,24 @@ Background (written before the decision):
   does not reach CallKit: `localizedCallerName` and the `CXHandle` value expose the name on the
   lock screen and in Phone → Recents. When names are hidden: generic title, and consider
   `includesCallsInRecents = false`.
+
+**Implemented 2026-11-09** (branch `ios-catch-up-2026-11`):
+- `resolveCallerName()` in `CallKitManager.kt`: account contact store → 1:1 conversation peer →
+  `ContactService` cache → `call.contact`, first one *with a name* wins (Android's order from
+  `e5af1df`). Used for the daemon-path report and the push-placeholder adoption update.
+- D4: every CallKit update (`callUpdate()`, and the outgoing handle) goes through
+  `presentedName()` — "Jami" for both handle and caller name while names are hidden;
+  `includesCallsInRecents` follows the setting, swapped per call with the ringtone
+  (`applyConfigurationForNow()`). The setting is mirrored by `IOSCallRinging` (`showNamesNow()`),
+  so a push-woken call obeys it too.
+- Tests: `CallerNameTest` (new), `IOSCallRingingTest` extended.
+
+**Found, not fixed:** `CallKitManager.reportOutgoingCallStarted` has **no callers** — outgoing
+calls are never reported to CallKit, so they get no system call UI, no audio-session handling by
+CallKit and no Recents entry. Candidate for its own task.
+
+Device check owed: a named contact's call shows the name on the lock screen; with names hidden it
+shows "Jami" and does not appear in Phone → Recents.
 
 ## T3 — Sender avatars in iOS notifications
 

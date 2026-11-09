@@ -42,10 +42,11 @@ import net.jami.utils.Log
  * - **Keep the daemon's ringtone off** on every account. The reference only sets this at
  *   creation; this client's accounts were created with it on, pointing at a file that does not
  *   exist on iOS, so existing accounts are repaired as well, and new ones as they appear.
- * - **Mirror the quiet-hours window into `NSUserDefaults`.** A call woken by a VoIP push has
- *   to be reported to CallKit synchronously, before the daemon has loaded an account and so
- *   before [SettingsRepository] holds anything but defaults. [ringtoneSoundNow] therefore reads
- *   the mirror, never the repository.
+ * - **Mirror what CallKit needs into `NSUserDefaults`**: the quiet-hours window and the
+ *   "show names in notifications" privacy setting. A call woken by a VoIP push has to be
+ *   reported to CallKit synchronously, before the daemon has loaded an account and so before
+ *   [SettingsRepository] holds anything but defaults. [ringtoneSoundNow] and [showNamesNow]
+ *   therefore read the mirror, never the repository.
  */
 class IOSCallRinging(
     private val accountService: AccountService,
@@ -65,12 +66,19 @@ class IOSCallRinging(
             // Only once an account's settings have really loaded: until then the repository
             // holds defaults, and mirroring those would switch quiet hours off for the next
             // push-woken call.
-            combine(settingsRepository.loadedAccountId, settingsRepository.notificationSettings) { loaded, settings ->
-                if (loaded == null) null else settings
+            combine(
+                settingsRepository.loadedAccountId,
+                settingsRepository.notificationSettings,
+                settingsRepository.privacySettings,
+            ) { loaded, notifications, privacy ->
+                if (loaded == null) null else notifications to privacy.showNamesInNotifications
             }
                 .filterNotNull()
                 .distinctUntilChanged()
-                .collect { mirrorQuietHours(it) }
+                .collect { (notifications, showNames) ->
+                    mirrorQuietHours(notifications)
+                    mirrorShowNames(showNames)
+                }
         }
     }
 
@@ -100,6 +108,10 @@ class IOSCallRinging(
         LocalPrefs.setInt(KEY_QUIET_END, settings.quietHoursEnd)
     }
 
+    internal fun mirrorShowNames(showNames: Boolean) {
+        LocalPrefs.setBoolean(KEY_SHOW_NAMES, showNames)
+    }
+
     companion object {
         private const val TAG = "IOSCallRinging"
 
@@ -112,6 +124,15 @@ class IOSCallRinging(
         internal const val KEY_QUIET_ENABLED = "ios_callkit_quiet_hours_enabled"
         internal const val KEY_QUIET_START = "ios_callkit_quiet_hours_start"
         internal const val KEY_QUIET_END = "ios_callkit_quiet_hours_end"
+        internal const val KEY_SHOW_NAMES = "ios_callkit_show_names"
+
+        /**
+         * The mirrored "show names in notifications" setting; on until an account's settings
+         * have loaded once, matching `PrivacySettings`' default. CallKit's incoming-call screen
+         * is a lock-screen notification too, so it obeys the same setting. Synchronous and
+         * repository-free, so the PushKit handler can call it.
+         */
+        fun showNamesNow(): Boolean = LocalPrefs.getBoolean(KEY_SHOW_NAMES, true)
 
         /**
          * The sound CallKit should ring the next incoming call with: [SILENT_SOUND] inside the
