@@ -191,7 +191,7 @@ Android notifications now carry the sender's name and avatar (`e5af1df` item 4, 
    "granted" / "NOT granted". **Done 2026-11-09 18:15:** capability enabled, profile regenerated
    (`199b768a…`, created 2026-11-09T17:15Z) and installed; `check_signing` reports it granted
    and the configuration consistent. (A distribution profile keeps its certificate's expiry,
-   2027-05-03, when regenerated. Three superseded copies are still installed; the lane now picks
+   2027-05-03, when regenerated. The three superseded copies were deleted the same day; the lane picks
    the newest, as Xcode does — it used to pick the first in directory order and read a June copy.)
 Until then device/Release codesign fails entitlement validation. Simulator builds are unaffected
 (verified: the entitlement is in `iosApp.app-Simulated.xcent`). If you need a device build before
