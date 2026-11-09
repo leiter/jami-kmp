@@ -255,6 +255,16 @@ notification.
 
 Device check owed: Accept from the lock screen with the app killed; the summary has no buttons.
 
+**Found while verifying T6 — intermittent launch crash, fixed separately:** a launch right after
+killing a running instance died ~60 ms after startup with SIGTRAP and no crash report. The
+simulator log showed `(BoardServices) … threading violation: expected the main thread` right after
+`IOSCameraService: Found cameras`. Pre-existing: `IOSCameraService.init` calls
+`UIDevice.beginGeneratingDeviceOrientationNotifications()`, and Koin creates the service on
+whichever thread asks first — at startup usually `initVideo()` on `Dispatchers.Default`. Now
+dispatched to the main thread. Before: 1 of 2 such launches died; after: 4 of 4 survived, no
+violation logged. Still open, same class: `currentVideoOrientation()` reads
+`UIDevice.orientation` from camera setup, which may run off the main thread during a video call.
+
 ## T7 — Lock-screen visibility setting *(small)*
 
 Private/Public/Secret is applied on Android only (`a838c8e`); the row still shows on iOS and does

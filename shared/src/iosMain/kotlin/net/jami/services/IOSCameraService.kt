@@ -484,15 +484,27 @@ class IOSCameraService(
     // Orientation Handling
     // ══════════════════════════════════════════════════════════════════════════
 
+    /**
+     * On the main thread, always. This runs from `init`, and Koin creates this service on
+     * whichever thread first asks for it — at startup usually `HardwareService.initVideo()` on
+     * `Dispatchers.Default`. `beginGeneratingDeviceOrientationNotifications()` off the main
+     * thread trips UIKit's "threading violation: expected the main thread" assertion and the
+     * process dies with SIGTRAP, with no Kotlin exception and no crash report. It depended on
+     * which thread won, so launches failed intermittently.
+     */
     private fun observeOrientationChanges() {
-        NSNotificationCenter.defaultCenter.addObserverForName(
-            name = UIDeviceOrientationDidChangeNotification,
-            `object` = null,
-            queue = NSOperationQueue.mainQueue
-        ) { _ ->
-            updateVideoOrientation()
+        val setup = {
+            NSNotificationCenter.defaultCenter.addObserverForName(
+                name = UIDeviceOrientationDidChangeNotification,
+                `object` = null,
+                queue = NSOperationQueue.mainQueue
+            ) { _ ->
+                updateVideoOrientation()
+            }
+            UIDevice.currentDevice.beginGeneratingDeviceOrientationNotifications()
         }
-        UIDevice.currentDevice.beginGeneratingDeviceOrientationNotifications()
+        if (platform.Foundation.NSThread.isMainThread) setup()
+        else platform.darwin.dispatch_async(platform.darwin.dispatch_get_main_queue()) { setup() }
     }
 
     private fun updateVideoOrientation() {
