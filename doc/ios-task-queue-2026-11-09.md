@@ -1,0 +1,158 @@
+# iOS task queue — assembled 2026-11-09
+
+**Status (2026-11-09):** **T0 done** — iOS Kotlin compiles; `iosSimulatorArm64Test` 973/973
+green after binding `SettingsRepository` in `shared/src/iosTest/.../PlatformTestKoin.ios.kt` (the
+proximity change, 084fa1a, made the iOS `HardwareService` inject it); Xcode Debug build for the
+iPhone 17 Pro simulator links and the app launches to the conversation list with the account
+online. T1 decisions taken (see T1); T1 implementation is next. Derived from reading `git diff 938e572..HEAD` (938e572 = 2026-10-31,
+the last iOS commit; HEAD = `e5af1df`, 2026-11-08). That range is 233 files / ~60 commits, almost
+all Android-side or shared Compose work. This file lists what iOS needs to keep up.
+
+**Key fact:** every Apple change in that range was written on a Linux host and has **never been
+compiled** (`doc/solo-task-queue-2026-11-08.md`: "iOS and macOS changes are uncompiled"). We are
+now on a Mac, so T0 is possible and comes first.
+
+## Resume here
+
+1. Run T0. Everything else assumes the iOS code compiles.
+2. T1 is decided (CallKit rings, silent swap for quiet hours, hide the ringtone row, D4 for
+   T2) — implement it.
+3. Then T2 → T7 in order. Tick items off in this file and note the commit hash, as
+   `solo-task-queue-2026-11-08.md` does.
+
+---
+
+## T0 — Compile and test the never-built Apple code *(first)*
+
+Files touched blind: `shared/src/iosMain/.../services/IOSNotificationService.kt`,
+`services/expect/HardwareService.kt` (proximity), `ui/platform/AppLanguage.ios.kt`,
+`ui/platform/BatteryOptimization.ios.kt`, `utils/PlatformLog.ios.kt`, `di/PlatformModule.ios.kt`.
+(macOS has the same set of new actuals but does not compile anyway — see `CLAUDE.md`.)
+
+- `./gradlew :shared:compileKotlinIosSimulatorArm64`
+- `./gradlew :shared:iosSimulatorArm64Test` — ~20 new `commonTest` files have never run on
+  Native (ReadMarkerTest, MentionsTest, MessageBodyTest, EmojiCatalogTest, ShippedLocalesTest,
+  StubDaemonEventsTest, NotificationGuardTest, NotificationChannelIdsTest, ProximityPolicyTest,
+  RingtonePolicyTest, BlockUnknownContactsTest, TrustRequestNotificationTest,
+  ConversationReadyBackfillTest, ContactDetailsViewModelTest, …).
+- Xcode simulator build that links the app, with an explicit arm64 destination
+  (`-destination 'platform=iOS Simulator,name=iPhone 17 Pro'`). A green Gradle link proves
+  nothing (`isStatic = true`). Run `python3 scripts/make_sim_links.py` first on a fresh checkout.
+
+**Done when:** compile clean, Native tests green (or failures recorded), app links and launches.
+
+## T1 — Who rings on iOS, and quiet hours for calls
+
+**Decided 2026-11-09 (Marco):**
+- **D1 — CallKit rings**, as jami-client-ios does (`Ring/Helpers/CallsHelper.swift:29`
+  `ringtoneSound = "default.wav"`; `Ring/Services/AccountsService.swift:412` creates accounts with
+  `Account.ringtoneEnabled = false`). Bundle the reference's `Ring/Resources/default.wav` (same
+  GPLv3 upstream), set `ringtoneSound` in `CallKitManager`, create iOS accounts with
+  `ringtoneEnabled=false`, **and** repair existing accounts to `false` (the reference never needs
+  the repair; ours were created with the daemon ringtone on).
+- **D2 — quiet hours: silent CallKit swap.** Before `reportNewIncomingCall` during quiet hours,
+  set `provider.configuration` with a silent `ringtoneSound`; restore after. Check that settings
+  are readable on a PushKit cold wake; if not, fall back to "calls follow Focus" and say so in
+  the setting's summary on iOS.
+- **D3 — hide the App Settings ringtone row on iOS** (the reference has no picker).
+- **D4 (applies to T2) — names hidden ⇒ CallKit shows a generic "Jami" caller and
+  `includesCallsInRecents = false`.**
+
+Background (written before the decision):
+
+- Android now bundles 11 `.opus` ringtones and repairs `Account.ringtonePath` so the daemon
+  rings (`ba917cb`, `59db588`; `AndroidRingtoneInstaller`, shared `RingtonePolicy`). Both commit
+  messages say "iOS needs its own ringtone provisioning."
+- iOS never sets `ringtonePath` (daemon logs "Ringtone … is not a valid file"); CallKit plays the
+  system ringtone.
+- **Quiet hours does nothing for iOS calls**: `IOSNotificationService` honours
+  `shouldSilenceCallNotification()`, but its RINGING path is skipped in favour of CallKit, which
+  rings regardless. Android's counterpart: `HardwareService.muteRingtoneIfSilenced()`.
+- **Recommendation:** CallKit rings — `CXProviderConfiguration.ringtoneSound` with a `.caf`
+  converted from `default.opus` (CallKit cannot play opus); disable the daemon ringtone on iOS
+  accounts (`ringtoneEnabled=false`) so it can never double-ring. For quiet hours, either mute
+  via `CallService.muteRingtone` / a silent CallKit update, or document that iOS Focus covers it.
+- The App Settings ringtone row is a no-op on iOS (`RingtoneLauncher.ios.kt`). Hide it or repoint
+  it — same open decision as Android (`59db588`, "left alone pending that decision").
+
+## T2 — CallKit caller identity (port of `e5af1df` items 3 and 4)
+
+- `CallKitManager.kt:~163` takes the name from `call.contact`. Likely the same placeholder from
+  `ContactService.getContactFromCache` that showed "d9f8c7f0bf76" on Android. Android now resolves
+  via `accountService.getAccount(accountId)?.getContactFromCache(uri)` (see the `e5af1df` diff of
+  `AndroidNotificationService.kt`). Verify on iOS, apply the same lookup.
+- The new "show names in notifications" setting (`b59976c`, `NotificationGuard.shouldShowNames()`)
+  does not reach CallKit: `localizedCallerName` and the `CXHandle` value expose the name on the
+  lock screen and in Phone → Recents. When names are hidden: generic title, and consider
+  `includesCallsInRecents = false`.
+
+## T3 — Sender avatars in iOS notifications
+
+Android notifications now carry the sender's name and avatar (`e5af1df` item 4, via
+`loadPeerAvatar()`). iOS equivalent: Communication Notifications — donate an
+`INSendMessageIntent` (and `INStartCallIntent` for missed calls) and update the content with
+`content.updating(from:)`. Needs the Communication Notifications entitlement in
+`ios-app/iosApp/iosApp.entitlements`. Must respect the hide-names setting.
+
+## T4 — Conversation shortcuts (port of `ce17110`)
+
+- iOS binds `NoConversationShortcuts` (`PlatformModule.ios.kt`). Write an iOS
+  `ConversationShortcutService` that publishes the publisher's four recent conversations as
+  dynamic `UIApplicationShortcutItem`s.
+- Handle the tap in `ios-app/iosApp/AppDelegate.swift` / `JamiApp.swift` (cold start and warm)
+  and route it through the new `OpenConversationState`, not `DeepLinkState` (which only pre-fills
+  search, by design).
+- T3's intent donations also give share-sheet suggestions for free.
+
+## T5 — Language picker on iOS (`fe5043d`)
+
+- Verify on the simulator that writing `AppleLanguages` makes Compose resources switch on next
+  launch, including strings fetched outside composition (notifications).
+- `Info.plist` `CFBundleLocalizations` has 124 entries, hand-maintained; `ShippedLocales.kt` is
+  generated by `scripts/generate_shipped_locales.py`. Make the script emit the plist list too, so
+  iOS Settings → Jami → Language matches the in-app list.
+
+## T6 — Contact-request notifications (`cbdfddf`)
+
+Check that Accept/Decline in `IOSNotificationDelegate.kt:~179-189` behave like Android's new
+`ACCEPT_REQUEST`/`DECLINE_REQUEST` (straight to the daemon), that the persisted "already
+notified" flag stops re-notifying after relaunch, and that an empty pending set removes the
+notification.
+
+## T7 — Lock-screen visibility setting *(small)*
+
+Private/Public/Secret is applied on Android only (`a838c8e`); the row still shows on iOS and does
+nothing. Hide it on iOS, or map "Secret" to `hiddenPreviewsBodyPlaceholder` on the notification
+categories.
+
+---
+
+## Simulator checks for shared changes (no code expected)
+
+- Chat: read markers (`b236634`), @mentions (`d40c6ac`), inline Markdown (`adede5c`), emoji
+  picker (`7e41471`) — check colour emoji render in the iOS Compose fonts.
+- Calls: incoming-direction fixes (`a36e5dc`, `c77dbec`) and "block unknown contacts"
+  (`d7367e4`) against `CallKitManager`, which reports only on `RINGING && isIncoming`.
+- Escaped apostrophes (`cfea231`), video gating (`eab16b9`), proximity on an audio call
+  (`084fa1a` — simulator has no sensor; just confirm no crash and that it turns off at hang-up).
+
+## Seen on the simulator, minor
+
+- `filter_unread` / `filter_groups` ("Unread", "Groups") have no German translation — KMP-only
+  keys, so nothing to import from the Android client.
+- The home empty-state subtitle ("Starten Sie eine neue Unterhaltung…") wraps left-aligned under
+  a centred title.
+
+## Not new, still open
+
+- The wrapper rebuild batch in `doc/apple-bridge-rebuild.md` (seven items: connectivity, call
+  recording, status note `publish`, `sendFile` parent, audio meter, moderator,
+  `createConfFromParticipantList`).
+- Notifications plan F2: 14 config signals missing in `DaemonBridge.ios.kt`. Android is complete;
+  iOS waits on the same rebuild.
+
+## Needs no iOS work
+
+Battery optimisation (no iOS equivalent; actual already returns `isSupported=false`), haptics
+(in-app part is shared; lock-screen answer is CallKit's), Android 14 screen-share fix,
+notification-channel fixes.
