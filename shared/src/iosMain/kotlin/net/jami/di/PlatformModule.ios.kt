@@ -133,7 +133,10 @@ actual val platformModule: Module get() = try {
         IOSNotificationService(
             settingsRepository = get(),
             notificationGuard = get(),
-            callKitManager = get()
+            callKitManager = get(),
+            accountService = get(),
+            contactService = get(),
+            vCardService = get(),
         )
     }
 

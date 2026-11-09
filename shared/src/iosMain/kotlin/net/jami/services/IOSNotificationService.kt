@@ -28,17 +28,12 @@ import platform.UserNotifications.*
 import net.jami.services.IOSNotificationDelegate
 
 // Extension functions for model properties
-private fun Call.getDisplayName(): String =
-    contact?.displayName ?: peerUri.uri
-
 private fun Call.getDaemonIdString(): String =
     daemonId ?: ""
 
-private fun Conference.getDisplayName(): String =
-    firstCall?.getDisplayName() ?: id
-
-private fun Conversation.getDisplayName(): String =
-    contact?.displayName ?: profileFlow.value.displayName?.takeIf { it.isNotEmpty() } ?: uri.uri
+// Safe for groups; see conversationTitle(). This used to read Conversation.contact, which
+// throws for a swarm of more than two, so every group message notification threw.
+private fun Conversation.getDisplayName(): String = conversationTitle(this)
 
 private fun Conversation.getLastMessage(): String? =
     lastEventFlow.value?.body
@@ -65,7 +60,24 @@ class IOSNotificationService(
     private val settingsRepository: SettingsRepository,
     private val notificationGuard: NotificationGuard,
     private val callKitManager: CallKitManagerApi,
+    private val accountService: AccountService,
+    private val contactService: ContactService,
+    vCardService: VCardService,
 ) : NotificationService {
+
+    private val communication = CommunicationNotifications(vCardService)
+
+    /**
+     * The caller's name, resolved the way CallKit does (T2, [resolveCallerName]) rather than
+     * from `call.contact`, a nameless placeholder for an incoming call — the missed-call text
+     * used to be the whole `jami:` URI.
+     */
+    private fun Call.getDisplayName(): String =
+        resolveCallerName(accountService.getAccount(account), contactService, this)
+            ?: peerUri.rawRingId.ifEmpty { peerUri.uri }
+
+    private fun Conference.getDisplayName(): String =
+        firstCall?.getDisplayName() ?: id
 
     private val notificationCenter = UNUserNotificationCenter.currentNotificationCenter()
 
@@ -313,10 +325,20 @@ class IOSNotificationService(
             if (!hiddenNames()) setBody(call.getDisplayName())
             setSound(UNNotificationSound.defaultSound())
         }
+        // The caller's photo in place of the app icon. Not with names hidden: the photo says
+        // who it was as plainly as the name does.
+        val shown = if (hiddenNames()) content else communication.forMissedCall(
+            content = content,
+            accountId = call.account,
+            contact = call.contact,
+            peerUri = call.peerUri,
+            callerName = call.getDisplayName(),
+            hadVideo = call.hasVideo(),
+        )
 
         val request = UNNotificationRequest.requestWithIdentifier(
             identifier = identifier,
-            content = content,
+            content = shown,
             trigger = null
         )
 
@@ -394,10 +416,15 @@ class IOSNotificationService(
             ))
             setThreadIdentifier(conversation.uri.uri) // For grouping notifications
         }
+        // The sender's photo and name as a Communication Notification. Not with names hidden:
+        // the photo identifies the sender as plainly as the name, and a donation would put the
+        // name into Siri and share-sheet suggestions too.
+        val shown = if (hiddenNames()) content
+            else communication.forMessage(content, conversation, lastMessage)
 
         val request = UNNotificationRequest.requestWithIdentifier(
             identifier = identifier,
-            content = content,
+            content = shown,
             trigger = null
         )
 

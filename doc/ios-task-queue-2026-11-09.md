@@ -4,7 +4,7 @@
 green after binding `SettingsRepository` in `shared/src/iosTest/.../PlatformTestKoin.ios.kt` (the
 proximity change, 084fa1a, made the iOS `HardwareService` inject it); Xcode Debug build for the
 iPhone 17 Pro simulator links and the app launches to the conversation list with the account
-online. **T1 done** (747e5e7). **T2 done** (see T2). T3 is next. Derived from reading `git diff 938e572..HEAD` (938e572 = 2026-10-31,
+online. **T1 done** (747e5e7). **T2 done** (5ae83d8). **T3 done** (see T3; needs a developer-portal step). T4 is next. Derived from reading `git diff 938e572..HEAD` (938e572 = 2026-10-31,
 the last iOS commit; HEAD = `e5af1df`, 2026-11-08). That range is 233 files / ~60 commits, almost
 all Android-side or shared Compose work. This file lists what iOS needs to keep up.
 
@@ -134,6 +134,39 @@ Android notifications now carry the sender's name and avatar (`e5af1df` item 4, 
 `INSendMessageIntent` (and `INStartCallIntent` for missed calls) and update the content with
 `content.updating(from:)`. Needs the Communication Notifications entitlement in
 `ios-app/iosApp/iosApp.entitlements`. Must respect the hide-names setting.
+
+**Implemented 2026-11-09** (branch `ios-catch-up-2026-11`):
+- `shared/src/iosMain/.../services/CommunicationNotifications.kt` (new): messages become an
+  `INSendMessageIntent` (sender `INPerson` with avatar; groups get `speakableGroupName`, the other
+  members as recipients and the conversation avatar), missed calls an `INStartCallIntent`; the
+  interaction is donated, then `contentByUpdatingWithProvider`. If iOS refuses (no entitlement),
+  the plain content is posted — never a lost notification. Skipped entirely while names are
+  hidden (the photo identifies as plainly as the name; a donation would also feed Siri/share
+  suggestions).
+- Avatar: in-memory profile, else `VCardService.loadPeerAvatar` (Android's order).
+- `IOSNotificationService`: missed-call/incoming-call names now go through `resolveCallerName`
+  (T2) instead of the placeholder `call.contact` — the missed-call body was the whole `jami:` URI.
+- **Crash fixed:** the iOS `Conversation.getDisplayName()` read `Conversation.contact`, which
+  throws for a group of more than two by design, so every group message notification and the
+  group-call notification threw. Now `conversationTitle()`.
+- `ios-app/iosApp/iosApp.entitlements`: `com.apple.developer.usernotifications.communication`.
+  `ios-app/iosApp/Info.plist`: `NSUserActivityTypes` = `INSendMessageIntent`, `INStartCallIntent`.
+- Tests: `CommunicationNotificationsTest` (iosTest).
+
+**Developer-portal step — Marco, needed before the next device or Release build:**
+1. developer.apple.com → Certificates, Identifiers & Profiles → **Identifiers** → the app's
+   App ID (team `K4K982LMZ9`) → Capabilities → tick **Communication Notifications** → Save.
+2. **Profiles** → regenerate `Jami-KMP-test` (device builds, see
+   `"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]"` in `project.pbxproj`) and the App Store
+   distribution profile used by `ios-app/fastlane`; download and install both (double-click, or
+   Xcode → Settings → Accounts → Download Manual Profiles).
+Until then device/Release codesign fails entitlement validation. Simulator builds are unaffected
+(verified: the entitlement is in `iosApp.app-Simulated.xcent`). If you need a device build before
+doing this, remove the two lines from the entitlements file — the code degrades to plain
+notifications on its own.
+
+Device check owed: a message and a missed call show the sender's photo; a group message shows the
+group style; with names hidden, neither photo nor name.
 
 ## T4 — Conversation shortcuts (port of `ce17110`)
 

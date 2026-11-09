@@ -16,5 +16,19 @@
 	     See doc/push-notifications.md. -->
 	<key>aps-environment</key>
 	<string>$(APS_ENVIRONMENT)</string>
+	<!-- Communication Notifications: messages and missed calls show the sender's
+	     photo and name instead of the app icon (CommunicationNotifications.kt).
+
+	     Like aps-environment, the signing profile must carry it: enable
+	     "Communication Notifications" on the App ID in the developer portal
+	     (Certificates, Identifiers & Profiles -> Identifiers -> the app ->
+	     Capabilities), then regenerate and reinstall the provisioning profiles
+	     (Jami-KMP-test for device builds, and the App Store one). Until then a
+	     device or Release build fails codesign entitlement validation.
+	     Simulator builds do not check it. Without the entitlement at runtime the
+	     notifications still arrive, just without the photo.
+	     See doc/ios-task-queue-2026-11-09.md, T3. -->
+	<key>com.apple.developer.usernotifications.communication</key>
+	<true/>
 </dict>
 </plist>
