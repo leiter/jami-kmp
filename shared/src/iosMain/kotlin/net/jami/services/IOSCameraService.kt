@@ -135,6 +135,16 @@ class IOSCameraService(
     // Orientation
     private var deviceOrientation: Int = 0
 
+    /**
+     * The capture orientation for the device's last real orientation, kept for reading off the
+     * main thread. `UIDevice.orientation` is main-thread-only UIKit state, but the camera is
+     * configured from `Dispatchers.IO` ([openCamera], [switchCamera]); reading it there is the
+     * same violation that crashed launches in 0012bca. Written only on the main thread, by
+     * [refreshVideoOrientation]. Declared before `init`, which may already write it.
+     */
+    @kotlin.concurrent.Volatile
+    private var videoOrientation: platform.AVFoundation.AVCaptureVideoOrientation = AVCaptureVideoOrientationPortrait
+
     init {
         enumerateCameras()
         observeOrientationChanges()
@@ -499,9 +509,11 @@ class IOSCameraService(
                 `object` = null,
                 queue = NSOperationQueue.mainQueue
             ) { _ ->
+                refreshVideoOrientation()
                 updateVideoOrientation()
             }
             UIDevice.currentDevice.beginGeneratingDeviceOrientationNotifications()
+            refreshVideoOrientation()
         }
         if (platform.Foundation.NSThread.isMainThread) setup()
         else platform.darwin.dispatch_async(platform.darwin.dispatch_get_main_queue()) { setup() }
@@ -520,14 +532,12 @@ class IOSCameraService(
         }
     }
 
-    private fun currentVideoOrientation(): platform.AVFoundation.AVCaptureVideoOrientation {
-        return when (UIDevice.currentDevice.orientation) {
-            UIDeviceOrientation.UIDeviceOrientationPortrait -> AVCaptureVideoOrientationPortrait
-            UIDeviceOrientation.UIDeviceOrientationPortraitUpsideDown -> AVCaptureVideoOrientationPortraitUpsideDown
-            UIDeviceOrientation.UIDeviceOrientationLandscapeLeft -> AVCaptureVideoOrientationLandscapeRight
-            UIDeviceOrientation.UIDeviceOrientationLandscapeRight -> AVCaptureVideoOrientationLandscapeLeft
-            else -> AVCaptureVideoOrientationPortrait
-        }
+    /** Safe from any thread: the cached value, never UIKit. */
+    private fun currentVideoOrientation(): platform.AVFoundation.AVCaptureVideoOrientation = videoOrientation
+
+    /** Main thread only. Keeps the last real orientation when the phone lies flat. */
+    private fun refreshVideoOrientation() {
+        captureOrientationFor(UIDevice.currentDevice.orientation)?.let { videoOrientation = it }
     }
 
     fun setDeviceOrientation(rotation: Int) {
@@ -594,7 +604,11 @@ class IOSCameraService(
     fun cleanup() {
         closeCamera()
         NSNotificationCenter.defaultCenter.removeObserver(this)
-        UIDevice.currentDevice.endGeneratingDeviceOrientationNotifications()
+        // Main thread, like its begin counterpart in observeOrientationChanges().
+        if (platform.Foundation.NSThread.isMainThread) UIDevice.currentDevice.endGeneratingDeviceOrientationNotifications()
+        else platform.darwin.dispatch_async(platform.darwin.dispatch_get_main_queue()) {
+            UIDevice.currentDevice.endGeneratingDeviceOrientationNotifications()
+        }
     }
 }
 
@@ -627,3 +641,18 @@ data class FrameEvent(
     val width: Int,
     val height: Int
 )
+
+/**
+ * The capture orientation for a device orientation, or null for one that says nothing about how
+ * the phone is held — face up, face down, unknown. The caller keeps its previous value then;
+ * this used to fall back to portrait, so a landscape phone laid on a table turned the outgoing
+ * video sideways. Landscape is mirrored between the two enums by Apple's definition.
+ */
+internal fun captureOrientationFor(orientation: UIDeviceOrientation): platform.AVFoundation.AVCaptureVideoOrientation? =
+    when (orientation) {
+        UIDeviceOrientation.UIDeviceOrientationPortrait -> AVCaptureVideoOrientationPortrait
+        UIDeviceOrientation.UIDeviceOrientationPortraitUpsideDown -> AVCaptureVideoOrientationPortraitUpsideDown
+        UIDeviceOrientation.UIDeviceOrientationLandscapeLeft -> AVCaptureVideoOrientationLandscapeRight
+        UIDeviceOrientation.UIDeviceOrientationLandscapeRight -> AVCaptureVideoOrientationLandscapeLeft
+        else -> null
+    }

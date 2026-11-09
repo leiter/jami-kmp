@@ -36,9 +36,14 @@ now on a Mac, so T0 is possible and comes first.
    `OutgoingCallKitTest`; **not exercised live** — placing a call needs UI taps the simulator
    session could not script. Check: place a call, lock the phone (system call UI), end it from the
    lock screen, see it in Phone → Recents.
-3. **Video-call orientation read off the main thread** — `IOSCameraService.currentVideoOrientation()`
-   reads `UIDevice.orientation` during camera setup; same class as the launch crash fixed in
-   `0012bca`.
+3. ~~**Video-call orientation read off the main thread**~~ — **fixed 2026-11-09**: `openCamera()`
+   and `switchCamera()` (both `Dispatchers.IO`) read `UIDevice.orientation` for the capture
+   connection. The orientation is now read only on the main thread (at setup and on every
+   change notification) into a `@Volatile` cache that camera setup reads from any thread;
+   `cleanup()`'s `endGeneratingDeviceOrientationNotifications()` is main-thread too. Also: a phone
+   lying flat (face up/down, unknown) keeps the last orientation instead of snapping the outgoing
+   video to portrait. `CaptureOrientationTest`; 3/3 launches, no violation logged. The capture
+   path itself needs a video call to exercise.
 4. **KMP-only strings are translated into German only** (`placeholder_search`,
    `home_no_conversation_*`, `action_new_conversation`, `filter_*`, …) — every other language
    shows an English home screen (T5).
