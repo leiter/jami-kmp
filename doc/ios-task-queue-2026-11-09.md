@@ -24,9 +24,8 @@ now on a Mac, so T0 is possible and comes first.
 
 ## Open after T0–T7
 
-1. **Developer portal (Marco):** enable *Communication Notifications* on the App ID and regenerate
-   `Jami-KMP-test` (the only device profile) — device/Release builds fail codesign until then.
-   Steps and the `fastlane check_signing` verification are in T3.
+1. ~~**Developer portal (Marco)**~~ — **done 2026-11-09**; `fastlane check_signing` confirms
+   `Jami-KMP-test` grants Communication Notifications (T3).
 2. ~~**Outgoing calls never reach CallKit**~~ — **fixed 2026-11-09**: `CallKitManager` now reports
    an outgoing call on its first live state (SEARCHING/CONNECTING/RINGING/CURRENT; Android does it
    at RINGING) through the existing `reportOutgoingCallStarted`, and implements the missing
@@ -189,7 +188,11 @@ Android notifications now carry the sender's name and avatar (`e5af1df` item 4, 
    both device Release builds and the App Store export (`ExportOptions.plist`); Debug builds are
    simulator-only.
 3. Verify: `cd ios-app && fastlane check_signing` — it now also checks this entitlement and says
-   "granted" / "NOT granted" (it said NOT granted on 2026-11-09, before the portal step).
+   "granted" / "NOT granted". **Done 2026-11-09 18:15:** capability enabled, profile regenerated
+   (`199b768a…`, created 2026-11-09T17:15Z) and installed; `check_signing` reports it granted
+   and the configuration consistent. (A distribution profile keeps its certificate's expiry,
+   2027-05-03, when regenerated. Three superseded copies are still installed; the lane now picks
+   the newest, as Xcode does — it used to pick the first in directory order and read a June copy.)
 Until then device/Release codesign fails entitlement validation. Simulator builds are unaffected
 (verified: the entitlement is in `iosApp.app-Simulated.xcent`). If you need a device build before
 doing this, remove the two lines from the entitlements file — the code degrades to plain

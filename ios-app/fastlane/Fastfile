@@ -84,14 +84,20 @@ platform :ios do
   # lane answers the same question in about a second.
   desc "Check the Release entitlements against the provisioning profile"
   lane :check_signing do
-    profile = Dir[File.expand_path("~/Library/Developer/Xcode/UserData/Provisioning Profiles/*.mobileprovision")]
-              .map  { |p| [p, `security cms -D -i "#{p}" 2>/dev/null`] }
-              .find { |_, xml| xml.include?("<string>#{PROFILE}</string>") }
+    # Every regeneration installs another file with the same name, and the old ones stay. Take
+    # the newest, as Xcode does: picking the first match in directory order read a copy from
+    # months earlier and reported an entitlement missing that the current profile grants.
+    candidates = Dir[File.expand_path("~/Library/Developer/Xcode/UserData/Provisioning Profiles/*.mobileprovision")]
+                 .map    { |p| [p, `security cms -D -i "#{p}" 2>/dev/null`] }
+                 .select { |_, xml| xml.include?("<string>#{PROFILE}</string>") }
+                 .map    { |p, xml| [p, Plist.parse_xml(xml)] }
 
     UI.user_error!("Provisioning profile '#{PROFILE}' is not installed. Open Xcode > Settings > " \
-                   "Accounts > Download Manual Profiles, or install it from the developer portal.") if profile.nil?
+                   "Accounts > Download Manual Profiles, or install it from the developer portal.") if candidates.empty?
 
-    plist = Plist.parse_xml(profile[1])
+    path, plist = candidates.max_by { |_, pl| pl["CreationDate"].to_time }
+    UI.message("Using '#{PROFILE}' created #{plist['CreationDate']} (#{File.basename(path)}; " \
+               "#{candidates.size} cop#{candidates.size == 1 ? 'y' : 'ies'} installed)")
     # ExpirationDate parses as a DateTime, which will not compare against a Time.
     expiry = plist["ExpirationDate"]&.to_time
     UI.user_error!("Profile '#{PROFILE}' expired on #{expiry}.") if expiry && expiry < Time.now
