@@ -26,8 +26,16 @@ now on a Mac, so T0 is possible and comes first.
 
 1. **Developer portal (Marco):** enable *Communication Notifications* on the App ID and regenerate
    `Jami-KMP-test` + the App Store profile — device/Release builds fail codesign until then (T3).
-2. **Outgoing calls never reach CallKit** — `CallKitManager.reportOutgoingCallStarted` has no
-   callers: no system call UI, no CallKit audio-session handling, no Recents entry (found in T2).
+2. ~~**Outgoing calls never reach CallKit**~~ — **fixed 2026-11-09**: `CallKitManager` now reports
+   an outgoing call on its first live state (SEARCHING/CONNECTING/RINGING/CURRENT; Android does it
+   at RINGING) through the existing `reportOutgoingCallStarted`, and implements the missing
+   `performStartCallAction` (reports connecting and fulfils — the daemon has already dialled; without
+   it CallKit fails the start action after its timeout). Group calls are named by the conversation;
+   one CallKit call at a time, so a conference's further legs are not reported. The CURRENT branch
+   no longer reports an answered *incoming* call as a connected outgoing one. Rule tested in
+   `OutgoingCallKitTest`; **not exercised live** — placing a call needs UI taps the simulator
+   session could not script. Check: place a call, lock the phone (system call UI), end it from the
+   lock screen, see it in Phone → Recents.
 3. **Video-call orientation read off the main thread** — `IOSCameraService.currentVideoOrientation()`
    reads `UIDevice.orientation` during camera setup; same class as the launch crash fixed in
    `0012bca`.
@@ -37,7 +45,7 @@ now on a Mac, so T0 is possible and comes first.
 5. **Device checks owed** (one iPhone session): CallKit tone on a locked phone and a silent
    quiet-hours call (T1); caller name, and "Jami" + no Recents with names hidden (T2); sender
    photos and group style (T3); quick actions cold and warm (T4); Accept from the lock screen with
-   the app killed (T6).
+   the app killed (T6); an outgoing call on CallKit (item 2).
 6. Not compiled on purpose (iOS focus): the desktop/macOS/web actuals of `hasRingtonePicker` and
    `appliesLockScreenVisibility` — one-line constants.
 

@@ -57,8 +57,10 @@ import platform.darwin.NSObject
  *   → [reportIncomingCall] → CXProvider shows the native incoming-call screen.
  * - User answers via system UI → [provider:performAnswerCallAction:] → callService.accept().
  * - User declines via system UI → [provider:performEndCallAction:] → callService.refuse().
- * - Outgoing: callService.call() → [reportOutgoingCallStarted] → system registers the call.
- * - Call connects → callUpdates(CURRENT) → [reportOutgoingCallConnected].
+ * - Outgoing: CallService.placeCall() has the daemon dial; the first callUpdates for the new
+ *   outgoing call → [registerOutgoingCall] → [reportOutgoingCallStarted] requests a
+ *   CXStartCallAction → performStartCallAction reports it connecting (it is not dialled again).
+ * - Outgoing call connects → callUpdates(CURRENT) → reportOutgoingCallWithUUID(connectedAt).
  * - Call ends → callUpdates(OVER) → CXProvider.reportCallWithUUID(ended).
  *
  * ## Audio session
@@ -216,6 +218,14 @@ class CallKitManager(
         val callId = call.daemonId ?: return
         val accountId = call.account
 
+        if (!call.isIncoming && call.callStatus in OUTGOING_LIVE_STATES && !callToUuid.containsKey(callId)) {
+            if (shouldReportOutgoing(call, callToUuid.keys, pushPending = pendingPush != null)) {
+                registerOutgoingCall(call, callId, accountId)
+            } else {
+                Log.d(TAG, "Outgoing $callId not reported: CallKit already holds a call")
+            }
+        }
+
         when (call.callStatus) {
             Call.CallStatus.RINGING -> {
                 if (call.isIncoming && !callToUuid.containsKey(callId)) {
@@ -233,9 +243,13 @@ class CallKitManager(
                 }
             }
             Call.CallStatus.CURRENT -> {
-                // Outgoing call connected — inform CallKit it is now live
-                callToUuid[callId]?.let { uuid ->
-                    provider.reportOutgoingCallWithUUID(uuid, connectedAtDate = null)
+                // Outgoing call connected — inform CallKit it is now live. Outgoing only: an
+                // answered incoming call is already live to CallKit through performAnswerCallAction,
+                // and this used to report it as a connected *outgoing* call as well.
+                if (!call.isIncoming) {
+                    callToUuid[callId]?.let { uuid ->
+                        provider.reportOutgoingCallWithUUID(uuid, connectedAtDate = null)
+                    }
                 }
             }
             Call.CallStatus.OVER -> {
@@ -368,8 +382,39 @@ class CallKitManager(
     }
 
     /**
-     * Register a new outgoing call with the system.
-     * Should be called by [CallService] when it places an outgoing call.
+     * Tell CallKit about an outgoing call the daemon has already placed.
+     *
+     * Nothing used to: [reportOutgoingCallStarted] existed and had no callers, so an outgoing
+     * call got no system call UI, no CallKit-managed audio session and no Phone → Recents entry.
+     * Android reports its outgoing calls to Telecom the same way, from the call's own update
+     * (`JamiTelecomManager.handleCallUpdate`). Reported on the first live state rather than at
+     * RINGING as Android does, so a call to an unreachable peer still shows and still lands in
+     * Recents.
+     *
+     * One CallKit call at a time ([maximumCallsPerCallGroup] is 1): a conference started from a
+     * participant list dials several outgoing calls, and only the first is reported — CallKit
+     * shows "the call", not each leg.
+     */
+    private fun registerOutgoingCall(call: Call, callId: String, accountId: String) {
+        val name = outgoingName(call)
+        applyConfigurationForNow()
+        reportOutgoingCallStarted(callId, accountId, name, call.hasVideo())
+    }
+
+    /** A group call is named by its conversation, a 1:1 call by the peer (as [resolveCallerName]). */
+    private fun outgoingName(call: Call): String {
+        val account = accountService.getAccount(call.account)
+        val conversationUri = call.conversationUri ?: call.peerUri.takeIf { it.isSwarm }
+        val conversation = conversationUri?.let { account?.getByUri(it) }
+        if (conversation != null && conversation.isGroup) return conversationTitle(conversation)
+        return resolveCallerName(account, contactService, call)
+            ?: call.peerUri.rawRingId.take(12).ifEmpty { call.peerUri.uri }
+    }
+
+    /**
+     * Register an outgoing call with the system: a CXStartCallAction, which CallKit answers in
+     * performStartCallAction. The caller name goes in a follow-up update, since a start action
+     * carries only a handle.
      */
     fun reportOutgoingCallStarted(callId: String, accountId: String, displayName: String, hasVideo: Boolean) {
         val uuid = NSUUID()
@@ -384,8 +429,13 @@ class CallKitManager(
         callController.requestTransaction(CXTransaction(action = startAction)) { error ->
             if (error != null) {
                 Log.e(TAG, "requestStartCallTransaction failed: ${error.localizedDescription}")
+                // The daemon call goes on; CallKit simply does not know about it.
+                uuidToCall.remove(uuid.UUIDString)
+                callToUuid.remove(callId)
+                callToAccount.remove(callId)
             } else {
                 Log.d(TAG, "Outgoing call registered: $callId uuid=${uuid.UUIDString}")
+                provider.reportCallWithUUID(uuid, updated = callUpdate(displayName, hasVideo))
             }
         }
     }
@@ -469,6 +519,29 @@ class CallKitManager(
         performEndCallAction.fulfill()
     }
 
+    /**
+     * CallKit's half of [reportOutgoingCallStarted]. The daemon has already dialled — the call
+     * was placed by CallService.placeCall() before CallKit heard of it — so this does not place
+     * anything: it reports the call as connecting and fulfils. Without this method the start
+     * action is never fulfilled and CallKit fails the call after its timeout.
+     */
+    override fun provider(provider: CXProvider, performStartCallAction: CXStartCallAction) {
+        val uuid = performStartCallAction.callUUID
+        if (!uuidToCall.containsKey(uuid.UUIDString)) {
+            Log.e(TAG, "performStartCallAction: unknown uuid=${uuid.UUIDString}")
+            performStartCallAction.fail()
+            return
+        }
+        val callId = uuidToCall[uuid.UUIDString]!!
+        provider.reportOutgoingCallWithUUID(uuid, startedConnectingAtDate = null)
+        performStartCallAction.fulfill()
+        // A call that connected before CallKit got round to this had its "connected" report
+        // ignored, since the start action was still pending; repeat it now, in order.
+        if (callService.getCall(callId)?.callStatus == Call.CallStatus.CURRENT) {
+            provider.reportOutgoingCallWithUUID(uuid, connectedAtDate = null)
+        }
+    }
+
     override fun provider(provider: CXProvider, performSetMutedCallAction: CXSetMutedCallAction) {
         val callId = uuidToCall[performSetMutedCallAction.callUUID.UUIDString]
         val accountId = callId?.let { callToAccount[it] }
@@ -512,6 +585,27 @@ private const val TAG = "CallKitManager"
  * Generous, because the daemon has to reconnect to the DHT from a cold background process.
  */
 private const val PUSH_CALL_TIMEOUT_MS = 25_000L
+
+/** States in which an outgoing call is alive and should be on CallKit. */
+private val OUTGOING_LIVE_STATES = setOf(
+    Call.CallStatus.SEARCHING,
+    Call.CallStatus.CONNECTING,
+    Call.CallStatus.RINGING,
+    Call.CallStatus.CURRENT,
+)
+
+/**
+ * Whether [call] is an outgoing call CallKit should be told about now: outgoing, in a live
+ * state, not already reported, and no other call on CallKit — neither a tracked one
+ * ([trackedCallIds]) nor a push placeholder ([pushPending]). One CallKit call at a time, so a
+ * conference's further legs are not reported.
+ */
+internal fun shouldReportOutgoing(call: Call, trackedCallIds: Set<String>, pushPending: Boolean): Boolean {
+    val callId = call.daemonId ?: return false
+    if (call.isIncoming || call.callStatus !in OUTGOING_LIVE_STATES) return false
+    if (callId in trackedCallIds) return false
+    return trackedCallIds.isEmpty() && !pushPending
+}
 
 /** The app's name: the provider's `localizedName`, and the caller shown while names are hidden. */
 private const val APP_NAME = "Jami"
