@@ -61,6 +61,7 @@ import net.jami.ui.platform.AppPermission
 import net.jami.ui.platform.PermissionRequesterEffect
 import net.jami.ui.platform.rememberBatteryOptimizationState
 import net.jami.ui.platform.RingtoneLauncherEffect
+import net.jami.ui.platform.appliesLockScreenVisibility
 import net.jami.ui.platform.hasRingtonePicker
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
@@ -307,36 +308,40 @@ fun AppSettingsScreen(
                 )
             }
 
-            SettingLabelRow(label = stringResource(Res.string.pref_notification_title))
-            Text(
-                text = stringResource(Res.string.pref_notification_summary),
-                style = JamiTheme.typography.bodySmall,
-                color = JamiTheme.colors.onSurfaceVariant,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
-                horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
-            ) {
-                JamiFilterChip(
-                    text = stringResource(Res.string.notification_visibility_private),
-                    selected = state.notificationVisibility == NotificationVisibility.PRIVATE,
-                    onClick = { viewModel.setNotificationVisibility(NotificationVisibility.PRIVATE) },
+            // Only where the platform applies it; see appliesLockScreenVisibility. On iOS the
+            // system's own "Show Previews" decides, and this row changed nothing.
+            if (appliesLockScreenVisibility) {
+                SettingLabelRow(label = stringResource(Res.string.pref_notification_title))
+                Text(
+                    text = stringResource(Res.string.pref_notification_summary),
+                    style = JamiTheme.typography.bodySmall,
+                    color = JamiTheme.colors.onSurfaceVariant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
                 )
-                JamiFilterChip(
-                    text = stringResource(Res.string.notification_visibility_public),
-                    selected = state.notificationVisibility == NotificationVisibility.PUBLIC,
-                    onClick = { viewModel.setNotificationVisibility(NotificationVisibility.PUBLIC) },
-                )
-                JamiFilterChip(
-                    text = stringResource(Res.string.notification_visibility_secret),
-                    selected = state.notificationVisibility == NotificationVisibility.SECRET,
-                    onClick = { viewModel.setNotificationVisibility(NotificationVisibility.SECRET) },
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
+                    horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+                ) {
+                    JamiFilterChip(
+                        text = stringResource(Res.string.notification_visibility_private),
+                        selected = state.notificationVisibility == NotificationVisibility.PRIVATE,
+                        onClick = { viewModel.setNotificationVisibility(NotificationVisibility.PRIVATE) },
+                    )
+                    JamiFilterChip(
+                        text = stringResource(Res.string.notification_visibility_public),
+                        selected = state.notificationVisibility == NotificationVisibility.PUBLIC,
+                        onClick = { viewModel.setNotificationVisibility(NotificationVisibility.PUBLIC) },
+                    )
+                    JamiFilterChip(
+                        text = stringResource(Res.string.notification_visibility_secret),
+                        selected = state.notificationVisibility == NotificationVisibility.SECRET,
+                        onClick = { viewModel.setNotificationVisibility(NotificationVisibility.SECRET) },
+                    )
+                }
             }
 
             HorizontalDivider()

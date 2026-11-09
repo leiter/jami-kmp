@@ -4,7 +4,7 @@
 green after binding `SettingsRepository` in `shared/src/iosTest/.../PlatformTestKoin.ios.kt` (the
 proximity change, 084fa1a, made the iOS `HardwareService` inject it); Xcode Debug build for the
 iPhone 17 Pro simulator links and the app launches to the conversation list with the account
-online. **T1 done** (747e5e7). **T2 done** (5ae83d8). **T3 done** (c09f7fb; needs a developer-portal step). **T4 done** (2c6866e). **T5 done** (7da11c8). **T6 done** (see T6). T7 is next. Derived from reading `git diff 938e572..HEAD` (938e572 = 2026-10-31,
+online. **T1 done** (747e5e7). **T2 done** (5ae83d8). **T3 done** (c09f7fb; needs a developer-portal step). **T4 done** (2c6866e). **T5 done** (7da11c8). **T6 done** (aa1b644). **T7 done** (see T7). Queue complete; open follow-ups below. Derived from reading `git diff 938e572..HEAD` (938e572 = 2026-10-31,
 the last iOS commit; HEAD = `e5af1df`, 2026-11-08). That range is 233 files / ~60 commits, almost
 all Android-side or shared Compose work. This file lists what iOS needs to keep up.
 
@@ -270,6 +270,15 @@ violation logged. Still open, same class: `currentVideoOrientation()` reads
 Private/Public/Secret is applied on Android only (`a838c8e`); the row still shows on iOS and does
 nothing. Hide it on iOS, or map "Secret" to `hiddenPreviewsBodyPlaceholder` on the notification
 categories.
+
+**Done 2026-11-09** (branch `ios-catch-up-2026-11`): hidden. Mapping "Secret" to
+`hiddenPreviewsBodyPlaceholder` was rejected — that only supplies placeholder text for when the
+*system* hides previews; whether content shows on the lock screen is iOS's per-app
+*Settings → Notifications → Show Previews*, which no app can override, so the mapping would still
+be a setting that does not do what it says. New `appliesLockScreenVisibility` expect/actual (true
+on Android only) gates the block in `AppSettingsScreen`; desktop/macOS/web lose it too, where it
+was equally inert. On iOS the cross-platform "show names in notifications" setting (T2/T3) is what
+keeps names and photos off notifications. iOS and Android compile; no Swift or resource change.
 
 ---
 
