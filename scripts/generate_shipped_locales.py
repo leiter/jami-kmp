@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Regenerates the shipped-locale list from the composeResources values-* folders.
 
-Two outputs, both committed:
+Three outputs, all committed:
   shared/src/commonMain/kotlin/net/jami/ui/platform/ShippedLocales.kt
   android-app/src/androidMain/res/xml/locales_config.xml
+  ios-app/iosApp/Info.plist  (only its CFBundleLocalizations array)
 
 Run it after adding or removing a locale folder. Keeping the list generated rather than
 hand-written is the point: a translation that ships but is missing from the picker is
@@ -11,6 +12,7 @@ invisible, and so is one in the picker that does not exist.
 """
 import pathlib
 import re
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RES = ROOT / "shared/src/commonMain/composeResources"
@@ -70,4 +72,21 @@ xml.write_text(
     + "".join(f'    <locale android:name="{t}" />\n' for t in tags)
     + '</locale-config>\n'
 )
+# iOS: CFBundleLocalizations tells iOS which languages the app has. It decides the languages
+# Settings -> Jami -> Language offers, and which of the user's preferred languages iOS will
+# resolve the app to — including the AppleLanguages override AppLanguage.ios.kt writes. A
+# language missing here is one the in-app picker can select and iOS then ignores.
+# Only that one array is rewritten, in place: the rest of Info.plist carries comments that a
+# plistlib round-trip would drop.
+plist = ROOT / "ios-app/iosApp/Info.plist"
+text = plist.read_text()
+pattern = re.compile(r"(\t<key>CFBundleLocalizations</key>\n\t<array>\n)(.*?)(\t</array>\n)", re.S)
+if not pattern.search(text):
+    sys.exit(f"{plist}: no CFBundleLocalizations array found; add an empty one and rerun")
+ios_tags = sorted(["en"] + tags)
+text = pattern.sub(
+    lambda m: m.group(1) + "".join(f"\t\t<string>{t}</string>\n" for t in ios_tags) + m.group(3),
+    text, count=1)
+plist.write_text(text)
+
 print(f"{len(tags)} locales written")
