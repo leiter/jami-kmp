@@ -102,6 +102,18 @@ class SettingsRepository(
     /** Per-conversation settings */
     val conversationSettings: StateFlow<Map<String, ConversationSettings>> = _conversationSettings.asStateFlow()
 
+    private val _loadedAccountId = MutableStateFlow<String?>(null)
+    /**
+     * The account whose stored settings the flows above currently hold, or null while they hold
+     * defaults — before the first load, between an account switch and its load, and after
+     * [stopObserving].
+     *
+     * Lets a consumer tell "the user's setting" from "the default, because nothing has loaded
+     * yet". iOS copies some settings into `NSUserDefaults` for a VoIP-push cold start, and
+     * copying the defaults would overwrite the user's real values.
+     */
+    val loadedAccountId: StateFlow<String?> = _loadedAccountId.asStateFlow()
+
     // ==================== Account Observation ====================
 
     /**
@@ -148,6 +160,8 @@ class SettingsRepository(
     }
 
     private fun resetToDefaults() {
+        // First, so nothing sees the defaults below while this still names an account.
+        _loadedAccountId.value = null
         _meta.value = KmpMeta()
         _uiSettings.value = UiSettings()
         _privacySettings.value = PrivacySettings()
@@ -698,6 +712,9 @@ class SettingsRepository(
                     }.getOrDefault(emptyMap())
                 }
 
+                // Only if this is still the account being observed: a switch while the store
+                // was being read has already reset the flows and started another load.
+                if (currentAccountId == accountId) _loadedAccountId.value = accountId
                 Log.d(TAG, "Loaded settings for account $accountId")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load settings for account $accountId: ${e.message}")

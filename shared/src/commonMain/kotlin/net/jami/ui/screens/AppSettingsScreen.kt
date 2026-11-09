@@ -61,6 +61,7 @@ import net.jami.ui.platform.AppPermission
 import net.jami.ui.platform.PermissionRequesterEffect
 import net.jami.ui.platform.rememberBatteryOptimizationState
 import net.jami.ui.platform.RingtoneLauncherEffect
+import net.jami.ui.platform.hasRingtonePicker
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import net.jami.di.getViewModel
@@ -296,12 +297,15 @@ fun AppSettingsScreen(
                 checked = state.isQuietHours,
                 onCheckedChange = { viewModel.toggleQuietHours() },
             )
-            RingtoneRow(
-                label = stringResource(Res.string.pref_ringtone_title),
-                ringtoneUri = state.ringtone,
-                defaultLabel = stringResource(Res.string.pref_ringtone_default),
-                onClick = { showRingtonePicker = true },
-            )
+            // Hidden where there is no picker to open, rather than offered and doing nothing.
+            if (hasRingtonePicker) {
+                RingtoneRow(
+                    label = stringResource(Res.string.pref_ringtone_title),
+                    ringtoneUri = state.ringtone,
+                    defaultLabel = stringResource(Res.string.pref_ringtone_default),
+                    onClick = { showRingtonePicker = true },
+                )
+            }
 
             SettingLabelRow(label = stringResource(Res.string.pref_notification_title))
             Text(

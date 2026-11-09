@@ -103,22 +103,8 @@ class NotificationGuard(
      * @param settings NotificationSettings containing quiet hours config
      * @return true if currently in quiet hours period
      */
-    private fun isInQuietHours(settings: NotificationSettings): Boolean {
-        if (!settings.quietHoursEnabled) return false
-
-        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        val currentMinutes = now.hour * 60 + now.minute
-        val start = settings.quietHoursStart
-        val end = settings.quietHoursEnd
-
-        return if (start < end) {
-            // Normal range (e.g., 08:00 to 22:00)
-            currentMinutes in start until end
-        } else {
-            // Wraps midnight (e.g., 23:00 to 07:00)
-            currentMinutes >= start || currentMinutes < end
-        }
-    }
+    private fun isInQuietHours(settings: NotificationSettings): Boolean =
+        QuietHours.isActiveNow(settings.quietHoursEnabled, settings.quietHoursStart, settings.quietHoursEnd)
 
     /**
      * What the sound settings add up to: off, the platform default, or a chosen URI.
@@ -167,5 +153,38 @@ class NotificationGuard(
      */
     fun getLedColor(): Int {
         return settingsRepository.notificationSettings.value.ledColor
+    }
+}
+
+/**
+ * The quiet-hours window as a pure rule, so it can be asked without a [SettingsRepository].
+ *
+ * iOS needs that: a call woken by a VoIP push must be reported to CallKit before the daemon
+ * has loaded any account, so it reads a copy of the window from `NSUserDefaults` rather than
+ * the repository (see `IOSCallRinging`).
+ */
+object QuietHours {
+
+    /**
+     * Whether [minuteOfDay] (0 until 1440) falls inside the window from [start] to [end], both
+     * minutes of the day. Handles midnight wraparound (e.g. 23:00 to 07:00); [end] itself is
+     * outside the window.
+     */
+    fun isActive(enabled: Boolean, start: Int, end: Int, minuteOfDay: Int): Boolean {
+        if (!enabled) return false
+        return if (start < end) {
+            // Normal range (e.g., 08:00 to 22:00)
+            minuteOfDay in start until end
+        } else {
+            // Wraps midnight (e.g., 23:00 to 07:00)
+            minuteOfDay >= start || minuteOfDay < end
+        }
+    }
+
+    /** [isActive] for the current local time. */
+    fun isActiveNow(enabled: Boolean, start: Int, end: Int): Boolean {
+        if (!enabled) return false
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        return isActive(enabled, start, end, now.hour * 60 + now.minute)
     }
 }

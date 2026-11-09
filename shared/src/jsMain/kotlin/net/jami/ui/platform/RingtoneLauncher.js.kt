@@ -2,6 +2,8 @@ package net.jami.ui.platform
 
 import androidx.compose.runtime.Composable
 
+actual val hasRingtonePicker: Boolean = false
+
 @Composable
 actual fun RingtoneLauncherEffect(
     show: Boolean,

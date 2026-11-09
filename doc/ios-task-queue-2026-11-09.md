@@ -58,6 +58,29 @@ Files touched blind: `shared/src/iosMain/.../services/IOSNotificationService.kt`
 - **D4 (applies to T2) — names hidden ⇒ CallKit shows a generic "Jami" caller and
   `includesCallsInRecents = false`.**
 
+**Implemented 2026-11-09** (branch `ios-catch-up-2026-11`):
+- `shared/src/iosMain/.../services/IOSCallRinging.kt` (new, started from `JamiLifecycle.start()`
+  before accounts load): switches `Account.ringtoneEnabled` off on every account the daemon lists,
+  re-run whenever the account set changes (so new accounts too), also updating the in-memory
+  `Account.details`; mirrors the quiet-hours window into `NSUserDefaults`, **only** once
+  `SettingsRepository.loadedAccountId` names an account, so defaults never overwrite it.
+  `ringtoneSoundNow()` reads the mirror synchronously — usable from the PushKit handler.
+- `CallKitManager`: configuration built per sound, `ringtoneSound` set; `applyRingtoneForNow()`
+  before both `reportNewIncomingCall` sites (daemon path and push path) swaps between
+  `default.wav` and `silence.wav`.
+- `ios-app/iosApp/default.wav` (jami-client-ios's file, converted from 32-bit stereo 48 kHz,
+  12 MB, to 16-bit mono 44.1 kHz, 2.9 MB; 32.4 s like the original) and `silence.wav` (1 s),
+  both Resources of the app target in `project.pbxproj`.
+- Common: `QuietHours` (pure rule, extracted from `NotificationGuard`),
+  `SettingsRepository.loadedAccountId`, `hasRingtonePicker` expect/actual (true on Android only)
+  — the App Settings ringtone row is now hidden on iOS, **and on desktop/macOS/web**, where the
+  picker was equally a no-op.
+- Tests: `QuietHoursTest`, `SettingsLoadedAccountTest` (common), `IOSCallRingingTest` (iosTest).
+
+Device checks owed (simulator cannot prove them): the tone actually rings from CallKit on a
+locked phone; a quiet-hours call shows but stays silent; whether it still vibrates is iOS's own
+haptics setting and is not ours to control.
+
 Background (written before the decision):
 
 - Android now bundles 11 `.opus` ringtones and repairs `Account.ringtonePath` so the daemon

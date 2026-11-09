@@ -41,6 +41,7 @@ private object JamiLifecycle : KoinComponent {
     private val syncManager: SyncManager by inject()
     private val contactService: ContactService by inject()
     private val sendQueue: net.jami.services.SendQueueService by inject()
+    private val callRinging: net.jami.services.IOSCallRinging by inject()
 
     fun start() {
         try {
@@ -49,6 +50,9 @@ private object JamiLifecycle : KoinComponent {
                     // Listen before accounts load, so held messages are sent after the first
                     // smartlist load (durable outbox, SendQueueService).
                     sendQueue.start()
+                    // Before accounts load, so the first account list already gets the daemon
+                    // ringtone switched off (CallKit rings on iOS).
+                    callRinging.start()
                     accountService.loadAccountsFromDaemon(isConnected = true)
                     // Feeds real network state into connectivityChanged, which
                     // AccountService collects to drive setAccountsActive().

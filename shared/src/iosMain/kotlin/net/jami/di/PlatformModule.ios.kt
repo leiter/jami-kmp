@@ -101,6 +101,18 @@ actual val platformModule: Module get() = try {
      * CallKit integration — reports incoming/outgoing calls to the iOS native call UI
      * and handles user actions (answer, decline, mute, hold) from the system.
      */
+    // CallKit rings, never the daemon; also mirrors quiet hours for PushKit cold starts.
+    single {
+        net.jami.services.IOSCallRinging(
+            accountService = get(),
+            daemonBridge = get(),
+            settingsRepository = get(),
+            scope = kotlinx.coroutines.CoroutineScope(
+                kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default
+            ),
+        )
+    }
+
     single<CallKitManagerApi> {
         CallKitManagerWrapper(CallKitManager(callService = get()))
     }

@@ -132,16 +132,42 @@ class CallKitManager(
 
     private var pendingPush: PendingPushCall? = null
 
-    init {
-        // localizedName is shown on the lock screen and in the system call UI; the
-        // no-argument initialiser leaves it blank, so the incoming-call screen had no
-        // app name on it.
-        val config = CXProviderConfiguration(localizedName = "Jami").apply {
+    /** The `ringtoneSound` the provider is configured with right now; see [applyRingtoneForNow]. */
+    private var currentRingtoneSound: String = IOSCallRinging.ringtoneSoundNow()
+
+    /**
+     * Built here rather than once, because quiet hours swap [ringtoneSound] per call.
+     *
+     * localizedName is shown on the lock screen and in the system call UI; the no-argument
+     * initialiser leaves it blank, so the incoming-call screen had no app name on it.
+     */
+    private fun providerConfiguration(ringtoneSound: String) =
+        CXProviderConfiguration(localizedName = "Jami").apply {
             supportsVideo = true
             maximumCallsPerCallGroup = 1u
             supportedHandleTypes = setOf(CXHandleTypeGeneric)
+            // CallKit rings, not the daemon (IOSCallRinging): the file must be in the main
+            // bundle, which is why both sounds are resources of the app target.
+            this.ringtoneSound = ringtoneSound
         }
-        provider = CXProvider(configuration = config)
+
+    /**
+     * Swap in the silent ringtone inside quiet hours, and back out of it after, right before a
+     * call is reported. CallKit reads the configuration when a call is reported, so changing it
+     * here affects exactly the call about to ring. Called from both the daemon path and the
+     * PushKit path, which is why the window comes from [IOSCallRinging.ringtoneSoundNow] and not
+     * from the settings repository.
+     */
+    private fun applyRingtoneForNow() {
+        val sound = IOSCallRinging.ringtoneSoundNow()
+        if (sound == currentRingtoneSound) return
+        provider.configuration = providerConfiguration(sound)
+        currentRingtoneSound = sound
+        Log.d(TAG, "CallKit ringtone now $sound")
+    }
+
+    init {
+        provider = CXProvider(configuration = providerConfiguration(currentRingtoneSound))
         provider.setDelegate(this, queue = null)
         observeCallUpdates()
     }
@@ -207,6 +233,7 @@ class CallKitManager(
             this.hasVideo = hasVideo
         }
 
+        applyRingtoneForNow()
         provider.reportNewIncomingCallWithUUID(uuid, update = update) { error ->
             if (error != null) {
                 Log.e(TAG, "reportNewIncomingCall failed: ${error.localizedDescription}")
@@ -249,6 +276,7 @@ class CallKitManager(
             this.hasVideo = hasVideo
         }
 
+        applyRingtoneForNow()
         provider.reportNewIncomingCallWithUUID(uuid, update = update) { error ->
             if (error != null) {
                 Log.e(TAG, "reportNewIncomingCall (push) failed: ${error.localizedDescription}")

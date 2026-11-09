@@ -9,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import net.jami.utils.PendingActivityResultTracker
 
+actual val hasRingtonePicker: Boolean = true
+
 @Composable
 actual fun RingtoneLauncherEffect(
     show: Boolean,
