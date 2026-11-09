@@ -124,9 +124,9 @@ actual val platformModule: Module get() = try {
      * Uses UNUserNotificationCenter for local notifications.
      * Enforces NotificationSettings via NotificationGuard.
      */
-    // No launcher shortcuts on this platform; the publisher writes to a sink.
+    // Recent conversations as home-screen quick actions (long-press the app icon).
     single<net.jami.services.ConversationShortcutService> {
-        net.jami.services.NoConversationShortcuts
+        net.jami.services.IOSConversationShortcuts()
     }
 
     single<NotificationService> {

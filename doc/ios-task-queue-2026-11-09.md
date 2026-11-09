@@ -4,7 +4,7 @@
 green after binding `SettingsRepository` in `shared/src/iosTest/.../PlatformTestKoin.ios.kt` (the
 proximity change, 084fa1a, made the iOS `HardwareService` inject it); Xcode Debug build for the
 iPhone 17 Pro simulator links and the app launches to the conversation list with the account
-online. **T1 done** (747e5e7). **T2 done** (5ae83d8). **T3 done** (see T3; needs a developer-portal step). T4 is next. Derived from reading `git diff 938e572..HEAD` (938e572 = 2026-10-31,
+online. **T1 done** (747e5e7). **T2 done** (5ae83d8). **T3 done** (c09f7fb; needs a developer-portal step). **T4 done** (see T4). T5 is next. Derived from reading `git diff 938e572..HEAD` (938e572 = 2026-10-31,
 the last iOS commit; HEAD = `e5af1df`, 2026-11-08). That range is 233 files / ~60 commits, almost
 all Android-side or shared Compose work. This file lists what iOS needs to keep up.
 
@@ -177,6 +177,28 @@ group style; with names hidden, neither photo nor name.
   and route it through the new `OpenConversationState`, not `DeepLinkState` (which only pre-fills
   search, by design).
 - T3's intent donations also give share-sheet suggestions for free.
+
+**Implemented 2026-11-09** (branch `ios-catch-up-2026-11`):
+- `shared/src/iosMain/.../services/IOSConversationShortcuts.kt` (new) replaces
+  `NoConversationShortcuts`: the shared `ConversationShortcutPublisher`'s four recent
+  conversations become `UIApplication.shortcutItems`, set on the main queue. Quick actions take
+  only a system symbol or template image, so every item shows `message.fill`, not the avatar.
+- The publisher is started from `JamiLifecycle.start()`, as Android starts it from
+  `JamiApplication`.
+- Taps: `SceneDelegate` in `ios-app/iosApp/AppDelegate.swift` (handed to SwiftUI's scene via
+  `configurationForConnecting`) covers both the cold launch (`connectionOptions.shortcutItem`)
+  and the warm tap (`windowScene(_:performActionFor:)`), calling
+  `openConversationShortcut(type:conversationId:)` → `OpenConversationState` with the bare id.
+- **Also:** tapping a *message* notification now opens its conversation (it only opened the
+  app); call and request notifications still just open the app.
+- Not done: share-sheet suggestions — T3 already donates `INSendMessageIntent`, but the app has
+  no share extension to receive the share, so nothing to wire yet.
+- Tests: `IOSConversationShortcutsTest` (new), `IOSNotificationDelegateTest` extended.
+
+Verified on the simulator: the window still renders with the scene delegate, and the publisher
+runs end to end ("Published 0 home-screen quick actions" — the test account has no
+conversations). Device/simulator-with-conversations check owed: long-press shows the four, and a
+tap opens the chat from both a cold and a warm start.
 
 ## T5 — Language picker on iOS (`fe5043d`)
 

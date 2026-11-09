@@ -63,6 +63,7 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
                 conversationId = userInfo[KEY_CONVERSATION_ID] as? String,
                 replyText = replyText,
                 actions = serviceActions,
+                categoryIdentifier = request.content.categoryIdentifier,
             )
             if (dismiss) {
                 center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
@@ -110,6 +111,13 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
             conversationFacade.acceptRequest(conversation)
         }
 
+        override fun openConversation(conversationId: String) {
+            Log.d(TAG, "Notification opened conversation $conversationId")
+            net.jami.ui.navigation.OpenConversationState.request(
+                net.jami.model.Uri.fromString(conversationId).rawRingId
+            )
+        }
+
         override suspend fun declineRequest(accountId: String, conversationId: String) {
             Log.d(TAG, "Declining trust request: $conversationId")
             conversationFacade.discardRequest(accountId, Uri.fromString(conversationId))
@@ -134,6 +142,8 @@ internal interface NotificationActions {
     suspend fun markRead(accountId: String, conversationId: String)
     suspend fun acceptRequest(accountId: String, conversationId: String)
     suspend fun declineRequest(accountId: String, conversationId: String)
+    /** Opens the chat; tapping a message notification. */
+    fun openConversation(conversationId: String)
 }
 
 /**
@@ -148,6 +158,7 @@ internal suspend fun dispatchNotificationAction(
     conversationId: String?,
     replyText: String?,
     actions: NotificationActions,
+    categoryIdentifier: String? = null,
 ): Boolean {
     // Every action is account-scoped; without an accountId there is nothing to act on.
     if (accountId == null) {
@@ -191,7 +202,15 @@ internal suspend fun dispatchNotificationAction(
             actions.declineRequest(accountId, conversationId)
             true
         }
-        UNNotificationDefaultActionIdentifier -> false
+        UNNotificationDefaultActionIdentifier -> {
+            // Tapping a message notification opens its conversation, as on Android, rather than
+            // just the app. Only messages: a call is CallKit's to present, and a request's
+            // conversation does not exist until it is accepted.
+            if (categoryIdentifier == IOSNotificationService.CATEGORY_MESSAGE && conversationId != null) {
+                actions.openConversation(conversationId)
+            }
+            false // the system removes a tapped notification itself
+        }
         UNNotificationDismissActionIdentifier -> false
         else -> {
             Log.w(TAG, "Unhandled action: $actionIdentifier")

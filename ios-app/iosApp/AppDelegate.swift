@@ -100,6 +100,19 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         IOSApplicationHelperKt.stopJami()
     }
 
+    /// Hands SwiftUI's window scene a delegate of ours, which is where iOS delivers a tapped
+    /// home-screen quick action; the app delegate's own `performActionFor` is not called once
+    /// the app uses scenes. SwiftUI still creates and owns the window.
+    func application(
+        _ application: UIApplication,
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+    ) -> UISceneConfiguration {
+        let configuration = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+        configuration.delegateClass = SceneDelegate.self
+        return configuration
+    }
+
     /// Flattens an APNs/PushKit payload to the `[String: String]` the daemon expects.
     private static func stringify(_ payload: [AnyHashable: Any]) -> [String: String] {
         var result = [String: String]()
@@ -182,6 +195,40 @@ extension AppDelegate: PKPushRegistryDelegate {
 }
 
 // MARK: - Helpers
+
+/// Receives home-screen quick actions — recent conversations published by
+/// IOSConversationShortcuts — and opens the conversation through the shared navigation.
+final class SceneDelegate: NSObject, UIWindowSceneDelegate {
+
+    /// Cold launch from a quick action: the item arrives with the connection options.
+    func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
+    ) {
+        if let item = connectionOptions.shortcutItem {
+            _ = SceneDelegate.open(item)
+        }
+    }
+
+    /// Quick action while the app is already running or suspended.
+    func windowScene(
+        _ windowScene: UIWindowScene,
+        performActionFor shortcutItem: UIApplicationShortcutItem,
+        completionHandler: @escaping (Bool) -> Void
+    ) {
+        completionHandler(SceneDelegate.open(shortcutItem))
+    }
+
+    private static func open(_ item: UIApplicationShortcutItem) -> Bool {
+        let conversationId = item.userInfo?["conversationId"] as? String
+        return IOSConversationShortcutsKt.openConversationShortcut(
+            type: item.type,
+            conversationId: conversationId
+        )
+    }
+}
+
 
 private extension AppDelegate {
 

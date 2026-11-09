@@ -42,6 +42,7 @@ private object JamiLifecycle : KoinComponent {
     private val contactService: ContactService by inject()
     private val sendQueue: net.jami.services.SendQueueService by inject()
     private val callRinging: net.jami.services.IOSCallRinging by inject()
+    private val shortcutPublisher: net.jami.services.ConversationShortcutPublisher by inject()
 
     fun start() {
         try {
@@ -53,6 +54,9 @@ private object JamiLifecycle : KoinComponent {
                     // Before accounts load, so the first account list already gets the daemon
                     // ringtone switched off (CallKit rings on iOS).
                     callRinging.start()
+                    // Recent conversations as home-screen quick actions, as Android publishes
+                    // launcher shortcuts from JamiApplication.
+                    shortcutPublisher.start()
                     accountService.loadAccountsFromDaemon(isConnected = true)
                     // Feeds real network state into connectivityChanged, which
                     // AccountService collects to drive setAccountsActive().

@@ -41,6 +41,9 @@ class IOSNotificationDelegateTest {
         override suspend fun declineRequest(accountId: String, conversationId: String) {
             calls += "declineRequest($accountId,$conversationId)"
         }
+        override fun openConversation(conversationId: String) {
+            calls += "openConversation($conversationId)"
+        }
     }
 
     private suspend fun dispatch(
@@ -50,7 +53,8 @@ class IOSNotificationDelegateTest {
         conversationId: String? = null,
         replyText: String? = null,
         actions: NotificationActions,
-    ) = dispatchNotificationAction(action, accountId, callId, conversationId, replyText, actions)
+        category: String? = null,
+    ) = dispatchNotificationAction(action, accountId, callId, conversationId, replyText, actions, category)
 
     @Test
     fun answerCallAcceptsTheCall() = runTest {
@@ -147,6 +151,35 @@ class IOSNotificationDelegateTest {
 
         assertTrue(actions.calls.isEmpty())
         assertFalse(dismiss)
+    }
+
+    @Test
+    fun tappingAMessageNotificationOpensItsConversation() = runTest {
+        val actions = RecordingActions()
+        val dismiss = dispatch(
+            platform.UserNotifications.UNNotificationDefaultActionIdentifier,
+            conversationId = CONVERSATION,
+            actions = actions,
+            category = IOSNotificationService.CATEGORY_MESSAGE,
+        )
+
+        assertEquals(listOf("openConversation($CONVERSATION)"), actions.calls)
+        assertFalse(dismiss)
+    }
+
+    @Test
+    fun tappingARequestOrCallNotificationOnlyOpensTheApp() = runTest {
+        val actions = RecordingActions()
+        for (category in listOf(IOSNotificationService.CATEGORY_REQUEST, IOSNotificationService.CATEGORY_CALL, null)) {
+            dispatch(
+                platform.UserNotifications.UNNotificationDefaultActionIdentifier,
+                conversationId = CONVERSATION,
+                actions = actions,
+                category = category,
+            )
+        }
+
+        assertTrue(actions.calls.isEmpty())
     }
 
     private companion object {
