@@ -25,7 +25,8 @@ now on a Mac, so T0 is possible and comes first.
 ## Open after T0–T7
 
 1. **Developer portal (Marco):** enable *Communication Notifications* on the App ID and regenerate
-   `Jami-KMP-test` + the App Store profile — device/Release builds fail codesign until then (T3).
+   `Jami-KMP-test` (the only device profile) — device/Release builds fail codesign until then.
+   Steps and the `fastlane check_signing` verification are in T3.
 2. ~~**Outgoing calls never reach CallKit**~~ — **fixed 2026-11-09**: `CallKitManager` now reports
    an outgoing call on its first live state (SEARCHING/CONNECTING/RINGING/CURRENT; Android does it
    at RINGING) through the existing `reportOutgoingCallStarted`, and implements the missing
@@ -181,12 +182,14 @@ Android notifications now carry the sender's name and avatar (`e5af1df` item 4, 
 - Tests: `CommunicationNotificationsTest` (iosTest).
 
 **Developer-portal step — Marco, needed before the next device or Release build:**
-1. developer.apple.com → Certificates, Identifiers & Profiles → **Identifiers** → the app's
-   App ID (team `K4K982LMZ9`) → Capabilities → tick **Communication Notifications** → Save.
-2. **Profiles** → regenerate `Jami-KMP-test` (device builds, see
-   `"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]"` in `project.pbxproj`) and the App Store
-   distribution profile used by `ios-app/fastlane`; download and install both (double-click, or
-   Xcode → Settings → Accounts → Download Manual Profiles).
+1. developer.apple.com → Certificates, IDs & Profiles → **Identifiers** → `net.jami.iosapp`
+   (team `K4K982LMZ9`) → tick **Communication Notifications** → Save → Confirm.
+2. **Profiles** → `Jami-KMP-test` → Edit → Save (regenerates it with the new capability) →
+   Download → double-click the `.mobileprovision`. This is the **only** device profile: it signs
+   both device Release builds and the App Store export (`ExportOptions.plist`); Debug builds are
+   simulator-only.
+3. Verify: `cd ios-app && fastlane check_signing` — it now also checks this entitlement and says
+   "granted" / "NOT granted" (it said NOT granted on 2026-11-09, before the portal step).
 Until then device/Release codesign fails entitlement validation. Simulator builds are unaffected
 (verified: the entitlement is in `iosApp.app-Simulated.xcent`). If you need a device build before
 doing this, remove the two lines from the entitlements file — the code degrades to plain

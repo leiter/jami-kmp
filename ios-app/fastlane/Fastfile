@@ -112,6 +112,21 @@ platform :ios do
                      "but '#{PROFILE}' grants #{profile_aps.inspect}. codesign will reject the archive.")
     end
 
+    # Every other entitlement the app requests must be granted by the profile as well. The
+    # Communication Notifications one (T3, sender photos on notifications) is the one that has
+    # been added without the profile following: the App ID needs the capability ticked and the
+    # profile regenerating, or codesign rejects the archive.
+    comm = "com.apple.developer.usernotifications.communication"
+    if File.read("../iosApp/iosApp.entitlements").include?(comm)
+      granted = plist.dig("Entitlements", comm) == true
+      UI.message("#{comm}: requested by the app, #{granted ? 'granted' : 'NOT granted'} by '#{PROFILE}'")
+      unless granted
+        UI.user_error!("'#{PROFILE}' does not grant Communication Notifications. In the developer portal " \
+                       "tick it on the App ID #{BUNDLE_ID}, then edit '#{PROFILE}', save it, download it and " \
+                       "double-click it. See doc/ios-task-queue-2026-11-09.md, T3.")
+      end
+    end
+
     UI.success("Signing configuration is consistent.")
   end
 

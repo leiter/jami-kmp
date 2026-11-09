@@ -22,8 +22,9 @@
 	     Like aps-environment, the signing profile must carry it: enable
 	     "Communication Notifications" on the App ID in the developer portal
 	     (Certificates, Identifiers & Profiles -> Identifiers -> the app ->
-	     Capabilities), then regenerate and reinstall the provisioning profiles
-	     (Jami-KMP-test for device builds, and the App Store one). Until then a
+	     Capabilities), then regenerate and reinstall the provisioning profile
+	     Jami-KMP-test (the only device profile; it also signs the App Store
+	     export). `fastlane check_signing` verifies it. Until then a
 	     device or Release build fails codesign entitlement validation.
 	     Simulator builds do not check it. Without the entitlement at runtime the
 	     notifications still arrive, just without the photo.
