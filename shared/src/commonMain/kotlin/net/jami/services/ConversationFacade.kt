@@ -677,7 +677,13 @@ class ConversationFacade(
         acceptRequest(conversation.accountId, conversation.uri)
     }
 
-    private fun acceptRequest(accountId: String, contactUri: Uri) {
+    /**
+     * Accept a request the account model may not have loaded yet, by its URI — a notification
+     * button pressed while the app was relaunched in the background (iOS). The overload taking
+     * a [Conversation] also moves its mode on; this one leaves that to the daemon's
+     * `conversationReady`, which the facade already handles.
+     */
+    fun acceptRequest(accountId: String, contactUri: Uri) {
         preferencesService.removeRequestPreferences(accountId, contactUri.rawRingId)
         accountService.acceptTrustRequest(accountId, contactUri)
         accountService.getAccount(accountId)?.let { refreshTrustRequestNotification(it) }

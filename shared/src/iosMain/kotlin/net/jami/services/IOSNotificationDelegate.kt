@@ -56,20 +56,29 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
         // Only the extraction from Objective-C happens here; the action mapping lives in
         // dispatchNotificationAction so it can be tested without a UNNotificationResponse.
         scope.launch {
-            val dismiss = dispatchNotificationAction(
-                actionIdentifier = actionIdentifier,
-                accountId = userInfo[KEY_ACCOUNT_ID] as? String,
-                callId = userInfo[KEY_CALL_ID] as? String,
-                conversationId = userInfo[KEY_CONVERSATION_ID] as? String,
-                replyText = replyText,
-                actions = serviceActions,
-                categoryIdentifier = request.content.categoryIdentifier,
-            )
-            if (dismiss) {
-                center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
+            try {
+                val dismiss = dispatchNotificationAction(
+                    actionIdentifier = actionIdentifier,
+                    accountId = userInfo[KEY_ACCOUNT_ID] as? String,
+                    callId = userInfo[KEY_CALL_ID] as? String,
+                    conversationId = userInfo[KEY_CONVERSATION_ID] as? String,
+                    replyText = replyText,
+                    actions = serviceActions,
+                    categoryIdentifier = request.content.categoryIdentifier,
+                )
+                if (dismiss) {
+                    center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
+                }
+            } finally {
+                // Only once the action has been handed to the daemon. A button pressed on the
+                // lock screen launches or wakes the app in the background, and iOS may suspend it
+                // as soon as this is called — calling it up front, as before, raced the work it
+                // was meant to cover.
+                platform.darwin.dispatch_async(platform.darwin.dispatch_get_main_queue()) {
+                    withCompletionHandler()
+                }
             }
         }
-        withCompletionHandler()
     }
 
     /** Binds the dispatch to the real services. */
@@ -104,7 +113,12 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
             val conversation = accountService.getAccount(accountId)
                 ?.getByUri(Uri.fromString(conversationId))
             if (conversation == null) {
-                Log.w(TAG, "Accept could not resolve conversation $conversationId")
+                // Typically a button pressed after the app was killed: iOS relaunches it in the
+                // background and the account's pending set has not loaded yet. The daemon knows
+                // the request regardless, so accept it by id, as Android does, rather than drop
+                // it — the notification is dismissed either way.
+                Log.d(TAG, "Accepting trust request by id (not loaded yet): $conversationId")
+                conversationFacade.acceptRequest(accountId, Uri.fromString(conversationId))
                 return
             }
             Log.d(TAG, "Accepting trust request: $conversationId")

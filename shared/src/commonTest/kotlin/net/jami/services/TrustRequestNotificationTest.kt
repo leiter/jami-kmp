@@ -35,6 +35,25 @@ import kotlin.test.assertTrue
  */
 class TrustRequestNotificationTest {
 
+    /**
+     * A notification button pressed after iOS relaunched a killed app in the background: the
+     * account has not loaded the request, so it is accepted by id. It must still reach the
+     * daemon, as the bare id, and clear the "already notified" flag so a later request from
+     * the same peer notifies again.
+     */
+    @Test
+    fun aRequestTheAccountHasNotLoadedIsAcceptedById() = runTest {
+        val stack = makeTestServiceStack(scope = this)
+        prepareAccountInService(stack.stub, stack.accountService)
+        stack.preferencesService.setRequestNotified(TEST_ACCOUNT_ID, CONVERSATION_ID)
+
+        stack.conversationFacade.acceptRequest(TEST_ACCOUNT_ID, Uri.fromString("swarm:$CONVERSATION_ID"))
+        advanceUntilIdle()
+
+        assertEquals(listOf(TEST_ACCOUNT_ID to CONVERSATION_ID), stack.stub.acceptedConversationRequests)
+        assertEquals(false, stack.preferencesService.hasRequestBeenNotified(TEST_ACCOUNT_ID, CONVERSATION_ID))
+    }
+
     @Test
     fun anIncomingRequestIsNotified() = runTest {
         val stack = makeTestServiceStack(scope = this)

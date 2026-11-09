@@ -456,19 +456,22 @@ class IOSNotificationService(
     // ==================== Trust Request Notifications ====================
 
     override fun showIncomingTrustRequestNotification(account: Account) {
-        // Check settings before showing
-        if (!notificationGuard.shouldShowRequestNotification()) {
-            Log.d(TAG, "Contact request notifications disabled in settings")
-            return
-        }
-
         val identifier = "request_${account.accountId}"
         val pending = account.getPending().toList()
+        // Before the settings check: a notification posted while requests were still notified
+        // must go once the last request is answered, even if the setting has been switched off
+        // since.
         if (pending.isEmpty()) {
             cancelTrustRequestNotification(account.accountId)
             Log.d(TAG, "No pending requests left; cancelled notification for ${account.accountId}")
             return
         }
+
+        if (!notificationGuard.shouldShowRequestNotification()) {
+            Log.d(TAG, "Contact request notifications disabled in settings")
+            return
+        }
+        val single = pending.singleOrNull()
 
         val content = UNMutableNotificationContent().apply {
             setTitle(runBlocking { getString(Res.string.new_invitation_request_title) })
@@ -476,7 +479,6 @@ class IOSNotificationService(
             // account.displayUsername — the *local* account's own name, which told the user
             // nothing about who was asking.
             setBody(runBlocking {
-                val single = pending.singleOrNull()
                 when {
                     // Names hidden: the count is not a name, so it still goes out.
                     hiddenNames() && single != null ->
@@ -485,13 +487,17 @@ class IOSNotificationService(
                     else -> getString(Res.string.invitation_message, pending.size)
                 }
             })
-            setCategoryIdentifier(CATEGORY_REQUEST)
+            // Accept and Decline only when there is exactly one request for them to act on, as
+            // on Android. The "N contact requests" summary carries no conversation, so its
+            // buttons did nothing — and as background actions they did not even open the app.
+            // Without a category it has no buttons, and a tap opens the app.
+            if (single != null) setCategoryIdentifier(CATEGORY_REQUEST)
             // Apply sound based on settings — the sound setting, not the vibration one; see
             // applySound().
             applySound(this)
             setUserInfo(buildMap<Any?, Any?> {
                 put(KEY_ACCOUNT_ID, account.accountId)
-                account.getPending().singleOrNull()?.let { put(KEY_CONVERSATION_ID, it.uri.uri) }
+                single?.let { put(KEY_CONVERSATION_ID, it.uri.uri) }
             })
         }
 

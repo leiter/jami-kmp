@@ -4,7 +4,7 @@
 green after binding `SettingsRepository` in `shared/src/iosTest/.../PlatformTestKoin.ios.kt` (the
 proximity change, 084fa1a, made the iOS `HardwareService` inject it); Xcode Debug build for the
 iPhone 17 Pro simulator links and the app launches to the conversation list with the account
-online. **T1 done** (747e5e7). **T2 done** (5ae83d8). **T3 done** (c09f7fb; needs a developer-portal step). **T4 done** (2c6866e). **T5 done** (see T5). T6 is next. Derived from reading `git diff 938e572..HEAD` (938e572 = 2026-10-31,
+online. **T1 done** (747e5e7). **T2 done** (5ae83d8). **T3 done** (c09f7fb; needs a developer-portal step). **T4 done** (2c6866e). **T5 done** (7da11c8). **T6 done** (see T6). T7 is next. Derived from reading `git diff 938e572..HEAD` (938e572 = 2026-10-31,
 the last iOS commit; HEAD = `e5af1df`, 2026-11-08). That range is 233 files / ~60 commits, almost
 all Android-side or shared Compose work. This file lists what iOS needs to keep up.
 
@@ -229,6 +229,31 @@ Check that Accept/Decline in `IOSNotificationDelegate.kt:~179-189` behave like A
 `ACCEPT_REQUEST`/`DECLINE_REQUEST` (straight to the daemon), that the persisted "already
 notified" flag stops re-notifying after relaunch, and that an empty pending set removes the
 notification.
+
+**Done 2026-11-09** (branch `ios-catch-up-2026-11`). Checked against Android's `cbdfddf`:
+- **Already at parity:** the "already notified" flag is persisted the same way on both (iOS binds
+  the same `SettingsPreferencesService`, NSUserDefaults-backed), so a relaunch does not re-notify;
+  the shared `TrustRequestNotificationTest` covers the dedupe and runs green on the iOS simulator.
+  An empty pending set cancels `request_<account>`. Accept/Decline end in the same daemon calls.
+- **Fixed — accept silently lost on a background relaunch:** iOS looked the request up in the
+  loaded account model first and gave up when it was not there — the normal state when a button is
+  pressed after the app was killed and iOS relaunches it in the background — while still
+  dismissing the notification. It now accepts by id through the newly public
+  `ConversationFacade.acceptRequest(accountId, uri)`, as Android goes straight to the daemon.
+- **Fixed — completion handler called before the work:** `didReceiveNotificationResponse` called
+  `withCompletionHandler()` right after launching the coroutine, so iOS could suspend a
+  background-launched app before reply / mark-read / accept / decline reached the daemon. It is now
+  called (on the main queue) once the action has been dispatched.
+- **Fixed — dead buttons on the summary:** with several pending requests the "N contact requests"
+  notification still had Accept/Decline (category `JAMI_REQUEST`) but no conversation, so they did
+  nothing, not even open the app (they are background actions). Now only a single request gets the
+  category; the summary has no buttons and a tap opens the app, as on Android.
+- Also: an emptied pending set now removes a stale notification even when request notifications
+  were switched off after it was posted.
+- Tests: `TrustRequestNotificationTest.aRequestTheAccountHasNotLoadedIsAcceptedById` (common; the
+  stub bridge now records `acceptConversationRequest`).
+
+Device check owed: Accept from the lock screen with the app killed; the summary has no buttons.
 
 ## T7 — Lock-screen visibility setting *(small)*
 

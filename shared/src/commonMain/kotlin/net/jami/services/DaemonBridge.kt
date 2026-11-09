@@ -1171,7 +1171,11 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> = emptyList()
 
     override fun getConversationRequests(accountId: String): List<Map<String, String>> = conversationRequests.toList()
-    override fun acceptConversationRequest(accountId: String, conversationId: String) {}
+    /** (accountId, conversationId) for every accepted request, in order, for tests to assert on. */
+    val acceptedConversationRequests = mutableListOf<Pair<String, String>>()
+    override fun acceptConversationRequest(accountId: String, conversationId: String) {
+        acceptedConversationRequests += accountId to conversationId
+    }
     override fun declineConversationRequest(accountId: String, conversationId: String) {}
 
     override fun getTrustRequests(accountId: String): List<Map<String, String>> = emptyList()
