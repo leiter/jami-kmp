@@ -406,7 +406,7 @@ Biometric or device authentication adds a convenient way to locally unlock acces
 
     <!-- Import / Export -->
     <string name="prompt_archive_path">Archive file path</string>
-    <string name="placeholder_archive_path">/path/to/backup.gz</string>
+    <string name="placeholder_archive_path" translatable="false">/path/to/backup.gz</string>
     <string name="dialog_export_title">Export Account</string>
     <string name="dialog_export_message">Enter your account password to create an encrypted backup.</string>
     <string name="action_export">Export</string>
