@@ -32,6 +32,40 @@
 static NSFileHandle *g_logFileHandle = nil;
 static NSDateFormatter *g_logDateFormatter = nil;
 static dispatch_queue_t g_logQueue = nil;
+/// Bytes written to the current log file (log queue only); see kMaxLogFileBytes.
+static unsigned long long g_logBytesWritten = 0;
+/// One file per launch used to pile up forever; and with the daemon's own log in it a file can
+/// grow by many megabytes per call. Keep this many files and cap each one.
+static const NSUInteger kLogFilesKept = 5;
+static const unsigned long long kMaxLogFileBytes = 20ull * 1024 * 1024;
+
+/// Deletes all but the newest kLogFilesKept native log files in `documentsPath`.
+static void pruneOldLogFiles(NSString *documentsPath) {
+    NSFileManager *fm = [NSFileManager defaultManager];
+    NSMutableArray<NSString *> *logs = [NSMutableArray array];
+    for (NSString *file in [fm contentsOfDirectoryAtPath:documentsPath error:nil]) {
+        if ([file hasPrefix:@"gettogether_native_"] && [file hasSuffix:@".log"]) [logs addObject:file];
+    }
+    // The timestamp in the name sorts chronologically.
+    [logs sortUsingSelector:@selector(compare:)];
+    while (logs.count > kLogFilesKept) {
+        [fm removeItemAtPath:[documentsPath stringByAppendingPathComponent:logs.firstObject] error:nil];
+        [logs removeObjectAtIndex:0];
+    }
+}
+
+/// Appends on the log queue; truncates the file instead of letting it grow past the cap.
+static void appendToLogFile(NSData *data) {
+    if (g_logBytesWritten + data.length > kMaxLogFileBytes) {
+        [g_logFileHandle truncateFileAtOffset:0];
+        g_logBytesWritten = 0;
+        NSData *marker = [@"[log truncated at size limit]\n" dataUsingEncoding:NSUTF8StringEncoding];
+        [g_logFileHandle writeData:marker];
+        g_logBytesWritten += marker.length;
+    }
+    [g_logFileHandle writeData:data];
+    g_logBytesWritten += data.length;
+}
 
 static void initFileLogger() {
     static dispatch_once_t onceToken;
@@ -51,6 +85,7 @@ static void initFileLogger() {
         NSString *logFilePath = [documentsPath stringByAppendingPathComponent:fileName];
 
         [[NSFileManager defaultManager] createFileAtPath:logFilePath contents:nil attributes:nil];
+        pruneOldLogFiles(documentsPath);
         g_logFileHandle = [NSFileHandle fileHandleForWritingAtPath:logFilePath];
 
         g_logDateFormatter = [[NSDateFormatter alloc] init];
@@ -67,6 +102,7 @@ static void initFileLogger() {
             [NSDate date]];
         NSData *data = [header dataUsingEncoding:NSUTF8StringEncoding];
         [g_logFileHandle writeData:data];
+        g_logBytesWritten += data.length;
         [g_logFileHandle synchronizeFile];
 
         NSLog(@"[FileLogger] Initialized at %@", logFilePath);
@@ -85,9 +121,22 @@ static void fileLog(const char* level, const char* tag, NSString *message) {
         NSString *timestamp = [g_logDateFormatter stringFromDate:[NSDate date]];
         NSString *line = [NSString stringWithFormat:@"[%@] %s/%s: %@\n", timestamp, level, tag, message];
         NSData *data = [line dataUsingEncoding:NSUTF8StringEncoding];
-        [g_logFileHandle writeData:data];
+        appendToLogFile(data);
         [g_logFileHandle synchronizeFile];
     });
+}
+
+/// One line of the daemon's own log (libjami's monitor stream) into the same file, so the
+/// in-app debug log carries it as Android's logcat capture does. Unlike fileLog: no NSLog (the
+/// daemon already logs to the console) and no fsync per line — the daemon can log hundreds of
+/// lines a second during a call. The line already carries the daemon's own timestamp.
+static void fileLogDaemonLine(const std::string& message) {
+    initFileLogger();
+    if (!g_logFileHandle) return;
+    std::string line = message;
+    if (line.empty() || line.back() != '\n') line.push_back('\n');
+    NSData *data = [NSData dataWithBytes:line.data() length:line.size()];
+    dispatch_async(g_logQueue, ^{ appendToLogFile(data); });
 }
 
 // Convenience macros for file logging
@@ -1752,13 +1801,31 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
             });
         }));
 
+    // The daemon's log stream (on while the monitor is, which initDaemon turns on for good).
+    // Every line goes to the log file the in-app debug log reads. The Kotlin side still gets
+    // them, but batched: at most one main-thread hop a second instead of one per line, which
+    // at the daemon's debug volume would have kept the main thread busy during calls.
     handlers.insert(exportable_callback<ConfigurationSignal::MessageSend>(
         [weakSelf](const std::string& message) {
-            NSString *messageNS = toNSString(message);
-            dispatch_async(dispatch_get_main_queue(), ^{
+            fileLogDaemonLine(message);
+            static std::mutex pendingMutex;
+            static std::string pending;
+            static bool flushScheduled = false;
+            std::lock_guard<std::mutex> lock(pendingMutex);
+            if (!pending.empty()) pending.push_back('\n');
+            pending += message;
+            if (flushScheduled) return;
+            flushScheduled = true;
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                std::string batch;
+                {
+                    std::lock_guard<std::mutex> lock(pendingMutex);
+                    batch.swap(pending);
+                    flushScheduled = false;
+                }
                 JamiBridgeWrapper *strongSelf = weakSelf;
-                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onDaemonMessageSend:)]) {
-                    [strongSelf.delegate onDaemonMessageSend:messageNS];
+                if (!batch.empty() && strongSelf && [strongSelf.delegate respondsToSelector:@selector(onDaemonMessageSend:)]) {
+                    [strongSelf.delegate onDaemonMessageSend:toNSString(batch)];
                 }
             });
         }));
@@ -1785,8 +1852,12 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
         }
     }
 
-    // Initialize with iOS flags
-    int flags = LIBJAMI_FLAG_CONSOLE_LOG | LIBJAMI_FLAG_IOS_EXTENSION;
+    // Initialize with iOS flags. DEBUG as in jami-client-ios DRingAdapter: without it the daemon
+    // drops its debug-level lines — request, conversation and connection traffic among them —
+    // and the debug log has nothing to diagnose a lost invitation with.
+    // (LIBJAMI_FLAG_IOS_EXTENSION is meant for the notification extension, not the app: it
+    // diverts incoming iOS call connections to CallConnectionRequest. Left as it was; to review.)
+    int flags = LIBJAMI_FLAG_DEBUG | LIBJAMI_FLAG_CONSOLE_LOG | LIBJAMI_FLAG_IOS_EXTENSION;
     FILE_LOG_I("JamiBridge", @"Calling libjami::init with flags=%d", flags);
 
     if (!libjami::init(static_cast<InitFlag>(flags))) {
@@ -1796,6 +1867,8 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
     FILE_LOG_I("JamiBridge", @"libjami::init() succeeded");
 
     [self registerSignalHandlers];
+    // Stream the daemon's log into the debug log file from now on (see MessageSend).
+    libjami::monitor(true);
     FILE_LOG_I("JamiBridge", @"Daemon initialized successfully");
 }
 
@@ -2574,7 +2647,9 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
 
 - (void)monitorDaemon:(BOOL)continuous {
     NSLog(@"[JamiBridge] monitor: %d", continuous);
-    libjami::monitor(continuous);
+    // Always continuous: a one-shot monitor(false) dumps the daemon's state and then switches
+    // its log stream off, which would silently end the debug log initDaemon started.
+    libjami::monitor(true);
 }
 
 - (NSArray<NSDictionary<NSString *, NSString *> *> *)connectionList:(NSString *)accountId
