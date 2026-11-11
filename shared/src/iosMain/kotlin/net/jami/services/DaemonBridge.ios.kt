@@ -27,11 +27,13 @@ import platform.Foundation.*
 import net.jami.services.expect.HardwareService
 import org.koin.mp.KoinPlatformTools
 import platform.darwin.NSObject
+import platform.AVFoundation.AVSampleBufferDisplayLayer
+import platform.CoreVideo.CVImageBufferRef
 
 /**
  * iOS implementation of DaemonBridge using JamiBridge Objective-C++ wrapper via cinterop.
  */
-actual class DaemonBridge() : DaemonBridgeApi {
+actual class DaemonBridge() : DaemonBridgeApi, IOSVideoFrameBridge {
     private var isInitialized = false
     private var callbacks: DaemonCallbacks? = null
     private val bridge: JamiBridgeWrapper = JamiBridgeWrapper.shared()
@@ -39,6 +41,14 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     companion object {
         private const val TAG = "DaemonBridge.iOS"
+
+        /** Capture preset IOSCameraService opens every camera with (AVCaptureSessionPreset1280x720). */
+        internal const val CAPTURE_WIDTH = 1280
+        internal const val CAPTURE_HEIGHT = 720
+        internal const val CAPTURE_RATE = 30
+
+        /** See [acquireNativeWindow]. */
+        private const val IOS_WINDOW_HANDLE = 1L
     }
 
     // ==================== Lifecycle ====================
@@ -774,7 +784,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
     // ==================== Video Device Management ====================
 
     override fun addVideoDevice(deviceId: String) {
-        bridge.addVideoDevice(deviceId)
+        // The daemon drops a device registered without capabilities, so the plain
+        // `addVideoDevice:` never made a camera usable. 1280x720@30 is the capture
+        // preset IOSCameraService opens every camera with.
+        bridge.addVideoDevice(deviceId, width = CAPTURE_WIDTH, height = CAPTURE_HEIGHT, rate = CAPTURE_RATE)
     }
 
     override fun removeVideoDevice(deviceId: String) {
@@ -796,7 +809,25 @@ actual class DaemonBridge() : DaemonBridgeApi {
     // ==================== Video Frame Capture ====================
 
     override fun captureVideoFrame(uri: String, data: ByteArray, rotation: Int) {
-        // TODO: Implement via JamiBridge cinterop
+        // Not used on iOS: frames go in without a copy through [writeOutgoingVideoFrame].
+        // This ByteArray overload is the Android JNI shape.
+    }
+
+    override fun writeOutgoingVideoFrame(pixelBuffer: CVImageBufferRef, angle: Int, videoInputId: String) {
+        bridge.writeOutgoingFrame(pixelBuffer, angle = angle, videoInputId = videoInputId)
+    }
+
+    override fun attachVideoLayer(sinkId: String, layer: AVSampleBufferDisplayLayer?) {
+        bridge.attachDisplayLayer(layer, toSink = sinkId)
+    }
+
+    override fun videoSinkSize(sinkId: String): Pair<Int, Int>? =
+        bridge.renderSizeForSink(sinkId).useContents {
+            if (width > 0 && height > 0) width.toInt() to height.toInt() else null
+        }
+
+    override fun layoutVideoLayer(layer: AVSampleBufferDisplayLayer) {
+        JamiBridgeWrapper.layoutDisplayLayer(layer)
     }
 
     override fun captureVideoPacket(
@@ -814,27 +845,26 @@ actual class DaemonBridge() : DaemonBridgeApi {
     // ==================== Native Window Management ====================
 
     override fun acquireNativeWindow(surface: Any): Long {
-        // TODO: Implement via JamiBridge cinterop
-        return 0L
+        // ANativeWindow is an Android concept. On iOS a sink is tied to its display layer
+        // by sink id ([attachVideoLayer]), so callers only need a non-zero "live" handle.
+        return IOS_WINDOW_HANDLE
     }
 
     override fun releaseNativeWindow(windowId: Long) {
-        // TODO: Implement via JamiBridge cinterop
+        // Nothing to release: see acquireNativeWindow.
     }
 
     override fun setNativeWindowGeometry(windowId: Long, width: Int, height: Int) {
-        // TODO: Implement via JamiBridge cinterop
+        // Layer geometry follows its view's layout pass on iOS.
     }
 
     // ==================== Video Callback Registration ====================
 
-    override fun registerVideoCallback(id: String, windowId: Long): Boolean {
-        // TODO: Implement via JamiBridge cinterop
-        return false
-    }
+    override fun registerVideoCallback(id: String, windowId: Long): Boolean =
+        bridge.registerSinkTarget(id, width = 0, height = 0)
 
     override fun unregisterVideoCallback(id: String, windowId: Long) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.removeSinkTarget(id)
     }
 
     // ==================== Video Input Switching ====================
@@ -1125,6 +1155,14 @@ private class JamiBridgeDelegateImpl(
 
     override fun onDecodingStopped(sinkId: String, shmPath: String, isMixer: Boolean) {
         hardwareService.decodingStopped(sinkId, shmPath, isMixer)
+    }
+
+    override fun onStartCapture(device: String) {
+        hardwareService.onDaemonStartCapture(device)
+    }
+
+    override fun onStopCapture(device: String) {
+        hardwareService.onDaemonStopCapture(device)
     }
 
     // Call Events

@@ -82,7 +82,7 @@ actual fun VideoSurface(
     ) {
         UIKitView(
             factory = {
-                val containerView = VideoContainerView().apply {
+                val containerView = VideoContainerView(hardwareService::layoutVideoLayer).apply {
                     backgroundColor = UIColor.blackColor
                     autoresizingMask = UIViewAutoresizingFlexibleWidth or UIViewAutoresizingFlexibleHeight
                 }
@@ -104,10 +104,11 @@ actual fun VideoSurface(
             },
             modifier = Modifier.fillMaxSize(),
             update = { view ->
-                // Update layer frame when view size changes
+                // Update layer geometry when view size changes. Through the bridge, not
+                // layer.frame: it also turns the layer by the rotation the frames carry.
                 displayLayer?.let { layer ->
+                    hardwareService.layoutVideoLayer(layer)
                     view.bounds.useContents {
-                        layer.frame = CGRectMake(0.0, 0.0, size.width, size.height)
                         if (size.width > 0 && size.height > 0) {
                             onSizeChanged(size.width.toInt(), size.height.toInt())
                         }
@@ -233,12 +234,18 @@ actual fun CameraPreview(
  * Custom UIView for video container with proper layer management.
  */
 @OptIn(ExperimentalForeignApi::class)
-private class VideoContainerView : UIView(CGRectMake(0.0, 0.0, 100.0, 100.0)) {
+private class VideoContainerView(
+    private val layoutVideoLayer: (AVSampleBufferDisplayLayer) -> Unit,
+) : UIView(CGRectMake(0.0, 0.0, 100.0, 100.0)) {
     override fun layoutSubviews() {
         super.layoutSubviews()
         bounds.useContents {
             layer.sublayers?.forEach { sublayer ->
-                (sublayer as? CALayer)?.frame = CGRectMake(0.0, 0.0, size.width, size.height)
+                when (sublayer) {
+                    // Rotated by the bridge to match the remote frames; a frame is undefined then.
+                    is AVSampleBufferDisplayLayer -> layoutVideoLayer(sublayer)
+                    is CALayer -> sublayer.frame = CGRectMake(0.0, 0.0, size.width, size.height)
+                }
             }
         }
     }

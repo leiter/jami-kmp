@@ -80,9 +80,9 @@ pushed, not merged) from the git history since 2026-10-31, `doc/ios-task-queue-2
 4. ~~**Small UI bugs**~~ — **fixed 2026-11-11**: the empty-state title and hint are centred
    (`textAlign`), and `filter_all` / `filter_unread` / `filter_groups` have German. Checked on
    the simulator in German.
-5. **Video pipeline** — calls send and render no video. Starts with wrapper work (frame-in,
-   `SinkTarget`), then renderer, encoder controls, PiP. Plan: `doc/ios-video-pipeline.md`. **L**,
-   needs a device to verify.
+5. **Video pipeline** — **implemented 2026-11-11** on branch `ios-video-pipeline`, unverified
+   in a call (needs a device and a second client). PiP still open. See
+   `doc/ios-video-pipeline.md` §0. Was: calls send and render no video.
 6. ~~**Callback tests via `fireDaemonEvent`**~~ — **done 2026-11-11**:
    `DaemonCallbackRoutingTest`, 15 tests for the 14 §2.1 callbacks (revocation has a success and
    a failure case), through the production `DaemonCallbacksImpl` on `iosSimulatorArm64Test`.

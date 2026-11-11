@@ -7,6 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <CoreVideo/CoreVideo.h>
+#import <AVFoundation/AVFoundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -360,6 +362,13 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (void)onDecodingStopped:(NSString *)sinkId
                   shmPath:(NSString *)shmPath
                   isMixer:(BOOL)isMixer;
+
+/// The daemon wants frames from a capture device (`VideoSignal::StartCapture`).
+/// `device` is the name the device was registered under with `addVideoDevice:`.
+- (void)onStartCapture:(NSString *)device;
+
+/// The daemon no longer needs frames from `device` (`VideoSignal::StopCapture`).
+- (void)onStopCapture:(NSString *)device;
 
 - (void)onReactionAdded:(NSString *)accountId
          conversationId:(NSString *)conversationId
@@ -847,6 +856,46 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (BOOL)switchVideoInput:(NSString *)accountId callId:(NSString *)callId uri:(NSString *)uri;
 - (void)addVideoDevice:(NSString *)node;
 - (void)removeVideoDevice:(NSString *)node;
+
+/// Registers a capture device with the capabilities the daemon needs to open it.
+/// The daemon ignores a device registered without at least one
+/// format/width/height/rate entry, which is what `addVideoDevice:` sends.
+- (void)addVideoDevice:(NSString *)node width:(int)width height:(int)height rate:(int)rate;
+
+// -------------------------------------------------------------------------
+// Video frames (iOS only; no-ops elsewhere)
+//
+// Ported from jami-client-ios VideoAdapter.mm / VideoUtils.mm.
+// See doc/ios-video-pipeline.md.
+// -------------------------------------------------------------------------
+
+/// Hands one captured camera frame to the daemon's encoder without copying it.
+/// `videoInputId` is the input URI the daemon captures from ("camera://<device>");
+/// if the daemon has no such input open, the frame is dropped.
+/// `angle` is the rotation, in degrees, the receiver must apply to show it upright.
+- (void)writeOutgoingFrame:(CVImageBufferRef)image
+                     angle:(int)angle
+              videoInputId:(NSString *)videoInputId;
+
+/// Starts receiving decoded frames for `sinkId` (a stream announced by
+/// `onDecodingStarted:`). Frames are rendered into the layer attached with
+/// `attachDisplayLayer:toSink:`. Returns NO if the daemon has no such sink.
+- (BOOL)registerSinkTarget:(NSString *)sinkId width:(int)width height:(int)height;
+
+/// Stops frame delivery for `sinkId`. Once this returns no frame for it is in flight.
+- (void)removeSinkTarget:(NSString *)sinkId;
+
+/// Renders `sinkId`'s frames into `layer`. Passing nil detaches it; frames then
+/// keep arriving but are dropped.
+- (void)attachDisplayLayer:(nullable AVSampleBufferDisplayLayer *)layer toSink:(NSString *)sinkId;
+
+/// Width and height of the last frame received for `sinkId`, or {0, 0}.
+- (CGSize)renderSizeForSink:(NSString *)sinkId;
+
+/// Sizes `layer` to its superlayer and turns it by the rotation of the last frame
+/// rendered into it. Call from the container view's layout pass instead of setting
+/// the layer's frame (a frame is undefined on a rotated layer). Main thread only.
++ (void)layoutDisplayLayer:(AVSampleBufferDisplayLayer *)layer;
 
 // =========================================================================
 // Audio Settings (4 methods)

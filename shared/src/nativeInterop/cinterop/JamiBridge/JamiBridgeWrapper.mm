@@ -277,6 +277,272 @@ static JBCallState toCallState(const std::string& state) {
 }
 
 // =============================================================================
+// Video frames (iOS only)
+//
+// Ported from jami-client-ios Ring/Ring/Bridging/VideoUtils.mm (MediaUtils) and
+// VideoAdapter.mm (Renderer, writeOutgoingFrame). See doc/ios-video-pipeline.md.
+//
+// Outgoing: a captured CVImageBuffer is described to the daemon in place
+// (getNewFrame -> point the AVFrame at the buffer's planes -> publishFrame);
+// the daemon copies while encoding. Incoming: the daemon pushes each decoded
+// frame into a SinkTarget on its own thread; it is wrapped in a CMSampleBuffer
+// and enqueued on the AVSampleBufferDisplayLayer attached for that sink.
+// =============================================================================
+
+#if TARGET_OS_IOS
+// FFmpeg's `enum AVMediaType` collides with AVFoundation's `AVMediaType` typedef
+// (imported through JamiBridgeWrapper.h). Nothing here uses FFmpeg's, so it is
+// renamed for the duration of the include; an enum's ABI does not depend on its name.
+#define AVMediaType FFmpegAVMediaType
+extern "C" {
+#include <libavutil/frame.h>
+#include <libavutil/display.h>
+#include <libavutil/pixfmt.h>
+}
+#undef AVMediaType
+#import <CoreMedia/CoreMedia.h>
+#include <atomic>
+#include <memory>
+#include <mutex>
+
+namespace jbvideo {
+
+/// Key under which a display layer remembers the rotation of the last frame
+/// rendered into it, read by +[JamiBridgeWrapper layoutDisplayLayer:].
+static NSString* const kRotationKey = @"jbRotationDegrees";
+
+static int avFormatFromApple(OSType format) {
+    switch (format) {
+        case kCVPixelFormatType_420YpCbCr8Planar: return AV_PIX_FMT_YUV420P;
+        case kCVPixelFormatType_422YpCbCr8_yuvs: return AV_PIX_FMT_YUYV422;
+        case kCVPixelFormatType_422YpCbCr8: return AV_PIX_FMT_UYVY422;
+        case kCVPixelFormatType_32BGRA: return AV_PIX_FMT_BGR0;
+        case kCVPixelFormatType_24RGB: return AV_PIX_FMT_RGB24;
+        case kCVPixelFormatType_24BGR: return AV_PIX_FMT_BGR24;
+        case kCVPixelFormatType_32ARGB: return AV_PIX_FMT_0RGB;
+        case kCVPixelFormatType_32ABGR: return AV_PIX_FMT_0BGR;
+        case kCVPixelFormatType_32RGBA: return AV_PIX_FMT_RGB0;
+        case kCVPixelFormatType_48RGB: return AV_PIX_FMT_BGR48BE;
+        case kCVPixelFormatType_444YpCbCr8: return AV_PIX_FMT_YUV444P;
+        case kCVPixelFormatType_4444AYpCbCr16: return AV_PIX_FMT_YUVA444P16LE;
+        case kCVPixelFormatType_4444YpCbCrA8R: return AV_PIX_FMT_YUVA444P;
+        case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+        case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
+        default: return AV_PIX_FMT_NV12;
+    }
+}
+
+/// MediaUtils configureFrame:fromImageBuffer:angle:, unchanged in behaviour.
+static void configureFrame(AVFrame* frame, CVImageBufferRef image, int angle) {
+    CVPixelBufferLockBaseAddress(image, 0);
+    frame->width = static_cast<int>(CVPixelBufferGetWidth(image));
+    frame->height = static_cast<int>(CVPixelBufferGetHeight(image));
+    frame->format = avFormatFromApple(CVPixelBufferGetPixelFormatType(image));
+    if (CVPixelBufferIsPlanar(image)) {
+        int planes = static_cast<int>(CVPixelBufferGetPlaneCount(image));
+        for (int i = 0; i < planes; i++) {
+            frame->data[i] = (uint8_t*)CVPixelBufferGetBaseAddressOfPlane(image, i);
+            frame->linesize[i] = static_cast<int>(CVPixelBufferGetBytesPerRowOfPlane(image, i));
+        }
+    } else {
+        frame->data[0] = (uint8_t*)CVPixelBufferGetBaseAddress(image);
+        frame->linesize[0] = static_cast<int>(CVPixelBufferGetBytesPerRow(image));
+    }
+    CVPixelBufferUnlockBaseAddress(image, 0);
+    if (angle == 0) return;
+    AVBufferRef* matrix = av_buffer_alloc(sizeof(int32_t) * 9);
+    if (!matrix) return;
+    av_display_rotation_set(reinterpret_cast<int32_t*>(matrix->data), angle);
+    av_frame_new_side_data_from_buf(frame, AV_FRAME_DATA_DISPLAYMATRIX, matrix);
+}
+
+static void copyLineByLine(const uint8_t* src, uint8_t* dest, size_t srcLinesize,
+                           size_t destLinesize, size_t height) {
+    const size_t row = srcLinesize < destLinesize ? srcLinesize : destLinesize;
+    for (size_t i = 0; i < height; i++) {
+        memcpy(dest, src, row);
+        dest += destLinesize;
+        src += srcLinesize;
+    }
+}
+
+/// MediaUtils converCVPixelBufferRefFromAVFrame: a software-decoded YUV420P or
+/// NV12 frame copied into a new NV12 CVPixelBuffer (+1 retained, caller releases).
+static CVPixelBufferRef copyPixelBufferFromAVFrame(const AVFrame* frame) {
+    if (!frame || !frame->data[0]) return NULL;
+    const auto format = (AVPixelFormat)frame->format;
+    if (format != AV_PIX_FMT_YUV420P && format != AV_PIX_FMT_NV12) return NULL;
+
+    NSDictionary* options = @{
+        (id)kCVPixelBufferBytesPerRowAlignmentKey: @(frame->linesize[0]),
+        (id)kCVPixelBufferIOSurfacePropertiesKey: @{},
+    };
+    CVPixelBufferRef pixelBuffer = NULL;
+    if (CVPixelBufferCreate(kCFAllocatorDefault, frame->width, frame->height,
+                            kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
+                            (__bridge CFDictionaryRef)options, &pixelBuffer) != kCVReturnSuccess) {
+        return NULL;
+    }
+
+    CVPixelBufferLockBaseAddress(pixelBuffer, 0);
+    const size_t rowY = CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer, 0);
+    const size_t rowUV = CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer, 1);
+    const size_t chromaHeight = (size_t)frame->height / 2;
+    auto* y = static_cast<uint8_t*>(CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 0));
+    auto* uv = static_cast<uint8_t*>(CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 1));
+
+    copyLineByLine(frame->data[0], y, frame->linesize[0], rowY, frame->height);
+    if (format == AV_PIX_FMT_NV12) {
+        copyLineByLine(frame->data[1], uv, frame->linesize[1], rowUV, chromaHeight);
+    } else {
+        // YUV420P: interleave the U and V planes row by row into the CbCr plane.
+        const size_t chromaWidth = ((size_t)frame->width + 1) / 2;
+        for (size_t row = 0; row < chromaHeight; row++) {
+            const uint8_t* u = frame->data[1] + row * frame->linesize[1];
+            const uint8_t* v = frame->data[2] + row * frame->linesize[2];
+            uint8_t* out = uv + row * rowUV;
+            for (size_t i = 0; i < chromaWidth; i++) {
+                *out++ = u[i];
+                *out++ = v[i];
+            }
+        }
+    }
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+    return pixelBuffer;
+}
+
+/// MediaUtils getCVPixelBufferFromAVFrame: as a +1 retained buffer in every case
+/// (hardware frames are retained, software frames are copied), plus the rotation
+/// the display matrix asks for.
+static CVPixelBufferRef retainedPixelBuffer(const AVFrame* frame, int* rotation) {
+    *rotation = 0;
+    if (auto* sideData = av_frame_get_side_data(frame, AV_FRAME_DATA_DISPLAYMATRIX)) {
+        *rotation = (int)av_display_rotation_get(reinterpret_cast<const int32_t*>(sideData->data));
+    }
+    if (auto hardware = (CVPixelBufferRef)frame->data[3]) {
+        // VideoToolbox-decoded: the AVFrame owns this buffer, so keep our own reference.
+        return CVPixelBufferRetain(hardware);
+    }
+    return copyPixelBufferFromAVFrame(frame);
+}
+
+static CMSampleBufferRef makeSampleBuffer(CVPixelBufferRef pixelBuffer) {
+    CMVideoFormatDescriptionRef description = NULL;
+    if (CMVideoFormatDescriptionCreateForImageBuffer(kCFAllocatorDefault, pixelBuffer, &description) != noErr) {
+        return NULL;
+    }
+    CMSampleTimingInfo timing = kCMTimingInfoInvalid;
+    CMSampleBufferRef sampleBuffer = NULL;
+    OSStatus status = CMSampleBufferCreateReadyWithImageBuffer(
+        kCFAllocatorDefault, pixelBuffer, description, &timing, &sampleBuffer);
+    CFRelease(description);
+    if (status != noErr || !sampleBuffer) return NULL;
+
+    CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
+    if (attachments && CFArrayGetCount(attachments) > 0) {
+        auto dict = (CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0);
+        CFDictionarySetValue(dict, kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
+    }
+    return sampleBuffer;
+}
+
+/// Sizes a display layer to its superlayer, turned by the rotation it last rendered.
+/// A quarter turn swaps width and height so the rotated video still fills the
+/// container instead of overflowing it. Main thread only.
+static void layoutDisplayLayer(AVSampleBufferDisplayLayer* layer) {
+    CALayer* container = layer.superlayer;
+    if (!container) return;
+    const CGRect bounds = container.bounds;
+    const int degrees = [[layer valueForKey:kRotationKey] intValue];
+    const bool quarterTurn = (((degrees % 180) + 180) % 180) == 90;
+    [CATransaction begin];
+    [CATransaction setDisableActions:YES];
+    layer.affineTransform = CGAffineTransformMakeRotation((CGFloat)degrees * M_PI / 180.0);
+    layer.bounds = quarterTurn ? CGRectMake(0, 0, bounds.size.height, bounds.size.width)
+                               : CGRectMake(0, 0, bounds.size.width, bounds.size.height);
+    layer.position = CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
+    [CATransaction commit];
+}
+
+/// One per daemon sink. The daemon calls push() from its decoding thread.
+struct Renderer : std::enable_shared_from_this<Renderer> {
+    explicit Renderer(int width, int height) : width_(width), height_(height) {}
+
+    void setLayer(AVSampleBufferDisplayLayer* layer) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        layer_ = layer;
+    }
+
+    CGSize size() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return CGSizeMake(width_, height_);
+    }
+
+    void push(FrameBuffer frame) {
+        @autoreleasepool {
+            AVSampleBufferDisplayLayer* layer;
+            {
+                std::lock_guard<std::mutex> lock(mutex_);
+                layer = layer_;
+            }
+            if (!layer || !frame) return;
+
+            int rotation = 0;
+            CVPixelBufferRef pixelBuffer = retainedPixelBuffer(frame.get(), &rotation);
+            if (!pixelBuffer) return;
+            {
+                std::lock_guard<std::mutex> lock(mutex_);
+                width_ = (int)CVPixelBufferGetWidth(pixelBuffer);
+                height_ = (int)CVPixelBufferGetHeight(pixelBuffer);
+            }
+            CMSampleBufferRef sampleBuffer = makeSampleBuffer(pixelBuffer);
+            CVPixelBufferRelease(pixelBuffer); // the sample buffer holds its own reference
+            if (!sampleBuffer) return;
+
+            // Geometry is UIKit state: change it on the main thread, and only when
+            // the rotation actually changes (it does when the sender turns the phone).
+            if (rotation != lastRotation_.exchange(rotation)) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [layer setValue:@(rotation) forKey:kRotationKey];
+                    layoutDisplayLayer(layer);
+                });
+            }
+            // Enqueueing from this thread is what the native client does as well.
+            if (layer.status == AVQueuedSampleBufferRenderingStatusFailed) {
+                // Happens after the app was in the background; the layer recovers after a flush.
+                [layer flush];
+            }
+            [layer enqueueSampleBuffer:sampleBuffer];
+            CFRelease(sampleBuffer);
+        }
+    }
+
+private:
+    mutable std::mutex mutex_;
+    AVSampleBufferDisplayLayer* layer_ = nil;
+    int width_;
+    int height_;
+    std::atomic_int lastRotation_ {0};
+};
+
+static std::mutex renderersMutex;
+/// Held across registerSinkTarget so registering and removing a sink are serialised;
+/// never taken on the frame-delivery path.
+static std::mutex lifecycleMutex;
+static std::map<std::string, std::shared_ptr<Renderer>> renderers;
+/// Layers attached before the daemon announced their sink, applied on registration.
+static std::map<std::string, AVSampleBufferDisplayLayer*> pendingLayers;
+
+static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
+    std::lock_guard<std::mutex> lock(renderersMutex);
+    auto it = renderers.find(sinkId);
+    return it == renderers.end() ? nullptr : it->second;
+}
+
+} // namespace jbvideo
+#endif // TARGET_OS_IOS
+
+// =============================================================================
 // Data Class Implementations
 // =============================================================================
 
@@ -1368,6 +1634,30 @@ static JBCallState toCallState(const std::string& state) {
                 JamiBridgeWrapper *strongSelf = weakSelf;
                 if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onDecodingStarted:shmPath:width:height:isMixer:)]) {
                     [strongSelf.delegate onDecodingStarted:sinkIdNS shmPath:shmPathNS width:width height:height isMixer:isMixer];
+                }
+            });
+        }));
+
+    // The daemon drives capture: it asks for frames when a call's video starts
+    // and stops asking when it is muted or the call ends.
+    handlers.insert(exportable_callback<VideoSignal::StartCapture>(
+        [weakSelf](const std::string& device) {
+            NSString *deviceNS = toNSString(device);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onStartCapture:)]) {
+                    [strongSelf.delegate onStartCapture:deviceNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<VideoSignal::StopCapture>(
+        [weakSelf](const std::string& device) {
+            NSString *deviceNS = toNSString(device);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onStopCapture:)]) {
+                    [strongSelf.delegate onStopCapture:deviceNS];
                 }
             });
         }));
@@ -2625,6 +2915,108 @@ static JBCallState toCallState(const std::string& state) {
 
 - (void)removeVideoDevice:(NSString *)node {
     libjami::removeVideoDevice(toCppString(node));
+}
+
+- (void)addVideoDevice:(NSString *)node width:(int)width height:(int)height rate:(int)rate {
+    // Same descriptor shape as jami-client-ios CameraCapturer.deviceInfo. The daemon's
+    // iOS device only uses "format" to pick a name; capture is always NV12.
+    std::vector<std::map<std::string, std::string>> devInfo {{
+        {"format", "BGRA"},
+        {"width", std::to_string(width)},
+        {"height", std::to_string(height)},
+        {"rate", std::to_string(rate)},
+    }};
+    libjami::addVideoDevice(toCppString(node), devInfo);
+}
+
+- (void)writeOutgoingFrame:(CVImageBufferRef)image
+                     angle:(int)angle
+              videoInputId:(NSString *)videoInputId {
+#if TARGET_OS_IOS
+    if (!image) return;
+    const std::string inputId = toCppString(videoInputId);
+    auto* frame = libjami::getNewFrame(inputId);
+    if (!frame) return; // the daemon is not capturing from this input (yet)
+    jbvideo::configureFrame(frame->pointer(), image, angle);
+    libjami::publishFrame(inputId);
+#endif
+}
+
+- (BOOL)registerSinkTarget:(NSString *)sinkId width:(int)width height:(int)height {
+#if TARGET_OS_IOS
+    const std::string id = toCppString(sinkId);
+    std::lock_guard<std::mutex> lifecycle(jbvideo::lifecycleMutex);
+    if (jbvideo::findRenderer(id)) return YES;
+
+    auto renderer = std::make_shared<jbvideo::Renderer>(width, height);
+    {
+        std::lock_guard<std::mutex> lock(jbvideo::renderersMutex);
+        auto pending = jbvideo::pendingLayers.find(id);
+        if (pending != jbvideo::pendingLayers.end()) {
+            renderer->setLayer(pending->second);
+            jbvideo::pendingLayers.erase(pending);
+        }
+        jbvideo::renderers.emplace(id, renderer);
+    }
+    libjami::SinkTarget target;
+    target.push = [renderer](libjami::FrameBuffer frame) { renderer->push(std::move(frame)); };
+    if (!libjami::registerSinkTarget(id, std::move(target))) {
+        std::lock_guard<std::mutex> lock(jbvideo::renderersMutex);
+        jbvideo::renderers.erase(id);
+        FILE_LOG_W("Video", @"registerSinkTarget: daemon has no sink %@", sinkId);
+        return NO;
+    }
+    FILE_LOG_D("Video", @"registerSinkTarget: %@ (%dx%d)", sinkId, width, height);
+    return YES;
+#else
+    return NO;
+#endif
+}
+
+- (void)removeSinkTarget:(NSString *)sinkId {
+#if TARGET_OS_IOS
+    const std::string id = toCppString(sinkId);
+    std::lock_guard<std::mutex> lifecycle(jbvideo::lifecycleMutex);
+    {
+        std::lock_guard<std::mutex> lock(jbvideo::renderersMutex);
+        jbvideo::pendingLayers.erase(id);
+    }
+    if (!jbvideo::findRenderer(id)) return;
+    // The sink takes its own lock both here and around every push, so once this
+    // returns no frame for it is in flight and none can start.
+    libjami::registerSinkTarget(id, libjami::SinkTarget {});
+    std::lock_guard<std::mutex> lock(jbvideo::renderersMutex);
+    jbvideo::renderers.erase(id);
+#endif
+}
+
+- (void)attachDisplayLayer:(nullable AVSampleBufferDisplayLayer *)layer toSink:(NSString *)sinkId {
+#if TARGET_OS_IOS
+    const std::string id = toCppString(sinkId);
+    std::lock_guard<std::mutex> lock(jbvideo::renderersMutex);
+    auto it = jbvideo::renderers.find(id);
+    if (it != jbvideo::renderers.end()) {
+        it->second->setLayer(layer);
+    } else if (layer) {
+        // The surface can exist before the daemon announces the stream.
+        jbvideo::pendingLayers[id] = layer;
+    } else {
+        jbvideo::pendingLayers.erase(id);
+    }
+#endif
+}
+
+- (CGSize)renderSizeForSink:(NSString *)sinkId {
+#if TARGET_OS_IOS
+    if (auto renderer = jbvideo::findRenderer(toCppString(sinkId))) return renderer->size();
+#endif
+    return CGSizeZero;
+}
+
++ (void)layoutDisplayLayer:(AVSampleBufferDisplayLayer *)layer {
+#if TARGET_OS_IOS
+    jbvideo::layoutDisplayLayer(layer);
+#endif
 }
 
 // =============================================================================

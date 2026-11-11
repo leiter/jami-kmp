@@ -75,6 +75,7 @@ import platform.CoreMedia.CMSampleBufferGetImageBuffer
 import platform.CoreMedia.CMVideoFormatDescriptionGetDimensions
 import platform.CoreMedia.CMSampleBufferRef
 import platform.CoreVideo.CVPixelBufferGetHeight
+import platform.CoreVideo.kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
 import platform.CoreVideo.CVPixelBufferGetWidth
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSOperationQueue
@@ -134,6 +135,14 @@ class IOSCameraService(
 
     // Orientation
     private var deviceOrientation: Int = 0
+
+    /**
+     * The daemon input frames are published under ("camera://<device>"), named by the
+     * daemon's last `StartCapture`. Null before any call asked for video, in which case the
+     * current camera's own input is used. Read on the capture queue.
+     */
+    @kotlin.concurrent.Volatile
+    private var daemonCaptureInput: String? = null
 
     /**
      * The capture orientation for the device's last real orientation, kept for reading off the
@@ -315,9 +324,14 @@ class IOSCameraService(
             session.addInput(input)
             currentInput = input
 
-            // Add video output
+            // Add video output. NV12 is what the daemon's iOS input expects
+            // (video_device_impl.cpp: pixel_format "nv12"); the key is
+            // kCVPixelBufferPixelFormatTypeKey's value.
             val output = AVCaptureVideoDataOutput()
             output.alwaysDiscardsLateVideoFrames = true
+            output.videoSettings = mapOf<Any?, Any?>(
+                "PixelFormatType" to platform.Foundation.NSNumber(unsignedInt = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange),
+            )
             output.setSampleBufferDelegate(sampleBufferDelegate, videoQueue)
 
             if (!session.canAddOutput(output)) {
@@ -328,17 +342,12 @@ class IOSCameraService(
             session.addOutput(output)
             videoOutput = output
 
-            // Configure video connection orientation
-            output.connectionWithMediaType(AVMediaTypeVideo)?.let { connection ->
-                if (connection.isVideoOrientationSupported()) {
-                    connection.videoOrientation = currentVideoOrientation()
-                }
-                if (connection.isVideoMirroringSupported() &&
-                    targetCamera.position == AVCaptureDevicePositionFront) {
-                    connection.automaticallyAdjustsVideoMirroring = false
-                    connection.setVideoMirrored(true)
-                }
-            }
+            // Outgoing frames: fixed orientation, never mirrored. The rotation travels with
+            // each frame instead (see outgoingFrameAngle), as in jami-client-ios
+            // CameraCapturer.configureOutputConnection. Rotating the buffers themselves would
+            // change the frame size whenever the phone turns, and mirroring them sent the
+            // peer a mirror image. The local preview layer mirrors on its own.
+            configureOutputConnection(output)
 
             session.commitConfiguration()
             captureSession = session
@@ -393,9 +402,11 @@ class IOSCameraService(
     fun closeCamera() {
         stopCapture()
 
-        currentParams?.let { params ->
-            daemonBridge.removeVideoDevice(params.cameraId)
-        }
+        // The camera stays registered with the daemon. HardwareService.initVideo() registers
+        // every camera once at startup; removing this one here left the next video call with
+        // no camera for the daemon to capture from (as jami-client-ios, which never removes
+        // its devices). It never mattered before only because the registration itself never
+        // took — see DaemonBridge.ios.kt addVideoDevice.
 
         captureSession?.let { session ->
             session.beginConfiguration()
@@ -449,16 +460,8 @@ class IOSCameraService(
                 currentCamera = newCamera
                 _currentCameraId.value = newCamera.uniqueID
 
-                // Update video connection
-                videoOutput?.connectionWithMediaType(AVMediaTypeVideo)?.let { connection ->
-                    if (connection.isVideoOrientationSupported()) {
-                        connection.videoOrientation = currentVideoOrientation()
-                    }
-                    if (connection.isVideoMirroringSupported()) {
-                        connection.automaticallyAdjustsVideoMirroring = false
-                        connection.setVideoMirrored(newCamera.position == AVCaptureDevicePositionFront)
-                    }
-                }
+                // A new input gets a new connection: pin it again.
+                videoOutput?.let { configureOutputConnection(it) }
 
                 // Update daemon
                 daemonBridge.setDefaultDevice(newCamera.uniqueID)
@@ -519,12 +522,24 @@ class IOSCameraService(
         else platform.darwin.dispatch_async(platform.darwin.dispatch_get_main_queue()) { setup() }
     }
 
-    private fun updateVideoOrientation() {
-        videoOutput?.connectionWithMediaType(AVMediaTypeVideo)?.let { connection ->
+    /** See the call site in [openCamera]. */
+    private fun configureOutputConnection(output: AVCaptureVideoDataOutput) {
+        output.connectionWithMediaType(AVMediaTypeVideo)?.let { connection ->
             if (connection.isVideoOrientationSupported()) {
-                connection.videoOrientation = currentVideoOrientation()
+                connection.videoOrientation = OUTGOING_CONNECTION_ORIENTATION
+            }
+            if (connection.isVideoMirroringSupported()) {
+                connection.automaticallyAdjustsVideoMirroring = false
+                connection.setVideoMirrored(false)
             }
         }
+    }
+
+    /**
+     * Only the preview follows the device: the outgoing connection stays pinned (see
+     * [configureOutputConnection]) and its frames carry [outgoingFrameAngle] instead.
+     */
+    private fun updateVideoOrientation() {
         previewLayer?.connection?.let { connection ->
             if (connection.isVideoOrientationSupported()) {
                 connection.videoOrientation = currentVideoOrientation()
@@ -538,6 +553,11 @@ class IOSCameraService(
     /** Main thread only. Keeps the last real orientation when the phone lies flat. */
     private fun refreshVideoOrientation() {
         captureOrientationFor(UIDevice.currentDevice.orientation)?.let { videoOrientation = it }
+    }
+
+    /** Names the daemon input outgoing frames go to; null falls back to the current camera. */
+    fun setDaemonCaptureInput(device: String?) {
+        daemonCaptureInput = device?.let { if (it.startsWith(CAMERA_SCHEME)) it else CAMERA_SCHEME + it }
     }
 
     fun setDeviceOrientation(rotation: Int) {
@@ -568,18 +588,14 @@ class IOSCameraService(
                 currentParams = params.copy(width = width, height = height)
             }
 
-            // Outgoing frames are NOT forwarded to the daemon yet.
-            //
-            // The previous implementation locked the pixel buffer and copied the whole NV12
-            // plane into a fresh Kotlin ByteArray on every callback (~30/s for the entire
-            // duration of every video call), then handed it to
-            // DaemonBridge.ios.kt#captureVideoFrame — which is an empty stub. That was pure
-            // CPU/allocator/battery cost for no effect, so the copy has been removed.
-            //
-            // The real outgoing path is zero-copy: hand the CVImageBufferRef straight to
-            // libjami via getNewFrame()/publishFrame() through a new JamiBridge selector.
-            // It requires rebuilding libJamiBridge_ios.a on macOS and vendoring the FFmpeg
-            // libavutil headers. Full design + steps: doc/ios-video-pipeline.md (§ Outgoing).
+            // Hand the frame to the daemon's encoder, zero-copy: the bridge points a daemon
+            // frame at this buffer's planes and publishes it (doc/ios-video-pipeline.md §2).
+            // Dropped by the bridge while the daemon is not capturing from this input.
+            (daemonBridge as? IOSVideoFrameBridge)?.writeOutgoingVideoFrame(
+                pixelBuffer,
+                angle = outgoingFrameAngle(videoOrientation, isFront = isFrontCamera),
+                videoInputId = daemonCaptureInput ?: (CAMERA_SCHEME + params.cameraId),
+            )
 
             // Emit frame event for UI (drives the local-preview size / "camera live" state).
             scope.launch {
@@ -610,6 +626,34 @@ class IOSCameraService(
             UIDevice.currentDevice.endGeneratingDeviceOrientationNotifications()
         }
     }
+}
+
+private const val CAMERA_SCHEME = "camera://"
+
+/** Orientation every outgoing frame is captured in; jami-client-ios uses the same. */
+private val OUTGOING_CONNECTION_ORIENTATION = platform.AVFoundation.AVCaptureVideoOrientationLandscapeLeft
+
+/**
+ * Rotation, in degrees, the receiver applies to an outgoing frame captured in
+ * [OUTGOING_CONNECTION_ORIENTATION] to show it upright, for a phone held in [orientation] —
+ * the capture orientation [captureOrientationFor] derives from the device orientation.
+ *
+ * The values are jami-client-ios CameraOrientationState.outgoingAngle, but that table is keyed
+ * on the native client's own device→capture mapping, which does *not* swap the landscape cases
+ * (device landscape-left → capture landscape-left). [captureOrientationFor] follows Apple and
+ * swaps them, so the two landscape rows are swapped here to land on the same angles: the
+ * frame is upright as captured when the phone is held device-landscape-right (capture
+ * landscape-left) and upside down the other way round. The front camera's portrait angles
+ * differ because its sensor faces the other way.
+ */
+internal fun outgoingFrameAngle(
+    orientation: platform.AVFoundation.AVCaptureVideoOrientation,
+    isFront: Boolean,
+): Int = when (orientation) {
+    AVCaptureVideoOrientationPortrait -> if (isFront) 270 else 90
+    AVCaptureVideoOrientationPortraitUpsideDown -> if (isFront) 90 else 270
+    AVCaptureVideoOrientationLandscapeRight -> 180 // device landscape-left
+    else -> 0 // capture landscape-left = device landscape-right: upright as captured
 }
 
 /**
