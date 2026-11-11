@@ -2400,21 +2400,28 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
 
     std::vector<std::map<std::string, std::string>> mediaList;
 
-    // Audio media
+    // Labels must be the ones the app's media list uses (Media.DEFAULT_AUDIO/VIDEO):
+    // the daemon matches a later requestMediaChange to existing streams by label and
+    // never changes a matched stream's type. Unlabelled streams made turning video on
+    // add a second audio stream, misaligning streams and SDP slots, and the daemon
+    // aborted in SIPCall::configureRtpSession (TestFlight build 38, 2026-11-11).
     std::map<std::string, std::string> audio;
     audio["MEDIA_TYPE"] = "MEDIA_TYPE_AUDIO";
+    audio["LABEL"] = "audio_0";
     audio["ENABLED"] = "true";
     audio["MUTED"] = "false";
     audio["SOURCE"] = "";
     mediaList.push_back(audio);
 
-    // Video media (optional)
+    // Video media (optional). Empty source: the daemon uses its default device, the
+    // camera IOSCameraService registered. "camera://0" named an Android camera.
     if (withVideo) {
         std::map<std::string, std::string> video;
         video["MEDIA_TYPE"] = "MEDIA_TYPE_VIDEO";
+        video["LABEL"] = "video_0";
         video["ENABLED"] = "true";
         video["MUTED"] = "false";
-        video["SOURCE"] = "camera://0";
+        video["SOURCE"] = "";
         mediaList.push_back(video);
     }
 
@@ -2427,9 +2434,11 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
 
     std::vector<std::map<std::string, std::string>> mediaList;
 
-    // Audio media
+    // Same labels and source as placeCall, for the same reason. For an incoming call the
+    // daemon names the offered streams audio_0 / video_0 by position (Sdp media parsing).
     std::map<std::string, std::string> audio;
     audio["MEDIA_TYPE"] = "MEDIA_TYPE_AUDIO";
+    audio["LABEL"] = "audio_0";
     audio["ENABLED"] = "true";
     audio["MUTED"] = "false";
     mediaList.push_back(audio);
@@ -2437,9 +2446,10 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
     if (withVideo) {
         std::map<std::string, std::string> video;
         video["MEDIA_TYPE"] = "MEDIA_TYPE_VIDEO";
+        video["LABEL"] = "video_0";
         video["ENABLED"] = "true";
         video["MUTED"] = "false";
-        video["SOURCE"] = "camera://0";
+        video["SOURCE"] = "";
         mediaList.push_back(video);
     }
 

@@ -59,6 +59,14 @@ reasoning.
   backgrounding and returning mid-call brings the remote image back. If nothing renders, the
   wrapper's log in the app's Documents folder has a `Video` line per registered sink, and
   the daemon logs `getNewFrame: Unable to find input …` when frames go to the wrong input.
+- **Build 38 crashed when video was turned on mid-call** (daemon abort in
+  `SIPCall::configureRtpSession`, `assert(videoRtp && mediaAttr)`). The iOS-built media
+  lists (wrapper `placeCall`/`acceptCall`, `DaemonBridge.ios.kt onIncomingCall`) had no
+  `LABEL` (and the incoming one no `ENABLED`); the daemon matches a media change to its
+  streams by label and never retypes a matched stream, so the unlabelled audio entry became
+  a second audio stream and the video SDP slot landed on it. Fixed by labelling them
+  `audio_0`/`video_0` and leaving the video source empty (the daemon's default device;
+  `camera://0` was an Android name). Needs a new build to verify.
 - PiP (§4).
 - Conference grids may want a Metal renderer later.
 - `CallViewModel.stopScreenShare` still sends Android's `camera://0`/`camera://1`

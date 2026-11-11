@@ -1173,14 +1173,13 @@ private class JamiBridgeDelegateImpl(
         peerDisplayName: String,
         hasVideo: Boolean
     ) {
-        val mediaList = if (hasVideo) {
-            listOf(
-                mapOf("MEDIA_TYPE" to "MEDIA_TYPE_AUDIO", "MUTED" to "false"),
-                mapOf("MEDIA_TYPE" to "MEDIA_TYPE_VIDEO", "MUTED" to "false")
-            )
-        } else {
-            listOf(mapOf("MEDIA_TYPE" to "MEDIA_TYPE_AUDIO", "MUTED" to "false"))
-        }
+        // Labels as the daemon names an incoming call's streams (audio_0 / video_0, by
+        // position in the offer). Without them, turning video on later sent an unlabelled
+        // audio entry the daemon could not match, so it added a second audio stream and
+        // aborted on the misaligned SDP slot (TestFlight build 38, 2026-11-11).
+        val audio = mapOf("MEDIA_TYPE" to "MEDIA_TYPE_AUDIO", "LABEL" to "audio_0", "ENABLED" to "true", "MUTED" to "false")
+        val video = mapOf("MEDIA_TYPE" to "MEDIA_TYPE_VIDEO", "LABEL" to "video_0", "ENABLED" to "true", "MUTED" to "false")
+        val mediaList = if (hasVideo) listOf(audio, video) else listOf(audio)
         callbacks.onIncomingCallWithMedia(accountId, callId, peerId, mediaList)
     }
 
