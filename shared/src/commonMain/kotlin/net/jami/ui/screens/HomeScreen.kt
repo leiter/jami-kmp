@@ -389,17 +389,24 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // Centre the text itself, not only the block: a hint that wraps onto two
+                    // lines (German) was left-aligned inside its centred box.
+                    Column(
+                        modifier = Modifier.padding(horizontal = JamiTheme.spacing.xl),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
                         Text(
                             text = stringResource(Res.string.home_no_conversation_title),
                             style = JamiTheme.typography.titleMedium,
                             color = JamiTheme.colors.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
                         )
                         Spacer(Modifier.height(JamiTheme.spacing.s))
                         Text(
                             text = stringResource(Res.string.home_no_conversation_hint),
                             style = JamiTheme.typography.bodyMedium,
                             color = JamiTheme.colors.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }
