@@ -1181,7 +1181,11 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun getTrustRequests(accountId: String): List<Map<String, String>> = emptyList()
     override fun acceptTrustRequest(accountId: String, uri: String) {}
     override fun discardTrustRequest(accountId: String, uri: String) {}
-    override fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray) {}
+    /** Every sendTrustRequest() that reached the "daemon", in order: (accountId, uri, payload). */
+    val sentTrustRequests = mutableListOf<Triple<String, String, ByteArray>>()
+    override fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray) {
+        sentTrustRequests += Triple(accountId, uri, payload)
+    }
 
     // ==================== Certificate Management ====================
     override fun getPinnedCertificates(accountId: String): List<String> =
@@ -1223,14 +1227,21 @@ class StubDaemonBridge : DaemonBridgeApi {
         return true
     }
 
-    override fun addContact(accountId: String, uri: String) {}
+    /** Every addContact() that reached the "daemon", in order: (accountId, uri). */
+    val addedContacts = mutableListOf<Pair<String, String>>()
+    override fun addContact(accountId: String, uri: String) {
+        addedContacts += accountId to uri
+    }
     /** Every removeContact() that reached the "daemon", in order: (accountId, uri, ban). */
     val removedContacts = mutableListOf<Triple<String, String, Boolean>>()
     override fun removeContact(accountId: String, uri: String, ban: Boolean) {
         removedContacts.add(Triple(accountId, uri, ban))
     }
     override fun getContacts(accountId: String): List<Map<String, String>> = contacts[accountId] ?: emptyList()
-    override fun getContactDetails(accountId: String, uri: String): Map<String, String> = emptyMap()
+    /** getContactDetails() answers, keyed by "accountId:uri"; empty for an unknown contact. */
+    val contactDetails: MutableMap<String, Map<String, String>> = mutableMapOf()
+    override fun getContactDetails(accountId: String, uri: String): Map<String, String> =
+        contactDetails["$accountId:$uri"] ?: emptyMap()
     /** Every presence call that actually reached the "daemon", in order. */
     val subscribeBuddyCalls = mutableListOf<Triple<String, String, Boolean>>()
     override fun subscribeBuddy(accountId: String, uri: String, subscribe: Boolean) {

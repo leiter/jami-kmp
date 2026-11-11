@@ -569,7 +569,12 @@ actual class DaemonBridge() : DaemonBridgeApi, IOSVideoFrameBridge {
     }
 
     override fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray) {
-        bridge.addContact(accountId, uri = uri)
+        // This used to call addContact, which only records the peer locally: no invitation
+        // ever left the phone.
+        val data = if (payload.isEmpty()) NSData() else payload.usePinned { pinned ->
+            NSData.create(bytes = pinned.addressOf(0), length = payload.size.toULong())
+        }
+        bridge.sendTrustRequest(accountId, uri = uri, payload = data)
     }
 
     // ==================== Contact Operations ====================

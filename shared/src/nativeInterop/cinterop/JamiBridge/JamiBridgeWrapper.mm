@@ -2161,6 +2161,14 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
     libjami::discardTrustRequest(toCppString(accountId), toCppString(uri));
 }
 
+- (void)sendTrustRequest:(NSString *)accountId uri:(NSString *)uri payload:(NSData *)payload {
+    FILE_LOG_I("JamiBridge", @"sendTrustRequest: accountId=%@ uri=%@ payload=%lu bytes",
+               accountId, uri, (unsigned long)payload.length);
+    const uint8_t *bytes = static_cast<const uint8_t *>(payload.bytes);
+    std::vector<uint8_t> data(bytes, bytes + payload.length);
+    libjami::sendTrustRequest(toCppString(accountId), toCppString(uri), data);
+}
+
 - (NSArray<JBTrustRequest *> *)getTrustRequests:(NSString *)accountId {
     auto requests = libjami::getTrustRequests(toCppString(accountId));
     NSMutableArray *result = [NSMutableArray arrayWithCapacity:requests.size()];

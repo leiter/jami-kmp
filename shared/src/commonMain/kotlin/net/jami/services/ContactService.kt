@@ -173,7 +173,7 @@ class ContactService(
      * Add a contact.
      */
     fun addContact(accountId: String, uri: Uri) {
-        daemonBridge.addContact(accountId, uri.uri)
+        accountService.addContact(accountId, uri.uri)
         val contact = getContactFromCache(accountId, uri)
         contact.status = Contact.Status.CONFIRMED
         scope.launch {

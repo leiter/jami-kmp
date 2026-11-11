@@ -537,7 +537,7 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (BOOL)provideAccountAuthentication:(NSString *)accountId password:(NSString *)password scheme:(NSString *)scheme;
 
 // =========================================================================
-// Contact Management (7 methods)
+// Contact Management (8 methods)
 // =========================================================================
 
 - (NSArray<JBContact *> *)getContacts:(NSString *)accountId;
@@ -552,6 +552,10 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (void)acceptTrustRequest:(NSString *)accountId uri:(NSString *)uri;
 
 - (void)discardTrustRequest:(NSString *)accountId uri:(NSString *)uri;
+
+/// Sends [uri] a contact invitation carrying [payload] (our vCard). addContact alone only records
+/// the peer locally; this is what puts the request in the peer's DHT inbox.
+- (void)sendTrustRequest:(NSString *)accountId uri:(NSString *)uri payload:(NSData *)payload;
 
 - (NSArray<JBTrustRequest *> *)getTrustRequests:(NSString *)accountId;
 
