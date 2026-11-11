@@ -386,9 +386,28 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                        payload:(NSData *)payload
                       received:(int64_t)received;
 
-- (void)onPresenceChanged:(NSString *)accountId
-                      uri:(NSString *)uri
-                 isOnline:(BOOL)isOnline;
+// PresenceSignal::NewBuddyNotification, with the status and the line status (the presence
+// note) as the daemon sends them. Replaces the former onPresenceChanged:uri:isOnline:, which
+// reduced the status to a bool and dropped the note.
+- (void)onNewBuddyNotification:(NSString *)accountId
+                      buddyUri:(NSString *)buddyUri
+                        status:(int)status
+                    lineStatus:(NSString *)lineStatus;
+
+// Local call recording started (state != 0) or stopped (CallSignal::RecordingStateChanged).
+- (void)onRecordingStateChanged:(NSString *)callId state:(int)state;
+
+// Linear audio level between 0 and 1 for a device id or call id, while metering is on
+// (setAudioMeterState). Fires often; the handler must stay cheap.
+- (void)onAudioMeter:(NSString *)audioId level:(float)level;
+
+// Configuration signals (notifications mini-plan F2).
+- (void)onVolumeChanged:(NSString *)device value:(double)value;
+- (void)onErrorAlert:(int)alert;
+- (void)onStunStatusFailed:(NSString *)accountId;
+- (void)onHardwareDecodingChanged:(BOOL)enabled;
+- (void)onHardwareEncodingChanged:(BOOL)enabled;
+- (void)onDaemonMessageSend:(NSString *)message;
 
 // =============================================================================
 // Certificates
@@ -427,6 +446,9 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (void)startDaemon;
 - (void)stopDaemon;
 - (BOOL)isDaemonRunning;
+
+// Tells the daemon the network changed so it re-resolves its connections.
+- (void)connectivityChanged;
 
 // =========================================================================
 // Account Management (14 methods)
@@ -525,6 +547,9 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (NSArray<JBTrustRequest *> *)getTrustRequests:(NSString *)accountId;
 
 - (void)subscribeBuddy:(NSString *)accountId uri:(NSString *)uri flag:(BOOL)flag;
+
+// libjami::publish — our own presence and its status note.
+- (void)publishPresence:(NSString *)accountId status:(BOOL)status note:(NSString *)note;
 
 // =========================================================================
 // Conversation Management (11 methods)
@@ -635,7 +660,16 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (NSDictionary<NSString *, NSString *> *)getCallDetails:(NSString *)accountId
                                                   callId:(NSString *)callId;
 
+// NOTE: despite its name this is libjami::getCallList — the account's call ids. The
+// per-conversation libjami::getActiveCalls is getConversationActiveCalls:conversationId: below.
 - (NSArray<NSString *> *)getActiveCalls:(NSString *)accountId;
+
+- (NSArray<NSDictionary<NSString *, NSString *> *> *)getConversationActiveCalls:(NSString *)accountId
+                                                                conversationId:(NSString *)conversationId;
+
+// Local call recording (libjami::toggleRecording / getIsRecording).
+- (BOOL)toggleRecording:(NSString *)accountId callId:(NSString *)callId;
+- (BOOL)isRecording:(NSString *)accountId callId:(NSString *)callId;
 
 - (void)sendTextMessage:(NSString *)accountId callId:(NSString *)callId
                messages:(NSDictionary<NSString *, NSString *> *)messages
@@ -674,6 +708,9 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (NSString *)noiseSuppressState;
 - (void)setAgcState:(BOOL)enabled;
 
+// Turns AudioMeter signals on or off for a device id or call id ("" = the default devices).
+- (void)setAudioMeterState:(NSString *)audioId state:(BOOL)state;
+
 // Push notifications. These only hand the token/payload to the daemon; end-to-end push
 // additionally needs PushKit on the app side and a push proxy server.
 - (void)setPushNotificationToken:(NSString *)token;
@@ -709,6 +746,10 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                             callId:(NSString *)callId
                conferenceAccountId:(NSString *)conferenceAccountId
                       conferenceId:(NSString *)conferenceId;
+
+// Each entry is "<peer uri>,<account id>", as libjami::createConfFromParticipantList expects.
+- (void)createConfFromParticipantList:(NSString *)accountId
+                         participants:(NSArray<NSString *> *)participants;
 
 - (void)hangUpConference:(NSString *)accountId conferenceId:(NSString *)conferenceId;
 
@@ -769,10 +810,12 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 // File Transfer (4 methods)
 // =========================================================================
 
-- (NSString *)sendFile:(NSString *)accountId
-        conversationId:(NSString *)conversationId
-              filePath:(NSString *)filePath
-           displayName:(NSString *)displayName;
+// libjami::sendFile. `parent` is the id of the message being replied to, or "".
+- (void)sendFile:(NSString *)accountId
+  conversationId:(NSString *)conversationId
+        filePath:(NSString *)filePath
+     displayName:(NSString *)displayName
+          parent:(NSString *)parent;
 
 - (void)acceptFileTransfer:(NSString *)accountId
             conversationId:(NSString *)conversationId

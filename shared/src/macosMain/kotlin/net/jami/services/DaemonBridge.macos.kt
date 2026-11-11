@@ -638,10 +638,13 @@ actual class DaemonBridge() : DaemonBridgeApi {
         displayName: String,
         parent: String
     ) {
-        // `parent` (the reply-to message id) is dropped: JamiBridgeWrapper.h's sendFile has no
-        // such argument, so a file sent while replying arrives as a plain file on Apple targets.
-        // Needs a wrapper regeneration — see doc/apple-bridge-rebuild.md.
-        bridge.sendFile(accountId, conversationId = conversationId, filePath = filePath, displayName = displayName)
+        bridge.sendFile(
+            accountId,
+            conversationId = conversationId,
+            filePath = filePath,
+            displayName = displayName,
+            parent = parent
+        )
     }
 
     override fun downloadFile(
@@ -1077,8 +1080,8 @@ private class JamiBridgeDelegateImpl(
         callbacks.onIncomingTrustRequest(accountId, conversationId, from, bytes, received)
     }
 
-    override fun onPresenceChanged(accountId: String, uri: String, isOnline: Boolean) {
-        callbacks.onNewBuddyNotification(accountId, uri, if (isOnline) 1 else 0, "")
+    override fun onNewBuddyNotification(accountId: String, buddyUri: String, status: Int, lineStatus: String) {
+        callbacks.onNewBuddyNotification(accountId, buddyUri, status, lineStatus)
     }
 
     // Certificate Events

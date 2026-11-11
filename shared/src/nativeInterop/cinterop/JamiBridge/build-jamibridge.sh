@@ -59,16 +59,20 @@ echo ""
 # Create output directory
 mkdir -p "$OUTPUT_DIR"
 
-# Build for macOS
+# Build for macOS. Non-fatal: the wrapper's UIKit file-picker code does not compile against the
+# macOS SDK (a long-standing problem, see doc/apple-bridge-rebuild.md hazard 3), and with `set -e`
+# that used to abort the script before the iOS stages below ever ran.
 echo "=== Compiling for macOS ($TARGET) ==="
-clang++ -c "$SCRIPT_DIR/JamiBridgeWrapper.mm" \
+if clang++ -c "$SCRIPT_DIR/JamiBridgeWrapper.mm" \
     -o "$OUTPUT_DIR/JamiBridgeWrapper_macos.o" \
     $CXX_FLAGS \
     $INCLUDE_FLAGS \
-    -target "$TARGET"
-
-echo "Creating libJamiBridge_macos.a..."
-ar rcs "$OUTPUT_DIR/libJamiBridge_macos.a" "$OUTPUT_DIR/JamiBridgeWrapper_macos.o"
+    -target "$TARGET"; then
+    echo "Creating libJamiBridge_macos.a..."
+    ar rcs "$OUTPUT_DIR/libJamiBridge_macos.a" "$OUTPUT_DIR/JamiBridgeWrapper_macos.o"
+else
+    echo "WARNING: macOS stage failed; libJamiBridge_macos.a not updated. Continuing with iOS."
+fi
 
 # Build for iOS (if on arm64 Mac)
 if [ "$ARCH" = "arm64" ]; then

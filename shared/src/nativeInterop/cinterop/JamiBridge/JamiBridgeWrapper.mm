@@ -1070,13 +1070,14 @@ static JBCallState toCallState(const std::string& state) {
             // Copy data before async dispatch to avoid use-after-free
             NSString *accountIdNS = toNSString(accountId);
             NSString *buddyUriNS = toNSString(buddyUri);
-            BOOL isOnline = (status != 0);
+            NSString *lineStatusNS = toNSString(lineStatus);
             dispatch_async(dispatch_get_main_queue(), ^{
                 JamiBridgeWrapper *strongSelf = weakSelf;
-                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onPresenceChanged:uri:isOnline:)]) {
-                    [strongSelf.delegate onPresenceChanged:accountIdNS
-                                                       uri:buddyUriNS
-                                                  isOnline:isOnline];
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onNewBuddyNotification:buddyUri:status:lineStatus:)]) {
+                    [strongSelf.delegate onNewBuddyNotification:accountIdNS
+                                                       buddyUri:buddyUriNS
+                                                         status:status
+                                                     lineStatus:lineStatusNS];
                 }
             });
         }));
@@ -1383,6 +1384,95 @@ static JBCallState toCallState(const std::string& state) {
             });
         }));
 
+    // =========================================================================
+    // Recording, audio metering, and configuration signals (notifications F2)
+    // =========================================================================
+
+    handlers.insert(exportable_callback<CallSignal::RecordingStateChanged>(
+        [weakSelf](const std::string& callId, int state) {
+            NSString *callIdNS = toNSString(callId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onRecordingStateChanged:state:)]) {
+                    [strongSelf.delegate onRecordingStateChanged:callIdNS state:state];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<AudioSignal::AudioMeter>(
+        [weakSelf](const std::string& audioId, float level) {
+            NSString *audioIdNS = toNSString(audioId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onAudioMeter:level:)]) {
+                    [strongSelf.delegate onAudioMeter:audioIdNS level:level];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::VolumeChanged>(
+        [weakSelf](const std::string& device, double value) {
+            NSString *deviceNS = toNSString(device);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onVolumeChanged:value:)]) {
+                    [strongSelf.delegate onVolumeChanged:deviceNS value:value];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::Error>(
+        [weakSelf](int alert) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onErrorAlert:)]) {
+                    [strongSelf.delegate onErrorAlert:alert];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::StunStatusFailed>(
+        [weakSelf](const std::string& accountId) {
+            NSString *accountIdNS = toNSString(accountId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onStunStatusFailed:)]) {
+                    [strongSelf.delegate onStunStatusFailed:accountIdNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::HardwareDecodingChanged>(
+        [weakSelf](bool enabled) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onHardwareDecodingChanged:)]) {
+                    [strongSelf.delegate onHardwareDecodingChanged:enabled];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::HardwareEncodingChanged>(
+        [weakSelf](bool enabled) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onHardwareEncodingChanged:)]) {
+                    [strongSelf.delegate onHardwareEncodingChanged:enabled];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::MessageSend>(
+        [weakSelf](const std::string& message) {
+            NSString *messageNS = toNSString(message);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onDaemonMessageSend:)]) {
+                    [strongSelf.delegate onDaemonMessageSend:messageNS];
+                }
+            });
+        }));
+
     libjami::registerSignalHandlers(handlers);
     FILE_LOG_I("JamiBridge", @"Signal handlers registered successfully");
 }
@@ -1442,6 +1532,11 @@ static JBCallState toCallState(const std::string& state) {
 
 - (BOOL)isDaemonRunning {
     return libjami::initialized() && self.daemonRunning;
+}
+
+- (void)connectivityChanged {
+    FILE_LOG_I("JamiBridge", @"connectivityChanged");
+    libjami::connectivityChanged();
 }
 
 // =============================================================================
@@ -1803,6 +1898,10 @@ static JBCallState toCallState(const std::string& state) {
     FILE_LOG_I("JamiBridge", @"subscribeBuddy: completed");
 }
 
+- (void)publishPresence:(NSString *)accountId status:(BOOL)status note:(NSString *)note {
+    libjami::publish(toCppString(accountId), status, toCppString(note));
+}
+
 // =============================================================================
 // Conversation Management
 // =============================================================================
@@ -2097,6 +2196,20 @@ static JBCallState toCallState(const std::string& state) {
     return toNSArray(calls);
 }
 
+- (NSArray<NSDictionary<NSString *, NSString *> *> *)getConversationActiveCalls:(NSString *)accountId
+                                                                conversationId:(NSString *)conversationId {
+    return toNSArrayOfDictionaries(libjami::getActiveCalls(toCppString(accountId),
+                                                           toCppString(conversationId)));
+}
+
+- (BOOL)toggleRecording:(NSString *)accountId callId:(NSString *)callId {
+    return libjami::toggleRecording(toCppString(accountId), toCppString(callId));
+}
+
+- (BOOL)isRecording:(NSString *)accountId callId:(NSString *)callId {
+    return libjami::getIsRecording(toCppString(accountId), toCppString(callId));
+}
+
 - (void)sendTextMessage:(NSString *)accountId callId:(NSString *)callId
                messages:(NSDictionary<NSString *, NSString *> *)messages
                    from:(NSString *)from isMixed:(BOOL)isMixed {
@@ -2186,6 +2299,10 @@ static JBCallState toCallState(const std::string& state) {
     libjami::setAgcState(enabled);
 }
 
+- (void)setAudioMeterState:(NSString *)audioId state:(BOOL)state {
+    libjami::setAudioMeterState(toCppString(audioId), state);
+}
+
 - (void)setPushNotificationToken:(NSString *)token {
     libjami::setPushNotificationToken(toCppString(token));
 }
@@ -2273,6 +2390,11 @@ static JBCallState toCallState(const std::string& state) {
     NSLog(@"[JamiBridge] addParticipantToConference: %@ conference: %@", callId, conferenceId);
     libjami::addParticipant(toCppString(accountId), toCppString(callId),
                            toCppString(conferenceAccountId), toCppString(conferenceId));
+}
+
+- (void)createConfFromParticipantList:(NSString *)accountId
+                         participants:(NSArray<NSString *> *)participants {
+    libjami::createConfFromParticipantList(toCppString(accountId), toCppVector(participants));
 }
 
 - (void)hangUpConference:(NSString *)accountId conferenceId:(NSString *)conferenceId {
@@ -2394,15 +2516,17 @@ static JBCallState toCallState(const std::string& state) {
 // File Transfer
 // =============================================================================
 
-- (NSString *)sendFile:(NSString *)accountId
-        conversationId:(NSString *)conversationId
-              filePath:(NSString *)filePath
-           displayName:(NSString *)displayName {
-    NSLog(@"[JamiBridge] sendFile: %@ name: %@", filePath, displayName);
-    // File transfer in swarm conversations uses sendMessage with file:// URI
-    std::string fileUri = "file://" + toCppString(filePath);
-    libjami::sendMessage(toCppString(accountId), toCppString(conversationId), fileUri, "", 0);
-    return @"";
+- (void)sendFile:(NSString *)accountId
+  conversationId:(NSString *)conversationId
+        filePath:(NSString *)filePath
+     displayName:(NSString *)displayName
+          parent:(NSString *)parent {
+    NSLog(@"[JamiBridge] sendFile: %@ name: %@ parent: %@", filePath, displayName, parent);
+    // libjami::sendFile commits a data-transfer interaction into the swarm. (This used to
+    // send the text "file://<path>" with sendMessage, which arrived as a plain text message
+    // and never transferred the file.)
+    libjami::sendFile(toCppString(accountId), toCppString(conversationId),
+                      toCppString(filePath), toCppString(displayName), toCppString(parent));
 }
 
 - (void)acceptFileTransfer:(NSString *)accountId

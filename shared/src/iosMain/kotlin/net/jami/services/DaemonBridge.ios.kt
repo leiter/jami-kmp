@@ -94,10 +94,9 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun isRunning(): Boolean = bridge.isDaemonRunning()
 
     override fun connectivityChanged() {
-        // JamiBridgeWrapper exposes no connectivity-changed entry point yet. libjami's
-        // `connectivityChanged()` (configurationmanager_interface.h) needs to be surfaced on
-        // the Obj-C++ wrapper and libJamiBridge.a rebuilt before this can forward to the daemon.
-        Log.d(TAG, "connectivityChanged() - not yet exposed via JamiBridge")
+        if (!isInitialized) return
+        Log.d(TAG, "connectivityChanged() -> daemon")
+        bridge.connectivityChanged()
     }
 
     // ==================== Account Operations ====================
@@ -247,10 +246,9 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     override fun playDtmf(key: String) { bridge.playDtmf(key) }
     override fun muteRingtone(mute: Boolean) { bridge.muteRingtone(mute) }
-    // JamiBridgeWrapper.h exposes neither setAudioMeterState nor the AudioMeter callback, so the
-    // level meter stays at zero on Apple — see doc/apple-bridge-rebuild.md.
     override fun setAudioMeterState(id: String, enabled: Boolean) {
-        Log.d(TAG, "setAudioMeterState (not exposed via JamiBridge): id=$id enabled=$enabled")
+        if (!isInitialized) return
+        bridge.setAudioMeterState(id, state = enabled)
     }
 
     override fun muteCapture(mute: Boolean) { bridge.muteCapture(mute) }
@@ -312,11 +310,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.attendedTransfer(accountId, callId = transferId, targetId = targetId)
     override fun getCallDetails(accountId: String, callId: String): Map<String, String> =
         bridge.getCallDetails(accountId, callId = callId)?.toKotlinMap() ?: emptyMap()
-    // Recording: JamiBridgeWrapper exposes no recording API yet. Stub until the native
-    // ObjC++ bridge gains toggleRecording/getIsRecording + a RecordingStateChanged delegate
-    // and libJamiBridge.a is rebuilt (see doc/plan_call_recording.md "iOS / macOS follow-up").
-    override fun toggleRecording(accountId: String, callId: String): Boolean = false
-    override fun getIsRecording(accountId: String, callId: String): Boolean = false
+    override fun toggleRecording(accountId: String, callId: String): Boolean =
+        bridge.toggleRecording(accountId, callId = callId)
+    override fun getIsRecording(accountId: String, callId: String): Boolean =
+        bridge.isRecording(accountId, callId = callId)
 
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {
@@ -382,9 +379,9 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.joinParticipant(accountId, callId = selCallId, accountId2 = account2Id, callId2 = dragCallId)
         return true
     }
-    // Not in JamiBridgeWrapper.h — see doc/apple-bridge-rebuild.md.
     override fun createConfFromParticipantList(accountId: String, participants: List<String>) {
-        Log.d(TAG, "createConfFromParticipantList (not exposed via JamiBridge): $participants")
+        if (!isInitialized) return
+        bridge.createConfFromParticipantList(accountId, participants = participants)
     }
 
     override fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean {
@@ -509,10 +506,9 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.setMessageDisplayed(accountId, conversationId = conversationUri, messageId = messageId)
     }
 
-    override fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> {
-        // JamiBridge getActiveCalls takes only accountId
-        return emptyList()
-    }
+    override fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> =
+        // Not the wrapper's getActiveCalls:, which is libjami::getCallList under another name.
+        bridge.getConversationActiveCalls(accountId, conversationId = conversationId).toKotlinListOfMaps()
 
     // ==================== Conversation Requests ====================
 
@@ -600,11 +596,9 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
 
     override fun publishPresence(accountId: String, status: Boolean, note: String) {
-        // JamiBridgeWrapper exposes no presence-publish entry point yet. libjami's `publish()`
-        // (presencemanager_interface.h:36) needs surfacing on the Obj-C++ wrapper and
-        // libJamiBridge.a rebuilt before this can forward to the daemon. Batch it with the other
-        // missing passthroughs (connectivityChanged, setDefaultModerator) rather than alone.
-        Log.d(TAG, "publishPresence('$note') - not yet exposed via JamiBridge")
+        if (!isInitialized) return
+        Log.d(TAG, "publishPresence: accountId='$accountId' status=$status note='$note'")
+        bridge.publishPresence(accountId, status = status, note = note)
     }
 
     override fun countInteractions(
@@ -703,10 +697,13 @@ actual class DaemonBridge() : DaemonBridgeApi {
         displayName: String,
         parent: String
     ) {
-        // `parent` (the reply-to message id) is dropped: JamiBridgeWrapper.h's sendFile has no
-        // such argument, so a file sent while replying arrives as a plain file on Apple targets.
-        // Needs a wrapper regeneration — see doc/apple-bridge-rebuild.md.
-        bridge.sendFile(accountId, conversationId = conversationId, filePath = filePath, displayName = displayName)
+        bridge.sendFile(
+            accountId,
+            conversationId = conversationId,
+            filePath = filePath,
+            displayName = displayName,
+            parent = parent
+        )
     }
 
     override fun downloadFile(
@@ -1214,6 +1211,39 @@ private class JamiBridgeDelegateImpl(
         callbacks.onRemoteRecordingChanged(callId, peerUri, recording)
     }
 
+    override fun onRecordingStateChanged(callId: String, state: Int) {
+        // state: 0 = stopped, non-zero = recording (as on Android)
+        callbacks.onRecordingStateChanged(callId, state != 0)
+    }
+
+    override fun onAudioMeter(audioId: String, level: Float) {
+        callbacks.onAudioMeter(audioId, level)
+    }
+
+    override fun onVolumeChanged(device: String, value: Double) {
+        callbacks.onVolumeChanged(device, value.toInt())
+    }
+
+    override fun onErrorAlert(alert: Int) {
+        callbacks.onErrorAlert(alert)
+    }
+
+    override fun onStunStatusFailed(accountId: String) {
+        callbacks.onStunStatusFailure(accountId)
+    }
+
+    override fun onHardwareDecodingChanged(enabled: Boolean) {
+        callbacks.onHardwareDecodingChanged(enabled)
+    }
+
+    override fun onHardwareEncodingChanged(enabled: Boolean) {
+        callbacks.onHardwareEncodingChanged(enabled)
+    }
+
+    override fun onDaemonMessageSend(message: String) {
+        callbacks.onDaemonLogMessage(message)
+    }
+
     override fun onConversationError(accountId: String, conversationId: String, code: Int, message: String) {
         callbacks.onConversationError(accountId, conversationId, code.toLong(), message)
     }
@@ -1382,8 +1412,8 @@ private class JamiBridgeDelegateImpl(
         callbacks.onIncomingTrustRequest(accountId, conversationId, from, bytes, received)
     }
 
-    override fun onPresenceChanged(accountId: String, uri: String, isOnline: Boolean) {
-        callbacks.onNewBuddyNotification(accountId, uri, if (isOnline) 1 else 0, "")
+    override fun onNewBuddyNotification(accountId: String, buddyUri: String, status: Int, lineStatus: String) {
+        callbacks.onNewBuddyNotification(accountId, buddyUri, status, lineStatus)
     }
 
     // Certificate Events
