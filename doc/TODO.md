@@ -1083,7 +1083,7 @@ code compiled against the macOS SDK (long-standing, dates to `93df547a`).
   `heightIn(min = ...)`, and the label is `weight(1f, fill = false)` + `TextAlign.Center` so it
   wraps instead of pushing a leading icon out. Verified in the simulator at `de-DE`.
   `JamiSearchField` keeps its fixed height deliberately — it is single-line.
-- [ ] **Script the device-side native symlinks.** `lib/` is hand-made and drifts silently when the
+- [x] **Script the device-side native symlinks.** *Done 2026-11-11: `scripts/make_device_links.py` (relinks, `--check` reports drift, cross-checks the device `OTHER_LDFLAGS`).* `lib/` is hand-made and drifts silently when the
   daemon's dependency set changes; three of the five first-build failures were exactly this
   (`http_parser` dropped, `vpx` absent on the simulator, `yrs` added). `scripts/make_sim_links.py`
   already does the simulator side by discovery.
@@ -1137,7 +1137,7 @@ checkbox are referenced, not repeated.
   `getActiveCalls:` wraps `getCallList`; the iOS actual returns `emptyList()`. No caller today.
 
 **Build hygiene**
-- [ ] Script the device-side symlinks (item above)
+- [x] Script the device-side symlinks (item above) — `scripts/make_device_links.py`
 - [x] `StubDaemonBridge` retains callbacks (item above) — done `333795c`
 
 **Feature gaps**

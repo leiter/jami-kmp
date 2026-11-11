@@ -51,8 +51,8 @@ checked-in sources).
 
 ```bash
 python3 scripts/make_sim_links.py
-# Created 49 symlinks
-# All libs found
+# Created 48 symlinks
+# No arm64-simulator slice (1): libvpx   <- expected, see below
 ```
 
 It reports any library it could not find, which is the quickest way to tell whether the
@@ -63,11 +63,22 @@ The script no longer hardcodes paths: it derives them from its own location, and
 library set and the simulator slice name from the xcframework directory instead of using a
 fixed list — both have changed underneath us before (see the drift note below).
 
-**Device** — there is **no** equivalent script. The symlinks in `lib/` were created by hand
-and point into `jami-client-ios/DEPS/arm64-iPhoneOS/lib/`. Recreating them means linking each
-`.a` from that directory into `lib/`, plus `libjami-core.a` as `lib/libjami.a` (the `.def`
-and the build script both expect the shorter name). Worth scripting the next time someone
-has to do it.
+**Device** — `scripts/make_device_links.py` (added 2026-11-11) regenerates `lib/` from
+`jami-client-ios/DEPS/arm64-iPhoneOS/lib/`, linking `libjami-core.a` as `lib/libjami.a` (the
+`.def`, the build script and `-ljami` all expect the shorter name):
+
+```bash
+python3 scripts/make_device_links.py          # relink, then check
+python3 scripts/make_device_links.py --check  # change nothing; exit 1 on drift
+# DEPS:   …/jami-client-ios/DEPS/arm64-iPhoneOS/lib (48 libraries)
+# No drift: lib/, DEPS and OTHER_LDFLAGS[sdk=iphoneos*] agree.
+```
+
+It discovers the library set, removes symlinks whose library left `DEPS`, never touches the
+two tracked `libJamiBridge_*.a` files, and cross-checks `OTHER_LDFLAGS[sdk=iphoneos*]` in
+`project.pbxproj` both ways: a `-l` with no library behind it (an undefined-symbol link error)
+and a library in `DEPS` the app does not link (a new daemon dependency). `JAMI_CLIENT_IOS` /
+`JAMI_DEPS_LIB` override the paths. It does not edit `project.pbxproj`.
 
 ### Dependency drift — the failure this actually causes
 
@@ -82,8 +93,9 @@ than anything Gradle or the test suites could catch:
 - **`yrs` (Y-CRDT) was added** — it was missing from both the link line and `lib/`. `lib-sim/`
   had picked it up automatically only because the script discovers rather than enumerates.
 
-When the daemon submodule moves, diff `jami-client-ios/DEPS/arm64-iPhoneOS/lib/*.a` against
-`lib/*.a` and the `OTHER_LDFLAGS` in `ios-app/iosApp.xcodeproj/project.pbxproj`. Refresh the
+When the daemon submodule moves, run `python3 scripts/make_device_links.py` (it does the
+`DEPS` / `lib/` / device `OTHER_LDFLAGS` comparison), then `scripts/make_sim_links.py`, and fix
+any `OTHER_LDFLAGS` it reports by hand (simulator link lines are not checked). Refresh the
 libjami headers at the same time: that same update changed four enum underlying types and
 added a `botOwner` parameter to `updateProfile`, which is silent ABI drift the Kotlin
 compiler cannot see.

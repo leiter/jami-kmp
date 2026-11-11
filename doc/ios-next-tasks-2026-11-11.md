@@ -33,7 +33,7 @@ pushed, not merged) from the git history since 2026-10-31, `doc/ios-task-queue-2
 
    One header + `.mm` change and one `build-jamibridge.sh` run (overwrites the two tracked `.a`
    files). Hazards and the verification recipe: `doc/apple-bridge-rebuild.md`. **M.**
-2. **Script the device-side symlinks** (`shared/src/nativeInterop/cinterop/lib/`) — hand-made,
+2. ~~**Script the device-side symlinks**~~ — **done 2026-11-11**, `scripts/make_device_links.py`. Was: (`shared/src/nativeInterop/cinterop/lib/`) — hand-made,
    drift silently, surface only as link errors. Same session as 1. **S.**
 3. **Translate the 87 KMP-only keys** that only `values-de` has (onboarding, account, ~20
    `content_desc_*` accessibility labels, home screen) into the other locales. **S–M.**

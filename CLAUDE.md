@@ -184,10 +184,11 @@ fails at *link* time with undefined libjami symbols.
 - Simulator symlinks: `python3 scripts/make_sim_links.py`. Paths are derived from the script's
   own location; `JAMI_CLIENT_IOS` / `JAMI_XCFRAMEWORK` override them. It discovers the library
   set from the xcframework rather than enumerating it.
-- Device symlinks: no script exists; they were created by hand into
-  `jami-client-ios/DEPS/arm64-iPhoneOS/lib/`. **This drifts.** When the daemon submodule moves,
-  its dependency set changes and the hand-made `lib/` plus the `OTHER_LDFLAGS` in
-  `project.pbxproj` go stale — a link error, never a compile error. See the drift section in
+- Device symlinks: `python3 scripts/make_device_links.py` relinks `lib/` from
+  `jami-client-ios/DEPS/arm64-iPhoneOS/lib/`; `--check` only reports. **This drifts.** When the
+  daemon submodule moves, its dependency set changes and `lib/` plus the `OTHER_LDFLAGS` in
+  `project.pbxproj` go stale — a link error, never a compile error. The script catches both
+  (device link line only; it does not edit the pbxproj). See the drift section in
   `shared/src/nativeInterop/cinterop/JamiBridge/README.md`.
 - **Release archives need ~6 GB of Gradle daemon heap**, and `org.gradle.jvmargs` is the only
   setting that controls it — the Kotlin/Native compile runs *inside* the Gradle daemon here, so
