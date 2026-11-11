@@ -120,9 +120,19 @@ class VCardService(
             return FileUtils.readBytes(cacheFilePath)
         }
 
+        // An empty or unreadable vcf means "this peer's profile has not arrived", not "this peer
+        // has no picture". The daemon creates a 0-byte placeholder at
+        // profiles/{base64url(uri)}.vcf when a profile transfer is started and does not complete,
+        // and that placeholder is *newer* than the cache, so the fast path above rejects a picture
+        // the device already had. Fall back to the cached bytes instead of blanking the avatar.
+        if (!FileUtils.exists(vcfPath) || FileUtils.getFileSize(vcfPath) <= 0L) return cachedBytes(cacheFilePath)
+
         // Slow path: parse vcf → extract photo → scale → persist to cache.
-        val content = FileUtils.readText(vcfPath) ?: return null
-        val vcard = VCardUtils.parseVCard(content) ?: return null
+        val content = FileUtils.readText(vcfPath)?.takeIf { it.isNotBlank() }
+            ?: return cachedBytes(cacheFilePath)
+        val vcard = VCardUtils.parseVCard(content) ?: return cachedBytes(cacheFilePath)
+        // A vcf that parses but carries no photo is a real answer (the peer removed their
+        // picture), so this one does drop the cached copy.
         val photo = vcard.photo ?: return null
 
         val scaled = scaleImageBytes(photo, 512)
@@ -134,4 +144,9 @@ class VCardService(
 
         return scaled
     }
+
+    /** Whatever the disk cache still holds for this entry, or null when it holds nothing usable. */
+    private fun cachedBytes(cacheFilePath: String): ByteArray? =
+        if (FileUtils.exists(cacheFilePath)) FileUtils.readBytes(cacheFilePath)?.takeIf { it.isNotEmpty() }
+        else null
 }

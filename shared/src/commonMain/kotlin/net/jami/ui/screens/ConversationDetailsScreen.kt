@@ -279,13 +279,18 @@ fun ConversationDetailsScreen(
         ) {
             Spacer(Modifier.height(JamiTheme.spacing.l))
 
-            val canEditGroup = state.isSwarm && state.isAdmin
-            val headerAvatarBytes = if (state.isSwarm) state.groupAvatarBytes else state.avatarBytes
+            // A 1:1 conversation is a swarm too, so these ask isGroup, not isSwarm. Keyed off
+            // isSwarm, a 1:1 showed the *conversation's* picture — which only a group ever has —
+            // instead of the peer's, so the person you were looking at was always a letter
+            // (seen on a device 2026-11-11), and the admin camera badge offered to set a group
+            // photo on a conversation that cannot have one.
+            val canEditGroup = state.isGroup && state.isAdmin
+            val headerAvatarBytes = if (state.isGroup) state.groupAvatarBytes else state.avatarBytes
             // Never blank: a nameless peer falls back to its registered name and then to its
             // id, the same chain Contact.displayUsername and the chat header use. The literals
             // "Unknown" and "?" that used to stand in here were untranslated and said nothing
             // about who was being looked at (seen on a device 2026-11-07).
-            val headerName = (if (state.isSwarm) state.groupTitle.ifEmpty { state.displayName } else state.displayName)
+            val headerName = (if (state.isGroup) state.groupTitle.ifEmpty { state.displayName } else state.displayName)
                 .ifBlank { state.username }
                 .ifBlank { state.identityHash }
 

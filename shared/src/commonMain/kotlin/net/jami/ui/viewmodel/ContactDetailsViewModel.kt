@@ -52,6 +52,12 @@ data class ContactDetailsState(
     val swarmId: String = "",
     val contactUri: String = "",
     val isSwarm: Boolean = false,
+    /**
+     * A swarm with more than two members. A 1:1 conversation is also a swarm, so [isSwarm]
+     * cannot stand in for "this is a group": anything that belongs to a group and not to a
+     * peer — the group's own picture and title, the admin edit affordance — keys off this.
+     */
+    val isGroup: Boolean = false,
     val isAdmin: Boolean = false,
     val memberUris: List<String> = emptyList(),
     /** Per-member role (admin/member/invited/…), keyed by member URI. Swarm groups only. */
@@ -180,6 +186,7 @@ class ContactDetailsViewModel(
                     else -> ""
                 }
                 val isSwarm = conversation?.isSwarm == true
+                val isGroup = conversation?.isGroup == true
                 val swarmId = if (isSwarm) conversation!!.uri.uri else ""
                 val isAdmin = conversation?.isUserGroupAdmin() == true
                 val memberUris = if (isSwarm) {
@@ -193,13 +200,18 @@ class ContactDetailsViewModel(
                         ?: contact.displayUsername,
                     username = contact.username ?: "",
                     identityHash = contact.primaryNumber,
-                    avatarBytes = avatarBytes ?: profile.avatar,
+                    // The profile's avatar comes from VCardService: scaled to 512 px,
+                    // disk-cached, and it keeps the last known picture when the peer's vcf is
+                    // an empty placeholder. Prefer it over the raw, full-resolution vcf read
+                    // below, which is only a fallback now.
+                    avatarBytes = profile.avatar ?: avatarBytes,
                     isBlocked = contact.status == Contact.Status.BLOCKED,
                     isLoading = false,
                     conversationType = convType,
                     swarmId = swarmId,
                     contactUri = contact.uri.uri,
                     isSwarm = isSwarm,
+                    isGroup = isGroup,
                     isAdmin = isAdmin,
                     memberUris = memberUris,
                     memberRoles = memberRoles,

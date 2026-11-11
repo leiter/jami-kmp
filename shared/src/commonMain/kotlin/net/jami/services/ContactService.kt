@@ -446,10 +446,13 @@ class ContactService(
         // Check cache first
         profileCache[cacheKey]?.let { return it }
 
-        // Return a profile based on contact display name or username
+        // Build a profile from what the contact already carries, plus the avatar the daemon
+        // wrote to disk. This used to hardcode `avatar = null`, which left every screen that
+        // asks for a contact's profile here — contact details, the call notification's
+        // caller — with the one-letter fallback even when a picture was sitting in the vcf.
         val profile = Profile(
             displayName = contact.displayName?.ifEmpty { contact.username } ?: contact.username,
-            avatar = null
+            avatar = vCardService.loadPeerAvatar(accountId, contact.uri.rawRingId)
         )
 
         profileCache[cacheKey] = profile
