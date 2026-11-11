@@ -279,7 +279,9 @@ def main() -> int:
     parser.add_argument('--update', action='store_true',
                         help='also refresh existing translations that differ (not German, not aliases)')
     parser.add_argument('--new-locales', action='store_true',
-                        help='create locale folders that only Android has')
+                        help='create locale folders that only Android has (each becomes a '
+                             'language-picker entry; the 2026-11-11 set was too thin and was '
+                             'discarded, see doc/ios-next-tasks-2026-11-11.md)')
     parser.add_argument('--all-keys', action='store_true',
                         help='also sync keys no Kotlin code references')
     parser.add_argument('--verbose', '-v', action='store_true', help='list every skipped string')
