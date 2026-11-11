@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">ಹಂಚಿಕೆ ನಿಲ್ಲಿಸಿ</string>
     <string name="location_share_about_title">ನಕ್ಷೆ ಮಾಹಿತಿ</string>
     <string name="you_txt_prefix">ನೀವು:</string>
-    <string name="action_call_hangup">ಮುಚ್ಚಿ</string>
+    <string name="action_call_hangup">ಕರೆ ಅಂತ್ಯಗೊಳಿಸು</string>
     <string name="action_call_maximize">ಗರಿಷ್ಠ ಮಟ್ಟದಲ್ಲಿ</string>
     <string name="action_call_minimize">ಕಡಿಮೆ ಮಾಡಿ</string>
     <string name="action_call_mute">ಮೂಕ</string>

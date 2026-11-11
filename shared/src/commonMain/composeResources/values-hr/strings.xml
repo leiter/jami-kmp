@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Prestani dijeliti</string>
     <string name="location_share_about_title">Informacije o karti</string>
     <string name="you_txt_prefix">Ti:</string>
-    <string name="action_call_hangup">Poklopi</string>
+    <string name="action_call_hangup">Završi poziv</string>
     <string name="action_call_maximize">Maksimiziraj</string>
     <string name="action_call_minimize">Smanjenje</string>
     <string name="action_call_mute">Neispravni</string>

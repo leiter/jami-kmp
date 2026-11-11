@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">साझा गर्न बन्द गर्नुहोस्</string>
     <string name="location_share_about_title">नक्सा जानकारी</string>
     <string name="you_txt_prefix">तिमी:</string>
-    <string name="action_call_hangup">बन्द गर</string>
+    <string name="action_call_hangup">कल समाप्त पार्नुहोस्</string>
     <string name="action_call_maximize">अधिकतम</string>
     <string name="action_call_minimize">कम गर्नुहोस्</string>
     <string name="action_call_mute">मौन</string>

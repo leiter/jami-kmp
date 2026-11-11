@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 -->
 <resources>
-    <string name="ic_delete_menu">Esborrar</string>
+    <string name="ic_delete_menu">Desaniciar</string>
     <string name="ic_advanced_menu">Configuraciones avanzadas</string>
     <string name="ic_blacklist_menu">Contactos bloqueados</string>
     <string name="add_ring_account_title">Aúna cuenta</string>
@@ -25,7 +25,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="prompt_alias">Allí foi presentáu'l so primer llibru.</string>
     <string name="prompt_hostname">Nombre de host</string>
     <string name="prompt_username">Nombre d'usuariu</string>
-    <string name="prompt_password">Paez que la contraseña</string>
+    <string name="prompt_password">Contraseña</string>
     <string name="action_create">Crear cuenta</string>
     <string name="action_create_short">Crear</string>
     <string name="action_register">El rexistru</string>

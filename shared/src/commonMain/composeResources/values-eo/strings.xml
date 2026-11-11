@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Ĉesu dividi</string>
     <string name="location_share_about_title">Mapo informoj</string>
     <string name="you_txt_prefix">Vi:</string>
-    <string name="action_call_hangup">Fini vokon</string>
+    <string name="action_call_hangup">Finigi vokon</string>
     <string name="action_call_maximize">Maksimumi</string>
     <string name="action_call_minimize">Redukti</string>
     <string name="action_call_mute">Mutaj</string>

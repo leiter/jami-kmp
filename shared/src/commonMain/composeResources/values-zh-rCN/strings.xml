@@ -91,7 +91,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">停止分享</string>
     <string name="location_share_about_title">地图信息</string>
     <string name="you_txt_prefix">您：</string>
-    <string name="action_call_hangup">挂断</string>
+    <string name="action_call_hangup">结束通话</string>
     <string name="action_call_maximize">最大化</string>
     <string name="action_call_minimize">减少</string>
     <string name="action_call_mute">静音</string>
@@ -425,7 +425,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="secure_p2p_connection">安全的对等连接</string>
     <string name="swarm_type">对话类型</string>
     <string name="Private">私人</string>
-    <string name="swarm_id">群ID</string>
+    <string name="swarm_id">会话ID</string>
     <string name="show_qr_code">显示二维码</string>
     <string name="show_certificate">显示证书</string>
     <string name="mute_conversation">静音对话</string>

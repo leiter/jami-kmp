@@ -28,8 +28,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_category_video_settings">Išplėstiniai vaizdo nustatymai</string>
     <string name="pref_mobileData_title">Mobilūs duomenys</string>
     <string name="pref_mobileData_summary">Leisti Jami 3G/LTE tinkluose, papildomai prie belaidžio tinklo (Wi-Fi)</string>
-    <string name="pref_pushNotifications_title">"Push" pranešimai</string>
-    <string name="pref_pushNotifications_summary">Naudoti Google serverius, kad būtų leista fone gauti skambučius/žinutes</string>
+    <string name="pref_pushNotifications_title">„Push“ pranešimai</string>
+    <string name="pref_pushNotifications_summary">Naudoti „Google“ serverius, kad būtų leista fone gauti skambučius/žinutes</string>
     <string name="pref_video_advanced_title">Išplėstiniai vaizdo nustatymai</string>
     <string name="pref_video_advanced_summary">Keisti vaizdo pralaidumą, raišką, o taip pat eksperimentines ypatybes</string>
     <string name="pref_hd_summary">Įjungti aukštos raiškos (HD) vaizdo siuntimą</string>
@@ -53,8 +53,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_logs_start">Pradėti registravimą</string>
     <string name="pref_logs_stop">Stabdyti registravimą</string>
     <string name="pref_connection_monitor">Ryšio prižiūryklė</string>
-    <string name="pref_link_preview_title">Žiniatinklio nuorodų peržiūra</string>
-    <string name="pref_link_preview_summary">Išankstinė peržiūra reikalauja atsisiųsti turinį iš trečiųjų šalių serverių.</string>
+    <string name="pref_link_preview_title">Saityno nuorodų peržiūra</string>
+    <string name="pref_link_preview_summary">Peržiūra reikalauja atsisiųsti turinį iš trečiųjų šalių serverių.</string>
     <string name="connectivity_local_node_title">Vietinis DHT mazgas</string>
     <string name="pref_enable_extensions_title">Įjungti plėtinius</string>
     <string name="pref_available_extensions_title">Prieinami plėtiniai</string>

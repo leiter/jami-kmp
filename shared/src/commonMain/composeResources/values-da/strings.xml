@@ -74,11 +74,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Stop deling</string>
     <string name="location_share_about_title">Kort information</string>
     <string name="you_txt_prefix">Dig:</string>
-    <string name="action_call_hangup">Læg på</string>
+    <string name="action_call_hangup">Afslut opkald</string>
     <string name="action_call_maximize">Maksimer</string>
     <string name="action_call_minimize">Reducer</string>
-    <string name="action_call_mute">Stem</string>
-    <string name="action_call_unmute">Uafstemt</string>
+    <string name="action_call_mute">Sluk lyden</string>
+    <string name="action_call_unmute">Tænd lyden</string>
     <string name="ongoing_call">Igangværende opkald</string>
     <string name="hist_in_call">Indgående opkald af %1$s</string>
     <string name="hist_out_call">Udgående opkald af %1$s</string>
@@ -86,7 +86,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_call_mic_mute">Sluk mikrofon</string>
     <string name="ab_action_contact_add">Tilføj til kontakter</string>
     <string name="ab_action_contact_add_question">Tilføj til kontakter?</string>
-    <string name="ab_action_audio_call">Start et audio opkald</string>
+    <string name="ab_action_audio_call">Start et lydopkald</string>
     <string name="ab_action_video_call">Start et video opkald</string>
     <string name="ab_action_change_screen_orientation">Ændr skærm-orientering</string>
     <string name="share_via">Del via</string>
@@ -107,7 +107,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_send_video">Optag video klip</string>
     <string name="conversation_share_location">Del lokation</string>
     <string name="ongoing_group_call">Igangværende opkald</string>
-    <string name="in_reply_to">I svar på</string>
+    <string name="in_reply_to">Som svar til</string>
     <string name="permission_dialog_camera_title">Kamera-tilladelse</string>
     <string name="ringtone_error_title">Fejl</string>
     <string name="ringtone_error_format_not_supported">Dette format understøttes ikke.</string>
@@ -136,7 +136,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="remove_conversation">Fjern samtalen</string>
     <string name="conversation_action_select_peer_number">Vælg et nummer</string>
     <string name="conversation_action_block_this">Bloker kontakt</string>
-    <string name="conversation_action_unblock_this">Ublokere kontakt</string>
+    <string name="conversation_action_unblock_this">Fjern blokering af kontakt</string>
     <string name="conversation_action_incoming_call">Indgående opkald</string>
     <string name="conversation_action_latest">Rul til slutning af samtale</string>
     <string name="conversation_open_file_error">Der er ikke installeret en app, som kan åbne denne fil.</string>
@@ -166,7 +166,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="prompt_new_password">Ny adgangskode</string>
     <string name="prompt_new_password_optional">Ny adgangskode (valgfrit)</string>
     <string name="prompt_new_password_repeat">bekræft nyt adgangskode</string>
-    <string name="account_create_title">Oprette Jami-konto</string>
+    <string name="account_create_title">Opret Jami-konto</string>
     <string name="prompt_new_username">Indtast nyt brugernavn</string>
     <string name="prompt_hint_username">Brugernavn</string>
     <string name="help_password_choose">Vælg et stærkt kodeord som du kan huske, til at beskytte din Jami-konto.</string>

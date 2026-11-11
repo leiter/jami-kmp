@@ -85,7 +85,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Sluta å dela</string>
     <string name="location_share_about_title">Kartinformasjon</string>
     <string name="you_txt_prefix">Du:</string>
-    <string name="action_call_hangup">Henga opp</string>
+    <string name="action_call_hangup">Avslutt samtale</string>
     <string name="action_call_maximize">Maksimalgjøre</string>
     <string name="action_call_minimize">Reduksjon av</string>
     <string name="action_call_mute">Stum</string>

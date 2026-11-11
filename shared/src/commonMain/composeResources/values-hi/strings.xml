@@ -78,7 +78,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">साझा करना बंद</string>
     <string name="location_share_about_title">मानचित्र की जानकारी</string>
     <string name="you_txt_prefix">आप:</string>
-    <string name="action_call_hangup">फोन रख दे</string>
+    <string name="action_call_hangup">कॉल समाप्त करें</string>
     <string name="action_call_maximize">बड़ा करें</string>
     <string name="action_call_minimize">कम करना</string>
     <string name="action_call_mute">आवाज़ बंद करना</string>

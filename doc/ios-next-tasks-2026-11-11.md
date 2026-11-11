@@ -43,8 +43,11 @@ pushed, not merged) from the git history since 2026-10-31, `doc/ios-task-queue-2
    (72 reviewed KMP-key → Android-key aliases, 5 rejected false friends) added **8049**
    translations across 95 locale folders. **Still open:** 253 used keys with no translation
    anywhere and 54 German-only — KMP-only text with no Android source, which needs translating
-   some other way. Not run: `--update` (497 existing translations differ from current Android)
-   and `--new-locales` (8 folders only Android has).
+   some other way. `--update` was run the same day: 404 existing translations refreshed in 79
+   folders (mostly upstream rewordings, e.g. `action_call_hangup` now "End call"); 93 kept
+   (German and aliased keys are never updated). Upstream's `values-zh` mixes in Traditional
+   strings; the one update that would have put one into our Simplified folder was replaced by
+   the `zh-rCN` text. Not run: `--new-locales` (8 folders only Android has).
 4. ~~**Small UI bugs**~~ — **fixed 2026-11-11**: the empty-state title and hint are centred
    (`textAlign`), and `filter_all` / `filter_unread` / `filter_groups` have German. Checked on
    the simulator in German.

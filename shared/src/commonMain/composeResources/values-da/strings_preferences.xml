@@ -57,9 +57,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_logs_summary">Åbne indstillinger for diagnostisk log</string>
     <string name="pref_logs_start">Start logging</string>
     <string name="pref_logs_stop">Stop med at logge</string>
-    <string name="pref_typing_title">Indikator til indtydning</string>
-    <string name="pref_block_record_title">Block skærmbilleder og optagelse</string>
-    <string name="pref_block_record_summary">Blokker at tage skærmbilleder eller optage videoer.</string>
+    <string name="pref_typing_title">Indtastningsindikator</string>
+    <string name="pref_block_record_title">Bloker skærmbilleder og optagelse</string>
+    <string name="pref_block_record_summary">Bloker skærmbilleder og optagelse af videoer.</string>
     <string name="pref_link_preview_title">Eksempelvisning af weblinks</string>
     <string name="pref_link_preview_summary">Forhåndsvisning kræver download af indhold fra tredjepartsservere.</string>
     <string name="connectivity_custom_title">Brugerdefineret</string>

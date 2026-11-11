@@ -82,7 +82,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Ukončiť zdieľanie</string>
     <string name="location_share_about_title">Informácie o mape</string>
     <string name="you_txt_prefix">Vy:</string>
-    <string name="action_call_hangup">Zložiť</string>
+    <string name="action_call_hangup">Ukončiť hovor</string>
     <string name="action_call_maximize">Maximálne</string>
     <string name="action_call_minimize">Zníženie</string>
     <string name="action_call_mute">Nezvláštne</string>

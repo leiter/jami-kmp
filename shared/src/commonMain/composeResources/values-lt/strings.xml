@@ -70,7 +70,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_title">Sinchronizuojami duomenys…</string>
     <string name="location_share_about_title">Informacija apie žemėlapį</string>
     <string name="you_txt_prefix">Jūs:</string>
-    <string name="action_call_hangup">Padėti ragelį</string>
+    <string name="action_call_hangup">Baigti skambutį</string>
     <string name="hist_in_call">%1$s gaunamasis skambutis</string>
     <string name="hist_out_call">%1$s išsiunčiamasis skambutis</string>
     <string name="call_duration">Trukmė: %1$s</string>
@@ -122,7 +122,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_action_delete_this">Ištrinti šį pokalbį</string>
     <string name="conversation_action_delete_this_title">Ištrinti šį pokalbį?</string>
     <string name="leave_conversation">Išeiti iš pokalbio</string>
-    <string name="conversation_action_delete_this_message">Šio veiksmo neįmanoma bus atšaukti.</string>
+    <string name="conversation_action_delete_this_message">Šį veiksmą neįmanoma bus atšaukti.</string>
     <string name="conversation_action_history_clear">Išvalyti istoriją</string>
     <string name="conversation_action_history_clear_title">Išvalyti pokalbio istoriją?</string>
     <string name="conversation_action_history_clear_message">Tai išvalys pokalbio istoriją.</string>

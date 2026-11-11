@@ -91,7 +91,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Ḥbes abḍu</string>
     <string name="location_share_about_title">Talɣut ɣef tkarḍa</string>
     <string name="you_txt_prefix">Kečč-Kemm:</string>
-    <string name="action_call_hangup">Senser</string>
+    <string name="action_call_hangup">Fak tiɣri</string>
     <string name="action_call_maximize">Semɣer</string>
     <string name="action_call_minimize">Senqes</string>
     <string name="action_call_mute"> Sgugem</string>

@@ -43,7 +43,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="help_sip_title">Pridėti SIP paskyrą</string>
     <string name="create_sip_account">Konfigūruoti SIP paskyrą</string>
     <string name="account_delete_dialog_title">Ištrinti paskyrą?</string>
-    <string name="account_delete_dialog_message">Šio veiksmo neįmanoma bus atšaukti.</string>
+    <string name="account_delete_dialog_message">Šį veiksmą neįmanoma bus atšaukti.</string>
     <string name="empty_account_list">Nėra užregistruotų paskyrų</string>
     <string name="normal_accounts_titles">Paskyros</string>
     <string name="normal_devices_titles">Susieti įrenginiai</string>
@@ -78,7 +78,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_video_enable">Įjungti vaizdą</string>
     <string name="account_preferences_advanced_tab">Išplėstiniai</string>
     <string name="account_call_settings_title">Skambučio nustatymai</string>
-    <string name="account_dht_public_in_calls_label">Leisti gaunamuosius skambučius nuo nežinomų adresatų</string>
+    <string name="account_dht_public_in_calls_label">Leisti skambučius nuo nežinomų adresatų</string>
     <string name="account_registration_exp_label">Registracijos galiojimo laikas</string>
     <string name="account_local_interface_label">Vietinė sąsaja</string>
     <string name="account_local_port_label">Vietinis prievadas</string>

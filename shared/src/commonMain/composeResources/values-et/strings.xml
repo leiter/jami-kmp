@@ -411,7 +411,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="group_admin">Peakasutaja</string>
     <string name="share_contact_intent_title">Lisa see kontakt Jamisse!</string>
     <string name="share_contact_intent_body">Sa võid selle kontakti lisada „%1$s“ hajutatud suhtlusvõrgus Jami: %2$s</string>
-    <string name="jami_id_copy">Kopeeri JamiId</string>
+    <string name="jami_id_copy">Kopeeri Jami kasutajatunnus</string>
     <string name="jami_id_share">Jaga JamiId</string>
     <string name="jami_id_validate">Registreeri kasutajanimi</string>
     <string name="jami_id_available">Kasutajanimi on saadaval</string>

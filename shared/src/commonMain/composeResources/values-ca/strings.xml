@@ -86,7 +86,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Para de compartir</string>
     <string name="location_share_about_title">Informació al mapa</string>
     <string name="you_txt_prefix">Usuari:</string>
-    <string name="action_call_hangup">Penja</string>
+    <string name="action_call_hangup">Finalitza la trucada</string>
     <string name="action_call_maximize">Maximitza</string>
     <string name="action_call_minimize">Redueix</string>
     <string name="action_call_mute">Silencia</string>

@@ -118,10 +118,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="enabled">Päällä</string>
     <string name="default_value">Oletus</string>
     <string name="account_proxy_label">DHT välityspalvelin</string>
-    <string name="account_proxy_enable_label">Käytä DHT välityspalvelinta</string>
-    <string name="account_proxy_list_enable_label">Käytä DHT-välityspalvelin luetteloa</string>
-    <string name="account_proxy_server_label">DHT välityspalvelimen osoite</string>
-    <string name="account_proxy_server_list_label">DHT-välityspalvelimen luettelon URL</string>
+    <string name="account_proxy_enable_label">Käytä DHT proxy-palvelinta</string>
+    <string name="account_proxy_list_enable_label">Käytä DHT proxy-palvelinlistaa</string>
+    <string name="account_proxy_server_label">DHT proxy osoite</string>
+    <string name="account_proxy_server_list_label">DHT proxy-palvelinlistan URL</string>
     <string name="account_proxy_server_used">Käytetään: %1$s</string>
     <string name="account_sip_proxy_label">Välityspalvelin</string>
     <string name="account_peer_discovery_label">Paikallinen vertaisten haku</string>

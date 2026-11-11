@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">শেয়ারিং বন্ধ করুন</string>
     <string name="location_share_about_title">মানচিত্রের তথ্য</string>
     <string name="you_txt_prefix">তুমিঃ</string>
-    <string name="action_call_hangup">বন্ধ করো</string>
+    <string name="action_call_hangup">কল শেষ</string>
     <string name="action_call_maximize">সর্বাধিক</string>
     <string name="action_call_minimize">হ্রাস করুন</string>
     <string name="action_call_mute">নীরব</string>

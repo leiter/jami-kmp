@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Ортақ қатынастарды тоқтату</string>
     <string name="location_share_about_title">Карталық ақпарат</string>
     <string name="you_txt_prefix">Сіз:</string>
-    <string name="action_call_hangup">Ашыңыз</string>
+    <string name="action_call_hangup">Қоңырауды аяқтау</string>
     <string name="action_call_maximize">Максималды</string>
     <string name="action_call_minimize">Қисық</string>
     <string name="action_call_mute">Өркітсіз</string>

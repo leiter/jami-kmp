@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Սեղմեք կիսումը</string>
     <string name="location_share_about_title">Քարտեզի տեղեկատվություն</string>
     <string name="you_txt_prefix">Դուք.</string>
-    <string name="action_call_hangup">Բացեք։</string>
+    <string name="action_call_hangup">Վերջնական զանգը</string>
     <string name="action_call_maximize">Մաքսիմալացնել</string>
     <string name="action_call_minimize">Կրկնել</string>
     <string name="action_call_mute">Լռություն</string>

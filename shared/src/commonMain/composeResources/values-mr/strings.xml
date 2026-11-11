@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">सामायिक करणे बंद करा</string>
     <string name="location_share_about_title">नकाशा माहिती</string>
     <string name="you_txt_prefix">तू:</string>
-    <string name="action_call_hangup">बंद करा</string>
+    <string name="action_call_hangup">कॉल समाप्त करा</string>
     <string name="action_call_maximize">जास्तीत जास्त</string>
     <string name="action_call_minimize">कमी करा</string>
     <string name="action_call_mute">गप्प</string>

@@ -54,7 +54,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">תפסיק לחלוק</string>
     <string name="location_share_about_title">מידע על מפה</string>
     <string name="you_txt_prefix">אני:</string>
-    <string name="action_call_hangup"> ניתוק</string>
+    <string name="action_call_hangup">סיום השיחה</string>
     <string name="action_call_maximize">שימו את האפס</string>
     <string name="action_call_minimize">להפחית</string>
     <string name="action_call_mute">שקט</string>

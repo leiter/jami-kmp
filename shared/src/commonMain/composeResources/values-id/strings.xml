@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Berhenti berbagi</string>
     <string name="location_share_about_title">Informasi peta</string>
     <string name="you_txt_prefix">Anda:</string>
-    <string name="action_call_hangup">Angkat</string>
+    <string name="action_call_hangup">Akhiri panggilan</string>
     <string name="action_call_maximize">Maksimalkan</string>
     <string name="action_call_minimize">Kurangi</string>
     <string name="action_call_mute">Senyapkan</string>

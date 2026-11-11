@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Acha kushiriki</string>
     <string name="location_share_about_title">Habari za ramani</string>
     <string name="you_txt_prefix">Wewe:</string>
-    <string name="action_call_hangup">Funga</string>
+    <string name="action_call_hangup">Maliza simu hii</string>
     <string name="action_call_maximize">Kufanya yote uwezayo</string>
     <string name="action_call_minimize">Kupunguza</string>
     <string name="action_call_mute">Kiziwi</string>

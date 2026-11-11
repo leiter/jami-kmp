@@ -91,7 +91,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">പങ്കിടുന്നത് അവസാനിപ്പിക്കുക</string>
     <string name="location_share_about_title">മാപ്പ് വിവരങ്ങൾ</string>
     <string name="you_txt_prefix">നീ:</string>
-    <string name="action_call_hangup">അടയ്ക്കുക</string>
+    <string name="action_call_hangup">കോൾ അവസാനിപ്പിക്കുക</string>
     <string name="action_call_maximize">പരമാവധി</string>
     <string name="action_call_minimize">കുറയ്ക്കുക</string>
     <string name="action_call_mute">നിശബ്ദത</string>

@@ -91,7 +91,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Oprește distribuirea</string>
     <string name="location_share_about_title">Detalii pe hartă</string>
     <string name="you_txt_prefix">Tu:</string>
-    <string name="action_call_hangup">Închide</string>
+    <string name="action_call_hangup">Închide apelul</string>
     <string name="action_call_maximize">Maximizează</string>
     <string name="action_call_minimize">Micșorează</string>
     <string name="action_call_mute">Oprește</string>

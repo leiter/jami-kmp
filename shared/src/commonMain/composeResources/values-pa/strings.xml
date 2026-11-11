@@ -73,7 +73,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">ਸਾਂਝਾ ਕਰਨਾ ਬੰਦ ਕਰੋ</string>
     <string name="location_share_about_title">ਨਕਸ਼ੇ ਦੀ ਜਾਣਕਾਰੀ</string>
     <string name="you_txt_prefix">ਤੁਸੀਂ:</string>
-    <string name="action_call_hangup">ਕਾਲ ਕੱਟੋ</string>
+    <string name="action_call_hangup">ਕਾਲ ਸਮਾਪਤ ਕਰੋ</string>
     <string name="action_call_maximize">ਵੱਡਾ ਕਰੋ</string>
     <string name="action_call_minimize">ਛੋਟਾ ਕਰੋ</string>
     <string name="action_call_mute">ਚੁੱਪ ਹੋਵੋ</string>

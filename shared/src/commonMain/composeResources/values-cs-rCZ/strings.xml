@@ -90,7 +90,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Přestat sdílet</string>
     <string name="location_share_about_title">Informace o mapě</string>
     <string name="you_txt_prefix">Vy:</string>
-    <string name="action_call_hangup">Zavěsit</string>
+    <string name="action_call_hangup">Ukončit hovor</string>
     <string name="action_call_maximize">Maximalizovat</string>
     <string name="action_call_minimize">Minimalizovat</string>
     <string name="action_call_mute">Ztlumit</string>

@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Cau pas de partejar</string>
     <string name="location_share_about_title">Informacion de mapa</string>
     <string name="you_txt_prefix">Tu:</string>
-    <string name="action_call_hangup">Òc, tanca.</string>
+    <string name="action_call_hangup">Terminar</string>
     <string name="action_call_maximize">Maximizar</string>
     <string name="action_call_minimize">Reduccion</string>
     <string name="action_call_mute">Muç</string>

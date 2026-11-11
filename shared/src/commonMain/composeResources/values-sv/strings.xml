@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Sluta dela</string>
     <string name="location_share_about_title">Kartinformation</string>
     <string name="you_txt_prefix">Du:</string>
-    <string name="action_call_hangup">Lägg på</string>
+    <string name="action_call_hangup">Avsluta samtal</string>
     <string name="action_call_maximize">Maximera</string>
     <string name="action_call_minimize">Minska</string>
     <string name="action_call_mute">Tysta</string>

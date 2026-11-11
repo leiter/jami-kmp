@@ -91,7 +91,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Зупинити поширення</string>
     <string name="location_share_about_title">Інформація з карти</string>
     <string name="you_txt_prefix">Ви:</string>
-    <string name="action_call_hangup">Зупинити</string>
+    <string name="action_call_hangup">Закінчити дзвінок</string>
     <string name="action_call_maximize">Збільшити</string>
     <string name="action_call_minimize">Зменшити</string>
     <string name="action_call_mute">Без звуку</string>

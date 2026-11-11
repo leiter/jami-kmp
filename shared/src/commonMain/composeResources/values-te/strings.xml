@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">భాగస్వామ్యం చేయడాన్ని ఆపండి</string>
     <string name="location_share_about_title">మ్యాప్ సమాచారం</string>
     <string name="you_txt_prefix">మీరు:</string>
-    <string name="action_call_hangup">మూసివేయండి</string>
+    <string name="action_call_hangup">కాల్‌ను ముగించు</string>
     <string name="action_call_maximize">గరిష్టంగా</string>
     <string name="action_call_minimize">తగ్గించు</string>
     <string name="action_call_mute">మ్యూట్</string>

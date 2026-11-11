@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Τερματισμός κοινοποίησης</string>
     <string name="location_share_about_title">Στοιχεία χάρτη</string>
     <string name="you_txt_prefix">Εσύ</string>
-    <string name="action_call_hangup">Κλείσιμο</string>
+    <string name="action_call_hangup">Τερματισμός κλήσης</string>
     <string name="action_call_maximize">Μεγιστοποίηση</string>
     <string name="action_call_minimize">Ελαχιστοποίηση</string>
     <string name="action_call_mute">Σίγαση</string>

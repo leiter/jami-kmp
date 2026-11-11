@@ -91,7 +91,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">停止分享</string>
     <string name="location_share_about_title">地图信息</string>
     <string name="you_txt_prefix">您：</string>
-    <string name="action_call_hangup">挂断</string>
+    <string name="action_call_hangup">结束通话</string>
     <string name="action_call_maximize">最大化</string>
     <string name="action_call_minimize">减少</string>
     <string name="action_call_mute">静音</string>

@@ -91,7 +91,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Arrêter le partage</string>
     <string name="location_share_about_title">Informations sur la carte</string>
     <string name="you_txt_prefix">Vous:</string>
-    <string name="action_call_hangup">Raccrochez</string>
+    <string name="action_call_hangup">Fin d’appel</string>
     <string name="action_call_maximize">Agrandir</string>
     <string name="action_call_minimize">Réduire</string>
     <string name="action_call_mute">Couper le micro</string>

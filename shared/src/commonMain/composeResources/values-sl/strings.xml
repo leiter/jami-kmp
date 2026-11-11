@@ -91,7 +91,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Prenehaj deliti</string>
     <string name="location_share_about_title">Podatki zemljevida</string>
     <string name="you_txt_prefix">Vi:</string>
-    <string name="action_call_hangup">Prekini</string>
+    <string name="action_call_hangup">Zaključi klic</string>
     <string name="action_call_maximize">Povečaj</string>
     <string name="action_call_minimize">Zmanjšaj</string>
     <string name="action_call_mute">Utišaj</string>

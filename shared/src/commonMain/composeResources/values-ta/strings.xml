@@ -81,7 +81,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">பகிர்வதை நிறுத்து</string>
     <string name="location_share_about_title">வரைபட தகவல்</string>
     <string name="you_txt_prefix">நீ:</string>
-    <string name="action_call_hangup">மூடிடு</string>
+    <string name="action_call_hangup">அழைப்பை முடித்திடுக</string>
     <string name="action_call_maximize">அதிகபட்சமாக</string>
     <string name="action_call_minimize">குறைத்தல்</string>
     <string name="action_call_mute">முடக்க</string>

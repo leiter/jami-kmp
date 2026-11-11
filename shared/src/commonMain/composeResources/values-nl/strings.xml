@@ -78,7 +78,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Stop met delen</string>
     <string name="location_share_about_title">Informatie over de kaart</string>
     <string name="you_txt_prefix">U:</string>
-    <string name="action_call_hangup">Ophangen</string>
+    <string name="action_call_hangup">Oproep beëindigen</string>
     <string name="action_call_maximize">Maximaliseren</string>
     <string name="action_call_minimize">Verkleinen</string>
     <string name="action_call_mute">Dempen</string>

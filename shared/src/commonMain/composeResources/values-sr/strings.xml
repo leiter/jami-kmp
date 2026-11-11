@@ -91,7 +91,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Zaustavi deljenje</string>
     <string name="location_share_about_title">Informacije o mapi</string>
     <string name="you_txt_prefix">Ti: </string>
-    <string name="action_call_hangup">Prekini poziv</string>
+    <string name="action_call_hangup">Završi poziv</string>
     <string name="action_call_maximize">Uvećaj</string>
     <string name="action_call_minimize">Smanji</string>
     <string name="action_call_mute">Isključi zvuk</string>

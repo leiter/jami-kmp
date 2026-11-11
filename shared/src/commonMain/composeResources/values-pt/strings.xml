@@ -91,7 +91,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Parar a partilha</string>
     <string name="location_share_about_title">Informações do mapa</string>
     <string name="you_txt_prefix">Você:</string>
-    <string name="action_call_hangup">Desligar</string>
+    <string name="action_call_hangup">Terminar chamada</string>
     <string name="action_call_maximize">Maximizar</string>
     <string name="action_call_minimize">Reduzir</string>
     <string name="action_call_mute">Silenciar</string>

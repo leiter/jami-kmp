@@ -73,7 +73,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_password_label">密码</string>
     <string name="account_optionnal_category">可选设置</string>
     <string name="account_useragent_label">用户代理</string>
-    <string name="account_autoanswer_label">自动应答</string>
+    <string name="account_autoanswer_label">自动回复</string>
     <string name="account_rendezvous_label">集合点模式</string>
     <string name="account_rendezvous_summary">在集合点模式中，传入呼叫将加入会议房间。</string>
     <string name="account_upnp_label">启用 UPnP</string>
@@ -154,7 +154,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_account_wait_title">请稍等…</string>
     <string name="export_account_wait_message">导出账户信息</string>
     <string name="account_export_file">备份账户</string>
-    <string name="account_export_file_summary">备份您设备上的账户以便恢复</string>
+    <string name="account_export_file_summary">将您的账户备份到设备上以便稍后恢复</string>
     <string name="account_export_end_decryption_message">使用该密码无法解锁您的账户。</string>
     <string name="account_enter_password">输入密码</string>
     <string name="account_share_body">用 "%1$s" 在 Jami 分布式通信平台上与我联系：%2$s</string>
@@ -214,7 +214,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="no_registered_name_for_account">没有注册名称</string>
     <string name="username_available">用户名可用。</string>
     <string name="register_name">注册名称</string>
-    <string name="trying_to_register_name">用户名正在注册中。请稍候...</string>
+    <string name="trying_to_register_name">正在注册您的用户名。请稍候...</string>
     <string name="registered_username">注册用户名</string>
     <string name="register_username">注册公开用户名</string>
     <string name="register_recommended">推荐</string>

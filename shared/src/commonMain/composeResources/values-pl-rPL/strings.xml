@@ -91,7 +91,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Zatrzymaj udostępnianie</string>
     <string name="location_share_about_title">Informacje o mapie</string>
     <string name="you_txt_prefix">Ty:</string>
-    <string name="action_call_hangup">Rozłącz się</string>
+    <string name="action_call_hangup">Skończ rozmowę</string>
     <string name="action_call_maximize">Maksymalizuj</string>
     <string name="action_call_minimize">Zredukuj</string>
     <string name="action_call_mute">Wycisz</string>

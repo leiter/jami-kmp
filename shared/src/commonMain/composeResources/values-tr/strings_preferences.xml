@@ -58,10 +58,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_logs_summary">Tanılama günlüğü ayarlarını aç</string>
     <string name="pref_logs_start">Günlükle</string>
     <string name="pref_logs_stop">Günlüklemeyi durdur</string>
-    <string name="pref_typing_title">Tipleme göstergesi</string>
+    <string name="pref_typing_title">Yazma göstergesi</string>
     <string name="pref_block_record_title">Ekran görüntüsünü ve kaydını engelle</string>
     <string name="pref_block_record_summary">Ekran görüntüsü ya da kaydını almayı engelle.</string>
-    <string name="pref_link_preview_title">Web bağlantısı önizlemeleri</string>
+    <string name="pref_link_preview_title">Ağ bağlantısı ön izlemeleri</string>
     <string name="pref_link_preview_summary">Ön izleme, içeriğin üçüncü taraf sunuculardan indirilmesini gerektirir.</string>
     <string name="connectivity_custom_title">Özel</string>
     <string name="extension_invalid_signature"><b>%1$s</b> geçersiz bir imza içeriyor.</string>

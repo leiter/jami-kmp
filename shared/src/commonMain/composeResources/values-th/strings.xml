@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">หยุดแบ่งปัน</string>
     <string name="location_share_about_title">ข้อมูลแผนที่</string>
     <string name="you_txt_prefix">คุณ:</string>
-    <string name="action_call_hangup">วางสาย</string>
+    <string name="action_call_hangup">สิ้นสุดการโทร</string>
     <string name="action_call_maximize">ทำให้สูงสุด</string>
     <string name="action_call_minimize">ลด</string>
     <string name="action_call_mute">ปิดเสียง</string>

@@ -91,7 +91,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_share_action_stop">Arrêter le partage</string>
     <string name="location_share_about_title">Informations sur la carte</string>
     <string name="you_txt_prefix">Vous :</string>
-    <string name="action_call_hangup">Raccrocher</string>
+    <string name="action_call_hangup">Fin d’appel</string>
     <string name="action_call_maximize">Maximiser</string>
     <string name="action_call_minimize">Réduire</string>
     <string name="action_call_mute">Désactiver le micro</string>
@@ -252,7 +252,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="hist_contact_unblocked">Contact débloqué</string>
     <string name="hist_invitation_received">Invitation reçue</string>
     <string name="profile">Profil</string>
-    <string name="profile_name">Nom du profile</string>
+    <string name="profile_name">Nom du profil</string>
     <string name="profile_message_warning">Votre profil n'est partagé qu'avec vos contacts</string>
     <string name="custom_profile_message_warning">Le profil personnalisé n'est visible que pour le compte de cet appareil.</string>
     <string name="open_the_gallery">Ouvrir la galerie</string>
