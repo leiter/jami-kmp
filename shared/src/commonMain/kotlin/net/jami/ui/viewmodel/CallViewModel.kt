@@ -142,6 +142,10 @@ data class CallState(
     val callStatus: String = "",
     val peerName: String = "",
     val peerUri: String = "",
+    /** Profile picture of the peer, or null for initials. */
+    val peerAvatar: ByteArray? = null,
+    /** Registered name shown under [peerName] when the two differ (Android's number line). */
+    val peerSubtitle: String = "",
     val duration: Long = 0L,
     val isAudioMuted: Boolean = false,
     val isVideoMuted: Boolean = false,
@@ -311,12 +315,15 @@ class CallViewModel(
                 callStatus = CallStatus.SEARCHING.name,
                 peerUri = peerUri.uri,
                 // A group has no peer to resolve a name for, so name the call by the conversation.
-                peerName = if (isGroupCall) conversation!!.title else contactUri,
+                peerName = if (isGroupCall) conversation!!.title else peerUri.rawRingId,
                 isIncoming = false,
                 hasVideo = effectiveVideo,
                 hasLocalVideo = effectiveVideo,
                 isFrontCamera = hardwareService.isPreviewFromFrontCamera
             )
+            // The outgoing screen showed the raw jami: URI for the whole call: only the
+            // incoming path ever looked the contact up.
+            if (!isGroupCall) resolveContactName(resolvedAccountId, peerUri, call = null)
 
             try {
                 // The swarm uri, not the raw id the route carries: CallService.placeCall and the
@@ -397,7 +404,7 @@ class CallViewModel(
                 callMode = initialMode,
                 callStatus = call.callStatus.name,
                 peerUri = call.peerUri.uri,
-                peerName = call.peerUri.uri,
+                peerName = call.peerUri.rawRingId,
                 isIncoming = call.isIncoming,
                 isVideo = hasVideoOffered,
                 hasVideo = hasVideoOffered,
@@ -1175,18 +1182,30 @@ class CallViewModel(
         }
     }
 
-    private fun resolveContactName(accountId: String, peerUri: Uri, call: Call) {
+    /**
+     * Name, registered name and picture of the peer, as the Android call screen shows them:
+     * profile name, else contact name, else registered username, else the Jami ID.
+     */
+    private fun resolveContactName(accountId: String, peerUri: Uri, call: Call?) {
         scope.launch {
             try {
                 val contact = contactService.findContact(accountId, peerUri)
                 val profile = contactService.loadContactData(contact, accountId)
-                val displayName = profile.displayName?.takeIf { it.isNotBlank() }
-                    ?: contact.displayName?.takeIf { it.isNotBlank() }
-                    ?: peerUri.uri
-                _state.value = _state.value.copy(peerName = displayName)
-                call.contact = contact
+                call?.contact = contact
+                _state.value = _state.value.copy(peerAvatar = profile.avatar)
+                // The registered name is often looked up after the call starts: follow it, so
+                // the title moves from the Jami ID to the name once it is known.
+                contact.usernameFlow.collect { username ->
+                    val (title, subtitle) = callPeerTitle(
+                        profileName = profile.displayName,
+                        contactName = contact.displayName,
+                        username = username,
+                        rawId = peerUri.rawRingId,
+                    )
+                    _state.value = _state.value.copy(peerName = title, peerSubtitle = subtitle)
+                }
             } catch (_: Exception) {
-                // Keep URI as display name on failure
+                // Keep the Jami ID as display name on failure
             }
         }
     }
@@ -1224,4 +1243,24 @@ class CallViewModel(
         /** Bounds how long startScreenShare() waits for the platform permission prompt. */
         private const val SCREEN_SHARE_PERMISSION_TIMEOUT_MS = 30_000L
     }
+}
+
+/**
+ * Title and subtitle of the call screen's peer: the first non-blank of profile name, contact
+ * name, registered username and Jami ID; the registered username goes underneath when it is
+ * not already the title (Android CallFragment's contact_bubble_num_txt).
+ */
+internal fun callPeerTitle(
+    profileName: String?,
+    contactName: String?,
+    username: String?,
+    rawId: String,
+): Pair<String, String> {
+    val name = username?.takeIf { it.isNotBlank() }
+    val title = profileName?.takeIf { it.isNotBlank() }
+        ?: contactName?.takeIf { it.isNotBlank() }
+        ?: name
+        ?: rawId
+    val subtitle = if (name != null && name != title) name else ""
+    return title to subtitle
 }

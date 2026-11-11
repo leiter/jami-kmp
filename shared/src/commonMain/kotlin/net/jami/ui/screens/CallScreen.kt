@@ -55,6 +55,15 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import net.jami.ui.components.content.AvatarSize
+import net.jami.ui.components.content.JamiAvatar
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.PhoneDisabled
 import androidx.compose.material.icons.filled.PhoneForwarded
@@ -744,22 +753,14 @@ private fun AudioCallBackground(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Avatar
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.15f))
-                    .semantics { contentDescription = callerAvatarDesc },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = Color.White.copy(alpha = 0.8f),
-                )
-            }
+            // Avatar: the peer's picture, or initials (Android CallFragment's contact_bubble).
+            // It used to be a generic person icon for every call.
+            JamiAvatar(
+                displayName = state.peerName.ifEmpty { state.peerUri },
+                avatarBytes = state.peerAvatar,
+                size = AvatarSize.XLarge,
+                contentDescription = callerAvatarDesc,
+            )
 
             Spacer(Modifier.height(JamiTheme.spacing.l))
 
@@ -768,7 +769,20 @@ private fun AudioCallBackground(
                 text = state.peerName.ifEmpty { state.peerUri },
                 style = JamiTheme.typography.headlineMedium,
                 color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = JamiTheme.spacing.l),
             )
+            // Registered name, when the title is a different (profile) name.
+            if (state.peerSubtitle.isNotEmpty()) {
+                Text(
+                    text = state.peerSubtitle,
+                    style = JamiTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.75f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
 
             Spacer(Modifier.height(JamiTheme.spacing.s))
 
@@ -851,11 +865,23 @@ private fun CallInfoOverlay(
                 .padding(JamiTheme.spacing.m),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(
-                text = state.peerName.ifEmpty { state.peerUri },
-                style = JamiTheme.typography.titleMedium,
-                color = Color.White,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
+            ) {
+                JamiAvatar(
+                    displayName = state.peerName.ifEmpty { state.peerUri },
+                    avatarBytes = state.peerAvatar,
+                    size = AvatarSize.Small,
+                )
+                Text(
+                    text = state.peerName.ifEmpty { state.peerUri },
+                    style = JamiTheme.typography.titleMedium,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
 
             if (state.duration > 0 && state.callMode is CallMode.OnGoing) {
                 Spacer(Modifier.height(JamiTheme.spacing.xs))
@@ -1098,15 +1124,161 @@ private fun OnGoingControls(
     onOpenTransfer: () -> Unit,
     onToggleRecording: () -> Unit,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        // First row: mute, speaker, video, screen share / camera switch
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CallControlButton(
+    // Eight buttons used to sit in one row (about 47 pt each on a 375 pt iPhone, under the
+    // 44 pt touch target once spaced) with a hold row and a conference row stacked on top.
+    // Now: the five things used during most calls, labelled, as on Android's call screen,
+    // and everything else one tap away under "More", in the same five-column grid.
+    var showMore by rememberSaveable { mutableStateOf(false) }
+    val videoActive = state.hasLocalVideo && !state.isVideoMuted
+    val canFlipCamera = videoActive && !state.isScreenSharing
+
+    val holdAction = CallAction(
+        icon = if (state.isOnHold) Icons.Default.PlayArrow else Icons.Default.Pause,
+        label = stringResource(if (state.isOnHold) Res.string.action_call_resume else Res.string.call_human_state_hold),
+        contentDescription = stringResource(
+            if (state.isOnHold) Res.string.content_desc_resume else Res.string.content_desc_hold
+        ),
+        isActive = state.isOnHold,
+        onClick = onToggleHold,
+    )
+
+    val moreActions = buildList {
+        // Hold sits in the main row while the camera is off; here once flip takes its place.
+        if (canFlipCamera) add(holdAction)
+        add(
+            CallAction(
+                icon = if (state.isScreenSharing) Icons.Default.StopScreenShare else Icons.Default.ScreenShare,
+                label = stringResource(Res.string.bottomSheet_share_btn),
+                contentDescription = stringResource(
+                    if (state.isScreenSharing) Res.string.content_desc_stop_screen_share
+                    else Res.string.content_desc_start_screen_share
+                ),
+                isActive = state.isScreenSharing,
+                onClick = onToggleScreenShare,
+            )
+        )
+        add(
+            CallAction(
+                icon = Icons.Default.Dialpad,
+                label = stringResource(Res.string.bottomSheet_dialpad_btn),
+                contentDescription = stringResource(Res.string.content_desc_dialpad),
+                onClick = onOpenDtmf,
+            )
+        )
+        add(
+            CallAction(
+                icon = Icons.Default.ChatBubble,
+                label = stringResource(Res.string.call_chat_title),
+                contentDescription = stringResource(Res.string.content_desc_call_chat),
+                badge = state.unreadInCallMessages,
+                onClick = onOpenCallChat,
+            )
+        )
+        add(
+            CallAction(
+                icon = Icons.Default.PhoneForwarded,
+                label = stringResource(Res.string.call_transfer_action),
+                contentDescription = stringResource(Res.string.content_desc_transfer),
+                onClick = onOpenTransfer,
+            )
+        )
+        add(
+            CallAction(
+                icon = Icons.Default.FiberManualRecord,
+                label = stringResource(
+                    if (state.isRecording) Res.string.content_desc_stop_recording
+                    else Res.string.content_desc_start_recording
+                ),
+                contentDescription = stringResource(
+                    if (state.isRecording) Res.string.content_desc_stop_recording
+                    else Res.string.content_desc_start_recording
+                ),
+                isActive = state.isRecording,
+                onClick = onToggleRecording,
+            )
+        )
+        // Conference controls: the roster and hand raising for everyone; mute-all and
+        // locking for moderators.
+        if (state.isConference) {
+            add(
+                CallAction(
+                    icon = Icons.Default.Groups,
+                    label = stringResource(Res.string.call_participants_title),
+                    contentDescription = stringResource(Res.string.content_desc_participants),
+                    onClick = onOpenParticipants,
+                )
+            )
+            add(
+                CallAction(
+                    icon = Icons.Default.BackHand,
+                    label = stringResource(
+                        if (state.isHandRaised) Res.string.call_lower_hand else Res.string.bottomSheet_raiseHand_btn
+                    ),
+                    contentDescription = stringResource(
+                        if (state.isHandRaised) Res.string.content_desc_lower_hand
+                        else Res.string.content_desc_raise_hand
+                    ),
+                    isActive = state.isHandRaised,
+                    onClick = onToggleRaiseHand,
+                )
+            )
+            if (state.isModerator && state.participants.size > 1) {
+                add(
+                    CallAction(
+                        icon = Icons.Default.MicOff,
+                        label = stringResource(Res.string.call_mute_all),
+                        contentDescription = stringResource(Res.string.content_desc_mute_all),
+                        onClick = onMuteAll,
+                    )
+                )
+                add(
+                    CallAction(
+                        icon = if (state.isConferenceLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                        label = stringResource(
+                            if (state.isConferenceLocked) Res.string.content_desc_unlock_conference
+                            else Res.string.content_desc_lock_conference
+                        ),
+                        contentDescription = stringResource(
+                            if (state.isConferenceLocked) Res.string.content_desc_unlock_conference
+                            else Res.string.content_desc_lock_conference
+                        ),
+                        isActive = state.isConferenceLocked,
+                        onClick = { onToggleConferenceLock(!state.isConferenceLocked) },
+                    )
+                )
+            }
+        }
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = JamiTheme.spacing.s),
+    ) {
+        AnimatedVisibility(visible = showMore) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(JamiTheme.spacing.m),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = JamiTheme.spacing.m)
+                    .clip(RoundedCornerShape(24.dp))
+                    // Opaque, a shade lighter than the screen: the grid opens over the peer's
+                    // name and the call timer, which showed through a translucent scrim.
+                    .background(JamiColors.DarkBackground)
+                    .background(Color.White.copy(alpha = 0.07f))
+                    .padding(vertical = JamiTheme.spacing.m),
+            ) {
+                moreActions.chunked(CALL_ACTION_COLUMNS).forEach { rowActions ->
+                    CallActionRow(rowActions)
+                }
+            }
+        }
+
+        val main = listOf(
+            CallAction(
                 icon = if (state.isAudioMuted) Icons.Default.MicOff else Icons.Default.Mic,
+                label = stringResource(if (state.isAudioMuted) Res.string.action_call_unmute else Res.string.action_call_mute),
                 contentDescription = stringResource(
                     if (state.isAudioMuted) Res.string.content_desc_unmute else Res.string.content_desc_mute
                 ),
@@ -1115,172 +1287,46 @@ private fun OnGoingControls(
                 // Nothing is being captured while muted, so the ring would sit at zero and read
                 // as "you are not being heard" twice over.
                 level = micLevel.takeUnless { state.isAudioMuted },
-            )
-
-            CallControlButton(
+            ),
+            CallAction(
                 icon = if (state.isSpeakerOn) Icons.Default.VolumeUp else Icons.Default.VolumeOff,
+                label = stringResource(Res.string.bottomSheet_sound_output_btn),
                 contentDescription = stringResource(
                     if (state.isSpeakerOn) Res.string.content_desc_speaker_off else Res.string.content_desc_speaker_on
                 ),
                 isActive = state.isSpeakerOn,
                 onClick = onToggleSpeaker,
-            )
-
-            val videoActive = state.hasLocalVideo && !state.isVideoMuted
-            CallControlButton(
+            ),
+            CallAction(
                 icon = if (videoActive) Icons.Default.Videocam else Icons.Default.VideocamOff,
+                label = stringResource(Res.string.bottomSheet_camera_onoff_switch_btn),
                 contentDescription = stringResource(
                     if (videoActive) Res.string.content_desc_disable_video else Res.string.content_desc_enable_video
                 ),
                 isActive = videoActive,
                 onClick = onToggleVideo,
-            )
-
-            // Screen share button
-            CallControlButton(
-                icon = if (state.isScreenSharing) Icons.Default.StopScreenShare else Icons.Default.ScreenShare,
-                contentDescription = stringResource(
-                    if (state.isScreenSharing) Res.string.content_desc_stop_screen_share else Res.string.content_desc_start_screen_share
-                ),
-                isActive = state.isScreenSharing,
-                onClick = onToggleScreenShare,
-            )
-
-            // DTMF dialpad button
-            CallControlButton(
-                icon = Icons.Default.Dialpad,
-                contentDescription = stringResource(Res.string.content_desc_dialpad),
-                isActive = false,
-                onClick = onOpenDtmf,
-            )
-
-            // In-call chat, with a badge for messages that arrived while it was closed
-            Box {
-                CallControlButton(
-                    icon = Icons.Default.ChatBubble,
-                    contentDescription = stringResource(Res.string.content_desc_call_chat),
-                    isActive = false,
-                    onClick = onOpenCallChat,
-                )
-                if (state.unreadInCallMessages > 0) {
-                    Badge(modifier = Modifier.align(Alignment.TopEnd)) {
-                        Text(state.unreadInCallMessages.coerceAtMost(99).toString())
-                    }
-                }
-            }
-
-            // Transfer button
-            CallControlButton(
-                icon = Icons.Default.PhoneForwarded,
-                contentDescription = stringResource(Res.string.content_desc_transfer),
-                isActive = false,
-                onClick = onOpenTransfer,
-            )
-
-            // Record button
-            CallControlButton(
-                icon = Icons.Default.FiberManualRecord,
-                contentDescription = stringResource(
-                    if (state.isRecording) Res.string.content_desc_stop_recording
-                    else Res.string.content_desc_start_recording
-                ),
-                isActive = state.isRecording,
-                onClick = onToggleRecording,
-            )
-        }
-
-        // Second row: camera switch (if video active), hold
-        if (state.hasLocalVideo && !state.isVideoMuted && !state.isScreenSharing) {
-            Spacer(Modifier.height(JamiTheme.spacing.m))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                CallControlButton(
+            ),
+            if (canFlipCamera) {
+                CallAction(
                     icon = Icons.Default.Cameraswitch,
+                    label = stringResource(Res.string.bottomSheet_change_camera_btn),
                     contentDescription = stringResource(Res.string.view_switch_camera),
-                    isActive = false,
                     onClick = onSwitchCamera,
                 )
-
-                CallControlButton(
-                    icon = if (state.isOnHold) Icons.Default.PlayArrow else Icons.Default.Pause,
-                    contentDescription = stringResource(
-                        if (state.isOnHold) Res.string.content_desc_resume else Res.string.content_desc_hold
-                    ),
-                    isActive = state.isOnHold,
-                    onClick = onToggleHold,
-                )
-            }
-        } else {
-            // Show hold button in a separate row when no video
-            Spacer(Modifier.height(JamiTheme.spacing.m))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                CallControlButton(
-                    icon = if (state.isOnHold) Icons.Default.PlayArrow else Icons.Default.Pause,
-                    contentDescription = stringResource(
-                        if (state.isOnHold) Res.string.content_desc_resume else Res.string.content_desc_hold
-                    ),
-                    isActive = state.isOnHold,
-                    onClick = onToggleHold,
-                )
-            }
-        }
-
-        // Conference controls — participant roster and hand raising are available to every
-        // participant; mute-all and locking are moderator-only.
-        if (state.isConference) {
-            Spacer(Modifier.height(JamiTheme.spacing.m))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                // Participant list (per-participant moderation lives in the sheet)
-                CallControlButton(
-                    icon = Icons.Default.Groups,
-                    contentDescription = stringResource(Res.string.content_desc_participants),
-                    isActive = false,
-                    onClick = onOpenParticipants,
-                )
-
-                // Raise / lower own hand
-                CallControlButton(
-                    icon = Icons.Default.BackHand,
-                    contentDescription = stringResource(
-                        if (state.isHandRaised) Res.string.content_desc_lower_hand
-                        else Res.string.content_desc_raise_hand
-                    ),
-                    isActive = state.isHandRaised,
-                    onClick = onToggleRaiseHand,
-                )
-
-                if (state.isModerator && state.participants.size > 1) {
-                    // Mute all button
-                    CallControlButton(
-                        icon = Icons.Default.MicOff,
-                        contentDescription = stringResource(Res.string.content_desc_mute_all),
-                        isActive = false,
-                        onClick = onMuteAll,
-                    )
-
-                    // Lock conference button
-                    CallControlButton(
-                        icon = if (state.isConferenceLocked) Icons.Default.Lock else Icons.Default.LockOpen,
-                        contentDescription = stringResource(
-                            if (state.isConferenceLocked) Res.string.content_desc_unlock_conference
-                            else Res.string.content_desc_lock_conference
-                        ),
-                        isActive = state.isConferenceLocked,
-                        onClick = {
-                            onToggleConferenceLock(!state.isConferenceLocked)
-                        },
-                    )
-                }
-            }
-        }
+            } else {
+                holdAction
+            },
+            CallAction(
+                icon = if (showMore) Icons.Default.ExpandMore else Icons.Default.MoreHoriz,
+                label = stringResource(Res.string.tv_action_more),
+                contentDescription = stringResource(Res.string.menu_overflow),
+                isActive = showMore,
+                // Chat messages that arrive while the grid is closed must still be noticed.
+                badge = if (showMore) 0 else state.unreadInCallMessages,
+                onClick = { showMore = !showMore },
+            ),
+        )
+        CallActionRow(main)
 
         Spacer(Modifier.height(JamiTheme.spacing.l))
 
@@ -1297,6 +1343,68 @@ private fun OnGoingControls(
         ) {
             Icon(Icons.Default.CallEnd, contentDescription = null, modifier = Modifier.size(32.dp))
         }
+    }
+}
+
+/** Columns of the call controls, as Android's call_parameters_grid. */
+private const val CALL_ACTION_COLUMNS = 5
+
+/** One labelled call control. */
+private class CallAction(
+    val icon: ImageVector,
+    val label: String,
+    val contentDescription: String,
+    val onClick: () -> Unit,
+    val isActive: Boolean = false,
+    val badge: Int = 0,
+    val level: (() -> Float)? = null,
+)
+
+/**
+ * Up to [CALL_ACTION_COLUMNS] controls, each in an equal-width cell so a short last row stays
+ * aligned with the rows above it.
+ */
+@Composable
+private fun CallActionRow(actions: List<CallAction>) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+    ) {
+        actions.forEach { action ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.weight(1f),
+            ) {
+                Box {
+                    CallControlButton(
+                        icon = action.icon,
+                        contentDescription = action.contentDescription,
+                        isActive = action.isActive,
+                        onClick = action.onClick,
+                        level = action.level,
+                    )
+                    if (action.badge > 0) {
+                        Badge(modifier = Modifier.align(Alignment.TopEnd)) {
+                            Text(action.badge.coerceAtMost(99).toString())
+                        }
+                    }
+                }
+                Spacer(Modifier.height(JamiTheme.spacing.xs))
+                // The button carries the spoken description; the label is for the eye only.
+                Text(
+                    text = action.label,
+                    style = JamiTheme.typography.labelSmall,
+                    color = Color.White.copy(alpha = 0.9f),
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .padding(horizontal = 2.dp)
+                        .clearAndSetSemantics { },
+                )
+            }
+        }
+        repeat(CALL_ACTION_COLUMNS - actions.size) { Spacer(Modifier.weight(1f)) }
     }
 }
 
