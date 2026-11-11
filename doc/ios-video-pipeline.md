@@ -50,8 +50,19 @@ reasoning.
 - Rotated remote frames: the layer is turned and its bounds swapped by `+layoutDisplayLayer:`,
   which every container's layout pass now calls instead of setting `layer.frame`.
 
-**Still open:** on-device verification; PiP (§4); conference grids may want Metal later;
-`CallViewModel.stopScreenShare` still sends Android's `camera://0`/`camera://1`.
+**Still open:**
+- **On-device verification, with TestFlight build 37** (the first build with this code;
+  build 36 is the state before it). A 1:1 video call against the native client or an Android
+  phone, checking: each side sees the other; the image stays upright when either phone
+  turns, in both landscape directions; a front/back camera switch keeps the outgoing stream;
+  backgrounding and returning mid-call brings the remote image back. If nothing renders, the
+  wrapper's log in the app's Documents folder has a `Video` line per registered sink, and
+  the daemon logs `getNewFrame: Unable to find input …` when frames go to the wrong input.
+- PiP (§4).
+- Conference grids may want a Metal renderer later.
+- `CallViewModel.stopScreenShare` still sends Android's `camera://0`/`camera://1`
+  (screen sharing does not work on iOS anyway).
+- The branch is not merged into `ios-catch-up-2026-11`.
 
 Reference implementation: `jami-client-ios/Ring/Ring/Bridging/VideoAdapter.mm` +
 `VideoUtils.mm` (the `MediaUtils` category) + `Services/VideoService.swift`.
