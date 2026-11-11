@@ -44,7 +44,7 @@ now on a Mac, so T0 is possible and comes first.
    lying flat (face up/down, unknown) keeps the last orientation instead of snapping the outgoing
    video to portrait. `CaptureOrientationTest`; 3/3 launches, no violation logged. The capture
    path itself needs a video call to exercise.
-4. **KMP-only strings are translated into German only** (`placeholder_search`,
+4. *(Superseded — see `doc/ios-next-tasks-2026-11-11.md` item 3.)* **KMP-only strings are translated into German only** (`placeholder_search`,
    `home_no_conversation_*`, `action_new_conversation`, `filter_*`, …) — every other language
    shows an English home screen (T5). *Measured 2026-11-11:* `values-de` has **87** keys that
    `values-fr` (and the other big locales, 838 keys each) lack — onboarding, account, and ~20
@@ -333,11 +333,8 @@ keeps names and photos off notifications. iOS and Android compile; no Swift or r
 
 ## Seen on the simulator, minor
 
-- `filter_unread` / `filter_groups` ("Unread", "Groups") have no German translation — KMP-only
-  keys, so nothing to import from the Android client.
-- The home empty-state subtitle is left-aligned whenever it wraps onto two lines (German), centred
-  when it fits on one (English): the text has no `textAlign`, only the single line is centred by
-  its container.
+- ~~`filter_unread` / `filter_groups` have no German~~ and ~~the home empty-state subtitle is
+  left-aligned when it wraps~~ — both fixed 2026-11-11.
 
 ## Not new, still open
 

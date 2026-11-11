@@ -35,10 +35,19 @@ pushed, not merged) from the git history since 2026-10-31, `doc/ios-task-queue-2
    files). Hazards and the verification recipe: `doc/apple-bridge-rebuild.md`. **M.**
 2. ~~**Script the device-side symlinks**~~ — **done 2026-11-11**, `scripts/make_device_links.py`. Was: (`shared/src/nativeInterop/cinterop/lib/`) — hand-made,
    drift silently, surface only as link errors. Same session as 1. **S.**
-3. **Translate the 87 KMP-only keys** that only `values-de` has (onboarding, account, ~20
-   `content_desc_*` accessibility labels, home screen) into the other locales. **S–M.**
-4. **Small UI bugs:** the home empty-state hint (`HomeScreen.kt:400`) has no `textAlign`, so it
-   goes left-aligned when it wraps; `filter_unread` / `filter_groups` have no German. **S.**
+3. **Translations — partly done 2026-11-11.** The gap was larger than measured above: besides
+   the 80 used German-only keys, 297 used keys had no translation at all, German included — the
+   KMP-only keys added since the one-off April import (`29f36b0`). Not a stale import: of 646 used
+   keys only 277 exist in Android under the same name, and those were already translated.
+   `scripts/sync_android_strings.py` (repeatable import) + `scripts/android_string_aliases.txt`
+   (72 reviewed KMP-key → Android-key aliases, 5 rejected false friends) added **8049**
+   translations across 95 locale folders. **Still open:** 253 used keys with no translation
+   anywhere and 54 German-only — KMP-only text with no Android source, which needs translating
+   some other way. Not run: `--update` (497 existing translations differ from current Android)
+   and `--new-locales` (8 folders only Android has).
+4. ~~**Small UI bugs**~~ — **fixed 2026-11-11**: the empty-state title and hint are centred
+   (`textAlign`), and `filter_all` / `filter_unread` / `filter_groups` have German. Checked on
+   the simulator in German.
 5. **Video pipeline** — calls send and render no video. Starts with wrapper work (frame-in,
    `SinkTarget`), then renderer, encoder controls, PiP. Plan: `doc/ios-video-pipeline.md`. **L**,
    needs a device to verify.
