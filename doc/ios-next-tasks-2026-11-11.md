@@ -41,9 +41,12 @@ pushed, not merged) from the git history since 2026-10-31, `doc/ios-task-queue-2
    keys only 277 exist in Android under the same name, and those were already translated.
    `scripts/sync_android_strings.py` (repeatable import) + `scripts/android_string_aliases.txt`
    (72 reviewed KMP-key → Android-key aliases, 5 rejected false friends) added **8049**
-   translations across 95 locale folders. **Still open:** 253 used keys with no translation
-   anywhere and 54 German-only — KMP-only text with no Android source, which needs translating
-   some other way. `--update` was run the same day: 404 existing translations refreshed in 79
+   translations across 95 locale folders. **German complete (2026-11-11):** the remaining 246
+   used keys were translated by hand (machine-quality, formal "Sie", terminology taken from the
+   existing German catalogue; not reviewed by a native speaker), and `account_type_jami` /
+   `account_type_sip` are marked `translatable="false"`. Every used key now has German.
+   **Still open:** those ~300 KMP-only keys exist in German only — every other language shows
+   them in English. `--update` was run the same day: 404 existing translations refreshed in 79
    folders (mostly upstream rewordings, e.g. `action_call_hangup` now "End call"); 93 kept
    (German and aliased keys are never updated). Upstream's `values-zh` mixes in Traditional
    strings; the one update that would have put one into our Simplified folder was replaced by

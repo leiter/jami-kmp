@@ -386,8 +386,8 @@ Biometric or device authentication adds a convenient way to locally unlock acces
     <string name="account_sip_username">Username</string>
     <string name="account_sip_port">Port (optional)</string>
     <string name="account_sip_display_name">Display name (optional)</string>
-    <string name="account_type_jami">Jami</string>
-    <string name="account_type_sip">SIP</string>
+    <string name="account_type_jami" translatable="false">Jami</string>
+    <string name="account_type_sip" translatable="false">SIP</string>
 
     <!-- Account Creation -->
     <string name="prompt_choose_username">Choose a username</string>
