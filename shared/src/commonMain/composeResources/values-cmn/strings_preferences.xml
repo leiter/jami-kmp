@@ -67,4 +67,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="extension_invalid_format">扩展格式无效：<b>%1$s</b></string>
     <string name="extension_force_install">强制安装</string>
     <string name="extension_path_image_add">添加新图像</string>
+    <string name="pref_category_privacy">隐私</string>
+    <string name="pref_pushNotifications_title">推送通知</string>
+    <string name="pref_pushNotifications_summary">使用 Google 服务从而允许在后台接受到电话或消息</string>
+    <string name="pref_videoResolution_title">视频分辨率</string>
+    <string name="pref_systemDialer_title">用 Jami 代替系统拨号</string>
+    <string name="pref_systemDialer_summary">在可用时使用 Jami 代替系统通话。</string>
+    <string name="pref_startOnBoot_title">启动时运行 Jami</string>
+    <string name="pref_startOnBoot_summary">系统启动时，在后台启动 Jami。</string>
+    <string name="pref_notification_title">通知可见性</string>
+    <string name="pref_notification_summary">设置锁定屏幕上的应用通知可见性。</string>
+    <string name="pref_blackList_title">屏蔽列表</string>
+    <string name="pref_blackList_summary">检查您的屏蔽列表</string>
+    <string name="pref_block_record_title">阻止截屏和录屏</string>
+    <string name="pref_block_record_summary">阻止截屏或录屏</string>
+    <string name="pref_category_calls">通话</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">消息</string>
+    <string name="pref_category_advanced">高级</string>
 </resources>

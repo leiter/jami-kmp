@@ -21,4 +21,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">Stiahnite</string>
     <string name="control_play">Spustiť</string>
     <string name="control_pause">Pozastaviť</string>
+    <string name="searchbar_navigation_account">Vybrať účet</string>
+    <string name="qrcode_to_scan">QR kód na naskenovanie</string>
+    <string name="content_desc_back">Späť</string>
+    <string name="content_desc_send">Poslať</string>
+    <string name="content_desc_mute">Nezvláštne</string>
+    <string name="content_desc_unmute">Nevyjadrený</string>
+    <string name="content_desc_enable_video">Povoliť video</string>
+    <string name="content_desc_disable_video">Vypnúť video</string>
+    <string name="content_desc_end_call">Ukončiť hovor</string>
+    <string name="content_desc_resume">Pokračovať</string>
+    <string name="content_desc_stop_recording">Ukončiť zaznamenávanie</string>
+    <string name="content_desc_take_photo">Zhotoviť fotografiu</string>
+    <string name="content_desc_send_message">Poslať správu</string>
+    <string name="content_desc_presence_online">Online</string>
+    <string name="content_desc_presence_offline">Offline</string>
+    <string name="content_desc_raise_hand">Zdvihnite ruku</string>
+    <string name="content_desc_send_call_message">Poslať správu</string>
+    <string name="content_desc_state_muted">Zmutuje</string>
 </resources>

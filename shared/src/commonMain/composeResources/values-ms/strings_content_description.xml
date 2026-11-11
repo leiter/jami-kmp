@@ -22,4 +22,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_play">Main</string>
     <string name="control_replay">Main ulang</string>
     <string name="control_pause">ഇടവേള</string>
+    <string name="content_desc_back">തിരിച്ചുപോവുക</string>
+    <string name="content_desc_send">അയയ്ക്കുക</string>
+    <string name="content_desc_mute">നിശബ്ദത</string>
+    <string name="content_desc_unmute">നിശബ്ദത</string>
+    <string name="content_desc_enable_video">Aktifkan panggilan video</string>
+    <string name="content_desc_end_call">Tamatkan panggilan</string>
+    <string name="content_desc_stop_recording">റെക്കോർഡിംഗ് നിർത്തുക</string>
+    <string name="content_desc_take_photo">ഫോട്ടോ എടുക്കൂ</string>
+    <string name="content_desc_send_message">Hantar pesan</string>
+    <string name="content_desc_presence_online">ഓൺലൈൻ</string>
+    <string name="content_desc_presence_offline">ഓഫ് ലൈൻ</string>
+    <string name="content_desc_raise_hand">കൈ ഉയര് ത്തുക</string>
+    <string name="content_desc_send_call_message">Hantar pesan</string>
+    <string name="content_desc_state_muted">നിശബ്ദത</string>
 </resources>

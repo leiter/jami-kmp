@@ -189,4 +189,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">Энэ форматг дэмжихгүй.</string>
     <string name="account_link_device_title">Шинэ төхөөрөмжийг холбох</string>
     <string name="account_link_device_button">Харилцаа холбоо</string>
+    <string name="account_delete_label">Хэтгэлээ устгах</string>
+    <string name="account_audio_rtp_min_label">Хамгийн бага</string>
+    <string name="account_audio_rtp_max_label">Хамгийн их хэмжээ</string>
+    <string name="account_video_rtp_min_label">Хамгийн бага</string>
+    <string name="account_video_rtp_max_label">Хамгийн их хэмжээ</string>
+    <string name="action_skip">Улаанбаатар</string>
+    <string name="error_username_invalid">Хэрэглэгчийн нэр хүчингүй</string>
+    <string name="account_sip_username">Хэрэглэгчийн нэр</string>
+    <string name="prompt_choose_username">Хэрэглэгчийн нэрийг сонго</string>
+    <string name="section_linked_devices">Хөгжлийн багаж хэрэгсэл</string>
+    <string name="account_rename_device">Уул уурхайн тоног төхөөрөмж</string>
+    <string name="screen_title_account_settings">Нягтлан бодох бүртгэлийн тохируулалт</string>
+    <string name="screen_title_blocked_contacts">Хаалттай холбоо</string>
+    <string name="certificates_status_banned">Блок</string>
 </resources>

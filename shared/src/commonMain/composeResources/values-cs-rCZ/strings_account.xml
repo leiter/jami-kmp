@@ -259,4 +259,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_error">Chyba ověření: %1$s</string>
     <string name="account_auth_success">Ověření proběhlo úspěšně</string>
     <string name="account_auth_password">Použijte heslo účtu</string>
+    <string name="account_delete_label">Odstranit účet</string>
+    <string name="account_delete_summary">Smazat účet z tohoto zařízení</string>
+    <string name="account_p2p_section_label">Peer-to-peer spojení</string>
+    <string name="account_audio_rtp_min_label">Minimum</string>
+    <string name="account_audio_rtp_max_label">Maximum</string>
+    <string name="account_video_rtp_min_label">Minimum</string>
+    <string name="account_video_rtp_max_label">Maximum</string>
+    <string name="account_read_receipts_label">Potvrzení o přečtení</string>
+    <string name="account_read_receipts_summary">Odesílat a vyžadovat potvrzení o doručení a přečtení při doručení nebo přečtení zpráv.</string>
+    <string name="account_biometric_setup_title">Povolit biometrické ověřování</string>
+    <string name="account_biometric_disable_title">Zakázat biometrické ověřování</string>
+    <string name="action_skip">Přeskočit</string>
+    <string name="error_username_invalid">Neplatné uživatelské jméno</string>
+    <string name="account_sip_username">Uživatelské jméno</string>
+    <string name="prompt_choose_username">Výberte uživatelské jméno</string>
+    <string name="dialog_export_title">Exportovat účet</string>
+    <string name="section_linked_devices">Připojená zařízení</string>
+    <string name="account_rename_device">Přejmenovat zařízení</string>
+    <string name="screen_title_account_settings">Nastavení účtu</string>
+    <string name="screen_title_blocked_contacts">Blokované kontakty</string>
+    <string name="certificates_status_banned">Blokovat</string>
 </resources>

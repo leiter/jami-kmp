@@ -103,4 +103,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="extension_invalid_format">Format du module d'extension invalide : <b>%1$s</b></string>
     <string name="extension_force_install">Forcer l'installation</string>
     <string name="extension_path_image_add">Ajouter une nouvelle image</string>
+    <string name="pref_category_calls">Appels</string>
+    <string name="pref_max_file_size_value">1%1$d MB</string>
+    <string name="pref_category_messages">Messages</string>
+    <string name="pref_category_advanced">Options avancées</string>
 </resources>

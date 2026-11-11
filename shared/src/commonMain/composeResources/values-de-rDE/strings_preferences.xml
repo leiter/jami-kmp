@@ -63,4 +63,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="extension_invalid_format">Ungültiges Erweiterungsformat: <b>%1$s</b></string>
     <string name="extension_force_install">erzwingen\ninstallieren</string>
     <string name="extension_path_image_add">Neues Bild hinzufügen</string>
+    <string name="pref_pushNotifications_summary">Google-Server verwenden, um den Empfang von Anrufen/Nachrichten im Hintergrund zu ermöglichen</string>
+    <string name="pref_videoBitrate_title">Videobitrate</string>
+    <string name="pref_videoResolution_title">Videoauflösung</string>
+    <string name="pref_systemDialer_title">Systemanrufe über Jami tätigen</string>
+    <string name="pref_systemDialer_summary">Jami verwenden, um Systemanrufe zu tätigen, wenn möglich</string>
+    <string name="pref_startOnBoot_title">Jami beim Systemstart starten</string>
+    <string name="pref_startOnBoot_summary">Jami im Hintergrund ausführen, wenn das System startet</string>
+    <string name="pref_notification_title">Benachrichtigungsanzeige</string>
+    <string name="pref_notification_summary">Sichtbarkeit der App-Benachrichtigungen auf dem Sperrbildschirm einstellen.</string>
+    <string name="pref_blackList_title">Blockierliste</string>
+    <string name="pref_blackList_summary">Überprüfen Sie Ihre Blockierliste.</string>
+    <string name="pref_category_calls">Anrufe</string>
+    <string name="pref_category_messages">Nachrichten</string>
 </resources>

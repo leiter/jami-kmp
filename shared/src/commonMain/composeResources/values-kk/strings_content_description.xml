@@ -21,4 +21,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">Жүктеу</string>
     <string name="control_play">Ойын</string>
     <string name="control_pause">Тынығу</string>
+    <string name="content_desc_back">Қайта оралу</string>
+    <string name="content_desc_send">Жіберіңіз</string>
+    <string name="content_desc_mute">Өркітсіз</string>
+    <string name="content_desc_unmute">Өркінсіз</string>
+    <string name="content_desc_enable_video">Видеоны қосу</string>
+    <string name="content_desc_end_call">Қоңырауды аяқтау</string>
+    <string name="content_desc_stop_recording">Жазуды тоқтату</string>
+    <string name="content_desc_take_photo">Суретке түсіріңіз</string>
+    <string name="content_desc_send_message">Хат жіберу</string>
+    <string name="content_desc_presence_online">Онлайн</string>
+    <string name="content_desc_presence_offline">Оффлайн</string>
+    <string name="content_desc_raise_hand">Қолын көтеру</string>
+    <string name="content_desc_send_call_message">Хат жіберу</string>
+    <string name="content_desc_state_muted">Ауыздау</string>
 </resources>

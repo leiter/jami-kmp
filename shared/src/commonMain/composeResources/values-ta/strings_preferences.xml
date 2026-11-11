@@ -63,4 +63,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">வலை இணைப்பு முன்னோட்டங்கள்</string>
     <string name="pref_link_preview_summary">முன்னோட்டமானது மூன்றாம் தரப்பு சேவையகங்களிலிருந்து உள்ளடக்கத்தை பதிவிறக்குவதைக் குறிக்கிறது.</string>
     <string name="connectivity_custom_title">தனிப்பயன்</string>
+    <string name="pref_category_calls">அழைப்புகள்</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">செய்திகள்</string>
+    <string name="pref_category_advanced">மேம்படுத்தபட்ட</string>
 </resources>

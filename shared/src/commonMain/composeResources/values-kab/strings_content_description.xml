@@ -28,4 +28,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="searchbar_navigation_account">Fren amiḍan</string>
     <string name="add_conversation_member">Rnu aɛeggal n udiwenni</string>
     <string name="qrcode_to_scan">Tangalt QR ara yettwaḍummen</string>
+    <string name="content_desc_back">Deffir</string>
+    <string name="content_desc_send">Azen</string>
+    <string name="content_desc_mute">Sgugem</string>
+    <string name="content_desc_unmute">Kkes agugem</string>
+    <string name="content_desc_enable_video">Rmed tavidyut</string>
+    <string name="content_desc_disable_video">Sens tavidyut</string>
+    <string name="content_desc_end_call">Fak tiɣri</string>
+    <string name="content_desc_resume">Kemmel</string>
+    <string name="content_desc_stop_recording">Ḥbes asekles</string>
+    <string name="content_desc_take_photo">Ṭṭef tawlaft</string>
+    <string name="content_desc_send_message">Azen izen</string>
+    <string name="content_desc_presence_online">Yeqqen</string>
+    <string name="content_desc_presence_offline">Ur iqqin ara</string>
+    <string name="content_desc_raise_hand">Rfed afus-ik-im</string>
+    <string name="content_desc_send_call_message">Azen izen</string>
+    <string name="content_desc_state_muted">Yettwasgugem</string>
 </resources>

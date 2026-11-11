@@ -189,4 +189,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">এই ফরম্যাট সমর্থিত নয়।</string>
     <string name="account_link_device_title">একটি নতুন ডিভাইস লিঙ্ক</string>
     <string name="account_link_device_button">সংযুক্ত করুন</string>
+    <string name="account_delete_label">অ্যাকাউন্ট মুছে ফেলুন</string>
+    <string name="account_device_revocation_wrong_password">ভুল পাসওয়ার্ড।</string>
+    <string name="account_audio_rtp_min_label">সর্বনিম্ন</string>
+    <string name="account_audio_rtp_max_label">সর্বোচ্চ</string>
+    <string name="account_video_rtp_min_label">সর্বনিম্ন</string>
+    <string name="account_video_rtp_max_label">সর্বোচ্চ</string>
+    <string name="account_read_receipts_label">পঠিত রসিদ</string>
+    <string name="account_read_receipts_summary">বার্তা সরবরাহ বা পঠিত হলে পাঠানোর জন্য সরবরাহ এবং পঠিত রসিদ পাঠান ও অনুরোধ করুন।</string>
+    <string name="action_skip">স্কিপ</string>
+    <string name="error_username_invalid">অবৈধ ব্যবহারকারীর নাম</string>
+    <string name="account_sip_username">ব্যবহারকারীর নাম</string>
+    <string name="prompt_choose_username">একটি ব্যবহারকারীর নাম নির্বাচন করুন</string>
+    <string name="section_linked_devices">সংযুক্ত ডিভাইস</string>
+    <string name="account_rename_device">ডিভাইস নাম পরিবর্তন</string>
+    <string name="screen_title_account_settings">অ্যাকাউন্ট সেটিংস</string>
+    <string name="screen_title_blocked_contacts">বন্ধ করা পরিচিতি</string>
+    <string name="certificates_status_banned">ব্লক</string>
 </resources>

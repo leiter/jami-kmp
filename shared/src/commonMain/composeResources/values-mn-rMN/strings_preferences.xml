@@ -62,4 +62,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_block_record_summary">Скриншот авах, видео бичлэг хийхэд саад.</string>
     <string name="pref_link_preview_summary">Анхны үзлэг нь гуравдагч этгээдийн серверээс контентыг татаж авах шаардлагатай.</string>
     <string name="connectivity_custom_title">Хувьцааны</string>
+    <string name="pref_category_calls">Зудлага</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Мэдээлэл</string>
+    <string name="pref_category_advanced">Өргөн дэвшилтэт</string>
 </resources>

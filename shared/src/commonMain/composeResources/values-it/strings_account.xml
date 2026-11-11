@@ -157,8 +157,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_export_file_summary">Esegui un backup del tuo account sul tuo dispositivo per ripristinarlo in seguito.</string>
     <string name="account_export_end_decryption_message">Password errata. Riprovare con la password corretta.</string>
     <string name="account_enter_password">Inserire la password</string>
-    <string name="account_share_body">Contattami con \"%1$s\" sulla piattaforma di comunicazione distribuita Jami: %2$s</string>
-    <string name="account_share_body_with_username">Contattami con \"%1$s\" o utilizzando il mio nome pubblico \"%2$s\" sulla piattaforma di comunicazione distribuita Jami: %3$s</string>
+    <string name="account_share_body">Contattami con "%1$s" sulla piattaforma di comunicazione distribuita Jami: %2$s</string>
+    <string name="account_share_body_with_username">Contattami con "%1$s" o utilizzando il mio nome pubblico "%2$s" sulla piattaforma di comunicazione distribuita Jami: %3$s</string>
     <string name="account_contact_me">Contattami su Jami!</string>
     <string name="update_account">Aggiorna account</string>
     <string name="account_migration">Il tuo account Jami può essere aggiornato.\nInserisci la tua password.</string>
@@ -253,9 +253,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_password">Questo account è crittografato tramite password. Inserisci la password per generare il codice di autenticazione.</string>
     <string name="account_link_generate_button">Genera</string>
     <string name="account_link_time_valid">l codice di autenticazione scadrà: %1$s.</string>
-    <string name="account_link_device_info">Scegliere \"Associa un altro dispositivo\" dall'altra applicazione Jami per mostrare il codice QR o il codice di autenticazione.</string>
+    <string name="account_link_device_info">Scegliere "Associa un altro dispositivo" dall'altra applicazione Jami per mostrare il codice QR o il codice di autenticazione.</string>
     <string name="account_generate_export_device">Nell'altro dispositivo</string>
-    <string name="account_generate_export_info">Installa e avvia Jami, seleziona \"Importa da un altro dispositivo\" e scansiona il codice QR oppure inserire manualmente il codice PIN.</string>
+    <string name="account_generate_export_info">Installa e avvia Jami, seleziona "Importa da un altro dispositivo" e scansiona il codice QR oppure inserire manualmente il codice PIN.</string>
     <string name="content_description_qr_generated">Codice QR dell'account</string>
     <string name="account_generate_export_invalid">Il codice di autenticazione non è più valido.\nInserire la password e generare un altro per associare il nuovo dispositivo.</string>
     <string name="account_generate_export_invalid_two">Il codice di autenticazione non è più valido.\nGenerare un altro per associare il nuovo dispositivo.</string>
@@ -273,4 +273,23 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_success">L'autenticazione è riuscita</string>
     <string name="account_auth_key_error">Si è verificato un errore durante la decrittografia della chiave dell'account.</string>
     <string name="account_auth_password">Usa la password dell'account</string>
+    <string name="account_delete_label">Elimina l'account</string>
+    <string name="account_delete_summary">Elimina l'account da questo dispositivo</string>
+    <string name="account_p2p_section_label">Connessione peer-to-peer</string>
+    <string name="account_audio_rtp_min_label">Minimo</string>
+    <string name="account_audio_rtp_max_label">Massimo</string>
+    <string name="account_video_rtp_min_label">Minimo</string>
+    <string name="account_video_rtp_max_label">Massimo</string>
+    <string name="account_biometric_setup_title">Attiva l'autenticazione biometrica</string>
+    <string name="account_biometric_disable_title">Disattiva l'autenticazione biometrica</string>
+    <string name="action_skip">Salta</string>
+    <string name="error_username_invalid">Nome utente non valido</string>
+    <string name="account_sip_username">Nome utente</string>
+    <string name="prompt_choose_username">Scegli un nome utente</string>
+    <string name="dialog_export_title">Esporta account</string>
+    <string name="section_linked_devices">Dispositivi associati</string>
+    <string name="account_rename_device">Rinomina dispositivo</string>
+    <string name="screen_title_account_settings">Impostazioni account</string>
+    <string name="screen_title_blocked_contacts">Contatti bloccati</string>
+    <string name="certificates_status_banned">Blocca</string>
 </resources>

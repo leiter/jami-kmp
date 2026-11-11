@@ -103,4 +103,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="extension_invalid_format">扩展格式无效：<b>%1$s</b></string>
     <string name="extension_force_install">强制安装</string>
     <string name="extension_path_image_add">添加新图像</string>
+    <string name="pref_category_calls">通话</string>
+    <string name="pref_max_file_size_value">%1$d 兆字节</string>
+    <string name="pref_category_messages">消息</string>
+    <string name="pref_category_advanced">進階</string>
 </resources>

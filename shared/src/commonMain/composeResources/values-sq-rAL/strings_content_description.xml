@@ -28,4 +28,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="searchbar_navigation_account">Përzgjidhni llogari</string>
     <string name="add_conversation_member">Shtoni anëtar bisede</string>
     <string name="qrcode_to_scan">Kod QR për skanim</string>
+    <string name="content_desc_back">Mbrapsht</string>
+    <string name="content_desc_send">Dërgoje</string>
+    <string name="content_desc_mute">Heshtoje</string>
+    <string name="content_desc_unmute">Çheshtoje</string>
+    <string name="content_desc_enable_video">Aktivizo Video</string>
+    <string name="content_desc_disable_video">Çaktivizo videon</string>
+    <string name="content_desc_end_call">Përfundoje thirrjen</string>
+    <string name="content_desc_resume">Rimerre</string>
+    <string name="content_desc_stop_recording">Ndale incizimin</string>
+    <string name="content_desc_take_photo">Bëni një foto</string>
+    <string name="content_desc_send_message">Dërgoje mesazhin</string>
+    <string name="content_desc_presence_online">Në linjë</string>
+    <string name="content_desc_presence_offline">Jo në linjë</string>
+    <string name="content_desc_raise_hand">Ngrini dorën</string>
+    <string name="content_desc_send_call_message">Dërgoje mesazhin</string>
+    <string name="content_desc_state_muted">Heshtuar</string>
 </resources>

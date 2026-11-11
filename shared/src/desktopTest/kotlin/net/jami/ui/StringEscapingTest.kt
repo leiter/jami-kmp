@@ -80,16 +80,25 @@ class StringEscapingTest {
     }
 
     /**
-     * `\"` is the same class of defect. These are not fixed yet — 352 of them remain, and
-     * whether the reader unescapes a double quote has never been established — so this only
-     * records the current count and fails if it *grows*. Lower it when they are cleaned up.
+     * `\"`, `\@` and `\?` are the same class of defect. Established 2026-11-11 from the
+     * Compose Gradle plugin (1.9.0, `PrepareComposeResourcesKt.handleSpecialCharacters`): the
+     * build step unescapes only `\n`, `\t`, `\uXXXX` and `\\`, so any other backslash renders.
+     * The 352 `\"` that remained (the English `share_contact_body` among them, so users saw
+     * `contact \"Alice\"`) were unescaped that day. `scripts/sync_android_strings.py` applies the
+     * same rule to everything it imports.
      */
     @Test
-    fun escapedDoubleQuotesDoNotIncrease() {
-        val total = stringFiles().sumOf { it.readText().split("\\\"").size - 1 }
-        assertTrue(
-            total <= 352,
-            "escaped double quotes rose to $total (was 352); they may render literally too"
-        )
+    fun noStringEscapesAQuoteAtOrQuestionMark() {
+        val pattern = Regex("""(?<!\\)\\["@?]""")
+        val offenders = stringFiles()
+            .map { it to pattern.findAll(it.readText()).count() }
+            .filter { (_, n) -> n > 0 }
+        if (offenders.isNotEmpty()) {
+            fail(
+                "${offenders.sumOf { it.second }} escaped \", @ or ? would render with the " +
+                    "backslash. Use the bare character in XML. Offenders: " +
+                    offenders.joinToString { (f, n) -> "${f.parentFile.name}/${f.name}=$n" }
+            )
+        }
     }
 }

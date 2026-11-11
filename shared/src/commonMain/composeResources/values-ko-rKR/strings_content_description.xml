@@ -21,4 +21,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">다운로드</string>
     <string name="control_play">재생</string>
     <string name="control_pause">멈춤</string>
+    <string name="searchbar_navigation_account">계정 선택</string>
+    <string name="qrcode_to_scan">스캔할 QR 코드</string>
+    <string name="content_desc_back">뒤로</string>
+    <string name="content_desc_send">보내기</string>
+    <string name="content_desc_mute">음소거</string>
+    <string name="content_desc_unmute">음소거 해제</string>
+    <string name="content_desc_enable_video">영상 활성화</string>
+    <string name="content_desc_disable_video">영상 비활성화</string>
+    <string name="content_desc_end_call">통화 종료</string>
+    <string name="content_desc_resume">재개</string>
+    <string name="content_desc_stop_recording">녹음을 중단</string>
+    <string name="content_desc_take_photo">사진 찍기</string>
+    <string name="content_desc_send_message">메시지 보내기</string>
+    <string name="content_desc_presence_online">온라인</string>
+    <string name="content_desc_presence_offline">오프라인</string>
+    <string name="content_desc_raise_hand">손 들기</string>
+    <string name="content_desc_send_call_message">메시지 보내기</string>
+    <string name="content_desc_state_muted">음소거됨</string>
 </resources>

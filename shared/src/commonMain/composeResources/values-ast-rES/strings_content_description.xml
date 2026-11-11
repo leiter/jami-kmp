@@ -21,4 +21,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">Descargar</string>
     <string name="control_play">Xugar</string>
     <string name="control_pause">Pausa</string>
+    <string name="content_desc_back">El so fíu, el so fíu,</string>
+    <string name="content_desc_send">Enviar</string>
+    <string name="content_desc_mute">Callar</string>
+    <string name="content_desc_unmute">Unmuted</string>
+    <string name="content_desc_enable_video">Activar video</string>
+    <string name="content_desc_disable_video">Desactivar video</string>
+    <string name="content_desc_end_call">Zarrar llamada</string>
+    <string name="content_desc_resume">Continuar</string>
+    <string name="content_desc_stop_recording">Pa parar de grabar</string>
+    <string name="content_desc_take_photo">Ye una fotografía.</string>
+    <string name="content_desc_send_message">Enviar mensaxe</string>
+    <string name="content_desc_presence_online">En línea</string>
+    <string name="content_desc_presence_offline">La llinia</string>
+    <string name="content_desc_raise_hand">Ellí ye la mano.</string>
+    <string name="content_desc_send_call_message">Enviar mensaxe</string>
+    <string name="content_desc_state_muted">El so nome ye "Castor".</string>
 </resources>

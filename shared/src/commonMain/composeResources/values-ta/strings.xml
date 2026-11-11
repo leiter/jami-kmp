@@ -21,7 +21,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="contribute_section">பங்களிப்பு</string>
     <string name="version_section">பதிப்பு</string>
     <string name="website_chooser_title">இணையதளத்தைப் பயன்படுத்தி பார்க்கவும்.</string>
-    <string name="license">இந்த மென்பொருள் எந்தவொரு உத்தரவாதமும் இல்லாமல் \"அதுபோல்\" வழங்கப்படுகிறது. விவரங்களுக்கு, <u>GNU பொது பொது உரிமம் பதிப்பு 3 அல்லது அதற்குப் பிறகு</u> ஐப் பார்க்கவும்</string>
+    <string name="license">இந்த மென்பொருள் எந்தவொரு உத்தரவாதமும் இல்லாமல் "அதுபோல்" வழங்கப்படுகிறது. விவரங்களுக்கு, <u>GNU பொது பொது உரிமம் பதிப்பு 3 அல்லது அதற்குப் பிறகு</u> ஐப் பார்க்கவும்</string>
     <string name="description">ஜாமி என்பது பொதுவான தகவல்தொடர்புக்கான இலவச மென்பொருள் ஆகும், இது அதன் பயனர்களின் சுதந்திரங்களையும் தனியுரிமையையும் மதிக்கிறது.</string>
     <string name="credits">கடன்கள்</string>
     <string name="pip_title">ஜாமி மாநாடு</string>
@@ -135,7 +135,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="ringtone_custom_prompt">தனிப்பயன் ரிங்டோன் அமைக்கவும்</string>
     <string name="ringtone_custom_label">தனிப்பயன்</string>
     <string name="ringtone_jami_tones">Jami ரிங்டோன்கள்</string>
-    <string name="permission_dialog_read_contacts_message">Jamiக்கு \"தொடர்புகளைப் படிக்க\" அனுமதி தேவை. இந்த அம்சத்தைப் பயன்படுத்த, சாதன அமைப்புகளில் அதை இயக்கவும்.</string>
+    <string name="permission_dialog_read_contacts_message">Jamiக்கு "தொடர்புகளைப் படிக்க" அனுமதி தேவை. இந்த அம்சத்தைப் பயன்படுத்த, சாதன அமைப்புகளில் அதை இயக்கவும்.</string>
     <string name="scan_qr_account_message">நீங்கள் சேர்க்க விரும்பும் கணக்கின் QR குறியீட்டை ஸ்கேன் செய்யவும்.</string>
     <string name="title_activity_qrcode">எனது கணக்கை பகிர்ந்து கொள்ளுங்கள்</string>
     <string name="tab_code">என் குறியீடு</string>
@@ -315,4 +315,27 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_side_step2_confirm">உறுதிப்படுத்தவும்</string>
     <string name="import_side_step1_share">பகிர்வு</string>
     <string name="import_side_step2_password_import">இறக்குமதி</string>
+    <string name="notif_send_reply">அனுப்பு</string>
+    <string name="recordings_delete_confirm">நீக்கவும்</string>
+    <string name="action_audio">கேள்விமாற்றி</string>
+    <string name="action_video">காணொளி</string>
+    <string name="qr_scan_instruction">ஜாமி இந்த குறியீட்டை ஸ்கேன் செய்யவும்</string>
+    <string name="menu_overflow">மேலும் விருப்பங்கள்</string>
+    <string name="action_cancel">ரத்துசெய்க</string>
+    <string name="group_remove_member">தொகுதி</string>
+    <string name="group_unblock_member">தடுக்கலை திறக்கவும்</string>
+    <string name="group_member_invited">அழைக்கப்பட்டவர்</string>
+    <string name="group_members">உறுப்பினர்</string>
+    <string name="action_create_account">கணக்கை உருவாக்கவும்</string>
+    <string name="action_new_conversation">உரையாடலைத் தொடங்குங்கள்</string>
+    <string name="action_new_group">ஒரு புதிய குழுவை உருவாக்கவும்</string>
+    <string name="menu_app_settings">பயன்பாட்டு அமைப்புகள்</string>
+    <string name="menu_item_copy">பதிப்பு</string>
+    <string name="menu_item_edit">திருத்தவும்</string>
+    <string name="screen_title_qr_scan">QR குறியீட்டை ஸ்கேன் செய்யவும்</string>
+    <string name="action_qr_code">QR குறியீடு</string>
+    <string name="screen_title_app_settings">அமைப்புகள்</string>
+    <string name="action_share">பகிர்வு</string>
+    <string name="filter_requests">கோரிக்கைகள்</string>
+    <string name="permission_dialog_battery_dismiss">இப்போது வேண்டாம்</string>
 </resources>

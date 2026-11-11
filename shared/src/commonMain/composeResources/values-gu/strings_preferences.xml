@@ -63,4 +63,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">વેબ લિંક પૂર્વાવલોકનો</string>
     <string name="pref_link_preview_summary">પૂર્વાવલોકન માટે તૃતીય-પક્ષ સર્વર્સમાંથી સામગ્રી ડાઉનલોડ કરવાની જરૂર છે.</string>
     <string name="connectivity_custom_title">કસ્ટમ</string>
+    <string name="pref_category_calls">કૉલ્સ</string>
+    <string name="pref_max_file_size_value">%1$d એમબી</string>
+    <string name="pref_category_messages">સંદેશાઓ</string>
+    <string name="pref_category_advanced">અદ્યતન</string>
 </resources>

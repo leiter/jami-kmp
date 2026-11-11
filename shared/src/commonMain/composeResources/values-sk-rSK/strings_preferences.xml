@@ -63,4 +63,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">Ukážky webových prepojení</string>
     <string name="pref_link_preview_summary">Preview si vyžaduje stiahnutie obsahu z serverov tretích strán.</string>
     <string name="connectivity_custom_title">Vlastný</string>
+    <string name="pref_connectivity_title">Režim pripojenia</string>
+    <string name="pref_connectivity_summary">Vyberte, ako sa má Jami pripojiť k distribuovanému systému na prijímanie hovorov a správ.</string>
+    <string name="pref_persistNotification_title">Spustiť na pozadí</string>
+    <string name="pref_persistNotification_summary">Povoliť spustenie na pozadí na prijímanie hovorov a správ.</string>
+    <string name="pref_typing_summary">Indikovať, keď sa píšu správy.</string>
+    <string name="connectivity_google_services_title">Služby Google</string>
+    <string name="connectivity_local_node_title">Lokálny uzol DHT</string>
+    <string name="pref_category_calls">Hovory</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Správy</string>
+    <string name="pref_category_advanced">Pokročilé</string>
 </resources>

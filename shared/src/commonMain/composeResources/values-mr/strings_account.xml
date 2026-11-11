@@ -189,4 +189,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">या स्वरूपात समर्थन नाही.</string>
     <string name="account_link_device_title">नवीन डिव्हाइस लिंक करा</string>
     <string name="account_link_device_button">कनेक्ट करा</string>
+    <string name="account_delete_label">खाते हटवा</string>
+    <string name="account_audio_rtp_min_label">किमान</string>
+    <string name="account_audio_rtp_max_label">जास्तीत जास्त</string>
+    <string name="account_video_rtp_min_label">किमान</string>
+    <string name="account_video_rtp_max_label">जास्तीत जास्त</string>
+    <string name="action_skip">उडी मारणे</string>
+    <string name="error_username_invalid">अवैध वापरकर्तानाव</string>
+    <string name="account_sip_username">नाव</string>
+    <string name="prompt_choose_username">एक वापरकर्तानाव निवडा</string>
+    <string name="section_linked_devices">जोडलेले उपकरणे</string>
+    <string name="account_rename_device">नाव बदलण्याची यंत्रणा</string>
+    <string name="screen_title_account_settings">खाते सेटिंग्ज</string>
+    <string name="screen_title_blocked_contacts">अवरोधित संपर्क</string>
+    <string name="certificates_status_banned">ब्लॉक</string>
 </resources>

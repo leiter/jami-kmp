@@ -62,7 +62,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_useragent_label">Потребителски агент</string>
     <string name="account_autoanswer_label">Авт. отговор</string>
     <string name="account_rendezvous_label">Режим на среща</string>
-    <string name="account_rendezvous_summary">В режим \"Рендежобъд\" входящите обаждания ще бъдат добавени в конферентна зала.</string>
+    <string name="account_rendezvous_summary">В режим "Рендежобъд" входящите обаждания ще бъдат добавени в конферентна зала.</string>
     <string name="account_upnp_label">Активиране на UPnP</string>
     <string name="account_proxy_field">Посредник</string>
     <string name="account_audio_label">Звук</string>
@@ -189,4 +189,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">Този формат не се поддържа.</string>
     <string name="account_link_device_title">Свържете ново устройство</string>
     <string name="account_link_device_button">Свържете се</string>
+    <string name="account_delete_label">Изтриване на акаунта</string>
+    <string name="account_device_revocation_wrong_password">Неправилна парола.</string>
+    <string name="account_audio_rtp_min_label">Минимален</string>
+    <string name="account_audio_rtp_max_label">Максимален</string>
+    <string name="account_video_rtp_min_label">Минимален</string>
+    <string name="account_video_rtp_max_label">Максимален</string>
+    <string name="account_read_receipts_label">Известия за прочитане</string>
+    <string name="account_read_receipts_summary">Изпращане и заявяване на известия за доставка и прочитане, които да се изпращат, когато съобщенията бъдат доставени или прочетени.</string>
+    <string name="action_skip">Пропускане</string>
+    <string name="error_username_invalid">Грешно потребителско име</string>
+    <string name="account_sip_username">Потребителско име</string>
+    <string name="prompt_choose_username">Изберете потребителско име</string>
+    <string name="dialog_export_title">Изнасяне на акаунта</string>
+    <string name="section_linked_devices">Свързани устройства</string>
+    <string name="account_rename_device">Преименуване на устройството</string>
+    <string name="screen_title_account_settings">Настройки на сметката</string>
+    <string name="screen_title_blocked_contacts">Блокирани контакти</string>
+    <string name="certificates_status_banned">Блокиране</string>
 </resources>

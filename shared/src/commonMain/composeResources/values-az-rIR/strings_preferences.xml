@@ -62,4 +62,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_block_record_summary">سکرین عکس آلماغی یا ویدئو ضبط ائتمه یه مانع اول.</string>
     <string name="pref_link_preview_summary">پیش نمایش اوچونجو طرفین سرورلاریندان محتوا آلتیندا آلینما لازیمدیر.</string>
     <string name="connectivity_custom_title">آدامی</string>
+    <string name="pref_category_calls">تماس</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">پيام هاي</string>
+    <string name="pref_category_advanced">تقدیملی</string>
 </resources>

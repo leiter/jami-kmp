@@ -190,4 +190,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">Format tidak didukung.</string>
     <string name="account_link_device_title">Hubungkan perangkat baru</string>
     <string name="account_link_device_button">Hubungkan</string>
+    <string name="account_delete_label">Hapus akun</string>
+    <string name="account_device_revocation_wrong_password">Kata sandi salah.</string>
+    <string name="account_audio_rtp_min_label">Minimum</string>
+    <string name="account_audio_rtp_max_label">Maksimum</string>
+    <string name="account_video_rtp_min_label">Minimum</string>
+    <string name="account_video_rtp_max_label">Maksimum</string>
+    <string name="account_read_receipts_label">Tanda terima dibaca</string>
+    <string name="account_read_receipts_summary">Kirim dan minta tanda terima pengiriman dan baca untuk dikirim saat pesan terkirim atau dibaca.</string>
+    <string name="action_skip">Lewat</string>
+    <string name="error_username_invalid">Nama pengguna tidak valid</string>
+    <string name="account_sip_username">Nama pengguna</string>
+    <string name="prompt_choose_username">Tentukan nama pengguna</string>
+    <string name="dialog_export_title">Ekspor akun</string>
+    <string name="section_linked_devices">Perangkat yang terhubung</string>
+    <string name="account_rename_device">Ubah nama perangkat</string>
+    <string name="screen_title_account_settings">Pengaturan Akun</string>
+    <string name="screen_title_blocked_contacts">Kontak yang diblokir</string>
+    <string name="certificates_status_banned">Blokir</string>
 </resources>

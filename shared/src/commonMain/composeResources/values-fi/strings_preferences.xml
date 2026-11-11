@@ -103,4 +103,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="extension_invalid_format">Virheellinen laajennus: <b>%1$s</b></string>
     <string name="extension_force_install">pakota\nasennus</string>
     <string name="extension_path_image_add">Lisää uusi kuva</string>
+    <string name="pref_category_calls">Puhelut</string>
+    <string name="pref_max_file_size_value">%1$d Mt</string>
+    <string name="pref_category_messages">Viestit</string>
+    <string name="pref_category_advanced">Lisäasetukset</string>
 </resources>

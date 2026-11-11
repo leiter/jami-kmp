@@ -62,4 +62,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_block_record_summary">Acha kupiga picha za skrini au kurekodi video.</string>
     <string name="pref_link_preview_summary">Kuangalia mbele inahitaji kupakua maudhui kutoka kwa seva za mtu wa tatu.</string>
     <string name="connectivity_custom_title">Desturi</string>
+    <string name="pref_link_preview_title">Hakikisho la viungo vya wavuti</string>
+    <string name="pref_category_calls">Mawasiliano</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Ujumbe</string>
+    <string name="pref_category_advanced">Maendeleo</string>
 </resources>

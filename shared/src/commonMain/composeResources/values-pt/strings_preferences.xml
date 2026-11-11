@@ -102,4 +102,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="extension_invalid_format">Formato de extensão inválido: <b>%1$s</b></string>
     <string name="extension_force_install">forçar\ninstalação</string>
     <string name="extension_path_image_add">Adicionar uma nova imagem</string>
+    <string name="pref_typing_summary">Indicar quando as mensagens estão a ser escritas.</string>
+    <string name="pref_category_calls">Chamadas</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Mensagens</string>
+    <string name="pref_category_advanced">Avançado</string>
 </resources>

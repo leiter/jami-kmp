@@ -293,4 +293,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_side_step2_confirm">ధృవీకరించు</string>
     <string name="import_side_step1_share">భాగస్వామ్యం</string>
     <string name="import_side_step2_password_import">దిగుమతి</string>
+    <string name="notif_send_reply">పంపండి</string>
+    <string name="recordings_delete_confirm">తొలగించు</string>
+    <string name="action_audio">ఆడియో</string>
+    <string name="action_video">వీడియో</string>
+    <string name="qr_scan_instruction">జామి తో ఈ కోడ్ స్కాన్</string>
+    <string name="menu_overflow">మరిన్ని ఎంపికలు</string>
+    <string name="action_cancel">రద్దు చేయి</string>
+    <string name="group_remove_member">బ్లాక్</string>
+    <string name="group_unblock_member">బ్లాక్ ను అన్బ్లాక్ చేయండి</string>
+    <string name="group_member_invited">ఆహ్వానించబడినవారు</string>
+    <string name="group_members">సభ్యులు</string>
+    <string name="action_create_account">ఖాతాను సృష్టించు</string>
+    <string name="action_new_conversation">సంభాషణ ప్రారంభించండి</string>
+    <string name="menu_item_copy">కాపీ</string>
+    <string name="menu_item_edit">సవరించు</string>
+    <string name="screen_title_qr_scan">QR కోడ్ స్కాన్</string>
+    <string name="action_qr_code">QR కోడ్</string>
+    <string name="screen_title_app_settings">సెట్టింగులు</string>
+    <string name="action_share">భాగస్వామ్యం</string>
+    <string name="filter_requests">అభ్యర్థనలు</string>
+    <string name="permission_dialog_battery_dismiss">ఇప్పుడు కాదు</string>
 </resources>

@@ -32,4 +32,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">Ordstyrer</string>
     <string name="call_muted">Dempet</string>
     <string name="call_handRaised">Rekker opp hånd</string>
+    <string name="call_dtmf_dialpad">Nummertaster</string>
+    <string name="call_participant_disable_video">Slå av video</string>
+    <string name="call_participant_enable_video">Aktiver video</string>
 </resources>

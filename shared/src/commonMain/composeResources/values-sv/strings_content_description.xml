@@ -22,4 +22,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_play">Spela</string>
     <string name="control_replay">Svara</string>
     <string name="control_pause">Paus</string>
+    <string name="searchbar_navigation_account">Välj konto</string>
+    <string name="qrcode_to_scan">QR-kod att skanna</string>
+    <string name="content_desc_back">Tillbaka</string>
+    <string name="content_desc_send">Skicka</string>
+    <string name="content_desc_mute">Tysta</string>
+    <string name="content_desc_unmute">Slå på ljudet</string>
+    <string name="content_desc_enable_video">Aktivera video</string>
+    <string name="content_desc_disable_video">Inaktivera video</string>
+    <string name="content_desc_end_call">Avsluta samtal</string>
+    <string name="content_desc_resume">Återuppta</string>
+    <string name="content_desc_stop_recording">Sluta spela in</string>
+    <string name="content_desc_take_photo">Ta ett foto</string>
+    <string name="content_desc_send_message">Skicka meddelande</string>
+    <string name="content_desc_presence_online">Uppkopplad</string>
+    <string name="content_desc_presence_offline">Nerkopplad</string>
+    <string name="content_desc_raise_hand">Räck upp handen</string>
+    <string name="content_desc_send_call_message">Skicka meddelande</string>
+    <string name="content_desc_state_muted">Tyst läge</string>
 </resources>

@@ -64,4 +64,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">Pretpregledi web-veza</string>
     <string name="pref_link_preview_summary">Preview zahtijeva preuzimanje sadržaja sa trećih strana servera.</string>
     <string name="connectivity_custom_title">Prilagođeno</string>
+    <string name="pref_category_calls">Pozivi</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Poruke</string>
+    <string name="pref_category_advanced">Napredno</string>
 </resources>

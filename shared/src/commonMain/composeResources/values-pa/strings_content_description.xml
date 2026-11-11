@@ -21,4 +21,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_play">ਚਲਾਓ</string>
     <string name="control_pause">ਰੋਕੋ</string>
     <string name="searchbar_navigation_account">ਖਾਤਾ ਚੁਣੋ</string>
+    <string name="content_desc_back">ਪਿੱਛੇ</string>
+    <string name="content_desc_send">ਭੇਜੋ</string>
+    <string name="content_desc_mute">ਚੁੱਪ ਹੋਵੋ</string>
+    <string name="content_desc_unmute">ਬੋਲੋ</string>
+    <string name="content_desc_enable_video">ਵੀਡੀਓ ਚਾਲੂ ਕਰੋ</string>
+    <string name="content_desc_end_call">ਕਾਲ ਸਮਾਪਤ ਕਰੋ</string>
+    <string name="content_desc_take_photo">ਫ਼ੋਟੋ ਖਿੱਚੋ</string>
+    <string name="content_desc_send_message">ਸੁਨੇਹਾ ਭੇਜੋ</string>
+    <string name="content_desc_presence_online">ਆਨਲਾਈਨ</string>
+    <string name="content_desc_presence_offline">ਆਫ਼ਲਾਈਨ</string>
+    <string name="content_desc_send_call_message">ਸੁਨੇਹਾ ਭੇਜੋ</string>
 </resources>

@@ -189,4 +189,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">ఈ ఫార్మాట్కు మద్దతు లేదు.</string>
     <string name="account_link_device_title">కొత్త పరికరాన్ని లింక్ చేయండి</string>
     <string name="account_link_device_button">కనెక్ట్</string>
+    <string name="account_delete_label">ఖాతాను తొలగించు</string>
+    <string name="account_audio_rtp_min_label">కనీస</string>
+    <string name="account_audio_rtp_max_label">గరిష్టం</string>
+    <string name="account_video_rtp_min_label">కనీస</string>
+    <string name="account_video_rtp_max_label">గరిష్టం</string>
+    <string name="action_skip">స్కిప్</string>
+    <string name="error_username_invalid">చెల్లని వాడుకరి పేరు</string>
+    <string name="account_sip_username">వాడుకరి పేరు</string>
+    <string name="prompt_choose_username">ఒక వినియోగదారు పేరును ఎంచుకోండి</string>
+    <string name="section_linked_devices">లింక్ చేయబడిన పరికరాలు</string>
+    <string name="account_rename_device">పేరు మార్చు పరికరం</string>
+    <string name="screen_title_account_settings">ఖాతా సెట్టింగులు</string>
+    <string name="screen_title_blocked_contacts">అడ్డుకున్న పరిచయాలు</string>
+    <string name="certificates_status_banned">బ్లాక్</string>
 </resources>

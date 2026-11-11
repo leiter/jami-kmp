@@ -75,7 +75,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_useragent_label">Agent utilisateur</string>
     <string name="account_autoanswer_label">Réponse automatique</string>
     <string name="account_rendezvous_label">Mode Rendez-vous</string>
-    <string name="account_rendezvous_summary">En mode \"Rendez-vous\", les appels entrants seront ajoutés à une salle de conférence.</string>
+    <string name="account_rendezvous_summary">En mode "Rendez-vous", les appels entrants seront ajoutés à une salle de conférence.</string>
     <string name="account_upnp_label">Activer l'UPnP</string>
     <string name="account_proxy_field">Proxy</string>
     <string name="account_preferences_extension_tab">Extensions</string>
@@ -157,7 +157,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_export_file_summary">Sauvegarder votre compte pour pouvoir le restaurer plus tard</string>
     <string name="account_export_end_decryption_message">Mot de passe incorrect. Veuillez réessayer.</string>
     <string name="account_enter_password">Entrez votre mot de passe</string>
-    <string name="account_share_body">Contactez-moi en utilisant l'identifiant \"%1$s\" sur la plateforme de communication distribuée %2$s</string>
+    <string name="account_share_body">Contactez-moi en utilisant l'identifiant "%1$s" sur la plateforme de communication distribuée %2$s</string>
     <string name="account_share_body_with_username">Contactez-moi en utilisant l'identifiant '%1$s' ou mon nom d'utilisateur public '%2$s' sur la plateforme de communication distribuée : %3$s</string>
     <string name="account_contact_me">Contactez moi sur Jami !</string>
     <string name="update_account">Mettre à jour le compte</string>
@@ -255,7 +255,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_time_valid">Le code d'authentification sera invalide : %1$s.</string>
     <string name="account_link_device_info">Choose “Link a new device” from the other Jami app to show the QR code or the authentication code.</string>
     <string name="account_generate_export_device">Sur l'autre appareil</string>
-    <string name="account_generate_export_info">Installer et lancer Jami, choisissez \"Importer d'un nouvel appareil\" et scanner le code QR ou entrer manuellement le NIP.</string>
+    <string name="account_generate_export_info">Installer et lancer Jami, choisissez "Importer d'un nouvel appareil" et scanner le code QR ou entrer manuellement le NIP.</string>
     <string name="content_description_qr_generated">Code QR du compte</string>
     <string name="account_generate_export_invalid">Le code d'authentification n'est plus valide.\nEntrez le mot de passe et générez-en un autre pour connecter le nouvel appareil.</string>
     <string name="account_generate_export_invalid_two">The authentication code is no longer valid.\nGenerate another one to link the new device.</string>
@@ -273,4 +273,23 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_success">Authentification réussie</string>
     <string name="account_auth_key_error">Une erreur s'est produite lors du décryptage de la clé du compte.</string>
     <string name="account_auth_password">Utiliser le mot de passe du compte</string>
+    <string name="account_delete_label">Supprimer le compte</string>
+    <string name="account_delete_summary">Supprimer ce compte de cet appareil</string>
+    <string name="account_p2p_section_label">Connectivité pair à pair</string>
+    <string name="account_audio_rtp_min_label">Minimum</string>
+    <string name="account_audio_rtp_max_label">Maximum</string>
+    <string name="account_video_rtp_min_label">Minimum</string>
+    <string name="account_video_rtp_max_label">Maximum</string>
+    <string name="account_biometric_setup_title">Activer l'authentification biométrique</string>
+    <string name="account_biometric_disable_title">Désactiver l'authentification biomètrique</string>
+    <string name="action_skip">Passer</string>
+    <string name="error_username_invalid">Nom d'utilisateur incorrect</string>
+    <string name="account_sip_username">Nom d'utilisateur</string>
+    <string name="prompt_choose_username">Choisir un nom d'utilisateur</string>
+    <string name="dialog_export_title">Exporter compte</string>
+    <string name="section_linked_devices">Appareils liés</string>
+    <string name="account_rename_device">Renommer l'appareil</string>
+    <string name="screen_title_account_settings">Paramètres Compte Jami</string>
+    <string name="screen_title_blocked_contacts">Contacts bloqués</string>
+    <string name="certificates_status_banned">Bloquer</string>
 </resources>

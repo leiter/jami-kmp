@@ -34,4 +34,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">Moderaator</string>
     <string name="call_muted">Summutatud</string>
     <string name="call_handRaised">Märguanne käega</string>
+    <string name="call_dtmf_dialpad">Klahvistik</string>
+    <string name="call_participant_disable_video">Lülita video välja</string>
+    <string name="call_participant_enable_video">Lülita video sisse</string>
 </resources>

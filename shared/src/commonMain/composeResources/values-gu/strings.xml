@@ -21,7 +21,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="contribute_section">યોગદાન આપો</string>
     <string name="version_section">આવૃત્તિ</string>
     <string name="website_chooser_title">વેબસાઇટનો ઉપયોગ કરીને જુઓ.</string>
-    <string name="license">આ સોફ્ટવેર \"જેમ છે તેમ\" આપવામાં આવે છે, કોઈ પણ પ્રકારની ગેરંટી વિના. વિગતો માટે, જુઓ <u>GNU જનરલ પબ્લિક લાઇસન્સ આવૃત્તિ 3 અથવા પછીની</u></string>
+    <string name="license">આ સોફ્ટવેર "જેમ છે તેમ" આપવામાં આવે છે, કોઈ પણ પ્રકારની ગેરંટી વિના. વિગતો માટે, જુઓ <u>GNU જનરલ પબ્લિક લાઇસન્સ આવૃત્તિ 3 અથવા પછીની</u></string>
     <string name="description">જમી સાર્વત્રિક સંદેશાવ્યવહાર માટે મફત સોફ્ટવેર છે જે તેના વપરાશકર્તાઓની સ્વતંત્રતા અને ગોપનીયતાનું સન્માન કરે છે.</string>
     <string name="credits">ક્રેડિટ્સ</string>
     <string name="pip_title">જમી પરિષદ</string>
@@ -293,4 +293,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_side_step2_confirm">પુષ્ટિ</string>
     <string name="import_side_step1_share">શેર કરો</string>
     <string name="import_side_step2_password_import">આયાત</string>
+    <string name="notif_send_reply">મોકલો</string>
+    <string name="recordings_delete_confirm">કાઢી નાખો</string>
+    <string name="action_audio">ઑડિઓ</string>
+    <string name="action_video">વિડિઓ</string>
+    <string name="qr_scan_instruction">જેમી સાથે આ કોડ સ્કેન કરો</string>
+    <string name="menu_overflow">વધુ વિકલ્પો</string>
+    <string name="action_cancel">રદ કરો</string>
+    <string name="group_remove_member">બ્લોક</string>
+    <string name="group_unblock_member">અવરોધિત કરો</string>
+    <string name="group_member_invited">આમંત્રિત</string>
+    <string name="group_members">સભ્યો</string>
+    <string name="action_create_account">એકાઉન્ટ બનાવો</string>
+    <string name="action_new_conversation">વાતચીત શરૂ કરો</string>
+    <string name="menu_item_copy">કૉપિ</string>
+    <string name="menu_item_edit">સંપાદિત કરો</string>
+    <string name="screen_title_qr_scan">QR કોડ સ્કેન કરો</string>
+    <string name="action_qr_code">ક્યૂઆર કોડ</string>
+    <string name="screen_title_app_settings">સેટિંગ્સ</string>
+    <string name="action_share">શેર કરો</string>
+    <string name="filter_requests">વિનંતીઓ</string>
+    <string name="permission_dialog_battery_dismiss">હમણાં નહીં</string>
 </resources>

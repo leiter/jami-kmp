@@ -34,4 +34,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">Moderator</string>
     <string name="call_muted">Heshtuar</string>
     <string name="call_handRaised">Dorë e ngritur</string>
+    <string name="call_participant_disable_video">Çaktivizo videon</string>
+    <string name="call_participant_enable_video">Aktivizo Video</string>
 </resources>

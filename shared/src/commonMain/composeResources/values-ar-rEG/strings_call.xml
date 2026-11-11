@@ -32,4 +32,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">المُتَدَلِّل</string>
     <string name="call_muted">غطى</string>
     <string name="call_handRaised">يدي مرتفعة</string>
+    <string name="call_dtmf_dialpad">لوحة الطلب</string>
+    <string name="call_participant_enable_video">فعل الفيديو</string>
 </resources>

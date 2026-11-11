@@ -22,4 +22,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_play">izvodi</string>
     <string name="control_replay">Odgovori</string>
     <string name="control_pause">Pauza</string>
+    <string name="content_desc_back">Natrag</string>
+    <string name="content_desc_send">Pošalji</string>
+    <string name="content_desc_mute">Neispravni</string>
+    <string name="content_desc_unmute">Nezgledni</string>
+    <string name="content_desc_enable_video">Omogući video</string>
+    <string name="content_desc_end_call">Završi poziv</string>
+    <string name="content_desc_stop_recording">Prestani snimati</string>
+    <string name="content_desc_take_photo">Fotografija</string>
+    <string name="content_desc_send_message">Pošalji poruku</string>
+    <string name="content_desc_presence_online">Online</string>
+    <string name="content_desc_presence_offline">Neprijavljeni</string>
+    <string name="content_desc_raise_hand">Podignite ruku</string>
+    <string name="content_desc_send_call_message">Pošalji poruku</string>
+    <string name="content_desc_state_muted">Umireni</string>
 </resources>

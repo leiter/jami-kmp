@@ -295,4 +295,24 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_side_step2_confirm">Confirmacion</string>
     <string name="import_side_step1_share">Compartilhar</string>
     <string name="import_side_step2_password_import">Importacion</string>
+    <string name="notif_send_reply">Enviar</string>
+    <string name="recordings_delete_confirm">Suprimir</string>
+    <string name="action_audio">Àudio</string>
+    <string name="action_video">Vidèo</string>
+    <string name="qr_scan_instruction">Escanar aqueste còdi amb Jami</string>
+    <string name="menu_overflow">Mai d’opcions</string>
+    <string name="action_cancel">Anullar</string>
+    <string name="group_remove_member">Blocar</string>
+    <string name="group_unblock_member">Desbloquejar</string>
+    <string name="group_member_invited">Convèsse</string>
+    <string name="group_members">Membres</string>
+    <string name="action_create_account">Crear compte</string>
+    <string name="action_new_conversation">Començar la conversacion</string>
+    <string name="menu_item_copy">Copiar</string>
+    <string name="menu_item_edit">Modificar</string>
+    <string name="screen_title_qr_scan">Escanar lo còdi QR</string>
+    <string name="action_qr_code">Còdi QR</string>
+    <string name="screen_title_app_settings">Paramètres</string>
+    <string name="action_share">Compartilhar</string>
+    <string name="filter_requests">Demanda</string>
 </resources>

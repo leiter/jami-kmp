@@ -157,8 +157,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_export_file_summary">Varmuuskopioi tili laitteellesi niin voit palauttaa sen myöhemmin.</string>
     <string name="account_export_end_decryption_message">Väärä salasana. Yritä uudelleen oikealla salasanalla.</string>
     <string name="account_enter_password">Anna salasana</string>
-    <string name="account_share_body">Ota minuun yhteyttä käyttämällä \"%1$s\" Jami viestintäalustalla: %2$s</string>
-    <string name="account_share_body_with_username">Ota minuun yhteyttä käyttämällä \"%1$s\" tai julkista käyttäjänimeä \"%2$s\" Jami viestintäalustalla: %3$s</string>
+    <string name="account_share_body">Ota minuun yhteyttä käyttämällä "%1$s" Jami viestintäalustalla: %2$s</string>
+    <string name="account_share_body_with_username">Ota minuun yhteyttä käyttämällä "%1$s" tai julkista käyttäjänimeä "%2$s" Jami viestintäalustalla: %3$s</string>
     <string name="account_contact_me">Ota minuun yhteyttä Jamilla!</string>
     <string name="update_account">Päivitä tili</string>
     <string name="account_migration">Jami-tilisi voidaan päivittää.\nAnna salasanasi.</string>
@@ -253,9 +253,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_password">Tili on salasanalla salattu. Anna salasana ja luo todennuskoodi.</string>
     <string name="account_link_generate_button">Luo</string>
     <string name="account_link_time_valid">Koodi ei kelpaa: %1$s</string>
-    <string name="account_link_device_info">Valitse toisesta Jami-sovelluksesta \"Linkitä uusi laite\" saadaksesi QR-koodin tai todennuskoodin.</string>
+    <string name="account_link_device_info">Valitse toisesta Jami-sovelluksesta "Linkitä uusi laite" saadaksesi QR-koodin tai todennuskoodin.</string>
     <string name="account_generate_export_device">Toisella laitteella</string>
-    <string name="account_generate_export_info">Asenna ja käynnistä Jami. Valitse \"Tuo toiselta laitteelta\" ja skannaa QR-koodi tai anna PIN-koodi käsin.</string>
+    <string name="account_generate_export_info">Asenna ja käynnistä Jami. Valitse "Tuo toiselta laitteelta" ja skannaa QR-koodi tai anna PIN-koodi käsin.</string>
     <string name="content_description_qr_generated">Tilin QR-koodi</string>
     <string name="account_generate_export_invalid">Koodi ei ole enää voimassa.\nAnna salasana ja luo uusi koodi linkittääksesi uuden laitteen.</string>
     <string name="account_generate_export_invalid_two">Koodi ei ole enää voimassa.\nLuo uusi koodi linkittääksesi uuden laitteen.</string>
@@ -273,4 +273,24 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_success">Todennus onnistui</string>
     <string name="account_auth_key_error">Tiliavaimen salausta purettaessa tapahtui virhe.</string>
     <string name="account_auth_password">Käytä tilin salasanaa</string>
+    <string name="account_delete_label">Poista tili</string>
+    <string name="account_delete_summary">Poista tili tältä laitteelta</string>
+    <string name="account_p2p_section_label">Vertaisyhteys</string>
+    <string name="account_audio_rtp_min_label">Minimi</string>
+    <string name="account_audio_rtp_max_label">Maksimi</string>
+    <string name="account_video_rtp_min_label">Minimi</string>
+    <string name="account_video_rtp_max_label">Maksimi</string>
+    <string name="account_biometric_setup_title">Ota biometrinen todennus käyttöön</string>
+    <string name="account_biometric_disable_title">Poista biometrinen todennus käytöstä</string>
+    <string name="action_skip">Ohita</string>
+    <string name="error_username_invalid">Virheellinen käyttäjänimi</string>
+    <string name="account_sip_username">Käyttäjänimi</string>
+    <string name="prompt_choose_username">Valitse käyttäjänimi</string>
+    <string name="dialog_export_title">Vie tunnus</string>
+    <string name="section_linked_devices">Linkitetyt laitteet</string>
+    <string name="account_rename_device">Nimeä laite</string>
+    <string name="action_rename">Nimeä</string>
+    <string name="screen_title_account_settings">Tiliasetukset</string>
+    <string name="screen_title_blocked_contacts">Estetyt henkilöt</string>
+    <string name="certificates_status_banned">Estä</string>
 </resources>

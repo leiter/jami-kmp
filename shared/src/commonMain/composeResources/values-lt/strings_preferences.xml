@@ -28,7 +28,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_category_video_settings">Išplėstiniai vaizdo nustatymai</string>
     <string name="pref_mobileData_title">Mobilūs duomenys</string>
     <string name="pref_mobileData_summary">Leisti Jami 3G/LTE tinkluose, papildomai prie belaidžio tinklo (Wi-Fi)</string>
-    <string name="pref_pushNotifications_title">\"Push\" pranešimai</string>
+    <string name="pref_pushNotifications_title">"Push" pranešimai</string>
     <string name="pref_pushNotifications_summary">Naudoti Google serverius, kad būtų leista fone gauti skambučius/žinutes</string>
     <string name="pref_video_advanced_title">Išplėstiniai vaizdo nustatymai</string>
     <string name="pref_video_advanced_summary">Keisti vaizdo pralaidumą, raišką, o taip pat eksperimentines ypatybes</string>
@@ -62,4 +62,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="extension_uninstall_title">Pašalinti plėtinį?</string>
     <string name="extension_reset_preferences">Atstatyti plėtinio nuostatas</string>
     <string name="extension_successfully_installed"><b>%1$s</b> plėtinys sėkmingai įdiegtas.</string>
+    <string name="pref_connectivity_title">Jungiamumo veiksena</string>
+    <string name="pref_connectivity_summary">Pasirinkti, kaip prijungti Jami prie paskirstytosios sistemos skambučių ir žinučių gavimui.</string>
+    <string name="pref_blackList_title">Užblokuotų adresatų sąrašas</string>
+    <string name="pref_blackList_summary">Patikrinti užblokuotų adresatų sąrašą.</string>
+    <string name="pref_persistNotification_title">Veikti fone</string>
+    <string name="pref_persistNotification_summary">Leisti veikti fone, kad būtų gaunami skambučiai ir žinutės.</string>
+    <string name="pref_typing_title">Rašymo indikatorius</string>
+    <string name="pref_typing_summary">Rodyti, kai yra rašomos žinutės.</string>
+    <string name="pref_block_record_title">Blokuoti ekrano kopijas ir ekrano filmavimą</string>
+    <string name="pref_block_record_summary">Blokuoti ir neleisti daryti ekrano kopijų ar filmuoti ekraną.</string>
+    <string name="connectivity_google_services_title">„Google“ paslaugos</string>
+    <string name="connectivity_custom_title">Tinkinta</string>
+    <string name="pref_category_calls">Skambučiai</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Žinutės</string>
+    <string name="pref_category_advanced">Išplėstiniai</string>
 </resources>

@@ -259,4 +259,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_error">Greška potvrda identiteta: %1$s</string>
     <string name="account_auth_success">Autentifikacija je uspela</string>
     <string name="account_auth_password">Koristite lozinku naloga</string>
+    <string name="account_delete_label">Obrisati nalog</string>
+    <string name="account_delete_summary">Izbrišite nalog sa ovog uređaja</string>
+    <string name="account_p2p_section_label">Peer-to-peer повезаност</string>
+    <string name="account_audio_rtp_min_label">Minimum</string>
+    <string name="account_audio_rtp_max_label">Maksimum</string>
+    <string name="account_video_rtp_min_label">Minimum</string>
+    <string name="account_video_rtp_max_label">Maksimum</string>
+    <string name="account_read_receipts_label">Potvrde o čitanju</string>
+    <string name="account_read_receipts_summary">Šalji i zahtevaj potvrde o isporuci i čitanju kada su poruke isporučene ili pročitane.</string>
+    <string name="account_biometric_setup_title">Omogućite biometrijsku autentifikaciju</string>
+    <string name="account_biometric_disable_title">Onemogućite biometrijsku autentifikaciju</string>
+    <string name="action_skip">Preskoči</string>
+    <string name="error_username_invalid">Nepravilno korisničko ime</string>
+    <string name="account_sip_username">Korisničko ime</string>
+    <string name="prompt_choose_username">Izaberi korisničko ime</string>
+    <string name="dialog_export_title">Izvezi nalog</string>
+    <string name="section_linked_devices">Povezani uređaji</string>
+    <string name="account_rename_device">Preimenuj uređaj</string>
+    <string name="screen_title_account_settings">Podešavanja naloga</string>
+    <string name="screen_title_blocked_contacts">Blokirani kontakti</string>
+    <string name="certificates_status_banned">Blokiraj</string>
 </resources>

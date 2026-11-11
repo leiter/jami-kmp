@@ -187,4 +187,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_disabled_indicator">ڤڠاجين</string>
     <string name="account_link_device_title">منچيلكن ڤڠڬونا?? ن بارو</string>
     <string name="account_link_device_button">وصلكن</string>
+    <string name="account_delete_label">مڠمبيل ڤڠاجرن</string>
+    <string name="account_audio_rtp_min_label">ڤڠاجين</string>
+    <string name="account_audio_rtp_max_label">ڤڠاجرن</string>
+    <string name="account_video_rtp_min_label">ڤڠاجين</string>
+    <string name="account_video_rtp_max_label">ڤڠاجرن</string>
+    <string name="action_skip">سكيڤ</string>
+    <string name="error_username_invalid">نام ڤڠڬونا يڠ تيدق برمولا</string>
+    <string name="account_sip_username">نام ڤڠڬونا</string>
+    <string name="prompt_choose_username">مميليه نام ڤڠڬونا</string>
+    <string name="section_linked_devices">ڤڠڬيلن يڠ دڤرچايا?? ي</string>
+    <string name="account_rename_device">ڤڠڬونا ڤڠڬونا</string>
+    <string name="screen_title_account_settings">ڤڠاجرن حساب</string>
+    <string name="screen_title_blocked_contacts">ڤڠاجين يڠ دڤرچايا?? ي</string>
+    <string name="certificates_status_banned">ڤڠاجرن</string>
 </resources>

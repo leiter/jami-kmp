@@ -27,4 +27,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_pause">Pozastavit</string>
     <string name="searchbar_navigation_account">Vyberte účet</string>
     <string name="add_conversation_member">Přidat člena konverzace</string>
+    <string name="qrcode_to_scan">QR kód k naskenování</string>
+    <string name="content_desc_back">Zpět</string>
+    <string name="content_desc_send">Odeslat</string>
+    <string name="content_desc_mute">Ztlumit</string>
+    <string name="content_desc_unmute">Zrušit ztlumení</string>
+    <string name="content_desc_enable_video">Povolit video</string>
+    <string name="content_desc_disable_video">Vypnout video</string>
+    <string name="content_desc_end_call">Ukončit hovor</string>
+    <string name="content_desc_resume">Pokračovat</string>
+    <string name="content_desc_stop_recording">Zastavit nahrávání</string>
+    <string name="content_desc_take_photo">Vyfotit</string>
+    <string name="content_desc_send_message">Odeslat zprávu</string>
+    <string name="content_desc_presence_online">Připojen</string>
+    <string name="content_desc_presence_offline">Nepřipojen</string>
+    <string name="content_desc_raise_hand">Zvednout ruku</string>
+    <string name="content_desc_send_call_message">Odeslat zprávu</string>
+    <string name="content_desc_state_muted">Ztlumené</string>
 </resources>

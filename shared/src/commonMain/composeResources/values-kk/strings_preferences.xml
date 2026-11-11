@@ -63,4 +63,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">Веб-сілтеменің алдын ала қарау нұсқалары</string>
     <string name="pref_link_preview_summary">Алдын ала қарау үшін үшінші тараптың серверлерінен мазмұнды жүктеу қажет.</string>
     <string name="connectivity_custom_title">Әдеттегі</string>
+    <string name="pref_category_calls">Зерттеу</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Хаттар</string>
+    <string name="pref_category_advanced">Жетісті</string>
 </resources>

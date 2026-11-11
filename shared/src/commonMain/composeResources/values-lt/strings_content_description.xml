@@ -22,4 +22,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_play">Groti</string>
     <string name="control_pause">Pristabdyti</string>
     <string name="searchbar_navigation_account">Pasirinkite paskyrą</string>
+    <string name="qrcode_to_scan">QR kodas nuskaitymui</string>
+    <string name="content_desc_back">Atgal</string>
+    <string name="content_desc_send">Siųsti</string>
+    <string name="content_desc_enable_video">Įjungti vaizdą</string>
+    <string name="content_desc_disable_video">Išjungti vaizdą</string>
+    <string name="content_desc_end_call">Baigti skambutį</string>
+    <string name="content_desc_resume">Pratęsti</string>
+    <string name="content_desc_take_photo">Padaryti nuotrauką</string>
+    <string name="content_desc_send_message">Siųsti žinutę</string>
+    <string name="content_desc_presence_online">Prisijungęs</string>
+    <string name="content_desc_presence_offline">Atsijungęs</string>
+    <string name="content_desc_raise_hand">Pakelti ranką</string>
+    <string name="content_desc_send_call_message">Siųsti žinutę</string>
+    <string name="content_desc_state_muted">Nutildytas</string>
 </resources>

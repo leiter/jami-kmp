@@ -32,4 +32,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">モデレータ</string>
     <string name="call_muted">ミュート中</string>
     <string name="call_handRaised">挙手</string>
+    <string name="call_dtmf_dialpad">ダイヤルパッド</string>
+    <string name="call_participant_enable_video">動画を有効化</string>
 </resources>

@@ -27,4 +27,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_pause">Пауза</string>
     <string name="searchbar_navigation_account">Выберите аккаунт</string>
     <string name="add_conversation_member">Добавить участника беседы</string>
+    <string name="qrcode_to_scan">QR-код для сканирования</string>
+    <string name="content_desc_back">Назад</string>
+    <string name="content_desc_send">Отправть</string>
+    <string name="content_desc_mute">Заглушить</string>
+    <string name="content_desc_unmute">Включить звук</string>
+    <string name="content_desc_enable_video">Включить видео</string>
+    <string name="content_desc_disable_video">Отключить видео</string>
+    <string name="content_desc_end_call">Завершить вызов</string>
+    <string name="content_desc_resume">Возобновить</string>
+    <string name="content_desc_stop_recording">Остановить запись</string>
+    <string name="content_desc_take_photo">Сфотографировать</string>
+    <string name="content_desc_send_message">Отправить сообщение</string>
+    <string name="content_desc_presence_online">В сети</string>
+    <string name="content_desc_presence_offline">Не в сети</string>
+    <string name="content_desc_raise_hand">Поднять руку</string>
+    <string name="content_desc_send_call_message">Отправить сообщение</string>
+    <string name="content_desc_state_muted">Беззвучно</string>
 </resources>

@@ -23,13 +23,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_human_state_connecting">Conexión</string>
     <string name="call_human_state_ringing">El soníu</string>
     <string name="call_human_state_current">El so padre foi un fíu de la familia de la familia de los neños.</string>
-    <string name="call_human_state_hungup">El so nome ye \"Castor\".</string>
+    <string name="call_human_state_hungup">El so nome ye "Castor".</string>
     <string name="call_human_state_busy">Entrabosáu</string>
     <string name="call_human_state_failure">Faló</string>
     <string name="call_human_state_hold">El so nome ye John.</string>
     <string name="call_human_state_unhold">La so parte más grande ye la de la so parte más grande.</string>
-    <string name="call_human_state_over">El so nome ye \"Castor\".</string>
+    <string name="call_human_state_over">El so nome ye "Castor".</string>
     <string name="call_moderator">Moderador</string>
-    <string name="call_muted">El so nome ye \"Castor\".</string>
+    <string name="call_muted">El so nome ye "Castor".</string>
     <string name="call_handRaised">La mano alzada</string>
+    <string name="call_dtmf_dialpad">Dialpad</string>
+    <string name="call_participant_disable_video">Desactivar video</string>
+    <string name="call_participant_enable_video">Activar video</string>
 </resources>

@@ -187,4 +187,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_disabled_indicator">Авырлык</string>
     <string name="account_link_device_title">Яңа җайланманы тоташтыру</string>
     <string name="account_link_device_button">Бәйләнешкә кертү</string>
+    <string name="account_delete_label">Хисапны бетерү</string>
+    <string name="account_audio_rtp_min_label">Минималь</string>
+    <string name="account_audio_rtp_max_label">Максималь</string>
+    <string name="account_video_rtp_min_label">Минималь</string>
+    <string name="account_video_rtp_max_label">Максималь</string>
+    <string name="action_skip">Карап чык</string>
+    <string name="error_username_invalid">Яраксыз кулланучы исеме</string>
+    <string name="account_sip_username">Исем кулланучы</string>
+    <string name="prompt_choose_username">Кулланучы исемен сайлагыз</string>
+    <string name="section_linked_devices">Бәйләнешле җайланмалар</string>
+    <string name="account_rename_device">Исем кую җайланмасы</string>
+    <string name="screen_title_account_settings">Хисапны урнаштыру</string>
+    <string name="screen_title_blocked_contacts">Тотылган контактлар</string>
+    <string name="certificates_status_banned">Блок</string>
 </resources>

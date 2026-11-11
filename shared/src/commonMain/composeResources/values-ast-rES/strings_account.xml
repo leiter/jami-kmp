@@ -67,7 +67,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_proxy_field">El so nome ye</string>
     <string name="account_audio_label">Audio</string>
     <string name="account_preferences_media_tab">Medios de comunicación</string>
-    <string name="account_ringtone_label">El so nome ye \"Ringtones\".</string>
+    <string name="account_ringtone_label">El so nome ye "Ringtones".</string>
     <string name="account_ringtone_enabled_label">Activar los sonidos</string>
     <string name="account_ringtone_path_label">La ruta del soníu</string>
     <string name="account_ringtone_custom_label">Utiliza soníu d'anillo personalizáu</string>
@@ -75,7 +75,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_ringtone_summary">Escueye un soníu o escueye'l so propiu</string>
     <string name="account_video_label">Video</string>
     <string name="account_video_enable">Activu video</string>
-    <string name="account_preferences_advanced_tab">El so nome ye \"Castor\"</string>
+    <string name="account_preferences_advanced_tab">El so nome ye "Castor"</string>
     <string name="account_call_settings_title">Les configuraciones d'escuestes</string>
     <string name="account_dht_public_in_calls_label">Permitir les llamadas entrantes de contactos desconocíos</string>
     <string name="account_registration_exp_label">El regresu va expirar</string>
@@ -189,4 +189,19 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">Esta versión nun ye compatible.</string>
     <string name="account_link_device_title">Enlazar un nuevu dispositivu</string>
     <string name="account_link_device_button">Conectar</string>
+    <string name="account_delete_label">La cuenta ye borrada</string>
+    <string name="account_delete_dialog_title">¿Desaniciar cuenta?</string>
+    <string name="account_audio_rtp_min_label">Minimu</string>
+    <string name="account_audio_rtp_max_label">Maximu</string>
+    <string name="account_video_rtp_min_label">Minimu</string>
+    <string name="account_video_rtp_max_label">Maximu</string>
+    <string name="action_skip">Saltar</string>
+    <string name="error_username_invalid">Nombre d'usuariu inválidu</string>
+    <string name="account_sip_username">Nombre d'usuariu</string>
+    <string name="prompt_choose_username">Escueye un nome d' usuariu</string>
+    <string name="section_linked_devices">Dispositivos enllazaos</string>
+    <string name="account_rename_device">Dispositivu de renombre</string>
+    <string name="screen_title_account_settings">Configuración de cuenta</string>
+    <string name="screen_title_blocked_contacts">Contautus bloquiados</string>
+    <string name="certificates_status_banned">Bloqueáu</string>
 </resources>

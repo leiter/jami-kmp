@@ -276,4 +276,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_success">Authentifizierung erfolgreich</string>
     <string name="account_auth_key_error">Beim Entschlüsseln des Kontoschlüssels ist ein Fehler aufgetreten.</string>
     <string name="account_auth_password">Kontopasswort verwenden</string>
+    <string name="account_p2p_section_label">Peer-to-Peer-Verbindung</string>
+    <string name="account_audio_rtp_min_label">Minimum</string>
+    <string name="account_audio_rtp_max_label">Maximum</string>
+    <string name="account_video_rtp_min_label">Minimum</string>
+    <string name="account_video_rtp_max_label">Maximum</string>
+    <string name="account_biometric_setup_title">Biometrische Authentifizierung aktivieren</string>
+    <string name="account_biometric_disable_title">Biometrische Authentifizierung deaktivieren</string>
+    <string name="action_skip">Überspringen</string>
+    <string name="error_username_invalid">Ungültiger Benutzername</string>
+    <string name="account_sip_username">Benutzername</string>
+    <string name="account_rename_device">Gerät umbenennen</string>
+    <string name="action_rename">Umbenennen</string>
+    <string name="certificates_status_banned">Blockieren</string>
 </resources>

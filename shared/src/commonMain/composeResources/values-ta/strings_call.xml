@@ -32,4 +32,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">நடுவர்</string>
     <string name="call_muted">மௌனமாக</string>
     <string name="call_handRaised">கை உயர்த்தி</string>
+    <string name="call_dtmf_dialpad">அலைபேசி</string>
+    <string name="call_participant_enable_video">வீடியோவை இயக்கு</string>
 </resources>

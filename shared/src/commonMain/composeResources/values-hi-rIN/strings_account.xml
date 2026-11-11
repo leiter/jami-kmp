@@ -190,4 +190,26 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">यह प्रारूप समर्थित नहीं है।</string>
     <string name="account_link_device_title">एक नई डिवाइस को लिंक करें</string>
     <string name="account_link_device_button">कनेक्ट करें</string>
+    <string name="account_selection">खाता चुनें</string>
+    <string name="account_delete_label">खाता मिटाये</string>
+    <string name="account_device_revocation_wrong_password">गलत पासवर्ड।</string>
+    <string name="account_audio_rtp_min_label">न्यूनतम</string>
+    <string name="account_audio_rtp_max_label">अधिकतम</string>
+    <string name="account_video_rtp_min_label">न्यूनतम</string>
+    <string name="account_video_rtp_max_label">अधिकतम</string>
+    <string name="account_read_receipts_label">पठन रसीदें</string>
+    <string name="account_read_receipts_summary">संदेश वितरित या पढ़े जाने पर भेजी जाने वाली वितरण और पठन रसीदें भेजें और अनुरोध करें।</string>
+    <string name="error_passwords_not_equals">पासवर्ड मेल नहीं खाते।</string>
+    <string name="username_available">उपयोगकर्ता नाम उपलब्ध है।</string>
+    <string name="trying_to_register_name">उपयोगकर्ता नाम पंजीकरण प्रगति पर है। कृपया प्रतीक्षा करें…</string>
+    <string name="looking_for_username_availability">उपयोगकर्ता नाम की उपलब्धता जाँची जा रही है…</string>
+    <string name="action_skip">स्किप</string>
+    <string name="error_username_invalid">अवैध उपयोगकर्ता नाम</string>
+    <string name="account_sip_username">उपयोगकर्ता नाम</string>
+    <string name="prompt_choose_username">एक उपयोगकर्ता नाम चुनें</string>
+    <string name="section_linked_devices">जुड़े हुए उपकरण</string>
+    <string name="account_rename_device">नामकरण उपकरण</string>
+    <string name="screen_title_account_settings">खाता सेटिंग</string>
+    <string name="screen_title_blocked_contacts">अवरुद्ध संपर्क</string>
+    <string name="certificates_status_banned">ब्लॉक</string>
 </resources>

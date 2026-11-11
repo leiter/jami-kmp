@@ -97,10 +97,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="disabled">איכותי</string>
     <string name="enabled">מאופשר</string>
     <string name="default_value">שגרתי</string>
-    <string name="account_proxy_label">דה\"ט פרוקסי</string>
+    <string name="account_proxy_label">דה"ט פרוקסי</string>
     <string name="account_proxy_enable_label">השתמש ב- DHT proxy</string>
-    <string name="account_proxy_server_label">כתובת ד\"ט</string>
-    <string name="account_proxy_server_list_label">ד\" ה \"ר\" רשימת הד\" ה \"ר\"</string>
+    <string name="account_proxy_server_label">כתובת ד"ט</string>
+    <string name="account_proxy_server_list_label">ד" ה "ר" רשימת הד" ה "ר"</string>
     <string name="account_sip_proxy_label">פרוקסי</string>
     <string name="account_peer_discovery_label">גילוי עמיתי מקומי</string>
     <string name="account_peer_discovery_enable_label">אפשרות גילוי עמיתי מקומי</string>
@@ -187,4 +187,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_disabled_indicator">איכותי</string>
     <string name="account_link_device_title">קישור מכשיר חדש</string>
     <string name="account_link_device_button">חיבור</string>
+    <string name="account_delete_label">למחוק חשבון</string>
+    <string name="account_device_revocation_wrong_password">סיסמה שגויה.</string>
+    <string name="account_audio_rtp_min_label">נומינלי</string>
+    <string name="account_audio_rtp_max_label">מרבי</string>
+    <string name="account_video_rtp_min_label">נומינלי</string>
+    <string name="account_video_rtp_max_label">מרבי</string>
+    <string name="account_read_receipts_label">אישורי קריאה</string>
+    <string name="account_read_receipts_summary">שלח ובקש אישורי מסירה וקריאה שיישלחו כאשר הודעות נמסרות או נקראות.</string>
+    <string name="action_skip">דילוג</string>
+    <string name="error_username_invalid">שם משתמש לא נכון</string>
+    <string name="account_sip_username">שם משתמש</string>
+    <string name="prompt_choose_username">בחר שם משתמש</string>
+    <string name="section_linked_devices">מכשירים מחוברים</string>
+    <string name="account_rename_device">מכשיר שינוי</string>
+    <string name="screen_title_account_settings">הגדרות החשבון</string>
+    <string name="screen_title_blocked_contacts">אנשי קשר חסומים</string>
+    <string name="certificates_status_banned">חסימה</string>
 </resources>

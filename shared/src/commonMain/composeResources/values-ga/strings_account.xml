@@ -187,4 +187,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_disabled_indicator">An duine atá faoi mhíchumas</string>
     <string name="account_link_device_title">Déan nasc a dhéanamh ar ghléas nua</string>
     <string name="account_link_device_button">Déan nasc</string>
+    <string name="account_delete_label">Crios cuntas</string>
+    <string name="account_device_revocation_wrong_password">Pasfhocal mícheart.</string>
+    <string name="account_audio_rtp_min_label">Níos lú</string>
+    <string name="account_audio_rtp_max_label">Céad-chuid</string>
+    <string name="account_video_rtp_min_label">Níos lú</string>
+    <string name="account_video_rtp_max_label">Céad-chuid</string>
+    <string name="account_read_receipts_label">Admhálacha léite</string>
+    <string name="account_read_receipts_summary">Seol agus iarr admhálacha seachadta agus léite le seoladh nuair a sheachadtar nó a léitear teachtaireachtaí.</string>
+    <string name="action_skip">Skip</string>
+    <string name="error_username_invalid">Ainm úsáideora neamhbhailí</string>
+    <string name="account_sip_username">Ainm úsáideora</string>
+    <string name="prompt_choose_username">Roghnaigh ainm úsáideora</string>
+    <string name="section_linked_devices">Feistí ceangailte</string>
+    <string name="account_rename_device">Ionstraimí athchóirithe</string>
+    <string name="screen_title_account_settings">Cinntí cuntas</string>
+    <string name="screen_title_blocked_contacts">Contaeanna blocaithe</string>
+    <string name="certificates_status_banned">Bloc</string>
 </resources>

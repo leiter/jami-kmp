@@ -70,4 +70,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="connectivity_google_services_title">Dịch vụ Google</string>
     <string name="connectivity_custom_title">Tùy chỉnh</string>
     <string name="pref_enable_extensions_title">Cho phép tiện ích mở rộng</string>
+    <string name="pref_typing_summary">Cho biết khi nào tin nhắn đang được nhập.</string>
+    <string name="pref_category_calls">Cuộc gọi</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Tin nhắn</string>
+    <string name="pref_category_advanced">Nâng cao</string>
 </resources>

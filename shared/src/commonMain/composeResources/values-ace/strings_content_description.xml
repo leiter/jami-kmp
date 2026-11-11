@@ -18,4 +18,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 <resources>
     <string name="dial_numeric_pad">ديالڤاد عددي</string>
     <string name="contact_unblock">ڤڠاجرن</string>
+    <string name="content_desc_back">ڤرنه</string>
+    <string name="content_desc_send">مڠهادڤ</string>
+    <string name="content_desc_mute">ساكن</string>
+    <string name="content_desc_unmute">اونتوق مڠمبيل</string>
+    <string name="content_desc_enable_video">ڤرلو ممڤوپا?? ي ڤيديو</string>
+    <string name="content_desc_end_call">ڤڠاجرن اخير</string>
+    <string name="content_desc_stop_recording">توقف ضبط</string>
+    <string name="content_desc_take_photo">ڤيليهن</string>
+    <string name="content_desc_presence_online">اونلاين</string>
+    <string name="content_desc_presence_offline">اونلاين</string>
+    <string name="content_desc_raise_hand">كرانڽ</string>
+    <string name="content_desc_state_muted">ساكيت</string>
 </resources>

@@ -253,7 +253,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_password">Ta račun je šifriran z geslom, vnesite geslo, da tvorite kodo overjanja.</string>
     <string name="account_link_generate_button">Tvori</string>
     <string name="account_link_time_valid">Koda overjanja bo neveljavna: %1$s.</string>
-    <string name="account_link_device_info">Izberite \"Poveži novo napravo\" v drugem programu Jami, da prikažete QR-kodo ali overitveno kodo.</string>
+    <string name="account_link_device_info">Izberite "Poveži novo napravo" v drugem programu Jami, da prikažete QR-kodo ali overitveno kodo.</string>
     <string name="account_generate_export_device">Na drugi napravi</string>
     <string name="account_generate_export_info">Namestite in zaženite Jami, izberite uvoz iz druge naprave in optično preberite kodo QR. Lahko tudi ročno vnesete kodo PIN.</string>
     <string name="content_description_qr_generated">QR-koda računa</string>
@@ -273,4 +273,23 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_success">Overjanje je uspelo</string>
     <string name="account_auth_key_error">Pri dešifriranju ključa računa je prišlo do napake.</string>
     <string name="account_auth_password">Uporabi geslo računa</string>
+    <string name="account_delete_label">Izbriši račun</string>
+    <string name="account_delete_summary">Izbriši račun s te naprave</string>
+    <string name="account_p2p_section_label">Povezljivost med vrstniki</string>
+    <string name="account_audio_rtp_min_label">Najmanj</string>
+    <string name="account_audio_rtp_max_label">Največ</string>
+    <string name="account_video_rtp_min_label">Najmanj</string>
+    <string name="account_video_rtp_max_label">Največ</string>
+    <string name="account_biometric_setup_title">Omogoči biometrično overjanje</string>
+    <string name="account_biometric_disable_title">Onemogoči biometrično overjanje</string>
+    <string name="action_skip">Preskoči</string>
+    <string name="error_username_invalid">Neveljavno uporabniško ime</string>
+    <string name="account_sip_username">Uporabniško ime</string>
+    <string name="prompt_choose_username">Izberite uporabniško ime</string>
+    <string name="dialog_export_title">Izvozi račun</string>
+    <string name="section_linked_devices">Povezane naprave</string>
+    <string name="account_rename_device">Preimenuj napravo</string>
+    <string name="screen_title_account_settings">Nastavitve računa</string>
+    <string name="screen_title_blocked_contacts">Blokirani stiki</string>
+    <string name="certificates_status_banned">Blokiraj</string>
 </resources>

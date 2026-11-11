@@ -273,4 +273,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_success">Đã xác thực thành công</string>
     <string name="account_auth_key_error">Xảy ra lỗi trong quá trình mở khóa tài khoản.</string>
     <string name="account_auth_password">Dùng mật khẩu tài khoản</string>
+    <string name="account_delete_label">Xóa tài khoản</string>
+    <string name="account_delete_summary">Xóa tài khoản khỏi thiết bị này</string>
+    <string name="account_p2p_section_label">Kết nối peer-to-peer</string>
+    <string name="account_audio_rtp_min_label">Tối thiểu</string>
+    <string name="account_audio_rtp_max_label">Tối đa</string>
+    <string name="account_video_rtp_min_label">Tối thiểu</string>
+    <string name="account_video_rtp_max_label">Tối đa</string>
+    <string name="account_biometric_setup_title">Bật xác thực vân tay</string>
+    <string name="account_biometric_disable_title">Tắt xác thực vân tay</string>
+    <string name="action_skip">Bỏ qua</string>
+    <string name="error_username_invalid">Tên người dùng không hợp lệ</string>
+    <string name="account_sip_username">Tên người dùng</string>
+    <string name="prompt_choose_username">Chọn tên người dùng</string>
+    <string name="section_linked_devices">Các thiết bị liên kết</string>
+    <string name="account_rename_device">Đổi tên thiết bị</string>
+    <string name="screen_title_account_settings">Cài đặt tài khoản</string>
+    <string name="screen_title_blocked_contacts">Liên hệ đã chặn</string>
+    <string name="certificates_status_banned">Chặn</string>
 </resources>

@@ -17,4 +17,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 -->
 <resources>
     <string name="call_human_state_failure">Fehlgeschlagen</string>
+    <string name="call_human_state_over">Beendet</string>
+    <string name="call_muted">Stummgeschaltet</string>
+    <string name="call_dtmf_dialpad">Wähltastatur</string>
+    <string name="call_participant_disable_video">Video deaktivieren</string>
+    <string name="call_participant_enable_video">Video aktivieren</string>
 </resources>

@@ -173,7 +173,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_status_unknown">نامعلوم</string>
     <string name="account_status_offline">آفلاین</string>
     <string name="account_status_error">خطای</string>
-    <string name="account_creation_home">\" جامي \" نين خوش آمديد</string>
+    <string name="account_creation_home">" جامي " نين خوش آمديد</string>
     <string name="account_creation_profile">پروفایل یارانماق</string>
     <string name="account_creation_ring">Jami حسابینی یارات</string>
     <string name="account_revoke_device_hint">تصدیق اوچون رمز یاز</string>
@@ -189,4 +189,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">بو فورمات دا معاون دئییل.</string>
     <string name="account_link_device_title">یئنی آلتی باغلا</string>
     <string name="account_link_device_button">باغلا</string>
+    <string name="account_delete_label">حسابي سيندير</string>
+    <string name="account_audio_rtp_min_label">حداقل</string>
+    <string name="account_audio_rtp_max_label">ماکسیما</string>
+    <string name="account_video_rtp_min_label">حداقل</string>
+    <string name="account_video_rtp_max_label">ماکسیما</string>
+    <string name="action_skip">سکیپ</string>
+    <string name="error_username_invalid">حاقسيز اِتمه آد</string>
+    <string name="account_sip_username">ایستیفاده چی آد</string>
+    <string name="prompt_choose_username">ایستیفاده چی آدینی سئچیب</string>
+    <string name="section_linked_devices">باغلانان سئلاحلار</string>
+    <string name="account_rename_device">آد آلتی</string>
+    <string name="screen_title_account_settings">حسابلارین تنظیماتلاری</string>
+    <string name="screen_title_blocked_contacts">قفل اولونموش تماسلار</string>
+    <string name="certificates_status_banned">بلوک</string>
 </resources>

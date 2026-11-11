@@ -65,4 +65,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_summary">A visualización previa require descargar contido de servidores de terceiros.</string>
     <string name="connectivity_custom_title">Personalizar</string>
     <string name="extension_invalid_signature"><b>%1$s</b> ten unha sinatura non válida</string>
+    <string name="pref_connectivity_title">Modo de conectividade</string>
+    <string name="pref_connectivity_summary">Selecciona como se debe conectar Jami ao sistema distribuído para recibir chamadas e mensaxes.</string>
+    <string name="pref_persistNotification_title">Executar en segundo plano</string>
+    <string name="pref_persistNotification_summary">Permitir a execución en segundo plano para recibir chamadas e mensaxes.</string>
+    <string name="pref_typing_summary">Indicar cando se están a escribir mensaxes.</string>
+    <string name="connectivity_google_services_title">Servizos de Google</string>
+    <string name="connectivity_local_node_title">Nodo DHT local</string>
+    <string name="pref_category_calls">Chamadas</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Mensaxes</string>
+    <string name="pref_category_advanced">Avanzado</string>
 </resources>

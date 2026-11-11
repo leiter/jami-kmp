@@ -63,4 +63,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">ವೆಬ್ ಲಿಂಕ್ ಪೂರ್ವವೀಕ್ಷಣೆಗಳು</string>
     <string name="pref_link_preview_summary">ಪೂರ್ವವೀಕ್ಷಣೆ ಮೂರನೇ ವ್ಯಕ್ತಿಯ ಸರ್ವರ್ಗಳಿಂದ ವಿಷಯವನ್ನು ಡೌನ್ಲೋಡ್ ಮಾಡುವ ಅಗತ್ಯವಿದೆ.</string>
     <string name="connectivity_custom_title">ಕಸ್ಟಮ್</string>
+    <string name="pref_category_calls">ಕರೆಗಳು</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">ಸಂದೇಶಗಳು</string>
+    <string name="pref_category_advanced">ಮುಂದುವರಿದ</string>
 </resources>

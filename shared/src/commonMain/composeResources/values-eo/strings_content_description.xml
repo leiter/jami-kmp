@@ -22,4 +22,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_play">Ludi</string>
     <string name="control_replay">Reludi</string>
     <string name="control_pause">Paŭzi</string>
+    <string name="content_desc_back">Reiri</string>
+    <string name="content_desc_send">Sendi</string>
+    <string name="content_desc_mute">Mutaj</string>
+    <string name="content_desc_unmute">Neŝanĝita</string>
+    <string name="content_desc_enable_video">Ŝalti Videon</string>
+    <string name="content_desc_end_call">Finigi vokon</string>
+    <string name="content_desc_stop_recording">Ĉesu registri</string>
+    <string name="content_desc_take_photo">Foti</string>
+    <string name="content_desc_send_message">Sendi mesaĝon</string>
+    <string name="content_desc_presence_online">Interreto</string>
+    <string name="content_desc_presence_offline">Malkonektita</string>
+    <string name="content_desc_raise_hand">Levu la manon</string>
+    <string name="content_desc_send_call_message">Sendi mesaĝon</string>
+    <string name="content_desc_state_muted">Silenta</string>
 </resources>

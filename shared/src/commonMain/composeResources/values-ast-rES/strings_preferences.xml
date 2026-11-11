@@ -34,7 +34,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_video_advanced_summary">Cambiar la tasa de bits del video, la resolución, y tamién les funciones experimentales d'accesu</string>
     <string name="pref_hd_summary">Activizar l' envío de video HD</string>
     <string name="pref_hwEncode_title">Activu la codificación acelerada</string>
-    <string name="pref_hwEncode_summary">El términu \"Colour\" ye un términu que se usa pa describir la superficie de la superficie.</string>
+    <string name="pref_hwEncode_summary">El términu "Colour" ye un términu que se usa pa describir la superficie de la superficie.</string>
     <string name="pref_videoBitrate_title">La tasa de bits de video</string>
     <string name="pref_videoBitrate_summary">Seleccione la velocidá de bits de video saliente predeterminada (KB/s)</string>
     <string name="pref_videoResolution_title">Resolución de video</string>
@@ -62,4 +62,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_block_record_summary">Bloquear la toma de captura de pantalla o grabación de video.</string>
     <string name="pref_link_preview_summary">La vista previa requiere descargar conteníos de servidores de terceros.</string>
     <string name="connectivity_custom_title">La personalidá</string>
+    <string name="pref_category_calls">Les llamadas</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Los mensaxes</string>
+    <string name="pref_category_advanced">El so nome ye "Castor"</string>
 </resources>

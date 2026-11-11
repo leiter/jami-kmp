@@ -155,8 +155,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_export_file_summary">Завантажуйте свій обліковий запис на свій пристрій, щоб відновити його пізніше.</string>
     <string name="account_export_end_decryption_message">Неправильний пароль. Будь ласка, спробуйте знову з правильним паролем.</string>
     <string name="account_enter_password">Ввести пароль</string>
-    <string name="account_share_body">Зв'яжіться зі мною, використовуючи \"%1$s\" на розподіленій комунікаційній платформі Jami: %2$s</string>
-    <string name="account_share_body_with_username">Зв'яжіться зі мною, використовуючи \"%1$s\" або моє публічне ім'я користувача \"%2$s\" на розподіленій комунікаційній платформі Jami: %3$s</string>
+    <string name="account_share_body">Зв'яжіться зі мною, використовуючи "%1$s" на розподіленій комунікаційній платформі Jami: %2$s</string>
+    <string name="account_share_body_with_username">Зв'яжіться зі мною, використовуючи "%1$s" або моє публічне ім'я користувача "%2$s" на розподіленій комунікаційній платформі Jami: %3$s</string>
     <string name="account_contact_me">Звініться зі мною на Джамі!</string>
     <string name="update_account">Оновити обліковий запис</string>
     <string name="account_migration">Ваш обліковий запис Джамі можна оновити.\nБудь ласка, введіть пароль.</string>
@@ -259,4 +259,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_error">Помилка автентифікації: %1$s</string>
     <string name="account_auth_success">Автентифікацію успішно виконано</string>
     <string name="account_auth_password">Використовувати пароль облікового запису</string>
+    <string name="account_delete_label">Видалити обліковий запис</string>
+    <string name="account_delete_summary">Видалити обліковий запис з цього пристрою</string>
+    <string name="account_p2p_section_label">Однорангове з'єднання</string>
+    <string name="account_audio_rtp_min_label">Мінімум</string>
+    <string name="account_audio_rtp_max_label">Максимум</string>
+    <string name="account_video_rtp_min_label">Мінімум</string>
+    <string name="account_video_rtp_max_label">Максимум</string>
+    <string name="account_read_receipts_label">Сповіщення про прочитання</string>
+    <string name="account_read_receipts_summary">Надсилати й запитувати сповіщення про доставлення та прочитання, коли повідомлення доставлено або прочитано.</string>
+    <string name="account_biometric_setup_title">Увімкнути біометричну автентифікацію</string>
+    <string name="account_biometric_disable_title">Вимкнути біометричну автентифікацію</string>
+    <string name="action_skip">Пропустити</string>
+    <string name="error_username_invalid">Недопустиме ім'я користувача</string>
+    <string name="account_sip_username">Ім’я користувача</string>
+    <string name="prompt_choose_username">Виберіть ім'я користувача</string>
+    <string name="dialog_export_title">Експортувати обліковий запис</string>
+    <string name="section_linked_devices">Привʼязані пристрої</string>
+    <string name="account_rename_device">Перейменувати пристрій</string>
+    <string name="screen_title_account_settings">Налаштування облікового запису</string>
+    <string name="screen_title_blocked_contacts">Заблоковані контакти</string>
+    <string name="certificates_status_banned">Заблокувати</string>
 </resources>

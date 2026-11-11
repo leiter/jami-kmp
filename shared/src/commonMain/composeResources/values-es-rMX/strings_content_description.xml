@@ -28,4 +28,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="searchbar_navigation_account">Seleccionar cuenta</string>
     <string name="add_conversation_member">Agregar miembro de conversación</string>
     <string name="qrcode_to_scan">Código QR para escanear</string>
+    <string name="content_desc_back">Atrás</string>
+    <string name="content_desc_send">Envíar</string>
+    <string name="content_desc_mute">Silenciar</string>
+    <string name="content_desc_unmute">Reactivar sonido</string>
+    <string name="content_desc_enable_video">Permitir video</string>
+    <string name="content_desc_disable_video">Deshabilitar video</string>
+    <string name="content_desc_end_call">Terminar llamada</string>
+    <string name="content_desc_resume">Reanudar</string>
+    <string name="content_desc_stop_recording">Parar grabación</string>
+    <string name="content_desc_take_photo">Tomar foto</string>
+    <string name="content_desc_send_message">Enviar mensaje</string>
+    <string name="content_desc_presence_online">En línea</string>
+    <string name="content_desc_presence_offline">Desconectado</string>
+    <string name="content_desc_raise_hand">Levantar la mano</string>
+    <string name="content_desc_send_call_message">Enviar mensaje</string>
+    <string name="content_desc_state_muted">Silenciado</string>
 </resources>

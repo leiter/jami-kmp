@@ -189,4 +189,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">Format ini tidak disokong.</string>
     <string name="account_link_device_title">പുതിയ ഉപകരണം ബന്ധിപ്പിക്കുക</string>
     <string name="account_link_device_button">ബന്ധിപ്പിക്കുക</string>
+    <string name="account_delete_label">അക്കൌണ്ട് ഇല്ലാതാക്കുക</string>
+    <string name="account_audio_rtp_min_label">Minimum</string>
+    <string name="account_audio_rtp_max_label">Maksimum</string>
+    <string name="account_video_rtp_min_label">Minimum</string>
+    <string name="account_video_rtp_max_label">Maksimum</string>
+    <string name="action_skip">സ്കിപ്പ് ചെയ്യുക</string>
+    <string name="error_username_invalid">Nama pengguna tidak sah</string>
+    <string name="account_sip_username">Nama pengguna</string>
+    <string name="prompt_choose_username">ഒരു ഉപയോക്തൃനാമം തിരഞ്ഞെടുക്കുക</string>
+    <string name="section_linked_devices">ബന്ധിപ്പിച്ച ഉപകരണങ്ങൾ</string>
+    <string name="account_rename_device">പേരുമാറ്റ ഉപകരണം</string>
+    <string name="screen_title_account_settings">അക്കൌണ്ട് ക്രമീകരണങ്ങൾ</string>
+    <string name="screen_title_blocked_contacts">തടഞ്ഞ കോൺടാക്റ്റുകൾ</string>
+    <string name="certificates_status_banned">തടയൽ</string>
 </resources>

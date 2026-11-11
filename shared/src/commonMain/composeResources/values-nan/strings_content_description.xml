@@ -26,4 +26,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="searchbar_navigation_account">选择帐户</string>
     <string name="add_conversation_member">添加对话成员</string>
     <string name="qrcode_to_scan">二维码，请扫描</string>
+    <string name="content_desc_back">上一步</string>
+    <string name="content_desc_send">发送</string>
+    <string name="content_desc_mute">静音</string>
+    <string name="content_desc_unmute">取消静音</string>
+    <string name="content_desc_enable_video">启用视频</string>
+    <string name="content_desc_disable_video">关闭视频</string>
+    <string name="content_desc_end_call">結束電話</string>
+    <string name="content_desc_resume">继续</string>
+    <string name="content_desc_stop_recording">停止錄製</string>
+    <string name="content_desc_take_photo">照相</string>
+    <string name="content_desc_send_message">发送消息</string>
+    <string name="content_desc_presence_online">上線</string>
+    <string name="content_desc_presence_offline">離線</string>
+    <string name="content_desc_raise_hand">举手</string>
+    <string name="content_desc_send_call_message">发送消息</string>
+    <string name="content_desc_state_muted">已静音</string>
 </resources>

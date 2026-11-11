@@ -21,7 +21,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="contribute_section">Өлешен кертү</string>
     <string name="version_section">Версия</string>
     <string name="website_chooser_title">Сайтны...</string>
-    <string name="license">Бу программа бернинди гарантиясез \"кайчан булса\" бирелә.</string>
+    <string name="license">Бу программа бернинди гарантиясез "кайчан булса" бирелә.</string>
     <string name="description">Jami - үз кулланучыларының ирекләрен һәм шәхси тормышын хөрмәт итүче универсаль коммуникация өчен ирекле программа.</string>
     <string name="credits">Кредитлар</string>
     <string name="pip_title">Җәми конференциясе</string>
@@ -151,4 +151,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_side_step2_confirm">Ышанычлылык</string>
     <string name="import_side_step1_share">Бүләкләү</string>
     <string name="import_side_step2_password_import">Импорт</string>
+    <string name="notif_send_reply">Җибәр</string>
+    <string name="action_call_hangup">Шалтыратуны тәмамлау</string>
+    <string name="recordings_delete_confirm">Ачу</string>
+    <string name="action_audio">Аудиоязма</string>
+    <string name="action_video">Видео</string>
+    <string name="menu_overflow">Күпрәк мөмкинлекләр</string>
+    <string name="action_cancel">Баш тарту</string>
+    <string name="group_remove_member">Блок</string>
+    <string name="group_unblock_member">Блокны ачыгыз</string>
+    <string name="group_member_invited">Чакырылганнар</string>
+    <string name="group_members">Депутатлар</string>
+    <string name="action_create_account">Хисапны булдыру</string>
+    <string name="menu_item_copy">Кушымта</string>
+    <string name="menu_item_edit">Редакция</string>
+    <string name="screen_title_app_settings">Калыплар</string>
+    <string name="action_share">Бүләкләү</string>
+    <string name="permission_dialog_battery_dismiss">Хәзер түгел</string>
 </resources>

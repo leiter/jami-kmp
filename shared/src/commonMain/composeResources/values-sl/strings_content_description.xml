@@ -28,4 +28,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="searchbar_navigation_account">Izberite račun</string>
     <string name="add_conversation_member">Dodaj člana pogovora</string>
     <string name="qrcode_to_scan">QR-koda za skeniranje</string>
+    <string name="content_desc_back">Nazaj</string>
+    <string name="content_desc_send">Pošlji</string>
+    <string name="content_desc_mute">Utišaj</string>
+    <string name="content_desc_unmute">Vklopi zvok</string>
+    <string name="content_desc_enable_video">Omogoči video</string>
+    <string name="content_desc_disable_video">Onemogoči video</string>
+    <string name="content_desc_end_call">Zaključi klic</string>
+    <string name="content_desc_resume">Nadaljuj</string>
+    <string name="content_desc_stop_recording">Ustavi snemanje</string>
+    <string name="content_desc_take_photo">Slikaj</string>
+    <string name="content_desc_send_message">Pošlji sporočilo</string>
+    <string name="content_desc_presence_online">Povezan</string>
+    <string name="content_desc_presence_offline">Brez povezave</string>
+    <string name="content_desc_raise_hand">Dvigni roko</string>
+    <string name="content_desc_send_call_message">Pošlji sporočilo</string>
+    <string name="content_desc_state_muted">Nemo</string>
 </resources>

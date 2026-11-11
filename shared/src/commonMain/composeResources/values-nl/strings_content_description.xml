@@ -22,4 +22,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_play">Afspelen</string>
     <string name="control_replay">Opnieuw afspelen</string>
     <string name="control_pause">Pauze</string>
+    <string name="searchbar_navigation_account">Account selecteren</string>
+    <string name="qrcode_to_scan">Te scannen QR-code</string>
+    <string name="content_desc_back">Terug</string>
+    <string name="content_desc_send">Versturen</string>
+    <string name="content_desc_mute">Dempen</string>
+    <string name="content_desc_unmute">Dempen opheffen</string>
+    <string name="content_desc_enable_video">Video inschakelen</string>
+    <string name="content_desc_disable_video">Video uitschakelen</string>
+    <string name="content_desc_end_call">Oproep beëindigen</string>
+    <string name="content_desc_resume">Hervatten</string>
+    <string name="content_desc_stop_recording">Opname beëindigen</string>
+    <string name="content_desc_take_photo">Foto nemen</string>
+    <string name="content_desc_send_message">Bericht versturen</string>
+    <string name="content_desc_presence_online">Online</string>
+    <string name="content_desc_presence_offline">Offline</string>
+    <string name="content_desc_raise_hand">Hand opsteken</string>
+    <string name="content_desc_send_call_message">Bericht versturen</string>
+    <string name="content_desc_state_muted">Gevoelige</string>
 </resources>

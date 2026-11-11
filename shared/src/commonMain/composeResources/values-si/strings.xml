@@ -26,4 +26,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="tab_settings">සැකසුම්</string>
     <string name="donation_card_not_now">දැන් නොවේ</string>
     <string name="export_side_step2_cancel">අවලංගු කරන්න</string>
+    <string name="action_call_hangup">ඇමතුම අවසන් කරන්න</string>
+    <string name="action_cancel">අවලංගු කරන්න</string>
+    <string name="action_new_group">නව සමූහය තනන්න</string>
+    <string name="screen_title_app_settings">සැකසුම්</string>
+    <string name="permission_dialog_battery_dismiss">දැන් නොවේ</string>
 </resources>

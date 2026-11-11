@@ -253,9 +253,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_link_password">Esta cuenta está encriptada con contraseña, ingresar la contraseña para generar el código de autenticación.</string>
     <string name="account_link_generate_button">Generar</string>
     <string name="account_link_time_valid">El código de autenticación no será válido: %1$s.</string>
-    <string name="account_link_device_info">Elija \"Vincular un nuevo dispositivo\" desde la otra aplicación Jami para mostrar el código QR o el código de autenticación</string>
+    <string name="account_link_device_info">Elija "Vincular un nuevo dispositivo" desde la otra aplicación Jami para mostrar el código QR o el código de autenticación</string>
     <string name="account_generate_export_device">En el otro dispositivo</string>
-    <string name="account_generate_export_info">Instalar y ejecutar Jami. Seleccionar \"Importar desde otro dispositivo\" y escanear el código QR. Alternativamente, ingresar el código PIN manualmente.</string>
+    <string name="account_generate_export_info">Instalar y ejecutar Jami. Seleccionar "Importar desde otro dispositivo" y escanear el código QR. Alternativamente, ingresar el código PIN manualmente.</string>
     <string name="content_description_qr_generated">Código QR de la cuenta</string>
     <string name="account_generate_export_invalid">El código de autenticación ya no es válido.\n ingrese la contraseña y genere otra para vincular el nuevo dispositivo .</string>
     <string name="account_generate_export_invalid_two">El código de autenticación ya no es válido.\n genere otro para vincular el nuevo dispositivo.</string>
@@ -273,4 +273,24 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_success">La autenticación se ha realizado correctamente</string>
     <string name="account_auth_key_error">Se produjo un error al descifrar la clave de la cuenta.</string>
     <string name="account_auth_password">Introduce la contraseña de la cuenta</string>
+    <string name="account_delete_label">Eliminar cuenta</string>
+    <string name="account_delete_summary">Eliminar cuenta de este dispositivo</string>
+    <string name="account_p2p_section_label">Conectividad punto a punto</string>
+    <string name="account_audio_rtp_min_label">Mínimo</string>
+    <string name="account_audio_rtp_max_label">Máximo</string>
+    <string name="account_video_rtp_min_label">Mínimo</string>
+    <string name="account_video_rtp_max_label">Máximo</string>
+    <string name="account_biometric_setup_title">Desactivar autenticación biométrica</string>
+    <string name="account_biometric_disable_title">Desactivar autenticación biométrica</string>
+    <string name="action_skip">Saltar</string>
+    <string name="error_username_invalid">Nombre de usuario inválido</string>
+    <string name="account_sip_username">Nombre de usuario</string>
+    <string name="prompt_choose_username">Elegir nombre de usuario</string>
+    <string name="dialog_export_title">Exportar cuenta</string>
+    <string name="section_linked_devices">Dispositivos vinculados</string>
+    <string name="account_rename_device">Renombrar dispositivo</string>
+    <string name="action_rename">Renombrar</string>
+    <string name="screen_title_account_settings">Configuración de la cuenta</string>
+    <string name="screen_title_blocked_contacts">Contactos bloqueados</string>
+    <string name="certificates_status_banned">Bloquear</string>
 </resources>

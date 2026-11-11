@@ -273,4 +273,24 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_success">Autentificarea a reușit</string>
     <string name="account_auth_key_error">A apărut o eroare la descifrarea cheii contului.</string>
     <string name="account_auth_password">Folosește parola contului</string>
+    <string name="account_delete_label">Șterge contul</string>
+    <string name="account_delete_summary">Șterge contul din acest aparat</string>
+    <string name="account_p2p_section_label">Conexiune directă P2P</string>
+    <string name="account_audio_rtp_min_label">Minimum</string>
+    <string name="account_audio_rtp_max_label">Maximum</string>
+    <string name="account_video_rtp_min_label">Minimum</string>
+    <string name="account_video_rtp_max_label">Maximum</string>
+    <string name="account_biometric_setup_title">Activează autentificarea biometrică</string>
+    <string name="account_biometric_disable_title">Dezactivează autentificarea biometrică</string>
+    <string name="action_skip">Omite</string>
+    <string name="error_username_invalid">Nume greșit</string>
+    <string name="account_sip_username">Nume de utilizator</string>
+    <string name="prompt_choose_username">Alege un nume de utilizator</string>
+    <string name="dialog_export_title">Exportă contul</string>
+    <string name="section_linked_devices">Aparate asociate</string>
+    <string name="account_rename_device">Redenumește aparatul</string>
+    <string name="action_rename">Redenumește</string>
+    <string name="screen_title_account_settings">Reglările contului</string>
+    <string name="screen_title_blocked_contacts">Contacte blocate</string>
+    <string name="certificates_status_banned">Blochează</string>
 </resources>

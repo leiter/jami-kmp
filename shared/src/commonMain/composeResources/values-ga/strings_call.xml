@@ -32,4 +32,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">Modhálaí</string>
     <string name="call_muted">Tá sé imithe</string>
     <string name="call_handRaised">lámh ar airde</string>
+    <string name="call_participant_enable_video">Céadú físeán</string>
 </resources>

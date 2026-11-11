@@ -157,8 +157,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_export_file_summary">备份您设备上的账户以便恢复</string>
     <string name="account_export_end_decryption_message">使用该密码无法解锁您的账户。</string>
     <string name="account_enter_password">输入密码</string>
-    <string name="account_share_body">用 \"%1$s\" 在 Jami 分布式通信平台上与我联系：%2$s</string>
-    <string name="account_share_body_with_username">使用 \"%1$s\"或我的公开用户名 \"%2$s\" 在 Jami 分布式通讯平台上联系我：%3$s</string>
+    <string name="account_share_body">用 "%1$s" 在 Jami 分布式通信平台上与我联系：%2$s</string>
+    <string name="account_share_body_with_username">使用 "%1$s"或我的公开用户名 "%2$s" 在 Jami 分布式通讯平台上联系我：%3$s</string>
     <string name="account_contact_me">在 Jami 上联系我！</string>
     <string name="update_account">更新账户</string>
     <string name="account_migration">您的 Jami 账户可以被更新。\n请输入您的密码。</string>
@@ -273,4 +273,24 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_success">身份验证成功</string>
     <string name="account_auth_key_error">解密账户密钥时发生错误。</string>
     <string name="account_auth_password">使用帐户密码</string>
+    <string name="account_delete_label">删除账户</string>
+    <string name="account_delete_summary">从此设备中删除帐户</string>
+    <string name="account_p2p_section_label">点到点连接</string>
+    <string name="account_audio_rtp_min_label">最小</string>
+    <string name="account_audio_rtp_max_label">最大</string>
+    <string name="account_video_rtp_min_label">最小</string>
+    <string name="account_video_rtp_max_label">最大</string>
+    <string name="account_biometric_setup_title">启用生物特征身份验证</string>
+    <string name="account_biometric_disable_title">禁用生物特征身份验证</string>
+    <string name="action_skip">跳过</string>
+    <string name="error_username_invalid">無效的使用者名稱</string>
+    <string name="account_sip_username">使用者名</string>
+    <string name="prompt_choose_username">选择一个用户名</string>
+    <string name="dialog_export_title">导出账户</string>
+    <string name="section_linked_devices">关联设备</string>
+    <string name="account_rename_device">重新命名裝置</string>
+    <string name="action_rename">重命名</string>
+    <string name="screen_title_account_settings">帳號設定</string>
+    <string name="screen_title_blocked_contacts">已屏蔽的联系人</string>
+    <string name="certificates_status_banned">屏蔽</string>
 </resources>

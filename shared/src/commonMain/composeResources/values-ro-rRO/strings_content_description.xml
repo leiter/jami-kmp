@@ -28,4 +28,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="searchbar_navigation_account">Alege contul</string>
     <string name="add_conversation_member">Adaugă un membru la conversație</string>
     <string name="qrcode_to_scan">Cod QR de scanat</string>
+    <string name="content_desc_back">Înapoi</string>
+    <string name="content_desc_send">Trimite</string>
+    <string name="content_desc_mute">Oprește</string>
+    <string name="content_desc_unmute">Pornește</string>
+    <string name="content_desc_enable_video">Activează Video</string>
+    <string name="content_desc_disable_video">Dezactivează video</string>
+    <string name="content_desc_end_call">Închide apelul</string>
+    <string name="content_desc_resume">Reia apelul</string>
+    <string name="content_desc_stop_recording">Oprește înregistrarea</string>
+    <string name="content_desc_take_photo">Fă o poză</string>
+    <string name="content_desc_send_message">Trimite mesajul</string>
+    <string name="content_desc_presence_online">Conectat</string>
+    <string name="content_desc_presence_offline">Deconectat</string>
+    <string name="content_desc_raise_hand">Mâna sus</string>
+    <string name="content_desc_send_call_message">Trimite mesajul</string>
+    <string name="content_desc_state_muted">Oprit</string>
 </resources>

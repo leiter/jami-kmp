@@ -293,4 +293,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_side_step2_confirm">पुष्टि गर्नुहोस्</string>
     <string name="import_side_step1_share">साझेदारी</string>
     <string name="import_side_step2_password_import">आयात</string>
+    <string name="notif_send_reply">पठाउनुहोस्</string>
+    <string name="recordings_delete_confirm">हटाउनु</string>
+    <string name="action_audio">अडियो</string>
+    <string name="action_video">भिडियो</string>
+    <string name="qr_scan_instruction">यो कोड जमीसँग स्क्यान गर्नुहोस्</string>
+    <string name="menu_overflow">थप विकल्पहरू</string>
+    <string name="action_cancel">रद्द गर्नुहोस्</string>
+    <string name="group_remove_member">ब्लक</string>
+    <string name="group_unblock_member">अनब्लक</string>
+    <string name="group_member_invited">आमन्त्रित</string>
+    <string name="group_members">सदस्यहरू</string>
+    <string name="action_create_account">खाता सिर्जना गर्नुहोस्</string>
+    <string name="action_new_conversation">कुराकानी सुरु गर्नुहोस्</string>
+    <string name="menu_item_copy">प्रतिलिपि</string>
+    <string name="menu_item_edit">सम्पादन</string>
+    <string name="screen_title_qr_scan">QR कोड स्क्यान गर्नुहोस्</string>
+    <string name="action_qr_code">QR कोड</string>
+    <string name="screen_title_app_settings">सेटिंग्स</string>
+    <string name="action_share">साझेदारी</string>
+    <string name="filter_requests">अनुरोधहरू</string>
+    <string name="permission_dialog_battery_dismiss">अहिले होइन</string>
 </resources>

@@ -63,4 +63,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">Визуализация на уеб връзки</string>
     <string name="pref_link_preview_summary">Прегледът изисква изтегляне на съдържание от сървъри на трети страни.</string>
     <string name="connectivity_custom_title">Персонализиран</string>
+    <string name="pref_category_calls">Обаждания</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Съобщения</string>
+    <string name="pref_category_advanced">Разширени</string>
 </resources>

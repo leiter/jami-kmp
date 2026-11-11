@@ -21,4 +21,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">Pakua</string>
     <string name="control_play">Kucheza</string>
     <string name="control_pause">Kupumzika</string>
+    <string name="content_desc_back">Kurudi</string>
+    <string name="content_desc_send">Tuma</string>
+    <string name="content_desc_mute">Kiziwi</string>
+    <string name="content_desc_unmute">Bila Kuzungumza</string>
+    <string name="content_desc_enable_video">Weka Video</string>
+    <string name="content_desc_end_call">Maliza simu hii</string>
+    <string name="content_desc_stop_recording">Acha kurekodi</string>
+    <string name="content_desc_take_photo">Piga picha</string>
+    <string name="content_desc_send_message">Tuma ujumbe</string>
+    <string name="content_desc_presence_online">Mtandaoni</string>
+    <string name="content_desc_presence_offline">Nje ya mtandao</string>
+    <string name="content_desc_raise_hand">Kuinua mkono</string>
+    <string name="content_desc_send_call_message">Tuma ujumbe</string>
+    <string name="content_desc_state_muted">Kuzimia</string>
 </resources>

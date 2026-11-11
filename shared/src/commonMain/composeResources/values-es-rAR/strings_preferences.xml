@@ -103,4 +103,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="extension_invalid_format">Formato de extensión no válido: <b>%1$s</b></string>
     <string name="extension_force_install">force\ninstall</string>
     <string name="extension_path_image_add">Agregar nueva imagen</string>
+    <string name="pref_category_calls">Llamadas</string>
+    <string name="pref_max_file_size_value">%1$dMB</string>
+    <string name="pref_category_messages">Mensajes</string>
+    <string name="pref_category_advanced">Avanzadas</string>
 </resources>

@@ -33,7 +33,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_name_server_label">Server imena</string>
     <string name="account_useragent_label">Uloga korisnika</string>
     <string name="account_rendezvous_label">Režim sastanka</string>
-    <string name="account_rendezvous_summary">U režimu \"Rendezvous\" prihađani pozivi će se dodati u konferencijsku sobu.</string>
+    <string name="account_rendezvous_summary">U režimu "Rendezvous" prihađani pozivi će se dodati u konferencijsku sobu.</string>
     <string name="account_preferences_extension_tab">Proširenja</string>
     <string name="account_ringtone_custom_label">Koristite prilagođen zvon</string>
     <string name="account_dht_public_in_calls_label">Dopusti dolazne pozive nepoznatih kontakata</string>
@@ -114,4 +114,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">Ovaj format nije podržan.</string>
     <string name="account_link_device_title">Povežite novi uređaj</string>
     <string name="account_link_device_button">Povezivanje</string>
+    <string name="account_delete_label">Izbrišite račun</string>
+    <string name="account_device_revocation_wrong_password">Netočna lozinka.</string>
+    <string name="account_read_receipts_label">Potvrde čitanja</string>
+    <string name="account_read_receipts_summary">Šalji i zahtijevaj potvrde isporuke i čitanja kada se poruke isporuče ili pročitaju.</string>
+    <string name="error_username_invalid">Nevaljan korisnički naziv</string>
+    <string name="prompt_choose_username">Izaberite korisničko ime</string>
+    <string name="section_linked_devices">Povezani uređaji</string>
+    <string name="account_rename_device">Uređaj za preimenovanje</string>
+    <string name="screen_title_account_settings">Nastavke računa</string>
 </resources>

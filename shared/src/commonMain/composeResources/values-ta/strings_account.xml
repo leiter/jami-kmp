@@ -189,4 +189,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">இந்த வடிவம் ஆதரிக்கப்படவில்லை.</string>
     <string name="account_link_device_title">புதிய சாதனத்தை இணைக்கவும்</string>
     <string name="account_link_device_button">இணைக்கவும்</string>
+    <string name="account_delete_label">கணக்கை நீக்கு</string>
+    <string name="account_audio_rtp_min_label">குறைந்தபட்ச</string>
+    <string name="account_audio_rtp_max_label">அதிகபட்ச</string>
+    <string name="account_video_rtp_min_label">குறைந்தபட்ச</string>
+    <string name="account_video_rtp_max_label">அதிகபட்ச</string>
+    <string name="action_skip">தப்பி</string>
+    <string name="error_username_invalid">செல்லுபடியற்ற பயனர் பெயர்</string>
+    <string name="account_sip_username">பயனர் பெயர்</string>
+    <string name="prompt_choose_username">ஒரு பயனர்பெயரைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="section_linked_devices">இணைக்கப்பட்ட சாதனங்கள்</string>
+    <string name="account_rename_device">பெயர் மாற்றம் செய்யும் சாதனம்</string>
+    <string name="screen_title_account_settings">கணக்கு அமைப்புகள்</string>
+    <string name="screen_title_blocked_contacts">தடுக்கப்பட்ட தொடர்புகள்</string>
+    <string name="certificates_status_banned">தொகுதி</string>
 </resources>

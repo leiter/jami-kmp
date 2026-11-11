@@ -61,4 +61,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_block_record_title">ڤڠهولوڠ ڤرسكوتوان دان ڤرڬي</string>
     <string name="pref_block_record_summary">مڠهادڤكن ڤمبلاجرن سكرينوت اتاو ڤمبلاجرن ڤيديو.</string>
     <string name="pref_link_preview_summary">ڤريڤوڠ ڤرلو مڠمبيل ڤمبلاجرن دري ڤرلاونن ڤرلاونن ترسبوت.</string>
+    <string name="pref_category_calls">ڤڠاجين</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">ڤرساتوان</string>
+    <string name="pref_category_advanced">ڤڠاجين</string>
 </resources>

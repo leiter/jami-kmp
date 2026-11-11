@@ -189,4 +189,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">Umbizo hili halitegemewi.</string>
     <string name="account_link_device_title">Unganisha kifaa kipya</string>
     <string name="account_link_device_button">Unganisha</string>
+    <string name="account_delete_label">Futa akaunti</string>
+    <string name="account_device_revocation_wrong_password">Nenosiri si sahihi.</string>
+    <string name="account_audio_rtp_min_label">Kiwango cha chini</string>
+    <string name="account_audio_rtp_max_label">Kiwango cha juu</string>
+    <string name="account_video_rtp_min_label">Kiwango cha chini</string>
+    <string name="account_video_rtp_max_label">Kiwango cha juu</string>
+    <string name="account_read_receipts_label">Risiti za kusoma</string>
+    <string name="account_read_receipts_summary">Tuma na omba risiti za kufikishwa na kusoma zitakazotumwa wakati ujumbe unapofikishwa au kusomwa.</string>
+    <string name="action_skip">Kwenda</string>
+    <string name="error_username_invalid">Jina la mtumiaji lisilofaa</string>
+    <string name="account_sip_username">Jina la mtumiaji</string>
+    <string name="prompt_choose_username">Chagua jina la mtumiaji</string>
+    <string name="section_linked_devices">Vifaa vilivyounganishwa</string>
+    <string name="account_rename_device">Kifaa cha kubadilisha jina</string>
+    <string name="screen_title_account_settings">Mipangilio ya Akaunti</string>
+    <string name="screen_title_blocked_contacts">Mawasiliano yaliyopigwa</string>
+    <string name="certificates_status_banned">Block</string>
 </resources>

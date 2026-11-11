@@ -273,4 +273,24 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_success">Tuvastamine õnnestus</string>
     <string name="account_auth_key_error">Kasutajakonto võtme dekrüptimisel tekkis viga.</string>
     <string name="account_auth_password">Kasuta konto salasõna</string>
+    <string name="account_delete_label">Kustuta kasutajakonto</string>
+    <string name="account_delete_summary">Kustuta kasutajakonto selle seadmest</string>
+    <string name="account_p2p_section_label">Võrdõigusvõrgu ühenduvus</string>
+    <string name="account_audio_rtp_min_label">Minimaalselt</string>
+    <string name="account_audio_rtp_max_label">Maksimaalselt</string>
+    <string name="account_video_rtp_min_label">Minimaalselt</string>
+    <string name="account_video_rtp_max_label">Maksimaalselt</string>
+    <string name="account_biometric_setup_title">Võta biomeetriline tuvastamine kasutusele</string>
+    <string name="account_biometric_disable_title">Lülita biomeetriline tuvastamine välja</string>
+    <string name="action_skip">Jäta vahele</string>
+    <string name="error_username_invalid">Vigane kasutajanimi</string>
+    <string name="account_sip_username">Kasutajanimi</string>
+    <string name="prompt_choose_username">Vali kasutajanimi</string>
+    <string name="dialog_export_title">Ekspordi kasutajakonto</string>
+    <string name="section_linked_devices">Seotud seadmed</string>
+    <string name="account_rename_device">Muuda seadme nime</string>
+    <string name="action_rename">Muuda nime</string>
+    <string name="screen_title_account_settings">Kontode seadistused</string>
+    <string name="screen_title_blocked_contacts">Blokeeritud kontaktid</string>
+    <string name="certificates_status_banned">Blokeeri</string>
 </resources>

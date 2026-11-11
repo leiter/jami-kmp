@@ -22,4 +22,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_play">Oynat</string>
     <string name="control_replay">Yeniden oynat</string>
     <string name="control_pause">Duraklat</string>
+    <string name="searchbar_navigation_account">Hesap seç</string>
+    <string name="qrcode_to_scan">Taranacak QR kodu</string>
+    <string name="content_desc_back">Geri</string>
+    <string name="content_desc_send">Gönder</string>
+    <string name="content_desc_mute">Sessiz</string>
+    <string name="content_desc_unmute">Sesi aç</string>
+    <string name="content_desc_enable_video">Görüntüyü Etkinleştir</string>
+    <string name="content_desc_disable_video">Videoyu devre dışı bırak</string>
+    <string name="content_desc_end_call">Çağrıyı sonlandır</string>
+    <string name="content_desc_resume">Sürdür</string>
+    <string name="content_desc_stop_recording">Kaydı durdur</string>
+    <string name="content_desc_take_photo">Fotoğraf çek</string>
+    <string name="content_desc_send_message">İleti gönder</string>
+    <string name="content_desc_presence_online">Çevrim İçi</string>
+    <string name="content_desc_presence_offline">Çevrim dışı</string>
+    <string name="content_desc_raise_hand">El kaldır</string>
+    <string name="content_desc_send_call_message">İleti gönder</string>
+    <string name="content_desc_state_muted">Sessiz</string>
 </resources>

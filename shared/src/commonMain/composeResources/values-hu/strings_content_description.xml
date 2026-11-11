@@ -28,4 +28,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="searchbar_navigation_account">Fiók kijelölése</string>
     <string name="add_conversation_member">Beszélgetési tag hozzáadása</string>
     <string name="qrcode_to_scan">QR-kód a beolvasáshoz</string>
+    <string name="content_desc_back">Vissza</string>
+    <string name="content_desc_send">Küldés</string>
+    <string name="content_desc_mute">Elnémítás</string>
+    <string name="content_desc_unmute">Némítás feloldása</string>
+    <string name="content_desc_enable_video">Videó engedélyezése</string>
+    <string name="content_desc_disable_video">Videó letiltása</string>
+    <string name="content_desc_end_call">Hívás befejezése</string>
+    <string name="content_desc_resume">Folytatás</string>
+    <string name="content_desc_stop_recording">Felvétel leállítása</string>
+    <string name="content_desc_take_photo">Fénykép készítése</string>
+    <string name="content_desc_send_message">Üzenet küldése</string>
+    <string name="content_desc_presence_online">Elérhető</string>
+    <string name="content_desc_presence_offline">Nem elérhető</string>
+    <string name="content_desc_raise_hand">Kéz felemelése</string>
+    <string name="content_desc_send_call_message">Üzenet küldése</string>
+    <string name="content_desc_state_muted">Elnémítva</string>
 </resources>

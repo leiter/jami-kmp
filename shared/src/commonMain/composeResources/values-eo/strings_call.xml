@@ -32,4 +32,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">Moderator</string>
     <string name="call_muted">Silenta</string>
     <string name="call_handRaised">Mano levita</string>
+    <string name="call_dtmf_dialpad">Dialpad</string>
+    <string name="call_participant_enable_video">Ŝalti Videon</string>
 </resources>

@@ -22,4 +22,19 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_play">再生</string>
     <string name="control_replay">再生</string>
     <string name="control_pause">一時停止</string>
+    <string name="searchbar_navigation_account">アカウントを選択</string>
+    <string name="content_desc_back">戻る</string>
+    <string name="content_desc_send">送信</string>
+    <string name="content_desc_mute">消音</string>
+    <string name="content_desc_unmute">消音を解除</string>
+    <string name="content_desc_enable_video">動画を有効化</string>
+    <string name="content_desc_end_call">通話を終了</string>
+    <string name="content_desc_stop_recording">録音を停止</string>
+    <string name="content_desc_take_photo">撮影</string>
+    <string name="content_desc_send_message">メッセージを送信</string>
+    <string name="content_desc_presence_online">オンライン</string>
+    <string name="content_desc_presence_offline">オフライン</string>
+    <string name="content_desc_raise_hand">手を挙げる</string>
+    <string name="content_desc_send_call_message">メッセージを送信</string>
+    <string name="content_desc_state_muted">ミュート中</string>
 </resources>

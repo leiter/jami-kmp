@@ -62,4 +62,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_block_record_summary">Պակասեք էկրանային նկարահանումները կամ տեսանյութերը ձայնագրելը:</string>
     <string name="pref_link_preview_summary">Նախագահում պահանջում է բովանդակություն ներբեռնել երրորդ կողմի սերվերներից:</string>
     <string name="connectivity_custom_title">Պարբերական</string>
+    <string name="pref_link_preview_title">Վեբ հղման նախադիտումներ</string>
+    <string name="pref_category_calls">Զանգահարություններ</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Հաղորդագրություններ</string>
+    <string name="pref_category_advanced">Առաջադեմ</string>
 </resources>

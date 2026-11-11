@@ -189,4 +189,27 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">Η μορφή δεν υποστιρίζεται.</string>
     <string name="account_link_device_title">Σύνδεση νέας συσκευής</string>
     <string name="account_link_device_button">Σύνδεση</string>
+    <string name="account_selection">Επιλογή λογαριασμού</string>
+    <string name="account_delete_label">Διαγραφή λογαριασμού</string>
+    <string name="account_device_revocation_wrong_password">Λανθασμένος κωδικός πρόσβασης.</string>
+    <string name="account_audio_rtp_min_label">Λεπτομέτρου</string>
+    <string name="account_audio_rtp_max_label">Μέγιστη</string>
+    <string name="account_video_rtp_min_label">Λεπτομέτρου</string>
+    <string name="account_video_rtp_max_label">Μέγιστη</string>
+    <string name="account_read_receipts_label">Αποδείξεις ανάγνωσης</string>
+    <string name="account_read_receipts_summary">Αποστολή και αίτημα αποδείξεων παράδοσης και ανάγνωσης όταν τα μηνύματα παραδίδονται ή διαβάζονται.</string>
+    <string name="error_passwords_not_equals">Οι κωδικοί πρόσβασης δεν ταιριάζουν.</string>
+    <string name="username_available">Το όνομα χρήστη είναι διαθέσιμο.</string>
+    <string name="trying_to_register_name">Η εγγραφή ονόματος χρήστη βρίσκεται σε εξέλιξη. Παρακαλώ περιμένετε…</string>
+    <string name="looking_for_username_availability">Έλεγχος διαθεσιμότητας ονόματος χρήστη…</string>
+    <string name="action_skip">Παράληψη</string>
+    <string name="error_username_invalid">Μη έγκυρο όνομα χρήστη</string>
+    <string name="account_sip_username">Όνομα χρήστη</string>
+    <string name="prompt_choose_username">Επιλέξτε όνομα χρήστη</string>
+    <string name="dialog_export_title">Εξαγωγή λογαριασμού</string>
+    <string name="section_linked_devices">Συνδεδεμένες συσκευές</string>
+    <string name="account_rename_device">Επανακατακατηγορία</string>
+    <string name="screen_title_account_settings">Ρυθμίσεις λογαριασμού</string>
+    <string name="screen_title_blocked_contacts">Μπλοκαρισμένες επαφές</string>
+    <string name="certificates_status_banned">Μπλοκάρισμα</string>
 </resources>

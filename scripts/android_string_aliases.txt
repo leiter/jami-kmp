@@ -1,0 +1,112 @@
+# Aliases for scripts/sync_android_strings.py
+#
+# A KMP-only string key whose English text is identical to a jami-client-android string under a
+# different key name. The sync script takes that Android string's translations for the KMP key.
+#
+#   kmp_key = android_key
+#
+# The script re-checks on every run that both English texts still match (ignoring case and
+# %s/%1$s numbering), and skips the alias if they have drifted apart. An alias only fills a
+# missing translation; it never overwrites an existing one, so hand-made German stays.
+#
+# Identical English is not identical meaning: every line below was reviewed against the Android
+# key's context and its German/French/Spanish translations. Rejected candidates are kept at the
+# bottom so nobody re-adds them.
+#
+# Exclusions skip one bad upstream translation:
+#
+#   ! <values-folder> <kmp_key>   # reason
+#
+# Reviewed 2026-11-11 against jami-client-android f36fae6 (2026-10-27).
+
+# --- Account ---------------------------------------------------------------------------------
+account_audio_rtp_min_label = account_rtp_min_port
+account_audio_rtp_max_label = account_rtp_max_port
+account_video_rtp_min_label = account_rtp_min_port
+account_video_rtp_max_label = account_rtp_max_port
+account_biometric_setup_title = account_biometric_set
+account_biometric_disable_title = account_biometric_disable
+account_delete_label = pref_delete_account_title
+account_delete_summary = pref_delete_account_summary
+account_p2p_section_label = account_connectivity_label
+account_rename_device = rename_device_button
+account_sip_username = account_username_label
+action_create_account = action_create
+action_import_account = import_side_main_title
+dialog_export_title = export_side_main_title
+error_username_invalid = invalid_username
+prompt_choose_username = jami_id_choose_username
+prompt_display_name = account_alias_label
+screen_title_account_settings = menu_item_account_settings
+screen_title_blocked_contacts = ic_blacklist_menu
+section_linked_devices = normal_devices_titles
+certificates_status_banned = block
+
+# --- Generic actions -------------------------------------------------------------------------
+action_audio = account_audio_label
+action_video = account_video_label
+action_cancel = export_side_step2_cancel
+action_rename = collab_rename
+action_share = share_label
+action_skip = wizard_skip
+action_new_conversation = start_conversation
+action_new_group = new_group
+action_qr_code = qr_code
+menu_app_settings = menu_item_app_settings
+menu_item_copy = menu_message_copy
+menu_item_edit = shared_services_edit
+menu_overflow = shared_services_more_options
+recordings_delete_confirm = menu_delete
+screen_title_app_settings = action_settings
+screen_title_qr_scan = scan_qr
+qr_scan_instruction = share_message
+share_contact_subject = share_contact_intent_title
+permission_dialog_battery_dismiss = donation_card_not_now
+placeholder_search = searchbar_hint
+
+# --- Calls -----------------------------------------------------------------------------------
+call_dtmf_dialpad = bottomSheet_dialpad_btn
+call_lower_hand = action_call_lower_hand
+call_participant_enable_video = switch_to_video
+call_participant_disable_video = switch_to_audio
+content_desc_enable_video = switch_to_video
+content_desc_disable_video = switch_to_audio
+content_desc_end_call = action_call_hangup
+content_desc_mute = action_call_mute
+content_desc_unmute = action_call_unmute
+content_desc_resume = action_call_resume
+content_desc_lower_hand = action_call_lower_hand
+content_desc_raise_hand = bottomSheet_raiseHand_btn
+content_desc_participants = action_call_show_participants
+content_desc_state_muted = call_muted
+
+# --- Chat, contacts, groups ------------------------------------------------------------------
+content_desc_back = wizard_back
+content_desc_send = tv_dialog_send
+content_desc_send_message = send_message
+content_desc_send_call_message = send_message
+content_desc_stop_recording = audio_recording_stop
+content_desc_take_photo = take_a_photo
+content_desc_presence_online = account_status_online
+content_desc_presence_offline = account_status_offline
+notif_send_reply = tv_dialog_send
+group_members = conversation_members
+group_remove_member = block
+group_unblock_member = contact_unblock
+filter_requests = notif_channel_requests
+
+# --- Preferences -----------------------------------------------------------------------------
+pref_category_advanced = account_preferences_advanced_tab
+pref_category_calls = notif_channel_calls
+pref_category_messages = notif_channel_messages
+pref_max_file_size_value = size_mb
+
+# --- Exclusions ------------------------------------------------------------------------------
+! values-fr pref_max_file_size_value   # upstream fr size_mb is "1%1$d MB", a stray "1"
+
+# --- Rejected (same English, different meaning) — do not add -------------------------------
+# call_layout_one_big_small = audio_output_speaker     "Speaker" is a call layout here, the loudspeaker there
+# content_desc_hold = call_human_state_hold            a button action here, a call state there (fr "Communication en attente")
+# notification_visibility_private = conversation_type_private      gender agreement follows "conversation" (fr "Privé")
+# notification_visibility_public = shared_services_policy_public   a peer-service policy, not a notification setting
+# pref_ringtone_default = default_value                fr "Défaut" also reads as "defect"

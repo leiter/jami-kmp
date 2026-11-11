@@ -103,4 +103,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="extension_invalid_format">Érvénytelen bővítményformátum: <b>%1$s</b></string>
     <string name="extension_force_install">Telepítés\nkényszerítése</string>
     <string name="extension_path_image_add">Új kép hozzáadása</string>
+    <string name="pref_category_calls">Hívások</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Üzenetek</string>
+    <string name="pref_category_advanced">Haladó</string>
 </resources>

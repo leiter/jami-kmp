@@ -187,4 +187,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_disabled_indicator">Ndị nwere nkwarụ</string>
     <string name="account_link_device_title">Jikọọ ngwaọrụ ọhụrụ</string>
     <string name="account_link_device_button">Jikọọ</string>
+    <string name="account_delete_label">Ihichapụ akaụntụ</string>
+    <string name="account_device_revocation_wrong_password">Paswọọdụ na-ezighi ezi.</string>
+    <string name="account_audio_rtp_min_label">Ihe kacha nta</string>
+    <string name="account_audio_rtp_max_label">Ihe kachasị</string>
+    <string name="account_video_rtp_min_label">Ihe kacha nta</string>
+    <string name="account_video_rtp_max_label">Ihe kachasị</string>
+    <string name="account_read_receipts_label">Akwụkwọ nnata ọgụgụ</string>
+    <string name="account_read_receipts_summary">Zipu ma rịọ akwụkwọ nnata nnyefe na ọgụgụ ka e zipu mgbe e nyefere ma ọ bụ gụọ ozi.</string>
+    <string name="action_skip">Ịpụ</string>
+    <string name="error_username_invalid">Aha njirimara na-ezighi ezi</string>
+    <string name="account_sip_username">Aha njirimara</string>
+    <string name="prompt_choose_username">Họrọ aha njirimara</string>
+    <string name="section_linked_devices">Ngwaọrụ jikọtara</string>
+    <string name="account_rename_device">Ngwá ọrụ aha ọhụrụ</string>
+    <string name="screen_title_account_settings">Ntọala akaụntụ</string>
+    <string name="screen_title_blocked_contacts">Ndị a na-egbochi</string>
+    <string name="certificates_status_banned">Ihe mgbochi</string>
 </resources>

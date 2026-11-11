@@ -177,4 +177,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">ਇਸ ਵੰਨਗੀ ਵਿੱਚ ਨਹੀਂ ਵਰਤ ਸਕਦੇ।</string>
     <string name="account_link_device_title">ਨਵਾਂ ਡੀਵਾਈਸ ਜੋੜੋ</string>
     <string name="account_link_device_button">ਜੋੜੋ</string>
+    <string name="account_delete_label">ਖਾਤਾ ਮਿਟਾਓ</string>
+    <string name="account_audio_rtp_min_label">ਘੱਟ ਤੋਂ ਘੱਟ</string>
+    <string name="account_audio_rtp_max_label">ਵੱਧ ਤੋਂ ਵੱਧ</string>
+    <string name="account_video_rtp_min_label">ਘੱਟ ਤੋਂ ਘੱਟ</string>
+    <string name="account_video_rtp_max_label">ਵੱਧ ਤੋਂ ਵੱਧ</string>
+    <string name="action_skip">ਛੱਡੋ</string>
+    <string name="error_username_invalid">ਅਵੈਧ ਵਰਤੋਂਕਾਰ ਨਾਂ</string>
+    <string name="account_sip_username">ਵਰਤੋਂਕਾਰ ਨਾਂ</string>
+    <string name="account_rename_device">ਡੀਵਾਈਸ ਦਾ ਨਾਂ ਬਦਲੋ</string>
+    <string name="screen_title_account_settings">ਖਾਤਾ ਸੈਟਿੰਗਾਂ</string>
+    <string name="screen_title_blocked_contacts">ਸੰਪਰਕ ਜਿਨ੍ਹਾਂ 'ਤੇ ਬੰਦਸ਼ ਹੈ</string>
+    <string name="certificates_status_banned">ਬੰਦਸ਼ ਲਗਾਓ</string>
 </resources>

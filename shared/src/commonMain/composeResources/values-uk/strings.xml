@@ -16,8 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 -->
 <resources>
-    <string name="submit_issue_title">Надіслати \"проблему\"</string>
-    <string name="submit_issue_action_description">Створити нову \"проблему\"</string>
+    <string name="submit_issue_title">Надіслати "проблему"</string>
+    <string name="submit_issue_action_description">Створити нову "проблему"</string>
     <string name="section_license">Ліцензія</string>
     <string name="sponsor_section">Jami — це вільне програмне забезпечення, яке розроблене й підтримується</string>
     <string name="copyright_section">Авторське право</string>
@@ -25,7 +25,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="version_section">Версія</string>
     <string name="no_browser_app_installed">Не знайдено жодного браузера. Будь ласка, встановіть браузер, щоб переглянути цю сторінку.</string>
     <string name="website_chooser_title">Переглянути сайт за допомогою...</string>
-    <string name="license">Це програмне забезпечення надається \"як є\", без будь-яких гарантій. Більш детально дивіться<u>GNU General Public License версію 3 чи новішу</u></string>
+    <string name="license">Це програмне забезпечення надається "як є", без будь-яких гарантій. Більш детально дивіться<u>GNU General Public License версію 3 чи новішу</u></string>
     <string name="description">Jami — це вільне програмне забезпечення для будь-якого звʼязку з повагою до свобод і приватності користувачів.</string>
     <string name="credits">Подяки</string>
     <string name="pip_title">Конференція Jami</string>
@@ -148,8 +148,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="ringtone_custom_prompt">Встановити власний рингтон</string>
     <string name="ringtone_custom_label">Кастомізація</string>
     <string name="ringtone_jami_tones">Мелодії дзвінка Jami</string>
-    <string name="permission_dialog_read_contacts_message">Jami потребує дозволу на \"Читання контактів\". Увімкніть його в налаштуваннях пристрою, щоб користуватися цією функцією.</string>
-    <string name="permission_dialog_write_call_log_message">Jami потребує дозволу на \"Запис журналу дзвінків\". Увімкніть його в налаштуваннях пристрою, щоб користуватися цією функцією.</string>
+    <string name="permission_dialog_read_contacts_message">Jami потребує дозволу на "Читання контактів". Увімкніть його в налаштуваннях пристрою, щоб користуватися цією функцією.</string>
+    <string name="permission_dialog_write_call_log_message">Jami потребує дозволу на "Запис журналу дзвінків". Увімкніть його в налаштуваннях пристрою, щоб користуватися цією функцією.</string>
     <string name="scan_qr_account_message">Проскануйте QR-код облікового запису, який ви хочете додати.</string>
     <string name="title_activity_qrcode">Поділитися моїм обліковим записом</string>
     <string name="error_scan_no_camera_permissions">Сканер QR-кодів потребує дозволу на використання камери. Дозвіл на використання камери вимкнено. Увімкніть його в налаштуваннях пристрою, щоб користуватися цією функцією.</string>
@@ -404,7 +404,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="swarm_detail_no_document">У вас ще немає документів.</string>
     <string name="group_admin">Адміністратор</string>
     <string name="share_contact_intent_title">Додайте цей контакт у Jami!</string>
-    <string name="share_contact_intent_body">Ви можете додати цей контакт \"%1$s\" на розподіленій комунікаційній платформі Jami: %2$s</string>
+    <string name="share_contact_intent_body">Ви можете додати цей контакт "%1$s" на розподіленій комунікаційній платформі Jami: %2$s</string>
     <string name="jami_id_copy">Копіювати JamiId</string>
     <string name="jami_id_share">Поділитися JamiId</string>
     <string name="jami_id_validate">Зареєструйте ім'я користувача</string>
@@ -459,4 +459,42 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="link_device_error_timeout">Час очікування операції вичерпано.</string>
     <string name="link_device_error_unknown">Сталася помилка.</string>
     <string name="link_device_error_bad_password">Будь ласка, перевірте облікові дані та спробуйте знову.</string>
+    <string name="view_switch_camera">Перемкнути камеру</string>
+    <string name="notif_send_reply">Відправити</string>
+    <string name="share_contact_subject">Додайте цей контакт у Jami!</string>
+    <string name="recordings_delete_confirm">Видалити</string>
+    <string name="file_saved_successfully">Файл успішно збережено.</string>
+    <string name="menu_message_cancel_reply">Скасувати відповідь</string>
+    <string name="action_audio">Звук</string>
+    <string name="action_video">Відео</string>
+    <string name="qr_scan_instruction">Зіскануйте цей код у Jami</string>
+    <string name="export_side_step3_body_loading">Операція експорту облікового запису на новий пристрій триває. Зачекайте…</string>
+    <string name="import_side_step3_body_loading">Обліковий запис імпортується на новий пристрій. Зачекайте…</string>
+    <string name="link_device_error_network">Під час прив'язування пристрою сталася помилка мережі. Перевірте з'єднання та повторіть спробу.</string>
+    <string name="link_device_error_authentication">Сталася помилка автентифікації під час підключення пристрою. Перевірте облікові дані та повторіть спробу.</string>
+    <string name="link_device_error_canceled">Операцію скасовано користувачем.</string>
+    <string name="menu_overflow">Більше параметрів</string>
+    <string name="action_cancel">Скасувати</string>
+    <string name="group_remove_member">Заблокувати</string>
+    <string name="group_unblock_member">Розблокувати</string>
+    <string name="group_member_blocked">Заблоковано</string>
+    <string name="group_member_invited">Запрошено</string>
+    <string name="group_members">Учасники</string>
+    <string name="action_create_account">Створити обліковий запис</string>
+    <string name="action_import_account">Імпортувати аккаунт</string>
+    <string name="prompt_display_name">Відображуване ім'я</string>
+    <string name="action_new_conversation">Почати розмову</string>
+    <string name="action_new_group">Створити нову групу</string>
+    <string name="menu_app_settings">Налаштування додатка</string>
+    <string name="menu_item_copy">Копіювати</string>
+    <string name="menu_item_edit">Редагувати</string>
+    <string name="placeholder_search">Знайти або додати</string>
+    <string name="screen_title_qr_scan">Сканування QR коду</string>
+    <string name="action_qr_code">QR код</string>
+    <string name="screen_title_app_settings">Налаштування</string>
+    <string name="action_share">Поділитися</string>
+    <string name="filter_requests">Запити</string>
+    <string name="permission_dialog_post_notifications_title">Дозволити сповіщення</string>
+    <string name="permission_dialog_post_notifications_blocked_message">Сповіщення для Jami вимкнені. Без них ви пропускатимете вхідні виклики та повідомлення. Увімкніть сповіщення для Jami в налаштуваннях пристрою.</string>
+    <string name="permission_dialog_battery_dismiss">Не зараз</string>
 </resources>

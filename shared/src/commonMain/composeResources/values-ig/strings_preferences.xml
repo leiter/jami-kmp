@@ -61,4 +61,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_block_record_title">Gbochie nseta ihuenyo na ndekọ</string>
     <string name="pref_block_record_summary">Kwụsị iwere nseta ihuenyo ma ọ bụ idekọ vidiyo.</string>
     <string name="pref_link_preview_summary">Nlele anya chọrọ ibudata ọdịnaya site na sava ndị ọzọ.</string>
+    <string name="pref_link_preview_title">Nlele njikọ weebụ</string>
+    <string name="connectivity_custom_title">Ahaziri ahazi</string>
+    <string name="pref_category_calls">Ọ na-akpọ</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Ozi</string>
+    <string name="pref_category_advanced">Ihe Ndị Dị Elu</string>
 </resources>

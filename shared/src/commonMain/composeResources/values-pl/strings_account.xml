@@ -259,4 +259,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_error">Błąd uwierzytelnienia: %1$s</string>
     <string name="account_auth_success">Uwierzytelnienie powiodło się</string>
     <string name="account_auth_password">Użyj hasła do konta</string>
+    <string name="account_delete_label">Usuń konto</string>
+    <string name="account_delete_summary">Usuń konto z tego urządzenia</string>
+    <string name="account_p2p_section_label">Połączenia peer-to-peer</string>
+    <string name="account_audio_rtp_min_label">Minimum</string>
+    <string name="account_audio_rtp_max_label">Maksimum</string>
+    <string name="account_video_rtp_min_label">Minimum</string>
+    <string name="account_video_rtp_max_label">Maksimum</string>
+    <string name="account_read_receipts_label">Odczytaj potwierdzenia</string>
+    <string name="account_read_receipts_summary">Wyślij i żądaj potwierdzenia dostarczenia wiadomości i do wysłania, gdy wiadomości są dostarczane lub czytane.</string>
+    <string name="account_biometric_setup_title">Włączenie uwierzytelniania biometrycznego</string>
+    <string name="account_biometric_disable_title">Wyłączenie uwierzytelniania biometrycznego</string>
+    <string name="action_skip">Pomiń</string>
+    <string name="error_username_invalid">Nieprawidłowa nazwa użytkownika</string>
+    <string name="account_sip_username">Nazwa użytkownika</string>
+    <string name="prompt_choose_username">Wybierz nazwę użytkownika</string>
+    <string name="dialog_export_title">Wyeksportuj konto</string>
+    <string name="section_linked_devices">Połączone urządzenia</string>
+    <string name="account_rename_device">Przemianuj urządzenie</string>
+    <string name="screen_title_account_settings">Ustawienia Konta</string>
+    <string name="screen_title_blocked_contacts">Zablokowane kontakty</string>
+    <string name="certificates_status_banned">Blokuj</string>
 </resources>

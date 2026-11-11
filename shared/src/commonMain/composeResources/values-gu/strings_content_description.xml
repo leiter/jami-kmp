@@ -21,4 +21,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">ડાઉનલોડ કરો</string>
     <string name="control_play">રમો</string>
     <string name="control_pause">વિરામ</string>
+    <string name="content_desc_back">પાછા</string>
+    <string name="content_desc_send">મોકલો</string>
+    <string name="content_desc_mute">મૌન</string>
+    <string name="content_desc_unmute">અવિનાશી</string>
+    <string name="content_desc_enable_video">વિડિઓ સક્ષમ કરો</string>
+    <string name="content_desc_end_call">કૉલ સમાપ્ત કરો</string>
+    <string name="content_desc_stop_recording">રેકોર્ડિંગ બંધ કરો</string>
+    <string name="content_desc_take_photo">ફોટો લો</string>
+    <string name="content_desc_send_message">સંદેશ મોકલો</string>
+    <string name="content_desc_presence_online">ઓનલાઇન</string>
+    <string name="content_desc_presence_offline">ઑફલાઇન</string>
+    <string name="content_desc_raise_hand">હાથ ઉઠાવો</string>
+    <string name="content_desc_send_call_message">સંદેશ મોકલો</string>
+    <string name="content_desc_state_muted">મૌન</string>
 </resources>

@@ -38,4 +38,12 @@ the Free Software Foundation, either version 3 of the License, or
     <string name="content_desc_end_call">Anruf beenden</string>
     <string name="content_desc_hold">Halten</string>
     <string name="content_desc_resume">Fortsetzen</string>
+    <string name="content_desc_stop_recording">Aufnahme stoppen</string>
+    <string name="content_desc_take_photo">Foto aufnehmen</string>
+    <string name="content_desc_send_message">Nachricht senden</string>
+    <string name="content_desc_presence_online">Online</string>
+    <string name="content_desc_presence_offline">Offline</string>
+    <string name="content_desc_raise_hand">Hand heben</string>
+    <string name="content_desc_send_call_message">Nachricht senden</string>
+    <string name="content_desc_state_muted">Stummgeschaltet</string>
 </resources>

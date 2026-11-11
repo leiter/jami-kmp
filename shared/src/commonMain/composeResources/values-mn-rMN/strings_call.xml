@@ -32,4 +32,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">Төвч</string>
     <string name="call_muted">Үмээнгүй</string>
     <string name="call_handRaised">Хөдөлмөрийг нь өргөж</string>
+    <string name="call_dtmf_dialpad">Диалпад</string>
+    <string name="call_participant_enable_video">Видеог ашиглах</string>
 </resources>

@@ -22,4 +22,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_play">Пускане</string>
     <string name="control_replay">Повторение</string>
     <string name="control_pause">Пауза</string>
+    <string name="content_desc_back">Назад</string>
+    <string name="content_desc_send">Изпращане</string>
+    <string name="content_desc_mute">Мълчави</string>
+    <string name="content_desc_unmute">Неизменен</string>
+    <string name="content_desc_enable_video">Активиране на видео</string>
+    <string name="content_desc_end_call">Край на разговора</string>
+    <string name="content_desc_stop_recording">Спиране на записа</string>
+    <string name="content_desc_take_photo">Направи снимка</string>
+    <string name="content_desc_send_message">Изпращане на съобщение</string>
+    <string name="content_desc_presence_online">На линия</string>
+    <string name="content_desc_presence_offline">Извън линия</string>
+    <string name="content_desc_raise_hand">Вдигнете ръка</string>
+    <string name="content_desc_send_call_message">Изпращане на съобщение</string>
+    <string name="content_desc_state_muted">Умряло</string>
 </resources>

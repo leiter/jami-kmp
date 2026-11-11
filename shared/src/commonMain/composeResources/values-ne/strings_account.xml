@@ -189,4 +189,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">यो ढाँचा समर्थित छैन।</string>
     <string name="account_link_device_title">नयाँ उपकरण जडान गर्नुहोस्</string>
     <string name="account_link_device_button">जोड्नुहोस्</string>
+    <string name="account_delete_label">खाता मेटाउने</string>
+    <string name="account_audio_rtp_min_label">न्यूनतम</string>
+    <string name="account_audio_rtp_max_label">अधिकतम</string>
+    <string name="account_video_rtp_min_label">न्यूनतम</string>
+    <string name="account_video_rtp_max_label">अधिकतम</string>
+    <string name="action_skip">स्किप</string>
+    <string name="error_username_invalid">अवैध प्रयोगकर्ता नाम</string>
+    <string name="account_sip_username">प्रयोगकर्ता नाम</string>
+    <string name="prompt_choose_username">प्रयोगकर्ता नाम चयन गर्नुहोस्</string>
+    <string name="section_linked_devices">जोडिएका यन्त्रहरू</string>
+    <string name="account_rename_device">नाम परिवर्तन गर्ने यन्त्र</string>
+    <string name="screen_title_account_settings">खाता सेटिंग्स</string>
+    <string name="screen_title_blocked_contacts">सम्पर्कहरू रोकिने</string>
+    <string name="certificates_status_banned">ब्लक</string>
 </resources>

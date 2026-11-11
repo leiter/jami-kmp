@@ -63,4 +63,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">Pratinjau link web</string>
     <string name="pref_link_preview_summary">Pratinjau membutuhkan pengunduhan konten dari server pihak ketiga.</string>
     <string name="connectivity_custom_title">Kustom</string>
+    <string name="pref_category_calls">Panggilan</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Pesan</string>
+    <string name="pref_category_advanced">Lanjutan</string>
 </resources>

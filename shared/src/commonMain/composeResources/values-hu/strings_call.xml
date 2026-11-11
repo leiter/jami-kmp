@@ -34,4 +34,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">Moderátor</string>
     <string name="call_muted">Elnémítva</string>
     <string name="call_handRaised">Kéz felemelt</string>
+    <string name="call_dtmf_dialpad">Tárcsázó</string>
+    <string name="call_participant_disable_video">Videó letiltása</string>
+    <string name="call_participant_enable_video">Videó engedélyezése</string>
 </resources>

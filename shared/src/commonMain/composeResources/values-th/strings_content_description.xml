@@ -21,4 +21,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">ดาวน์โหลด</string>
     <string name="control_play">เล่น</string>
     <string name="control_pause">หยุด</string>
+    <string name="content_desc_back">กลับ</string>
+    <string name="content_desc_send">ส่ง</string>
+    <string name="content_desc_mute">ปิดเสียง</string>
+    <string name="content_desc_unmute">เปิดเสียง</string>
+    <string name="content_desc_enable_video">เปิดวีดีโอ</string>
+    <string name="content_desc_end_call">สิ้นสุดการโทร</string>
+    <string name="content_desc_stop_recording">หยุดบันทึก</string>
+    <string name="content_desc_take_photo">ถ่ายภาพ</string>
+    <string name="content_desc_send_message">ส่งข้อความ</string>
+    <string name="content_desc_presence_online">ออนไลน์</string>
+    <string name="content_desc_presence_offline">ภายนอกระบบ</string>
+    <string name="content_desc_raise_hand">ยกมือ</string>
+    <string name="content_desc_send_call_message">ส่งข้อความ</string>
+    <string name="content_desc_state_muted">ปิดเสียง</string>
 </resources>

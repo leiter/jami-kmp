@@ -18,4 +18,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 <resources>
     <string name="dial_numeric_pad">Cluicheí uimhir</string>
     <string name="contact_unblock">Fág an blocaíocht</string>
+    <string name="content_desc_back">Ar ais</string>
+    <string name="content_desc_send">Cuir isteach</string>
+    <string name="content_desc_mute">Múnla</string>
+    <string name="content_desc_unmute">Unmute</string>
+    <string name="content_desc_enable_video">Céadú físeán</string>
+    <string name="content_desc_end_call">Críochnaigh an glao</string>
+    <string name="content_desc_stop_recording">Stop ag taifeadadh</string>
+    <string name="content_desc_take_photo">Déan grianghraf</string>
+    <string name="content_desc_presence_online">Ar líne</string>
+    <string name="content_desc_presence_offline">Offline</string>
+    <string name="content_desc_raise_hand">Cuir lámh suas</string>
+    <string name="content_desc_state_muted">Tá sé imithe</string>
 </resources>

@@ -63,4 +63,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">वेब लिंक पूर्वावलोकन</string>
     <string name="pref_link_preview_summary">पूर्वावलोकन तृतीय पक्ष सर्वर से सामग्री डाउनलोड करने की आवश्यकता होती है।</string>
     <string name="connectivity_custom_title">कस्टम</string>
+    <string name="pref_typing_summary">संदेश टाइप किए जाने पर संकेत दें।</string>
+    <string name="pref_category_calls">कॉल</string>
+    <string name="pref_max_file_size_value">%1$d एमबी</string>
+    <string name="pref_category_messages">संदेश</string>
+    <string name="pref_category_advanced">उन्नत</string>
 </resources>

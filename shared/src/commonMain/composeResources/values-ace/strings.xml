@@ -21,7 +21,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="contribute_section">ڤڠاجين</string>
     <string name="version_section">ڤرسي</string>
     <string name="website_chooser_title">مڠمبيل ڤرچاي ويب دڠن...</string>
-    <string name="license">ڤوۏيرو اين دبريكن \"ساي كيت،\" دڠن كرجاسام سياڤا. اونتوق ڤرليندوڠن، اكن مڠيكوت <u>GNU General Public License ڤرسي 3 اتاو ڤرليندوڠ</u></string>
+    <string name="license">ڤوۏيرو اين دبريكن "ساي كيت،" دڠن كرجاسام سياڤا. اونتوق ڤرليندوڠن، اكن مڠيكوت <u>GNU General Public License ڤرسي 3 اتاو ڤرليندوڠ</u></string>
     <string name="description">Jami اداله سوفيتور براوسيا اونورسال يڠ ممڤرچايا?? ي ڤرليبتن دان ڤريۏيتي ڤڠڬوناڽ.</string>
     <string name="credits">ڤرودوک</string>
     <string name="pip_title">كونفرنس جامي</string>
@@ -149,4 +149,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_side_step2_confirm">ڤڠاجرن</string>
     <string name="import_side_step1_share">ڤڠاجين</string>
     <string name="import_side_step2_password_import">ڤڠاجرن</string>
+    <string name="notif_send_reply">مڠهادڤ</string>
+    <string name="action_call_hangup">ڤڠاجرن اخير</string>
+    <string name="recordings_delete_confirm">مڠمبيل</string>
+    <string name="action_audio">اودي</string>
+    <string name="action_video">ڤيديو</string>
+    <string name="menu_overflow">ڤرليندوڠ لبيه</string>
+    <string name="action_cancel">ڤڠڬيل</string>
+    <string name="group_remove_member">ڤڠاجرن</string>
+    <string name="group_unblock_member">ڤڠاجرن</string>
+    <string name="group_member_invited">دجالنكن</string>
+    <string name="group_members">ڤڠڬونا</string>
+    <string name="action_create_account">منوليسكن ايكون</string>
+    <string name="menu_item_copy">كاپي</string>
+    <string name="menu_item_edit">ڤڠاجرن</string>
+    <string name="screen_title_app_settings">سيٽنگون</string>
+    <string name="action_share">ڤڠاجين</string>
 </resources>

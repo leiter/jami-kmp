@@ -32,4 +32,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">Moderador</string>
     <string name="call_muted">Silenciat</string>
     <string name="call_handRaised">Mà aixecada</string>
+    <string name="call_dtmf_dialpad">Teclat de marcatge</string>
+    <string name="call_participant_disable_video">Desactiva el vídeo</string>
+    <string name="call_participant_enable_video">Habilita el vídeo</string>
 </resources>

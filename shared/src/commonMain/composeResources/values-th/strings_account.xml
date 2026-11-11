@@ -189,4 +189,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">ไม่รองรับรูปแบบนี้</string>
     <string name="account_link_device_title">เชื่อมโยงอุปกรณ์ใหม่</string>
     <string name="account_link_device_button">เชื่อมต่อ</string>
+    <string name="account_delete_label">ลบบัญชี</string>
+    <string name="account_device_revocation_wrong_password">รหัสผ่านไม่ถูกต้อง</string>
+    <string name="account_audio_rtp_min_label">ต่ำสุด</string>
+    <string name="account_audio_rtp_max_label">สูงสุด</string>
+    <string name="account_video_rtp_min_label">ต่ำสุด</string>
+    <string name="account_video_rtp_max_label">สูงสุด</string>
+    <string name="account_read_receipts_label">การแจ้งอ่าน</string>
+    <string name="account_read_receipts_summary">ส่งและขอการแจ้งการนำส่งและการอ่านให้ส่งเมื่อมีการนำส่งหรืออ่านข้อความ</string>
+    <string name="action_skip">ข้าม</string>
+    <string name="error_username_invalid">ชื่อผู้ใช้งานไม่ถูกต้อง</string>
+    <string name="account_sip_username">ชื่อผู้ใช้</string>
+    <string name="prompt_choose_username">เลือกชื่อผู้ใช้งาน</string>
+    <string name="section_linked_devices">อุปกรณ์ที่เชื่อมโยง</string>
+    <string name="account_rename_device">เครื่องเปลี่ยนชื่อ</string>
+    <string name="screen_title_account_settings">การตั้งค่าบัญชี</string>
+    <string name="screen_title_blocked_contacts">ผู้ติดต่อที่ถูกบล็อก</string>
+    <string name="certificates_status_banned">ปิดกั้น</string>
 </resources>

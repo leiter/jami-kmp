@@ -34,4 +34,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">Moderatore</string>
     <string name="call_muted">Disattivato</string>
     <string name="call_handRaised">Mano alzata</string>
+    <string name="call_dtmf_dialpad">Tastiera</string>
+    <string name="call_participant_disable_video">Disattiva video</string>
+    <string name="call_participant_enable_video">Attiva Video</string>
 </resources>

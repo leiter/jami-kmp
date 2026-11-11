@@ -63,4 +63,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">Förhandsvisningar av länkar</string>
     <string name="pref_link_preview_summary">Förhandsvisning kräver att du laddar ner innehåll från tredje parts servrar.</string>
     <string name="connectivity_custom_title">Anpassad</string>
+    <string name="pref_connectivity_title">Anslutningsläge</string>
+    <string name="pref_connectivity_summary">Välj hur Jami ska ansluta till det distribuerade systemet för att ta emot samtal och meddelanden.</string>
+    <string name="pref_persistNotification_title">Kör i bakgrunden</string>
+    <string name="pref_persistNotification_summary">Tillåt körning i bakgrunden för att ta emot samtal och meddelanden.</string>
+    <string name="pref_typing_summary">Ange när meddelanden skrivs.</string>
+    <string name="connectivity_google_services_title">Google-tjänster</string>
+    <string name="connectivity_local_node_title">Lokal DHT-nod</string>
+    <string name="pref_category_calls">Samtal</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Meddelanden</string>
+    <string name="pref_category_advanced">Avancerat</string>
 </resources>

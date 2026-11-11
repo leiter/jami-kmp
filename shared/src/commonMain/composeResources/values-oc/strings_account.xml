@@ -189,4 +189,19 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">Aqueste format es pas suportat.</string>
     <string name="account_link_device_title">Ligam un dispositiu novèl</string>
     <string name="account_link_device_button">Se connectar</string>
+    <string name="account_delete_label">Suprimir lo compte</string>
+    <string name="account_audio_rtp_min_label">Minimum</string>
+    <string name="account_audio_rtp_max_label">Maximum</string>
+    <string name="account_video_rtp_min_label">Minimum</string>
+    <string name="account_video_rtp_max_label">Maximum</string>
+    <string name="action_skip">Saultar</string>
+    <string name="error_username_invalid">Nom d’utilizaire invalid</string>
+    <string name="account_sip_username">Nom d’utilizaire</string>
+    <string name="prompt_choose_username">Escotar un nom d' utilizaire</string>
+    <string name="dialog_export_title">Exportar compte</string>
+    <string name="section_linked_devices">Dispositius ligats</string>
+    <string name="account_rename_device">Dispositiu de renomenatge</string>
+    <string name="screen_title_account_settings">Configuracion de compte</string>
+    <string name="screen_title_blocked_contacts">Contactes blocats</string>
+    <string name="certificates_status_banned">Blocar</string>
 </resources>

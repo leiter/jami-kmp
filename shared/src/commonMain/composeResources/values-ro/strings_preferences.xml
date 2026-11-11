@@ -103,4 +103,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="extension_invalid_format">Format de extensie neacceptat: <b>%1$s</b></string>
     <string name="extension_force_install">forțează\ninstalarea</string>
     <string name="extension_path_image_add">Adaugă o imagine nouă</string>
+    <string name="pref_category_calls">Apeluri</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Mesaje</string>
+    <string name="pref_category_advanced">Avansate</string>
 </resources>

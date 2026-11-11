@@ -21,4 +21,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">பதிவிறக்கம்</string>
     <string name="control_play">விளையாடு</string>
     <string name="control_pause">இடைநிறுத்தம்</string>
+    <string name="content_desc_back">திரும்பி</string>
+    <string name="content_desc_send">அனுப்பு</string>
+    <string name="content_desc_mute">முடக்க</string>
+    <string name="content_desc_unmute">முடக்கப்படாத</string>
+    <string name="content_desc_enable_video">வீடியோவை இயக்கு</string>
+    <string name="content_desc_end_call">அழைப்பை முடித்திடுக</string>
+    <string name="content_desc_stop_recording">பதிவு செய்வதை நிறுத்து</string>
+    <string name="content_desc_take_photo">புகைப்படம் எடு</string>
+    <string name="content_desc_send_message">செய்தி அனுப்பவும்</string>
+    <string name="content_desc_presence_online">இணையத்தில்</string>
+    <string name="content_desc_presence_offline">ஆஃப்லைன்</string>
+    <string name="content_desc_raise_hand">கை உயர்த்தி</string>
+    <string name="content_desc_send_call_message">செய்தி அனுப்பவும்</string>
+    <string name="content_desc_state_muted">மௌனமாக</string>
 </resources>

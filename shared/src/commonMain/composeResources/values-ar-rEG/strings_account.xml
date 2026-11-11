@@ -190,4 +190,27 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">هذا التنسيق غير مدعوم.</string>
     <string name="account_link_device_title">ربط جهاز جديد</string>
     <string name="account_link_device_button">إتصال</string>
+    <string name="account_selection">اختيار حساب</string>
+    <string name="account_delete_label">حذف الحساب</string>
+    <string name="account_device_revocation_wrong_password">كلمة المرور غير صحيحة.</string>
+    <string name="account_audio_rtp_min_label">الحد الأدنى</string>
+    <string name="account_audio_rtp_max_label">الحد الاقصى</string>
+    <string name="account_video_rtp_min_label">الحد الأدنى</string>
+    <string name="account_video_rtp_max_label">الحد الاقصى</string>
+    <string name="account_read_receipts_label">إيصالات القراءة</string>
+    <string name="account_read_receipts_summary">إرسال وطلب إيصالات التسليم والقراءة عند تسليم الرسائل أو قراءتها.</string>
+    <string name="error_passwords_not_equals">كلمتا المرور غير متطابقتين.</string>
+    <string name="username_available">اسم المستخدم متاح.</string>
+    <string name="trying_to_register_name">جارٍ تسجيل اسم المستخدم. يرجى الانتظار…</string>
+    <string name="looking_for_username_availability">جارٍ التحقق من توفّر اسم المستخدم…</string>
+    <string name="action_skip">تخطي</string>
+    <string name="error_username_invalid">اسم مستخدم غير صالح</string>
+    <string name="account_sip_username">اسم المستخدم</string>
+    <string name="prompt_choose_username">اختر اسم مستخدم</string>
+    <string name="dialog_export_title">تصدير الحساب</string>
+    <string name="section_linked_devices">الأجهزة المتصلة</string>
+    <string name="account_rename_device">أعد تسمية الجهاز</string>
+    <string name="screen_title_account_settings">إعدادت الحساب</string>
+    <string name="screen_title_blocked_contacts">جهات إتصال محظورة</string>
+    <string name="certificates_status_banned">حظر</string>
 </resources>

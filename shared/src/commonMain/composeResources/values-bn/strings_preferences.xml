@@ -63,4 +63,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">ওয়েব সংযোগের প্রাকদর্শন</string>
     <string name="pref_link_preview_summary">প্রিভিউতে তৃতীয় পক্ষের সার্ভার থেকে সামগ্রী ডাউনলোড করা প্রয়োজন।</string>
     <string name="connectivity_custom_title">কাস্টম</string>
+    <string name="pref_category_calls">কল</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">বার্তা</string>
+    <string name="pref_category_advanced">উন্নত</string>
 </resources>

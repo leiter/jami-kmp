@@ -190,4 +190,27 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">この形式はサポートされていません。</string>
     <string name="account_link_device_title">新しいデバイスをリンク</string>
     <string name="account_link_device_button">接続</string>
+    <string name="account_selection">アカウントを選択</string>
+    <string name="account_delete_label">アカウントの削除</string>
+    <string name="account_device_revocation_wrong_password">パスワードが正しくありません。</string>
+    <string name="account_audio_rtp_min_label">最小</string>
+    <string name="account_audio_rtp_max_label">最大</string>
+    <string name="account_video_rtp_min_label">最小</string>
+    <string name="account_video_rtp_max_label">最大</string>
+    <string name="account_read_receipts_label">開封確認</string>
+    <string name="account_read_receipts_summary">メッセージが配信または既読になったときに、配信確認と開封確認の送信を要求・送信します。</string>
+    <string name="error_passwords_not_equals">パスワードが一致しません。</string>
+    <string name="username_available">このユーザー名は利用可能です。</string>
+    <string name="trying_to_register_name">ユーザー名を登録中です。お待ちください…</string>
+    <string name="looking_for_username_availability">ユーザー名の利用可否を確認中…</string>
+    <string name="action_skip">スキップ</string>
+    <string name="error_username_invalid">無効なユーザー名です</string>
+    <string name="account_sip_username">ユーザー名</string>
+    <string name="prompt_choose_username">ユーザー名を選択する</string>
+    <string name="dialog_export_title">アカウントをエクスポート</string>
+    <string name="section_linked_devices">リンクされたデバイス</string>
+    <string name="account_rename_device">機器の名前を変更</string>
+    <string name="screen_title_account_settings">アカウント設定</string>
+    <string name="screen_title_blocked_contacts">ブロックした連絡先</string>
+    <string name="certificates_status_banned">ブロック</string>
 </resources>

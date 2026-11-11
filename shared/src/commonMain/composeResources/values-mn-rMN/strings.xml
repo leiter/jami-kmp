@@ -170,7 +170,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="prompt_new_username">Шинэ хэрэглэгчдийн нэрийг оруул</string>
     <string name="prompt_hint_username">Хэрэглэгчийн нэр</string>
     <string name="help_password_choose">Jami-ийн дансыг хамгаалахын тулд санаж болох хүчтэй нууц үг сонгох.</string>
-    <string name="help_password_enter">Таны \"Jami\" дансны нууц үгсийг оруул.</string>
+    <string name="help_password_enter">Таны "Jami" дансны нууц үгсийг оруул.</string>
     <string name="help_server_enter">Захиргааны серверний URL-ийг оруул.</string>
     <string name="wizard_next">Дараа нь</string>
     <string name="wizard_back">Хурд</string>
@@ -294,4 +294,26 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_side_step2_confirm">Дашрамд</string>
     <string name="import_side_step1_share">Хөдөлмөр</string>
     <string name="import_side_step2_password_import">Импортын</string>
+    <string name="notif_send_reply">Хэвлэл</string>
+    <string name="recordings_delete_confirm">Хасах</string>
+    <string name="action_audio">Зөгнөлийн дуу</string>
+    <string name="action_video">Видео</string>
+    <string name="qr_scan_instruction">Энэ код нь Джамитай сканж</string>
+    <string name="menu_overflow">Үүнээс илүү сонголт</string>
+    <string name="action_cancel">Цуцлах</string>
+    <string name="group_remove_member">Блок</string>
+    <string name="group_unblock_member">Блокийг нээж</string>
+    <string name="group_member_invited">Урилга авсан</string>
+    <string name="group_members">Улсчдын гишүүд</string>
+    <string name="action_create_account">Хэтгэлэг бий болгох</string>
+    <string name="action_new_conversation">Хэлэлцүүлэг эхлүүлэх</string>
+    <string name="action_new_group">Шинэ бүлэг үүсгэх</string>
+    <string name="menu_item_copy">Хөгжүүлэн</string>
+    <string name="menu_item_edit">Харилцаажуулах</string>
+    <string name="screen_title_qr_scan">QR код сканируулна</string>
+    <string name="action_qr_code">QR код</string>
+    <string name="screen_title_app_settings">Байгууллага</string>
+    <string name="action_share">Хөдөлмөр</string>
+    <string name="filter_requests">Талуулалт</string>
+    <string name="permission_dialog_battery_dismiss">Одоо биш</string>
 </resources>

@@ -21,4 +21,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">Хөгжүүлнэ</string>
     <string name="control_play">Уурхай тогло</string>
     <string name="control_pause">Хаашаа</string>
+    <string name="content_desc_back">Хурд</string>
+    <string name="content_desc_send">Хэвлэл</string>
+    <string name="content_desc_mute">Үмээнгүй</string>
+    <string name="content_desc_unmute">Үгүй</string>
+    <string name="content_desc_enable_video">Видеог ашиглах</string>
+    <string name="content_desc_end_call">Дуудлагыг дуусгах</string>
+    <string name="content_desc_stop_recording">Зүрхлэх зогсоо</string>
+    <string name="content_desc_take_photo">Сүрэл зураг хий</string>
+    <string name="content_desc_send_message">Мэдээлэл илгээ</string>
+    <string name="content_desc_presence_online">Онлайн</string>
+    <string name="content_desc_presence_offline">Газар буулгын</string>
+    <string name="content_desc_raise_hand">Та гар нь дээшлүүлж</string>
+    <string name="content_desc_send_call_message">Мэдээлэл илгээ</string>
+    <string name="content_desc_state_muted">Үмээнгүй</string>
 </resources>

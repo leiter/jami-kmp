@@ -18,4 +18,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 <resources>
     <string name="dial_numeric_pad">Лічбавы дыялог</string>
     <string name="contact_unblock">Адключыць блок</string>
+    <string name="content_desc_back">Звярніцеся назад</string>
+    <string name="content_desc_send">Пашляць</string>
+    <string name="content_desc_mute">Непаўторны</string>
+    <string name="content_desc_unmute">Неўмоўнае</string>
+    <string name="content_desc_enable_video">Уключыць відэа</string>
+    <string name="content_desc_end_call">Скончыць выклік</string>
+    <string name="content_desc_stop_recording">Спыніць запіс</string>
+    <string name="content_desc_take_photo">Здымайце фота</string>
+    <string name="content_desc_presence_online">Інтэрнэт</string>
+    <string name="content_desc_presence_offline">Недаступная</string>
+    <string name="content_desc_raise_hand">Падыміце руку</string>
+    <string name="content_desc_state_muted">Зацішыўся</string>
 </resources>

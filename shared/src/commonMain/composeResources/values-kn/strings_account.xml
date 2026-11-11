@@ -189,4 +189,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">ಈ ಸ್ವರೂಪವನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ.</string>
     <string name="account_link_device_title">ಹೊಸ ಸಾಧನವನ್ನು ಸಂಪರ್ಕಿಸಿ</string>
     <string name="account_link_device_button">ಸಂಪರ್ಕ</string>
+    <string name="account_delete_label">ಖಾತೆಯನ್ನು ಅಳಿಸಿ</string>
+    <string name="account_device_revocation_wrong_password">ತಪ್ಪು ಪಾಸ್‌ವರ್ಡ್.</string>
+    <string name="account_audio_rtp_min_label">ಕನಿಷ್ಠ</string>
+    <string name="account_audio_rtp_max_label">ಗರಿಷ್ಠ</string>
+    <string name="account_video_rtp_min_label">ಕನಿಷ್ಠ</string>
+    <string name="account_video_rtp_max_label">ಗರಿಷ್ಠ</string>
+    <string name="account_read_receipts_label">ಓದಿದ ರಸೀದಿಗಳು</string>
+    <string name="account_read_receipts_summary">ಸಂದೇಶಗಳನ್ನು ತಲುಪಿಸಿದಾಗ ಅಥವಾ ಓದಿದಾಗ ಕಳುಹಿಸಬೇಕಾದ ತಲುಪಿಸುವಿಕೆ ಮತ್ತು ಓದಿದ ರಸೀದಿಗಳನ್ನು ಕಳುಹಿಸಿ ಮತ್ತು ವಿನಂತಿಸಿ.</string>
+    <string name="action_skip">ಸ್ಕಿಪ್</string>
+    <string name="error_username_invalid">ಅಮಾನ್ಯ ಬಳಕೆದಾರ ಹೆಸರು</string>
+    <string name="account_sip_username">ಬಳಕೆದಾರ ಹೆಸರು</string>
+    <string name="prompt_choose_username">ಬಳಕೆದಾರ ಹೆಸರನ್ನು ಆರಿಸಿ</string>
+    <string name="section_linked_devices">ಸಂಪರ್ಕಿತ ಸಾಧನಗಳು</string>
+    <string name="account_rename_device">ಮರುನಾಮಕರಣ ಸಾಧನ</string>
+    <string name="screen_title_account_settings">ಖಾತೆ ಸೆಟ್ಟಿಂಗ್ಗಳು</string>
+    <string name="screen_title_blocked_contacts">ನಿರ್ಬಂಧಿತ ಸಂಪರ್ಕಗಳು</string>
+    <string name="certificates_status_banned">ಬ್ಲಾಕ್</string>
 </resources>

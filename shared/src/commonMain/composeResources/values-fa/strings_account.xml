@@ -190,4 +190,24 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">این قالب پشتیبانی نمی‌شود.</string>
     <string name="account_link_device_title">پیوند یک دستگاه جدید</string>
     <string name="account_link_device_button">اتصال</string>
+    <string name="account_delete_label">حذف حساب</string>
+    <string name="account_device_revocation_wrong_password">گذرواژه نادرست است.</string>
+    <string name="account_audio_rtp_min_label">کمینه</string>
+    <string name="account_audio_rtp_max_label">بیشینه</string>
+    <string name="account_video_rtp_min_label">کمینه</string>
+    <string name="account_video_rtp_max_label">بیشینه</string>
+    <string name="account_read_receipts_label">رسیدهای خواندن</string>
+    <string name="account_read_receipts_summary">ارسال و درخواست رسیدهای تحویل و خواندن برای ارسال هنگام تحویل یا خوانده شدن پیام‌ها.</string>
+    <string name="error_passwords_not_equals">گذرواژه‌ها یکسان نیستند.</string>
+    <string name="username_available">نام کاربری در دسترس است.</string>
+    <string name="action_skip">پرش</string>
+    <string name="error_username_invalid">نام کاربری نامعتبر</string>
+    <string name="account_sip_username">نام کاربری</string>
+    <string name="prompt_choose_username">یک نام کاربری را انتخاب کنید</string>
+    <string name="dialog_export_title">برون‌برد حساب</string>
+    <string name="section_linked_devices">دستگاه‌های پیوند‌‌داده‌شده</string>
+    <string name="account_rename_device">تغییر نام دستگاه</string>
+    <string name="screen_title_account_settings">تنظیمات حساب</string>
+    <string name="screen_title_blocked_contacts">مخاطبین مسدود‌شده</string>
+    <string name="certificates_status_banned">مسدود</string>
 </resources>

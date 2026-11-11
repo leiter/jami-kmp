@@ -32,4 +32,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">മോഡറേറ്റർ</string>
     <string name="call_muted">നിശബ്ദത</string>
     <string name="call_handRaised">കൈ ഉയര് ത്തുക</string>
+    <string name="call_dtmf_dialpad">ഡയല് പഡ്</string>
+    <string name="call_participant_enable_video">വീഡിയോ പ്രവർത്തനക്ഷമമാക്കുക</string>
 </resources>

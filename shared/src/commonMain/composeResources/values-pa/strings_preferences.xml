@@ -42,4 +42,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_blackList_summary">ਆਪਣੀ ਬੰਦਸ਼ ਸੂਚੀ ਵੇਖੋ।</string>
     <string name="pref_delete_account_title">ਖਾਤਾ ਮਿਟਾਓ</string>
     <string name="connectivity_custom_title">ਮਨਮਰਜ਼ੀ</string>
+    <string name="pref_category_calls">ਕਾਲਾਂ</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">ਸੁਨੇਹੇ</string>
+    <string name="pref_category_advanced">ਉੱਨਤ</string>
 </resources>

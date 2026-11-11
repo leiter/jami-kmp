@@ -23,4 +23,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_replay">Repetir</string>
     <string name="control_pause">Pausar</string>
     <string name="searchbar_navigation_account">Selecciona el compte</string>
+    <string name="qrcode_to_scan">Codi QR per escanejar</string>
+    <string name="content_desc_back">Enrere</string>
+    <string name="content_desc_send">Envia</string>
+    <string name="content_desc_mute">Silencia</string>
+    <string name="content_desc_unmute">No silenciïs</string>
+    <string name="content_desc_enable_video">Habilita el vídeo</string>
+    <string name="content_desc_disable_video">Desactiva el vídeo</string>
+    <string name="content_desc_end_call">Finalitza la trucada</string>
+    <string name="content_desc_resume">Reprèn</string>
+    <string name="content_desc_stop_recording">Para d'enregistrar.</string>
+    <string name="content_desc_take_photo">Fer foto</string>
+    <string name="content_desc_send_message">Envia el missatge</string>
+    <string name="content_desc_presence_online">En línia</string>
+    <string name="content_desc_presence_offline">Fora de línia</string>
+    <string name="content_desc_raise_hand">Aixeca la mà</string>
+    <string name="content_desc_send_call_message">Envia el missatge</string>
+    <string name="content_desc_state_muted">Silenciat</string>
 </resources>

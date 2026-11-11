@@ -32,4 +32,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">מתווך</string>
     <string name="call_muted">שקט</string>
     <string name="call_handRaised">יד מעלה</string>
+    <string name="call_participant_enable_video">אפשר וידאו</string>
 </resources>

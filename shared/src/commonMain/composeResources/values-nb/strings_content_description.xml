@@ -21,4 +21,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">Last ned</string>
     <string name="control_play">Spill av</string>
     <string name="control_pause">Pause</string>
+    <string name="searchbar_navigation_account">Velg konto</string>
+    <string name="qrcode_to_scan">QR-kode å skanne</string>
+    <string name="content_desc_back">Tilbake</string>
+    <string name="content_desc_send">Send</string>
+    <string name="content_desc_mute">Mikrofon av</string>
+    <string name="content_desc_unmute">Mikrofon på</string>
+    <string name="content_desc_enable_video">Aktiver video</string>
+    <string name="content_desc_disable_video">Slå av video</string>
+    <string name="content_desc_end_call">Avslutt samtale</string>
+    <string name="content_desc_resume">Gjenopta</string>
+    <string name="content_desc_stop_recording">Stopp opptak</string>
+    <string name="content_desc_take_photo">Ta bilde</string>
+    <string name="content_desc_send_message">Send melding</string>
+    <string name="content_desc_presence_online">Tilkoblet</string>
+    <string name="content_desc_presence_offline">Frakoblet</string>
+    <string name="content_desc_raise_hand">Rekk opp hånden</string>
+    <string name="content_desc_send_call_message">Send melding</string>
+    <string name="content_desc_state_muted">Dempet</string>
 </resources>

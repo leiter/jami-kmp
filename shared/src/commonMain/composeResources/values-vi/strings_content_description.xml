@@ -20,4 +20,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="contact_unblock">Tháo khóa</string>
     <string name="control_play">Phát</string>
     <string name="searchbar_navigation_account">Chọn tài khoản</string>
+    <string name="content_desc_back">Trở lại</string>
+    <string name="content_desc_send">Gửi</string>
+    <string name="content_desc_mute">Tắt tiếng</string>
+    <string name="content_desc_unmute">Bỏ tắt tiếng</string>
+    <string name="content_desc_enable_video">Bật video</string>
+    <string name="content_desc_end_call">Kết thúc cuộc gọi</string>
+    <string name="content_desc_stop_recording">Ngừng ghi lại</string>
+    <string name="content_desc_take_photo">Chụp ảnh</string>
+    <string name="content_desc_presence_online">Online</string>
+    <string name="content_desc_presence_offline">Offline</string>
+    <string name="content_desc_raise_hand">Giơ tay</string>
+    <string name="content_desc_state_muted">Nên</string>
 </resources>

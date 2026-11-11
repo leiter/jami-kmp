@@ -273,4 +273,23 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_success">Mirëfilltësimi pat sukses</string>
     <string name="account_auth_key_error">Ndodhi një gabim teksa shfshehtëzohej kyçi i llogarisë.</string>
     <string name="account_auth_password">Përdorni fjalëkalim llogarie</string>
+    <string name="account_delete_label">Fshije llogarinë</string>
+    <string name="account_delete_summary">Fshije llogarinë prej kësaj pajisjeje</string>
+    <string name="account_p2p_section_label">Aftësi lidhjeje tek-për-tek</string>
+    <string name="account_audio_rtp_min_label">Minimum</string>
+    <string name="account_audio_rtp_max_label">Maksimum</string>
+    <string name="account_video_rtp_min_label">Minimum</string>
+    <string name="account_video_rtp_max_label">Maksimum</string>
+    <string name="account_biometric_setup_title">Aktivizo mirëfilltësim biometrik</string>
+    <string name="account_biometric_disable_title">Çaktivizo mirëfilltësim biometrik</string>
+    <string name="action_skip">Anashkaloje</string>
+    <string name="error_username_invalid">Emër përdoruesi i pavlefshëm</string>
+    <string name="account_sip_username">Emër përdoruesi</string>
+    <string name="prompt_choose_username">Zgjidhni emër përdoruesi</string>
+    <string name="dialog_export_title">Eksportoni llogari</string>
+    <string name="section_linked_devices">Pajisje të lidhura</string>
+    <string name="account_rename_device">Riemërtoje pajisjen</string>
+    <string name="screen_title_account_settings">Rregullime Llogarie</string>
+    <string name="screen_title_blocked_contacts">Kontakte të bllokuar</string>
+    <string name="certificates_status_banned">Bllokoje</string>
 </resources>

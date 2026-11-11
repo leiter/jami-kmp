@@ -32,4 +32,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">مدیر</string>
     <string name="call_muted">بی‌صدا</string>
     <string name="call_handRaised">دست بالاست</string>
+    <string name="call_dtmf_dialpad">صفحه ی شماره گیری</string>
+    <string name="call_participant_enable_video">فعال کردن ویدیو</string>
 </resources>

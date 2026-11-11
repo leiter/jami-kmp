@@ -22,4 +22,19 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_play">Αναπαραγωγή</string>
     <string name="control_replay">Απάντηση</string>
     <string name="control_pause">Παύση</string>
+    <string name="searchbar_navigation_account">Επιλογή λογαριασμού</string>
+    <string name="content_desc_back">Πίσω</string>
+    <string name="content_desc_send">Αποστολή</string>
+    <string name="content_desc_mute">Σίγαση</string>
+    <string name="content_desc_unmute">Μη σίγαση</string>
+    <string name="content_desc_enable_video">Ενεργοποίηση βίντεο</string>
+    <string name="content_desc_end_call">Τερματισμός κλήσης</string>
+    <string name="content_desc_stop_recording">Σταματήστε την ηχογράφηση</string>
+    <string name="content_desc_take_photo">Λήψη φωτογραφίας</string>
+    <string name="content_desc_send_message">Στείλε μήνυμα</string>
+    <string name="content_desc_presence_online">Συνδεδεμένος</string>
+    <string name="content_desc_presence_offline">Απαλλαγή</string>
+    <string name="content_desc_raise_hand">Σηκώστε το χέρι σας</string>
+    <string name="content_desc_send_call_message">Στείλε μήνυμα</string>
+    <string name="content_desc_state_muted">Ακωδές</string>
 </resources>

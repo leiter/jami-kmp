@@ -293,4 +293,24 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_side_step2_confirm">Konfirmu</string>
     <string name="import_side_step1_share">Kunhavi</string>
     <string name="import_side_step2_password_import">Enporti</string>
+    <string name="notif_send_reply">Sendi</string>
+    <string name="recordings_delete_confirm">Forigi</string>
+    <string name="action_audio">Aŭdio</string>
+    <string name="action_video">Video</string>
+    <string name="qr_scan_instruction">Skenu ĉi tiun kodon kun Jami</string>
+    <string name="menu_overflow">Pli da ebloj</string>
+    <string name="action_cancel">Nuligi</string>
+    <string name="group_remove_member">Bloko</string>
+    <string name="group_unblock_member">Malŝalti la blokon</string>
+    <string name="group_member_invited">Invitita</string>
+    <string name="group_members">Anoj</string>
+    <string name="action_create_account">Kreu konton</string>
+    <string name="action_new_conversation">Ekkonversaciu</string>
+    <string name="menu_item_copy">Kopii</string>
+    <string name="menu_item_edit">Modifi</string>
+    <string name="screen_title_qr_scan">Skani QR Kodon</string>
+    <string name="action_qr_code">QR-kodo</string>
+    <string name="screen_title_app_settings">Agordoj</string>
+    <string name="action_share">Kunhavi</string>
+    <string name="filter_requests">Petoj</string>
 </resources>

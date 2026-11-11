@@ -21,7 +21,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="contribute_section">Sumbangkan</string>
     <string name="version_section">Versi</string>
     <string name="website_chooser_title">വെബ്സൈറ്റ് കാണുക.</string>
-    <string name="license">ഈ സോഫ്റ്റ്വെയർ \"അത് പോലെ തന്നെ\" നൽകുന്നു, യാതൊരു തരത്തിലുള്ള ഗ്യാരണ്ടിയും ഇല്ലാതെ. വിശദാംശങ്ങൾക്കായി, കാണുക <u>GNU ജനറൽ പബ്ലിക് ലൈസൻസ് പതിപ്പ് 3 അല്ലെങ്കിൽ അതിനുശേഷമുള്ളത്</u></string>
+    <string name="license">ഈ സോഫ്റ്റ്വെയർ "അത് പോലെ തന്നെ" നൽകുന്നു, യാതൊരു തരത്തിലുള്ള ഗ്യാരണ്ടിയും ഇല്ലാതെ. വിശദാംശങ്ങൾക്കായി, കാണുക <u>GNU ജനറൽ പബ്ലിക് ലൈസൻസ് പതിപ്പ് 3 അല്ലെങ്കിൽ അതിനുശേഷമുള്ളത്</u></string>
     <string name="description">ജാമി എന്നത് സാർവത്രിക ആശയവിനിമയത്തിനുള്ള ഒരു സ്വതന്ത്ര സോഫ്റ്റ്വെയറാണ്. അത് ഉപയോക്താക്കളുടെ സ്വതന്ത്രതയും സ്വകാര്യതയും ബഹുമാനിക്കുന്നു.</string>
     <string name="credits">Kredit</string>
     <string name="pip_title">ജാമി സമ്മേളനം</string>
@@ -294,4 +294,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_side_step2_confirm">സ്ഥിരീകരണം</string>
     <string name="import_side_step1_share">പങ്കിടുക</string>
     <string name="import_side_step2_password_import">ഇറക്കുമതി</string>
+    <string name="notif_send_reply">അയയ്ക്കുക</string>
+    <string name="recordings_delete_confirm">Hapus</string>
+    <string name="action_audio">Bunyi</string>
+    <string name="action_video">Video</string>
+    <string name="qr_scan_instruction">ജാമിയുമായി ഈ കോഡ് സ്കാൻ ചെയ്യുക</string>
+    <string name="menu_overflow">കൂടുതൽ ഓപ്ഷനുകൾ</string>
+    <string name="action_cancel">Batal</string>
+    <string name="group_remove_member">തടയൽ</string>
+    <string name="group_unblock_member">തടയൽ നീക്കം ചെയ്യുക</string>
+    <string name="group_member_invited">ക്ഷണിച്ചവർ</string>
+    <string name="group_members">അംഗങ്ങള്</string>
+    <string name="action_create_account">Cipta akaun</string>
+    <string name="action_new_conversation">സംഭാഷണം ആരംഭിക്കുക</string>
+    <string name="menu_item_copy">കോപ്പി</string>
+    <string name="menu_item_edit">പരിഷ്കരിക്കുക</string>
+    <string name="screen_title_qr_scan">Imbas kod QR</string>
+    <string name="action_qr_code">ക്യുആർ കോഡ്</string>
+    <string name="screen_title_app_settings">Tetapan</string>
+    <string name="action_share">പങ്കിടുക</string>
+    <string name="filter_requests">അപേക്ഷകൾ</string>
+    <string name="permission_dialog_battery_dismiss">Bukan sekarang</string>
 </resources>

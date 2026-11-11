@@ -62,4 +62,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_block_record_summary">स्क्रिनशट लिने वा भिडियो रेकर्ड गर्ने कार्य रोक्नुहोस्।</string>
     <string name="pref_link_preview_summary">पूर्वावलोकनले तेस्रो पक्षको सर्भरबाट सामग्री डाउनलोड गर्न आवश्यक छ।</string>
     <string name="connectivity_custom_title">अनुकूलन</string>
+    <string name="pref_category_calls">फोन</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">सन्देशहरू</string>
+    <string name="pref_category_advanced">उन्नत</string>
 </resources>

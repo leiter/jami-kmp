@@ -25,7 +25,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="version_section">Version</string>
     <string name="no_browser_app_installed">Keine Webbrowser-App gefunden. Installieren Sie eine, um diese Seite anzuzeigen.</string>
     <string name="website_chooser_title">Webseite anzeigen mit...</string>
-    <string name="license">Diese Software wird \"wie sie ist\" ohne Gewährleistung irgendwelcher Art zur Verfügung gestellt. Details finden Sie unter <u>GNU General Public License Version 3 oder höher</u></string>
+    <string name="license">Diese Software wird "wie sie ist" ohne Gewährleistung irgendwelcher Art zur Verfügung gestellt. Details finden Sie unter <u>GNU General Public License Version 3 oder höher</u></string>
     <string name="description">Jami ist eine freie Software für universelle Kommunikation und respektiert die Freiheiten und Privatsphäre der Benutzer.</string>
     <string name="credits">Würdigung</string>
     <string name="pip_title">Jami-Konferenz</string>
@@ -539,4 +539,26 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="screen_title_about">Über Jami</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_license">Lizenziert unter der GNU General Public License v3.0</string>
+    <string name="view_switch_camera">Kamera wechseln</string>
+    <string name="notif_send_reply">Senden</string>
+    <string name="share_contact_subject">Diesen Kontakt zu Jami hinzufügen!</string>
+    <string name="recordings_delete_confirm">Löschen</string>
+    <string name="menu_message_cancel_reply">Antwort abbrechen</string>
+    <string name="action_audio">Audio</string>
+    <string name="action_video">Video</string>
+    <string name="qr_scan_instruction">Diesen Code mit Jami scannen</string>
+    <string name="menu_overflow">Weitere Optionen</string>
+    <string name="group_remove_member">Blockieren</string>
+    <string name="group_unblock_member">Blockierung aufheben</string>
+    <string name="group_member_blocked">Blockiert</string>
+    <string name="group_member_invited">Eingeladen</string>
+    <string name="group_members">Mitglieder</string>
+    <string name="action_share">Teilen</string>
+    <string name="filter_requests">Anfragen</string>
+    <string name="permission_dialog_post_notifications_title">Benachrichtigungen zulassen</string>
+    <string name="permission_dialog_post_notifications_blocked_message">Benachrichtigungen sind für Jami deaktiviert. Ohne sie werden Sie eingehende Anrufe und Nachrichten verpassen. Bitte aktivieren Sie Benachrichtigungen für Jami in den Geräteeinstellungen.</string>
+    <string name="permission_dialog_battery_dismiss">Nicht jetzt</string>
+    <string name="filter_all">Alle</string>
+    <string name="filter_unread">Ungelesen</string>
+    <string name="filter_groups">Gruppen</string>
 </resources>

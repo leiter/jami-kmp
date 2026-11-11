@@ -22,4 +22,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_play">پخش</string>
     <string name="control_replay">پاسخ</string>
     <string name="control_pause">مکث</string>
+    <string name="content_desc_back">بازگشت</string>
+    <string name="content_desc_send">ارسال</string>
+    <string name="content_desc_mute">بی‌صدا کردن</string>
+    <string name="content_desc_unmute">خروج از حالت بی‌صدا</string>
+    <string name="content_desc_enable_video">فعال کردن ویدیو</string>
+    <string name="content_desc_end_call">پایان دادن به تماس</string>
+    <string name="content_desc_stop_recording">توقف ضبط</string>
+    <string name="content_desc_take_photo">عکس بگیرید!</string>
+    <string name="content_desc_send_message">ارسال پیام</string>
+    <string name="content_desc_presence_online">آنلاین</string>
+    <string name="content_desc_presence_offline">آفلاین</string>
+    <string name="content_desc_raise_hand">بالا بردن دست</string>
+    <string name="content_desc_send_call_message">ارسال پیام</string>
+    <string name="content_desc_state_muted">بی‌صدا</string>
 </resources>

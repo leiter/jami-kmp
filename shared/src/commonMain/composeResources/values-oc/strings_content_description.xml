@@ -21,4 +21,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">Descargar</string>
     <string name="control_play">Joguèri</string>
     <string name="control_pause">Pausa</string>
+    <string name="content_desc_back">Tornar</string>
+    <string name="content_desc_send">Enviar</string>
+    <string name="content_desc_mute">Muç</string>
+    <string name="content_desc_unmute">Unmut</string>
+    <string name="content_desc_enable_video">Activar la vidèo</string>
+    <string name="content_desc_end_call">Terminar</string>
+    <string name="content_desc_stop_recording">Arrestar d’enregistrar</string>
+    <string name="content_desc_take_photo">Prendre fòto</string>
+    <string name="content_desc_send_message">Enviar messatge</string>
+    <string name="content_desc_presence_online">En linha</string>
+    <string name="content_desc_presence_offline">Fòra linha</string>
+    <string name="content_desc_raise_hand">Levant la man</string>
+    <string name="content_desc_send_call_message">Enviar messatge</string>
+    <string name="content_desc_state_muted">Foguèt silenciat.</string>
 </resources>

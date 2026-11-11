@@ -21,4 +21,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">డౌన్లోడ్</string>
     <string name="control_play">ఆడటం</string>
     <string name="control_pause">విరామం</string>
+    <string name="content_desc_back">తిరిగి</string>
+    <string name="content_desc_send">పంపండి</string>
+    <string name="content_desc_mute">మ్యూట్</string>
+    <string name="content_desc_unmute">నిశ్శబ్దంగా</string>
+    <string name="content_desc_enable_video">వీడియోను ప్రారంభించండి</string>
+    <string name="content_desc_end_call">కాల్‌ను ముగించు</string>
+    <string name="content_desc_stop_recording">రికార్డింగ్ ఆపండి</string>
+    <string name="content_desc_take_photo">ఫోటో తీయండి</string>
+    <string name="content_desc_send_message">సందేశం పంపండి</string>
+    <string name="content_desc_presence_online">ఆన్లైన్</string>
+    <string name="content_desc_presence_offline">ఆఫ్లైన్</string>
+    <string name="content_desc_raise_hand">చేతి పైకి</string>
+    <string name="content_desc_send_call_message">సందేశం పంపండి</string>
+    <string name="content_desc_state_muted">నిశ్శబ్దంగా</string>
 </resources>

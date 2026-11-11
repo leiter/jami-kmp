@@ -273,4 +273,23 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_success">Hitelesítés sikerült</string>
     <string name="account_auth_key_error">Hiba történt a fiókkulcs visszafejtése közben.</string>
     <string name="account_auth_password">Fiókjelszó használata</string>
+    <string name="account_delete_label">Fiók törlése</string>
+    <string name="account_delete_summary">Fiók törlése az eszközről</string>
+    <string name="account_p2p_section_label">Társ-társ kapcsolódása</string>
+    <string name="account_audio_rtp_min_label">Legalább</string>
+    <string name="account_audio_rtp_max_label">Legfeljebb</string>
+    <string name="account_video_rtp_min_label">Legalább</string>
+    <string name="account_video_rtp_max_label">Legfeljebb</string>
+    <string name="account_biometric_setup_title">Biometrikus hitelesítés engedélyezése</string>
+    <string name="account_biometric_disable_title">Biometrikus hitelesítés letiltása</string>
+    <string name="action_skip">Átugrani</string>
+    <string name="error_username_invalid">Érvénytelen felhasználónév</string>
+    <string name="account_sip_username">Felhasználónév</string>
+    <string name="prompt_choose_username">Felhasználónév kiválasztása</string>
+    <string name="dialog_export_title">Fiók exportálása</string>
+    <string name="section_linked_devices">Összekapcsolt eszközök</string>
+    <string name="account_rename_device">Eszköz átnevezése</string>
+    <string name="screen_title_account_settings">Fiókbeállítások</string>
+    <string name="screen_title_blocked_contacts">Letiltott kapcsolattartók</string>
+    <string name="certificates_status_banned">Letiltás</string>
 </resources>

@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 -->
 <resources>
     <string name="website_chooser_title">Pogledaj web stranicu koristeći...</string>
-    <string name="license">Ovaj softver je dostavljen \"kao što je\", bez ikakve jamstva.</string>
+    <string name="license">Ovaj softver je dostavljen "kao što je", bez ikakve jamstva.</string>
     <string name="pip_title">Konferencija Jamija</string>
     <string name="call_service_description">Ova usluga je potrebna da bi se pozivi bili u prvom planu.</string>
     <string name="data_transfer_service_description">Ova usluga je potrebna za prikaz stalnih obavijesti tijekom prijenosa datoteka.</string>
@@ -171,4 +171,23 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_side_step2_confirm">Potvrdi</string>
     <string name="import_side_step1_share">Podijeli</string>
     <string name="import_side_step2_password_import">Uvezi</string>
+    <string name="notif_inprogress_group_call">Poziv u tijeku</string>
+    <string name="action_call_hangup">Završi poziv</string>
+    <string name="action_call_accept">Prihvati poziv</string>
+    <string name="swarm_group_action_leave">Napusti grupu</string>
+    <string name="swarm_type">Vrsta konverzacije</string>
+    <string name="qr_scan_instruction">Skenirajte ovaj kod sa Jamijem.</string>
+    <string name="link_device_error_authentication">Došlo je do pogreške autentifikacije prilikom povezivanja uređaja. Provjerite vjerodajnice i pokušajte ponovno.</string>
+    <string name="link_device_error_canceled">Korisnik je otkazao operaciju.</string>
+    <string name="menu_overflow">Više opcija</string>
+    <string name="action_cancel">Otkaži</string>
+    <string name="group_member_blocked">Blokirano</string>
+    <string name="group_member_invited">Pozvani</string>
+    <string name="prompt_display_name">Prikazano ime</string>
+    <string name="action_new_conversation">Pokrenite razgovor.</string>
+    <string name="action_new_group">Stvori novu grupu</string>
+    <string name="menu_item_edit">Uredi</string>
+    <string name="placeholder_search">Pretraži ili dodaj</string>
+    <string name="action_qr_code">QR kod</string>
+    <string name="permission_dialog_battery_dismiss">Ne sada</string>
 </resources>

@@ -63,4 +63,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">پیش نمایش های پیوند وب</string>
     <string name="pref_link_preview_summary">پیش نمایش نیاز به دانلود محتوا از سرورهای شخص ثالث دارد.</string>
     <string name="connectivity_custom_title">سفارشی</string>
+    <string name="pref_category_calls">تماس‌ها</string>
+    <string name="pref_max_file_size_value">%1$d مگابایت</string>
+    <string name="pref_category_messages">پیام‌ها</string>
+    <string name="pref_category_advanced">پیشرفته</string>
 </resources>

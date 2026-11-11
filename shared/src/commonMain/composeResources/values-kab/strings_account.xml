@@ -157,8 +157,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_export_file_summary">Ḥrez amiḍan-ik-im ɣef yibenk-ik-im akken ad t-id-terreḍ ticki.</string>
     <string name="account_export_end_decryption_message">Awal n uɛeddi mačči d ameɣtu. Ma ulac aɣilif, ɛreḍ tikelt nniḍen s wawal n uɛeddi ameɣtu.</string>
     <string name="account_enter_password">Sekcem awal n uɛeddi</string>
-    <string name="account_share_body">Nermes-iyi-d s useqdec n \"%1$s\" ɣef tɣerɣert n teywalt n Jami yettwazuzren: %2$s</string>
-    <string name="account_share_body_with_username">Nermes-iyi-d s useqdec n \"%1$s\" Neɣ isem-iw n useqdac azayez \"%2$s\" ɣef tɣerɣert n teɣwalt n Jami yettwazuzren: %3$s</string>
+    <string name="account_share_body">Nermes-iyi-d s useqdec n "%1$s" ɣef tɣerɣert n teywalt n Jami yettwazuzren: %2$s</string>
+    <string name="account_share_body_with_username">Nermes-iyi-d s useqdec n "%1$s" Neɣ isem-iw n useqdac azayez "%2$s" ɣef tɣerɣert n teɣwalt n Jami yettwazuzren: %3$s</string>
     <string name="account_contact_me">Nermes-iyi-d ɣer Jami!</string>
     <string name="update_account">Leqqem amiḍan</string>
     <string name="account_migration">Amiḍan-ik-im n jami yezmer ad yettwaleqqem.\nMa ulac aɣilif, sekcem awal-ik-im n uɛeddi. </string>
@@ -273,4 +273,23 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_success">Asesteb yedda akken iwata</string>
     <string name="account_auth_key_error">Teḍra-d tuccḍa deg tukksa n uwgelhen n tsarut n umiḍan.</string>
     <string name="account_auth_password">Seqdec awal n uɛeddi n umiḍan</string>
+    <string name="account_delete_label">Kkes amiḍan</string>
+    <string name="account_delete_summary">Kkes amiḍan seg yibenk-a</string>
+    <string name="account_p2p_section_label">Tuqqna n uyugan ɣer uyugan</string>
+    <string name="account_audio_rtp_min_label">Adday</string>
+    <string name="account_audio_rtp_max_label">Afellay</string>
+    <string name="account_video_rtp_min_label">Adday</string>
+    <string name="account_video_rtp_max_label">Afellay</string>
+    <string name="account_biometric_setup_title">Rmed asesteb abiyumitri</string>
+    <string name="account_biometric_disable_title">Sens asesteb abiyumitri</string>
+    <string name="action_skip">Neggez</string>
+    <string name="error_username_invalid">Isem n useqdac mačči d ameɣtu</string>
+    <string name="account_sip_username">Isem n useqdac</string>
+    <string name="prompt_choose_username">Fren isem n useqdac</string>
+    <string name="dialog_export_title">Sifeḍ amiḍan</string>
+    <string name="section_linked_devices">Ibenkan icudden</string>
+    <string name="account_rename_device">Snifel isem n yibenk</string>
+    <string name="screen_title_account_settings">Iɣewwaṛen n umiḍan</string>
+    <string name="screen_title_blocked_contacts">Inermisen iwaḥlen</string>
+    <string name="certificates_status_banned">Sewḥel</string>
 </resources>

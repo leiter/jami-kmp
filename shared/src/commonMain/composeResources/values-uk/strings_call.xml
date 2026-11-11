@@ -34,4 +34,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">Модератор</string>
     <string name="call_muted">Приглушено</string>
     <string name="call_handRaised">Піднята рука</string>
+    <string name="call_dtmf_dialpad">Диальпади</string>
+    <string name="call_participant_disable_video">Вимкнути відео</string>
+    <string name="call_participant_enable_video">Увімкнути відео</string>
 </resources>

@@ -189,4 +189,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">Այս ձեւաչափը չի աջակցվում:</string>
     <string name="account_link_device_title">Կապակցեք նոր սարք</string>
     <string name="account_link_device_button">Կապակցել</string>
+    <string name="account_delete_label">Հաշիվը ջնջել</string>
+    <string name="account_device_revocation_wrong_password">Սխալ գաղտնաբառ։</string>
+    <string name="account_audio_rtp_min_label">Մինիմում</string>
+    <string name="account_audio_rtp_max_label">Մաքսիմալ</string>
+    <string name="account_video_rtp_min_label">Մինիմում</string>
+    <string name="account_video_rtp_max_label">Մաքսիմալ</string>
+    <string name="account_read_receipts_label">Կարդալու անդորրագրեր</string>
+    <string name="account_read_receipts_summary">Ուղարկել և պահանջել առաքման ու կարդալու անդորրագրեր, որոնք ուղարկվում են, երբ հաղորդագրությունները առաքվում կամ կարդացվում են։</string>
+    <string name="action_skip">Հեռանալ</string>
+    <string name="error_username_invalid">Անհավեր օգտագործողի անունը</string>
+    <string name="account_sip_username">Օգտագործողի անունը</string>
+    <string name="prompt_choose_username">Ընտրեք օգտատերու անուն</string>
+    <string name="section_linked_devices">Կապակցված սարքեր</string>
+    <string name="account_rename_device">Անունափոխման սարք</string>
+    <string name="screen_title_account_settings">Հաշվեի կարգավորումները</string>
+    <string name="screen_title_blocked_contacts">Պակված շփումներ</string>
+    <string name="certificates_status_banned">Բլոկ</string>
 </resources>

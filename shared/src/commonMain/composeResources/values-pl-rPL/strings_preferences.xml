@@ -102,4 +102,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="extension_invalid_format">Format rozszerzenia nie jest wspierany: <b>%1$s</b></string>
     <string name="extension_force_install">wymuś\nzainstaluj</string>
     <string name="extension_path_image_add">Dodaj nowe zdjęcie</string>
+    <string name="pref_typing_summary">Wskazuj, gdy wiadomości są pisane.</string>
+    <string name="pref_category_calls">Rozmowy</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Wiadomości</string>
+    <string name="pref_category_advanced">Zaawansowane</string>
 </resources>

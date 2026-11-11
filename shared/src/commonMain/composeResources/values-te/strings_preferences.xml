@@ -63,4 +63,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">వెబ్ లింక్ పరిదృశ్యాలు</string>
     <string name="pref_link_preview_summary">ముందస్తు వీక్షణ మూడవ పార్టీ సర్వర్ల నుండి కంటెంట్ను డౌన్లోడ్ చేసుకోవాలి.</string>
     <string name="connectivity_custom_title">కస్టమ్</string>
+    <string name="pref_category_calls">కాల్స్</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">సందేశాలు</string>
+    <string name="pref_category_advanced">ఆధునిక</string>
 </resources>

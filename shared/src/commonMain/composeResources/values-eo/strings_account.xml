@@ -189,4 +189,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">Tiu formato ne estas subtenata.</string>
     <string name="account_link_device_title">Ligigu novan aparaton</string>
     <string name="account_link_device_button">Konekti</string>
+    <string name="account_delete_label">Forviŝi konton</string>
+    <string name="account_audio_rtp_min_label">Minimumo</string>
+    <string name="account_audio_rtp_max_label">Maksimumo</string>
+    <string name="account_video_rtp_min_label">Minimumo</string>
+    <string name="account_video_rtp_max_label">Maksimumo</string>
+    <string name="action_skip">Skip</string>
+    <string name="error_username_invalid">Nevalida uzantnomo</string>
+    <string name="account_sip_username">Uzantnomo</string>
+    <string name="prompt_choose_username">Elektu uzantnomon</string>
+    <string name="section_linked_devices">Interligitaj aparatoj</string>
+    <string name="account_rename_device">Re-nomigilo</string>
+    <string name="screen_title_account_settings">Konto-sekcioj</string>
+    <string name="screen_title_blocked_contacts">Blokiĝintaj kontaktoj</string>
+    <string name="certificates_status_banned">Bloko</string>
 </resources>

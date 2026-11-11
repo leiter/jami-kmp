@@ -27,4 +27,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="control_pause">Pauziraj</string>
     <string name="searchbar_navigation_account">Izaberi nalog</string>
     <string name="add_conversation_member">Dodajte člana konverzacije</string>
+    <string name="qrcode_to_scan">QR kod za skeniranje</string>
+    <string name="content_desc_back">Nazad</string>
+    <string name="content_desc_send">Pošalji</string>
+    <string name="content_desc_mute">Isključi zvuk</string>
+    <string name="content_desc_unmute">Uključi zvuk</string>
+    <string name="content_desc_enable_video">Omogući video</string>
+    <string name="content_desc_disable_video">Onemogući video</string>
+    <string name="content_desc_end_call">Završi poziv</string>
+    <string name="content_desc_resume">Nastavi</string>
+    <string name="content_desc_stop_recording">Zaustavi snimanje</string>
+    <string name="content_desc_take_photo">Snimite fotografiju</string>
+    <string name="content_desc_send_message">Pošalji poruku</string>
+    <string name="content_desc_presence_online">Na vezi</string>
+    <string name="content_desc_presence_offline">Nije na vezi</string>
+    <string name="content_desc_raise_hand">Podigni ruku</string>
+    <string name="content_desc_send_call_message">Pošalji poruku</string>
+    <string name="content_desc_state_muted">Isključen zvuk</string>
 </resources>

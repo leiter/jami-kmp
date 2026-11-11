@@ -32,4 +32,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">संयोजक</string>
     <string name="call_muted">मौन</string>
     <string name="call_handRaised">हात उठाएर</string>
+    <string name="call_dtmf_dialpad">डायलप्याड</string>
+    <string name="call_participant_enable_video">भिडियो सक्षम गर्नुहोस्</string>
 </resources>

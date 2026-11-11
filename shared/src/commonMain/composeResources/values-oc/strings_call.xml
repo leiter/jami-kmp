@@ -32,4 +32,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_moderator">Moderator</string>
     <string name="call_muted">Foguèt silenciat.</string>
     <string name="call_handRaised">Man levada</string>
+    <string name="call_dtmf_dialpad">Dialpad</string>
+    <string name="call_participant_enable_video">Activar la vidèo</string>
 </resources>

@@ -64,4 +64,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_summary">La visualització prealable requereix descarregar contingut des de servidors de tercers.</string>
     <string name="connectivity_custom_title">Personalitzat</string>
     <string name="extension_invalid_signature"><b>%1$s</b> té una firma invàlida</string>
+    <string name="pref_connectivity_title">Mode de connectivitat</string>
+    <string name="pref_connectivity_summary">Seleccioneu com s'ha de connectar el Jami al sistema distribuït per rebre trucades i missatges.</string>
+    <string name="pref_persistNotification_title">Executa en segon pla</string>
+    <string name="pref_persistNotification_summary">Permet l'execució en segon pla per rebre trucades i missatges.</string>
+    <string name="pref_typing_summary">Indica quan s'estan escrivint missatges.</string>
+    <string name="connectivity_google_services_title">Serveis de Google</string>
+    <string name="connectivity_local_node_title">Node DHT local</string>
+    <string name="pref_category_calls">Trucades</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Missatges</string>
+    <string name="pref_category_advanced">Avançat</string>
 </resources>

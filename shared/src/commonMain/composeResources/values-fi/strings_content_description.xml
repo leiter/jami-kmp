@@ -28,4 +28,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="searchbar_navigation_account">Valitse tili</string>
     <string name="add_conversation_member">Lisää keskusteluun jäsen</string>
     <string name="qrcode_to_scan">Luettava QR-koodi</string>
+    <string name="content_desc_back">Takaisin</string>
+    <string name="content_desc_send">Lähetä</string>
+    <string name="content_desc_mute">Mykistä</string>
+    <string name="content_desc_unmute">Poista mykistys</string>
+    <string name="content_desc_enable_video">Ota video käyttöön</string>
+    <string name="content_desc_disable_video">Poista video</string>
+    <string name="content_desc_end_call">Lopeta puhelu</string>
+    <string name="content_desc_resume">Jatka</string>
+    <string name="content_desc_stop_recording">Lopeta tallennus</string>
+    <string name="content_desc_take_photo">Ota valokuva</string>
+    <string name="content_desc_send_message">Lähetä viesti</string>
+    <string name="content_desc_presence_online">Verkossa</string>
+    <string name="content_desc_presence_offline">Poissa</string>
+    <string name="content_desc_raise_hand">Nosta käsi</string>
+    <string name="content_desc_send_call_message">Lähetä viesti</string>
+    <string name="content_desc_state_muted">Mykistetty</string>
 </resources>

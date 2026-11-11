@@ -19,4 +19,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dial_numeric_pad">לוח חיוג מספרי</string>
     <string name="contact_unblock">פותח את הבלוק</string>
     <string name="control_replay">נגן שוב</string>
+    <string name="content_desc_back">חזרה</string>
+    <string name="content_desc_send">שליחה</string>
+    <string name="content_desc_mute">שקט</string>
+    <string name="content_desc_unmute">לא נקט</string>
+    <string name="content_desc_enable_video">אפשר וידאו</string>
+    <string name="content_desc_end_call">סיום השיחה</string>
+    <string name="content_desc_stop_recording">תפסיק להקליט</string>
+    <string name="content_desc_take_photo">צלם.</string>
+    <string name="content_desc_send_message">שליחת הודעה</string>
+    <string name="content_desc_presence_online">באינטרנט</string>
+    <string name="content_desc_presence_offline">לא מקוונים</string>
+    <string name="content_desc_raise_hand">תרים את היד.</string>
+    <string name="content_desc_send_call_message">שליחת הודעה</string>
+    <string name="content_desc_state_muted">שקט</string>
 </resources>

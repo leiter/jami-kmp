@@ -63,4 +63,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">معاينات ارتباطات ويب</string>
     <string name="pref_link_preview_summary">تطلب المشاهدة المسبقة تنزيل المحتوى من خوادم طرف ثالث.</string>
     <string name="connectivity_custom_title">تخصيص</string>
+    <string name="pref_typing_summary">يُظهر عند كتابة الرسائل.</string>
+    <string name="pref_category_calls">مكالمات</string>
+    <string name="pref_max_file_size_value">%1$d ميجابايت</string>
+    <string name="pref_category_messages">رسائل</string>
+    <string name="pref_category_advanced">إعدادات متقدمة</string>
 </resources>

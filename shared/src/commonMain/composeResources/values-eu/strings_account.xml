@@ -189,4 +189,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">Formatu hau ez da onartzen.</string>
     <string name="account_link_device_title">Estekatu gailu berria</string>
     <string name="account_link_device_button">Konektatu</string>
+    <string name="account_delete_label">Kontua ezabatu</string>
+    <string name="account_device_revocation_wrong_password">Pasahitz okerra.</string>
+    <string name="account_audio_rtp_min_label">Minimoa</string>
+    <string name="account_audio_rtp_max_label">Maximoa</string>
+    <string name="account_video_rtp_min_label">Minimoa</string>
+    <string name="account_video_rtp_max_label">Maximoa</string>
+    <string name="account_read_receipts_label">Irakurragiriak</string>
+    <string name="account_read_receipts_summary">Bidali eta eskatu bidalketa- eta irakurketa-agiriak, mezuak entregatzen edo irakurtzen direnean bidaltzeko.</string>
+    <string name="action_skip">Jauzi</string>
+    <string name="error_username_invalid">Erabiltzaile-izen baliogabea</string>
+    <string name="account_sip_username">Erabiltzaile-izena</string>
+    <string name="prompt_choose_username">Erabiltzaile izena aukeratu</string>
+    <string name="dialog_export_title">Esportatu kontua</string>
+    <string name="section_linked_devices">Estekatuta dauden gailuak</string>
+    <string name="account_rename_device">Aldatu izena gailuari</string>
+    <string name="screen_title_account_settings">Kontuaren ezarpenak</string>
+    <string name="screen_title_blocked_contacts">Blokeatutako kontaktuak</string>
+    <string name="certificates_status_banned">Bloketu</string>
 </resources>

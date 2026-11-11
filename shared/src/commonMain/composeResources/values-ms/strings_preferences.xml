@@ -63,4 +63,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">Pratonton pautan web</string>
     <string name="pref_link_preview_summary">പ്രിവ്യൂ മൂന്നാം കക്ഷി സെർവറുകളിൽ നിന്നും ഉള്ളടക്കം ഡൌൺലോഡ് ചെയ്യണം.</string>
     <string name="connectivity_custom_title">Tidak lalai</string>
+    <string name="pref_category_calls">Panggilan</string>
+    <string name="pref_max_file_size_value">%1$d എംബി</string>
+    <string name="pref_category_messages">സന്ദേശങ്ങള്</string>
+    <string name="pref_category_advanced">Lanjut</string>
 </resources>

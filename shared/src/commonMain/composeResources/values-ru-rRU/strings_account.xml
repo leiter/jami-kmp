@@ -259,4 +259,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_error">Ошибка аутентификации: %1$s</string>
     <string name="account_auth_success">Аутентификация успешна</string>
     <string name="account_auth_password">Использовать пароль аккаунта</string>
+    <string name="account_delete_label">Удалить аккаунт</string>
+    <string name="account_delete_summary">Удалить учетную запись с этого устройства</string>
+    <string name="account_p2p_section_label">Одноранговое соединение</string>
+    <string name="account_audio_rtp_min_label">Минимум</string>
+    <string name="account_audio_rtp_max_label">Максимум</string>
+    <string name="account_video_rtp_min_label">Минимум</string>
+    <string name="account_video_rtp_max_label">Максимум</string>
+    <string name="account_read_receipts_label">Уведомления о прочтении</string>
+    <string name="account_read_receipts_summary">Отправлять и запрашивать уведомления о доставке и прочтении при доставке или прочтении сообщений.</string>
+    <string name="account_biometric_setup_title">Включить биометрику</string>
+    <string name="account_biometric_disable_title">Отключить биометрику</string>
+    <string name="action_skip">Пропустить</string>
+    <string name="error_username_invalid">Недопустимое имя пользователя</string>
+    <string name="account_sip_username">Пользователь</string>
+    <string name="prompt_choose_username">Выберите имя пользователя</string>
+    <string name="dialog_export_title">Экспортировать аккаунт</string>
+    <string name="section_linked_devices">Привязанные устройства</string>
+    <string name="account_rename_device">Переименовать устройство</string>
+    <string name="screen_title_account_settings">Настройки аккаунта</string>
+    <string name="screen_title_blocked_contacts">Заблокированные контакты</string>
+    <string name="certificates_status_banned">Заблокировать</string>
 </resources>

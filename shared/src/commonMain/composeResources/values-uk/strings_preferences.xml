@@ -102,4 +102,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="extension_invalid_format">Недійсний формат розширення:<b>%1$s</b></string>
     <string name="extension_force_install">примусово\nвстановити</string>
     <string name="extension_path_image_add">Додати нове зображення</string>
+    <string name="pref_typing_summary">Показувати, коли набираються повідомлення.</string>
+    <string name="pref_category_calls">Дзвінки</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Повідомлення</string>
+    <string name="pref_category_advanced">Розширені</string>
 </resources>

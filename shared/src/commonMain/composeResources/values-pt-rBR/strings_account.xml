@@ -258,4 +258,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_auth_error">Erro de autenticação: %1$s</string>
     <string name="account_auth_success">A autenticação foi bem sucedida</string>
     <string name="account_auth_password">Usar a senha da conta</string>
+    <string name="account_delete_label">Deletar conta</string>
+    <string name="account_delete_summary">Eliminar a conta deste dispositivo</string>
+    <string name="account_p2p_section_label">Conectividade ponto a ponto</string>
+    <string name="account_audio_rtp_min_label">Mínimo</string>
+    <string name="account_audio_rtp_max_label">Máximo</string>
+    <string name="account_video_rtp_min_label">Mínimo</string>
+    <string name="account_video_rtp_max_label">Máximo</string>
+    <string name="account_read_receipts_label">Confirmações de leitura</string>
+    <string name="account_read_receipts_summary">Enviar e solicitar confirmações de entrega e de leitura quando as mensagens são entregues ou lidas.</string>
+    <string name="account_biometric_setup_title">Ativar autenticação biométrica</string>
+    <string name="account_biometric_disable_title">Desativar autenticação biométrica</string>
+    <string name="action_skip">Pular</string>
+    <string name="error_username_invalid">Nome de usuário inválido</string>
+    <string name="account_sip_username">Nome de usuário</string>
+    <string name="prompt_choose_username">Escolha um nome de usuário</string>
+    <string name="dialog_export_title">Exportar conta</string>
+    <string name="section_linked_devices">Dispositivos vinculados</string>
+    <string name="account_rename_device">Renomear dispositivo</string>
+    <string name="screen_title_account_settings">Configurações da conta</string>
+    <string name="screen_title_blocked_contacts">Contatos bloqueados</string>
+    <string name="certificates_status_banned">Bloquear</string>
 </resources>

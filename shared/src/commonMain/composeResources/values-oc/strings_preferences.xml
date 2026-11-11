@@ -63,4 +63,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">Visualitzacions prèvies d'enllaços web</string>
     <string name="pref_link_preview_summary">La preview demanda de descargar de contengut de servidors de tèrces.</string>
     <string name="connectivity_custom_title">Personalitat</string>
+    <string name="pref_category_calls">Apèls</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Messatges</string>
+    <string name="pref_category_advanced">Avançat</string>
 </resources>

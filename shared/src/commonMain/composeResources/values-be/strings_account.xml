@@ -61,7 +61,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_useragent_label">Агент карыстальніка</string>
     <string name="account_autoanswer_label">Аўтаматычны адказ</string>
     <string name="account_rendezvous_label">Рэзідэнцкі рэжым</string>
-    <string name="account_rendezvous_summary">У рэжыме \"Рэзідэнт\" прыступаюць да канферэнцыйнай пакоі.</string>
+    <string name="account_rendezvous_summary">У рэжыме "Рэзідэнт" прыступаюць да канферэнцыйнай пакоі.</string>
     <string name="account_upnp_label">Уключыць UPnP</string>
     <string name="account_proxy_field">Практыкаванне</string>
     <string name="account_audio_label">Аўдыё</string>
@@ -187,4 +187,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_disabled_indicator">З інваліднасцю</string>
     <string name="account_link_device_title">Злучыць новае прылада</string>
     <string name="account_link_device_button">Злучэнне</string>
+    <string name="account_delete_label">Знішчыць рахунак</string>
+    <string name="account_device_revocation_wrong_password">Няправільны пароль.</string>
+    <string name="account_audio_rtp_min_label">Мінімальная</string>
+    <string name="account_audio_rtp_max_label">Максімальная</string>
+    <string name="account_video_rtp_min_label">Мінімальная</string>
+    <string name="account_video_rtp_max_label">Максімальная</string>
+    <string name="account_read_receipts_label">Квітанцыі аб прачытанні</string>
+    <string name="account_read_receipts_summary">Адпраўляць і запытваць квітанцыі аб дастаўцы і прачытанні, якія адпраўляюцца, калі паведамленні дастаўлены або прачытаны.</string>
+    <string name="action_skip">Скінг</string>
+    <string name="error_username_invalid">Непапраўнае карыстацкае імя</string>
+    <string name="account_sip_username">Назва карыстальніка</string>
+    <string name="prompt_choose_username">Выберыце імя карыстальніка</string>
+    <string name="section_linked_devices">Злучаныя прылады</string>
+    <string name="account_rename_device">Пераназванае прылада</string>
+    <string name="screen_title_account_settings">Налады ўліковых запісаў</string>
+    <string name="screen_title_blocked_contacts">Блокаваныя кантакты</string>
+    <string name="certificates_status_banned">Блокіроўванне</string>
 </resources>

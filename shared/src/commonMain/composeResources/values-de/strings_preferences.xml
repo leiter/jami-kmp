@@ -112,4 +112,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_category_account">Konto</string>
     <string name="pref_category_media">Medium</string>
     <string name="pref_category_messages">Nachrichten</string>
+    <string name="pref_category_calls">Anrufe</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_advanced">Erweitert</string>
 </resources>

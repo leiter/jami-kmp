@@ -21,7 +21,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="contribute_section">ਯੋਗਦਾਨ ਪਾਓ</string>
     <string name="version_section">ਵਰਜਨ</string>
     <string name="website_chooser_title">ਇਹ ਵਰਤ ਕੇ ਵੈੱਬਸਾਈਟ ਵੇਖੋ…</string>
-    <string name="license">ਇਹ ਸਾਫ਼ਟਵੇਅਰ \"ਜਿਵੇਂ ਵੀ ਐ\", ਕਿਸੇ ਵੀ ਵਰੰਟੀ ਦੇ ਬਿਨਾਂ ਦਿੱਤਾ ਜਾਂਦਾ ਹੈ। ਵੇਰਵਿਆਂ ਲਈ, <u>GNU General Public License version 3 ਜਾਂ ਬਾਅਦ ਵਾਲੇ ਲਾਇਸੰਸ</u> ਵੇਖੋ</string>
+    <string name="license">ਇਹ ਸਾਫ਼ਟਵੇਅਰ "ਜਿਵੇਂ ਵੀ ਐ", ਕਿਸੇ ਵੀ ਵਰੰਟੀ ਦੇ ਬਿਨਾਂ ਦਿੱਤਾ ਜਾਂਦਾ ਹੈ। ਵੇਰਵਿਆਂ ਲਈ, <u>GNU General Public License version 3 ਜਾਂ ਬਾਅਦ ਵਾਲੇ ਲਾਇਸੰਸ</u> ਵੇਖੋ</string>
     <string name="description">Jami ਦੁਨੀਆ ਭਰ ਵਿੱਚ ਸੰਚਾਰ ਕਰਨ ਲਈ ਮੁਫ਼ਤ ਸਾਫ਼ਟਵੇਅਰ ਹੈ ਜੋ ਆਪਣੇ ਵਰਤੋਂਕਾਰਾਂ ਦੀ ਅਜ਼ਾਦੀ ਅਤੇ ਪਰਦੇਦਾਰੀ ਦਾ ਖਿਆਲ ਰੱਖਦਾ ਹੈ।</string>
     <string name="credits">ਸ਼ਲਾਘਾਯੋਗ ਵਿਅਕਤੀ</string>
     <string name="pip_title">Jami ਸੰਮੇਲਨ</string>
@@ -240,4 +240,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="export_side_step1_code_connect">ਜੋੜੋ</string>
     <string name="export_side_step2_cancel">ਰੱਦ ਕਰੋ</string>
     <string name="import_side_step1_share">ਸਾਂਝਾ ਕਰੋ</string>
+    <string name="notif_send_reply">ਭੇਜੋ</string>
+    <string name="recordings_delete_confirm">ਮਿਟਾਓ</string>
+    <string name="action_audio">ਅਵਾਜ਼</string>
+    <string name="action_video">ਵੀਡੀਓ</string>
+    <string name="qr_scan_instruction">Jami ਨਾਲ ਇਹ ਕੋਡ ਸਕੈਨ ਕਰੋ</string>
+    <string name="action_cancel">ਰੱਦ ਕਰੋ</string>
+    <string name="group_remove_member">ਬੰਦਸ਼ ਲਗਾਓ</string>
+    <string name="group_unblock_member">ਅਣਬਲਾਕ ਕਰੋ</string>
+    <string name="group_members">ਸਾਥੀ</string>
+    <string name="action_create_account">ਖਾਤਾ ਬਣਾਓ</string>
+    <string name="action_new_conversation">ਗੱਲਬਾਤ ਸ਼ੁਰੂ ਕਰੋ</string>
+    <string name="menu_item_copy">ਨਕਲ ਲਾਹੋ</string>
+    <string name="screen_title_qr_scan">QR ਕੋਡ ਸਕੈਨ ਕਰੋ</string>
+    <string name="action_qr_code">QR ਕੋਡ</string>
+    <string name="screen_title_app_settings">ਸੈਟਿੰਗਾਂ</string>
+    <string name="action_share">ਸਾਂਝਾ ਕਰੋ</string>
+    <string name="filter_requests">ਬੇਨਤੀਆਂ</string>
+    <string name="permission_dialog_battery_dismiss">ਹਾਲੇ ਨਹੀਂ</string>
 </resources>

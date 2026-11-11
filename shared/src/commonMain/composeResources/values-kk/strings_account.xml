@@ -189,4 +189,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="error_format_not_supported">Бұл форматты қолдамайды.</string>
     <string name="account_link_device_title">Жаңа құрылғыны қосу</string>
     <string name="account_link_device_button">Қосылыңыз</string>
+    <string name="account_delete_label">Тіркелгілерді өшіру</string>
+    <string name="account_device_revocation_wrong_password">Қате құпия сөз.</string>
+    <string name="account_audio_rtp_min_label">Минималды</string>
+    <string name="account_audio_rtp_max_label">Ең жоғары</string>
+    <string name="account_video_rtp_min_label">Минималды</string>
+    <string name="account_video_rtp_max_label">Ең жоғары</string>
+    <string name="account_read_receipts_label">Оқу туралы хабарламалар</string>
+    <string name="account_read_receipts_summary">Хабарламалар жеткізілген немесе оқылған кезде жіберілетін жеткізу және оқу туралы хабарламаларды жіберу және сұрау.</string>
+    <string name="action_skip">Кетіңіз</string>
+    <string name="error_username_invalid">Қолданушының жарамсыз атауы</string>
+    <string name="account_sip_username">Пайдаланушы аты</string>
+    <string name="prompt_choose_username">Пайдаланушы атауын таңдау</string>
+    <string name="section_linked_devices">Қосылған құрылғылар</string>
+    <string name="account_rename_device">Атауын өзгерту құрылғысы</string>
+    <string name="screen_title_account_settings">Тіркелгі параметрлері</string>
+    <string name="screen_title_blocked_contacts">Ашық контакттар</string>
+    <string name="certificates_status_banned">Блок</string>
 </resources>

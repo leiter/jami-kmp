@@ -65,4 +65,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_summary">Ön izleme, içeriğin üçüncü taraf sunuculardan indirilmesini gerektirir.</string>
     <string name="connectivity_custom_title">Özel</string>
     <string name="extension_invalid_signature"><b>%1$s</b> geçersiz bir imza içeriyor.</string>
+    <string name="pref_connectivity_title">Bağlantı modu</string>
+    <string name="pref_connectivity_summary">Çağrıları ve mesajları almak için Jami'nin dağıtık sisteme nasıl bağlanacağını seç.</string>
+    <string name="pref_persistNotification_title">Arka planda çalıştır</string>
+    <string name="pref_persistNotification_summary">Aramaları ve mesajları almak için arka planda çalışmaya izin ver.</string>
+    <string name="pref_typing_summary">Mesajların ne zaman yazıldığını belirt.</string>
+    <string name="connectivity_google_services_title">Google hizmetleri</string>
+    <string name="connectivity_local_node_title">Yerel DHT düğümü</string>
+    <string name="pref_category_calls">Çağrılar</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">İletiler</string>
+    <string name="pref_category_advanced">Gelişmiş</string>
 </resources>

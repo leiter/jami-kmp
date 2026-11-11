@@ -21,4 +21,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">دانلود</string>
     <string name="control_play">اوینایین</string>
     <string name="control_pause">توقف</string>
+    <string name="content_desc_back">گئری دؤن</string>
+    <string name="content_desc_send">گؤنده ر</string>
+    <string name="content_desc_mute">ساکئت</string>
+    <string name="content_desc_unmute">ساکئت اولما</string>
+    <string name="content_desc_enable_video">ویدیو فعال ائتمک</string>
+    <string name="content_desc_end_call">Zəngi bitir</string>
+    <string name="content_desc_stop_recording">ضبط ائتمه یه داوام ائتدیر</string>
+    <string name="content_desc_take_photo">عکس آل</string>
+    <string name="content_desc_send_message">پيام ارسال کن</string>
+    <string name="content_desc_presence_online">اونلاين</string>
+    <string name="content_desc_presence_offline">آفلاین</string>
+    <string name="content_desc_raise_hand">ال قالديريب</string>
+    <string name="content_desc_send_call_message">پيام ارسال کن</string>
+    <string name="content_desc_state_muted">ساکئت</string>
 </resources>

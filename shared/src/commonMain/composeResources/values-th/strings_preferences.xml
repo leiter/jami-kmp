@@ -63,4 +63,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">ตัวอย่างลิงก์เว็บ</string>
     <string name="pref_link_preview_summary">การดูก่อนหน้านี้ต้องดาวน์โหลดเนื้อหาจากเซอร์เวอร์พาร์ทที่สาม</string>
     <string name="connectivity_custom_title">กำหนดเอง</string>
+    <string name="pref_category_calls">โทร</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">ข้อความ</string>
+    <string name="pref_category_advanced">ขั้นสูง</string>
 </resources>

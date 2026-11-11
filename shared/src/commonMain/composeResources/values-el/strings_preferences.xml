@@ -63,4 +63,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_link_preview_title">Προεπισκοπήσεις συνδέσεων Web</string>
     <string name="pref_link_preview_summary">Η προεπισκόπηση απαιτεί την λήψη περιεχομένου από διακομιστές τρίτων.</string>
     <string name="connectivity_custom_title">Προμηθευτές</string>
+    <string name="pref_typing_summary">Υποδεικνύει πότε πληκτρολογούνται μηνύματα.</string>
+    <string name="pref_category_calls">Κλήσεις</string>
+    <string name="pref_max_file_size_value">%1$d MB</string>
+    <string name="pref_category_messages">Μηνύματα</string>
+    <string name="pref_category_advanced">Για προχωρημένους</string>
 </resources>

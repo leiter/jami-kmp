@@ -21,4 +21,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_download_button">ಡೌನ್ಲೋಡ್ ಮಾಡಿ</string>
     <string name="control_play">ಆಟವಾಡಿ</string>
     <string name="control_pause">ವಿರಾಮ</string>
+    <string name="content_desc_back">ಹಿಂದಕ್ಕೆ</string>
+    <string name="content_desc_send">ಕಳುಹಿಸು</string>
+    <string name="content_desc_mute">ಮೂಕ</string>
+    <string name="content_desc_unmute">ನಿಷ್ಕಪಟ</string>
+    <string name="content_desc_enable_video">ವೀಡಿಯೊವನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ</string>
+    <string name="content_desc_end_call">ಕರೆ ಅಂತ್ಯಗೊಳಿಸು</string>
+    <string name="content_desc_stop_recording">ರೆಕಾರ್ಡಿಂಗ್ ನಿಲ್ಲಿಸಿ</string>
+    <string name="content_desc_take_photo">ಫೋಟೋ ತೆಗೆದುಕೊ</string>
+    <string name="content_desc_send_message">ಸಂದೇಶ ಕಳುಹಿಸಿ</string>
+    <string name="content_desc_presence_online">ಆನ್ಲೈನ್</string>
+    <string name="content_desc_presence_offline">ಆಫ್ಲೈನ್</string>
+    <string name="content_desc_raise_hand">ಕೈ ಎತ್ತಿ</string>
+    <string name="content_desc_send_call_message">ಸಂದೇಶ ಕಳುಹಿಸಿ</string>
+    <string name="content_desc_state_muted">ಮೌನ</string>
 </resources>
