@@ -331,6 +331,8 @@
 					"$(inherited)",
 					"-framework",
 					JamiShared,
+					"-framework",
+					PhotosUI,
 				);
 				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
 					"$(inherited)",
@@ -394,6 +396,8 @@
 					VideoToolbox,
 					"-framework",
 					AudioToolbox,
+					"-framework",
+					PhotosUI,
 				);
 				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = (
 					"$(inherited)",
@@ -456,6 +460,8 @@
 					VideoToolbox,
 					"-framework",
 					AudioToolbox,
+					"-framework",
+					PhotosUI,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.jami.iosapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -506,6 +512,8 @@
 					"$(inherited)",
 					"-framework",
 					JamiShared,
+					"-framework",
+					PhotosUI,
 				);
 				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
 					"$(inherited)",
@@ -569,6 +577,8 @@
 					VideoToolbox,
 					"-framework",
 					AudioToolbox,
+					"-framework",
+					PhotosUI,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.jami.iosapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
