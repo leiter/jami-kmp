@@ -51,8 +51,9 @@ reasoning.
   which every container's layout pass now calls instead of setting `layer.frame`.
 
 **Still open:**
-- **On-device verification, with TestFlight build 37** (the first build with this code;
-  build 36 is the state before it). A 1:1 video call against the native client or an Android
+- **On-device verification, with TestFlight build 38.** Build 37 was the first with this
+  code but, like 36, crashed every call on connect (proximity monitoring set off the main
+  thread, fixed in 9e6c4c7); 38 has both. A 1:1 video call against the native client or an Android
   phone, checking: each side sees the other; the image stays upright when either phone
   turns, in both landscape directions; a front/back camera switch keeps the outgoing stream;
   backgrounding and returning mid-call brings the remote image back. If nothing renders, the

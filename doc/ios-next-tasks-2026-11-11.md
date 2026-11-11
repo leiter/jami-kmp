@@ -81,7 +81,7 @@ pushed, not merged) from the git history since 2026-10-31, `doc/ios-task-queue-2
    (`textAlign`), and `filter_all` / `filter_unread` / `filter_groups` have German. Checked on
    the simulator in German.
 5. **Video pipeline** — **implemented 2026-11-11** on branch `ios-video-pipeline` (not merged
-   into `ios-catch-up-2026-11`), shipped as TestFlight build 37, unverified in a call (needs a
+   into `ios-catch-up-2026-11`), shipped as TestFlight build 38 (37 crashes on connect), unverified in a call (needs a
    device and a second client; checklist in `doc/ios-video-pipeline.md` §0). PiP still open.
    Was: calls send and render no video.
 6. ~~**Callback tests via `fireDaemonEvent`**~~ — **done 2026-11-11**:
