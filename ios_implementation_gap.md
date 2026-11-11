@@ -63,7 +63,7 @@ every target. `StubPreferencesService` is retained for tests.
 | `scaleImageBytes` returned its input | UIImage redraw at `scale = 1.0`, JPEG 0.85; returns input unchanged if it already fits or decoding fails |
 | `extractVideoThumbnail` returned `null` | `AVAssetImageGenerator` at t=1s (frame 0 is black in many recordings) |
 | `VideoPlayerView` drew a static placeholder | `AVPlayerViewController` in a `UIKitViewController` — native transport controls, autoplay, release on dispose, matching the Android ExoPlayer behaviour |
-| `changeCamera()` always returned `null` | Returned before its `scope.launch` had run. Now derives the target camera id synchronously from the device list and launches the hardware switch behind it |
+| `changeCamera()` always returned `null` | Returned before its `scope.launch` had run. Now derives the target camera id synchronously from the device list and launches the hardware switch behind it. The returned id is the *intended* camera, not a confirmed one: the `expect` is non-suspend while the switch is suspend, so a failed switch is not reflected in the return value |
 | `getCameraInfo()` hardcoded capabilities | Real `AVCaptureDevice.formats` enumeration via a new `IOSCameraService.getCameraCapabilities`; old list kept as fallback |
 | History reactions dropped | `JBSwarmMessage.reactions` **was** already populated by the bridge and discarded in conversion. Now marshalled |
 
