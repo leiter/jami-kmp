@@ -1,5 +1,24 @@
 # Apple bridge rebuild — the pending Mac task
 
+> **2026-11-11: the accumulated wrapper batch landed for iOS.** `JamiBridgeWrapper.{h,mm}` gained
+> `connectivityChanged`, `publishPresence:status:note:`, `setAudioMeterState:state:`,
+> `createConfFromParticipantList:participants:`, `toggleRecording:callId:`, `isRecording:callId:`,
+> `getConversationActiveCalls:conversationId:`; `sendFile` gained `parent:` **and now calls
+> `libjami::sendFile`**: since the first wrapper commit (`79cfa5d`) it had sent the text
+> `file://<path>` through `sendMessage`, so no file was ever transferred from iOS. New signals:
+> `RecordingStateChanged`, `AudioMeter`, `VolumeChanged`, `Error`, `StunStatusFailed`,
+> `HardwareDecodingChanged`, `HardwareEncodingChanged`, `MessageSend`; `NewBuddyNotification` now
+> forwards status and line status (`onNewBuddyNotification:…` replaces `onPresenceChanged:…`).
+> Rebuilt `.a` files: **1223** `JamiBridgeWrapper` method symbols (from 1096), all 160
+> header-declared methods present in both archives. `:shared:compileKotlinIosSimulatorArm64` is
+> clean, the Xcode simulator app links (`BUILD SUCCEEDED`), and the app launches with the
+> daemon registering. `iosSimulatorArm64Test` passes 1009/1009. **Not exercised live:** none of the
+> new calls or signals has fired on the simulator yet.
+> `setDefaultModerator` was dropped: default moderators already work through account details
+> (`ConfigKey.DEFAULT_MODERATORS`), and `DaemonBridgeApi` has no such method. `build-jamibridge.sh`'s
+> macOS stage is now non-fatal, so the script builds both iOS archives in one run. The macOS
+> `.a` was not rebuilt, so `DaemonBridge.macos.kt` keeps its stubs. Step 8 (`appleMain`) is still open.
+
 > Written 2026-10-14 on a Linux host, at `fe40027`.
 > **Read this on the Mac before touching the iOS build.**
 >

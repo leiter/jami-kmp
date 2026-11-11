@@ -56,7 +56,9 @@ step can be faked — the file-send path had no test at all before, because it c
 filesystem.
 
 **Not on Apple.** `JamiBridgeWrapper.h`'s `sendFile` has no `parent:` argument, so iOS and macOS
-drop it and a file reply arrives as a plain file. Added to `apple-bridge-rebuild.md`.
+drop it and a file reply arrives as a plain file. Added to `apple-bridge-rebuild.md`. *Fixed for iOS
+2026-11-11. It turned out the wrapper never called `libjami::sendFile` and sent the text
+`file://<path>` instead.*
 
 ### F5: No member role promotion/demotion in UI or API — capability gap — **BLOCKED: no daemon function exists (verified 2026-10-12)**
 **Evidence:** `Conversation.kt` tracks `roles: MutableMap<String, MemberRole>` (with ADMIN, MEMBER, INVITED, LEFT, BLOCKED states), and `ContactDetailsViewModel.kt:22` exposes `memberRoles` to the UI, but there is no function in `DaemonBridge`, `AccountService`, or `ConversationFacade` to change a member's role.

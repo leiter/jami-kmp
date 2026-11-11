@@ -18,7 +18,7 @@ pushed, not merged) from the git history since 2026-10-31, `doc/ios-task-queue-2
 
 ## Prioritised
 
-1. **Wrapper rebuild batch** — none of these exist in `JamiBridgeWrapper.h`; the iOS actuals log
+1. ~~**Wrapper rebuild batch**~~ — **done 2026-11-11**, see `doc/apple-bridge-rebuild.md`; `setDefaultModerator` was not needed, and `sendFile` turned out never to have sent a file. Was: none of these exist in `JamiBridgeWrapper.h`; the iOS actuals log
    and drop:
    - `connectivityChanged` — the daemon never re-resolves its connections after a network change.
    - `sendFile` `parent:` — a file sent as a reply arrives as a plain file.

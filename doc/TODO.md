@@ -480,7 +480,7 @@ Pixel pair.**
 ## Call Recording
 
 - [x] **Call recording (Android)** — `toggleRecording` / `getIsRecording` exposed in `DaemonBridgeApi`, wired through `CallService` (action + `onRecordingStateChanged` callback fed by the daemon's `RecordingStateChanged` signal), `CallViewModel` (`CallState.isRecording` + `toggleRecording()`), and a `FiberManualRecord` record button in `OnGoingControls`. `Call.isRecording` promoted to observable. See `doc/plan_call_recording.md`.
-- [ ] **Call recording (iOS/macOS)** — Stubbed (returns false, inert). Requires `JamiBridgeWrapper.h/.mm` to expose `toggleRecording`/`getIsRecording` + a `RecordingStateChanged` delegate, then a `libJamiBridge.a` rebuild. See "iOS / macOS follow-up" in `doc/plan_call_recording.md`.
+- [x] **Call recording (iOS)** — *wired 2026-11-11 (wrapper batch); macOS still stubbed.* Was: stubbed (returns false, inert). Requires `JamiBridgeWrapper.h/.mm` to expose `toggleRecording`/`getIsRecording` + a `RecordingStateChanged` delegate, then a `libJamiBridge.a` rebuild. See "iOS / macOS follow-up" in `doc/plan_call_recording.md`.
 
 ## Push Notifications
 
@@ -1091,7 +1091,7 @@ code compiled against the macOS SDK (long-standing, dates to `93df547a`).
   them and exposes `fireDaemonEvent { … }`; `StubDaemonEventsTest` is the pattern.)* `init(callbacks)` discarded them, so none of
   the 15 daemon callbacks added to the iOS bridge can be tested without a live peer. Retaining
   them makes each one testable single-app, on JVM and iOS both.
-- [ ] **iOS connectivity never reaches the daemon** — `NWPathMonitor` feeds
+- [x] **iOS connectivity never reaches the daemon** — *fixed 2026-11-11 (wrapper batch).* `NWPathMonitor` feeds
   `HardwareService.connectivityChanged()` correctly, but `DaemonBridge.ios.kt` cannot forward it:
   `JamiBridgeWrapper.h` has no `connectivityChanged` entry point, so libjami never re-resolves its
   connections after a network change. One wrapper passthrough + `build-jamibridge.sh` rebuild.
@@ -1120,15 +1120,20 @@ checkbox are referenced, not repeated.
 
 **Wrapper batch — one `JamiBridgeWrapper.{h,mm}` change + one `build-jamibridge.sh` run**
 (details and hazards: `doc/apple-bridge-rebuild.md`)
-- [ ] `connectivityChanged` (item above)
-- [ ] `setDefaultModerator` / `getDefaultModerators`
-- [ ] `publish` + presence callback carrying `lineStatus` (`status-note-open-ends.md` open end 4)
-- [ ] `sendFile` `parent:` argument
-- [ ] `setAudioMeterState` + `AudioMeter` signal
-- [ ] `createConfFromParticipantList`
-- [ ] Call recording: `toggleRecording` / `getIsRecording` + `RecordingStateChanged` (item in
+*Landed 2026-11-11 for iOS — see the status block at the top of `doc/apple-bridge-rebuild.md`.*
+- [x] `connectivityChanged` (item above)
+- [x] ~~`setDefaultModerator` / `getDefaultModerators`~~ — not needed: default moderators go
+  through account details (`ConfigKey.DEFAULT_MODERATORS`) on every platform
+- [x] `publish` + presence callback carrying `lineStatus` (`status-note-open-ends.md` open end 4)
+- [x] `sendFile` `parent:` argument — and it now calls `libjami::sendFile` at all (it used to send
+  the text `file://<path>`)
+- [x] `setAudioMeterState` + `AudioMeter` signal
+- [x] `createConfFromParticipantList`
+- [x] Call recording: `toggleRecording` / `getIsRecording` + `RecordingStateChanged` (item in
   "Calling" above, `doc/plan_call_recording.md`)
-- [ ] *(low)* a correctly named per-conversation `getActiveCalls` — the wrapper's existing
+- [x] Six configuration signals (notifications F2): `VolumeChanged`, `Error`, `StunStatusFailed`,
+  `HardwareDecodingChanged`, `HardwareEncodingChanged`, `MessageSend`
+- [x] *(low)* a correctly named per-conversation `getActiveCalls` — the wrapper's existing
   `getActiveCalls:` wraps `getCallList`; the iOS actual returns `emptyList()`. No caller today.
 
 **Build hygiene**

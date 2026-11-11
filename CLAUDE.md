@@ -141,15 +141,16 @@ All user-visible strings live in `shared/src/commonMain/composeResources/`. The 
 All major mobile features are implemented, including CallKit (iOS) and Telecom API/ConnectionService (Android). The remaining gaps are:
 
 - **Push notifications** — Android (FCM) and iOS (APNs + PushKit) client integration are both done (2026-07-27, see `doc/push-notifications.md`). Delivery still needs a push-capable DHT proxy holding the FCM/APNs credentials for this app, so calls and messages currently still rely on the daemon running. The iOS half now compiles and runs (it was written on a Linux host, where Apple targets are skipped, and needed five fixes on the first Mac build — see `ios_implementation_gap.md` §4.1).
-- **iOS connectivity never reaches the daemon** — `NWPathMonitor` feeds `HardwareService.connectivityChanged()`, so `_connectivityState` and `setAccountsActive()` are correct, but `DaemonBridge.ios.kt` cannot forward it: `JamiBridgeWrapper.h` exposes no `connectivityChanged` entry point, so the call is a log line. The daemon is never told to re-resolve its connections after a network change. Android is fully wired (`ConnectivityManager.NetworkCallback` → JNI). Fix is one wrapper passthrough + a `build-jamibridge.sh` rebuild. Six more calls are now waiting
-on the same rebuild, so batch them — the list has grown to seven and is kept in
-`doc/apple-bridge-rebuild.md`: `setDefaultModerator`, `publish` (the presence status note —
-Android publishes it, iOS/macOS log and drop it, and their presence callback synthesises
-`lineStatus` as `""`, so Apple can neither send nor receive a note until the wrapper is
-regenerated), `sendFile`'s missing `parent` argument (a file sent as a reply arrives as a plain
-file), `setAudioMeterState` plus its `AudioMeter` callback (the microphone level ring stays dark),
-`createConfFromParticipantList`, and call recording (`toggleRecording`/`getIsRecording` +
-`RecordingStateChanged`) — seven in all.
+- **~~Apple wrapper batch~~ — closed 2026-11-11 for iOS.** The wrapper now exposes
+`connectivityChanged`, `publish` (+ the presence callback carries status and `lineStatus`), a real
+`libjami::sendFile` with `parent` (the old one sent the text `file://<path>` and never transferred
+a file), `setAudioMeterState` + `AudioMeter`, `createConfFromParticipantList`, call recording
+(+ `RecordingStateChanged`), a per-conversation `getConversationActiveCalls`, and six configuration
+signals (`VolumeChanged`, `Error`, `StunStatusFailed`, hardware de/encoding, `MessageSend`). The
+`.a` files were rebuilt, the app links and starts, and `iosSimulatorArm64Test` passes. None of these
+paths has been exercised live yet. `setDefaultModerator` was dropped from the batch: default moderators go through
+account details (`ConfigKey.DEFAULT_MODERATORS`) on every platform. macOS keeps stubs (its `.a` is not rebuilt).
+See `doc/apple-bridge-rebuild.md`.
 - **macOS target does not compile** — ~95 errors, mostly in `MacOSHardwareService.kt`. Since the iOS and macOS Darwin implementations are now substantively identical, the right fix is a shared `appleMain` source set. A start exists on `origin/macos-build-and-apple-source-set` (`f0f66ce`, 2026-10-01); it predates the nine wrapper commits and is 149 commits behind `ios-catch-up-2026-11` (2026-11-11), so it needs rebasing first. `build-jamibridge.sh`'s macOS stage also fails independently, on UIKit code compiled against the macOS SDK — long-standing, not caused by recent work.
 - **iOS video in calls** — video calls connect but render no remote image *and* send no local image: no `SinkTarget` → `AVSampleBufferDisplayLayer` path and no `getNewFrame`/`publishFrame` capture path in the wrapper. Local self-view and audio-only calls work. Plan: `doc/ios-video-pipeline.md`.
 - **Chat plugins** — Jami plugin system not ported to KMP. Menu item shows a "not yet supported" snackbar.

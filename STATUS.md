@@ -254,12 +254,10 @@ Built on a Mac and run in the simulator; the Obj-C++ wrapper `.a` files were reb
 - Certificate management screen (list / pin / unpin / trust), exercised on the simulator — five
   bugs found and fixed there (2026-10-14, `89d1443`)
 - Missing: remote video rendering (Metal/CALayer sink target — architectural, multi-week; audio-only calls work fine)
-- Missing: `connectivityChanged` passthrough — `JamiBridgeWrapper.h` still exposes no entry point,
-  so the daemon is never told to re-resolve connections after a network change
-- Missing: call recording (`toggleRecording` / `getIsRecording` return `false`)
-- Missing, waiting on the same wrapper rebuild as `connectivityChanged` (full list in
-  `doc/apple-bridge-rebuild.md`): presence status note send/receive, default moderators,
-  reply-to on file sends, microphone level ring, conference from a contact list
+- Wired 2026-11-11 (wrapper batch, `doc/apple-bridge-rebuild.md`): `connectivityChanged`, call
+  recording, presence status note send/receive, file sends via `libjami::sendFile` with reply-to
+  (previously no file was transferred at all), microphone level ring, conference from a contact
+  list, six configuration signals. Builds, links and launches; not yet exercised live.
 - Kotlin side compiles for Apple as of 2026-10-31 (`989ba1b`): the seven Linux-written commits
   touching `iosMain` since the last Mac session type-check and the Xcode simulator app links;
   none has been exercised on a simulator yet

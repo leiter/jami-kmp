@@ -18,7 +18,7 @@ The jami-kmp daemon bridge (`DaemonBridge.android.kt`) implements only 50% of th
 
 ---
 
-### F2: 14 configuration signals never forwarded — gap — **PARTLY DONE (2026-10-04): Android wired except certificate signals and audioMeter; iOS/macOS pending**
+### F2: 14 configuration signals never forwarded — gap — **PARTLY DONE (2026-10-04): Android wired except certificate signals and audioMeter; iOS/macOS pending** — **iOS wired 2026-11-11** (`VolumeChanged`, `Error`, `StunStatusFailed`, hardware de/encoding, `MessageSend`, `AudioMeter`; certificate signals were already there; `historyChanged` does not exist in this daemon's headers)
 **Evidence:**
 - `configurationmanager.i` declares `volumeChanged`, `historyChanged`, `stunStatusFailure`, `activeCallsChanged`, `errorAlert`, `getHardwareAudioFormat`, `hardwareDecodingChanged`, `hardwareEncodingChanged`, `audioMeter`, `messageSend`, and certificate-related signals (`certificatePinned`, `certificatePathPinned`, `certificateExpired`, `certificateStateChanged`)
 - `DaemonBridge.createConfigurationCallback()` implements none of these (only 21 of 37 signals)

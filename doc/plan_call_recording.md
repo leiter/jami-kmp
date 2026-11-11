@@ -218,6 +218,8 @@ key, so follow the existing `content_desc_*` convention used by the sibling call
 
 ## iOS / macOS follow-up (deferred — requires native rebuild)
 
+**Done for iOS 2026-11-11** (wrapper batch, `doc/apple-bridge-rebuild.md`). macOS still stubbed.
+
 To activate recording on iOS/macOS, the ObjC++ bridge must expose the daemon calls and the
 state signal, then `libJamiBridge.a` must be rebuilt (cannot be done in this environment):
 

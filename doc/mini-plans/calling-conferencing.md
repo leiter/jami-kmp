@@ -216,7 +216,7 @@ the `isOurConferenceDial` branch never decided anything. The guard is unit-teste
 on this daemon RINGING is never the first state for an outgoing call, so do not treat it as
 load-bearing without a case where it is. See `two-device-verification-2026-10-29.md`.
 
-**Not on Apple:** not in `JamiBridgeWrapper.h`; added to `apple-bridge-rebuild.md`.
+**Not on Apple:** not in `JamiBridgeWrapper.h`; added to `apple-bridge-rebuild.md`. *iOS wired 2026-11-11.*
 
 ---
 

@@ -341,11 +341,8 @@ keeps names and photos off notifications. iOS and Android compile; no Swift or r
 
 ## Not new, still open
 
-- The wrapper rebuild batch in `doc/apple-bridge-rebuild.md` (seven items: connectivity, call
-  recording, status note `publish`, `sendFile` parent, audio meter, moderator,
-  `createConfFromParticipantList`).
-- Notifications plan F2: 14 config signals missing in `DaemonBridge.ios.kt`. Android is complete;
-  iOS waits on the same rebuild.
+- ~~The wrapper rebuild batch~~ and ~~notifications plan F2 on iOS~~ — **landed 2026-11-11**; see
+  the status block at the top of `doc/apple-bridge-rebuild.md`.
 
 ## Needs no iOS work
 

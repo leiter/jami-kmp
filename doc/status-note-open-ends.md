@@ -98,6 +98,9 @@ somebody adds to that state; a `copy()` would be the safer shape.
 
 Neither Apple target can send or receive a status note.
 
+- **Resolved for iOS 2026-11-11:** the wrapper exposes `publishPresence:status:note:` and
+  `onNewBuddyNotification:buddyUri:status:lineStatus:`, both wired in `DaemonBridge.ios.kt`
+  (macOS still stubbed). The two points below are the original finding.
 - **`publish` is not in `JamiBridgeWrapper.h`.** The iOS and macOS actuals log and drop the call.
   It joins `connectivityChanged` and `setDefaultModerator` in waiting for a wrapper regeneration
   and a `build-jamibridge.sh` rebuild on a Mac — see `apple-bridge-rebuild.md`.
