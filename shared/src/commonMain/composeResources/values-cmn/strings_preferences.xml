@@ -46,7 +46,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="connectivity_local_node_title">本地DHT节点</string>
     <string name="connectivity_local_node_description">使用本地DHT节点与其他Jami设备和联系人连接。</string>
     <string name="connectivity_unified_push_description">使用自定义UnifiedPush服务器接收推送通知。</string>
-    <string name="connectivity_custom_title">自訂</string>
+    <string name="connectivity_custom_title">自定义</string>
     <string name="connectivity_custom_description">当前未使用任何可用的配置预设。</string>
     <string name="pref_enable_extensions_title">启用扩展</string>
     <string name="pref_enable_extensions_summary">启用扩展并设置其参数</string>

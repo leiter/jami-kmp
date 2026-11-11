@@ -47,7 +47,14 @@ pushed, not merged) from the git history since 2026-10-31, `doc/ios-task-queue-2
    folders (mostly upstream rewordings, e.g. `action_call_hangup` now "End call"); 93 kept
    (German and aliased keys are never updated). Upstream's `values-zh` mixes in Traditional
    strings; the one update that would have put one into our Simplified folder was replaced by
-   the `zh-rCN` text. Not run: `--new-locales` (8 folders only Android has).
+   the `zh-rCN` text. The script now checks Chinese script itself (see below). Not run:
+   `--new-locales` (8 folders only Android has).
+   **Chinese script check (2026-11-11):** each Chinese folder has an expected script (Simplified:
+   `zh`, `zh-rCN`, `cmn`, `nan`, `hak`; Traditional: `zh-rTW`, `zh-rHK`); a wrong-script import
+   is replaced by the same key from a right-script sibling folder. Its first `--update` run
+   repaired 301 used strings — `zh-rHK` had been mostly Simplified (upstream's own `zh-rHK` is
+   ~70% Simplified), and `zh`/`cmn`/`nan`/`hak` carried stray Traditional strings. No used
+   string is left in the wrong script.
 4. ~~**Small UI bugs**~~ — **fixed 2026-11-11**: the empty-state title and hint are centred
    (`textAlign`), and `filter_all` / `filter_unread` / `filter_groups` have German. Checked on
    the simulator in German.

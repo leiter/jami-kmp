@@ -21,8 +21,8 @@ default catalogue still carries a few hundred imported keys no screen uses, and 
 those only bloats the files. --all-keys lifts that.
 
 By default it only *adds* translations that are missing. --update also refreshes existing
-translations that differ from Android's — never in values-de*/ (hand-curated) and never for an
-aliased key. --new-locales creates locale folders Android has and KMP does not; run
+translations that differ from Android's — never in values-de*/ (hand-curated), and for an
+aliased key only to replace a string in the wrong Chinese script. --new-locales creates locale folders Android has and KMP does not; run
 scripts/generate_shipped_locales.py afterwards.
 
 Usage:
@@ -44,6 +44,12 @@ Conversion — Compose's resource build step unescapes only \\n, \\t, \\uXXXX an
   * whitespace runs collapse to one space, as AAPT does.
 A translation is skipped, and counted, if it is empty, uses CDATA or markup the English does not,
 or does not carry exactly the English string's format arguments.
+
+Chinese script: each Chinese-language folder has an expected script (CHINESE_SCRIPT below).
+Upstream mixes them — Android's values-zh carries ~70 Traditional strings, zh-rHK is mostly
+Simplified — so a translation whose script is detectably the other one is replaced by the same
+key from a sibling folder of the right script (zh-rCN / zh / cmn, or zh-rTW / zh-rHK), and
+skipped if no sibling has one. A string with no telling character is accepted as it is.
 
 Locale folders: only values-ll and values-ll-rRR (the forms Compose's qualifier parser accepts).
 Android's values-b+zh+Hans style folders are skipped; Android also ships complete zh-rCN /
@@ -68,6 +74,47 @@ LOCALE_DIR = re.compile(r'^values-[a-z]{2,3}(-r[A-Z]{2})?$')
 ELEMENT = re.compile(r'<(string|plurals)\s+name="([^"]+)"([^>]*)>(.*?)</\1>', re.S)
 ITEM = re.compile(r'<item\s+quantity="([^"]+)"\s*>(.*?)</item>', re.S)
 FORMAT = re.compile(r'%(?:(\d+)\$)?([sd])')
+
+# Expected script per Chinese-language folder. nan and hak follow upstream's content, which is
+# Simplified Mandarin, rather than those languages' customary Traditional script.
+CHINESE_SCRIPT = {
+    'values-zh': 'Simplified', 'values-zh-rCN': 'Simplified', 'values-cmn': 'Simplified',
+    'values-nan': 'Simplified', 'values-hak': 'Simplified',
+    'values-zh-rTW': 'Traditional', 'values-zh-rHK': 'Traditional',
+}
+SCRIPT_SIBLINGS = {
+    'Simplified': ['values-zh-rCN', 'values-zh', 'values-cmn'],
+    'Traditional': ['values-zh-rTW', 'values-zh-rHK'],
+}
+
+# Simplified/Traditional character pairs in which *each* character belongs to one script only.
+# Characters that are valid in both scripts in some word are left out on purpose — 后 干 里 台
+# 只 余 系 制 范 松 谷 丑 冲 面 发 复(複) 才 表 云 准 几 志 历 于 合 斗 尽 当 卷 采 布 划 回 价 叶 致
+# 周 朴 征 适 签 — they made an earlier, looser check misread Traditional text as Simplified.
+# Validated 2026-11-11 against jami-client-android f36fae6: flags 1 of 1039 zh-rCN strings and
+# 5 of 1039 zh-rTW strings, every one of them genuinely in the wrong script; ~78% of strings
+# contain a telling character.
+_PAIRS = ('们們 这這 个個 设設 说說 时時 国國 来來 对對 关關 会會 经經 过過 还還 电電 话話 联聯 络絡 '
+          '录錄 网網 应應 选選 择擇 开開 启啟 连連 该該 删刪 挂掛 断斷 结結 视視 频頻 语語 请請 检檢 '
+          '确確 认認 帐帳 号號 账賬 户戶 装裝 链鏈 将將 导導 备備 线線 处處 绪緒 码碼 扫掃 题題 输輸 '
+          '错錯 误誤 证證 据據 项項 无無 动動 态態 级級 么麼 让讓 资資 讯訊 区區 显顯 为為 与與 '
+          '图圖 档檔 载載 传傳 实實 现現 务務 间間 问問 门門 见見 观觀 览覽 页頁 听聽 声聲 响響 '
+          '静靜 机機 钮鈕 键鍵 锁鎖 气氣 场場 状狀 习習 书書 读讀 写寫 记記 论論 谈談 讨討 许許 '
+          '访訪 识識 测測 试試 验驗 预預 计計 订訂 阅閱 杂雜 总總 数數 储儲 转轉 换換 变變 侦偵 '
+          '隐隱 协協 议議 组組 织織 员員 届屆 汇匯 层層 归歸').split()
+SIMPLIFIED_ONLY = frozenset(p[0] for p in _PAIRS)
+TRADITIONAL_ONLY = frozenset(p[1] for p in _PAIRS)
+assert not SIMPLIFIED_ONLY & TRADITIONAL_ONLY
+
+
+def chinese_script(text: str) -> str | None:
+    """'Simplified', 'Traditional', or None when the text does not tell."""
+    s = sum(c in SIMPLIFIED_ONLY for c in text)
+    t = sum(c in TRADITIONAL_ONLY for c in text)
+    if s == t:
+        return None
+    return 'Simplified' if s > t else 'Traditional'
+
 
 NEW_FILE = '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n</resources>\n'
 
@@ -270,6 +317,28 @@ def main() -> int:
           f'; taking translations for {len(source)} '
           f'({sum(1 for k in source if k in aliases)} via aliases)')
 
+    android_cache: dict[str, dict[str, Entry]] = {}
+
+    def android_folder(name: str) -> dict[str, Entry]:
+        if name not in android_cache:
+            android_cache[name] = read_folder(android_res / name)
+        return android_cache[name]
+
+    def right_script(folder: str, android_key: str, english: Entry,
+                     converted: str) -> tuple[str | None, str | None]:
+        """(text to use, sibling it came from) — or (None, None) if none is in the right script."""
+        want = CHINESE_SCRIPT.get(folder)
+        if want is None or chinese_script(converted) in (None, want):
+            return converted, None
+        for sibling in SCRIPT_SIBLINGS[want]:
+            if sibling == folder or android_key not in android_folder(sibling):
+                continue
+            alt = convert(android_folder(sibling)[android_key])
+            if alt is not None and not acceptable(alt, convert(english)) \
+                    and chinese_script(alt) in (None, want):
+                return alt, sibling
+        return None, None
+
     totals = collections.Counter()
     skipped = collections.Counter()
     skipped_detail: list[str] = []
@@ -282,7 +351,7 @@ def main() -> int:
                 totals['folders only Android has (skipped)'] += 1
                 continue
             new_folders.append(a_dir.name)
-        android_loc = read_folder(a_dir)
+        android_loc = android_folder(a_dir.name)
         kmp_loc = read_folder(k_dir) if k_dir.is_dir() else {}
         adds: dict[str, list[str]] = collections.defaultdict(list)
         updates: dict[str, dict[str, tuple[str, str]]] = collections.defaultdict(dict)
@@ -293,6 +362,14 @@ def main() -> int:
             english = kmp_en[key]
             converted = convert(android_loc[android_key])
             reason = 'markup or CDATA' if converted is None else acceptable(converted, convert(english))
+            if not reason:
+                text, sibling = right_script(a_dir.name, android_key, english, converted)
+                if text is None:
+                    reason = 'wrong Chinese script'
+                elif sibling:
+                    totals['Chinese: taken from a sibling folder'] += 1
+                    skipped_detail.append(f'{a_dir.name}/{key}: wrong script, used {sibling}')
+                    converted = text
             if reason:
                 skipped[reason] += 1
                 skipped_detail.append(f'{a_dir.name}/{key}: {reason}')
@@ -302,7 +379,13 @@ def main() -> int:
                 adds[english.file].append(element(english.kind, key, converted))
                 totals['added'] += 1
             elif convert(existing) != converted:
-                if args.update and a_dir.name not in PROTECTED and key not in aliases:
+                want = CHINESE_SCRIPT.get(a_dir.name)
+                # Repairing the script is always worth it, even for an aliased key.
+                repairs_script = want is not None \
+                    and chinese_script(existing.body) not in (None, want) \
+                    and chinese_script(converted) in (None, want)
+                if args.update and a_dir.name not in PROTECTED \
+                        and (key not in aliases or repairs_script):
                     updates[existing.file][key] = (english.kind, converted)
                     totals['updated'] += 1
                 else:
@@ -318,7 +401,8 @@ def main() -> int:
                       f' ~{sum(len(v) for v in updates.values())}')
 
     print('\n' + ('Would change' if args.dry_run else 'Changed') + ':')
-    for label in ('added', 'updated', 'differ, kept', 'folders changed',
+    for label in ('added', 'updated', 'differ, kept', 'Chinese: taken from a sibling folder',
+                  'folders changed',
                   'folders only Android has (skipped)'):
         if totals[label]:
             print(f'  {label}: {totals[label]}')
@@ -333,6 +417,21 @@ def main() -> int:
         print(f'\nKeys whose English no longer matches their Android source ({len(drift)}):')
         for line in drift:
             print(f'  {line}')
+    misplaced = []
+    for folder, want in CHINESE_SCRIPT.items():
+        if (KMP_RES / folder).is_dir():
+            for key, entry in read_folder(KMP_RES / folder).items():
+                if used is not None and key not in used:
+                    continue
+                if chinese_script(entry.body) not in (None, want):
+                    misplaced.append(f'{folder}/{key}')
+    if misplaced:
+        print(f'\nUsed strings in the catalogue in the wrong Chinese script: {len(misplaced)} '
+              '(no right-script source to replace them; -v lists them)' if not args.dry_run else
+              f'\nUsed strings currently in the wrong Chinese script: {len(misplaced)} (-v lists them)')
+        if args.verbose:
+            for line in misplaced:
+                print(f'    {line}')
     if new_folders:
         print('\nNew locale folders:', ', '.join(new_folders))
         print('Run scripts/generate_shipped_locales.py to put them in the language picker.')

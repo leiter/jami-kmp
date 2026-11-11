@@ -61,7 +61,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_tls_certificate_list_label">证书颁发机构</string>
     <string name="account_tls_certificate_file_label">证书文件</string>
     <string name="account_tls_private_key_file_label">私钥文件</string>
-    <string name="account_tls_password_label">私鑰保護密碼</string>
+    <string name="account_tls_password_label">私钥密码</string>
     <string name="account_tls_method_label">TLS方法</string>
     <string name="account_tls_ciphers_label">TLS加密</string>
     <string name="account_tls_server_name_label">服务器名称</string>
@@ -182,8 +182,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="registered_username">注册用户名</string>
     <string name="register_username">注册公开用户名</string>
     <string name="unknown_error">未知错误。请检查您的网络连接。</string>
-    <string name="account_status_online">上線</string>
-    <string name="account_status_offline">離線</string>
+    <string name="account_status_online">在线</string>
+    <string name="account_status_offline">离线</string>
     <string name="account_device_this_indicator">此设备</string>
     <string name="account_link_device_title">关联新设备</string>
     <string name="account_biometric_setup_title">启用生物特征身份验证</string>
@@ -191,7 +191,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_skip">跳过</string>
     <string name="error_username_invalid">非法用户名</string>
     <string name="account_sip_username">用户名</string>
-    <string name="prompt_choose_username">選擇一個用戶名</string>
+    <string name="prompt_choose_username">选择一个用户名</string>
     <string name="dialog_export_title">导出账户</string>
     <string name="section_linked_devices">关联设备</string>
     <string name="account_rename_device">重命名设备</string>
