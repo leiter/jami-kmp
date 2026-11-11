@@ -240,7 +240,8 @@ peer, **Bluetooth and wired-headset routing**, **call audio surviving background
 To make the §2.1 callbacks verifiable without peers: `StubDaemonBridge.init(callbacks)` now
 retains its callbacks and exposes `fireDaemonEvent { … }` (**done `333795c`, 2026-11-08**), so each
 callback can get a test that fires it and asserts the service reacts. `StubDaemonEventsTest` is the
-pattern; per-callback coverage for the §2.1 signals has not been written yet.
+pattern. Per-callback coverage for the §2.1 signals: `DaemonCallbackRoutingTest` (2026-11-11),
+one test per callback through the production routing layer.
 
 ### 4.1 Defects found on the first Mac build
 

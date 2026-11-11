@@ -67,8 +67,12 @@ pushed, not merged) from the git history since 2026-10-31, `doc/ios-task-queue-2
 5. **Video pipeline** — calls send and render no video. Starts with wrapper work (frame-in,
    `SinkTarget`), then renderer, encoder controls, PiP. Plan: `doc/ios-video-pipeline.md`. **L**,
    needs a device to verify.
-6. **Callback tests via `fireDaemonEvent`** for the 15 signals in `ios_implementation_gap.md` §2.1,
-   runnable as `iosSimulatorArm64Test` without a peer. **S–M.**
+6. ~~**Callback tests via `fireDaemonEvent`**~~ — **done 2026-11-11**:
+   `DaemonCallbackRoutingTest`, 15 tests for the 14 §2.1 callbacks (revocation has a success and
+   a failure case), through the production `DaemonCallbacksImpl` on `iosSimulatorArm64Test`.
+   Checked by sabotage: blanking three routes failed exactly those three tests. Not covered:
+   the Obj-C++ registration itself (needs the native daemon) and the two video-decoding
+   signals, which go to `HardwareService`. Item 5 (video) was skipped for now (Marco).
 7. **Simulator walk of shared work never run on iOS:** read markers, @mentions, inline Markdown,
    emoji fonts, SQLDelight settings/drafts, presence suspend/resume. No code change expected. **S.**
 
