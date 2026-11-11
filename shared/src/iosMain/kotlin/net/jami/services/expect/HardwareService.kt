@@ -187,6 +187,12 @@ actual class HardwareService : KoinComponent {
      *
      * Always turned off again at the end of a call: monitoring left on blanks the screen
      * whenever anything comes near the phone, which looks like a dead device.
+     *
+     * The UIKit call goes to the main thread. Callers are not on it: CallViewModel reaches
+     * [updateAudioState] from a `Dispatchers.Default` coroutine, and UIKit kills the app with
+     * EXC_BREAKPOINT in `-[FBSMainRunLoopSerialQueue assertBarrierOnQueue]` when the setting
+     * changes anywhere else. That crashed every call the moment it connected (TestFlight
+     * builds 36 and 37, crash report "Beim anrufen", 2026-11-11).
      */
     private fun updateProximityMonitoring(isAudioOnly: Boolean) {
         val wanted = ProximityPolicy.shouldBlankScreen(
@@ -194,7 +200,10 @@ actual class HardwareService : KoinComponent {
             onSpeaker = speakerphoneOn,
             settingEnabled = settingsRepository.callSettings.value.proximityEnabled,
         )
-        UIDevice.currentDevice.setProximityMonitoringEnabled(wanted)
+        // Always queued, even from the main thread, so on/off requests apply in call order.
+        platform.darwin.dispatch_async(dispatch_get_main_queue()) {
+            UIDevice.currentDevice.setProximityMonitoringEnabled(wanted)
+        }
     }
 
     private fun activateAudioSession() {
