@@ -1087,7 +1087,8 @@ code compiled against the macOS SDK (long-standing, dates to `93df547a`).
   daemon's dependency set changes; three of the five first-build failures were exactly this
   (`http_parser` dropped, `vpx` absent on the simulator, `yrs` added). `scripts/make_sim_links.py`
   already does the simulator side by discovery.
-- [ ] **Let `StubDaemonBridge` retain its callbacks.** `init(callbacks)` discards them, so none of
+- [x] **Let `StubDaemonBridge` retain its callbacks.** *(Done `333795c`, 2026-11-08: the stub keeps
+  them and exposes `fireDaemonEvent { … }`; `StubDaemonEventsTest` is the pattern.)* `init(callbacks)` discarded them, so none of
   the 15 daemon callbacks added to the iOS bridge can be tested without a live peer. Retaining
   them makes each one testable single-app, on JVM and iOS both.
 - [ ] **iOS connectivity never reaches the daemon** — `NWPathMonitor` feeds
@@ -1100,7 +1101,7 @@ code compiled against the macOS SDK (long-standing, dates to `93df547a`).
   substantively identical, and macOS does not compile (~95 errors). One copy would fix both.
   Start from `origin/macos-build-and-apple-source-set` (`f0f66ce`, 2026-10-01) rather than from
   scratch; it predates the nine wrapper commits and needs rebasing onto `main` first
-  (70 commits behind as of 2026-10-31).
+  (70 commits behind as of 2026-10-31; 149 behind `ios-catch-up-2026-11` on 2026-11-11).
 
 ### Open iOS tasks — consolidated 2026-10-31
 
@@ -1132,7 +1133,7 @@ checkbox are referenced, not repeated.
 
 **Build hygiene**
 - [ ] Script the device-side symlinks (item above)
-- [ ] `StubDaemonBridge` retains callbacks (item above)
+- [x] `StubDaemonBridge` retains callbacks (item above) — done `333795c`
 
 **Feature gaps**
 - [x] Cherry-picked `8baaf0f` (stop the per-frame NV12 copy into a no-op) and `4a2dcad` from

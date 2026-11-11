@@ -46,7 +46,9 @@ now on a Mac, so T0 is possible and comes first.
    path itself needs a video call to exercise.
 4. **KMP-only strings are translated into German only** (`placeholder_search`,
    `home_no_conversation_*`, `action_new_conversation`, `filter_*`, …) — every other language
-   shows an English home screen (T5).
+   shows an English home screen (T5). *Measured 2026-11-11:* `values-de` has **87** keys that
+   `values-fr` (and the other big locales, 838 keys each) lack — onboarding, account, and ~20
+   `content_desc_*` accessibility labels, not only the home screen. `values/` has 1296 keys.
 5. **Device checks owed** (one iPhone session): CallKit tone on a locked phone and a silent
    quiet-hours call (T1); caller name, and "Jami" + no Recents with names hidden (T2); sender
    photos and group style (T3); quick actions cold and warm (T4); Accept from the lock screen with

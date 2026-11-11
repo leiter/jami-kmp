@@ -237,9 +237,10 @@ calls need entitlements a test binary does not have), the **reactions marshallin
 peer, **Bluetooth and wired-headset routing**, **call audio surviving backgrounding**, and
 **screen-recording blocking**. These ship on code review.
 
-To make the §2.1 callbacks verifiable without peers: `StubDaemonBridge.init(callbacks)`
-(`DaemonBridge.kt:976`) still discards its callbacks. Have it retain them, and each callback gets
-a test that fires it and asserts the service reacts. **Not yet done.**
+To make the §2.1 callbacks verifiable without peers: `StubDaemonBridge.init(callbacks)` now
+retains its callbacks and exposes `fireDaemonEvent { … }` (**done `333795c`, 2026-11-08**), so each
+callback can get a test that fires it and asserts the service reacts. `StubDaemonEventsTest` is the
+pattern; per-callback coverage for the §2.1 signals has not been written yet.
 
 ### 4.1 Defects found on the first Mac build
 
