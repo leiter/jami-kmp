@@ -52,8 +52,17 @@ pushed, not merged) from the git history since 2026-10-31, `doc/ios-task-queue-2
    speakers; terms follow each locale's existing catalogue (e.g. 主持人 / モデレータ for moderator).
    Each of these locales and German now has every used key; regional variants (fr-rCA, es-rMX,
    …) fall back to them. `placeholder_archive_path` is now `translatable="false"`.
-   **Still open:** the other ~50 base locales (Arabic, Turkish, Czech, Swedish, Korean, …) show
-   these ~300 strings in English. `--update` was run the same day: 404 existing translations refreshed in 79
+   **Second round done (2026-11-11):** the same ~300 keys, machine-quality and unreviewed, in
+   sv, da, nb, nn, fi, et, cs-rCZ, sk, ro, hu, el, bg, hr, sr (Latin, matching the existing
+   folder), sl, lt, tr, ar, he, fa, ca, gl, eu, eo, ko, vi, th, id, hi, bn, ta, te, ml, kn, mr,
+   gu, pa, ne, be, kk, hy, mn-rMN, sq-rAL, sw, ga, oc, ast-rES; `zh` copied into cmn, hak, nan
+   (commits `4fe7493`…`5cbf0d0`). Kannada uses ಮಾಡರೇಟರ್ for moderator — upstream's ಸಂರಚಕ means
+   "configurator"; upstream's Belarusian "mute" and Mongolian "settings" are also wrong and were
+   not followed. **Deliberately skipped, still English:** ace, kbd, ig, kab, tt, si (too little
+   confidence in a machine translation); `ms` (upstream `values-ms` is about two-thirds
+   Malayalam script); `az` (upstream `values-az` is Perso-Arabic South Azerbaijani, near-identical
+   to `az-rIR`, mixed with Latin — the folder needs sorting out before adding to it). `ru-rRU` and
+   `ro-rRO` fall back to their base folders. `--update` was run the same day: 404 existing translations refreshed in 79
    folders (mostly upstream rewordings, e.g. `action_call_hangup` now "End call"); 93 kept
    (German and aliased keys are never updated). Upstream's `values-zh` mixes in Traditional
    strings; the one update that would have put one into our Simplified folder was replaced by
