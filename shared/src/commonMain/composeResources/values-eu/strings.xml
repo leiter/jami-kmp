@@ -336,6 +336,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">“%1$s” kontaktua Jami komunikazio-plataforma banatuan gehi dezakezu: %2$s</string>
     <string name="debug_dump_daemon_state">Idatzi atzeko zerbitzuaren egoera erregistroan</string>
     <string name="debug_restart_daemon">Berrabiarazi atzeko zerbitzua</string>
+    <string name="debug_clear_logs">Garbitu erregistroak</string>
     <string name="screen_title_recordings">Dei-grabazioak</string>
     <string name="recordings_empty">Oraindik ez dago dei-grabaziorik.</string>
     <string name="recordings_delete_title">Grabazioa ezabatu?</string>

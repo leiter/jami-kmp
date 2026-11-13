@@ -336,6 +336,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">คุณสามารถเพิ่มผู้ติดต่อ “%1$s” นี้บนแพลตฟอร์มการสื่อสารแบบกระจาย Jami ได้: %2$s</string>
     <string name="debug_dump_daemon_state">เขียนสถานะของบริการเบื้องหลังลงในบันทึก</string>
     <string name="debug_restart_daemon">เริ่มบริการเบื้องหลังใหม่</string>
+    <string name="debug_clear_logs">ล้างบันทึก</string>
     <string name="screen_title_recordings">การบันทึกการโทร</string>
     <string name="recordings_empty">ยังไม่มีการบันทึกการโทร</string>
     <string name="recordings_delete_title">ลบการบันทึกไหม</string>

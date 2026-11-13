@@ -326,6 +326,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Podètz apondre aqueste contacte « %1$s » sus Jami, la plataforma de comunicacion descentralizada : %2$s</string>
     <string name="debug_dump_daemon_state">Escriure l’estat del demon dins lo jornal</string>
     <string name="debug_restart_daemon">Reaviar lo demon</string>
+    <string name="debug_clear_logs">Escafar los jornals</string>
     <string name="screen_title_recordings">Enregistraments de sonadas</string>
     <string name="recordings_empty">Cap d’enregistrament de sonada pel moment.</string>
     <string name="recordings_delete_title">Suprimir l’enregistrament ?</string>

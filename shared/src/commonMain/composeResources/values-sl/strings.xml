@@ -520,6 +520,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Ta stik »%1$s« lahko dodate na porazdeljeni platformi za komunikacijo Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Zapiši stanje demona v dnevnik</string>
     <string name="debug_restart_daemon">Znova zaženi demona</string>
+    <string name="debug_clear_logs">Počisti dnevnike</string>
     <string name="screen_title_recordings">Posnetki klicev</string>
     <string name="recordings_empty">Še ni posnetkov klicev.</string>
     <string name="recordings_delete_title">Želite izbrisati posnetek?</string>

@@ -325,6 +325,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">विकेन्द्रीकृत सञ्चार प्लेटफर्म Jami मा यो सम्पर्क “%1$s” थप्न सक्नुहुन्छ: %2$s</string>
     <string name="debug_dump_daemon_state">डेमनको अवस्था लगमा लेख्नुहोस्</string>
     <string name="debug_restart_daemon">डेमन पुनः सुरु गर्नुहोस्</string>
+    <string name="debug_clear_logs">लगहरू खाली गर्नुहोस्</string>
     <string name="screen_title_recordings">कल रेकर्डिङहरू</string>
     <string name="recordings_empty">अहिलेसम्म कुनै कल रेकर्डिङ छैन।</string>
     <string name="recordings_delete_title">रेकर्डिङ मेटाउने?</string>

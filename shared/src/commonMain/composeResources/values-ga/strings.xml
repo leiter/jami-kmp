@@ -194,6 +194,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Is féidir leat an teagmháil seo “%1$s” a chur le Jami, an t-ardán cumarsáide díláraithe: %2$s</string>
     <string name="debug_dump_daemon_state">Scríobh staid an deamhain sa loga</string>
     <string name="debug_restart_daemon">Atosaigh an deamhan</string>
+    <string name="debug_clear_logs">Glan na logaí</string>
     <string name="screen_title_recordings">Taifeadtaí glaonna</string>
     <string name="recordings_empty">Níl aon taifeadtaí glaonna fós.</string>
     <string name="recordings_delete_title">An taifeadadh a scriosadh?</string>

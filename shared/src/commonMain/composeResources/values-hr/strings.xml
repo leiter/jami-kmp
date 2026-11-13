@@ -339,6 +339,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Ovaj kontakt „%1$s” možete dodati na distribuiranoj komunikacijskoj platformi Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Zapiši stanje daemona u zapisnik</string>
     <string name="debug_restart_daemon">Ponovno pokreni daemon</string>
+    <string name="debug_clear_logs">Očisti zapisnike</string>
     <string name="screen_title_recordings">Snimke poziva</string>
     <string name="recordings_empty">Još nema snimki poziva.</string>
     <string name="recordings_delete_title">Izbrisati snimku?</string>

@@ -384,6 +384,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">आप इस संपर्क “%1$s” को वितरित संचार प्लेटफ़ॉर्म Jami पर जोड़ सकते हैं: %2$s</string>
     <string name="debug_dump_daemon_state">डेमन की स्थिति लॉग में लिखें</string>
     <string name="debug_restart_daemon">डेमन फिर से शुरू करें</string>
+    <string name="debug_clear_logs">लॉग साफ़ करें</string>
     <string name="screen_title_recordings">कॉल रिकॉर्डिंग</string>
     <string name="recordings_empty">अभी तक कोई कॉल रिकॉर्डिंग नहीं है।</string>
     <string name="recordings_delete_title">रिकॉर्डिंग हटाएँ?</string>

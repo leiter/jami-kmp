@@ -336,6 +336,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Можете да добавите този контакт „%1$s“ в разпределената платформа за комуникация Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Записване на състоянието на демона в дневника</string>
     <string name="debug_restart_daemon">Рестартиране на демона</string>
+    <string name="debug_clear_logs">Изчистване на журналите</string>
     <string name="screen_title_recordings">Записи на разговори</string>
     <string name="recordings_empty">Все още няма записи на разговори.</string>
     <string name="recordings_delete_title">Изтриване на записа?</string>

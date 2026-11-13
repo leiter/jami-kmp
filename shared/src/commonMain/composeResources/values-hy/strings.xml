@@ -336,6 +336,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Կարող եք ավելացնել այս «%1$s» կոնտակտը Jami-ում՝ ապակենտրոնացված հաղորդակցման հարթակում․ %2$s</string>
     <string name="debug_dump_daemon_state">Գրանցել դեմոնի վիճակը մատյանում</string>
     <string name="debug_restart_daemon">Վերագործարկել դեմոնը</string>
+    <string name="debug_clear_logs">Մաքրել մատյանները</string>
     <string name="screen_title_recordings">Զանգերի ձայնագրություններ</string>
     <string name="recordings_empty">Զանգերի ձայնագրություններ դեռ չկան։</string>
     <string name="recordings_delete_title">Ջնջե՞լ ձայնագրությունը</string>

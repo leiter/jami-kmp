@@ -396,6 +396,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Tento kontakt „%1$s“ si môžete pridať na distribuovanej komunikačnej platforme Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Zapísať stav démona do denníka</string>
     <string name="debug_restart_daemon">Reštartovať démona</string>
+    <string name="debug_clear_logs">Vymazať záznamy</string>
     <string name="screen_title_recordings">Nahrávky hovorov</string>
     <string name="recordings_empty">Zatiaľ žiadne nahrávky hovorov.</string>
     <string name="recordings_delete_title">Odstrániť nahrávku?</string>

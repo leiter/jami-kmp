@@ -349,6 +349,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">பரவலாக்கப்பட்ட தொடர்புத் தளமான Jami-இல் இந்தத் தொடர்பு “%1$s”-ஐச் சேர்க்கலாம்: %2$s</string>
     <string name="debug_dump_daemon_state">டீமனின் நிலையைப் பதிவில் எழுது</string>
     <string name="debug_restart_daemon">டீமனை மீண்டும் தொடங்கு</string>
+    <string name="debug_clear_logs">பதிவுகளை அழி</string>
     <string name="screen_title_recordings">அழைப்புப் பதிவுகள்</string>
     <string name="recordings_empty">இன்னும் அழைப்புப் பதிவுகள் இல்லை.</string>
     <string name="recordings_delete_title">பதிவை நீக்கவா?</string>

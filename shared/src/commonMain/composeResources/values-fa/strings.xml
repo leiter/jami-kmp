@@ -373,6 +373,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">می‌توانید این مخاطب «%1$s» را در بستر ارتباطی توزیع‌شدهٔ Jami اضافه کنید: %2$s</string>
     <string name="debug_dump_daemon_state">نوشتن وضعیت سرویس پس‌زمینه در گزارش</string>
     <string name="debug_restart_daemon">راه‌اندازی دوبارهٔ سرویس پس‌زمینه</string>
+    <string name="debug_clear_logs">پاک کردن گزارش‌ها</string>
     <string name="screen_title_recordings">ضبط تماس‌ها</string>
     <string name="recordings_empty">هنوز ضبط تماسی وجود ندارد.</string>
     <string name="recordings_delete_title">ضبط حذف شود؟</string>

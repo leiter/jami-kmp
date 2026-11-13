@@ -508,6 +508,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Ви можете додати цей контакт «%1$s» на розподіленій платформі спілкування Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Записати стан демона в журнал</string>
     <string name="debug_restart_daemon">Перезапустити демон</string>
+    <string name="debug_clear_logs">Очистити журнали</string>
     <string name="screen_title_recordings">Записи дзвінків</string>
     <string name="recordings_empty">Записів дзвінків ще немає.</string>
     <string name="recordings_delete_title">Видалити запис?</string>

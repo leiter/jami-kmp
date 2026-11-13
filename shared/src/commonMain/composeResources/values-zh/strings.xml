@@ -523,6 +523,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">你可以在分布式通信平台 Jami 上添加此联系人“%1$s”：%2$s</string>
     <string name="debug_dump_daemon_state">将守护进程状态写入日志</string>
     <string name="debug_restart_daemon">重启守护进程</string>
+    <string name="debug_clear_logs">清除日志</string>
     <string name="screen_title_recordings">通话录音</string>
     <string name="recordings_empty">还没有通话录音。</string>
     <string name="recordings_delete_title">删除录音？</string>

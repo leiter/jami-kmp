@@ -44,6 +44,15 @@ internal object AppLogBuffer {
         }
     }
 
+    fun clear() {
+        lock.lock()
+        try {
+            lines.clear()
+        } finally {
+            lock.unlock()
+        }
+    }
+
     fun recent(maxLines: Int): String {
         lock.lock()
         try {

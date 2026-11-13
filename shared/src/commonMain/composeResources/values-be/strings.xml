@@ -195,6 +195,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Вы можаце дадаць гэты кантакт «%1$s» у Jami, дэцэнтралізаванай платформе зносін: %2$s</string>
     <string name="debug_dump_daemon_state">Запісаць стан дэмана ў журнал</string>
     <string name="debug_restart_daemon">Перазапусціць дэман</string>
+    <string name="debug_clear_logs">Ачысціць журналы</string>
     <string name="screen_title_recordings">Запісы выклікаў</string>
     <string name="recordings_empty">Запісаў выклікаў пакуль няма.</string>
     <string name="recordings_delete_title">Выдаліць запіс?</string>

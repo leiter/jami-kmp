@@ -523,6 +523,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Poți adăuga acest contact „%1$s” pe platforma de comunicare distribuită Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Scrie starea daemonului în jurnal</string>
     <string name="debug_restart_daemon">Repornește daemonul</string>
+    <string name="debug_clear_logs">Șterge jurnalele</string>
     <string name="screen_title_recordings">Înregistrări de apeluri</string>
     <string name="recordings_empty">Nu există încă înregistrări de apeluri.</string>
     <string name="recordings_delete_title">Ștergi înregistrarea?</string>

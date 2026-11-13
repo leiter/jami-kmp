@@ -510,6 +510,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Вы можете добавить этот контакт «%1$s» на распределённой платформе общения Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Записать состояние демона в журнал</string>
     <string name="debug_restart_daemon">Перезапустить демон</string>
+    <string name="debug_clear_logs">Очистить журналы</string>
     <string name="screen_title_recordings">Записи звонков</string>
     <string name="recordings_empty">Записей звонков пока нет.</string>
     <string name="recordings_delete_title">Удалить запись?</string>

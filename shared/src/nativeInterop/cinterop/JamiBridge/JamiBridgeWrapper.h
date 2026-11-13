@@ -982,6 +982,11 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 
 - (NSString *)captureRecentLogs:(int)maxLines;
 
+/// Empties the log: truncates the current native log file (on its write queue, so no line is
+/// half-written), deletes the older ones and the saved crash report (jami_last_crash.txt).
+/// Blocks until done.
+- (void)clearLogs;
+
 @end
 
 NS_ASSUME_NONNULL_END

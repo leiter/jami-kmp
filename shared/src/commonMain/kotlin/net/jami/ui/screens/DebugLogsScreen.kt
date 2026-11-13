@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularProgressIndicator
@@ -91,6 +92,12 @@ fun DebugLogsScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { viewModel.clearLogs() }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = stringResource(Res.string.debug_clear_logs),
+                        )
+                    }
                     IconButton(
                         onClick = { shareText("Jami debug logs", state.logs) },
                         enabled = state.logs.isNotEmpty(),

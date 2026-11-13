@@ -523,6 +523,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Saad lisada selle kontakti „%1$s” hajutatud suhtlusplatvormil Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Kirjuta deemoni olek logisse</string>
     <string name="debug_restart_daemon">Taaskäivita deemon</string>
+    <string name="debug_clear_logs">Tühjenda logid</string>
     <string name="screen_title_recordings">Kõnesalvestised</string>
     <string name="recordings_empty">Kõnesalvestisi veel pole.</string>
     <string name="recordings_delete_title">Kas kustutada salvestis?</string>

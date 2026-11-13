@@ -406,6 +406,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Je kunt dit contact ‘%1$s’ toevoegen op het gedistribueerde communicatieplatform Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Daemonstatus naar het logboek schrijven</string>
     <string name="debug_restart_daemon">Daemon herstarten</string>
+    <string name="debug_clear_logs">Logboeken wissen</string>
     <string name="screen_title_recordings">Gespreksopnamen</string>
     <string name="recordings_empty">Nog geen gespreksopnamen.</string>
     <string name="recordings_delete_title">Opname verwijderen?</string>

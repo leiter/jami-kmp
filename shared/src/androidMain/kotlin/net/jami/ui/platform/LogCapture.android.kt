@@ -20,3 +20,11 @@ actual fun captureRecentLogs(maxLines: Int): String = try {
 } catch (e: Exception) {
     "Error capturing logs: ${e.message}"
 }
+
+/** Clears the logcat buffer (`logcat -c`); best effort, as the system may refuse it. */
+actual fun clearLogs() {
+    try {
+        Runtime.getRuntime().exec(arrayOf("logcat", "-c")).waitFor()
+    } catch (_: Exception) {
+    }
+}

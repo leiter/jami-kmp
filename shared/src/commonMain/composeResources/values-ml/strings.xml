@@ -458,6 +458,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">വികേന്ദ്രീകൃത ആശയവിനിമയ പ്ലാറ്റ്‌ഫോമായ Jami-യിൽ ഈ കോൺടാക്റ്റ് “%1$s” ചേർക്കാം: %2$s</string>
     <string name="debug_dump_daemon_state">ഡെമണിന്റെ നില ലോഗിൽ എഴുതുക</string>
     <string name="debug_restart_daemon">ഡെമൺ പുനരാരംഭിക്കുക</string>
+    <string name="debug_clear_logs">ലോഗുകൾ മായ്ക്കുക</string>
     <string name="screen_title_recordings">കോൾ റെക്കോർഡിംഗുകൾ</string>
     <string name="recordings_empty">ഇതുവരെ കോൾ റെക്കോർഡിംഗുകളില്ല.</string>
     <string name="recordings_delete_title">റെക്കോർഡിംഗ് ഇല്ലാതാക്കണോ?</string>

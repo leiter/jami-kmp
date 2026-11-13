@@ -306,6 +306,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Bạn có thể thêm liên hệ “%1$s” này trên nền tảng liên lạc phân tán Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Ghi trạng thái dịch vụ nền vào nhật ký</string>
     <string name="debug_restart_daemon">Khởi động lại dịch vụ nền</string>
+    <string name="debug_clear_logs">Xóa nhật ký</string>
     <string name="screen_title_recordings">Bản ghi cuộc gọi</string>
     <string name="recordings_empty">Chưa có bản ghi cuộc gọi nào.</string>
     <string name="recordings_delete_title">Xóa bản ghi?</string>

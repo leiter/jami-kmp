@@ -390,6 +390,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Du kan lägga till kontakten ”%1$s” på den distribuerade kommunikationsplattformen Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Skriv daemonens tillstånd till loggen</string>
     <string name="debug_restart_daemon">Starta om daemonen</string>
+    <string name="debug_clear_logs">Rensa loggar</string>
     <string name="screen_title_recordings">Samtalsinspelningar</string>
     <string name="recordings_empty">Inga samtalsinspelningar än.</string>
     <string name="recordings_delete_title">Ta bort inspelningen?</string>

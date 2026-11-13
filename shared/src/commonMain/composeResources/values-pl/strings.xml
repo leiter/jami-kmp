@@ -509,6 +509,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Możesz dodać ten kontakt „%1$s” na rozproszonej platformie komunikacyjnej Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Zapisz stan demona w dzienniku</string>
     <string name="debug_restart_daemon">Uruchom ponownie demona</string>
+    <string name="debug_clear_logs">Wyczyść dzienniki</string>
     <string name="screen_title_recordings">Nagrania rozmów</string>
     <string name="recordings_empty">Brak nagrań rozmów.</string>
     <string name="recordings_delete_title">Usunąć nagranie?</string>

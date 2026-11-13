@@ -523,6 +523,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Ezt a kapcsolatot („%1$s”) a Jami elosztott kommunikációs platformon veheted fel: %2$s</string>
     <string name="debug_dump_daemon_state">A démon állapotának naplózása</string>
     <string name="debug_restart_daemon">Démon újraindítása</string>
+    <string name="debug_clear_logs">Naplók törlése</string>
     <string name="screen_title_recordings">Hívásfelvételek</string>
     <string name="recordings_empty">Még nincsenek hívásfelvételek.</string>
     <string name="recordings_delete_title">Törlöd a felvételt?</string>

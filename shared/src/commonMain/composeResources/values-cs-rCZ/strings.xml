@@ -442,6 +442,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Tento kontakt „%1$s“ si můžete přidat na distribuované komunikační platformě Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Zapsat stav démona do protokolu</string>
     <string name="debug_restart_daemon">Restartovat démona</string>
+    <string name="debug_clear_logs">Vymazat protokoly</string>
     <string name="screen_title_recordings">Nahrávky hovorů</string>
     <string name="recordings_empty">Zatím žádné nahrávky hovorů.</string>
     <string name="recordings_delete_title">Smazat nahrávku?</string>

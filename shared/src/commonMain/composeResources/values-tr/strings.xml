@@ -407,6 +407,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Bu kişiyi “%1$s” dağıtık iletişim platformu Jami üzerinde ekleyebilirsiniz: %2$s</string>
     <string name="debug_dump_daemon_state">Arka plan hizmetinin durumunu günlüğe yaz</string>
     <string name="debug_restart_daemon">Arka plan hizmetini yeniden başlat</string>
+    <string name="debug_clear_logs">Günlükleri temizle</string>
     <string name="screen_title_recordings">Arama kayıtları</string>
     <string name="recordings_empty">Henüz arama kaydı yok.</string>
     <string name="recordings_delete_title">Kayıt silinsin mi?</string>

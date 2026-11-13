@@ -34,34 +34,58 @@ static NSDateFormatter *g_logDateFormatter = nil;
 static dispatch_queue_t g_logQueue = nil;
 /// Bytes written to the current log file (log queue only); see kMaxLogFileBytes.
 static unsigned long long g_logBytesWritten = 0;
-/// One file per launch used to pile up forever; and with the daemon's own log in it a file can
-/// grow by many megabytes per call. Keep this many files and cap each one.
+/// The file currently written to; kept by clearLogs while the older ones are deleted.
+static NSString *g_logFilePath = nil;
+static NSString *g_logDocumentsPath = nil;
+/// Name of this launch's files and the number of the current one, for rotation.
+static NSString *g_logLaunchStamp = nil;
+static NSUInteger g_logPart = 0;
+/// A rolling log: when the current file reaches kMaxLogFileBytes a new one is started and only
+/// the newest kLogFilesKept are kept, so the log holds the latest ~20 MB across launches.
+/// (It used to be one file per launch emptied at 20 MB, which threw away everything before the
+/// limit, with five such files on disk — up to 100 MB.)
 static const NSUInteger kLogFilesKept = 5;
-static const unsigned long long kMaxLogFileBytes = 20ull * 1024 * 1024;
+static const unsigned long long kMaxLogFileBytes = 4ull * 1024 * 1024;
+
+/// The native log files in `documentsPath`, oldest first. Names sort chronologically:
+/// gettogether_native_<yyyy-MM-dd_HH-mm-ss>[_<part>].log.
+static NSMutableArray<NSString *> *nativeLogFiles(NSString *documentsPath) {
+    NSMutableArray<NSString *> *logs = [NSMutableArray array];
+    for (NSString *file in [[NSFileManager defaultManager] contentsOfDirectoryAtPath:documentsPath error:nil]) {
+        if ([file hasPrefix:@"gettogether_native_"] && [file hasSuffix:@".log"]) [logs addObject:file];
+    }
+    [logs sortUsingSelector:@selector(compare:)];
+    return logs;
+}
 
 /// Deletes all but the newest kLogFilesKept native log files in `documentsPath`.
 static void pruneOldLogFiles(NSString *documentsPath) {
-    NSFileManager *fm = [NSFileManager defaultManager];
-    NSMutableArray<NSString *> *logs = [NSMutableArray array];
-    for (NSString *file in [fm contentsOfDirectoryAtPath:documentsPath error:nil]) {
-        if ([file hasPrefix:@"gettogether_native_"] && [file hasSuffix:@".log"]) [logs addObject:file];
-    }
-    // The timestamp in the name sorts chronologically.
-    [logs sortUsingSelector:@selector(compare:)];
+    NSMutableArray<NSString *> *logs = nativeLogFiles(documentsPath);
     while (logs.count > kLogFilesKept) {
-        [fm removeItemAtPath:[documentsPath stringByAppendingPathComponent:logs.firstObject] error:nil];
+        [[NSFileManager defaultManager] removeItemAtPath:[documentsPath stringByAppendingPathComponent:logs.firstObject] error:nil];
         [logs removeObjectAtIndex:0];
     }
 }
 
-/// Appends on the log queue; truncates the file instead of letting it grow past the cap.
+/// Starts the next file of this launch and makes it the current one.
+static void openNextLogFile() {
+    NSString *name = g_logPart == 0
+        ? [NSString stringWithFormat:@"gettogether_native_%@.log", g_logLaunchStamp]
+        : [NSString stringWithFormat:@"gettogether_native_%@_%03lu.log", g_logLaunchStamp, (unsigned long)g_logPart];
+    g_logPart++;
+    NSString *path = [g_logDocumentsPath stringByAppendingPathComponent:name];
+    [[NSFileManager defaultManager] createFileAtPath:path contents:nil attributes:nil];
+    [g_logFileHandle closeFile];
+    g_logFileHandle = [NSFileHandle fileHandleForWritingAtPath:path];
+    g_logFilePath = path;
+    g_logBytesWritten = 0;
+    pruneOldLogFiles(g_logDocumentsPath);
+}
+
+/// Appends on the log queue; rolls over to a new file at the size limit.
 static void appendToLogFile(NSData *data) {
-    if (g_logBytesWritten + data.length > kMaxLogFileBytes) {
-        [g_logFileHandle truncateFileAtOffset:0];
-        g_logBytesWritten = 0;
-        NSData *marker = [@"[log truncated at size limit]\n" dataUsingEncoding:NSUTF8StringEncoding];
-        [g_logFileHandle writeData:marker];
-        g_logBytesWritten += marker.length;
+    if (g_logBytesWritten > 0 && g_logBytesWritten + data.length > kMaxLogFileBytes) {
+        openNextLogFile();
     }
     [g_logFileHandle writeData:data];
     g_logBytesWritten += data.length;
@@ -81,12 +105,10 @@ static void initFileLogger() {
         timestampFormatter.dateFormat = @"yyyy-MM-dd_HH-mm-ss";
         NSString *timestamp = [timestampFormatter stringFromDate:[NSDate date]];
 
-        NSString *fileName = [NSString stringWithFormat:@"gettogether_native_%@.log", timestamp];
-        NSString *logFilePath = [documentsPath stringByAppendingPathComponent:fileName];
-
-        [[NSFileManager defaultManager] createFileAtPath:logFilePath contents:nil attributes:nil];
-        pruneOldLogFiles(documentsPath);
-        g_logFileHandle = [NSFileHandle fileHandleForWritingAtPath:logFilePath];
+        g_logDocumentsPath = documentsPath;
+        g_logLaunchStamp = timestamp;
+        openNextLogFile();
+        NSString *logFilePath = g_logFilePath;
 
         g_logDateFormatter = [[NSDateFormatter alloc] init];
         g_logDateFormatter.dateFormat = @"HH:mm:ss.SSS";
@@ -3262,39 +3284,51 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
     });
 }
 
+- (void)clearLogs {
+    initFileLogger();
+    NSString *documentsPath =
+        NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+    if (!documentsPath || !g_logQueue) return;
+    dispatch_sync(g_logQueue, ^{
+        NSFileManager *fm = [NSFileManager defaultManager];
+        for (NSString *file in [fm contentsOfDirectoryAtPath:documentsPath error:nil]) {
+            NSString *path = [documentsPath stringByAppendingPathComponent:file];
+            BOOL oldLog = [file hasPrefix:@"gettogether_native_"] && [file hasSuffix:@".log"]
+                && ![path isEqualToString:g_logFilePath];
+            if (oldLog || [file isEqualToString:@"jami_last_crash.txt"]) {
+                [fm removeItemAtPath:path error:nil];
+            }
+        }
+        [g_logFileHandle truncateFileAtOffset:0];
+        g_logBytesWritten = 0;
+        NSString *marker = [NSString stringWithFormat:@"[%@] Log cleared\n",
+                                                      [g_logDateFormatter stringFromDate:[NSDate date]]];
+        NSData *data = [marker dataUsingEncoding:NSUTF8StringEncoding];
+        [g_logFileHandle writeData:data];
+        g_logBytesWritten += data.length;
+    });
+}
+
 - (NSString *)captureRecentLogs:(int)maxLines {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsPath = paths.firstObject;
-    if (!documentsPath) return @"";
+    if (!documentsPath || maxLines <= 0) return @"";
 
-    NSError *error = nil;
-    NSArray *files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:documentsPath error:&error];
-    if (!files) return @"";
-
-    // Find the most recent .log file
-    NSString *latestLog = nil;
-    NSDate *latestDate = nil;
-    for (NSString *file in files) {
-        if ([file hasSuffix:@".log"]) {
-            NSString *fullPath = [documentsPath stringByAppendingPathComponent:file];
-            NSDictionary *attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:fullPath error:nil];
-            NSDate *modDate = attrs[NSFileModificationDate];
-            if (!latestDate || [modDate compare:latestDate] == NSOrderedDescending) {
-                latestDate = modDate;
-                latestLog = fullPath;
-            }
-        }
+    // The log rolls over files (see appendToLogFile): take the newest lines, reading back
+    // through older files until maxLines are collected.
+    NSMutableArray<NSString *> *collected = [NSMutableArray array];
+    for (NSString *file in [nativeLogFiles(documentsPath) reverseObjectEnumerator]) {
+        NSString *content = [NSString stringWithContentsOfFile:[documentsPath stringByAppendingPathComponent:file]
+                                                      encoding:NSUTF8StringEncoding error:nil];
+        if (!content) continue;
+        NSMutableArray<NSString *> *lines = [[content componentsSeparatedByString:@"\n"] mutableCopy];
+        if (lines.count > 0 && lines.lastObject.length == 0) [lines removeLastObject];
+        NSUInteger need = (NSUInteger)maxLines - collected.count;
+        NSArray *tail = lines.count > need ? [lines subarrayWithRange:NSMakeRange(lines.count - need, need)] : lines;
+        [collected insertObjects:tail atIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, tail.count)]];
+        if (collected.count >= (NSUInteger)maxLines) break;
     }
-    if (!latestLog) return @"";
-
-    NSString *content = [NSString stringWithContentsOfFile:latestLog encoding:NSUTF8StringEncoding error:nil];
-    if (!content) return @"";
-
-    NSArray<NSString *> *lines = [content componentsSeparatedByString:@"\n"];
-    if ((int)lines.count <= maxLines) return content;
-
-    NSArray *tail = [lines subarrayWithRange:NSMakeRange(lines.count - maxLines, maxLines)];
-    return [tail componentsJoinedByString:@"\n"];
+    return [collected componentsJoinedByString:@"\n"];
 }
 
 @end

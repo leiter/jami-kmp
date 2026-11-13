@@ -337,6 +337,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Anda dapat menambahkan kontak “%1$s” ini di platform komunikasi terdistribusi Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Tulis status daemon ke log</string>
     <string name="debug_restart_daemon">Mulai ulang daemon</string>
+    <string name="debug_clear_logs">Hapus log</string>
     <string name="screen_title_recordings">Rekaman panggilan</string>
     <string name="recordings_empty">Belum ada rekaman panggilan.</string>
     <string name="recordings_delete_title">Hapus rekaman?</string>

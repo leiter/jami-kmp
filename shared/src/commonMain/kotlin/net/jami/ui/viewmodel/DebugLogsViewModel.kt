@@ -107,6 +107,15 @@ class DebugLogsViewModel(
         }
     }
 
+    /** Empties the captured logs (files, crash report, in-memory lines), then re-reads them. */
+    fun clearLogs() {
+        scope.launch {
+            net.jami.ui.platform.clearLogs()
+            accountService.clearRecentDaemonLog()
+            refresh()
+        }
+    }
+
     fun dumpDaemonState() {
         scope.launch {
             accountService.monitorDaemon(continuous = false)

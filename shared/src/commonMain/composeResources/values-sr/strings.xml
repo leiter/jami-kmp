@@ -440,6 +440,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Ovaj kontakt „%1$s” možete dodati na distribuiranoj platformi za komunikaciju Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Upiši stanje demona u dnevnik</string>
     <string name="debug_restart_daemon">Ponovo pokreni demon</string>
+    <string name="debug_clear_logs">Obriši dnevnike</string>
     <string name="screen_title_recordings">Snimci poziva</string>
     <string name="recordings_empty">Još nema snimaka poziva.</string>
     <string name="recordings_delete_title">Obrisati snimak?</string>

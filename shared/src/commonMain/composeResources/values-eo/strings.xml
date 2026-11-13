@@ -324,6 +324,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Vi povas aldoni ĉi tiun kontakton “%1$s” en la distribuita komunikada platformo Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Skribi la staton de la demono al la protokolo</string>
     <string name="debug_restart_daemon">Restartigi la demonon</string>
+    <string name="debug_clear_logs">Viŝi protokolojn</string>
     <string name="screen_title_recordings">Vokregistraĵoj</string>
     <string name="recordings_empty">Ankoraŭ neniuj vokregistraĵoj.</string>
     <string name="recordings_delete_title">Ĉu forigi la registraĵon?</string>

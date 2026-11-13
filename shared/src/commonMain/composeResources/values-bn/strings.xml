@@ -337,6 +337,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">আপনি বিকেন্দ্রীভূত যোগাযোগ প্ল্যাটফর্ম Jami-তে এই পরিচিতি “%1$s” যোগ করতে পারেন: %2$s</string>
     <string name="debug_dump_daemon_state">ডেমনের অবস্থা লগে লিখুন</string>
     <string name="debug_restart_daemon">ডেমন আবার চালু করুন</string>
+    <string name="debug_clear_logs">লগ মুছুন</string>
     <string name="screen_title_recordings">কল রেকর্ডিং</string>
     <string name="recordings_empty">এখনও কোনো কল রেকর্ডিং নেই।</string>
     <string name="recordings_delete_title">রেকর্ডিং মুছবেন?</string>

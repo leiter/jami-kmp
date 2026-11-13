@@ -325,6 +325,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">વિકેન્દ્રિત સંચાર પ્લેટફોર્મ Jami પર આ સંપર્ક “%1$s” ઉમેરી શકો છો: %2$s</string>
     <string name="debug_dump_daemon_state">ડેમનની સ્થિતિ લૉગમાં લખો</string>
     <string name="debug_restart_daemon">ડેમન ફરી શરૂ કરો</string>
+    <string name="debug_clear_logs">લૉગ સાફ કરો</string>
     <string name="screen_title_recordings">કૉલ રેકોર્ડિંગ</string>
     <string name="recordings_empty">હજી કોઈ કૉલ રેકોર્ડિંગ નથી.</string>
     <string name="recordings_delete_title">રેકોર્ડિંગ કાઢી નાખવું?</string>

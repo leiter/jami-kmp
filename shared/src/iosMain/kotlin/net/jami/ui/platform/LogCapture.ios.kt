@@ -27,6 +27,13 @@ actual fun captureRecentLogs(maxLines: Int): String = buildString {
     append(JamiBridgeWrapper.shared().captureRecentLogs(maxLines) ?: "")
 }
 
+/** The native/daemon log files, the saved crash report and this launch's app log. */
+@OptIn(ExperimentalForeignApi::class)
+actual fun clearLogs() {
+    JamiBridgeWrapper.shared().clearLogs()
+    AppLogBuffer.clear()
+}
+
 @OptIn(ExperimentalForeignApi::class)
 private fun lastCrash(): String? {
     val docs = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)

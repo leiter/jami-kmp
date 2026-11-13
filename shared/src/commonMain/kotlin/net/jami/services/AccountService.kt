@@ -518,6 +518,11 @@ class AccountService(
         _daemonDiagnostics.update { it.copy(hardwareEncoding = enabled) }
     }
 
+    /** Forgets the daemon log lines kept for the debug screen ("Clear logs"). */
+    fun clearRecentDaemonLog() {
+        _daemonDiagnostics.update { it.copy(recentDaemonLog = emptyList()) }
+    }
+
     /** A log line emitted by libjami itself — routed into the app log so bug reports carry it. */
     internal fun onDaemonLogMessage(message: String) {
         Log.d(TAG, "[daemon] $message")

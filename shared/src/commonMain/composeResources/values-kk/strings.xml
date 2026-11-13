@@ -335,6 +335,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Бұл «%1$s» контактісін орталықсыздандырылған байланыс платформасы Jami-ге қоса аласыз: %2$s</string>
     <string name="debug_dump_daemon_state">Демон күйін журналға жазу</string>
     <string name="debug_restart_daemon">Демонды қайта іске қосу</string>
+    <string name="debug_clear_logs">Журналдарды тазалау</string>
     <string name="screen_title_recordings">Қоңырау жазбалары</string>
     <string name="recordings_empty">Әзірге қоңырау жазбалары жоқ.</string>
     <string name="recordings_delete_title">Жазбаны жою керек пе?</string>

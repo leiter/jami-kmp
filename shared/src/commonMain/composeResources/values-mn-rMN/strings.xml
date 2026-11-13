@@ -327,6 +327,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Та энэ «%1$s» харилцагчийг төвлөрсөн бус харилцааны платформ Jami-д нэмж болно: %2$s</string>
     <string name="debug_dump_daemon_state">Демоны төлөвийг бүртгэлд бичих</string>
     <string name="debug_restart_daemon">Демоныг дахин эхлүүлэх</string>
+    <string name="debug_clear_logs">Бүртгэлийг цэвэрлэх</string>
     <string name="screen_title_recordings">Дуудлагын бичлэгүүд</string>
     <string name="recordings_empty">Одоогоор дуудлагын бичлэг алга.</string>
     <string name="recordings_delete_title">Бичлэгийг устгах уу?</string>

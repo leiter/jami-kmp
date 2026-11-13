@@ -393,6 +393,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">분산형 커뮤니케이션 플랫폼 Jami에서 이 연락처 "%1$s"을(를) 추가할 수 있습니다: %2$s</string>
     <string name="debug_dump_daemon_state">데몬 상태를 로그에 기록</string>
     <string name="debug_restart_daemon">데몬 다시 시작</string>
+    <string name="debug_clear_logs">로그 지우기</string>
     <string name="screen_title_recordings">통화 녹음</string>
     <string name="recordings_empty">아직 통화 녹음이 없습니다.</string>
     <string name="recordings_delete_title">녹음을 삭제할까요?</string>

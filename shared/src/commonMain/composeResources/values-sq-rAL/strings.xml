@@ -522,6 +522,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Mund ta shtoni këtë kontakt “%1$s” në Jami, platformën e decentralizuar të komunikimit: %2$s</string>
     <string name="debug_dump_daemon_state">Shkruaj gjendjen e demonit në regjistër</string>
     <string name="debug_restart_daemon">Rinis demonin</string>
+    <string name="debug_clear_logs">Pastro regjistrat</string>
     <string name="screen_title_recordings">Regjistrime thirrjesh</string>
     <string name="recordings_empty">Ende s’ka regjistrime thirrjesh.</string>
     <string name="recordings_delete_title">Të fshihet regjistrimi?</string>

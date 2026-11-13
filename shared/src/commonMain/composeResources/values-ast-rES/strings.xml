@@ -342,6 +342,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Pues amestar esti contautu «%1$s» en Jami, la plataforma de comunicación descentralizada: %2$s</string>
     <string name="debug_dump_daemon_state">Escribir l’estáu del degorriu nel rexistru</string>
     <string name="debug_restart_daemon">Reaniciar el degorriu</string>
+    <string name="debug_clear_logs">Llimpiar los rexistros</string>
     <string name="screen_title_recordings">Grabaciones de llamaes</string>
     <string name="recordings_empty">Entá nun hai grabaciones de llamaes.</string>
     <string name="recordings_delete_title">¿Desaniciar la grabación?</string>

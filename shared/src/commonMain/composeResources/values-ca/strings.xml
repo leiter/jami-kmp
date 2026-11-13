@@ -413,6 +413,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Pots afegir aquest contacte «%1$s» a la plataforma de comunicació distribuïda Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Escriu l’estat del dimoni al registre</string>
     <string name="debug_restart_daemon">Reinicia el dimoni</string>
+    <string name="debug_clear_logs">Esborra els registres</string>
     <string name="screen_title_recordings">Enregistraments de trucades</string>
     <string name="recordings_empty">Encara no hi ha enregistraments de trucades.</string>
     <string name="recordings_delete_title">Vols suprimir l’enregistrament?</string>

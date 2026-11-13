@@ -335,6 +335,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">ವಿಕೇಂದ್ರೀಕೃತ ಸಂವಹನ ವೇದಿಕೆ Jami ಯಲ್ಲಿ ಈ ಸಂಪರ್ಕ “%1$s” ಅನ್ನು ಸೇರಿಸಬಹುದು: %2$s</string>
     <string name="debug_dump_daemon_state">ಡೀಮನ್ ಸ್ಥಿತಿಯನ್ನು ಲಾಗ್‌ಗೆ ಬರೆಯಿರಿ</string>
     <string name="debug_restart_daemon">ಡೀಮನ್ ಮರುಪ್ರಾರಂಭಿಸಿ</string>
+    <string name="debug_clear_logs">ಲಾಗ್‌ಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ</string>
     <string name="screen_title_recordings">ಕರೆ ರೆಕಾರ್ಡಿಂಗ್‌ಗಳು</string>
     <string name="recordings_empty">ಇನ್ನೂ ಕರೆ ರೆಕಾರ್ಡಿಂಗ್‌ಗಳಿಲ್ಲ.</string>
     <string name="recordings_delete_title">ರೆಕಾರ್ಡಿಂಗ್ ಅಳಿಸಬೇಕೇ?</string>

@@ -325,6 +325,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">వికేంద్రీకృత కమ్యూనికేషన్ ప్లాట్‌ఫారమ్ Jamiలో ఈ పరిచయం “%1$s”ను జోడించవచ్చు: %2$s</string>
     <string name="debug_dump_daemon_state">డెమన్ స్థితిని లాగ్‌లో రాయండి</string>
     <string name="debug_restart_daemon">డెమన్‌ను పునఃప్రారంభించండి</string>
+    <string name="debug_clear_logs">లాగ్‌లను క్లియర్ చేయండి</string>
     <string name="screen_title_recordings">కాల్ రికార్డింగ్‌లు</string>
     <string name="recordings_empty">ఇంకా కాల్ రికార్డింగ్‌లు లేవు.</string>
     <string name="recordings_delete_title">రికార్డింగ్‌ను తొలగించాలా?</string>

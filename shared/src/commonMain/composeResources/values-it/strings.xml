@@ -523,6 +523,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Puoi aggiungere questo contatto «%1$s» sulla piattaforma di comunicazione distribuita Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Scrivi lo stato del daemon nel log</string>
     <string name="debug_restart_daemon">Riavvia il daemon</string>
+    <string name="debug_clear_logs">Cancella i log</string>
     <string name="screen_title_recordings">Registrazioni delle chiamate</string>
     <string name="recordings_empty">Ancora nessuna registrazione di chiamata.</string>
     <string name="recordings_delete_title">Eliminare la registrazione?</string>

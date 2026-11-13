@@ -208,6 +208,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">אפשר להוסיף את איש הקשר „%1$s” בפלטפורמת התקשורת המבוזרת Jami: %2$s</string>
     <string name="debug_dump_daemon_state">כתיבת מצב השירות ליומן</string>
     <string name="debug_restart_daemon">הפעלה מחדש של השירות</string>
+    <string name="debug_clear_logs">ניקוי יומנים</string>
     <string name="screen_title_recordings">הקלטות שיחה</string>
     <string name="recordings_empty">אין עדיין הקלטות שיחה.</string>
     <string name="recordings_delete_title">למחוק את ההקלטה?</string>

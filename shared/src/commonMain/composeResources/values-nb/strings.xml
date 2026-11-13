@@ -389,6 +389,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="share_contact_body">Du kan legge til kontakten «%1$s» på den distribuerte kommunikasjonsplattformen Jami: %2$s</string>
     <string name="debug_dump_daemon_state">Skriv daemonens tilstand til loggen</string>
     <string name="debug_restart_daemon">Start daemonen på nytt</string>
+    <string name="debug_clear_logs">Tøm logger</string>
     <string name="screen_title_recordings">Samtaleopptak</string>
     <string name="recordings_empty">Ingen samtaleopptak ennå.</string>
     <string name="recordings_delete_title">Slette opptaket?</string>
