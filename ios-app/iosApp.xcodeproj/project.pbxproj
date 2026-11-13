@@ -7,16 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CACE71F2CACE71F2CACE71F2 /* cacert.pem in Resources */ = {isa = PBXBuildFile; fileRef = CACE71F1CACE71F1CACE71F1 /* cacert.pem */; };
 		511E017B511E017B511E017B /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 511E017A511E017A511E017A /* silence.wav */; };
-		DEFA017BDEFA017BDEFA017B /* default.wav in Resources */ = {isa = PBXBuildFile; fileRef = DEFA017ADEFA017ADEFA017A /* default.wav */; };
+		CACE71F2CACE71F2CACE71F2 /* cacert.pem in Resources */ = {isa = PBXBuildFile; fileRef = CACE71F1CACE71F1CACE71F1 /* cacert.pem */; };
 		D1D2D3D4D5D6D7D8D9D0DDDA /* JamiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCA /* JamiApp.swift */; };
 		D1D2D3D4D5D6D7D8D9D0DDDB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCB /* AppDelegate.swift */; };
 		D1D2D3D4D5D6D7D8D9D0DDDC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCC /* ContentView.swift */; };
 		D1D2D3D4D5D6D7D8D9D0DDDD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCD /* Assets.xcassets */; };
+		DEFA017BDEFA017BDEFA017B /* default.wav in Resources */ = {isa = PBXBuildFile; fileRef = DEFA017ADEFA017ADEFA017A /* default.wav */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		511E017A511E017A511E017A /* silence.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = silence.wav; sourceTree = "<group>"; };
 		B1B2B3B4B5B6B7B8B9B0BBBB /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1C2C3C4C5C6C7C8C9C0CCCA /* JamiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JamiApp.swift; sourceTree = "<group>"; };
 		C1C2C3C4C5C6C7C8C9C0CCCB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -24,7 +25,6 @@
 		C1C2C3C4C5C6C7C8C9C0CCCD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C1C2C3C4C5C6C7C8C9C0CCCE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CACE71F1CACE71F1CACE71F1 /* cacert.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = cacert.pem; sourceTree = "<group>"; };
-		511E017A511E017A511E017A /* silence.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = silence.wav; sourceTree = "<group>"; };
 		DEFA017ADEFA017ADEFA017A /* default.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = default.wav; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -299,7 +299,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_REQUIRED = NO;
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 43;
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -331,6 +331,8 @@
 					"$(inherited)",
 					"-framework",
 					JamiShared,
+					"-framework",
+					PhotosUI,
 				);
 				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
 					"$(inherited)",
@@ -394,6 +396,8 @@
 					VideoToolbox,
 					"-framework",
 					AudioToolbox,
+					"-framework",
+					PhotosUI,
 				);
 				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = (
 					"$(inherited)",
@@ -456,6 +460,8 @@
 					VideoToolbox,
 					"-framework",
 					AudioToolbox,
+					"-framework",
+					PhotosUI,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.jami.iosapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -477,7 +483,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 43;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = K4K982LMZ9;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -506,6 +512,8 @@
 					"$(inherited)",
 					"-framework",
 					JamiShared,
+					"-framework",
+					PhotosUI,
 				);
 				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
 					"$(inherited)",
@@ -569,6 +577,8 @@
 					VideoToolbox,
 					"-framework",
 					AudioToolbox,
+					"-framework",
+					PhotosUI,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.jami.iosapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";

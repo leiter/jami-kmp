@@ -154,7 +154,12 @@ paths has been exercised live yet. `setDefaultModerator` was dropped from the ba
 account details (`ConfigKey.DEFAULT_MODERATORS`) on every platform. macOS keeps stubs (its `.a` is not rebuilt).
 See `doc/apple-bridge-rebuild.md`.
 - **macOS target does not compile** — ~95 errors, mostly in `MacOSHardwareService.kt`. Since the iOS and macOS Darwin implementations are now substantively identical, the right fix is a shared `appleMain` source set. A start exists on `origin/macos-build-and-apple-source-set` (`f0f66ce`, 2026-10-01); it predates the nine wrapper commits and is 149 commits behind `ios-catch-up-2026-11` (2026-11-11), so it needs rebasing first. `build-jamibridge.sh`'s macOS stage also fails independently, on UIKit code compiled against the macOS SDK — long-standing, not caused by recent work.
-- **iOS video in calls** — video calls connect but render no remote image *and* send no local image: no `SinkTarget` → `AVSampleBufferDisplayLayer` path and no `getNewFrame`/`publishFrame` capture path in the wrapper. Local self-view and audio-only calls work. Plan: `doc/ios-video-pipeline.md`.
+- **iOS video in calls** — implemented 2026-11-11 (branch `ios-video-pipeline`), **not yet
+  verified in a call**: outgoing frames via `getNewFrame`/`publishFrame`, incoming via a
+  `SinkTarget` per sink rendered into an `AVSampleBufferDisplayLayer`. Builds, links, the app
+  starts, `iosSimulatorArm64Test` passes; the simulator has no camera, so a device call against
+  another client is still needed. Before this, cameras were registered with the daemon without
+  capabilities and silently dropped. PiP not done. See `doc/ios-video-pipeline.md` §0.
 - **Chat plugins** — Jami plugin system not ported to KMP. Menu item shows a "not yet supported" snackbar.
 - **OsmMapView (Desktop/macOS)** — no viable JVM or AppKit map library in scope; shows coordinate text instead of a map.
 - **Desktop DaemonBridge** — all 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.

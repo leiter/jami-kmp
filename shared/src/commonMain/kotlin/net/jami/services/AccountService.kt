@@ -863,10 +863,27 @@ class AccountService(
     // ==================== Contact Operations ====================
 
     /**
-     * Add a contact.
+     * Add a contact and invite them.
+     *
+     * The daemon's addContact only records the peer locally (and creates the 1:1 conversation);
+     * the invitation itself goes out through sendTrustRequest, as in the official clients.
+     * Without it the peer never hears of us. A contact who already accepted is not re-invited.
      */
     fun addContact(accountId: String, uri: String) {
         daemonBridge.addContact(accountId, uri)
+        val peer = Uri.fromString(uri).rawRingId
+        if (daemonBridge.getContactDetails(accountId, peer)["confirmed"] == "true") return
+        daemonBridge.sendTrustRequest(accountId, peer, localProfilePayload(accountId))
+    }
+
+    /** Our profile vCard, sent with an invitation so the peer sees our name and photo. */
+    private fun localProfilePayload(accountId: String): ByteArray {
+        val dataPath = deviceRuntimeService.getDataPath()
+        if (dataPath.isEmpty()) return ByteArray(0)
+        val vcard = net.jami.utils.FileUtils.readBytes("$dataPath/$accountId/profile.vcf")
+            ?: return ByteArray(0)
+        // The daemon drops a payload this large anyway; the request must still go out.
+        return if (vcard.size >= 64000) ByteArray(0) else vcard
     }
 
     /**

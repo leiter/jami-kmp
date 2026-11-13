@@ -25,6 +25,21 @@ OUTPUT_DIR="$LIB_DIR"
 CXX_FLAGS="-std=c++17 -fobjc-arc -fmodules -DNDEBUG -O2"
 INCLUDE_FLAGS="-I$HEADERS_DIR -I$SCRIPT_DIR"
 
+# FFmpeg libavutil headers for the video frame code (iOS only). Taken from the
+# jami-client-ios dependency build the daemon itself was compiled against, so the
+# AVFrame layout always matches the linked libavutil. Same sibling-checkout
+# convention as scripts/make_sim_links.py; override with JAMI_CLIENT_IOS.
+JAMI_CLIENT_IOS="${JAMI_CLIENT_IOS:-$(cd "$SCRIPT_DIR/../../../../../.." && pwd)/jami-client-ios}"
+IOS_DEPS_INCLUDE="$JAMI_CLIENT_IOS/DEPS/arm64-iPhoneOS/include"
+IOS_SIM_DEPS_INCLUDE="$JAMI_CLIENT_IOS/DEPS/arm64-iPhoneSimulator/include"
+for dir in "$IOS_DEPS_INCLUDE" "$IOS_SIM_DEPS_INCLUDE"; do
+    if [ ! -f "$dir/libavutil/frame.h" ]; then
+        echo "Error: libavutil headers not found in $dir"
+        echo "Set JAMI_CLIENT_IOS to a jami-client-ios checkout with built DEPS."
+        exit 1
+    fi
+done
+
 echo "=== Building JamiBridge Static Library ==="
 echo "Headers: $HEADERS_DIR"
 echo "Output:  $OUTPUT_DIR"
@@ -87,6 +102,7 @@ if [ "$ARCH" = "arm64" ]; then
         -o "$OUTPUT_DIR/JamiBridgeWrapper_ios.o" \
         $CXX_FLAGS \
         $INCLUDE_FLAGS \
+        -isystem "$IOS_DEPS_INCLUDE" \
         -target "$IOS_TARGET" \
         -isysroot "$IOS_SDK"
 
@@ -101,6 +117,7 @@ if [ "$ARCH" = "arm64" ]; then
         -o "$OUTPUT_DIR/JamiBridgeWrapper_iossim.o" \
         $CXX_FLAGS \
         $INCLUDE_FLAGS \
+        -isystem "$IOS_SIM_DEPS_INCLUDE" \
         -target "arm64-apple-ios14.0-simulator" \
         -isysroot "$IOS_SIM_SDK"
 

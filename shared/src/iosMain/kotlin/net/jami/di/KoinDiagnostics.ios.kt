@@ -11,6 +11,8 @@ package net.jami.di
 import org.koin.core.annotation.KoinInternalApi
 import org.koin.mp.KoinPlatform
 import platform.Foundation.NSLog
+import platform.Foundation.NSBundle
+import platform.Foundation.NSDate
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
@@ -163,6 +165,14 @@ private fun fatal_ClassCast(): Nothing { abort(); error("unreachable") }
 private fun fatal_IllegalState(): Nothing { abort(); error("unreachable") }
 private fun fatal_IllegalArgument(): Nothing { abort(); error("unreachable") }
 private fun fatal_MissingResource(): Nothing { abort(); error("unreachable") }
+private fun fatal_NoSuchElement(): Nothing { abort(); error("unreachable") }
+private fun fatal_IndexOutOfBounds(): Nothing { abort(); error("unreachable") }
+private fun fatal_NumberFormat(): Nothing { abort(); error("unreachable") }
+private fun fatal_UnsupportedOperation(): Nothing { abort(); error("unreachable") }
+private fun fatal_ConcurrentModification(): Nothing { abort(); error("unreachable") }
+private fun fatal_Arithmetic(): Nothing { abort(); error("unreachable") }
+private fun fatal_Koin(): Nothing { abort(); error("unreachable") }
+private fun fatal_Serialization(): Nothing { abort(); error("unreachable") }
 private fun fatal_Other(): Nothing { abort(); error("unreachable") }
 
 private fun jamiDispatchFatal(typeName: String, message: String): Nothing {
@@ -176,6 +186,16 @@ private fun jamiDispatchFatal(typeName: String, message: String): Nothing {
         "missingresource" in t || "resource" in m -> fatal_MissingResource()
         "illegalstate" in t -> fatal_IllegalState()
         "illegalargument" in t -> fatal_IllegalArgument()
+        // Build 41/42 crashed in a Compose effect as "Other" with nothing of ours on the stack:
+        // finer markers narrow the next report down without needing the device.
+        "nosuchelement" in t -> fatal_NoSuchElement()
+        "indexoutofbounds" in t -> fatal_IndexOutOfBounds()
+        "numberformat" in t -> fatal_NumberFormat()
+        "unsupportedoperation" in t -> fatal_UnsupportedOperation()
+        "concurrentmodification" in t -> fatal_ConcurrentModification()
+        "arithmetic" in t -> fatal_Arithmetic()
+        "koin" in t -> fatal_Koin()
+        "serializ" in t -> fatal_Serialization()
         else -> fatal_Other()
     }
 }
@@ -186,7 +206,14 @@ private fun jamiDumpCrashToFile(text: String) {
         val dirs = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
         val docs = dirs.firstOrNull() as? String ?: return
         val path = "$docs/jami_last_crash.txt"
-        (text as NSString).writeToFile(path, atomically = true, encoding = NSUTF8StringEncoding, error = null)
+        // Shown at the top of the in-app debug log after the next launch (LogCapture.ios.kt),
+        // so a tester can send it; the TestFlight report carries no exception message.
+        val build = NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleVersion") as? String
+        // With the app's recent log: what it was doing when it died. The file is also visible
+        // in the Files app (UIFileSharingEnabled), for a crash that leaves no way into the app.
+        val recent = runCatching { net.jami.utils.AppLogBuffer.recent(400) }.getOrDefault("")
+        val stamped = "crashed at ${NSDate()} (build $build)\n$text\n\n--- app log before the crash ---\n$recent"
+        (stamped as NSString).writeToFile(path, atomically = true, encoding = NSUTF8StringEncoding, error = null)
         jamiKoinLog("JAMI_FATAL wrote crash details to $path")
     }
 }

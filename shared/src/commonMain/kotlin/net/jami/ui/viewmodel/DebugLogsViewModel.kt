@@ -62,7 +62,9 @@ class DebugLogsViewModel(
     fun refresh() {
         scope.launch {
             _state.value = _state.value.copy(isLoading = true)
-            val logs = captureRecentLogs(maxLines = 500)
+            // 3000, not 500: on iOS the capture now includes the daemon's own log, of which 500
+            // lines are a few seconds — too little to span, say, sending an invitation.
+            val logs = captureRecentLogs(maxLines = 3000)
             val accountId = accountService.currentAccount.value?.accountId
             val conversations = if (accountId != null) {
                 runCatching { conversationFacade.snapshotConversationSyncInfo(accountId) }

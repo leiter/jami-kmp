@@ -110,6 +110,16 @@ log at all. To tell them apart, check the daemon's CPU: pegged near 100% with a
 climbing heap means progress; 0% means it is finished or dead. Watch that daemon log
 as well as the fastlane one.
 
+### An upload fastlane calls failed may have succeeded
+
+When the connection drops mid-upload, altool retries the part and finishes, printing
+`UPLOAD SUCCEEDED with no errors` — but its retry messages went to stderr, and fastlane
+then reported `Error uploading ipa file:` (empty message) and exited non-zero. Build 37
+(2026-11-11) did this and was on App Store Connect all along. Before re-uploading, run
+`fastlane check_api_key`: if it already shows the build number, there is nothing to resend
+(a second upload of the same number is rejected anyway). If it does not, `fastlane upload`
+resends the existing IPA without rebuilding.
+
 ### Failed builds still consume build numbers
 
 `build` runs `bump_build` before archiving, so every failed attempt burns a number —

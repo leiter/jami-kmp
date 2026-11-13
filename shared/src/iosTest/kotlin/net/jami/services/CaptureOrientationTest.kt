@@ -44,4 +44,31 @@ class CaptureOrientationTest {
         assertNull(captureOrientationFor(UIDeviceOrientation.UIDeviceOrientationFaceDown))
         assertNull(captureOrientationFor(UIDeviceOrientation.UIDeviceOrientationUnknown))
     }
+
+    /**
+     * Outgoing frames are captured in a fixed landscape-left orientation and carry the turn the
+     * receiver applies. Values from jami-client-ios CameraOrientationState.outgoingAngle, with
+     * its landscape rows swapped onto Apple's device→capture mapping (see outgoingFrameAngle).
+     * A wrong entry shows the peer a sideways or upside-down image, which no check on this side
+     * of the call would notice.
+     */
+    @Test
+    fun outgoingFramesCarryTheNativeClientsRotation() {
+        assertEquals(90, outgoingFrameAngle(AVCaptureVideoOrientationPortrait, isFront = false))
+        assertEquals(270, outgoingFrameAngle(AVCaptureVideoOrientationPortrait, isFront = true))
+        assertEquals(270, outgoingFrameAngle(AVCaptureVideoOrientationPortraitUpsideDown, isFront = false))
+        assertEquals(90, outgoingFrameAngle(AVCaptureVideoOrientationPortraitUpsideDown, isFront = true))
+    }
+
+    @Test
+    fun landscapeFollowsTheDeviceNotTheNativeClientsEnumMapping() {
+        // Held device-landscape-right: the capture orientation itself, upright as captured.
+        val heldRight = captureOrientationFor(UIDeviceOrientation.UIDeviceOrientationLandscapeRight)!!
+        assertEquals(0, outgoingFrameAngle(heldRight, isFront = false))
+        assertEquals(0, outgoingFrameAngle(heldRight, isFront = true))
+        // Held device-landscape-left: the native client's `.landscapeLeft -> 180` row.
+        val heldLeft = captureOrientationFor(UIDeviceOrientation.UIDeviceOrientationLandscapeLeft)!!
+        assertEquals(180, outgoingFrameAngle(heldLeft, isFront = false))
+        assertEquals(180, outgoingFrameAngle(heldLeft, isFront = true))
+    }
 }

@@ -28,7 +28,10 @@ internal actual fun platformLog(
     val prefix = level.name.first()
     if (throwable == null) {
         NSLog("%s/%s: %s", prefix.toString(), tag, message)
+        AppLogBuffer.add("$prefix/$tag: $message")
     } else {
-        NSLog("%s/%s: %s: %s", prefix.toString(), tag, message, throwable.stackTraceToString())
+        val stack = throwable.stackTraceToString()
+        NSLog("%s/%s: %s: %s", prefix.toString(), tag, message, stack)
+        AppLogBuffer.add("$prefix/$tag: $message: $stack")
     }
 }

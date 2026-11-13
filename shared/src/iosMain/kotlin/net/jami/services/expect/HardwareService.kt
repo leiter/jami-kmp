@@ -10,11 +10,15 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import net.jami.model.Call
 import net.jami.model.Conference
 import net.jami.services.CameraState
+import net.jami.services.IOSVideoFrameBridge
+import net.jami.services.DisplayLayerView
 import net.jami.services.DaemonBridgeApi
 import net.jami.repository.SettingsRepository
 import net.jami.services.IOSCameraService
@@ -56,6 +60,8 @@ import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSOperationQueue
 import platform.Foundation.NSUserDefaults
 import platform.UIKit.UIDevice
+import platform.AVFoundation.AVSampleBufferDisplayLayer
+import platform.AVFoundation.flushAndRemoveImage
 import platform.UIKit.UIView
 
 private val STATE_INTERNAL = AudioState(AudioOutput(AudioOutputType.INTERNAL))
@@ -94,6 +100,20 @@ actual class HardwareService : KoinComponent {
     private val _maxResolutions = MutableStateFlow<Pair<Int?, Int?>>(1920 to 1080)
 
     private val videoSurfaces = mutableMapOf<String, UIView>()
+    /** The layer each sink's frames are rendered into, inside its [videoSurfaces] view. */
+    private val displayLayers = mutableMapOf<String, AVSampleBufferDisplayLayer>()
+
+    /**
+     * The iOS bridge, for the frame paths that have no place in [DaemonBridgeApi]. Null under
+     * test doubles, which turns every video call below into a no-op instead of touching libjami.
+     * An interface type check, not a cast to DaemonBridge: see [IOSVideoFrameBridge].
+     */
+    private val videoBridge: IOSVideoFrameBridge? get() = daemonBridge as? IOSVideoFrameBridge
+
+    /** Lays out a remote video layer, rotation included. Main thread only. */
+    fun layoutVideoLayer(layer: AVSampleBufferDisplayLayer) {
+        videoBridge?.layoutVideoLayer(layer)
+    }
     private var previewSurface: UIView? = null
     private var speakerphoneOn = false
     private var routeObserver: Any? = null
@@ -327,10 +347,17 @@ actual class HardwareService : KoinComponent {
     actual val isVideoAvailable: Boolean get() = cameraService.getVideoDevices().cameras.isNotEmpty()
 
     actual fun decodingStarted(id: String, shmPath: String, width: Int, height: Int, isMixer: Boolean) {
+        // Ask the daemon for this stream's frames. A surface attached earlier is picked up by
+        // the bridge; one attached later goes through addVideoSurface.
+        if (!daemonBridge.registerVideoCallback(id, 0L)) {
+            Log.w(tag, "decodingStarted: could not register sink $id")
+        }
         scope.launch { _videoEvents.emit(VideoEvent(sinkId = id, started = true, width = width, height = height)) }
     }
 
     actual fun decodingStopped(id: String, shmPath: String, isMixer: Boolean) {
+        daemonBridge.unregisterVideoCallback(id, 0L)
+        displayLayers[id]?.flushAndRemoveImage()
         scope.launch { _videoEvents.emit(VideoEvent(sinkId = id)) }
     }
 
@@ -374,18 +401,62 @@ actual class HardwareService : KoinComponent {
         scope.launch { _cameraEvents.emit(VideoEvent(sinkId = camId)) }
     }
 
+    /**
+     * The daemon asks for frames from [device] (`VideoSignal::StartCapture`). Besides
+     * starting the camera, this names the daemon input the frames are published under, so
+     * they keep reaching the call after a front/back switch changes the physical camera.
+     */
+    fun onDaemonStartCapture(device: String) {
+        Log.d(tag, "Daemon starts capture: $device")
+        cameraService.setDaemonCaptureInput(device)
+        startCapture(device)
+    }
+
+    /** `VideoSignal::StopCapture`. An empty device is the muted-camera placeholder. */
+    fun onDaemonStopCapture(device: String) {
+        Log.d(tag, "Daemon stops capture: $device")
+        if (device.isEmpty()) return
+        cameraService.setDaemonCaptureInput(null)
+        stopCapture(device)
+    }
+
     actual fun requestKeyFrame(camId: String) {}
     actual fun setBitrate(camId: String, bitrate: Int) {}
 
+    /**
+     * Renders sink [id] into [holder]. The view may already carry an
+     * [AVSampleBufferDisplayLayer] (VideoSurface builds one); otherwise one is added in a
+     * child view that keeps it sized. Either way the layer is handed to the bridge, which
+     * enqueues the sink's decoded frames on it.
+     */
     actual fun addVideoSurface(id: String, holder: Any) {
-        (holder as? UIView)?.let { videoSurfaces[id] = it }
+        val view = holder as? UIView ?: return
+        videoSurfaces[id] = view
+        val layer = existingDisplayLayer(view) ?: DisplayLayerView.install(view, ::layoutVideoLayer)
+        displayLayers[id] = layer
+        videoBridge?.attachVideoLayer(id, layer)
     }
+
+    private fun existingDisplayLayer(view: UIView): AVSampleBufferDisplayLayer? =
+        view.layer.sublayers?.firstNotNullOfOrNull { it as? AVSampleBufferDisplayLayer }
 
     actual fun updateVideoSurfaceId(currentId: String, newId: String) {
         videoSurfaces.remove(currentId)?.let { videoSurfaces[newId] = it }
+        displayLayers.remove(currentId)?.let { layer ->
+            displayLayers[newId] = layer
+            videoBridge?.attachVideoLayer(currentId, null)
+            videoBridge?.attachVideoLayer(newId, layer)
+        }
     }
 
-    actual fun removeVideoSurface(id: String) { videoSurfaces.remove(id) }
+    actual fun removeVideoSurface(id: String) {
+        videoSurfaces.remove(id)
+        displayLayers.remove(id)?.let { layer ->
+            videoBridge?.attachVideoLayer(id, null)
+            layer.flushAndRemoveImage()
+            DisplayLayerView.uninstall(layer)
+        }
+    }
 
     actual fun addPreviewVideoSurface(holder: Any, conference: Conference?) {
         previewSurface = holder as? UIView
@@ -428,10 +499,21 @@ actual class HardwareService : KoinComponent {
     actual val isPreviewFromFrontCamera: Boolean get() = cameraService.isFrontCamera
     actual fun unregisterCameraDetectionCallback() {}
 
-    actual fun connectSink(id: String, windowId: Long): Flow<Pair<Int, Int>> = flow { emit(1280 to 720) }
+    /**
+     * The sink's frame size as the daemon reports it: the last decoded size if frames are
+     * already arriving, then every size a `DecodingStarted` announces for it. This used to
+     * be a hardcoded 1280x720.
+     */
+    actual fun connectSink(id: String, windowId: Long): Flow<Pair<Int, Int>> =
+        _videoEvents
+            .filter { it.sinkId == id && it.started && it.width > 0 && it.height > 0 }
+            .map { it.width to it.height }
+            .onStart { videoBridge?.videoSinkSize(id)?.let { emit(it) } }
 
     actual suspend fun getSinkSize(id: String): Pair<Int, Int> =
-        cameraService.currentVideoParams?.let { it.width to it.height } ?: (1280 to 720)
+        videoBridge?.videoSinkSize(id)
+            ?: cameraService.currentVideoParams?.let { it.width to it.height }
+            ?: (1280 to 720)
 
     actual fun setDeviceOrientation(rotation: Int) { cameraService.setDeviceOrientation(rotation) }
 

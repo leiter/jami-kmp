@@ -118,6 +118,31 @@ class ContactServiceIntegrationTest {
     }
 
     @Test
+    fun addingAContactSendsTheInvitation() = runTest {
+        // addContact alone only records the peer locally; the invitation is sendTrustRequest.
+        // Without it neither phone ever saw the other's request (TestFlight build 40).
+        val stub = StubDaemonBridge()
+        val (_, contactService) = makeServices(stub, this)
+
+        contactService.addContact("acc1", Uri.fromId("abc123"))
+
+        assertEquals(listOf("acc1" to "abc123"), stub.addedContacts)
+        assertEquals(listOf("acc1" to "abc123"), stub.sentTrustRequests.map { it.first to it.second })
+    }
+
+    @Test
+    fun aContactWhoAlreadyAcceptedIsNotInvitedAgain() = runTest {
+        val stub = StubDaemonBridge()
+        stub.contactDetails["acc1:abc123"] = mapOf("id" to "abc123", "confirmed" to "true")
+        val (accountService, _) = makeServices(stub, this)
+
+        accountService.addContact("acc1", "jami:abc123")
+
+        assertEquals(listOf("acc1" to "jami:abc123"), stub.addedContacts)
+        assertTrue(stub.sentTrustRequests.isEmpty())
+    }
+
+    @Test
     fun removeContactCallsDaemonBridge() = runTest {
         val stub = StubDaemonBridge()
         val (accountService, contactService) = makeServices(stub, this)

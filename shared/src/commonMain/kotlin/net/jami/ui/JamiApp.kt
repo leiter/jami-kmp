@@ -16,6 +16,7 @@
  */
 package net.jami.ui
 
+import net.jami.ui.platform.clearFocusOnTapOutside
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -47,7 +48,8 @@ fun JamiApp() {
 
     JamiTheme {
         Surface(
-            modifier = Modifier.fillMaxSize(),
+            // iOS: a tap on empty space hides the keyboard (see clearFocusOnTapOutside).
+            modifier = Modifier.fillMaxSize().clearFocusOnTapOutside(),
             color = MaterialTheme.colorScheme.background,
         ) {
             JamiNavigation()

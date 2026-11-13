@@ -1,12 +1,77 @@
 # iOS video pipeline
 
-**Status: not functional. Audio calls work; video calls connect but render no remote image and
-send no local image.** This document is the implementation plan.
+**Status (2026-11-11): implemented on branch `ios-video-pipeline`, built and linked, NOT yet
+verified in a call.** Outgoing (camera → peer) and incoming (peer → screen) are both wired; the
+simulator has no camera and a two-party call needs a device plus a second client, so the
+§2/§3 "Verify" steps are still open. Picture-in-picture (§4) is not done. What was built, and
+where it departs from the plan below, is in §0; §1–§6 are the original plan, kept for the
+reasoning.
 
-It cannot be completed on a Linux host: it requires rebuilding the prebuilt
-`libJamiBridge_ios.a` / `libJamiBridge_iossim.a` static libraries on macOS, vendoring FFmpeg
-`libavutil` headers, and multi-week renderer work verified on a device. Same shape of blocker as
-`ios-app/jamiNotificationExtension/README.md`.
+## 0. What was implemented
+
+**Wrapper (`JamiBridgeWrapper.{h,mm}`, rebuilt `.a`, 1274 methods):**
+- `addVideoDevice:width:height:rate:` — **a bug the plan missed:** the daemon's
+  `VideoDeviceMonitor::addDevice` silently drops a device registered without at least one
+  format/width/height/rate entry, and `addVideoDevice:` sent none. No camera ever reached the
+  daemon, so neither direction could have worked whatever else was built.
+  `DaemonBridge.addVideoDevice` now sends 1280x720@30 (the capture preset).
+- `writeOutgoingFrame:angle:videoInputId:` — `getNewFrame` → `configureFrame` → `publishFrame`.
+- `registerSinkTarget:width:height:`, `removeSinkTarget:`, `attachDisplayLayer:toSink:`,
+  `renderSizeForSink:`, `+layoutDisplayLayer:`. **Departure:** frames are not passed up to
+  Kotlin. The `Renderer` wraps each pixel buffer in a `CMSampleBuffer` and enqueues it on the
+  `AVSampleBufferDisplayLayer` attached for the sink, from the daemon's thread, as the native
+  client does — no per-frame Kotlin/Native call on a foreign thread. A layer attached before
+  the daemon announces its sink is parked and picked up on registration.
+- `VideoSignal::StartCapture` / `StopCapture` → `onStartCapture:` / `onStopCapture:`. Not in
+  the plan either; the daemon uses them to tell the client when to capture.
+- `MediaUtils` ported as `jbvideo::` free functions inside the `.mm`. The software-frame
+  copy was rewritten row by row (the original mixed `new[]` with `free()` and used the luma
+  stride for the chroma plane); behaviour is otherwise the same.
+- **FFmpeg headers are not vendored.** `build-jamibridge.sh` includes
+  `jami-client-ios/DEPS/<arch>/include` — the dependency build the linked daemon was compiled
+  against, so the `AVFrame` layout cannot drift. `JAMI_CLIENT_IOS` overrides the path.
+- FFmpeg's `enum AVMediaType` collides with AVFoundation's `AVMediaType`; it is renamed for the
+  duration of the include (the native client keeps them in separate files).
+
+**Kotlin:**
+- `IOSCameraService`: NV12 output; the output connection is pinned to landscape-left and never
+  mirrored (it used to follow the device and mirror the front camera, which sent the peer a
+  mirror image and changed the frame size on every turn); each frame carries
+  `outgoingFrameAngle`. The preview layer still rotates and mirrors on its own. Frames are
+  published under the daemon input named by the last `StartCapture`, so a front/back switch
+  keeps feeding the same call.
+- `outgoingFrameAngle`: the native client's table, **with the landscape rows swapped** — the
+  native client maps device landscape-left to capture landscape-left, Apple (and
+  `captureOrientationFor`) to capture landscape-right. Pinned by `CaptureOrientationTest`.
+- `HardwareService`: `decodingStarted`/`Stopped` register/remove the sink; `addVideoSurface`
+  reuses a display layer already in the view (`VideoSurface`) or installs one
+  (`DisplayLayerView`, for `VideoRenderer`'s plain `UIView`); `connectSink`/`getSinkSize`
+  report real sizes instead of a hardcoded 1280x720.
+- Rotated remote frames: the layer is turned and its bounds swapped by `+layoutDisplayLayer:`,
+  which every container's layout pass now calls instead of setting `layer.frame`.
+
+**Still open:**
+- **On-device verification, with TestFlight build 38.** Build 37 was the first with this
+  code but, like 36, crashed every call on connect (proximity monitoring set off the main
+  thread, fixed in 9e6c4c7); 38 has both. A 1:1 video call against the native client or an Android
+  phone, checking: each side sees the other; the image stays upright when either phone
+  turns, in both landscape directions; a front/back camera switch keeps the outgoing stream;
+  backgrounding and returning mid-call brings the remote image back. If nothing renders, the
+  wrapper's log in the app's Documents folder has a `Video` line per registered sink, and
+  the daemon logs `getNewFrame: Unable to find input …` when frames go to the wrong input.
+- **Build 38 crashed when video was turned on mid-call** (daemon abort in
+  `SIPCall::configureRtpSession`, `assert(videoRtp && mediaAttr)`). The iOS-built media
+  lists (wrapper `placeCall`/`acceptCall`, `DaemonBridge.ios.kt onIncomingCall`) had no
+  `LABEL` (and the incoming one no `ENABLED`); the daemon matches a media change to its
+  streams by label and never retypes a matched stream, so the unlabelled audio entry became
+  a second audio stream and the video SDP slot landed on it. Fixed by labelling them
+  `audio_0`/`video_0` and leaving the video source empty (the daemon's default device;
+  `camera://0` was an Android name). Needs a new build to verify.
+- PiP (§4).
+- Conference grids may want a Metal renderer later.
+- `CallViewModel.stopScreenShare` still sends Android's `camera://0`/`camera://1`
+  (screen sharing does not work on iOS anyway).
+- The branch is not merged into `ios-catch-up-2026-11`.
 
 Reference implementation: `jami-client-ios/Ring/Ring/Bridging/VideoAdapter.mm` +
 `VideoUtils.mm` (the `MediaUtils` category) + `Services/VideoService.swift`.
