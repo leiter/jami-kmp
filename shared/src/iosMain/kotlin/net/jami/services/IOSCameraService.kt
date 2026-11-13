@@ -151,6 +151,14 @@ class IOSCameraService(
      * same violation that crashed launches in 0012bca. Written only on the main thread, by
      * [refreshVideoOrientation]. Declared before `init`, which may already write it.
      */
+    /**
+     * Every AVCaptureSession call runs here, one at a time. AVFoundation throws (an uncatchable
+     * NSGenericException) on stopRunning between beginConfiguration and commitConfiguration;
+     * [closeCamera] used to start an asynchronous stop and reconfigure the session on the
+     * calling thread at the same moment, and TestFlight build 39 crashed exactly there.
+     */
+    private val sessionDispatcher = Dispatchers.IO.limitedParallelism(1)
+
     @kotlin.concurrent.Volatile
     private var videoOrientation: platform.AVFoundation.AVCaptureVideoOrientation = AVCaptureVideoOrientationPortrait
 
@@ -280,7 +288,7 @@ class IOSCameraService(
     // Session Management
     // ══════════════════════════════════════════════════════════════════════════
 
-    suspend fun openCamera(cameraId: String? = null): Boolean = withContext(Dispatchers.IO) {
+    suspend fun openCamera(cameraId: String? = null): Boolean = withContext(sessionDispatcher) {
         if (_cameraState.value == CameraState.CAPTURING) {
             Log.w(tag, "Camera already capturing")
             return@withContext true
@@ -381,7 +389,7 @@ class IOSCameraService(
             return
         }
 
-        scope.launch(Dispatchers.IO) {
+        scope.launch(sessionDispatcher) {
             session.startRunning()
             _cameraState.value = CameraState.CAPTURING
             Log.d(tag, "Capture started")
@@ -390,9 +398,8 @@ class IOSCameraService(
 
     fun stopCapture() {
         val session = captureSession ?: return
-        if (!session.isRunning()) return
-
-        scope.launch(Dispatchers.IO) {
+        scope.launch(sessionDispatcher) {
+            if (!session.isRunning()) return@launch
             session.stopRunning()
             _cameraState.value = CameraState.READY
             Log.d(tag, "Capture stopped")
@@ -400,7 +407,6 @@ class IOSCameraService(
     }
 
     fun closeCamera() {
-        stopCapture()
 
         // The camera stays registered with the daemon. HardwareService.initVideo() registers
         // every camera once at startup; removing this one here left the next video call with
@@ -408,11 +414,19 @@ class IOSCameraService(
         // its devices). It never mattered before only because the registration itself never
         // took — see DaemonBridge.ios.kt addVideoDevice.
 
-        captureSession?.let { session ->
-            session.beginConfiguration()
-            currentInput?.let { session.removeInput(it) }
-            videoOutput?.let { session.removeOutput(it) }
-            session.commitConfiguration()
+        // Stop and tear down in one block on the session queue, after anything already queued:
+        // never a stop in the middle of the reconfiguration.
+        val session = captureSession
+        val input = currentInput
+        val output = videoOutput
+        if (session != null) {
+            scope.launch(sessionDispatcher) {
+                if (session.isRunning()) session.stopRunning()
+                session.beginConfiguration()
+                input?.let { session.removeInput(it) }
+                output?.let { session.removeOutput(it) }
+                session.commitConfiguration()
+            }
         }
 
         captureSession = null
@@ -431,7 +445,7 @@ class IOSCameraService(
     // Camera Switching
     // ══════════════════════════════════════════════════════════════════════════
 
-    suspend fun switchCamera(): String? = withContext(Dispatchers.IO) {
+    suspend fun switchCamera(): String? = withContext(sessionDispatcher) {
         val session = captureSession ?: return@withContext null
         val currentPosition = currentCamera?.position ?: return@withContext null
 

@@ -69,6 +69,12 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
                 if (dismiss) {
                     center.removeDeliveredNotificationsWithIdentifiers(listOf(request.identifier))
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Uncaught, this ends the app (it has no parent to absorb it): a failed accept
+                // or reply must not take the whole app down with it.
+                Log.e(TAG, "Notification action $actionIdentifier failed", e)
             } finally {
                 // Only once the action has been handed to the daemon. A button pressed on the
                 // lock screen launches or wakes the app in the background, and iOS may suspend it

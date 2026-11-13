@@ -11,6 +11,8 @@ package net.jami.di
 import org.koin.core.annotation.KoinInternalApi
 import org.koin.mp.KoinPlatform
 import platform.Foundation.NSLog
+import platform.Foundation.NSBundle
+import platform.Foundation.NSDate
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
@@ -186,7 +188,11 @@ private fun jamiDumpCrashToFile(text: String) {
         val dirs = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
         val docs = dirs.firstOrNull() as? String ?: return
         val path = "$docs/jami_last_crash.txt"
-        (text as NSString).writeToFile(path, atomically = true, encoding = NSUTF8StringEncoding, error = null)
+        // Shown at the top of the in-app debug log after the next launch (LogCapture.ios.kt),
+        // so a tester can send it; the TestFlight report carries no exception message.
+        val build = NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleVersion") as? String
+        val stamped = "crashed at ${NSDate()} (build $build)\n$text"
+        (stamped as NSString).writeToFile(path, atomically = true, encoding = NSUTF8StringEncoding, error = null)
         jamiKoinLog("JAMI_FATAL wrote crash details to $path")
     }
 }
