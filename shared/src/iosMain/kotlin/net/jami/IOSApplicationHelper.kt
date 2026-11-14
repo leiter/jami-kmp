@@ -111,15 +111,21 @@ private object JamiLifecycle : KoinComponent {
     }
 
     /**
-     * Called when the app returns to the foreground: ends the background window,
-     * tells the daemon connectivity is available again, so accounts re-register
-     * promptly instead of waiting for their own timers, and restores the presence
-     * subscriptions released by [enterBackground].
+     * Called when the app returns to the foreground: ends the background window and restores
+     * the presence subscriptions released by [enterBackground].
+     *
+     * Deliberately does **not** call `connectivityChanged`. It used to, "so accounts re-register
+     * promptly", but the daemon treats that call as a network change: it re-registers the
+     * account and drops every DHT operation in flight, and if the re-registration fails the
+     * account stays offline until the next 60 s retry. Seen 2026-11-14 in the two-simulator
+     * test: an invitation accepted just after a foreground transition never cloned. Real network
+     * changes — including ones that happened while suspended — reach the daemon through the
+     * NWPathMonitor ([net.jami.services.expect.HardwareService.startConnectivityMonitoring]). Matches
+     * jami-client-ios, whose scene-foreground handlers only resubscribe presence.
      */
     fun enterForeground() {
         try {
             syncManager.stopBackgroundSync()
-            hardwareService.connectivityChanged(true)
             contactService.resumePresence()
         } catch (e: Exception) {
             Log.e(TAG, "Exception entering foreground: $e")
