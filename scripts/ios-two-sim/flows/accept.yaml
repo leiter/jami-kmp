@@ -1,0 +1,15 @@
+# On the conversation list: wait for the invitation, open it, accept, land in the chat.
+# The banner text also guards the %1$d placeholder fix ("%d pending invitation" before it).
+appId: net.jami.iosapp
+---
+# Another tool on this Mac may have brought its own app forward; this does not restart Jami.
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible: "1 pending invitation"
+    timeout: 90000
+- tapOn: "1 pending invitation"
+- tapOn: "Accept"
+- extendedWaitUntil:
+    visible: ".* has joined the conversation\\."
+    timeout: 90000

@@ -1,0 +1,21 @@
+# On the conversation list: find ${PEER_ID} and open it, which creates the 1:1 swarm and
+# sends the invitation.
+appId: net.jami.iosapp
+---
+# Another tool on this Mac may have brought its own app forward; this does not restart Jami.
+- launchApp:
+    stopApp: false
+- tapOn: "Search conversations"
+- inputText: "${PEER_ID}"
+- extendedWaitUntil:
+    visible: "Public directory"
+    timeout: 30000
+- tapOn:
+    text: ".*${PEER_ID}.*"
+    below: "Public directory"
+# The chat is open. Not asserted: the "<peer> was invited" event — on 2026-11-14 it showed in
+# one run and not in the next, where A instead kept a "Downloading conversation from peer"
+# banner (see README, known issues).
+- extendedWaitUntil:
+    visible: "Write message"
+    timeout: 30000

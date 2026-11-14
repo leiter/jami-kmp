@@ -1,0 +1,9 @@
+# In an open chat: react to ${TEXT} with the first quick emoji (thumbs up).
+appId: net.jami.iosapp
+---
+# Another tool on this Mac may have brought its own app forward; this does not restart Jami.
+- launchApp:
+    stopApp: false
+- longPressOn: "${TEXT}(\\n[\\s\\S]*)?"
+- tapOn: "React"
+- tapOn: "👍"

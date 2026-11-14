@@ -1,0 +1,12 @@
+# In an open chat: send ${TEXT}.
+appId: net.jami.iosapp
+---
+# Another tool on this Mac may have brought its own app forward; this does not restart Jami.
+- launchApp:
+    stopApp: false
+- tapOn: "Write message"
+- inputText: "${TEXT}"
+- tapOn: "Send"
+- hideKeyboard:
+    optional: true
+- assertVisible: "${TEXT}(\\n[\\s\\S]*)?"

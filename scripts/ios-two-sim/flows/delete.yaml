@@ -1,0 +1,11 @@
+# In an open chat: delete own message ${TEXT} (no confirmation dialog).
+appId: net.jami.iosapp
+---
+# Another tool on this Mac may have brought its own app forward; this does not restart Jami.
+- launchApp:
+    stopApp: false
+- longPressOn: "${TEXT}(\\n[\\s\\S]*)?"
+- tapOn: "Delete"
+- extendedWaitUntil:
+    notVisible: "${TEXT}(\\n[\\s\\S]*)?"
+    timeout: 15000

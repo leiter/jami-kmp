@@ -1,0 +1,34 @@
+# Profile screen → account summary → conversation list. Split out so a run that stopped
+# here can be resumed.
+appId: net.jami.iosapp
+---
+- extendedWaitUntil:
+    visible: "Add a profile photo"
+    timeout: 60000
+- tapOn:
+    point: "50%,38%"
+- inputText: "${NAME}"
+# Top bar and button share the label; take the button.
+- tapOn:
+    text: "Continue"
+    below: "Add a profile photo"
+# On a fresh install the notification prompt covers the summary (covered elements are not
+# "visible"), followed by the contacts prompt. The system UI keeps the simulator's original
+# language, so both spellings are matched.
+- extendedWaitUntil:
+    visible: "Allow|Erlauben|Continue to Jami"
+    timeout: 60000
+- tapOn:
+    text: "Allow|Erlauben"
+    optional: true
+- extendedWaitUntil:
+    visible: "Don.t Allow|Nicht erlauben"
+    timeout: 10000
+    optional: true
+- tapOn:
+    text: "Don.t Allow|Nicht erlauben"
+    optional: true
+- tapOn: "Continue to Jami"
+- extendedWaitUntil:
+    visible: "Search conversations"
+    timeout: 30000

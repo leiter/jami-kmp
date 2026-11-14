@@ -1,0 +1,27 @@
+# Fresh install → Jami account without username → display name ${NAME} → conversation list.
+# Text selectors are regexes over the accessibility tree; labels are the English catalogue
+# (run.sh sets the simulator to en). Text fields expose no text, not even their placeholder,
+# so the display-name field is tapped by position (run.sh pins the device type to iPhone 17).
+appId: net.jami.iosapp
+---
+- extendedWaitUntil:
+    visible: "Connect from another device"
+    timeout: 60000
+# The first tap after launch is sometimes swallowed, and retryTapIfNoChange does not catch
+# it: keep tapping while the welcome screen is still there.
+- repeat:
+    times: 5
+    while:
+      visible: "Connect from another device"
+    commands:
+      - tapOn: "Create Account"
+      - waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "SIP"
+    timeout: 15000
+# Title and button share the label; the button is the one below the Jami/SIP tabs.
+- tapOn:
+    text: "Create Account"
+    below: "SIP"
+    retryTapIfNoChange: true
+- runFlow: onboard-profile.yaml

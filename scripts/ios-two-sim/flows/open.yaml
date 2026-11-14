@@ -1,0 +1,16 @@
+# From the conversation list (or already inside it): open the chat with ${PEER_NAME}.
+appId: net.jami.iosapp
+---
+- launchApp:
+    stopApp: false
+- runFlow:
+    when:
+      notVisible: "Write message"
+    commands:
+      - extendedWaitUntil:
+          visible: "${PEER_NAME}.*"
+          timeout: 60000
+      - tapOn: "${PEER_NAME}.*"
+- extendedWaitUntil:
+    visible: "Write message"
+    timeout: 15000

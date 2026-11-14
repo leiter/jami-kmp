@@ -1,0 +1,16 @@
+# In an open chat: edit own message ${OLD} into ${NEW}.
+appId: net.jami.iosapp
+---
+# Another tool on this Mac may have brought its own app forward; this does not restart Jami.
+- launchApp:
+    stopApp: false
+- longPressOn: "${OLD}(\\n[\\s\\S]*)?"
+- tapOn: "Edit"
+- eraseText: 200
+- inputText: "${NEW}"
+- tapOn: "Send"
+- hideKeyboard:
+    optional: true
+- extendedWaitUntil:
+    visible: "${NEW}(\\n[\\s\\S]*)?"
+    timeout: 15000

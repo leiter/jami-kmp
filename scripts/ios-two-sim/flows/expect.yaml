@@ -1,0 +1,9 @@
+# In an open chat: ${TEXT} arrives (default within 60 s).
+appId: net.jami.iosapp
+---
+# Another tool on this Mac may have brought its own app forward; this does not restart Jami.
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible: "${TEXT}(\\n[\\s\\S]*)?"
+    timeout: 60000
