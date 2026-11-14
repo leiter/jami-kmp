@@ -74,8 +74,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">Skemë konference</string>
     <string name="content_desc_call_chat">Fjalosje thirrjeje</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d mesazh i palexuar</item>
-        <item quantity="other">%d mesazhe të palexuar</item>
+        <item quantity="one">%1$d mesazh i palexuar</item>
+        <item quantity="other">%1$d mesazhe të palexuar</item>
     </plurals>
     <string name="account_default_moderator_remove">Hiqe %1$s nga moderatorët parazgjedhje</string>
     <string name="account_status_note_save">Publiko gjendjen</string>
@@ -91,8 +91,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">Mikrofoni i fikur</string>
     <string name="content_desc_participant_video_off">Kamera e fikur</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d ftesë në pritje</item>
-        <item quantity="other">%d ftesa në pritje</item>
+        <item quantity="one">%1$d ftesë në pritje</item>
+        <item quantity="other">%1$d ftesa në pritje</item>
     </plurals>
     <string name="content_desc_profile_photo">Foto profili</string>
     <string name="content_desc_available">I lirë</string>

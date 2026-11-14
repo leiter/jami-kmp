@@ -74,9 +74,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">Layout da conferência</string>
     <string name="content_desc_call_chat">Chat da chamada</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d mensagem não lida</item>
-        <item quantity="many">%d mensagens não lidas</item>
-        <item quantity="other">%d mensagens não lidas</item>
+        <item quantity="one">%1$d mensagem não lida</item>
+        <item quantity="many">%1$d mensagens não lidas</item>
+        <item quantity="other">%1$d mensagens não lidas</item>
     </plurals>
     <string name="account_default_moderator_remove">Remover %1$s dos moderadores padrão</string>
     <string name="account_status_note_save">Publicar status</string>
@@ -92,9 +92,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">Microfone desligado</string>
     <string name="content_desc_participant_video_off">Câmera desligada</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d convite pendente</item>
-        <item quantity="many">%d convites pendentes</item>
-        <item quantity="other">%d convites pendentes</item>
+        <item quantity="one">%1$d convite pendente</item>
+        <item quantity="many">%1$d convites pendentes</item>
+        <item quantity="other">%1$d convites pendentes</item>
     </plurals>
     <string name="content_desc_profile_photo">Foto de perfil</string>
     <string name="content_desc_available">Disponível</string>

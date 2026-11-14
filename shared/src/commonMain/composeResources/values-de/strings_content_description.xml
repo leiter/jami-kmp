@@ -76,8 +76,8 @@ the Free Software Foundation, either version 3 of the License, or
     <string name="content_desc_conference_layout">Konferenzlayout</string>
     <string name="content_desc_call_chat">Anruf-Chat</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d ungelesene Nachricht</item>
-        <item quantity="other">%d ungelesene Nachrichten</item>
+        <item quantity="one">%1$d ungelesene Nachricht</item>
+        <item quantity="other">%1$d ungelesene Nachrichten</item>
     </plurals>
     <string name="account_default_moderator_remove">%1$s aus den Standardmoderatoren entfernen</string>
     <string name="account_status_note_save">Status veröffentlichen</string>
@@ -93,7 +93,7 @@ the Free Software Foundation, either version 3 of the License, or
     <string name="content_desc_participant_muted">Mikrofon aus</string>
     <string name="content_desc_participant_video_off">Kamera aus</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d ausstehende Einladung</item>
-        <item quantity="other">%d ausstehende Einladungen</item>
+        <item quantity="one">%1$d ausstehende Einladung</item>
+        <item quantity="other">%1$d ausstehende Einladungen</item>
     </plurals>
 </resources>

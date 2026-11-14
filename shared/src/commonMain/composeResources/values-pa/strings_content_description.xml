@@ -62,8 +62,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">ਕਾਨਫਰੰਸ ਖਾਕਾ</string>
     <string name="content_desc_call_chat">ਕਾਲ ਚੈਟ</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d ਅਣਪੜ੍ਹਿਆ ਸੁਨੇਹਾ</item>
-        <item quantity="other">%d ਅਣਪੜ੍ਹੇ ਸੁਨੇਹੇ</item>
+        <item quantity="one">%1$d ਅਣਪੜ੍ਹਿਆ ਸੁਨੇਹਾ</item>
+        <item quantity="other">%1$d ਅਣਪੜ੍ਹੇ ਸੁਨੇਹੇ</item>
     </plurals>
     <string name="account_default_moderator_remove">%1$s ਨੂੰ ਡਿਫ਼ੌਲਟ ਸੰਚਾਲਕਾਂ ਵਿੱਚੋਂ ਹਟਾਓ</string>
     <string name="account_status_note_save">ਸਥਿਤੀ ਪ੍ਰਕਾਸ਼ਿਤ ਕਰੋ</string>
@@ -79,8 +79,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">ਮਾਈਕ੍ਰੋਫ਼ੋਨ ਬੰਦ</string>
     <string name="content_desc_participant_video_off">ਕੈਮਰਾ ਬੰਦ</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d ਬਕਾਇਆ ਸੱਦਾ</item>
-        <item quantity="other">%d ਬਕਾਇਆ ਸੱਦੇ</item>
+        <item quantity="one">%1$d ਬਕਾਇਆ ਸੱਦਾ</item>
+        <item quantity="other">%1$d ਬਕਾਇਆ ਸੱਦੇ</item>
     </plurals>
     <string name="content_desc_profile_photo">ਪ੍ਰੋਫਾਈਲ ਫ਼ੋਟੋ</string>
     <string name="content_desc_available">ਉਪਲਬਧ</string>

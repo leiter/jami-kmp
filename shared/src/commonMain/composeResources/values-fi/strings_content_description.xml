@@ -74,8 +74,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">Neuvottelun asettelu</string>
     <string name="content_desc_call_chat">Puhelun chat</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d lukematon viesti</item>
-        <item quantity="other">%d lukematonta viestiä</item>
+        <item quantity="one">%1$d lukematon viesti</item>
+        <item quantity="other">%1$d lukematonta viestiä</item>
     </plurals>
     <string name="account_default_moderator_remove">Poista %1$s oletusmoderaattoreista</string>
     <string name="account_status_note_save">Julkaise tila</string>
@@ -91,8 +91,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">Mikrofoni pois</string>
     <string name="content_desc_participant_video_off">Kamera pois</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d odottava kutsu</item>
-        <item quantity="other">%d odottavaa kutsua</item>
+        <item quantity="one">%1$d odottava kutsu</item>
+        <item quantity="other">%1$d odottavaa kutsua</item>
     </plurals>
     <string name="content_desc_profile_photo">Profiilikuva</string>
     <string name="content_desc_available">Vapaana</string>

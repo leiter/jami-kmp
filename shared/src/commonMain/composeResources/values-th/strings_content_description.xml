@@ -65,7 +65,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">เลย์เอาต์การประชุม</string>
     <string name="content_desc_call_chat">แชทในการโทร</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="other">ข้อความที่ยังไม่อ่าน %d ข้อความ</item>
+        <item quantity="other">ข้อความที่ยังไม่อ่าน %1$d ข้อความ</item>
     </plurals>
     <string name="account_default_moderator_remove">นำ %1$s ออกจากพิธีกรเริ่มต้น</string>
     <string name="account_status_note_save">เผยแพร่สถานะ</string>
@@ -81,7 +81,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">ไมโครโฟนปิดอยู่</string>
     <string name="content_desc_participant_video_off">กล้องปิดอยู่</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="other">คำเชิญที่รอดำเนินการ %d รายการ</item>
+        <item quantity="other">คำเชิญที่รอดำเนินการ %1$d รายการ</item>
     </plurals>
     <string name="content_desc_profile_photo">รูปโปรไฟล์</string>
     <string name="content_desc_available">ใช้ได้</string>

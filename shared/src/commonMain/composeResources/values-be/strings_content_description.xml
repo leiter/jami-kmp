@@ -60,10 +60,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">Макет канферэнцыі</string>
     <string name="content_desc_call_chat">Чат выкліку</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d непрачытанае паведамленне</item>
-        <item quantity="few">%d непрачытаныя паведамленні</item>
-        <item quantity="many">%d непрачытаных паведамленняў</item>
-        <item quantity="other">%d непрачытанага паведамлення</item>
+        <item quantity="one">%1$d непрачытанае паведамленне</item>
+        <item quantity="few">%1$d непрачытаныя паведамленні</item>
+        <item quantity="many">%1$d непрачытаных паведамленняў</item>
+        <item quantity="other">%1$d непрачытанага паведамлення</item>
     </plurals>
     <string name="account_default_moderator_remove">Выдаліць %1$s з мадэратараў па змаўчанні</string>
     <string name="account_status_note_save">Апублікаваць статус</string>
@@ -79,10 +79,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">Мікрафон выключаны</string>
     <string name="content_desc_participant_video_off">Камера выключана</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d запрашэнне чакае</item>
-        <item quantity="few">%d запрашэнні чакаюць</item>
-        <item quantity="many">%d запрашэнняў чакаюць</item>
-        <item quantity="other">%d запрашэння чакаюць</item>
+        <item quantity="one">%1$d запрашэнне чакае</item>
+        <item quantity="few">%1$d запрашэнні чакаюць</item>
+        <item quantity="many">%1$d запрашэнняў чакаюць</item>
+        <item quantity="other">%1$d запрашэння чакаюць</item>
     </plurals>
     <string name="content_desc_profile_photo">Фота профілю</string>
     <string name="content_desc_available">Даступна</string>

@@ -70,9 +70,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
         <item quantity="zero">لا توجد رسائل غير مقروءة</item>
         <item quantity="one">رسالة واحدة غير مقروءة</item>
         <item quantity="two">رسالتان غير مقروءتين</item>
-        <item quantity="few">%d رسائل غير مقروءة</item>
-        <item quantity="many">%d رسالة غير مقروءة</item>
-        <item quantity="other">%d رسالة غير مقروءة</item>
+        <item quantity="few">%1$d رسائل غير مقروءة</item>
+        <item quantity="many">%1$d رسالة غير مقروءة</item>
+        <item quantity="other">%1$d رسالة غير مقروءة</item>
     </plurals>
     <string name="account_default_moderator_remove">إزالة %1$s من المشرفين الافتراضيين</string>
     <string name="account_status_note_save">نشر الحالة</string>
@@ -91,9 +91,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
         <item quantity="zero">لا توجد دعوات معلقة</item>
         <item quantity="one">دعوة واحدة معلقة</item>
         <item quantity="two">دعوتان معلقتان</item>
-        <item quantity="few">%d دعوات معلقة</item>
-        <item quantity="many">%d دعوة معلقة</item>
-        <item quantity="other">%d دعوة معلقة</item>
+        <item quantity="few">%1$d دعوات معلقة</item>
+        <item quantity="many">%1$d دعوة معلقة</item>
+        <item quantity="other">%1$d دعوة معلقة</item>
     </plurals>
     <string name="content_desc_profile_photo">صورة الملف الشخصي</string>
     <string name="content_desc_available">متاح</string>

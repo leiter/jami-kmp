@@ -74,7 +74,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">会议布局</string>
     <string name="content_desc_call_chat">通话聊天</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="other">%d 条未读消息</item>
+        <item quantity="other">%1$d 条未读消息</item>
     </plurals>
     <string name="account_default_moderator_remove">将 %1$s 从默认主持人中移除</string>
     <string name="account_status_note_save">发布状态</string>
@@ -90,7 +90,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">麦克风已关闭</string>
     <string name="content_desc_participant_video_off">摄像头已关闭</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="other">%d 个待处理的邀请</item>
+        <item quantity="other">%1$d 个待处理的邀请</item>
     </plurals>
     <string name="content_desc_profile_photo">头像</string>
     <string name="content_desc_available">可用</string>

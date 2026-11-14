@@ -66,8 +66,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">Подредба на конференцията</string>
     <string name="content_desc_call_chat">Чат на разговора</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d непрочетено съобщение</item>
-        <item quantity="other">%d непрочетени съобщения</item>
+        <item quantity="one">%1$d непрочетено съобщение</item>
+        <item quantity="other">%1$d непрочетени съобщения</item>
     </plurals>
     <string name="account_default_moderator_remove">Премахване на %1$s от модераторите по подразбиране</string>
     <string name="account_status_note_save">Публикуване на статуса</string>
@@ -83,8 +83,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">Микрофонът е изключен</string>
     <string name="content_desc_participant_video_off">Камерата е изключена</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d чакаща покана</item>
-        <item quantity="other">%d чакащи покани</item>
+        <item quantity="one">%1$d чакаща покана</item>
+        <item quantity="other">%1$d чакащи покани</item>
     </plurals>
     <string name="content_desc_profile_photo">Снимка на профила</string>
     <string name="content_desc_available">Свободно</string>

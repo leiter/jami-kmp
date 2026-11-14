@@ -193,8 +193,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <!-- Home Fragment -->
     <string name="invitation_card_title">Invitations received</string>
     <plurals name="home_conferences_title">
-        <item quantity="one">%d Conversation</item>
-        <item quantity="other">%d Conversations</item>
+        <item quantity="one">%1$d Conversation</item>
+        <item quantity="other">%1$d Conversations</item>
     </plurals>
 
     <!-- ContactList Fragment -->

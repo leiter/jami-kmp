@@ -69,7 +69,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">회의 레이아웃</string>
     <string name="content_desc_call_chat">통화 채팅</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="other">읽지 않은 메시지 %d개</item>
+        <item quantity="other">읽지 않은 메시지 %1$d개</item>
     </plurals>
     <string name="account_default_moderator_remove">기본 조정자에서 %1$s 제거</string>
     <string name="account_status_note_save">상태 게시</string>
@@ -85,7 +85,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">마이크 꺼짐</string>
     <string name="content_desc_participant_video_off">카메라 꺼짐</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="other">대기 중인 초대 %d개</item>
+        <item quantity="other">대기 중인 초대 %1$d개</item>
     </plurals>
     <string name="content_desc_profile_photo">프로필 사진</string>
     <string name="content_desc_available">사용 가능</string>

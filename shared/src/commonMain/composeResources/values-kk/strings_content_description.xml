@@ -65,8 +65,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">Конференция орналасуы</string>
     <string name="content_desc_call_chat">Қоңырау чаты</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d оқылмаған хабарлама</item>
-        <item quantity="other">%d оқылмаған хабарлама</item>
+        <item quantity="one">%1$d оқылмаған хабарлама</item>
+        <item quantity="other">%1$d оқылмаған хабарлама</item>
     </plurals>
     <string name="account_default_moderator_remove">%1$s әдепкі модераторлардан алып тастау</string>
     <string name="account_status_note_save">Күйді жариялау</string>
@@ -82,8 +82,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">Микрофон өшірулі</string>
     <string name="content_desc_participant_video_off">Камера өшірулі</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d шақыру күтуде</item>
-        <item quantity="other">%d шақыру күтуде</item>
+        <item quantity="one">%1$d шақыру күтуде</item>
+        <item quantity="other">%1$d шақыру күтуде</item>
     </plurals>
     <string name="content_desc_profile_photo">Профиль фотосы</string>
     <string name="content_desc_available">Бос</string>

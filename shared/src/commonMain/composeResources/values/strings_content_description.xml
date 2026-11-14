@@ -74,8 +74,8 @@
     <string name="content_desc_send_call_message">Send message</string>
 
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d unread message</item>
-        <item quantity="other">%d unread messages</item>
+        <item quantity="one">%1$d unread message</item>
+        <item quantity="other">%1$d unread messages</item>
     </plurals>
     <string name="account_default_moderator_remove">Remove %1$s from default moderators</string>
     <string name="account_status_note_save">Publish status</string>
@@ -95,7 +95,7 @@
     <string name="content_desc_participant_muted">Microphone off</string>
     <string name="content_desc_participant_video_off">Camera off</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d pending invitation</item>
-        <item quantity="other">%d pending invitations</item>
+        <item quantity="one">%1$d pending invitation</item>
+        <item quantity="other">%1$d pending invitations</item>
     </plurals>
 </resources>

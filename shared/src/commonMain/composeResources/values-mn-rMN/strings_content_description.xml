@@ -65,8 +65,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">Хурлын байршил</string>
     <string name="content_desc_call_chat">Дуудлагын чат</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d уншаагүй мессеж</item>
-        <item quantity="other">%d уншаагүй мессеж</item>
+        <item quantity="one">%1$d уншаагүй мессеж</item>
+        <item quantity="other">%1$d уншаагүй мессеж</item>
     </plurals>
     <string name="account_default_moderator_remove">%1$s-г үндсэн модераторуудаас хасах</string>
     <string name="account_status_note_save">Төлөв нийтлэх</string>
@@ -82,8 +82,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">Микрофон унтарсан</string>
     <string name="content_desc_participant_video_off">Камер унтарсан</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d хүлээгдэж буй урилга</item>
-        <item quantity="other">%d хүлээгдэж буй урилга</item>
+        <item quantity="one">%1$d хүлээгдэж буй урилга</item>
+        <item quantity="other">%1$d хүлээгдэж буй урилга</item>
     </plurals>
     <string name="content_desc_profile_photo">Профайл зураг</string>
     <string name="content_desc_available">Боломжтой</string>

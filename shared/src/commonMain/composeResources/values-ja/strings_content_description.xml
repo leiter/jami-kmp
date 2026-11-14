@@ -67,7 +67,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">会議のレイアウト</string>
     <string name="content_desc_call_chat">通話チャット</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="other">未読メッセージ %d 件</item>
+        <item quantity="other">未読メッセージ %1$d 件</item>
     </plurals>
     <string name="account_default_moderator_remove">%1$s をデフォルトのモデレータから削除</string>
     <string name="account_status_note_save">ステータスを公開</string>
@@ -83,7 +83,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">マイクオフ</string>
     <string name="content_desc_participant_video_off">カメラオフ</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="other">保留中の招待 %d 件</item>
+        <item quantity="other">保留中の招待 %1$d 件</item>
     </plurals>
     <string name="content_desc_profile_photo">プロフィール写真</string>
     <string name="content_desc_available">利用可能</string>

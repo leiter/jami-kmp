@@ -66,9 +66,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">Raspored konferencije</string>
     <string name="content_desc_call_chat">Chat poziva</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d nepročitana poruka</item>
-        <item quantity="few">%d nepročitane poruke</item>
-        <item quantity="other">%d nepročitanih poruka</item>
+        <item quantity="one">%1$d nepročitana poruka</item>
+        <item quantity="few">%1$d nepročitane poruke</item>
+        <item quantity="other">%1$d nepročitanih poruka</item>
     </plurals>
     <string name="account_default_moderator_remove">Ukloni %1$s iz zadanih moderatora</string>
     <string name="account_status_note_save">Objavi status</string>
@@ -84,9 +84,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">Mikrofon isključen</string>
     <string name="content_desc_participant_video_off">Kamera isključena</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d pozivnica na čekanju</item>
-        <item quantity="few">%d pozivnice na čekanju</item>
-        <item quantity="other">%d pozivnica na čekanju</item>
+        <item quantity="one">%1$d pozivnica na čekanju</item>
+        <item quantity="few">%1$d pozivnice na čekanju</item>
+        <item quantity="other">%1$d pozivnica na čekanju</item>
     </plurals>
     <string name="content_desc_profile_photo">Profilna fotografija</string>
     <string name="content_desc_available">Dostupno</string>

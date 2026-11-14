@@ -74,10 +74,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">Розкладка конференції</string>
     <string name="content_desc_call_chat">Чат дзвінка</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d непрочитане повідомлення</item>
-        <item quantity="few">%d непрочитані повідомлення</item>
-        <item quantity="many">%d непрочитаних повідомлень</item>
-        <item quantity="other">%d непрочитаного повідомлення</item>
+        <item quantity="one">%1$d непрочитане повідомлення</item>
+        <item quantity="few">%1$d непрочитані повідомлення</item>
+        <item quantity="many">%1$d непрочитаних повідомлень</item>
+        <item quantity="other">%1$d непрочитаного повідомлення</item>
     </plurals>
     <string name="account_default_moderator_remove">Видалити %1$s із модераторів за замовчуванням</string>
     <string name="account_status_note_save">Опублікувати статус</string>
@@ -93,10 +93,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">Мікрофон вимкнено</string>
     <string name="content_desc_participant_video_off">Камеру вимкнено</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d запрошення, що очікує</item>
-        <item quantity="few">%d запрошення, що очікують</item>
-        <item quantity="many">%d запрошень, що очікують</item>
-        <item quantity="other">%d запрошення, що очікує</item>
+        <item quantity="one">%1$d запрошення, що очікує</item>
+        <item quantity="few">%1$d запрошення, що очікують</item>
+        <item quantity="many">%1$d запрошень, що очікують</item>
+        <item quantity="other">%1$d запрошення, що очікує</item>
     </plurals>
     <string name="content_desc_profile_photo">Фото профілю</string>
     <string name="content_desc_available">Доступно</string>

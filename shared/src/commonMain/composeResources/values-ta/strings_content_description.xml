@@ -65,8 +65,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">மாநாட்டு அமைப்பு</string>
     <string name="content_desc_call_chat">அழைப்பு அரட்டை</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d படிக்காத செய்தி</item>
-        <item quantity="other">%d படிக்காத செய்திகள்</item>
+        <item quantity="one">%1$d படிக்காத செய்தி</item>
+        <item quantity="other">%1$d படிக்காத செய்திகள்</item>
     </plurals>
     <string name="account_default_moderator_remove">இயல்புநிலை நடுவர்களிலிருந்து %1$s-ஐ நீக்கு</string>
     <string name="account_status_note_save">நிலையை வெளியிடு</string>
@@ -82,8 +82,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">மைக்ரோஃபோன் அணைக்கப்பட்டது</string>
     <string name="content_desc_participant_video_off">கேமரா அணைக்கப்பட்டது</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d நிலுவை அழைப்பு</item>
-        <item quantity="other">%d நிலுவை அழைப்புகள்</item>
+        <item quantity="one">%1$d நிலுவை அழைப்பு</item>
+        <item quantity="other">%1$d நிலுவை அழைப்புகள்</item>
     </plurals>
     <string name="content_desc_profile_photo">சுயவிவரப் படம்</string>
     <string name="content_desc_available">கிடைக்கிறது</string>

@@ -67,8 +67,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">Διάταξη διάσκεψης</string>
     <string name="content_desc_call_chat">Συνομιλία κλήσης</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d μη αναγνωσμένο μήνυμα</item>
-        <item quantity="other">%d μη αναγνωσμένα μηνύματα</item>
+        <item quantity="one">%1$d μη αναγνωσμένο μήνυμα</item>
+        <item quantity="other">%1$d μη αναγνωσμένα μηνύματα</item>
     </plurals>
     <string name="account_default_moderator_remove">Αφαίρεση του/της %1$s από τους προεπιλεγμένους συντονιστές</string>
     <string name="account_status_note_save">Δημοσίευση κατάστασης</string>
@@ -84,8 +84,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">Μικρόφωνο κλειστό</string>
     <string name="content_desc_participant_video_off">Κάμερα κλειστή</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d εκκρεμής πρόσκληση</item>
-        <item quantity="other">%d εκκρεμείς προσκλήσεις</item>
+        <item quantity="one">%1$d εκκρεμής πρόσκληση</item>
+        <item quantity="other">%1$d εκκρεμείς προσκλήσεις</item>
     </plurals>
     <string name="content_desc_profile_photo">Φωτογραφία προφίλ</string>
     <string name="content_desc_available">Διαθέσιμο</string>

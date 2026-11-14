@@ -70,9 +70,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">Disposició de la conferència</string>
     <string name="content_desc_call_chat">Xat de la trucada</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d missatge no llegit</item>
-        <item quantity="many">%d missatges no llegits</item>
-        <item quantity="other">%d missatges no llegits</item>
+        <item quantity="one">%1$d missatge no llegit</item>
+        <item quantity="many">%1$d missatges no llegits</item>
+        <item quantity="other">%1$d missatges no llegits</item>
     </plurals>
     <string name="account_default_moderator_remove">Treu %1$s dels moderadors per defecte</string>
     <string name="account_status_note_save">Publica l’estat</string>
@@ -88,9 +88,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">Micròfon desactivat</string>
     <string name="content_desc_participant_video_off">Càmera desactivada</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d invitació pendent</item>
-        <item quantity="many">%d invitacions pendents</item>
-        <item quantity="other">%d invitacions pendents</item>
+        <item quantity="one">%1$d invitació pendent</item>
+        <item quantity="many">%1$d invitacions pendents</item>
+        <item quantity="other">%1$d invitacions pendents</item>
     </plurals>
     <string name="content_desc_profile_photo">Foto de perfil</string>
     <string name="content_desc_available">Disponible</string>

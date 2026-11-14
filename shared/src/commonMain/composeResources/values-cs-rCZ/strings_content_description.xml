@@ -74,10 +74,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">Rozvržení konference</string>
     <string name="content_desc_call_chat">Chat hovoru</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d nepřečtená zpráva</item>
-        <item quantity="few">%d nepřečtené zprávy</item>
-        <item quantity="many">%d nepřečtené zprávy</item>
-        <item quantity="other">%d nepřečtených zpráv</item>
+        <item quantity="one">%1$d nepřečtená zpráva</item>
+        <item quantity="few">%1$d nepřečtené zprávy</item>
+        <item quantity="many">%1$d nepřečtené zprávy</item>
+        <item quantity="other">%1$d nepřečtených zpráv</item>
     </plurals>
     <string name="account_default_moderator_remove">Odebrat %1$s z výchozích moderátorů</string>
     <string name="account_status_note_save">Zveřejnit stav</string>
@@ -93,10 +93,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">Mikrofon vypnutý</string>
     <string name="content_desc_participant_video_off">Kamera vypnutá</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d čekající pozvánka</item>
-        <item quantity="few">%d čekající pozvánky</item>
-        <item quantity="many">%d čekající pozvánky</item>
-        <item quantity="other">%d čekajících pozvánek</item>
+        <item quantity="one">%1$d čekající pozvánka</item>
+        <item quantity="few">%1$d čekající pozvánky</item>
+        <item quantity="many">%1$d čekající pozvánky</item>
+        <item quantity="other">%1$d čekajících pozvánek</item>
     </plurals>
     <string name="content_desc_profile_photo">Profilová fotka</string>
     <string name="content_desc_available">Dostupné</string>

@@ -101,4 +101,25 @@ class StringEscapingTest {
             )
         }
     }
+
+    /**
+     * Compose resources (1.9.0, `StringResourcesUtils.replaceWithArgs`) substitutes only
+     * numbered placeholders, `%1$d` / `%1$s`; a bare `%d` or `%s` is rendered as-is. Found
+     * 2026-11-14 in a two-simulator run: the home banner read "%d ausstehende Einladung". 296
+     * bare `%d` across three plurals and 65 files were numbered that day.
+     */
+    @Test
+    fun everyPlaceholderIsNumbered() {
+        val pattern = Regex("""(?<!%)%[ds]""")
+        val offenders = stringFiles()
+            .map { it to pattern.findAll(it.readText()).count() }
+            .filter { (_, n) -> n > 0 }
+        if (offenders.isNotEmpty()) {
+            fail(
+                "${offenders.sumOf { it.second }} bare %d/%s would render literally; use " +
+                    "%1\$d / %1\$s. Offenders: " +
+                    offenders.joinToString { (f, n) -> "${f.parentFile.name}/${f.name}=$n" }
+            )
+        }
+    }
 }

@@ -74,10 +74,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_conference_layout">Układ konferencji</string>
     <string name="content_desc_call_chat">Czat połączenia</string>
     <plurals name="content_desc_unread_count">
-        <item quantity="one">%d nieprzeczytana wiadomość</item>
-        <item quantity="few">%d nieprzeczytane wiadomości</item>
-        <item quantity="many">%d nieprzeczytanych wiadomości</item>
-        <item quantity="other">%d nieprzeczytanej wiadomości</item>
+        <item quantity="one">%1$d nieprzeczytana wiadomość</item>
+        <item quantity="few">%1$d nieprzeczytane wiadomości</item>
+        <item quantity="many">%1$d nieprzeczytanych wiadomości</item>
+        <item quantity="other">%1$d nieprzeczytanej wiadomości</item>
     </plurals>
     <string name="account_default_moderator_remove">Usuń %1$s z domyślnych moderatorów</string>
     <string name="account_status_note_save">Opublikuj status</string>
@@ -93,10 +93,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_participant_muted">Mikrofon wyłączony</string>
     <string name="content_desc_participant_video_off">Kamera wyłączona</string>
     <plurals name="content_desc_pending_invitations">
-        <item quantity="one">%d oczekujące zaproszenie</item>
-        <item quantity="few">%d oczekujące zaproszenia</item>
-        <item quantity="many">%d oczekujących zaproszeń</item>
-        <item quantity="other">%d oczekującego zaproszenia</item>
+        <item quantity="one">%1$d oczekujące zaproszenie</item>
+        <item quantity="few">%1$d oczekujące zaproszenia</item>
+        <item quantity="many">%1$d oczekujących zaproszeń</item>
+        <item quantity="other">%1$d oczekującego zaproszenia</item>
     </plurals>
     <string name="content_desc_profile_photo">Zdjęcie profilowe</string>
     <string name="content_desc_available">Dostępna</string>
