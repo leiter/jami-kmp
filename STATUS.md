@@ -7,6 +7,37 @@ Android 14+ requires)
 
 ---
 
+## Known Gaps (moved from CLAUDE.md 2026-11-14; section last revised 2026-10-31, with later dated entries)
+
+
+All major mobile features are implemented, including CallKit (iOS) and Telecom API/ConnectionService (Android). The remaining gaps are:
+
+- **Push notifications** — Android (FCM) and iOS (APNs + PushKit) client integration are both done (2026-07-27, see `doc/push-notifications.md`). Delivery still needs a push-capable DHT proxy holding the FCM/APNs credentials for this app, so calls and messages currently still rely on the daemon running. The iOS half now compiles and runs (it was written on a Linux host, where Apple targets are skipped, and needed five fixes on the first Mac build — see `ios_implementation_gap.md` §4.1).
+- **~~Apple wrapper batch~~ — closed 2026-11-11 for iOS.** The wrapper now exposes
+`connectivityChanged`, `publish` (+ the presence callback carries status and `lineStatus`), a real
+`libjami::sendFile` with `parent` (the old one sent the text `file://<path>` and never transferred
+a file), `setAudioMeterState` + `AudioMeter`, `createConfFromParticipantList`, call recording
+(+ `RecordingStateChanged`), a per-conversation `getConversationActiveCalls`, and six configuration
+signals (`VolumeChanged`, `Error`, `StunStatusFailed`, hardware de/encoding, `MessageSend`). The
+`.a` files were rebuilt, the app links and starts, and `iosSimulatorArm64Test` passes. None of these
+paths has been exercised live yet. `setDefaultModerator` was dropped from the batch: default moderators go through
+account details (`ConfigKey.DEFAULT_MODERATORS`) on every platform. macOS keeps stubs (its `.a` is not rebuilt).
+See `doc/apple-bridge-rebuild.md`.
+- **macOS target does not compile** — ~95 errors, mostly in `MacOSHardwareService.kt`. Since the iOS and macOS Darwin implementations are now substantively identical, the right fix is a shared `appleMain` source set. A start exists on `origin/macos-build-and-apple-source-set` (`f0f66ce`, 2026-10-01); it predates the nine wrapper commits and is 149 commits behind `ios-catch-up-2026-11` (2026-11-11), so it needs rebasing first. `build-jamibridge.sh`'s macOS stage also fails independently, on UIKit code compiled against the macOS SDK — long-standing, not caused by recent work.
+- **iOS video in calls** — implemented 2026-11-11 (branch `ios-video-pipeline`), **not yet
+  verified in a call**: outgoing frames via `getNewFrame`/`publishFrame`, incoming via a
+  `SinkTarget` per sink rendered into an `AVSampleBufferDisplayLayer`. Builds, links, the app
+  starts, `iosSimulatorArm64Test` passes; the simulator has no camera, so a device call against
+  another client is still needed. Before this, cameras were registered with the daemon without
+  capabilities and silently dropped. PiP not done. See `doc/ios-video-pipeline.md` §0.
+- **Chat plugins** — Jami plugin system not ported to KMP. Menu item shows a "not yet supported" snackbar.
+- **OsmMapView (Desktop/macOS)** — no viable JVM or AppKit map library in scope; shows coordinate text instead of a map.
+- **Desktop DaemonBridge** — all 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.
+- **Web/JS platform** — entire daemon bridge is REST stubs. Explicitly experimental; candidate for removal if a REST bridge server is not developed.
+- **~~Sending into a not-yet-live 1:1 swarm~~ — closed 2026-09-18.** The daemon never delivers a message committed into a 1:1 swarm that has no peer device, so such sends are no longer handed to it: `SendQueueService` + `OutboxStore` hold them while the conversation is `Syncing` or the peer's role is `invited`, persist them, and send once the conversation is live — on `ConversationReady`, on the peer joining, or after the next smartlist load, so they survive a restart. Started from both hosts (`JamiApplication`, `IOSApplicationHelper`). Still outstanding: UI-driven verification on real devices — the `send-before-member-join` e2e scenario bypasses the outbox. See `doc/stabilization-findings-2026-09-04.md` (F1/F4).
+
+---
+
 ## ✅ Fully Implemented & Working
 
 ### UI / Navigation
