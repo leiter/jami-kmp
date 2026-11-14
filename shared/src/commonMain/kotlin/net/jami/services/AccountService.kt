@@ -675,6 +675,33 @@ class AccountService(
         daemonBridge.updateProfile(accountId, displayName, avatar, fileType, botOwner = "", flag)
     }
 
+    /**
+     * Suspends until the daemon has finished initializing [accountId]: it has reported a
+     * registration state other than `INITIALIZING`. Returns false on timeout.
+     *
+     * A freshly created account is unusable for some calls until then. libjami's
+     * `JamiAccount::updateProfile` dereferences `accountManager_->getInfo()` unchecked, and that
+     * is null until initialization (key generation) completes — so onboarding's profile save,
+     * issued seconds after `addAccount`, crashed the app with SIGSEGV whenever it won that race
+     * (2 of ~8 two-simulator onboardings on 2026-11-14).
+     *
+     * Reads the raw status, not [Account.registrationState]: an absent status parses as
+     * UNREGISTERED, which would look initialized before the daemon has said anything.
+     */
+    suspend fun awaitInitialized(accountId: String, timeoutMs: Long = 60_000): Boolean {
+        fun initialized(): Boolean {
+            val status = accountsMap[accountId]?.volatileDetails?.get(ConfigKey.ACCOUNT_REGISTRATION_STATUS.key)
+            return !status.isNullOrEmpty() && status != "INITIALIZING"
+        }
+        if (initialized()) return true
+        return withTimeoutOrNull(timeoutMs) {
+            // accountEvents replays each account's current state on subscription, so a
+            // transition between the check above and this collect is not missed.
+            accountEvents.first { it is AccountEvent.RegistrationStateChanged && it.accountId == accountId && initialized() }
+            true
+        } ?: false
+    }
+
     // ==================== Export/Import ====================
 
     /**

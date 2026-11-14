@@ -17,6 +17,7 @@
 package net.jami.viewmodel
 
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import net.jami.services.StubDaemonBridge
 import net.jami.ui.viewmodel.ProfileSetupViewModel
@@ -117,6 +118,31 @@ class ProfileSetupViewModelTest {
         advanceUntilIdle()
         assertTrue(vm.state.value.isSaved)
         assertFalse(vm.state.value.isLoading)
+    }
+
+    /**
+     * libjami's updateProfile dereferences account info that only exists once the account has
+     * finished initializing; calling it earlier crashed onboarding with SIGSEGV (2026-11-14).
+     */
+    @Test
+    fun saveProfileWaitsUntilAccountIsInitialized() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        prepareAccountInService(stub, accountService)
+        accountService.onRegistrationStateChanged(TEST_ACCOUNT_ID, "INITIALIZING", 0, "")
+        runCurrent()
+
+        val vm = ProfileSetupViewModel(accountService, viewModelScope())
+        vm.setDisplayName("Alice")
+        vm.saveProfile()
+        runCurrent()
+        assertTrue(stub.updateProfileCalls.isEmpty(), "must not reach the daemon while INITIALIZING")
+        assertFalse(vm.state.value.isSaved)
+
+        accountService.onRegistrationStateChanged(TEST_ACCOUNT_ID, "UNREGISTERED", 0, "")
+        runCurrent()
+        assertEquals(listOf(TEST_ACCOUNT_ID to "Alice"), stub.updateProfileCalls)
+        assertTrue(vm.state.value.isSaved)
     }
 
     @Test

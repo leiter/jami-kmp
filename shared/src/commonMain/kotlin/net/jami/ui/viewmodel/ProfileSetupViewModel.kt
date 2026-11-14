@@ -70,6 +70,11 @@ class ProfileSetupViewModel(
             _state.value = current.copy(isLoading = true, error = null)
             try {
                 if (current.displayName.isNotEmpty() || current.avatarPath != null) {
+                    // The account was created seconds ago; libjami crashes (SIGSEGV) on a
+                    // profile update before it finishes initializing. See awaitInitialized.
+                    if (!accountService.awaitInitialized(accountId)) {
+                        Log.w(TAG, "saveProfile: $accountId still initializing after timeout; saving anyway")
+                    }
                     accountService.updateProfile(
                         accountId = accountId,
                         displayName = current.displayName,

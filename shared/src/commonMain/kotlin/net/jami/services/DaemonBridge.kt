@@ -1049,7 +1049,11 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun cancelAddDevice(accountId: String, opId: Long): Boolean = true
     override fun provideAccountAuthentication(accountId: String, password: String, scheme: String): Boolean = true
 
-    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int) {}
+    /** Every updateProfile() that reached the "daemon": (accountId, displayName), in order. */
+    val updateProfileCalls = mutableListOf<Pair<String, String>>()
+    override fun updateProfile(accountId: String, displayName: String, avatar: String, fileType: String, botOwner: String, flag: Int) {
+        updateProfileCalls += accountId to displayName
+    }
 
     override fun placeCall(accountId: String, uri: String, mediaList: List<MediaAttribute>): String = placeCallResult
     override fun accept(accountId: String, callId: String, mediaList: List<MediaAttribute>) {}
