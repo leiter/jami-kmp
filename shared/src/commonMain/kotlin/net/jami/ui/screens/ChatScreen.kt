@@ -804,16 +804,16 @@ fun ChatScreen(
                         tint = MaterialTheme.colorScheme.error,
                     )
                     Text(
-                        text = "Recording audio…",
+                        text = stringResource(Res.string.tv_audio_recording),
                         style = JamiTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.weight(1f).padding(horizontal = JamiTheme.spacing.s),
                     )
                     TextButton(onClick = { viewModel.cancelAudioRecording() }) {
-                        Text("Cancel")
+                        Text(stringResource(Res.string.action_cancel))
                     }
                     Button(onClick = { viewModel.stopAudioRecording() }) {
-                        Text("Send")
+                        Text(stringResource(Res.string.tv_dialog_send))
                     }
                 }
             }
@@ -1327,7 +1327,7 @@ private fun ChatBubble(
                     )
                 }
                 DropdownMenuItem(
-                    text = { Text("React") },
+                    text = { Text(stringResource(Res.string.menu_message_react)) },
                     onClick = {
                         showMenu = false
                         showEmojiPicker = true
@@ -1732,19 +1732,19 @@ private fun FileTransferMessage(
     val tapToRetry = isError && isOutgoing && message.destinationPath != null
 
     val statusText = when (status) {
-        Interaction.TransferStatus.TRANSFER_CREATED        -> "Initializing…"
-        Interaction.TransferStatus.TRANSFER_AWAITING_PEER  -> "Waiting for peer…"
+        Interaction.TransferStatus.TRANSFER_CREATED        -> stringResource(Res.string.file_transfer_status_created)
+        Interaction.TransferStatus.TRANSFER_AWAITING_PEER  -> stringResource(Res.string.file_transfer_status_wait_peer_acceptance)
         Interaction.TransferStatus.TRANSFER_AWAITING_HOST,
-        Interaction.TransferStatus.FILE_AVAILABLE          -> "Tap to download"
+        Interaction.TransferStatus.FILE_AVAILABLE          -> stringResource(Res.string.file_transfer_tap_to_download)
         Interaction.TransferStatus.TRANSFER_ONGOING        ->
             "${formatFileSize(message.bytesProgress)} / ${formatFileSize(message.totalSize)}"
         Interaction.TransferStatus.TRANSFER_FINISHED       -> formatFileSize(message.totalSize)
-        Interaction.TransferStatus.TRANSFER_CANCELED       -> "Canceled"
+        Interaction.TransferStatus.TRANSFER_CANCELED       -> stringResource(Res.string.file_transfer_status_canceled)
         Interaction.TransferStatus.TRANSFER_ERROR,
-        Interaction.TransferStatus.FAILURE                 -> "Transfer failed"
-        Interaction.TransferStatus.TRANSFER_UNJOINABLE_PEER -> "Peer unreachable"
-        Interaction.TransferStatus.TRANSFER_TIMEOUT_EXPIRED -> "Timed out"
-        Interaction.TransferStatus.FILE_REMOVED            -> "File deleted"
+        Interaction.TransferStatus.FAILURE                 -> stringResource(Res.string.file_transfer_status_error)
+        Interaction.TransferStatus.TRANSFER_UNJOINABLE_PEER -> stringResource(Res.string.file_transfer_status_unjoinable_peer)
+        Interaction.TransferStatus.TRANSFER_TIMEOUT_EXPIRED -> stringResource(Res.string.file_transfer_status_timed_out)
+        Interaction.TransferStatus.FILE_REMOVED            -> stringResource(Res.string.file_transfer_status_removed)
         else                                               -> ""
     }
 

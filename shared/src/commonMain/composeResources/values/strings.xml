@@ -548,6 +548,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_canceled">Canceled</string>
     <string name="file_transfer_status_error">An error occurred while transferring the file.</string>
     <string name="file_transfer_status_timed_out">The operation timed out.</string>
+    <string name="file_transfer_status_removed">File deleted</string>
+    <string name="file_transfer_tap_to_download">Tap to download</string>
     <string name="file_saved_in">File saved in %1$s.</string>
     <string name="file_saved_successfully">The file was saved successfully.</string>
     <string name="file_download">Download</string>
@@ -564,6 +566,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="menu_message_delete">Delete message</string>
     <string name="menu_message_cancel">Cancel message</string>
     <string name="menu_message_reply">Reply</string>
+    <string name="menu_message_react">React</string>
     <string name="menu_message_cancel_reply">Cancel reply</string>
     <string name="menu_delete">Delete</string>
     <string name="pref_darkTheme_title">Dark theme</string>

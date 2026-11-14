@@ -213,7 +213,10 @@ fun HomeScreen(
                             .semantics(mergeDescendants = true) { role = Role.Button }
                     ) {
                         JamiAvatar(
-                            displayName = "Me",
+                            // The account's own name (same fallback chain as the account
+                            // picker), so a profile without a photo shows its initial. Was
+                            // "Me", which gave every account an "M".
+                            displayName = state.accounts.firstOrNull { it.isCurrentAccount }?.displayName.orEmpty(),
                             avatarBytes = state.currentAccountAvatarBytes,
                             size = AvatarSize.Small,
                             showPresence = true,
