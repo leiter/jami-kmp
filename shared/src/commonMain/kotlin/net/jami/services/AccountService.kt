@@ -1404,8 +1404,15 @@ class AccountService(
                     contact.setConversationUri(Uri(Uri.SWARM_SCHEME, conversationId))
                 }
                 val conversationUri = contact.conversationUri.value
-                if (conversationUri.isSwarm && account.getByUri(conversationUri) == null) {
-                    val conversation = account.newSwarm(conversationUri.rawRingId, Conversation.Mode.Syncing)
+                // newSwarmIfAbsent, not newSwarm: onConversationReady may be setting up this very
+                // swarm concurrently (indexed, not yet in the URI map getByUri searches), and
+                // newSwarm would downgrade it to Syncing for good. See Account.newSwarmIfAbsent.
+                val placeholder = if (conversationUri.isSwarm && account.getByUri(conversationUri) == null) {
+                    account.newSwarmIfAbsent(conversationUri.rawRingId, Conversation.Mode.Syncing)
+                } else {
+                    null
+                }
+                placeholder?.let { conversation ->
                     conversation.addContact(contact, MemberRole.MEMBER)
                     // newSwarm() alone only indexes into the swarm-id map; conversationStarted()
                     // is what actually adds it to the URI-keyed map that getByUri()/getByContact()

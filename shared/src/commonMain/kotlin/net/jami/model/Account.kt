@@ -127,6 +127,27 @@ class Account(
     }
 
     /**
+     * Create a swarm conversation only if none is indexed under [conversationId] yet; an
+     * existing one is left untouched, its mode included. Returns the new conversation, or null.
+     *
+     * For callers that only want a placeholder. [newSwarm] would *overwrite* the mode of a
+     * conversation another callback is still setting up: `onConversationReady` indexes the swarm
+     * (via [newSwarm]) before [conversationStarted] puts it in the URI map, so a concurrent
+     * `onContactAdded` that checked [getByUri] found nothing and downgraded the live 1:1 to
+     * `Syncing` for good — every message then waited in the outbox. Seen 2026-11-14 on two iOS
+     * simulators: Alice's chat stuck on "Downloading conversation from peer" after Bob joined.
+     */
+    fun newSwarmIfAbsent(conversationId: String, mode: Conversation.Mode): Conversation? =
+        synchronized(conversationsLock) {
+            if (swarmConversations.containsKey(conversationId)) {
+                null
+            } else {
+                Conversation(accountId, Uri(Uri.SWARM_SCHEME, conversationId), mode)
+                    .also { swarmConversations[conversationId] = it }
+            }
+        }
+
+    /**
      * Mark a conversation as started (add to active conversations)
      */
     fun conversationStarted(conversation: Conversation, newMode: Conversation.Mode? = null) {

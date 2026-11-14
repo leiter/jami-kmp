@@ -3,6 +3,8 @@ package net.jami.model
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class AccountTest {
@@ -99,5 +101,33 @@ class AccountTest {
 
         val restored = AccountCredentials.fromMap(map)
         assertEquals(credentials, restored)
+    }
+
+    @Test
+    fun newSwarmIfAbsentCreatesOnlyOnce() {
+        val account = Account(accountId = "acc")
+        val created = account.newSwarmIfAbsent("conv1", Conversation.Mode.Syncing)
+        assertEquals(Conversation.Mode.Syncing, created?.mode)
+        assertSame(created, account.getSwarm("conv1"))
+        assertNull(account.newSwarmIfAbsent("conv1", Conversation.Mode.OneToOne))
+    }
+
+    /**
+     * The interleaving that left a live 1:1 stuck in Syncing (2026-11-14): onConversationReady
+     * has indexed the swarm as OneToOne but not yet started it, so getByUri() misses it, and
+     * onContactAdded's placeholder must not touch it.
+     */
+    @Test
+    fun placeholderDoesNotDowngradeASwarmBeingSetUp() {
+        val account = Account(accountId = "acc")
+        val ready = account.newSwarm("conv1", Conversation.Mode.OneToOne)   // onConversationReady, step 1
+        assertNull(account.getByUri(ready.uri))                              // not started yet
+
+        val placeholder = account.newSwarmIfAbsent("conv1", Conversation.Mode.Syncing) // onContactAdded
+        assertNull(placeholder)
+        assertEquals(Conversation.Mode.OneToOne, ready.mode)
+
+        account.conversationStarted(ready)                                   // onConversationReady, step 2
+        assertEquals(Conversation.Mode.OneToOne, account.getByUri(ready.uri)?.mode)
     }
 }
