@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcrun simctl io *)",
+      "Bash(xcrun simctl list *)",
+      "Bash(plutil -lint *)",
+      "Bash(nm *)",
+      "Bash(javap *)"
+    ]
+  }
+}
