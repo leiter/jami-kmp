@@ -31,4 +31,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_new_group">නව සමූහය තනන්න</string>
     <string name="screen_title_app_settings">සැකසුම්</string>
     <string name="permission_dialog_battery_dismiss">දැන් නොවේ</string>
+    <string name="menu_message_react">ප්‍රතිචාර දක්වන්න</string>
+    <string name="file_transfer_tap_to_download">බාගැනීමට තට්ටු කරන්න</string>
+    <string name="file_transfer_status_removed">ගොනුව මකා දමන ලදී</string>
+    <string name="location_share_duration_10_min">මිනි. 10</string>
+    <string name="location_share_duration_1_hour">පැය 1</string>
+    <string name="conversation_video_recording_unsupported">වීඩියෝ පටිගත කිරීම ඉක්මනින්</string>
+    <string name="chat_extensions_unsupported">පේනු තවම සහාය නොදක්වයි</string>
+    <string name="emoji_category_smileys">සිනහමුහුණු</string>
+    <string name="emoji_category_animals_nature">සතුන් සහ සොබාදහම</string>
+    <string name="emoji_category_food_drink">ආහාර සහ පාන</string>
+    <string name="emoji_category_activities">ක්‍රියාකාරකම්</string>
+    <string name="emoji_category_travel_places">සංචාර සහ ස්ථාන</string>
+    <string name="emoji_category_objects">වස්තු</string>
+    <string name="emoji_category_symbols">සංකේත</string>
 </resources>

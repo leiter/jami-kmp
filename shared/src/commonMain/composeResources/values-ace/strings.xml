@@ -165,4 +165,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="menu_item_edit">ڤڠاجرن</string>
     <string name="screen_title_app_settings">سيٽنگون</string>
     <string name="action_share">ڤڠاجين</string>
+    <string name="menu_message_react">بري رياکسي</string>
+    <string name="file_transfer_tap_to_download">سنتوه اونتوق ڤوه تورون</string>
+    <string name="file_transfer_status_removed">فايل کا دهاڤوس</string>
+    <string name="location_share_duration_10_min">10 مينيت</string>
+    <string name="location_share_duration_1_hour">1 جم</string>
+    <string name="conversation_video_recording_unsupported">رکمن ڤيديو ترڤيه</string>
+    <string name="chat_extensions_unsupported">ڤلوڬين کلوم ددوکوڠ</string>
+    <string name="emoji_category_smileys">سميلي</string>
+    <string name="emoji_category_animals_nature">بنتاڠ ڠون علم</string>
+    <string name="emoji_category_food_drink">ڤاجوه ڠون جيب</string>
+    <string name="emoji_category_activities">ڬيتن</string>
+    <string name="emoji_category_travel_places">جاک ڠون تمڤت</string>
+    <string name="emoji_category_objects">بارڠ</string>
+    <string name="emoji_category_symbols">سيمبول</string>
 </resources>

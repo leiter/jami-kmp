@@ -510,4 +510,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_post_notifications_title">Sireg ilɣa</string>
     <string name="permission_dialog_post_notifications_blocked_message">Ilɣa nsan i Jami. War nitni ad tweḍṛeḍ isawalen d yiznan i d-ikecmen. Ttxil-k rmed ilɣa i Jami deg yiɣewwaṛen n yibenk.</string>
     <string name="permission_dialog_battery_dismiss">Mačči tura</string>
+    <string name="menu_message_react">Rnu tamyerrut</string>
+    <string name="file_transfer_tap_to_download">Sit i usider</string>
+    <string name="file_transfer_status_removed">Afaylu yettwakkes</string>
+    <string name="location_share_duration_10_min">10 n tesdatin</string>
+    <string name="location_share_duration_1_hour">1 n usrag</string>
+    <string name="conversation_video_recording_unsupported">Asekles n tvidyut ad d-yas qrib</string>
+    <string name="chat_extensions_unsupported">Izegrar ur ttwasefraken ara yakan</string>
+    <string name="emoji_category_smileys">Udmawen</string>
+    <string name="emoji_category_animals_nature">Iɣersiwen d ugama</string>
+    <string name="emoji_category_food_drink">Učči d tissit</string>
+    <string name="emoji_category_activities">Irmuden</string>
+    <string name="emoji_category_travel_places">Inigen d yimukan</string>
+    <string name="emoji_category_objects">Tiɣawsiwin</string>
+    <string name="emoji_category_symbols">Izamulen</string>
 </resources>

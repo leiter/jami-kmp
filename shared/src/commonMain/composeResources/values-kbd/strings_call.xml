@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="video_loss_duration">Секунд %1$d видео щыӏэкъым</string>
+    <string name="video_loss_attempt">Хэтыкӏэ %1$d/%2$d</string>
+    <string name="video_loss_unavailable">Мы зэпыщӏэныгъэмкӏэ видеор щыӏэкъым</string>
+    <string name="video_loss_retry">Аргуэру хэтын</string>
+    <string name="video_loss_audio_only">Аудио закъуэ</string>
+    <string name="conference_waiting_participants">Хэтхэм пэплъэ…</string>
+</resources>

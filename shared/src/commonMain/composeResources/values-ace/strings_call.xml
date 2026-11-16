@@ -33,4 +33,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_muted">ساكيت</string>
     <string name="call_handRaised">يڠ دڤرتوان</string>
     <string name="call_participant_enable_video">ڤرلو ممڤوپا?? ي ڤيديو</string>
+    <string name="video_loss_duration">هان ڤيديو %1$d دتيک</string>
+    <string name="video_loss_attempt">چوبا %1$d/%2$d</string>
+    <string name="video_loss_unavailable">ڤيديو هان ترسديا بق سمبوڠن نيه</string>
+    <string name="video_loss_retry">چوبا لوم</string>
+    <string name="video_loss_audio_only">اودييو مانتڠ</string>
+    <string name="conference_waiting_participants">تڠوه ڤريه ڤسرتا…</string>
 </resources>

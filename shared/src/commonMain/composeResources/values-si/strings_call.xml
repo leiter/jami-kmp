@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="video_loss_duration">තත්. %1$d ක් වීඩියෝ නැත</string>
+    <string name="video_loss_attempt">උත්සාහය %1$d/%2$d</string>
+    <string name="video_loss_unavailable">මෙම සම්බන්ධතාවයේ වීඩියෝ ලබා ගත නොහැක</string>
+    <string name="video_loss_retry">නැවත උත්සාහ කරන්න</string>
+    <string name="video_loss_audio_only">ශ්‍රව්‍ය පමණි</string>
+    <string name="conference_waiting_participants">සහභාගිවන්නන් එනතෙක් රැඳී සිටී…</string>
+</resources>

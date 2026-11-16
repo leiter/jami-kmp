@@ -33,4 +33,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_muted">N'enweghị isi</string>
     <string name="call_handRaised">Aka e weliri elu</string>
     <string name="call_participant_enable_video">Gbaa vidiyo ahụ</string>
+    <string name="video_loss_duration">Enweghị vidiyo maka sekọnd %1$d</string>
+    <string name="video_loss_attempt">Mgbalị %1$d/%2$d</string>
+    <string name="video_loss_unavailable">Vidiyo adịghị na njikọ a</string>
+    <string name="video_loss_retry">Nwaa ọzọ</string>
+    <string name="video_loss_audio_only">Naanị ụda</string>
+    <string name="conference_waiting_participants">Na-eche ndị so…</string>
 </resources>

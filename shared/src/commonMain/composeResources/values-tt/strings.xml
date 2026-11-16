@@ -168,4 +168,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="screen_title_app_settings">Калыплар</string>
     <string name="action_share">Бүләкләү</string>
     <string name="permission_dialog_battery_dismiss">Хәзер түгел</string>
+    <string name="menu_message_react">Реакция белдерү</string>
+    <string name="file_transfer_tap_to_download">Йөкләү өчен басыгыз</string>
+    <string name="file_transfer_status_removed">Файл бетерелде</string>
+    <string name="location_share_duration_10_min">10 мин</string>
+    <string name="location_share_duration_1_hour">1 сәгать</string>
+    <string name="conversation_video_recording_unsupported">Видео язу тиздән</string>
+    <string name="chat_extensions_unsupported">Плагиннар әлегә хупланмый</string>
+    <string name="emoji_category_smileys">Смайликлар</string>
+    <string name="emoji_category_animals_nature">Хайваннар һәм табигать</string>
+    <string name="emoji_category_food_drink">Ризык һәм эчемлек</string>
+    <string name="emoji_category_activities">Шөгыльләр</string>
+    <string name="emoji_category_travel_places">Сәяхәт һәм урыннар</string>
+    <string name="emoji_category_objects">Әйберләр</string>
+    <string name="emoji_category_symbols">Символлар</string>
 </resources>

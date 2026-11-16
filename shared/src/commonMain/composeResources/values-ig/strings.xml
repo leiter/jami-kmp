@@ -183,4 +183,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="screen_title_app_settings">Ntọala</string>
     <string name="action_share">Ịkekọrịta</string>
     <string name="permission_dialog_battery_dismiss">Ọbụghị ugbu a</string>
+    <string name="menu_message_react">Meghachi omume</string>
+    <string name="file_transfer_tap_to_download">Pịa ka ibudata</string>
+    <string name="file_transfer_status_removed">E hichapụla faịlụ</string>
+    <string name="location_share_duration_10_min">Nkeji 10</string>
+    <string name="location_share_duration_1_hour">Awa 1</string>
+    <string name="conversation_video_recording_unsupported">Ndekọ vidiyo na-abịa n'oge na-adịghị anya</string>
+    <string name="chat_extensions_unsupported">A naghị akwado ngwa mgbakwunye ugbu a</string>
+    <string name="emoji_category_smileys">Ihu ọchị</string>
+    <string name="emoji_category_animals_nature">Anụmanụ na okike</string>
+    <string name="emoji_category_food_drink">Nri na ihe ọṅụṅụ</string>
+    <string name="emoji_category_activities">Ihe omume</string>
+    <string name="emoji_category_travel_places">Njem na ebe</string>
+    <string name="emoji_category_objects">Ihe</string>
+    <string name="emoji_category_symbols">Akara</string>
 </resources>
