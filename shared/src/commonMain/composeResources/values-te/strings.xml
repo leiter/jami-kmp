@@ -387,4 +387,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">అన్నీ</string>
     <string name="filter_unread">చదవనివి</string>
     <string name="filter_groups">సమూహాలు</string>
+    <string name="menu_message_react">ప్రతిస్పందించండి</string>
+    <string name="file_transfer_tap_to_download">డౌన్‌లోడ్ చేయడానికి నొక్కండి</string>
+    <string name="file_transfer_status_removed">ఫైల్ తొలగించబడింది</string>
+    <string name="location_share_duration_10_min">10 నిమి</string>
+    <string name="location_share_duration_1_hour">1 గంట</string>
+    <string name="conversation_video_recording_unsupported">వీడియో రికార్డింగ్ త్వరలో</string>
+    <string name="chat_extensions_unsupported">ప్లగిన్‌లకు ఇంకా మద్దతు లేదు</string>
+    <string name="emoji_category_smileys">స్మైలీలు</string>
+    <string name="emoji_category_animals_nature">జంతువులు &amp; ప్రకృతి</string>
+    <string name="emoji_category_food_drink">ఆహారం &amp; పానీయం</string>
+    <string name="emoji_category_activities">కార్యకలాపాలు</string>
+    <string name="emoji_category_travel_places">ప్రయాణం &amp; ప్రదేశాలు</string>
+    <string name="emoji_category_objects">వస్తువులు</string>
+    <string name="emoji_category_symbols">చిహ్నాలు</string>
 </resources>

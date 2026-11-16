@@ -398,4 +398,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Բոլորը</string>
     <string name="filter_unread">Չընթերցված</string>
     <string name="filter_groups">Խմբեր</string>
+    <string name="menu_message_react">Արձագանքել</string>
+    <string name="file_transfer_tap_to_download">Հպեք՝ ներբեռնելու համար</string>
+    <string name="file_transfer_status_removed">Ֆայլը ջնջված է</string>
+    <string name="location_share_duration_10_min">10 րոպե</string>
+    <string name="location_share_duration_1_hour">1 ժամ</string>
+    <string name="conversation_video_recording_unsupported">Տեսագրությունը շուտով</string>
+    <string name="chat_extensions_unsupported">Պլագինները դեռ չեն աջակցվում</string>
+    <string name="emoji_category_smileys">Սմայլիկներ</string>
+    <string name="emoji_category_animals_nature">Կենդանիներ և բնություն</string>
+    <string name="emoji_category_food_drink">Սնունդ և խմիչք</string>
+    <string name="emoji_category_activities">Զբաղմունքներ</string>
+    <string name="emoji_category_travel_places">Ճամփորդություն և վայրեր</string>
+    <string name="emoji_category_objects">Առարկաներ</string>
+    <string name="emoji_category_symbols">Նշաններ</string>
 </resources>

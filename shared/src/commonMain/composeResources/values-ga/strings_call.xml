@@ -60,4 +60,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">Teachtaireacht</string>
     <string name="call_chat_empty">Feictear anseo teachtaireachtaí a sheoltar le linn an ghlao seo. Ní shábháiltear sa chomhrá iad.</string>
     <string name="call_on_hold">Ar feitheamh</string>
+    <string name="video_loss_duration">Gan físeán le %1$d s</string>
+    <string name="video_loss_attempt">Iarracht %1$d/%2$d</string>
+    <string name="video_loss_unavailable">Níl an físeán ar fáil ar an nasc seo</string>
+    <string name="video_loss_retry">Bain triail eile as</string>
+    <string name="video_loss_audio_only">Fuaim amháin</string>
+    <string name="conference_waiting_participants">Ag fanacht le rannpháirtithe…</string>
 </resources>

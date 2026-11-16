@@ -413,4 +413,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Όλες</string>
     <string name="filter_unread">Μη αναγνωσμένες</string>
     <string name="filter_groups">Ομάδες</string>
+    <string name="menu_message_react">Αντίδραση</string>
+    <string name="file_transfer_tap_to_download">Πατήστε για λήψη</string>
+    <string name="file_transfer_status_removed">Το αρχείο διαγράφηκε</string>
+    <string name="location_share_duration_10_min">10 λεπτά</string>
+    <string name="location_share_duration_1_hour">1 ώρα</string>
+    <string name="conversation_video_recording_unsupported">Η εγγραφή βίντεο έρχεται σύντομα</string>
+    <string name="chat_extensions_unsupported">Τα πρόσθετα δεν υποστηρίζονται ακόμα</string>
+    <string name="emoji_category_smileys">Φατσούλες</string>
+    <string name="emoji_category_animals_nature">Ζώα και φύση</string>
+    <string name="emoji_category_food_drink">Φαγητό και ποτό</string>
+    <string name="emoji_category_activities">Δραστηριότητες</string>
+    <string name="emoji_category_travel_places">Ταξίδια και μέρη</string>
+    <string name="emoji_category_objects">Αντικείμενα</string>
+    <string name="emoji_category_symbols">Σύμβολα</string>
 </resources>

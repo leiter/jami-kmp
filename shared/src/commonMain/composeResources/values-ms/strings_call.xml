@@ -34,4 +34,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_handRaised">കൈ ഉയര് ത്തുക</string>
     <string name="call_dtmf_dialpad">ഡയല് പഡ്</string>
     <string name="call_participant_enable_video">Aktifkan panggilan video</string>
+    <string name="video_loss_duration">Tiada video selama %1$d saat</string>
+    <string name="video_loss_attempt">Cubaan %1$d/%2$d</string>
+    <string name="video_loss_unavailable">Video tidak tersedia pada sambungan ini</string>
+    <string name="video_loss_retry">Cuba lagi</string>
+    <string name="video_loss_audio_only">Audio sahaja</string>
+    <string name="conference_waiting_participants">Menunggu peserta…</string>
 </resources>

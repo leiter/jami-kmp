@@ -312,4 +312,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="screen_title_app_settings">تنظیمات</string>
     <string name="action_share">بؤلوم</string>
     <string name="filter_requests">طلبلر</string>
+    <string name="menu_message_react">Reaksiya ver</string>
+    <string name="file_transfer_tap_to_download">Endirmək üçün toxunun</string>
+    <string name="file_transfer_status_removed">Fayl silindi</string>
+    <string name="location_share_duration_10_min">10 dəq</string>
+    <string name="location_share_duration_1_hour">1 saat</string>
+    <string name="conversation_video_recording_unsupported">Video yazma tezliklə</string>
+    <string name="chat_extensions_unsupported">Plaginlər hələ dəstəklənmir</string>
+    <string name="emoji_category_smileys">Smaylikler</string>
+    <string name="emoji_category_animals_nature">Heyvanlar və təbiət</string>
+    <string name="emoji_category_food_drink">Yemək və içki</string>
+    <string name="emoji_category_activities">Fəaliyyətlər</string>
+    <string name="emoji_category_travel_places">Səyahət və yerlər</string>
+    <string name="emoji_category_objects">Əşyalar</string>
+    <string name="emoji_category_symbols">Simvollar</string>
 </resources>

@@ -61,4 +61,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">Messatge</string>
     <string name="call_chat_empty">Los messatges mandats pendent aquesta sonada apareisson aquí. Son pas enregistrats dins la conversacion.</string>
     <string name="call_on_hold">En espèra</string>
+    <string name="video_loss_duration">Pas de vidèo dempuèi %1$d s</string>
+    <string name="video_loss_attempt">Ensag %1$d/%2$d</string>
+    <string name="video_loss_unavailable">La vidèo es pas disponibla sus aquesta connexion</string>
+    <string name="video_loss_retry">Tornar ensajar</string>
+    <string name="video_loss_audio_only">Àudio solament</string>
+    <string name="conference_waiting_participants">En espèra dels participants…</string>
 </resources>

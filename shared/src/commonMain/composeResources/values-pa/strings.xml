@@ -331,4 +331,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">ਸਾਰੇ</string>
     <string name="filter_unread">ਅਣਪੜ੍ਹੇ</string>
     <string name="filter_groups">ਸਮੂਹ</string>
+    <string name="menu_message_react">ਪ੍ਰਤੀਕਿਰਿਆ ਦਿਓ</string>
+    <string name="file_transfer_tap_to_download">ਡਾਊਨਲੋਡ ਕਰਨ ਲਈ ਟੈਪ ਕਰੋ</string>
+    <string name="file_transfer_status_removed">ਫ਼ਾਈਲ ਮਿਟਾਈ ਗਈ</string>
+    <string name="location_share_duration_10_min">10 ਮਿੰਟ</string>
+    <string name="location_share_duration_1_hour">1 ਘੰਟਾ</string>
+    <string name="conversation_video_recording_unsupported">ਵੀਡੀਓ ਰਿਕਾਰਡਿੰਗ ਜਲਦੀ ਆ ਰਹੀ ਹੈ</string>
+    <string name="chat_extensions_unsupported">ਪਲੱਗਇਨ ਅਜੇ ਸਮਰਥਿਤ ਨਹੀਂ ਹਨ</string>
+    <string name="emoji_category_smileys">ਸਮਾਈਲੀ</string>
+    <string name="emoji_category_animals_nature">ਜਾਨਵਰ ਅਤੇ ਕੁਦਰਤ</string>
+    <string name="emoji_category_food_drink">ਖਾਣਾ ਅਤੇ ਪੀਣ</string>
+    <string name="emoji_category_activities">ਗਤੀਵਿਧੀਆਂ</string>
+    <string name="emoji_category_travel_places">ਯਾਤਰਾ ਅਤੇ ਥਾਵਾਂ</string>
+    <string name="emoji_category_objects">ਵਸਤੂਆਂ</string>
+    <string name="emoji_category_symbols">ਚਿੰਨ੍ਹ</string>
 </resources>

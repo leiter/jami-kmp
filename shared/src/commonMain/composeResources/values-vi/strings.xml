@@ -368,4 +368,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Tất cả</string>
     <string name="filter_unread">Chưa đọc</string>
     <string name="filter_groups">Nhóm</string>
+    <string name="menu_message_react">Bày tỏ cảm xúc</string>
+    <string name="file_transfer_tap_to_download">Nhấn để tải xuống</string>
+    <string name="file_transfer_status_removed">Đã xóa tệp</string>
+    <string name="location_share_duration_10_min">10 phút</string>
+    <string name="location_share_duration_1_hour">1 giờ</string>
+    <string name="conversation_video_recording_unsupported">Sắp có tính năng quay video</string>
+    <string name="chat_extensions_unsupported">Chưa hỗ trợ tiện ích bổ sung</string>
+    <string name="emoji_category_smileys">Mặt cười</string>
+    <string name="emoji_category_animals_nature">Động vật và thiên nhiên</string>
+    <string name="emoji_category_food_drink">Đồ ăn và thức uống</string>
+    <string name="emoji_category_activities">Hoạt động</string>
+    <string name="emoji_category_travel_places">Du lịch và địa điểm</string>
+    <string name="emoji_category_objects">Đồ vật</string>
+    <string name="emoji_category_symbols">Biểu tượng</string>
 </resources>

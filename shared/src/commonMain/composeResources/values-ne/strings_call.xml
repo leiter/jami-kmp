@@ -61,4 +61,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">सन्देश</string>
     <string name="call_chat_empty">यस कलको बेला पठाइएका सन्देशहरू यहाँ देखिन्छन्। ती वार्तालापमा सुरक्षित गरिँदैनन्।</string>
     <string name="call_on_hold">होल्डमा</string>
+    <string name="video_loss_duration">%1$d से. देखि भिडियो छैन</string>
+    <string name="video_loss_attempt">प्रयास %1$d/%2$d</string>
+    <string name="video_loss_unavailable">यो जडानमा भिडियो उपलब्ध छैन</string>
+    <string name="video_loss_retry">फेरि प्रयास गर्नुहोस्</string>
+    <string name="video_loss_audio_only">अडियो मात्र</string>
+    <string name="conference_waiting_participants">सहभागीहरूको प्रतीक्षा…</string>
 </resources>

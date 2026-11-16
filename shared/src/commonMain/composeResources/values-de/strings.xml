@@ -616,4 +616,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_battery_title">Jami aktiv halten</string>
     <string name="permission_dialog_battery_message">Um Anrufe und Nachrichten bei ausgeschaltetem Bildschirm zu empfangen, muss Jami von der Akkuoptimierung ausgenommen werden. Andernfalls beendet das System Jami nach wenigen Minuten im Hintergrund.</string>
     <string name="permission_dialog_battery_confirm">Zulassen</string>
+    <string name="location_share_duration_10_min">10 Min.</string>
+    <string name="location_share_duration_1_hour">1 Stunde</string>
+    <string name="conversation_video_recording_unsupported">Videoaufnahme folgt bald</string>
+    <string name="chat_extensions_unsupported">Plugins werden noch nicht unterstützt</string>
+    <string name="emoji_category_smileys">Smileys</string>
+    <string name="emoji_category_animals_nature">Tiere &amp; Natur</string>
+    <string name="emoji_category_food_drink">Essen &amp; Trinken</string>
+    <string name="emoji_category_activities">Aktivitäten</string>
+    <string name="emoji_category_travel_places">Reisen &amp; Orte</string>
+    <string name="emoji_category_objects">Objekte</string>
+    <string name="emoji_category_symbols">Symbole</string>
 </resources>

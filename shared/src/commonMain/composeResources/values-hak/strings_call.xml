@@ -58,4 +58,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">消息</string>
     <string name="call_chat_empty">通话期间发送的消息会显示在这里。这些消息不会保存到对话中。</string>
     <string name="call_on_hold">已保持</string>
+    <string name="video_loss_duration">已 %1$d 秒無影像</string>
+    <string name="video_loss_attempt">第 %1$d/%2$d 次嘗試</string>
+    <string name="video_loss_unavailable">此連線無法使用視訊</string>
+    <string name="video_loss_retry">重試</string>
+    <string name="video_loss_audio_only">僅音訊</string>
+    <string name="conference_waiting_participants">正在等候參與者…</string>
 </resources>

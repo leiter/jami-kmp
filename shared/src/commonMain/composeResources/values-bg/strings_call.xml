@@ -61,4 +61,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">Съобщение</string>
     <string name="call_chat_empty">Съобщенията, изпратени по време на разговора, се показват тук. Те не се запазват в разговора.</string>
     <string name="call_on_hold">Задържан</string>
+    <string name="video_loss_duration">Няма видео от %1$d с</string>
+    <string name="video_loss_attempt">Опит %1$d/%2$d</string>
+    <string name="video_loss_unavailable">Видеото не е достъпно при тази връзка</string>
+    <string name="video_loss_retry">Опитай отново</string>
+    <string name="video_loss_audio_only">Само звук</string>
+    <string name="conference_waiting_participants">Изчакване на участници…</string>
 </resources>

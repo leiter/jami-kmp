@@ -585,4 +585,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Összes</string>
     <string name="filter_unread">Olvasatlan</string>
     <string name="filter_groups">Csoportok</string>
+    <string name="menu_message_react">Reagálás</string>
+    <string name="file_transfer_tap_to_download">Koppintson a letöltéshez</string>
+    <string name="file_transfer_status_removed">Fájl törölve</string>
+    <string name="location_share_duration_10_min">10 perc</string>
+    <string name="location_share_duration_1_hour">1 óra</string>
+    <string name="conversation_video_recording_unsupported">A videófelvétel hamarosan érkezik</string>
+    <string name="chat_extensions_unsupported">A bővítmények még nem támogatottak</string>
+    <string name="emoji_category_smileys">Hangulatjelek</string>
+    <string name="emoji_category_animals_nature">Állatok és természet</string>
+    <string name="emoji_category_food_drink">Étel és ital</string>
+    <string name="emoji_category_activities">Tevékenységek</string>
+    <string name="emoji_category_travel_places">Utazás és helyek</string>
+    <string name="emoji_category_objects">Tárgyak</string>
+    <string name="emoji_category_symbols">Szimbólumok</string>
 </resources>

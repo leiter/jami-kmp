@@ -455,4 +455,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">전체</string>
     <string name="filter_unread">읽지 않음</string>
     <string name="filter_groups">그룹</string>
+    <string name="menu_message_react">반응하기</string>
+    <string name="file_transfer_tap_to_download">탭하여 다운로드</string>
+    <string name="file_transfer_status_removed">파일이 삭제됨</string>
+    <string name="location_share_duration_10_min">10분</string>
+    <string name="location_share_duration_1_hour">1시간</string>
+    <string name="conversation_video_recording_unsupported">동영상 녹화 곧 지원 예정</string>
+    <string name="chat_extensions_unsupported">플러그인은 아직 지원되지 않습니다</string>
+    <string name="emoji_category_smileys">스마일리</string>
+    <string name="emoji_category_animals_nature">동물 및 자연</string>
+    <string name="emoji_category_food_drink">음식 및 음료</string>
+    <string name="emoji_category_activities">활동</string>
+    <string name="emoji_category_travel_places">여행 및 장소</string>
+    <string name="emoji_category_objects">사물</string>
+    <string name="emoji_category_symbols">기호</string>
 </resources>

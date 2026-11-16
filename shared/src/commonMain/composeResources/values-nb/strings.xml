@@ -451,4 +451,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Alle</string>
     <string name="filter_unread">Uleste</string>
     <string name="filter_groups">Grupper</string>
+    <string name="menu_message_react">Reager</string>
+    <string name="file_transfer_tap_to_download">Trykk for å laste ned</string>
+    <string name="file_transfer_status_removed">Filen er slettet</string>
+    <string name="location_share_duration_10_min">10 min</string>
+    <string name="location_share_duration_1_hour">1 time</string>
+    <string name="conversation_video_recording_unsupported">Videoopptak kommer snart</string>
+    <string name="chat_extensions_unsupported">Programtillegg støttes ikke ennå</string>
+    <string name="emoji_category_smileys">Smilefjes</string>
+    <string name="emoji_category_animals_nature">Dyr og natur</string>
+    <string name="emoji_category_food_drink">Mat og drikke</string>
+    <string name="emoji_category_activities">Aktiviteter</string>
+    <string name="emoji_category_travel_places">Reise og steder</string>
+    <string name="emoji_category_objects">Objekter</string>
+    <string name="emoji_category_symbols">Symboler</string>
 </resources>

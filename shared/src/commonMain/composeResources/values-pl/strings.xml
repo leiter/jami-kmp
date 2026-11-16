@@ -571,4 +571,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Wszystkie</string>
     <string name="filter_unread">Nieprzeczytane</string>
     <string name="filter_groups">Grupy</string>
+    <string name="menu_message_react">Zareaguj</string>
+    <string name="file_transfer_tap_to_download">Dotknij, aby pobrać</string>
+    <string name="file_transfer_status_removed">Plik usunięty</string>
+    <string name="location_share_duration_10_min">10 min</string>
+    <string name="location_share_duration_1_hour">1 godzina</string>
+    <string name="conversation_video_recording_unsupported">Nagrywanie wideo wkrótce</string>
+    <string name="chat_extensions_unsupported">Wtyczki nie są jeszcze obsługiwane</string>
+    <string name="emoji_category_smileys">Emotikony</string>
+    <string name="emoji_category_animals_nature">Zwierzęta i przyroda</string>
+    <string name="emoji_category_food_drink">Jedzenie i napoje</string>
+    <string name="emoji_category_activities">Aktywności</string>
+    <string name="emoji_category_travel_places">Podróże i miejsca</string>
+    <string name="emoji_category_objects">Przedmioty</string>
+    <string name="emoji_category_symbols">Symbole</string>
 </resources>

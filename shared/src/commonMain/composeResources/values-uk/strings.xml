@@ -570,4 +570,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Усі</string>
     <string name="filter_unread">Непрочитані</string>
     <string name="filter_groups">Групи</string>
+    <string name="menu_message_react">Відреагувати</string>
+    <string name="file_transfer_tap_to_download">Торкніться, щоб завантажити</string>
+    <string name="file_transfer_status_removed">Файл видалено</string>
+    <string name="location_share_duration_10_min">10 хв</string>
+    <string name="location_share_duration_1_hour">1 година</string>
+    <string name="conversation_video_recording_unsupported">Запис відео незабаром</string>
+    <string name="chat_extensions_unsupported">Плагіни ще не підтримуються</string>
+    <string name="emoji_category_smileys">Смайлики</string>
+    <string name="emoji_category_animals_nature">Тварини і природа</string>
+    <string name="emoji_category_food_drink">Їжа і напої</string>
+    <string name="emoji_category_activities">Заняття</string>
+    <string name="emoji_category_travel_places">Подорожі й місця</string>
+    <string name="emoji_category_objects">Предмети</string>
+    <string name="emoji_category_symbols">Символи</string>
 </resources>

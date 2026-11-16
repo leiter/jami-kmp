@@ -64,4 +64,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">Mesaj</string>
     <string name="call_chat_empty">Mesajele trimise în timpul acestui apel apar aici. Nu sunt salvate în conversație.</string>
     <string name="call_on_hold">În așteptare</string>
+    <string name="video_loss_duration">Fără video de %1$d s</string>
+    <string name="video_loss_attempt">Încercarea %1$d/%2$d</string>
+    <string name="video_loss_unavailable">Videoclipul nu este disponibil pe această conexiune</string>
+    <string name="video_loss_retry">Încearcă din nou</string>
+    <string name="video_loss_audio_only">Doar audio</string>
+    <string name="conference_waiting_participants">Se așteaptă participanții…</string>
 </resources>

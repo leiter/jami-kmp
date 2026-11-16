@@ -64,4 +64,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">Üzenet</string>
     <string name="call_chat_empty">A hívás közben küldött üzenetek itt jelennek meg. Nem kerülnek mentésre a beszélgetésbe.</string>
     <string name="call_on_hold">Tartásban</string>
+    <string name="video_loss_duration">%1$d mp óta nincs videó</string>
+    <string name="video_loss_attempt">%1$d/%2$d. próbálkozás</string>
+    <string name="video_loss_unavailable">A videó nem érhető el ezen a kapcsolaton</string>
+    <string name="video_loss_retry">Újra</string>
+    <string name="video_loss_audio_only">Csak hang</string>
+    <string name="conference_waiting_participants">Várakozás a résztvevőkre…</string>
 </resources>

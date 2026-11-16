@@ -582,4 +582,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Vse</string>
     <string name="filter_unread">Neprebrano</string>
     <string name="filter_groups">Skupine</string>
+    <string name="menu_message_react">Odzovi se</string>
+    <string name="file_transfer_tap_to_download">Tapnite za prenos</string>
+    <string name="file_transfer_status_removed">Datoteka izbrisana</string>
+    <string name="location_share_duration_10_min">10 min</string>
+    <string name="location_share_duration_1_hour">1 ura</string>
+    <string name="conversation_video_recording_unsupported">Snemanje videa kmalu</string>
+    <string name="chat_extensions_unsupported">Vtičniki še niso podprti</string>
+    <string name="emoji_category_smileys">Smeški</string>
+    <string name="emoji_category_animals_nature">Živali in narava</string>
+    <string name="emoji_category_food_drink">Hrana in pijača</string>
+    <string name="emoji_category_activities">Dejavnosti</string>
+    <string name="emoji_category_travel_places">Potovanja in kraji</string>
+    <string name="emoji_category_objects">Predmeti</string>
+    <string name="emoji_category_symbols">Simboli</string>
 </resources>

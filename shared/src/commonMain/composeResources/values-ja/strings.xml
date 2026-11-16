@@ -451,4 +451,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="menu_app_settings">アプリの設定</string>
     <string name="permission_dialog_post_notifications_title">通知を許可</string>
     <string name="permission_dialog_post_notifications_blocked_message">Jami の通知が無効になっています。このままでは着信やメッセージを見逃してしまいます。デバイスの設定で Jami の通知を有効にしてください。</string>
+    <string name="menu_message_react">リアクション</string>
+    <string name="file_transfer_tap_to_download">タップしてダウンロード</string>
+    <string name="file_transfer_status_removed">ファイルは削除されました</string>
+    <string name="location_share_duration_10_min">10 分</string>
+    <string name="location_share_duration_1_hour">1 時間</string>
+    <string name="conversation_video_recording_unsupported">ビデオ録画は近日対応予定</string>
+    <string name="chat_extensions_unsupported">プラグインはまだサポートされていません</string>
+    <string name="emoji_category_smileys">スマイリー</string>
+    <string name="emoji_category_animals_nature">動物と自然</string>
+    <string name="emoji_category_food_drink">食べ物と飲み物</string>
+    <string name="emoji_category_activities">アクティビティ</string>
+    <string name="emoji_category_travel_places">旅行と場所</string>
+    <string name="emoji_category_objects">物</string>
+    <string name="emoji_category_symbols">記号</string>
 </resources>

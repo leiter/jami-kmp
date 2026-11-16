@@ -397,4 +397,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Барлығы</string>
     <string name="filter_unread">Оқылмаған</string>
     <string name="filter_groups">Топтар</string>
+    <string name="menu_message_react">Әрекет білдіру</string>
+    <string name="file_transfer_tap_to_download">Жүктеп алу үшін түртіңіз</string>
+    <string name="file_transfer_status_removed">Файл жойылды</string>
+    <string name="location_share_duration_10_min">10 мин</string>
+    <string name="location_share_duration_1_hour">1 сағат</string>
+    <string name="conversation_video_recording_unsupported">Бейне жазу жақында қосылады</string>
+    <string name="chat_extensions_unsupported">Плагиндерге әлі қолдау жоқ</string>
+    <string name="emoji_category_smileys">Смайликтер</string>
+    <string name="emoji_category_animals_nature">Жануарлар мен табиғат</string>
+    <string name="emoji_category_food_drink">Тағам мен сусын</string>
+    <string name="emoji_category_activities">Әрекеттер</string>
+    <string name="emoji_category_travel_places">Саяхат пен орындар</string>
+    <string name="emoji_category_objects">Заттар</string>
+    <string name="emoji_category_symbols">Таңбалар</string>
 </resources>

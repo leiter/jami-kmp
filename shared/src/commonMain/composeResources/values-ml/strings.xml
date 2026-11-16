@@ -520,4 +520,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">എല്ലാം</string>
     <string name="filter_unread">വായിക്കാത്തവ</string>
     <string name="filter_groups">ഗ്രൂപ്പുകൾ</string>
+    <string name="menu_message_react">പ്രതികരിക്കുക</string>
+    <string name="file_transfer_tap_to_download">ഡൗൺലോഡ് ചെയ്യാൻ ടാപ്പ് ചെയ്യുക</string>
+    <string name="file_transfer_status_removed">ഫയൽ ഇല്ലാതാക്കി</string>
+    <string name="location_share_duration_10_min">10 മിനിറ്റ്</string>
+    <string name="location_share_duration_1_hour">1 മണിക്കൂർ</string>
+    <string name="conversation_video_recording_unsupported">വീഡിയോ റെക്കോർഡിംഗ് ഉടൻ</string>
+    <string name="chat_extensions_unsupported">പ്ലഗിനുകൾ ഇതുവരെ പിന്തുണയ്ക്കുന്നില്ല</string>
+    <string name="emoji_category_smileys">സ്മൈലികൾ</string>
+    <string name="emoji_category_animals_nature">മൃഗങ്ങളും പ്രകൃതിയും</string>
+    <string name="emoji_category_food_drink">ഭക്ഷണവും പാനീയവും</string>
+    <string name="emoji_category_activities">പ്രവർത്തനങ്ങൾ</string>
+    <string name="emoji_category_travel_places">യാത്രയും സ്ഥലങ്ങളും</string>
+    <string name="emoji_category_objects">വസ്തുക്കൾ</string>
+    <string name="emoji_category_symbols">ചിഹ്നങ്ങൾ</string>
 </resources>

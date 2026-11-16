@@ -61,4 +61,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">Mezua</string>
     <string name="call_chat_empty">Dei honetan bidalitako mezuak hemen agertzen dira. Ez dira elkarrizketan gordetzen.</string>
     <string name="call_on_hold">Zain</string>
+    <string name="video_loss_duration">%1$d s bideorik gabe</string>
+    <string name="video_loss_attempt">%1$d/%2$d. saiakera</string>
+    <string name="video_loss_unavailable">Bideoa ez dago erabilgarri konexio honetan</string>
+    <string name="video_loss_retry">Saiatu berriro</string>
+    <string name="video_loss_audio_only">Audioa soilik</string>
+    <string name="conference_waiting_participants">Parte-hartzaileen zain…</string>
 </resources>

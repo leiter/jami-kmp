@@ -468,4 +468,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Alle</string>
     <string name="filter_unread">Ongelezen</string>
     <string name="filter_groups">Groepen</string>
+    <string name="menu_message_react">Reageren</string>
+    <string name="file_transfer_tap_to_download">Tik om te downloaden</string>
+    <string name="file_transfer_status_removed">Bestand verwijderd</string>
+    <string name="location_share_duration_10_min">10 min</string>
+    <string name="location_share_duration_1_hour">1 uur</string>
+    <string name="conversation_video_recording_unsupported">Video-opname komt binnenkort</string>
+    <string name="chat_extensions_unsupported">Plug-ins worden nog niet ondersteund</string>
+    <string name="emoji_category_smileys">Smileys</string>
+    <string name="emoji_category_animals_nature">Dieren &amp; natuur</string>
+    <string name="emoji_category_food_drink">Eten &amp; drinken</string>
+    <string name="emoji_category_activities">Activiteiten</string>
+    <string name="emoji_category_travel_places">Reizen &amp; plaatsen</string>
+    <string name="emoji_category_objects">Objecten</string>
+    <string name="emoji_category_symbols">Symbolen</string>
 </resources>

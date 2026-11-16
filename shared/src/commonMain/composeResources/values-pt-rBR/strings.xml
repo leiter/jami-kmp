@@ -569,4 +569,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Todas</string>
     <string name="filter_unread">Não lidas</string>
     <string name="filter_groups">Grupos</string>
+    <string name="menu_message_react">Reagir</string>
+    <string name="file_transfer_tap_to_download">Toque para baixar</string>
+    <string name="file_transfer_status_removed">Arquivo excluído</string>
+    <string name="location_share_duration_10_min">10 min</string>
+    <string name="location_share_duration_1_hour">1 hora</string>
+    <string name="conversation_video_recording_unsupported">Gravação de vídeo em breve</string>
+    <string name="chat_extensions_unsupported">Plugins ainda não são suportados</string>
+    <string name="emoji_category_smileys">Smileys</string>
+    <string name="emoji_category_animals_nature">Animais e natureza</string>
+    <string name="emoji_category_food_drink">Comida e bebida</string>
+    <string name="emoji_category_activities">Atividades</string>
+    <string name="emoji_category_travel_places">Viagens e lugares</string>
+    <string name="emoji_category_objects">Objetos</string>
+    <string name="emoji_category_symbols">Símbolos</string>
 </resources>

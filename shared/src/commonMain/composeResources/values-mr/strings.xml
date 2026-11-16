@@ -387,4 +387,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">सर्व</string>
     <string name="filter_unread">न वाचलेले</string>
     <string name="filter_groups">गट</string>
+    <string name="menu_message_react">प्रतिक्रिया द्या</string>
+    <string name="file_transfer_tap_to_download">डाउनलोड करण्यासाठी टॅप करा</string>
+    <string name="file_transfer_status_removed">फाइल हटवली</string>
+    <string name="location_share_duration_10_min">10 मिनिटे</string>
+    <string name="location_share_duration_1_hour">1 तास</string>
+    <string name="conversation_video_recording_unsupported">व्हिडिओ रेकॉर्डिंग लवकरच</string>
+    <string name="chat_extensions_unsupported">प्लगइन अद्याप समर्थित नाहीत</string>
+    <string name="emoji_category_smileys">स्माइली</string>
+    <string name="emoji_category_animals_nature">प्राणी आणि निसर्ग</string>
+    <string name="emoji_category_food_drink">अन्न आणि पेय</string>
+    <string name="emoji_category_activities">क्रियाकलाप</string>
+    <string name="emoji_category_travel_places">प्रवास आणि ठिकाणे</string>
+    <string name="emoji_category_objects">वस्तू</string>
+    <string name="emoji_category_symbols">चिन्हे</string>
 </resources>

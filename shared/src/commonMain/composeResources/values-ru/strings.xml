@@ -572,4 +572,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Все</string>
     <string name="filter_unread">Непрочитанные</string>
     <string name="filter_groups">Группы</string>
+    <string name="menu_message_react">Отреагировать</string>
+    <string name="file_transfer_tap_to_download">Нажмите, чтобы скачать</string>
+    <string name="file_transfer_status_removed">Файл удалён</string>
+    <string name="location_share_duration_10_min">10 мин</string>
+    <string name="location_share_duration_1_hour">1 час</string>
+    <string name="conversation_video_recording_unsupported">Запись видео скоро появится</string>
+    <string name="chat_extensions_unsupported">Плагины пока не поддерживаются</string>
+    <string name="emoji_category_smileys">Смайлики</string>
+    <string name="emoji_category_animals_nature">Животные и природа</string>
+    <string name="emoji_category_food_drink">Еда и напитки</string>
+    <string name="emoji_category_activities">Занятия</string>
+    <string name="emoji_category_travel_places">Путешествия и места</string>
+    <string name="emoji_category_objects">Предметы</string>
+    <string name="emoji_category_symbols">Символы</string>
 </resources>

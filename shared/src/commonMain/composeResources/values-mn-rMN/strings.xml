@@ -389,4 +389,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Бүгд</string>
     <string name="filter_unread">Уншаагүй</string>
     <string name="filter_groups">Бүлгүүд</string>
+    <string name="menu_message_react">Хариу үйлдэл</string>
+    <string name="file_transfer_tap_to_download">Татахын тулд товшино уу</string>
+    <string name="file_transfer_status_removed">Файл устгагдсан</string>
+    <string name="location_share_duration_10_min">10 мин</string>
+    <string name="location_share_duration_1_hour">1 цаг</string>
+    <string name="conversation_video_recording_unsupported">Видео бичлэг удахгүй</string>
+    <string name="chat_extensions_unsupported">Залгаасууд одоогоор дэмжигдээгүй</string>
+    <string name="emoji_category_smileys">Инээмсэглэл</string>
+    <string name="emoji_category_animals_nature">Амьтан ба байгаль</string>
+    <string name="emoji_category_food_drink">Хоол ба ундаа</string>
+    <string name="emoji_category_activities">Үйл ажиллагаа</string>
+    <string name="emoji_category_travel_places">Аялал ба газрууд</string>
+    <string name="emoji_category_objects">Эд зүйлс</string>
+    <string name="emoji_category_symbols">Тэмдэгтүүд</string>
 </resources>

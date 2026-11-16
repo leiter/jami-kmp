@@ -585,4 +585,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">全部</string>
     <string name="filter_unread">未讀</string>
     <string name="filter_groups">群組</string>
+    <string name="menu_message_react">回應</string>
+    <string name="file_transfer_tap_to_download">輕按即可下載</string>
+    <string name="file_transfer_status_removed">檔案已刪除</string>
+    <string name="location_share_duration_10_min">10 分鐘</string>
+    <string name="location_share_duration_1_hour">1 小時</string>
+    <string name="conversation_video_recording_unsupported">視像錄製即將推出</string>
+    <string name="chat_extensions_unsupported">尚不支援外掛程式</string>
+    <string name="emoji_category_smileys">笑臉</string>
+    <string name="emoji_category_animals_nature">動物與自然</string>
+    <string name="emoji_category_food_drink">食物與飲品</string>
+    <string name="emoji_category_activities">活動</string>
+    <string name="emoji_category_travel_places">旅遊與地點</string>
+    <string name="emoji_category_objects">物件</string>
+    <string name="emoji_category_symbols">符號</string>
 </resources>

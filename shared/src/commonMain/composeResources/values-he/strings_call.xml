@@ -60,4 +60,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">הודעה</string>
     <string name="call_chat_empty">הודעות שנשלחות במהלך השיחה מופיעות כאן. הן לא נשמרות בשיחה.</string>
     <string name="call_on_hold">בהמתנה</string>
+    <string name="video_loss_duration">אין וידאו כבר %1$d שנ׳</string>
+    <string name="video_loss_attempt">ניסיון %1$d/%2$d</string>
+    <string name="video_loss_unavailable">הווידאו אינו זמין בחיבור זה</string>
+    <string name="video_loss_retry">נסה שוב</string>
+    <string name="video_loss_audio_only">שמע בלבד</string>
+    <string name="conference_waiting_participants">ממתין למשתתפים…</string>
 </resources>

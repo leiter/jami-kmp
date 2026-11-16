@@ -315,4 +315,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_share">പങ്കിടുക</string>
     <string name="filter_requests">അപേക്ഷകൾ</string>
     <string name="permission_dialog_battery_dismiss">Bukan sekarang</string>
+    <string name="menu_message_react">Beri reaksi</string>
+    <string name="file_transfer_tap_to_download">Ketik untuk memuat turun</string>
+    <string name="file_transfer_status_removed">Fail dipadamkan</string>
+    <string name="location_share_duration_10_min">10 min</string>
+    <string name="location_share_duration_1_hour">1 jam</string>
+    <string name="conversation_video_recording_unsupported">Rakaman video akan datang</string>
+    <string name="chat_extensions_unsupported">Pemalam belum disokong</string>
+    <string name="emoji_category_smileys">Smiley</string>
+    <string name="emoji_category_animals_nature">Haiwan &amp; alam semula jadi</string>
+    <string name="emoji_category_food_drink">Makanan &amp; minuman</string>
+    <string name="emoji_category_activities">Aktiviti</string>
+    <string name="emoji_category_travel_places">Perjalanan &amp; tempat</string>
+    <string name="emoji_category_objects">Objek</string>
+    <string name="emoji_category_symbols">Simbol</string>
 </resources>

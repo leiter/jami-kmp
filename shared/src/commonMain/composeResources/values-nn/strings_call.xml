@@ -62,4 +62,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">Melding</string>
     <string name="call_chat_empty">Meldingar som blir sende under samtalen, blir viste her. Dei blir ikkje lagra i samtaletråden.</string>
     <string name="call_on_hold">Sett på vent</string>
+    <string name="video_loss_duration">Ingen video på %1$d s</string>
+    <string name="video_loss_attempt">Forsøk %1$d/%2$d</string>
+    <string name="video_loss_unavailable">Video er ikkje tilgjengeleg på dette sambandet</string>
+    <string name="video_loss_retry">Prøv igjen</string>
+    <string name="video_loss_audio_only">Berre lyd</string>
+    <string name="conference_waiting_participants">Ventar på deltakarar…</string>
 </resources>

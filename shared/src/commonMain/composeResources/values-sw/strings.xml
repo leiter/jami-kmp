@@ -396,4 +396,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Zote</string>
     <string name="filter_unread">Hazijasomwa</string>
     <string name="filter_groups">Vikundi</string>
+    <string name="menu_message_react">Toa hisia</string>
+    <string name="file_transfer_tap_to_download">Gusa ili kupakua</string>
+    <string name="file_transfer_status_removed">Faili imefutwa</string>
+    <string name="location_share_duration_10_min">Dak 10</string>
+    <string name="location_share_duration_1_hour">Saa 1</string>
+    <string name="conversation_video_recording_unsupported">Kurekodi video kunakuja hivi karibuni</string>
+    <string name="chat_extensions_unsupported">Programu-jalizi bado hazitumiki</string>
+    <string name="emoji_category_smileys">Vikaragosi</string>
+    <string name="emoji_category_animals_nature">Wanyama na asili</string>
+    <string name="emoji_category_food_drink">Chakula na vinywaji</string>
+    <string name="emoji_category_activities">Shughuli</string>
+    <string name="emoji_category_travel_places">Safari na maeneo</string>
+    <string name="emoji_category_objects">Vitu</string>
+    <string name="emoji_category_symbols">Alama</string>
 </resources>

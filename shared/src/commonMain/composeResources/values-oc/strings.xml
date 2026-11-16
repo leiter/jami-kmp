@@ -388,4 +388,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Totas</string>
     <string name="filter_unread">Pas legidas</string>
     <string name="filter_groups">Grops</string>
+    <string name="menu_message_react">Reagir</string>
+    <string name="file_transfer_tap_to_download">Tocatz per telecargar</string>
+    <string name="file_transfer_status_removed">Fichièr suprimit</string>
+    <string name="location_share_duration_10_min">10 min</string>
+    <string name="location_share_duration_1_hour">1 ora</string>
+    <string name="conversation_video_recording_unsupported">L'enregistrament vidèo arriba lèu</string>
+    <string name="chat_extensions_unsupported">Las extensions son pas encara presas en carga</string>
+    <string name="emoji_category_smileys">Smileys</string>
+    <string name="emoji_category_animals_nature">Animals e natura</string>
+    <string name="emoji_category_food_drink">Manjar e beure</string>
+    <string name="emoji_category_activities">Activitats</string>
+    <string name="emoji_category_travel_places">Viatges e luòcs</string>
+    <string name="emoji_category_objects">Objèctes</string>
+    <string name="emoji_category_symbols">Simbòls</string>
 </resources>

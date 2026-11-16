@@ -504,4 +504,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Vše</string>
     <string name="filter_unread">Nepřečtené</string>
     <string name="filter_groups">Skupiny</string>
+    <string name="menu_message_react">Reagovat</string>
+    <string name="file_transfer_tap_to_download">Klepnutím stáhnete</string>
+    <string name="file_transfer_status_removed">Soubor smazán</string>
+    <string name="location_share_duration_10_min">10 min</string>
+    <string name="location_share_duration_1_hour">1 hodina</string>
+    <string name="conversation_video_recording_unsupported">Nahrávání videa již brzy</string>
+    <string name="chat_extensions_unsupported">Zásuvné moduly zatím nejsou podporovány</string>
+    <string name="emoji_category_smileys">Smajlíci</string>
+    <string name="emoji_category_animals_nature">Zvířata a příroda</string>
+    <string name="emoji_category_food_drink">Jídlo a pití</string>
+    <string name="emoji_category_activities">Aktivity</string>
+    <string name="emoji_category_travel_places">Cestování a místa</string>
+    <string name="emoji_category_objects">Předměty</string>
+    <string name="emoji_category_symbols">Symboly</string>
 </resources>

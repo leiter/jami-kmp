@@ -397,4 +397,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">ಎಲ್ಲಾ</string>
     <string name="filter_unread">ಓದದವು</string>
     <string name="filter_groups">ಗುಂಪುಗಳು</string>
+    <string name="menu_message_react">ಪ್ರತಿಕ್ರಿಯಿಸಿ</string>
+    <string name="file_transfer_tap_to_download">ಡೌನ್‌ಲೋಡ್ ಮಾಡಲು ಟ್ಯಾಪ್ ಮಾಡಿ</string>
+    <string name="file_transfer_status_removed">ಫೈಲ್ ಅಳಿಸಲಾಗಿದೆ</string>
+    <string name="location_share_duration_10_min">10 ನಿಮಿ</string>
+    <string name="location_share_duration_1_hour">1 ಗಂಟೆ</string>
+    <string name="conversation_video_recording_unsupported">ವೀಡಿಯೊ ರೆಕಾರ್ಡಿಂಗ್ ಶೀಘ್ರದಲ್ಲೇ</string>
+    <string name="chat_extensions_unsupported">ಪ್ಲಗಿನ್‌ಗಳು ಇನ್ನೂ ಬೆಂಬಲಿತವಾಗಿಲ್ಲ</string>
+    <string name="emoji_category_smileys">ಸ್ಮೈಲಿಗಳು</string>
+    <string name="emoji_category_animals_nature">ಪ್ರಾಣಿಗಳು &amp; ಪ್ರಕೃತಿ</string>
+    <string name="emoji_category_food_drink">ಆಹಾರ &amp; ಪಾನೀಯ</string>
+    <string name="emoji_category_activities">ಚಟುವಟಿಕೆಗಳು</string>
+    <string name="emoji_category_travel_places">ಪ್ರಯಾಣ &amp; ಸ್ಥಳಗಳು</string>
+    <string name="emoji_category_objects">ವಸ್ತುಗಳು</string>
+    <string name="emoji_category_symbols">ಚಿಹ್ನೆಗಳು</string>
 </resources>

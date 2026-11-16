@@ -63,4 +63,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">Mesazh</string>
     <string name="call_chat_empty">Mesazhet e dërguara gjatë kësaj thirrjeje shfaqen këtu. Nuk ruhen në bisedë.</string>
     <string name="call_on_hold">Në pritje</string>
+    <string name="video_loss_duration">Pa video prej %1$d s</string>
+    <string name="video_loss_attempt">Përpjekja %1$d/%2$d</string>
+    <string name="video_loss_unavailable">Videoja nuk është e disponueshme në këtë lidhje</string>
+    <string name="video_loss_retry">Provo përsëri</string>
+    <string name="video_loss_audio_only">Vetëm audio</string>
+    <string name="conference_waiting_participants">Në pritje të pjesëmarrësve…</string>
 </resources>

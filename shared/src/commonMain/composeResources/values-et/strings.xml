@@ -585,4 +585,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Kõik</string>
     <string name="filter_unread">Lugemata</string>
     <string name="filter_groups">Grupid</string>
+    <string name="menu_message_react">Reageeri</string>
+    <string name="file_transfer_tap_to_download">Allalaadimiseks puuduta</string>
+    <string name="file_transfer_status_removed">Fail kustutatud</string>
+    <string name="location_share_duration_10_min">10 min</string>
+    <string name="location_share_duration_1_hour">1 tund</string>
+    <string name="conversation_video_recording_unsupported">Videosalvestus tuleb peagi</string>
+    <string name="chat_extensions_unsupported">Pistikprogramme veel ei toetata</string>
+    <string name="emoji_category_smileys">Emotikonid</string>
+    <string name="emoji_category_animals_nature">Loomad ja loodus</string>
+    <string name="emoji_category_food_drink">Toit ja jook</string>
+    <string name="emoji_category_activities">Tegevused</string>
+    <string name="emoji_category_travel_places">Reisimine ja kohad</string>
+    <string name="emoji_category_objects">Esemed</string>
+    <string name="emoji_category_symbols">Sümbolid</string>
 </resources>

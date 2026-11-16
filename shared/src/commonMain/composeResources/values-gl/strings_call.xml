@@ -62,4 +62,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">Mensaxe</string>
     <string name="call_chat_empty">As mensaxes enviadas durante esta chamada aparecen aquí. Non se gardan na conversa.</string>
     <string name="call_on_hold">En espera</string>
+    <string name="video_loss_duration">Sen vídeo desde hai %1$d s</string>
+    <string name="video_loss_attempt">Intento %1$d/%2$d</string>
+    <string name="video_loss_unavailable">O vídeo non está dispoñible nesta conexión</string>
+    <string name="video_loss_retry">Tentar de novo</string>
+    <string name="video_loss_audio_only">Só audio</string>
+    <string name="conference_waiting_participants">Agardando polos participantes…</string>
 </resources>

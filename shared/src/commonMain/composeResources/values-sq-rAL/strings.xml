@@ -584,4 +584,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Të gjitha</string>
     <string name="filter_unread">Të palexuara</string>
     <string name="filter_groups">Grupe</string>
+    <string name="menu_message_react">Reago</string>
+    <string name="file_transfer_tap_to_download">Prek për ta shkarkuar</string>
+    <string name="file_transfer_status_removed">Skedari u fshi</string>
+    <string name="location_share_duration_10_min">10 min</string>
+    <string name="location_share_duration_1_hour">1 orë</string>
+    <string name="conversation_video_recording_unsupported">Regjistrimi i videos së shpejti</string>
+    <string name="chat_extensions_unsupported">Shtojcat nuk mbështeten ende</string>
+    <string name="emoji_category_smileys">Fytyrëqeshura</string>
+    <string name="emoji_category_animals_nature">Kafshë dhe natyrë</string>
+    <string name="emoji_category_food_drink">Ushqim dhe pije</string>
+    <string name="emoji_category_activities">Aktivitete</string>
+    <string name="emoji_category_travel_places">Udhëtime dhe vende</string>
+    <string name="emoji_category_objects">Objekte</string>
+    <string name="emoji_category_symbols">Simbole</string>
 </resources>

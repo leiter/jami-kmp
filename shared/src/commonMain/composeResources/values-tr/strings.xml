@@ -469,4 +469,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Tümü</string>
     <string name="filter_unread">Okunmamış</string>
     <string name="filter_groups">Gruplar</string>
+    <string name="menu_message_react">Tepki ver</string>
+    <string name="file_transfer_tap_to_download">İndirmek için dokunun</string>
+    <string name="file_transfer_status_removed">Dosya silindi</string>
+    <string name="location_share_duration_10_min">10 dk</string>
+    <string name="location_share_duration_1_hour">1 saat</string>
+    <string name="conversation_video_recording_unsupported">Video kaydı yakında</string>
+    <string name="chat_extensions_unsupported">Eklentiler henüz desteklenmiyor</string>
+    <string name="emoji_category_smileys">İfadeler</string>
+    <string name="emoji_category_animals_nature">Hayvanlar ve doğa</string>
+    <string name="emoji_category_food_drink">Yiyecek ve içecek</string>
+    <string name="emoji_category_activities">Etkinlikler</string>
+    <string name="emoji_category_travel_places">Seyahat ve yerler</string>
+    <string name="emoji_category_objects">Nesneler</string>
+    <string name="emoji_category_symbols">Semboller</string>
 </resources>

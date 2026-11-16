@@ -256,4 +256,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Gach rud</string>
     <string name="filter_unread">Neamhléite</string>
     <string name="filter_groups">Grúpaí</string>
+    <string name="menu_message_react">Freagair</string>
+    <string name="file_transfer_tap_to_download">Tapáil chun íoslódáil</string>
+    <string name="file_transfer_status_removed">Comhad scriosta</string>
+    <string name="location_share_duration_10_min">10 nóim</string>
+    <string name="location_share_duration_1_hour">1 uair</string>
+    <string name="conversation_video_recording_unsupported">Taifeadadh físe ag teacht go luath</string>
+    <string name="chat_extensions_unsupported">Ní thacaítear le breiseáin fós</string>
+    <string name="emoji_category_smileys">Straoiseoga</string>
+    <string name="emoji_category_animals_nature">Ainmhithe agus nádúr</string>
+    <string name="emoji_category_food_drink">Bia agus deoch</string>
+    <string name="emoji_category_activities">Gníomhaíochtaí</string>
+    <string name="emoji_category_travel_places">Taisteal agus áiteanna</string>
+    <string name="emoji_category_objects">Rudaí</string>
+    <string name="emoji_category_symbols">Siombailí</string>
 </resources>

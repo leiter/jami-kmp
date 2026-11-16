@@ -401,4 +401,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Sve</string>
     <string name="filter_unread">Nepročitano</string>
     <string name="filter_groups">Grupe</string>
+    <string name="menu_message_react">Reagiraj</string>
+    <string name="file_transfer_tap_to_download">Dodirnite za preuzimanje</string>
+    <string name="file_transfer_status_removed">Datoteka izbrisana</string>
+    <string name="location_share_duration_10_min">10 min</string>
+    <string name="location_share_duration_1_hour">1 sat</string>
+    <string name="conversation_video_recording_unsupported">Snimanje videa uskoro</string>
+    <string name="chat_extensions_unsupported">Dodaci još nisu podržani</string>
+    <string name="emoji_category_smileys">Smajlići</string>
+    <string name="emoji_category_animals_nature">Životinje i priroda</string>
+    <string name="emoji_category_food_drink">Hrana i piće</string>
+    <string name="emoji_category_activities">Aktivnosti</string>
+    <string name="emoji_category_travel_places">Putovanja i mjesta</string>
+    <string name="emoji_category_objects">Predmeti</string>
+    <string name="emoji_category_symbols">Simboli</string>
 </resources>

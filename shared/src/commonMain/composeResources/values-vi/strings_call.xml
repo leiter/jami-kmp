@@ -61,4 +61,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">Tin nhắn</string>
     <string name="call_chat_empty">Tin nhắn gửi trong cuộc gọi này hiển thị ở đây. Chúng không được lưu vào cuộc trò chuyện.</string>
     <string name="call_on_hold">Đang giữ máy</string>
+    <string name="video_loss_duration">Không có video trong %1$d giây</string>
+    <string name="video_loss_attempt">Lần thử %1$d/%2$d</string>
+    <string name="video_loss_unavailable">Video không khả dụng trên kết nối này</string>
+    <string name="video_loss_retry">Thử lại</string>
+    <string name="video_loss_audio_only">Chỉ âm thanh</string>
+    <string name="conference_waiting_participants">Đang chờ người tham gia…</string>
 </resources>

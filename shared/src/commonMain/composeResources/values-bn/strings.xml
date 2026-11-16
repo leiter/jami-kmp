@@ -399,4 +399,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">সব</string>
     <string name="filter_unread">অপঠিত</string>
     <string name="filter_groups">গ্রুপ</string>
+    <string name="menu_message_react">প্রতিক্রিয়া জানান</string>
+    <string name="file_transfer_tap_to_download">ডাউনলোড করতে ট্যাপ করুন</string>
+    <string name="file_transfer_status_removed">ফাইল মুছে ফেলা হয়েছে</string>
+    <string name="location_share_duration_10_min">১০ মিনিট</string>
+    <string name="location_share_duration_1_hour">১ ঘণ্টা</string>
+    <string name="conversation_video_recording_unsupported">ভিডিও রেকর্ডিং শীঘ্রই আসছে</string>
+    <string name="chat_extensions_unsupported">প্লাগইন এখনও সমর্থিত নয়</string>
+    <string name="emoji_category_smileys">স্মাইলি</string>
+    <string name="emoji_category_animals_nature">প্রাণী ও প্রকৃতি</string>
+    <string name="emoji_category_food_drink">খাবার ও পানীয়</string>
+    <string name="emoji_category_activities">কার্যকলাপ</string>
+    <string name="emoji_category_travel_places">ভ্রমণ ও স্থান</string>
+    <string name="emoji_category_objects">বস্তু</string>
+    <string name="emoji_category_symbols">প্রতীক</string>
 </resources>

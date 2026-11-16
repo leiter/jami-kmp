@@ -458,4 +458,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_all">Všetko</string>
     <string name="filter_unread">Neprečítané</string>
     <string name="filter_groups">Skupiny</string>
+    <string name="menu_message_react">Reagovať</string>
+    <string name="file_transfer_tap_to_download">Ťuknutím stiahnete</string>
+    <string name="file_transfer_status_removed">Súbor odstránený</string>
+    <string name="location_share_duration_10_min">10 min</string>
+    <string name="location_share_duration_1_hour">1 hodina</string>
+    <string name="conversation_video_recording_unsupported">Nahrávanie videa už čoskoro</string>
+    <string name="chat_extensions_unsupported">Doplnky zatiaľ nie sú podporované</string>
+    <string name="emoji_category_smileys">Smajlíky</string>
+    <string name="emoji_category_animals_nature">Zvieratá a príroda</string>
+    <string name="emoji_category_food_drink">Jedlo a nápoje</string>
+    <string name="emoji_category_activities">Aktivity</string>
+    <string name="emoji_category_travel_places">Cestovanie a miesta</string>
+    <string name="emoji_category_objects">Predmety</string>
+    <string name="emoji_category_symbols">Symboly</string>
 </resources>

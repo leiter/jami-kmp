@@ -64,4 +64,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">Správa</string>
     <string name="call_chat_empty">Správy odoslané počas tohto hovoru sa zobrazujú tu. Neukladajú sa do konverzácie.</string>
     <string name="call_on_hold">Podržané</string>
+    <string name="video_loss_duration">Žiadne video %1$d s</string>
+    <string name="video_loss_attempt">Pokus %1$d/%2$d</string>
+    <string name="video_loss_unavailable">Video nie je na tomto pripojení dostupné</string>
+    <string name="video_loss_retry">Skúsiť znova</string>
+    <string name="video_loss_audio_only">Iba zvuk</string>
+    <string name="conference_waiting_participants">Čaká sa na účastníkov…</string>
 </resources>

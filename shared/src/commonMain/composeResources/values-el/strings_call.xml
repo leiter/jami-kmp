@@ -61,4 +61,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">Μήνυμα</string>
     <string name="call_chat_empty">Τα μηνύματα που στέλνονται κατά την κλήση εμφανίζονται εδώ. Δεν αποθηκεύονται στη συνομιλία.</string>
     <string name="call_on_hold">Σε αναμονή</string>
+    <string name="video_loss_duration">Χωρίς βίντεο για %1$d δ</string>
+    <string name="video_loss_attempt">Προσπάθεια %1$d/%2$d</string>
+    <string name="video_loss_unavailable">Το βίντεο δεν είναι διαθέσιμο σε αυτή τη σύνδεση</string>
+    <string name="video_loss_retry">Δοκιμάστε ξανά</string>
+    <string name="video_loss_audio_only">Μόνο ήχος</string>
+    <string name="conference_waiting_participants">Αναμονή για συμμετέχοντες…</string>
 </resources>

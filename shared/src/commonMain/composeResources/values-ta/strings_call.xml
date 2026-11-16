@@ -61,4 +61,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_chat_hint">செய்தி</string>
     <string name="call_chat_empty">இந்த அழைப்பின்போது அனுப்பிய செய்திகள் இங்கே தோன்றும். அவை உரையாடலில் சேமிக்கப்படாது.</string>
     <string name="call_on_hold">நிறுத்தி வைக்கப்பட்டது</string>
+    <string name="video_loss_duration">%1$d வி. வீடியோ இல்லை</string>
+    <string name="video_loss_attempt">முயற்சி %1$d/%2$d</string>
+    <string name="video_loss_unavailable">இந்த இணைப்பில் வீடியோ கிடைக்கவில்லை</string>
+    <string name="video_loss_retry">மீண்டும் முயல்க</string>
+    <string name="video_loss_audio_only">ஆடியோ மட்டும்</string>
+    <string name="conference_waiting_participants">பங்கேற்பாளர்களுக்காகக் காத்திருக்கிறது…</string>
 </resources>
