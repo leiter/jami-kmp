@@ -33,6 +33,9 @@ import platform.QuartzCore.CATransaction
 import platform.UIKit.UIView
 import platform.darwin.NSObject
 import platform.darwin.dispatch_get_main_queue
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.error_scan_no_camera_permissions
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalForeignApi::class)
 @Composable
@@ -51,7 +54,7 @@ actual fun QrCodeScannerView(
             hasPermission = granted
         }
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Camera permission required to scan QR codes")
+            Text(stringResource(Res.string.error_scan_no_camera_permissions))
         }
         return
     }

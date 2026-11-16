@@ -103,6 +103,7 @@ import net.jami.ui.viewmodel.ConversationItem
 import net.jami.ui.viewmodel.ConversationsViewModel
 import net.jami.ui.viewmodel.PendingRequestItem
 import net.jami.ui.components.content.conversationDisplayName
+import net.jami.ui.utils.compactAgeLabel
 
 /**
  * Main home screen displaying the conversation list.
@@ -693,7 +694,7 @@ internal fun ConversationListItem(
         rowName,
         unreadSpeech,
         conversation.lastMessage.takeIf { it.isNotBlank() },
-        formatTimestamp(conversation.timestamp).takeIf { it.isNotEmpty() },
+        compactAgeLabel(conversation.timestamp).takeIf { it.isNotEmpty() },
     ).joinToString(", ")
     val rowState = when {
         conversation.isPinned && conversation.isMuted ->
@@ -803,7 +804,7 @@ internal fun ConversationListItem(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                val timestamp = formatTimestamp(conversation.timestamp)
+                val timestamp = compactAgeLabel(conversation.timestamp)
                 if (timestamp.isNotEmpty()) {
                     Text(
                         text = timestamp,
@@ -897,19 +898,3 @@ internal fun ConversationListItem(
     }
 }
 
-/**
- * Format a timestamp (epoch millis) for display in the conversation list.
- */
-private fun formatTimestamp(timestamp: Long): String {
-    if (timestamp <= 0L) return ""
-    // Simple relative time formatting
-    val now = net.jami.utils.currentTimeMillis()
-    val diffSeconds = (now - timestamp) / 1000
-    return when {
-        diffSeconds < 60 -> "Now"
-        diffSeconds < 3600 -> "${diffSeconds / 60}m"
-        diffSeconds < 86400 -> "${diffSeconds / 3600}h"
-        diffSeconds < 604800 -> "${diffSeconds / 86400}d"
-        else -> "${diffSeconds / 604800}w"
-    }
-}

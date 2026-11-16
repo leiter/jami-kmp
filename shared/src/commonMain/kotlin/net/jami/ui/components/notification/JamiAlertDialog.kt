@@ -23,6 +23,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import net.jami.ui.theme.JamiTheme
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.action_cancel
+import jami_kmp.shared.generated.resources.action_ok
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Alert dialog with title, body, and confirm/dismiss buttons.
@@ -43,8 +47,8 @@ fun JamiAlertDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
-    confirmText: String = "OK",
-    dismissText: String? = "Cancel",
+    confirmText: String = stringResource(Res.string.action_ok),
+    dismissText: String? = stringResource(Res.string.action_cancel),
     isDestructive: Boolean = false,
 ) {
     val confirmColor = if (isDestructive) JamiTheme.colors.error

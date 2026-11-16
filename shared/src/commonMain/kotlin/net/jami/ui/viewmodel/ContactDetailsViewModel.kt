@@ -37,6 +37,9 @@ import net.jami.services.ContactService
 import net.jami.services.ConversationFacade
 import net.jami.services.DeviceRuntimeService
 import net.jami.utils.VCardUtils
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.getString
 
 /**
  * State for the contact details screen.
@@ -178,11 +181,11 @@ class ContactDetailsViewModel(
                 )
 
                 val convType = when (conversation?.mode) {
-                    Conversation.Mode.OneToOne -> "Private"
-                    Conversation.Mode.AdminInvitesOnly -> "Group (admin invites)"
-                    Conversation.Mode.InvitesOnly -> "Group (invite only)"
-                    Conversation.Mode.Public -> "Public group"
-                    Conversation.Mode.Legacy -> "Legacy"
+                    Conversation.Mode.OneToOne -> getString(Res.string.conversation_type_private)
+                    Conversation.Mode.AdminInvitesOnly -> getString(Res.string.conversation_type_group_admin_invites)
+                    Conversation.Mode.InvitesOnly -> getString(Res.string.conversation_type_group_invite_only)
+                    Conversation.Mode.Public -> getString(Res.string.conversation_type_group_public)
+                    Conversation.Mode.Legacy -> getString(Res.string.conversation_type_legacy)
                     else -> ""
                 }
                 val isSwarm = conversation?.isSwarm == true

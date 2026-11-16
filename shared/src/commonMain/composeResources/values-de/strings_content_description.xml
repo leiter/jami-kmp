@@ -96,4 +96,6 @@ the Free Software Foundation, either version 3 of the License, or
         <item quantity="one">%1$d ausstehende Einladung</item>
         <item quantity="other">%1$d ausstehende Einladungen</item>
     </plurals>
+    <string name="content_desc_selected">Ausgewählt</string>
+    <string name="content_desc_not_selected">Nicht ausgewählt</string>
 </resources>

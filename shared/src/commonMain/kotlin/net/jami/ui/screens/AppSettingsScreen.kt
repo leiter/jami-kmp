@@ -449,9 +449,9 @@ fun AppSettingsScreen(
                     .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
                 horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
             ) {
-                for ((label, value) in listOf("Auto" to 0, "64" to 64, "128" to 128, "256" to 256, "512" to 512, "1024" to 1024)) {
+                for (value in listOf(0, 64, 128, 256, 512, 1024)) {
                     JamiFilterChip(
-                        text = if (value == 0) label else "$label kb/s",
+                        text = if (value == 0) stringResource(Res.string.pref_option_auto) else "$value kb/s",
                         selected = state.videoBitrate == value,
                         onClick = { viewModel.setVideoBitrate(value) },
                     )
@@ -608,9 +608,10 @@ fun AppSettingsScreen(
                     .padding(horizontal = JamiTheme.spacing.l, vertical = JamiTheme.spacing.xs),
                 horizontalArrangement = Arrangement.spacedBy(JamiTheme.spacing.s),
             ) {
-                for ((label, value) in listOf("Forever" to 0, "30 d" to 30, "90 d" to 90, "365 d" to 365)) {
+                for (value in listOf(0, 30, 90, 365)) {
                     JamiFilterChip(
-                        text = label,
+                        text = if (value == 0) stringResource(Res.string.pref_history_forever)
+                        else stringResource(Res.string.pref_days_short, value),
                         selected = state.historyLimitDays == value,
                         onClick = { viewModel.setHistoryLimit(value) },
                     )
@@ -632,7 +633,7 @@ fun AppSettingsScreen(
             ) {
                 for (seconds in listOf(15, 30, 45, 60)) {
                     JamiFilterChip(
-                        text = "${seconds}s",
+                        text = stringResource(Res.string.pref_seconds_short, seconds),
                         selected = state.ringingTimeoutSeconds == seconds,
                         onClick = { viewModel.setRingingTimeout(seconds) },
                     )

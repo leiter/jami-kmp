@@ -331,7 +331,7 @@ private fun SelectableContactItem(
         Icon(
             imageVector = if (isSelected) Icons.Default.CheckCircle
             else Icons.Default.RadioButtonUnchecked,
-            contentDescription = if (isSelected) "Selected" else "Not selected",
+            contentDescription = stringResource(if (isSelected) Res.string.content_desc_selected else Res.string.content_desc_not_selected),
             tint = if (isSelected) JamiTheme.colors.primary
             else JamiTheme.colors.onSurfaceVariant,
         )

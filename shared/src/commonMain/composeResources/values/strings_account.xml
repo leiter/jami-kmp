@@ -497,5 +497,13 @@ Biometric or device authentication adds a convenient way to locally unlock acces
     <string name="account_status_note_summary">A short line your contacts see next to your name.</string>
     <string name="account_status_note_error_charset">Use only letters, digits, spaces and underscores — other characters cannot be delivered.</string>
     <string name="account_status_note_error_long">Too long. Keep it under %1$d characters.</string>
+    <string name="error_no_account">No account selected</string>
+    <string name="biometric_authenticating">Authenticating…</string>
+    <string name="biometric_unlock">Unlock</string>
+    <string name="biometric_unlock_title">Unlock Jami</string>
+    <string name="biometric_enroll_description">Authenticate to secure your account password</string>
+    <string name="biometric_enroll_failed">Could not enable biometric authentication.</string>
+    <string name="biometric_disable_failed">Could not disable biometric authentication.</string>
+    <string name="biometric_error_no_credential">No valid biometric login is saved for this account. Unlock with your password and enable biometrics again.</string>
 
 </resources>

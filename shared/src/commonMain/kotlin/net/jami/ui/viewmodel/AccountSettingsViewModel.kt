@@ -50,6 +50,9 @@ import net.jami.services.DeviceRuntimeService
 import net.jami.utils.VCardUtils
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.getString
 
 /**
  * State machine for the export side of the add-device protocol (existing device).
@@ -532,7 +535,7 @@ class AccountSettingsViewModel(
      * @return Result indicating success or failure with error message
      */
     suspend fun enableBiometric(password: String): Result<Unit> {
-        val account = accountService.currentAccount.value ?: return Result.failure(Exception("No account"))
+        val account = accountService.currentAccount.value ?: return Result.failure(Exception(getString(Res.string.error_no_account)))
 
         // Check device capability first
         return when (biometricService?.checkAvailability()) {
@@ -540,24 +543,24 @@ class AccountSettingsViewModel(
                 val success = biometricService?.enroll(
                     accountId = account.accountId,
                     password = password,
-                    promptTitle = "Enable biometric authentication",
-                    promptDescription = "Authenticate to secure your account password"
+                    promptTitle = getString(Res.string.account_biometric_setup_title),
+                    promptDescription = getString(Res.string.biometric_enroll_description)
                 ) ?: false
                 if (success) {
                     _state.value = _state.value.copy(hasBiometric = true)
                     Result.success(Unit)
                 } else {
-                    Result.failure(Exception("Enrollment failed"))
+                    Result.failure(Exception(getString(Res.string.biometric_enroll_failed)))
                 }
             }
             BiometricAvailability.NOT_ENROLLED -> {
-                Result.failure(Exception("No biometrics enrolled on device"))
+                Result.failure(Exception(getString(Res.string.account_biometric_error_not_enrolled)))
             }
             BiometricAvailability.NO_HARDWARE -> {
-                Result.failure(Exception("Biometric hardware not available"))
+                Result.failure(Exception(getString(Res.string.account_biometric_error_no_hardware)))
             }
             else -> {
-                Result.failure(Exception("Biometric unavailable"))
+                Result.failure(Exception(getString(Res.string.account_biometric_error_unavailable)))
             }
         }
     }
@@ -568,14 +571,14 @@ class AccountSettingsViewModel(
      * @return Result indicating success or failure
      */
     suspend fun disableBiometric(): Result<Unit> {
-        val account = accountService.currentAccount.value ?: return Result.failure(Exception("No account"))
+        val account = accountService.currentAccount.value ?: return Result.failure(Exception(getString(Res.string.error_no_account)))
 
         val success = biometricService?.disable(account.accountId) ?: false
         if (success) {
             _state.value = _state.value.copy(hasBiometric = false)
             return Result.success(Unit)
         }
-        return Result.failure(Exception("Failed to disable biometric"))
+        return Result.failure(Exception(getString(Res.string.biometric_disable_failed)))
     }
 
     /**
@@ -590,9 +593,9 @@ class AccountSettingsViewModel(
         title: String,
         description: String
     ): BiometricResult {
-        val account = accountService.currentAccount.value ?: return BiometricResult.Error("No account", false)
+        val account = accountService.currentAccount.value ?: return BiometricResult.Error(getString(Res.string.error_no_account), false)
         return biometricService?.authenticate(account.accountId, title, description)
-            ?: BiometricResult.Error("Biometric not available", false)
+            ?: BiometricResult.Error(getString(Res.string.account_biometric_error_unavailable), false)
     }
 
     /**

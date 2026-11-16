@@ -72,6 +72,7 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import net.jami.ui.utils.MessageBody
+import net.jami.ui.utils.dateSeparatorLabel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -724,7 +725,7 @@ fun ChatScreen(
                                 )
                         ) {
                         when (message.type) {
-                            MessageType.DateSeparator -> DateSeparatorItem(message.text)
+                            MessageType.DateSeparator -> DateSeparatorItem(dateSeparatorLabel(message.timestamp))
                             MessageType.System        -> SystemMessage(message)
                             MessageType.Call          -> CallMessage(message)
                             MessageType.Transfer      -> FileTransferMessage(

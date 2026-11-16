@@ -281,7 +281,7 @@ fun LocationSharingScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showInfoDialog = false }) {
-                    Text("OK")
+                    Text(stringResource(Res.string.action_ok))
                 }
             },
         )

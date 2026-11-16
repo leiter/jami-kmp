@@ -46,6 +46,10 @@ import net.jami.ui.screens.*
 import net.jami.ui.viewmodel.AppState
 import net.jami.ui.viewmodel.AppViewModel
 import org.koin.compose.koinInject
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.account_biometric_auth_description
+import jami_kmp.shared.generated.resources.biometric_unlock_title
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Extract a navigation argument in a KMP-compatible way.
@@ -88,8 +92,10 @@ fun JamiNavigation() {
 
     // Show the biometric lock screen on top of whatever app state we're in
     if (isLocked && appState is AppState.HasAccounts) {
+        val unlockTitle = stringResource(Res.string.biometric_unlock_title)
+        val unlockDescription = stringResource(Res.string.account_biometric_auth_description)
         BiometricLockScreen(
-            onAuthenticate = { appViewModel.authenticateBiometric("Unlock Jami", "Use biometric to unlock") },
+            onAuthenticate = { appViewModel.authenticateBiometric(unlockTitle, unlockDescription) },
             onUnlocked = { appViewModel.unlock() },
         )
         return

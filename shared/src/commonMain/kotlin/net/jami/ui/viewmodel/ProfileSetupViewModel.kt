@@ -28,6 +28,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.jami.services.AccountService
 import net.jami.utils.Log
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.getString
 
 data class ProfileSetupState(
     val displayName: String = "",
@@ -88,7 +91,7 @@ class ProfileSetupViewModel(
                 Log.w(TAG, "saveProfile failed: ${e.message}")
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Failed to save profile"
+                    error = e.message ?: getString(Res.string.profile_save_failed)
                 )
             }
         }

@@ -94,12 +94,17 @@ actually changes. Invoked before showing call notifications with the current
 
 ## P4 — Polish / Low Priority
 
-### Adopt koin-compose-viewmodel (koinViewModel) across all platforms
-- Currently: Android uses `koinInject()` (+ implicit `remember`); iOS/macOS use a custom Koin-core resolver (`jamiResolveViewModel` / `vmKClassCache`) wrapped in `remember { }`. The 20 view models in `ui/viewmodel/` are plain classes with a hand-rolled `onCleared()` and their own `CoroutineScope`.
-- Goal: switch registration/lookup to `koinViewModel { }` / `koinViewModel()` (dep already in `libs.versions.toml`; Koin 4.1 supports this on iOS/macOS via Compose Multiplatform `lifecycle-viewmodel-compose`). Gains proper `LocalViewModelStoreOwner` (nav back-stack) scoping + auto-clear, and lets the per-platform `getViewModel` expect/actual largely collapse to one common impl.
-- Migrate all 20 VMs to `androidx.lifecycle.ViewModel` (`onCleared()` → `override`; own scope → `viewModelScope`). Do it on **all** platforms so they don't diverge.
-- **Gate on an on-device check**: `koinViewModel()` resolves via Koin core `get(KClass)` — the exact Kotlin/Native KClass path the custom resolver was built to avoid; verify it doesn't regress iOS startup/resolution before trusting it.
-- Not a bugfix — the `remember { }` fix already resolved the "Jami-tab input resets each keystroke" bug. This is a quality/architecture upgrade.
+### Use koinViewModel() on iOS/macOS too (optional cleanup)
+- Done (2026-06-26, `9e96884`): all 20 view models extend `androidx.lifecycle.ViewModel` and are scoped to the ViewModelStoreOwner; Android/Desktop/JS resolve them with `koinViewModel()`.
+- iOS/macOS still use AndroidX `viewModel { }` with the custom resolver `jamiResolveViewModel` (Kotlin/Native KClass-identity workaround) — same lifecycle behaviour, different lookup. Remaining goal: one common `getViewModel` and no custom resolver.
+- Before trying: bump Koin 4.1.0 → 4.1.1 (`koinViewModel()` fails to link on iOS with 4.1.0, Koin #2175; 4.2.x needs Kotlin ≥ 2.3.20 on Native), then validate the KClass lookup on a real iOS **release** build.
+- Not a bugfix — the bugs it once was tied to (NoDefinitionFoundException in release, input reset, scope leak) are fixed.
+
+### Translate the 45 strings that exist only in English and German (added 2026-11-16)
+- The last hardcoded UI strings were moved into the catalogue with **en + de only**; the other ~70 locale folders fall back to English for them.
+- Keys: `action_ok`, `date_full_format`, `date_month_1`…`date_month_12`, `time_now_short`, `time_{minutes,hours,days,weeks}_short`, `conversation_type_group_{admin_invites,invite_only,public}`, `conversation_type_legacy`, `import_select_archive`, `import_failed`, `import_failed_reason`, `migration_failed_reason`, `profile_save_failed`, `location_my_location`, `notif_sync_text`, `notif_file_transfer_progress_bytes` (strings.xml); `error_no_account`, `biometric_{authenticating,unlock,unlock_title,enroll_description,enroll_failed,disable_failed,error_no_credential}` (strings_account.xml); `pref_option_auto`, `pref_history_forever`, `pref_days_short`, `pref_seconds_short` (strings_preferences.xml); `content_desc_selected`, `content_desc_not_selected` (strings_content_description.xml).
+- First run `scripts/sync_android_strings.py` against a jami-client-android checkout (and map KMP-only keys whose English matches an Android string in `scripts/android_string_aliases.txt`, e.g. the month names); translate the rest as in `856ad36` / `aa02131` (a translations file per locale, inserted without overwriting existing keys).
+- `date_full_format` is a per-language pattern (`%1$s` month, `%2$d` day, `%3$d` year) — word order matters, not just the words. Same for the `time_*_short` abbreviations.
 
 ### strings_kmp.xml locale cleanup
 - Legacy locale folders (`values-de/`, `values-fr/`, etc.) still contain a `strings_kmp.xml` file.

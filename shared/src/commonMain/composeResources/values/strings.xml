@@ -875,5 +875,36 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="emoji_category_travel_places">Travel &amp; places</string>
     <string name="emoji_category_objects">Objects</string>
     <string name="emoji_category_symbols">Symbols</string>
+    <string name="action_ok">OK</string>
+    <string name="date_full_format">%1$s %2$d, %3$d</string>
+    <string name="date_month_1">January</string>
+    <string name="date_month_2">February</string>
+    <string name="date_month_3">March</string>
+    <string name="date_month_4">April</string>
+    <string name="date_month_5">May</string>
+    <string name="date_month_6">June</string>
+    <string name="date_month_7">July</string>
+    <string name="date_month_8">August</string>
+    <string name="date_month_9">September</string>
+    <string name="date_month_10">October</string>
+    <string name="date_month_11">November</string>
+    <string name="date_month_12">December</string>
+    <string name="time_now_short">Now</string>
+    <string name="time_minutes_short">%1$dm</string>
+    <string name="time_hours_short">%1$dh</string>
+    <string name="time_days_short">%1$dd</string>
+    <string name="time_weeks_short">%1$dw</string>
+    <string name="conversation_type_group_admin_invites">Group (admin invites)</string>
+    <string name="conversation_type_group_invite_only">Group (invite only)</string>
+    <string name="conversation_type_group_public">Public group</string>
+    <string name="conversation_type_legacy">Legacy</string>
+    <string name="import_select_archive">Please select an archive file</string>
+    <string name="import_failed">Import failed</string>
+    <string name="import_failed_reason">Import failed: %1$s</string>
+    <string name="migration_failed_reason">Migration failed: %1$s</string>
+    <string name="profile_save_failed">Failed to save profile</string>
+    <string name="location_my_location">My location</string>
+    <string name="notif_sync_text">Syncing conversations in the background</string>
+    <string name="notif_file_transfer_progress_bytes">%1$d / %2$d bytes</string>
 
 </resources>

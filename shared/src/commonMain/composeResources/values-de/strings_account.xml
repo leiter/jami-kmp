@@ -368,4 +368,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="account_status_note_summary">Eine kurze Zeile, die Ihre Kontakte neben Ihrem Namen sehen.</string>
     <string name="account_status_note_error_charset">Nur Buchstaben, Ziffern, Leerzeichen und Unterstriche verwenden – andere Zeichen können nicht zugestellt werden.</string>
     <string name="account_status_note_error_long">Zu lang. Bitte unter %1$d Zeichen bleiben.</string>
+    <string name="error_no_account">Kein Konto ausgewählt</string>
+    <string name="biometric_authenticating">Authentifizierung…</string>
+    <string name="biometric_unlock">Entsperren</string>
+    <string name="biometric_unlock_title">Jami entsperren</string>
+    <string name="biometric_enroll_description">Authentifizieren, um das Kontopasswort zu sichern</string>
+    <string name="biometric_enroll_failed">Biometrische Authentifizierung konnte nicht aktiviert werden.</string>
+    <string name="biometric_disable_failed">Biometrische Authentifizierung konnte nicht deaktiviert werden.</string>
+    <string name="biometric_error_no_credential">Für dieses Konto ist keine gültige biometrische Anmeldung gespeichert. Mit dem Passwort entsperren und die Biometrie erneut aktivieren.</string>
 </resources>

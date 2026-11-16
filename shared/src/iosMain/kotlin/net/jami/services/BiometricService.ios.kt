@@ -46,6 +46,10 @@ import platform.darwin.noErr
 import platform.posix.memcpy
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.account_biometric_error_failed
+import jami_kmp.shared.generated.resources.biometric_error_no_credential
+import org.jetbrains.compose.resources.getString
 
 /**
  * iOS biometric authentication backed by the Keychain.
@@ -125,12 +129,12 @@ actual class BiometricService {
                 // enrolled biometric set changed. Clear the marker so the UI offers
                 // re-enrollment instead of failing on every launch.
                 defaults.setBool(false, forKey = enabledKey(accountId))
-                return BiometricResult.Error("No stored credential", false)
+                return BiometricResult.Error(getString(Res.string.biometric_error_no_credential), false)
             }
             BiometricResult.Success(password)
         } catch (e: Exception) {
             Log.e(TAG, "Biometric authentication failed: ${e.message}")
-            BiometricResult.Error(e.message ?: "Authentication failed", false)
+            BiometricResult.Error(e.message ?: getString(Res.string.account_biometric_error_failed), false)
         }
     }
 

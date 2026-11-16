@@ -34,6 +34,9 @@ import net.jami.services.BiometricResult
 import net.jami.services.BiometricService
 import net.jami.utils.Log
 import net.jami.utils.PendingActivityResultTracker
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.getString
 
 sealed class AppState {
     data object Loading : AppState()
@@ -207,7 +210,7 @@ class AppViewModel(
         promptDescription: String,
     ): BiometricResult {
         val account = accountService.currentAccount.value
-            ?: return BiometricResult.Error("No account", false)
+            ?: return BiometricResult.Error(getString(Res.string.error_no_account), false)
         return biometricService.authenticate(account.accountId, promptTitle, promptDescription)
     }
 

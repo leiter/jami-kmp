@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.account_biometric_auth_description
 import jami_kmp.shared.generated.resources.app_name
+import jami_kmp.shared.generated.resources.biometric_authenticating
+import jami_kmp.shared.generated.resources.biometric_unlock
 import kotlinx.coroutines.launch
 import net.jami.services.BiometricResult
 import net.jami.ui.theme.JamiTheme
@@ -136,7 +138,7 @@ fun BiometricLockScreen(
                 )
                 androidx.compose.foundation.layout.Spacer(Modifier.size(JamiTheme.spacing.xs))
                 Text(
-                    text = if (isAuthenticating) "Authenticating…" else "Unlock",
+                    text = stringResource(if (isAuthenticating) Res.string.biometric_authenticating else Res.string.biometric_unlock),
                 )
             }
         }

@@ -35,11 +35,9 @@ import kotlinx.coroutines.withTimeoutOrNull
 import net.jami.services.AccountEvent
 import net.jami.services.expect.AudioRecorderService
 import kotlinx.datetime.Clock
-import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import net.jami.model.CallHistory
 import net.jami.model.Contact
@@ -1271,7 +1269,8 @@ class ChatViewModel(
                 result.add(
                     MessageItem(
                         id = "date_${item.timestamp}",
-                        text = epochMillisToDateLabel(item.timestamp),
+                        // The label is localized where it is drawn (DateSeparatorItem), from timestamp.
+                        text = "",
                         author = "", timestamp = item.timestamp,
                         isOutgoing = false, type = MessageType.DateSeparator
                     )
@@ -1281,18 +1280,6 @@ class ChatViewModel(
             result.add(item)
         }
         return result
-    }
-
-    private fun epochMillisToDateLabel(timestamp: Long): String {
-        val tz = TimeZone.currentSystemDefault()
-        val date = Instant.fromEpochMilliseconds(timestamp).toLocalDateTime(tz).date
-        val today = Clock.System.now().toLocalDateTime(tz).date
-        val yesterday = today.minus(DatePeriod(days = 1))
-        return when (date) {
-            today     -> DATE_TODAY
-            yesterday -> DATE_YESTERDAY
-            else      -> "${date.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${date.dayOfMonth}, ${date.year}"
-        }
     }
 
     /**
@@ -1767,8 +1754,6 @@ class ChatViewModel(
 
     companion object {
         private const val TAG = "ChatViewModel"
-        private const val DATE_TODAY     = "Today"
-        private const val DATE_YESTERDAY = "Yesterday"
         private const val SEARCH_DEBOUNCE_MS = 300L
         private const val SEND_TIMEOUT_MS = 20_000L
     }

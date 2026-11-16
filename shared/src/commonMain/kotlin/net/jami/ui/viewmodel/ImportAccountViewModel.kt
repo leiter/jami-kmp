@@ -29,6 +29,9 @@ import kotlinx.coroutines.launch
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.utils.ScratchFiles
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.getString
 
 /**
  * State for the account import screen.
@@ -113,7 +116,7 @@ class ImportAccountViewModel(
         val current = _state.value
 
         if (current.archivePath.isEmpty()) {
-            _state.value = current.copy(error = "Please select an archive file")
+            scope.launch { _state.value = current.copy(error = getString(Res.string.import_select_archive)) }
             return
         }
 
@@ -137,7 +140,7 @@ class ImportAccountViewModel(
                 if (importedAccountId == null) ScratchFiles.deleteIfScratch(current.archivePath)
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Import failed"
+                    error = e.message ?: getString(Res.string.import_failed)
                 )
             }
         }
@@ -163,7 +166,7 @@ class ImportAccountViewModel(
     /**
      * Handle registration state changes to detect successful import.
      */
-    private fun handleRegistrationState(event: AccountEvent.RegistrationStateChanged) {
+    private suspend fun handleRegistrationState(event: AccountEvent.RegistrationStateChanged) {
         // Only react to the account we just imported.
         if (importedAccountId != null && event.accountId != importedAccountId) return
         when (event.state) {
@@ -177,7 +180,7 @@ class ImportAccountViewModel(
             "ERROR_HOST", "ERROR_SERVICE_UNAVAILABLE" -> {
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = "Import failed: ${event.state}"
+                    error = getString(Res.string.import_failed_reason, event.state)
                 )
             }
             "ERROR_NEED_MIGRATION" -> {
@@ -190,7 +193,7 @@ class ImportAccountViewModel(
     /**
      * Handle migration result after importing an older-format account.
      */
-    private fun handleMigrationResult(event: AccountEvent.MigrationEnded) {
+    private suspend fun handleMigrationResult(event: AccountEvent.MigrationEnded) {
         when (event.state) {
             "SUCCESS" -> {
                 _state.value = _state.value.copy(
@@ -201,7 +204,7 @@ class ImportAccountViewModel(
             else -> {
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = "Migration failed: ${event.state}"
+                    error = getString(Res.string.migration_failed_reason, event.state)
                 )
             }
         }

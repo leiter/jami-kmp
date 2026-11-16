@@ -98,4 +98,6 @@
         <item quantity="one">%1$d pending invitation</item>
         <item quantity="other">%1$d pending invitations</item>
     </plurals>
+    <string name="content_desc_selected">Selected</string>
+    <string name="content_desc_not_selected">Not selected</string>
 </resources>
