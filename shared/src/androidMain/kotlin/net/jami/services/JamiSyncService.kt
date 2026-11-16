@@ -37,6 +37,13 @@ import kotlinx.coroutines.launch
 import net.jami.utils.Log
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.notif_channel_reconnect
+import jami_kmp.shared.generated.resources.notif_channel_sync
+import jami_kmp.shared.generated.resources.notif_sync_text
+import jami_kmp.shared.generated.resources.notif_sync_title
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.getString
 
 /**
  * Android foreground service for background synchronization.
@@ -174,10 +181,10 @@ class JamiSyncService : Service(), KoinComponent {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                CHANNEL_NAME,
+                runBlocking { getString(Res.string.notif_channel_sync) },
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Background synchronization"
+                description = runBlocking { getString(Res.string.notif_channel_reconnect) }
                 setShowBadge(false)
                 enableVibration(false)
                 setSound(null, null)
@@ -215,8 +222,8 @@ class JamiSyncService : Service(), KoinComponent {
         }
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Jami Sync")
-            .setContentText("Syncing conversations in background")
+            .setContentTitle(runBlocking { getString(Res.string.notif_sync_title) })
+            .setContentText(runBlocking { getString(Res.string.notif_sync_text) })
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setAutoCancel(false)
@@ -235,7 +242,6 @@ class JamiSyncService : Service(), KoinComponent {
         private const val TAG = "JamiSyncService"
         private const val NOTIFICATION_ID = 1004
         private const val CHANNEL_ID = "jami_sync_channel"
-        private const val CHANNEL_NAME = "Jami Sync"
 
         const val ACTION_START = "net.jami.SYNC_START"
         const val ACTION_STOP = "net.jami.SYNC_STOP"

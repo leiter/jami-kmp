@@ -19,6 +19,12 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 import kotlin.coroutines.resume
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.account_biometric_error_failed
+import jami_kmp.shared.generated.resources.action_cancel
+import jami_kmp.shared.generated.resources.biometric_error_no_credential
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.getString
 
 /**
  * Android implementation of BiometricService using AndroidKeyStore and BiometricPrompt.
@@ -129,11 +135,11 @@ actual class BiometricService(private val context: Context) {
         return try {
             // Load encrypted data
             val biometricData = loadEncryptedData(accountId)
-                ?: return BiometricResult.Error("No biometric data found for this account", false)
+                ?: return BiometricResult.Error(getString(Res.string.biometric_error_no_credential), false)
 
             // Get the key
             val secretKey = getSecretKey(biometricData.keyName)
-                ?: return BiometricResult.Error("Biometric key not found or invalidated", false)
+                ?: return BiometricResult.Error(getString(Res.string.biometric_error_no_credential), false)
 
             // Decrypt the password
             val cipher = getCipher()
@@ -147,7 +153,7 @@ actual class BiometricService(private val context: Context) {
             BiometricResult.Success(password)
         } catch (e: Exception) {
             Log.e(TAG, "Biometric authentication failed", e)
-            BiometricResult.Error(e.message ?: "Authentication failed", false)
+            BiometricResult.Error(e.message ?: getString(Res.string.account_biometric_error_failed), false)
         }
     }
 
@@ -286,7 +292,7 @@ actual class BiometricService(private val context: Context) {
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(promptTitle)
             .setDescription(promptDescription)
-            .setNegativeButtonText("Cancel")
+            .setNegativeButtonText(runBlocking { getString(Res.string.action_cancel) })
             .setAllowedAuthenticators(ALLOWED_AUTHENTICATORS)
             .build()
 
@@ -353,7 +359,7 @@ actual class BiometricService(private val context: Context) {
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(promptTitle)
             .setDescription(promptDescription)
-            .setNegativeButtonText("Cancel")
+            .setNegativeButtonText(runBlocking { getString(Res.string.action_cancel) })
             .setAllowedAuthenticators(ALLOWED_AUTHENTICATORS)
             .build()
 

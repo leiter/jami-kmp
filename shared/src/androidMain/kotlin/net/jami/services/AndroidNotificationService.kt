@@ -110,7 +110,9 @@ class AndroidNotificationService(
 
     // Track active notifications
     private val activeCallNotifications = mutableSetOf<Int>()
-    private val selfUser: Person = Person.Builder().setName("You").build()
+    private val selfUser: Person by lazy {
+        Person.Builder().setName(runBlocking { getString(Res.string.conversation_info_contact_you) }).build()
+    }
     private val activeTextNotifications = mutableMapOf<String, Int>() // conversationId -> notifId
     private val activeTransferNotifications = mutableMapOf<String, Int>() // fileId -> notifId
     private var currentCallNotificationId: Int? = null
@@ -931,7 +933,7 @@ class AndroidNotificationService(
             .setSmallIcon(smallIcon)
             .applyUserVisibility()
             .setContentTitle(info.displayName)
-            .setContentText("${info.bytesProgress} / ${info.totalSize} bytes")
+            .setContentText(runBlocking { getString(Res.string.notif_file_transfer_progress_bytes, info.bytesProgress, info.totalSize) })
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setProgress(100, progress, progress == 0)

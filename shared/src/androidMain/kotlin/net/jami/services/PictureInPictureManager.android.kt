@@ -39,6 +39,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import net.jami.ui.viewmodel.CallMode
 import net.jami.utils.Log
 import java.lang.ref.WeakReference
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.action_call_hangup
+import jami_kmp.shared.generated.resources.action_call_mute
+import jami_kmp.shared.generated.resources.action_video
+import jami_kmp.shared.generated.resources.view_switch_camera
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.getString
 
 /**
  * Android implementation of PictureInPictureManager.
@@ -282,22 +289,22 @@ class AndroidPictureInPictureManager : PictureInPictureManager {
             val (iconRes, title, actionType) = when (action) {
                 PipAction.TOGGLE_MUTE -> Triple(
                     android.R.drawable.ic_lock_silent_mode_off,
-                    "Mute",
+                    runBlocking { getString(Res.string.action_call_mute) },
                     ACTION_TOGGLE_MUTE
                 )
                 PipAction.TOGGLE_VIDEO -> Triple(
                     android.R.drawable.ic_menu_camera,
-                    "Video",
+                    runBlocking { getString(Res.string.action_video) },
                     ACTION_TOGGLE_VIDEO
                 )
                 PipAction.HANG_UP -> Triple(
                     android.R.drawable.ic_menu_close_clear_cancel,
-                    "Hang up",
+                    runBlocking { getString(Res.string.action_call_hangup) },
                     ACTION_HANG_UP
                 )
                 PipAction.SWITCH_CAMERA -> Triple(
                     android.R.drawable.ic_menu_rotate,
-                    "Switch",
+                    runBlocking { getString(Res.string.view_switch_camera) },
                     ACTION_SWITCH_CAMERA
                 )
             }

@@ -46,6 +46,9 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
 import java.io.File
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.location_my_location
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 actual fun OsmMapView(
@@ -209,6 +212,7 @@ actual fun OsmMapView(
         map.invalidate()
     }
 
+    val myLocationTitle = stringResource(Res.string.location_my_location)
     AndroidView(
         modifier = modifier,
         factory = { ctx ->
@@ -226,7 +230,7 @@ actual fun OsmMapView(
                 // Create marker for user location
                 val locationMarker = Marker(this).apply {
                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    title = "My Location"
+                    title = myLocationTitle
                 }
                 overlays.add(locationMarker)
                 marker = locationMarker

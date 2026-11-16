@@ -32,6 +32,9 @@ import com.google.zxing.NotFoundException
 import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import java.util.concurrent.Executors
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.error_scan_no_camera_permissions
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 actual fun QrCodeScannerView(
@@ -53,7 +56,7 @@ actual fun QrCodeScannerView(
 
     if (!hasCameraPermission) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Camera permission required to scan QR codes")
+            Text(stringResource(Res.string.error_scan_no_camera_permissions))
         }
         return
     }
