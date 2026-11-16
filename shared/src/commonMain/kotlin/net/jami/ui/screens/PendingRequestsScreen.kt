@@ -36,6 +36,7 @@ import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.accept
 import jami_kmp.shared.generated.resources.block
 import jami_kmp.shared.generated.resources.decline
+import jami_kmp.shared.generated.resources.home_no_pending_requests
 import jami_kmp.shared.generated.resources.invitation_card_title
 import net.jami.di.getViewModel
 import net.jami.ui.components.content.AvatarSize
@@ -90,7 +91,7 @@ fun PendingRequestsScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "No pending invitations",
+                    text = stringResource(Res.string.home_no_pending_requests),
                     style = JamiTheme.typography.bodyLarge,
                     color = JamiTheme.colors.onSurfaceVariant,
                 )

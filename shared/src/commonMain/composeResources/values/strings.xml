@@ -864,5 +864,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_battery_message">To receive calls and messages while the screen is off, Jami needs to be left out of battery optimisation. Without it the system stops Jami in the background after a few minutes.</string>
     <string name="permission_dialog_battery_confirm">Allow</string>
     <string name="permission_dialog_battery_dismiss">Not now</string>
+    <string name="location_share_duration_10_min">10 min</string>
+    <string name="location_share_duration_1_hour">1 hour</string>
+    <string name="conversation_video_recording_unsupported">Video recording coming soon</string>
+    <string name="chat_extensions_unsupported">Plugins not yet supported</string>
+    <string name="emoji_category_smileys">Smileys</string>
+    <string name="emoji_category_animals_nature">Animals &amp; nature</string>
+    <string name="emoji_category_food_drink">Food &amp; drink</string>
+    <string name="emoji_category_activities">Activities</string>
+    <string name="emoji_category_travel_places">Travel &amp; places</string>
+    <string name="emoji_category_objects">Objects</string>
+    <string name="emoji_category_symbols">Symbols</string>
 
 </resources>

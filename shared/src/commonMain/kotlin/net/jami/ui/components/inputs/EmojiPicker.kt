@@ -94,14 +94,13 @@ fun EmojiPickerDialog(
     var query by remember { mutableStateOf("") }
     var categoryIndex by remember { mutableStateOf(0) }
     val recent = remember { RecentEmoji.load() }
-    val recentTitle = stringResource(Res.string.emoji_picker_recent)
 
     // Recents are a page like any other, but only when there are some: an empty first tab
     // that appears after the first reaction and not before is worse than no tab.
     val pages = remember(recent) {
         buildList {
             if (recent.isNotEmpty()) {
-                add(EmojiCategory(recentTitle, recent.map { Emoji(it, "") }))
+                add(EmojiCategory(Res.string.emoji_picker_recent, recent.map { Emoji(it, "") }))
             }
             addAll(EmojiCatalog.categories)
         }
@@ -135,7 +134,7 @@ fun EmojiPickerDialog(
                                 onClick = { categoryIndex = index },
                                 text = {
                                     Text(
-                                        text = page.title,
+                                        text = stringResource(page.title),
                                         style = JamiTheme.typography.labelSmall,
                                         textAlign = TextAlign.Center,
                                     )

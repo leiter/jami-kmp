@@ -12,14 +12,15 @@ Unicode version matters more than the churn.
 import pathlib
 import unicodedata
 
+# (string resource key of the page title — English text in composeResources/values/strings.xml, ranges)
 CATEGORIES = [
-    ("Smileys", [(0x1F600, 0x1F64F), (0x1F910, 0x1F92F), (0x1F970, 0x1F97A), (0x1F9D0, 0x1F9DF)]),
-    ("Animals & nature", [(0x1F400, 0x1F43F), (0x1F980, 0x1F9AE), (0x1F330, 0x1F344)]),
-    ("Food & drink", [(0x1F345, 0x1F37F), (0x1F950, 0x1F96F)]),
-    ("Activities", [(0x1F380, 0x1F3C4), (0x1F3C6, 0x1F3CA), (0x1F947, 0x1F94F)]),
-    ("Travel & places", [(0x1F680, 0x1F6A4), (0x1F3E0, 0x1F3F0), (0x1F30D, 0x1F320)]),
-    ("Objects", [(0x1F4A1, 0x1F4FF), (0x1F527, 0x1F52F)]),
-    ("Symbols", [(0x2764, 0x2764), (0x1F493, 0x1F49F), (0x2705, 0x2705), (0x274C, 0x274C), (0x2B50, 0x2B50)]),
+    ("emoji_category_smileys", [(0x1F600, 0x1F64F), (0x1F910, 0x1F92F), (0x1F970, 0x1F97A), (0x1F9D0, 0x1F9DF)]),
+    ("emoji_category_animals_nature", [(0x1F400, 0x1F43F), (0x1F980, 0x1F9AE), (0x1F330, 0x1F344)]),
+    ("emoji_category_food_drink", [(0x1F345, 0x1F37F), (0x1F950, 0x1F96F)]),
+    ("emoji_category_activities", [(0x1F380, 0x1F3C4), (0x1F3C6, 0x1F3CA), (0x1F947, 0x1F94F)]),
+    ("emoji_category_travel_places", [(0x1F680, 0x1F6A4), (0x1F3E0, 0x1F3F0), (0x1F30D, 0x1F320)]),
+    ("emoji_category_objects", [(0x1F4A1, 0x1F4FF), (0x1F527, 0x1F52F)]),
+    ("emoji_category_symbols", [(0x2764, 0x2764), (0x1F493, 0x1F49F), (0x2705, 0x2705), (0x274C, 0x274C), (0x2B50, 0x2B50)]),
 ]
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -41,9 +42,9 @@ def entries(ranges):
             yield ch, keywords
 
 body = []
-for title, ranges in CATEGORIES:
+for title_key, ranges in CATEGORIES:
     rows = list(entries(ranges))
-    body.append(f'        EmojiCategory(\n            title = "{title}",\n            emoji = listOf(\n')
+    body.append(f'        EmojiCategory(\n            title = Res.string.{title_key},\n            emoji = listOf(\n')
     for ch, kw in rows:
         # Kotlin's \u takes exactly four hex digits, so astral codepoints have to go in as
         # UTF-16 surrogate pairs — \u1F602 does not compile.
@@ -73,11 +74,15 @@ OUT.write_text('''/*
  */
 package net.jami.ui.components.inputs
 
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.StringResource
+
 /** One emoji and the words that should find it. [keywords] is its Unicode name, lowercased. */
 data class Emoji(val char: String, val keywords: String)
 
-/** A titled page of the picker. */
-data class EmojiCategory(val title: String, val emoji: List<Emoji>)
+/** A titled page of the picker; the title is localized. */
+data class EmojiCategory(val title: StringResource, val emoji: List<Emoji>)
 
 /**
  * The emoji the reaction picker offers.

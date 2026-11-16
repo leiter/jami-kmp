@@ -112,7 +112,7 @@ fun VideoLossOverlay(
                 // Loss duration (if applicable)
                 if (videoLoss.lossDurationSeconds > 0) {
                     Text(
-                        text = "No video for ${videoLoss.lossDurationSeconds}s",
+                        text = stringResource(Res.string.video_loss_duration, videoLoss.lossDurationSeconds),
                         style = JamiTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.75f),
                         textAlign = TextAlign.Center
@@ -134,7 +134,7 @@ fun VideoLossOverlay(
 
                     // Retry attempt counter
                     Text(
-                        text = "Attempt ${videoLoss.retryAttempt + 1}/${videoLoss.maxRetries}",
+                        text = stringResource(Res.string.video_loss_attempt, videoLoss.retryAttempt + 1, videoLoss.maxRetries),
                         style = JamiTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.75f)
                     )
@@ -145,7 +145,7 @@ fun VideoLossOverlay(
                 // Fallback to audio only
                 if (videoLoss.isFallbackToAudioOnly) {
                     Text(
-                        text = "Video is unavailable on this connection",
+                        text = stringResource(Res.string.video_loss_unavailable),
                         style = JamiTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.75f),
                         textAlign = TextAlign.Center
@@ -161,7 +161,7 @@ fun VideoLossOverlay(
                         ),
                         modifier = Modifier.size(width = 160.dp, height = 44.dp)
                     ) {
-                        Text("Try Again")
+                        Text(stringResource(Res.string.video_loss_retry))
                     }
                 } else if (videoLoss.isRetrying && !videoLoss.canRetry) {
                     // Max retries reached - offer audio only fallback
@@ -173,7 +173,7 @@ fun VideoLossOverlay(
                         ),
                         modifier = Modifier.size(width = 160.dp, height = 44.dp)
                     ) {
-                        Text("Audio Only")
+                        Text(stringResource(Res.string.video_loss_audio_only))
                     }
                 }
             }

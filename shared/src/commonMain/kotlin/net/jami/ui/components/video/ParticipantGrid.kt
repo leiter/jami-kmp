@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.ceil
 import kotlin.math.sqrt
 import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.conference_waiting_participants
 import jami_kmp.shared.generated.resources.content_desc_participant_muted
 import jami_kmp.shared.generated.resources.content_desc_participant_video_off
 import org.jetbrains.compose.resources.stringResource
@@ -425,7 +426,7 @@ private fun EmptyParticipantState(modifier: Modifier = Modifier) {
                 tint = Color.Gray
             )
             Text(
-                text = "Waiting for participants...",
+                text = stringResource(Res.string.conference_waiting_participants),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray,
                 textAlign = TextAlign.Center

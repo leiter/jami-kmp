@@ -16,11 +16,15 @@
  */
 package net.jami.ui.components.inputs
 
+import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.*
+import org.jetbrains.compose.resources.StringResource
+
 /** One emoji and the words that should find it. [keywords] is its Unicode name, lowercased. */
 data class Emoji(val char: String, val keywords: String)
 
-/** A titled page of the picker. */
-data class EmojiCategory(val title: String, val emoji: List<Emoji>)
+/** A titled page of the picker; the title is localized. */
+data class EmojiCategory(val title: StringResource, val emoji: List<Emoji>)
 
 /**
  * The emoji the reaction picker offers.
@@ -41,7 +45,7 @@ object EmojiCatalog {
 
     val categories: List<EmojiCategory> = listOf(
         EmojiCategory(
-            title = "Smileys",
+            title = Res.string.emoji_category_smileys,
             emoji = listOf(
                 Emoji("\uD83D\uDE00", "grinning face"),
                 Emoji("\uD83D\uDE01", "grinning face with smiling eyes"),
@@ -184,7 +188,7 @@ object EmojiCatalog {
             ),
         ),
         EmojiCategory(
-            title = "Animals & nature",
+            title = Res.string.emoji_category_animals_nature,
             emoji = listOf(
                 Emoji("\uD83D\uDC00", "rat"),
                 Emoji("\uD83D\uDC01", "mouse"),
@@ -321,7 +325,7 @@ object EmojiCatalog {
             ),
         ),
         EmojiCategory(
-            title = "Food & drink",
+            title = Res.string.emoji_category_food_drink,
             emoji = listOf(
                 Emoji("\uD83C\uDF45", "tomato"),
                 Emoji("\uD83C\uDF46", "aubergine"),
@@ -417,7 +421,7 @@ object EmojiCatalog {
             ),
         ),
         EmojiCategory(
-            title = "Activities",
+            title = Res.string.emoji_category_activities,
             emoji = listOf(
                 Emoji("\uD83C\uDF80", "ribbon"),
                 Emoji("\uD83C\uDF81", "wrapped present"),
@@ -505,7 +509,7 @@ object EmojiCatalog {
             ),
         ),
         EmojiCategory(
-            title = "Travel & places",
+            title = Res.string.emoji_category_travel_places,
             emoji = listOf(
                 Emoji("\uD83D\uDE80", "rocket"),
                 Emoji("\uD83D\uDE81", "helicopter"),
@@ -584,7 +588,7 @@ object EmojiCatalog {
             ),
         ),
         EmojiCategory(
-            title = "Objects",
+            title = Res.string.emoji_category_objects,
             emoji = listOf(
                 Emoji("\uD83D\uDCA1", "electric light bulb"),
                 Emoji("\uD83D\uDCA2", "anger symbol"),
@@ -693,7 +697,7 @@ object EmojiCatalog {
             ),
         ),
         EmojiCategory(
-            title = "Symbols",
+            title = Res.string.emoji_category_symbols,
             emoji = listOf(
                 Emoji("\u2764", "heavy black heart"),
                 Emoji("\uD83D\uDC93", "beating heart"),

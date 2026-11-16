@@ -187,12 +187,12 @@ fun LocationSharingScreen(
                             FilterChip(
                                 selected = state.selectedDuration == SharingDuration.TEN_MINUTES,
                                 onClick = { viewModel.selectDuration(SharingDuration.TEN_MINUTES) },
-                                label = { Text("10 min") },
+                                label = { Text(stringResource(Res.string.location_share_duration_10_min)) },
                             )
                             FilterChip(
                                 selected = state.selectedDuration == SharingDuration.ONE_HOUR,
                                 onClick = { viewModel.selectDuration(SharingDuration.ONE_HOUR) },
-                                label = { Text("1 hour") },
+                                label = { Text(stringResource(Res.string.location_share_duration_1_hour)) },
                             )
                         }
                     }

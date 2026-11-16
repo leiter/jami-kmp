@@ -197,6 +197,7 @@ import net.jami.ui.viewmodel.ReplyPreview
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
 import net.jami.ui.TestTags
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
 import net.jami.ui.components.content.AvatarSize
@@ -1017,12 +1018,12 @@ fun ChatScreen(
                     onStartAudioRecording = { viewModel.startAudioRecording() },
                     onVideoRecordingUnsupported = {
                         coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Video recording coming soon")
+                            snackbarHostState.showSnackbar(getString(Res.string.conversation_video_recording_unsupported))
                         }
                     },
                     onChatExtensionsUnsupported = {
                         coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Plugins not yet supported")
+                            snackbarHostState.showSnackbar(getString(Res.string.chat_extensions_unsupported))
                         }
                     },
                 )
