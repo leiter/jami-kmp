@@ -1148,7 +1148,11 @@ class StubDaemonBridge : DaemonBridgeApi {
     override fun loadConversation(accountId: String, conversationId: String, fromMessage: String, size: Int) {}
     override fun getConversationMembers(accountId: String, conversationId: String): List<Map<String, String>> = conversationMembers[conversationId] ?: emptyList()
     override fun getConversationInfo(accountId: String, conversationId: String): Map<String, String> = conversationInfo[conversationId] ?: emptyMap()
-    override fun removeConversation(accountId: String, conversationId: String) {}
+    /** Every removeConversation() that reached the "daemon", in order: (accountId, convId). */
+    val removedConversations = mutableListOf<Pair<String, String>>()
+    override fun removeConversation(accountId: String, conversationId: String) {
+        removedConversations += accountId to conversationId
+    }
     override fun countInteractions(
         accountId: String,
         conversationId: String,

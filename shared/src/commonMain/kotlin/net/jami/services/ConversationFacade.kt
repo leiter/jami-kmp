@@ -756,27 +756,31 @@ class ConversationFacade(
     // ==================== Conversation Management ====================
 
     /**
-     * Remove a conversation.
+     * Leave and remove a conversation, telling the other participants that we left.
      */
-    suspend fun removeConversation(
-        accountId: String,
-        conversationUri: Uri,
-        shouldClearConversation: Boolean = false
-    ) {
-        val account = accountService.getAccount(accountId)
+    suspend fun removeConversation(accountId: String, conversationUri: Uri) {
+        // Kept for the unknown-account guard; nothing else needs the model here.
+        accountService.getAccount(accountId)
             ?: throw IllegalArgumentException("Unknown account")
 
         if (conversationUri.isSwarm) {
-            val conversation = findSwarmConversation(account, conversationUri.rawRingId)
-            if (conversation != null && conversation.mode == Conversation.Mode.OneToOne) {
-                if (!shouldClearConversation) {
-                    accountService.removeContact(accountId, conversation.contact!!.uri.rawRingId, false)
-                } else {
-                    accountService.removeConversation(accountId, conversationUri)
-                }
-            } else {
-                accountService.removeConversation(accountId, conversationUri)
-            }
+            // Every swarm leaves the same way, 1:1 included, so the other participant is told.
+            //
+            // The reference client (and this one until 2026-11-17) removed the *contact* for a
+            // 1:1 instead — "contact is strongly related", libjamiclient's ConversationFacade.
+            // That reaches the daemon's `ConversationModule::removeContact`, which marks the
+            // conversation removed and calls `removeRepository(force = true)`: the git repo is
+            // erased on the spot and `Conversation::leave()` is never called, so no
+            // `{type: member, action: remove}` commit is ever written and the peer hears
+            // nothing — their conversation simply stops working. `removeConversation` commits
+            // the leave, notifies the members and keeps the repo until a peer has synced it, so
+            // the other side materialises a ContactEvent(REMOVED) and renders "<name> left the
+            // conversation" like it does for a group.
+            //
+            // The contact is deliberately kept: leaving is not blocking, and a fresh 1:1 with
+            // them can be started again. Contact details has its own remove and block actions
+            // (`ContactDetailsViewModel.removeContact` / `blockContact`) for the other intent.
+            accountService.removeConversation(accountId, conversationUri)
         } else {
             historyService.clearHistory(conversationUri.uri, accountId, true)
             accountService.removeContact(accountId, conversationUri.rawRingId, false)
