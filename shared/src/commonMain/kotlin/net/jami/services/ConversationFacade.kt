@@ -712,8 +712,29 @@ class ConversationFacade(
      */
     private fun refreshTrustRequestNotification(account: Account) {
         val pending = account.getPending()
+        // Keyed by the request's own conversation id, not by the peer. Every trust request
+        // carries a fresh conversation id, so a second invitation from a peer already flagged
+        // is still new — keyed by peer it was silently deduped against the first one, for good.
+        // Observed on the Pixel pair: a flag written on 2026-11-11 kept a genuine request
+        // received on 2026-11-17 from ever notifying. See doc/TODO.md, 2026-11-17.
+        val pendingKeys = pending.map { it.uri.rawRingId }.toSet()
+
+        // Forget every flag whose request is no longer pending, whatever removed it: accept and
+        // discard clear their own, but a request that left the pending set by any other route —
+        // the peer withdrawing it, the contact being removed, the request becoming a contact —
+        // left a flag behind for ever.
+        val notified = preferencesService.notifiedRequests(account.accountId)
+        for (stale in notified - pendingKeys) {
+            Log.d(TAG, "refreshTrustRequestNotification: forgetting stale notified flag for $stale")
+            preferencesService.removeRequestPreferences(account.accountId, stale)
+        }
+
         if (pending.isEmpty()) {
-            notificationService.cancelTrustRequestNotification(account.accountId)
+            // Only when something was notified before: an account that has never had a request
+            // has no notification to take down, and this now runs on every smartlist load.
+            if (notified.isNotEmpty()) {
+                notificationService.cancelTrustRequestNotification(account.accountId)
+            }
             return
         }
 
@@ -721,8 +742,7 @@ class ConversationFacade(
         // is republished whenever any request arrives or is answered, so without this the user
         // would get a fresh notification for requests they have already seen and left pending.
         var hasNewRequest = false
-        for (conversation in pending) {
-            val key = conversation.contactOrNull?.uri?.rawRingId ?: conversation.uri.rawRingId
+        for (key in pendingKeys) {
             if (!preferencesService.hasRequestBeenNotified(account.accountId, key)) {
                 hasNewRequest = true
                 preferencesService.setRequestNotified(account.accountId, key)
@@ -981,6 +1001,11 @@ class ConversationFacade(
                 val interactions = historyService.getSmartlist(account.accountId)
                 // Process interactions and update conversations
             }
+
+            // Requests the daemon holds for this account, including any that arrived while the
+            // app was not running. Before the conversation list is published, so a pending
+            // request is in the model by the time list screens react to ConversationsLoaded.
+            if (account.isJami) mergeDaemonConversationRequests(account)
 
             // Publish updated conversation list
             // Sort by last event timestamp descending (most recent first)
@@ -1543,6 +1568,18 @@ class ConversationFacade(
             return
         }
 
+        seedPendingRequest(account, conversationId, metadata)
+        refreshTrustRequestNotification(account)
+        scope.launch {
+            _conversationEvents.emit(ConversationEvent.ConversationRequestReceived(accountId, conversationId, metadata))
+        }
+    }
+
+    /**
+     * Put a conversation request into the account's pending set, as both the live callback and
+     * the startup merge need it.
+     */
+    private fun seedPendingRequest(account: Account, conversationId: String, metadata: Map<String, String>) {
         val conversation = account.getSwarm(conversationId)
             ?: account.newSwarm(conversationId, Conversation.Mode.Request)
         conversation.setMode(Conversation.Mode.Request)
@@ -1565,10 +1602,31 @@ class ConversationFacade(
         }
 
         account.addPendingConversation(conversation)
-        refreshTrustRequestNotification(account)
-        scope.launch {
-            _conversationEvents.emit(ConversationEvent.ConversationRequestReceived(accountId, conversationId, metadata))
+    }
+
+    /**
+     * Merge the requests the daemon is already holding into the account's pending set during a
+     * smartlist load, then notify for any that are new.
+     *
+     * `onConversationRequestReceived` only fires for a request that arrives while the app is
+     * running, and it was the sole producer of both the pending set and the request
+     * notification. A request that landed while the app was stopped therefore notified nobody:
+     * the Pixel 7a held B's invitation of 2026-11-17 13:40:13 in `convRequests` and stayed
+     * silent across restarts, visible only to whoever opened the requests screen — the two
+     * request screens poll the daemon themselves, which is why it showed there and nowhere
+     * else. The same poll now feeds the model, so the notification no longer depends on the
+     * app having been awake at the right moment. Filtered by [getConversationRequests], so
+     * "block unknown contacts" still withholds a stranger's request.
+     */
+    private fun mergeDaemonConversationRequests(account: Account) {
+        val requests = getConversationRequests(account.accountId)
+        for (request in requests) {
+            val conversationId = request["id"] ?: request["conversationId"] ?: continue
+            seedPendingRequest(account, conversationId, request)
         }
+        Log.d(TAG, "mergeDaemonConversationRequests: ${requests.size} held by the daemon " +
+            "for ${account.accountId}")
+        refreshTrustRequestNotification(account)
     }
 
     /**

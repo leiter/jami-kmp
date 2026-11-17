@@ -50,7 +50,7 @@ interface PreferencesService {
      * Remove trust request preferences.
      *
      * @param accountId The account ID
-     * @param contactId The contact ID (raw ring ID)
+     * @param contactId The request's conversation ID (the raw id of the uri it is keyed by)
      */
     fun removeRequestPreferences(accountId: String, contactId: String)
 
@@ -59,12 +59,14 @@ interface PreferencesService {
      *
      * The pending set is republished on every change, so without this the same request would
      * be re-notified each time another one arrives or is answered. Cleared by
-     * [removeRequestPreferences] when the request is accepted or discarded, so a later request
-     * from the same peer notifies again. Mirrors the reference client's
+     * [removeRequestPreferences] when the request is accepted or discarded, and pruned against
+     * the pending set via [notifiedRequests] on every refresh, so a later request from the same
+     * peer always notifies again. Mirrors the reference client's
      * `loadRequestsPreferences`/`saveRequestPreferences` pair.
      *
      * @param accountId The account ID
-     * @param contactId The contact ID (raw ring ID)
+     * @param contactId The request's conversation ID — not the peer: every trust request
+     *   carries a fresh conversation id, so a second invitation from a known peer is new
      */
     fun hasRequestBeenNotified(accountId: String, contactId: String): Boolean
 
@@ -72,9 +74,21 @@ interface PreferencesService {
      * Record that a notification has been shown for this pending request.
      *
      * @param accountId The account ID
-     * @param contactId The contact ID (raw ring ID)
+     * @param contactId The request's conversation ID
      */
     fun setRequestNotified(accountId: String, contactId: String)
+
+    /**
+     * The request conversation IDs that currently carry an "already notified" flag.
+     *
+     * Needed to prune flags whose request has left the pending set by a route other than
+     * accept/discard — the peer withdrawing it, the contact being removed, or the request
+     * turning into a contact. Such a flag used to survive forever and silenced every later
+     * invitation from that peer. See doc/TODO.md, 2026-11-17.
+     *
+     * @param accountId The account ID
+     */
+    fun notifiedRequests(accountId: String): Set<String>
 
     /**
      * Get the maximum file size for auto-accept.
@@ -136,6 +150,13 @@ class StubPreferencesService : PreferencesService {
 
     override fun setRequestNotified(accountId: String, contactId: String) {
         notifiedRequests.add("$accountId:$contactId")
+    }
+
+    override fun notifiedRequests(accountId: String): Set<String> {
+        val prefix = "$accountId:"
+        return notifiedRequests.filter { it.startsWith(prefix) }
+            .map { it.removePrefix(prefix) }
+            .toSet()
     }
 
     override fun getMaxFileAutoAccept(accountId: String): Int = 20 * 1024 * 1024 // 20MB default

@@ -44,6 +44,58 @@ was reproduced on the two-simulator harness (`scripts/ios-two-sim`).
   Bob's chat shows "Alice" rather than her ID. Not yet on real phones; the Android half compiles
   but is unexercised (no Firebase build here).
 
+**Android: reproduced from device state, 2026-11-17 15:xx.** Both candidates below are ruled
+out on the pair — neither account's `config.yml` holds a `proxyPushToken`, and
+`shared_prefs/jami_settings.xml` carries no `block_unknown_contacts` key on either device, so it
+is at its `false` default. The daemon state tells the real story:
+
+- A (`3f3dad8b`, unitedhumans) holds a pending, **undeclined** request from B (`d9f8c7f0`),
+  conversation `e5c001b1…`, received `2026-11-17 13:40:13`. The daemon received it fine.
+- A's `shared_prefs/jami_settings.xml` was last written **2026-11-11 23:14** — six days before
+  that request — and already contained `req_3f3dad8b328eb995:d9f8c7f0…=true`.
+
+- [x] **An "already notified" flag keyed by the peer silenced every later invitation from
+  them.** `refreshTrustRequestNotification` deduped on `req_<account>:<contact ring id>`, and
+  only `acceptRequest`/`discardRequest` ever cleared it. So a request that left the pending set
+  by any other route — the contact removed (A removed B at 13:39:38, 35 s before B's invitation
+  landed), the peer withdrawing it, the request becoming a contact — left the flag behind, and
+  the next genuine request from that peer hit `hasRequestBeenNotified == true` and was never
+  notified. The app was silent while the daemon held the invitation.
+  Fixed two ways: the flag is now keyed by the **request's conversation id**, which is fresh for
+  every trust request (the pair's own history shows three distinct ones from A: `c32f62ac`,
+  `c67e81c7`, `e5c001b1`), and every refresh prunes flags that are not in the current pending
+  set, so no flag can outlive its request. All call sites already passed a conversation uri.
+  Covered by `TrustRequestNotificationTest.aStaleNotifiedFlagDoesNotSilenceANewRequest` and
+  `pruningLeavesOtherAccountsFlagsAlone`; the stale flags on the Pixels are pruned at the next
+  refresh after the update.
+
+- [x] **A request already held by the daemon at startup notified nobody.**
+  `onConversationRequestReceived` only fires for a request that arrives while the app is
+  running, and it was the only producer of both the account's pending set and the request
+  notification; `loadSmartlist` never looked at `getConversationRequests`. So an invitation that
+  landed while the app was stopped was visible only to whoever opened a requests screen — those
+  two ViewModels poll the daemon themselves, which is why it appeared there and nowhere else.
+  The smartlist load now merges the daemon's held requests into the model
+  (`mergeDaemonConversationRequests`, filtered by the same "block unknown contacts" predicate)
+  and refreshes the notification. Covered by `aRequestHeldByTheDaemonAtStartupIsNotified` and
+  `aDaemonHeldRequestIsNotifiedOnceAcrossReloads`.
+
+**Verified on the Pixel 7a, 2026-11-17 15:25.** The pair was left untouched; the APK with both
+fixes was installed over the old one and the app restarted. B's invitation of 13:40, which the
+daemon had held in silence for nearly two hours, came straight through:
+
+    ConversationFacade: mergeDaemonConversationRequests: 1 held by the daemon for 3f3dad8b328eb995
+    ConversationFacade: refreshTrustRequestNotification: forgetting stale notified flag for d9f8c7f0…
+    ConversationFacade: refreshTrustRequestNotification: forgetting stale notified flag for 73a1cacb…
+    ConversationFacade: refreshTrustRequestNotification: forgetting stale notified flag for 9045ef4c…
+    AndroidNotificationService: Showing trust request notification for account: 3f3dad8b328eb995, 1 pending
+
+A live record on `channel=jami_requests__sdef_v1` with `actions=2` followed, and
+`shared_prefs/jami_settings.xml` now holds exactly one flag,
+`req_3f3dad8b328eb995:e5c001b17aa…` — the request's conversation id, with all three stale
+peer-keyed flags gone. Accepting from the notification is not re-verified (that path is
+unchanged); the iPhone half of the report is covered by the push-token section above.
+
 **Android, not reproduced. Candidates to check on the Pixels:**
 - "Only accept messages from your contacts" left on since the 2026-11-07 B3 run: it silently
   drops every invitation, because an inviter is never a confirmed contact yet.

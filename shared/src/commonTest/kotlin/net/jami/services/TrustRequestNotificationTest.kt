@@ -146,6 +146,83 @@ class TrustRequestNotificationTest {
         assertEquals(2, stack.notificationService.shownTrustRequests.size)
     }
 
+    /**
+     * The device case of 2026-11-17: a `req_` flag written days earlier, whose request had
+     * left the pending set without ever being accepted or discarded through the app (the
+     * contact was removed instead), silenced a genuine new invitation from that same peer —
+     * the Pixel's daemon held the request while the app stayed silent. Every refresh now
+     * prunes flags against the pending set, so the stale one cannot outlive its request.
+     */
+    @Test
+    fun aStaleNotifiedFlagDoesNotSilenceANewRequest() = runTest {
+        val stack = makeTestServiceStack(scope = this)
+        prepareAccountInService(stack.stub, stack.accountService)
+        // Written by an earlier request that vanished by a route other than accept/discard.
+        stack.preferencesService.setRequestNotified(TEST_ACCOUNT_ID, PEER_ID)
+
+        stack.conversationFacade.onConversationRequestReceived(
+            TEST_ACCOUNT_ID, CONVERSATION_ID, mapOf("from" to PEER_ID)
+        )
+        advanceUntilIdle()
+
+        assertEquals(listOf(TEST_ACCOUNT_ID), stack.notificationService.shownTrustRequests)
+    }
+
+    /** Pruning is per account: another account's flags are left alone. */
+    @Test
+    fun pruningLeavesOtherAccountsFlagsAlone() = runTest {
+        val stack = makeTestServiceStack(scope = this)
+        prepareAccountInService(stack.stub, stack.accountService)
+        stack.preferencesService.setRequestNotified("other_account", PEER_ID)
+
+        stack.conversationFacade.onConversationRequestReceived(
+            TEST_ACCOUNT_ID, CONVERSATION_ID, mapOf("from" to PEER_ID)
+        )
+        advanceUntilIdle()
+
+        assertTrue(stack.preferencesService.hasRequestBeenNotified("other_account", PEER_ID))
+    }
+
+    /**
+     * A request that landed while the app was not running: `onConversationRequestReceived`
+     * never fires for it, so before the smartlist load merged the daemon's own request list it
+     * notified nobody — the Pixel 7a sat on B's invitation of 2026-11-17 13:40 in silence.
+     */
+    @Test
+    fun aRequestHeldByTheDaemonAtStartupIsNotified() = runTest {
+        val stack = makeTestServiceStack(scope = this)
+        prepareAccountInService(stack.stub, stack.accountService)
+        stack.stub.conversationRequests.add(
+            mapOf("id" to CONVERSATION_ID, "from" to PEER_ID)
+        )
+
+        stack.conversationFacade.refreshConversations(TEST_ACCOUNT_ID)
+        advanceUntilIdle()
+
+        assertEquals(listOf(TEST_ACCOUNT_ID), stack.notificationService.shownTrustRequests)
+        assertEquals(
+            listOf(CONVERSATION_ID),
+            stack.accountService.getAccount(TEST_ACCOUNT_ID)!!.getPending().map { it.uri.rawRingId }
+        )
+    }
+
+    /** …and it is notified once, not again on every later reload. */
+    @Test
+    fun aDaemonHeldRequestIsNotifiedOnceAcrossReloads() = runTest {
+        val stack = makeTestServiceStack(scope = this)
+        prepareAccountInService(stack.stub, stack.accountService)
+        stack.stub.conversationRequests.add(
+            mapOf("id" to CONVERSATION_ID, "from" to PEER_ID)
+        )
+
+        repeat(3) {
+            stack.conversationFacade.refreshConversations(TEST_ACCOUNT_ID)
+            advanceUntilIdle()
+        }
+
+        assertEquals(1, stack.notificationService.shownTrustRequests.size)
+    }
+
     /** A request withheld by "block unknown contacts" must not notify either. */
     @Test
     fun aWithheldRequestIsNotNotified() = runTest {

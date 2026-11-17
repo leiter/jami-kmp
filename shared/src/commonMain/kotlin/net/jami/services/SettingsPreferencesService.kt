@@ -63,6 +63,15 @@ class SettingsPreferencesService(private val settings: Settings) : PreferencesSe
         settings.setBoolean(requestKey(accountId, contactId), true)
     }
 
+    override fun notifiedRequests(accountId: String): Set<String> {
+        val prefix = requestKey(accountId, "")
+        return settings.getAllKeys()
+            .filter { it.startsWith(prefix) }
+            .map { it.removePrefix(prefix) }
+            .filter { it.isNotEmpty() }
+            .toSet()
+    }
+
     /**
      * Persisted rather than held in memory so that relaunching the app does not re-notify a
      * request the user has already seen and chosen to leave pending.
