@@ -93,8 +93,10 @@ daemon had held in silence for nearly two hours, came straight through:
 A live record on `channel=jami_requests__sdef_v1` with `actions=2` followed, and
 `shared_prefs/jami_settings.xml` now holds exactly one flag,
 `req_3f3dad8b328eb995:e5c001b17aa…` — the request's conversation id, with all three stale
-peer-keyed flags gone. Accepting from the notification is not re-verified (that path is
-unchanged); the iPhone half of the report is covered by the push-token section above.
+peer-keyed flags gone. The iPhone half of the report is covered by the push-token section above.
+
+**Confirmed by the user on the pair, 2026-11-17.** Both fixes verified on hardware beyond the
+logcat run above; invitations arrive and surface as they should.
 
 **Android, not reproduced. Candidates to check on the Pixels:**
 - "Only accept messages from your contacts" left on since the 2026-11-07 B3 run: it silently
