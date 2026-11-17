@@ -107,6 +107,28 @@ unchanged); the iPhone half of the report is covered by the push-token section a
 **Daemon facts confirmed in source:** `addContact` alone sends no trust request, in either
 daemon; only `sendTrustRequest` does (`9d5d508`), plus the presence-triggered resend above.
 
+## OPEN DECISION: no auto-join of conversation requests (asked 2026-11-17)
+
+Checked across all three layers; **no auto-join / auto-accept setting for conversation requests
+exists anywhere.** In this app the only automatic acceptance is file transfer
+(`FileTransferSettings.maxAutoAcceptSize`, the max-file-size slider); every `acceptTrustRequest`
+call comes from a user tap (`PendingRequestsViewModel`, `ConversationsViewModel`, the
+notification action). The reference client has no such pref either — its only `canAutoAccept` is
+`DataTransfer`'s size check — and the daemon has no config key for it (`Account.autoAnswer` is
+for calls).
+
+Three things are easily mistaken for it: `PrivacySettings.blockUnknownContacts` ("Only accept
+messages from your contacts") is the inverse filter; the daemon *implicitly* links a 1:1 from an
+already-confirmed contact without surfacing a request at all (the mechanism behind "The existing
+pair cannot produce a fresh contact request" below); and a group's
+`AdminInvitesOnly`/`InvitesOnly`/`Public` mode governs who may invite, not auto-join.
+
+**Undecided:** whether to add an "auto-join invitations from my contacts" toggle. That is a new
+feature rather than an exposed setting. It would sit in `PrivacySettings` beside
+`blockUnknownContacts`, and the accept would hook into
+`ConversationFacade.onConversationRequestReceived` after the block-unknown gate, reusing that
+gate's `daemonBridge.isConfirmedContact(accountId, senderUri)` check. Not started.
+
 ## POSTPONED: device verification of the 2026-11-06 fixes
 
 Started on the Pixel pair on 2026-11-06 at ~22:10 and **stopped at the user's request before
