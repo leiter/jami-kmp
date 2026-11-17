@@ -107,6 +107,25 @@ unchanged); the iPhone half of the report is covered by the push-token section a
 **Daemon facts confirmed in source:** `addContact` alone sends no trust request, in either
 daemon; only `sendTrustRequest` does (`9d5d508`), plus the presence-triggered resend above.
 
+## Leaving a 1:1 now reaches the peer — verified on the pair, 2026-11-17
+
+- [x] **Leaving a 1:1 conversation told the other participant nothing.** A group leave
+  propagates: the daemon's `Conversation::leave()` commits
+  `{type: member, action: remove, uri: <us>}` into the swarm and notifies the members, and the
+  peer maps that commit to a `ContactEvent(REMOVED)` rendered as `conversation_contact_left`
+  (`ChatScreen.kt`). A 1:1 never got there — `ConversationFacade.removeConversation` removed the
+  *contact* instead, as libjamiclient does ("contact is strongly related"), which lands in
+  `ConversationModule::removeContact` → `removeRepository(force = true)`: the git repo is erased
+  on the spot, `leave()` is never called, no commit is written, and the peer's conversation just
+  silently stops working.
+  Fixed in `18e6461`: every swarm leaves the same way. A deliberate divergence from the
+  reference client, chosen by the user. The contact is **kept** — leaving is not blocking and a
+  fresh 1:1 can be started again; contact details keeps its own remove and block actions
+  (`ContactDetailsViewModel.removeContact` / `blockContact`) for that intent. The dead
+  `shouldClearConversation` parameter went with the branch that selected it. Covered by
+  `LeaveConversationTest`. **Verified by the user on the Pixel pair on 2026-11-17** — the leave
+  reaches the other participant.
+
 ## OPEN DECISION: no auto-join of conversation requests (asked 2026-11-17)
 
 Checked across all three layers; **no auto-join / auto-accept setting for conversation requests
