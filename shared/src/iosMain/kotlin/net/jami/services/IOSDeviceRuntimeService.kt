@@ -114,8 +114,29 @@ class IOSDeviceRuntimeService : DeviceRuntimeService {
     override fun getCachePath(): String =
         cachesDir
 
+    /**
+     * The daemon's data directory, where libjami keeps `<accountId>/profile.vcf` and
+     * `<accountId>/profiles/`. Must match the path `DaemonBridge.init` hands the daemon
+     * (Application Support/jami), as Android's `filesDir` does.
+     */
+    private val daemonDataDir: String by lazy {
+        val paths = NSSearchPathForDirectoriesInDomains(
+            NSApplicationSupportDirectory,
+            NSUserDomainMask,
+            true
+        )
+        val appSupport = (paths.firstOrNull() as? String) ?: return@lazy ""
+        "$appSupport/jami"
+    }
+
+    /**
+     * Every caller reads daemon files under this path (`<accountId>/profile.vcf`, the peer
+     * vCards under `<accountId>/profiles/`). It used to return Documents/, where none of them
+     * exist, so invitations went out without the sender's vCard (`payload=0 bytes`) and avatars
+     * read from disk were always missing. See doc/TODO.md, 2026-11-17.
+     */
     override fun getDataPath(): String =
-        documentsDir
+        daemonDataDir
 
     override fun hasStoragePermission(): Boolean =
         true // iOS doesn't require explicit storage permissions for app sandbox

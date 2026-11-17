@@ -25,16 +25,24 @@ was reproduced on the two-simulator harness (`scripts/ios-two-sim`).
   that open the 1:1 travel to the iPhone's inbox too.
 
 **Open bugs found:**
-- [ ] **A push token is never cleared once the daemon holds it.** The daemon persists it in
+- [x] **A push token is never cleared once the daemon holds it.** The daemon persists it in
   `config.yml`. `IOSPushServiceManager.applyCurrentMode()` and Android's
   `PushServiceManager.applyCurrentMode()` start with `appliedToken = null`, so in "Local node"
   mode `desired == appliedToken` returns early and the stored token survives every launch.
-  Fix: clear the daemon's token at startup whenever no token is wanted.
-- [ ] **iOS invitations carry no profile** (`sendTrustRequest … payload=0 bytes`).
-  `IOSDeviceRuntimeService.getDataPath()` returns `Documents/`, while the daemon keeps account
+  Fixed: the first call always reaches the daemon (`applied` flag), so a stale token is cleared
+  at startup; opendht resubscribes in listen mode at once.
+- [x] **iOS invitations carry no profile** (`sendTrustRequest … payload=0 bytes`).
+  `IOSDeviceRuntimeService.getDataPath()` returned `Documents/`, while the daemon keeps account
   data in `Library/Application Support/jami/<accountId>/`. Every `getDataPath()` consumer
   (`AccountService.localProfilePayload`, `VCardService`, the profile write in `AccountService`,
-  `ChatViewModel`, …) reads or writes the wrong folder on iOS.
+  `ChatViewModel`, …) read or wrote the wrong folder on iOS. Fixed: it returns the daemon's
+  directory, as Android's `filesDir` does.
+- **Verified on the simulators (fresh build, 14:42).** Bob started with the planted token
+  (daemon logged `using push notifications…`); seconds later the token was gone from his
+  `config.yml`. Alice's invitation went out with `payload=75 bytes`, Bob logged
+  `Got trust request` 3 s later, the harness phases `invite`, `accept` and `chat` passed, and
+  Bob's chat shows "Alice" rather than her ID. Not yet on real phones; the Android half compiles
+  but is unexercised (no Firebase build here).
 
 **Android, not reproduced. Candidates to check on the Pixels:**
 - "Only accept messages from your contacts" left on since the 2026-11-07 B3 run: it silently

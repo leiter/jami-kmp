@@ -42,6 +42,16 @@ object PushServiceManager : KoinComponent {
     @Volatile
     private var appliedToken: String? = null
 
+    /**
+     * False until the first [applyCurrentMode] has reached the daemon. The daemon persists the
+     * token in each account's config.yml, so "nothing applied yet" does not mean "no token":
+     * without this the first call with push off matched `appliedToken == null` and returned,
+     * and a token stored earlier kept the DHT proxy in push-only mode, where inbox values
+     * (contact requests) arrive only by push. See doc/TODO.md, 2026-11-17.
+     */
+    @Volatile
+    private var applied = false
+
     /** True once Firebase initialised successfully (i.e. a google-services.json was present). */
     @Volatile
     var isAvailable: Boolean = false
@@ -97,7 +107,8 @@ object PushServiceManager : KoinComponent {
     fun applyCurrentMode() {
         val desired = if (isPushSelected) token else null
 
-        if (desired == appliedToken) return
+        if (applied && desired == appliedToken) return
+        applied = true
         appliedToken = desired
 
         if (desired != null) {

@@ -59,6 +59,18 @@ object IOSPushServiceManager : KoinComponent {
     private var appliedToken: String? = null
 
     /**
+     * False until the first [applyCurrentMode] has reached the daemon. The daemon persists the
+     * token in each account's config.yml, so "nothing applied yet" does not mean "no token":
+     * without this the first call in "Local node" mode matched `appliedToken == null` and
+     * returned, and a token stored by an earlier launch or build stayed forever. With a token
+     * the DHT proxy only delivers inbox values (contact requests, connection requests) by push,
+     * which the public proxy cannot send to this app — the device stops receiving invitations
+     * (reproduced on the simulators, doc/TODO.md 2026-11-17).
+     */
+    @Volatile
+    private var applied = false
+
+    /**
      * Unlike Android there is no Firebase-versus-nothing choice here — APNs is the only push
      * transport iOS offers, so every mode except an explicitly local node uses it.
      */
@@ -94,7 +106,8 @@ object IOSPushServiceManager : KoinComponent {
     fun applyCurrentMode() {
         val desired = if (isPushSelected) (voipToken ?: apnsToken) else null
 
-        if (desired == appliedToken) return
+        if (applied && desired == appliedToken) return
+        applied = true
         appliedToken = desired
 
         if (desired != null) {
