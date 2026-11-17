@@ -1,5 +1,52 @@
 # TODO
 
+## Invitations iPhone ↔ Pixel — investigation of 2026-11-17
+
+Reported: iOS can neither send nor receive invitations successfully, and Android, which used to
+work, stopped working recently. No phones were attached and the Android daemon libraries are
+not on the investigating Mac, so the Android side is not reproduced. The iOS mechanism below
+was reproduced on the two-simulator harness (`scripts/ios-two-sim`).
+
+**Proven: a push token makes the device deaf to invitations.**
+- With `proxyPushToken` / `proxyPushPlatform: ios` / `proxyPushiOSTopic` in Bob's `config.yml`,
+  the daemon logs `using push notifications with platform: ios…` and the opendht proxy client
+  switches the inbox listen from `GET /key/…/listen` to `SUBSCRIBE`. New values then arrive only
+  as pushes, and the public proxy cannot push to this app's bundle id.
+- Alice → Bob (token set): Alice logged `Sending trust request` twice at 14:01:49–50; Bob logged
+  no `Got trust request` in over 2 minutes and showed no invitation.
+- Bob → Alice (no token): Alice logged `Got trust request` within a second.
+- The request sent while Bob was in push mode was **not** redelivered after the token was
+  removed: the inviter resends only on the invitee's offline → online presence transition
+  (`JamiAccount::onTrackedBuddyOnline`), which Bob's restart did not trigger.
+- The real-device difference: simulators never get a PushKit token, so the 2026-11-14 harness
+  runs stayed in listen mode. A real iPhone registers its PushKit (or APNs) token with the daemon
+  whenever Settings → Connectivity is anything but "Local node".
+- A deaf iPhone also explains Pixel-side symptoms: acceptances and the connection requests
+  that open the 1:1 travel to the iPhone's inbox too.
+
+**Open bugs found:**
+- [ ] **A push token is never cleared once the daemon holds it.** The daemon persists it in
+  `config.yml`. `IOSPushServiceManager.applyCurrentMode()` and Android's
+  `PushServiceManager.applyCurrentMode()` start with `appliedToken = null`, so in "Local node"
+  mode `desired == appliedToken` returns early and the stored token survives every launch.
+  Fix: clear the daemon's token at startup whenever no token is wanted.
+- [ ] **iOS invitations carry no profile** (`sendTrustRequest … payload=0 bytes`).
+  `IOSDeviceRuntimeService.getDataPath()` returns `Documents/`, while the daemon keeps account
+  data in `Library/Application Support/jami/<accountId>/`. Every `getDataPath()` consumer
+  (`AccountService.localProfilePayload`, `VCardService`, the profile write in `AccountService`,
+  `ChatViewModel`, …) reads or writes the wrong folder on iOS.
+
+**Android, not reproduced. Candidates to check on the Pixels:**
+- "Only accept messages from your contacts" left on since the 2026-11-07 B3 run: it silently
+  drops every invitation, because an inviter is never a confirmed contact yet.
+- The two accounts already holding each other as contacts: the daemon auto-accepts and no
+  invitation card appears (see "The existing pair cannot produce a fresh contact request").
+- A push token on the Pixel: possible only if the APK was built with a `google-services.json`
+  and "Google services" was chosen.
+
+**Daemon facts confirmed in source:** `addContact` alone sends no trust request, in either
+daemon; only `sendTrustRequest` does (`9d5d508`), plus the presence-triggered resend above.
+
 ## POSTPONED: device verification of the 2026-11-06 fixes
 
 Started on the Pixel pair on 2026-11-06 at ~22:10 and **stopped at the user's request before
