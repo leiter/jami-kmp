@@ -10,9 +10,21 @@ appId: net.jami.iosapp
 - extendedWaitUntil:
     visible: "Public directory"
     timeout: 30000
+# The result row re-renders when the name lookup settles; a tap during that was lost
+# (2026-11-18). Let it settle, and tap once more if the chat did not open.
+- waitForAnimationToEnd:
+    timeout: 5000
 - tapOn:
     text: ".*${PEER_ID}.*"
     below: "Public directory"
+- extendedWaitUntil:
+    visible: "Write message"
+    timeout: 10000
+    optional: true
+- tapOn:
+    text: ".*${PEER_ID}.*"
+    below: "Public directory"
+    optional: true
 # The chat is open. Not asserted: the "<peer> was invited" event — on 2026-11-14 it showed in
 # one run and not in the next, where A instead kept a "Downloading conversation from peer"
 # banner (see README, known issues).

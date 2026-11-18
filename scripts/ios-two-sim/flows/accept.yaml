@@ -9,6 +9,13 @@ appId: net.jami.iosapp
     visible: "1 pending invitation"
     timeout: 90000
 - tapOn: "1 pending invitation"
+# Tapped during the screen's slide-in, "Accept" resolved to stale bounds and hit Decline
+# (2026-11-18: the log showed PendingRequestsVM.discard). Wait for the screen to settle.
+- extendedWaitUntil:
+    visible: "Accept"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
 - tapOn: "Accept"
 - extendedWaitUntil:
     visible: ".* has joined the conversation\\."
