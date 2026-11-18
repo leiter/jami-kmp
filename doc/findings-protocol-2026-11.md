@@ -20,8 +20,8 @@ open items in `doc/TODO.md`. Plan: `~/.claude/plans/i-want-to-create-robust-glad
 | F8 | Notification shows hash and app icon | **fixed** (names) `698c86d` | shared change | device test |
 | F9 | Notification sound inaudible | code was fine; logging + small fixes `698c86d` | — | check iPhone settings |
 | F10 | vCard (profile) sync | to check | works live (user) | open |
-| F11 | Re-adding a contact hangs | to reproduce | to retest (seen 2026-11-07) | open |
-| F12 | "Block unknown" refuses peers we sync with | to reproduce | to retest (seen 2026-11-07) | open |
+| F11 | Re-adding a contact hangs | **not reproduced** on sims (works) | to retest on the Pixels | no change |
+| F12 | "Block unknown" refuses peers we sync with | not testable on sims (needs calls) | to retest on the Pixels | no change |
 | F13 | Self-conversation / call to own account possible | **guarded** `6dde67e` | **guarded** `6dde67e` | done |
 | F14 | Refused incoming call still reaches Telecom / CallKit | to check | bug (2026-11-07) | open |
 | F15 | Account export / import fails (user, 2026-11-18) | **fixed** `36d8b9c` | link-device import fixed too | device test |
@@ -144,3 +144,20 @@ Then by hand on the same pair:
 - Side notes, not fixed: the details screen lists members as hex ids; "Leave group" is the
   label on a 1:1 too; the "edited" label sits below a reaction chip; event rows written before
   a peer's name arrived keep the hex id until the chat is reopened.
+
+### Leave → re-add, same pair (07:20–07:33)
+
+- **After Bob left the 1:1** (and both apps restarted), Bob's daemon had started a **fresh 1:1
+  with Alice** by itself (`ConversationModule::removeConversation` keeps a 1:1 with a confirmed
+  contact), and Alice's daemon joined it automatically. Alice's list then showed **two "Bob"
+  rows**: the ended one ("Bob has left the conversation.") and the new, empty one. This follows
+  from the leave design chosen on 2026-11-17 (contact kept) and is daemon behaviour, so Android
+  will show the same. **Open decision for the user:** hide an ended 1:1 when a newer 1:1 with
+  the same peer exists, or keep both.
+- **F11 not reproduced:** Alice then deleted Bob as a contact (both rows went), searched Bob's id
+  and wrote "Hello again after re-adding". It was delivered (double tick) and Bob's list showed
+  it with a **1** badge within seconds — no "waiting for confirmation". Bob is left with a stale
+  second "Alice" row (the conversation Alice's contact deletion erased) — same open decision.
+  No code change, per the plan's rule. Android: retest on the Pixels (the 2026-11-07 hang
+  predates `9d5d508`, which made addContact send the trust request).
+- **F12** needs calls; out of scope on the simulators. Android retest owed.
