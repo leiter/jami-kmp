@@ -161,3 +161,44 @@ Then by hand on the same pair:
   No code change, per the plan's rule. Android: retest on the Pixels (the 2026-11-07 hang
   predates `9d5d508`, which made addContact send the trust request).
 - **F12** needs calls; out of scope on the simulators. Android retest owed.
+
+## Device test checklist — build 47 (iPhone + Pixel pair)
+
+The Android APK must be rebuilt from this branch for the Android items (shared fixes).
+
+**iPhone ↔ Pixel**
+1. **Edit / react / delete** (F1, F2, F19): edit a message → changed in place with "edited" on
+   both phones; react 👍 → chip under the message on both; delete → "<who> deleted a message".
+2. **Background** (F5): send the iPhone to the home screen for > 30 s, write from the Pixel,
+   reopen the iPhone → the message arrives within seconds, without restarting the app. Then
+   write from the iPhone → the Pixel gets it.
+3. **Unread badge** (F6): with the iPhone on the list, receive 2 messages → badge 2; open the
+   chat → 0; force-quit and reopen → still 0.
+4. **Mark as read** (F7, both phones): lock the phone, receive a message, use "Mark as read" on
+   the notification → unlock: the conversation has no badge; on iPhone the app icon badge is
+   gone too; the sender sees the read receipt.
+5. **Names in notifications** (F8): force-quit the iPhone app, receive a message → the
+   notification shows the sender's name (and photo if they have one), not a hash.
+6. **Sound** (F9): if still silent, check the ring/silent switch, Focus, and
+   Settings → Notifications → Jami → Sounds; the debug log shows
+   `Notification settings: sound=…` (2 = enabled, 1 = disabled).
+7. **Leave a 1:1** (F4/F20): from conversation details → "Leave group" → the other phone shows
+   "<name> has left the conversation". Expect a second row for the same person afterwards
+   (open decision, see above).
+8. **Self** (F13): search your own Jami ID → no result; no call buttons in a self-conversation.
+
+**iPhone only**
+9. **Export** (F15): Account → export to a file with a password → the save dialog appears and
+   the file is written.
+10. **Import** (F15): import that archive on a fresh install → the *same* account (same Jami ID)
+    comes back, not a new one.
+11. **Link a device** (F15): "Link from another device" shows a token/QR; on the Pixel, add the
+    device with it → the iPhone ends on the same account.
+12. **Delete the account** (F16): first delete any stray accounts left by earlier import/link
+    attempts (account list); deleting the last account → onboarding screen.
+
+**Pixel only** (retests, no iOS cause found)
+13. **Re-add** (F11): A deletes B as a contact, then searches B and writes → B gets it.
+14. **Block unknown** (F12): with "Only accept messages from your contacts" on, a peer you share
+    a conversation with can still call you; a stranger cannot.
+15. **Link from another device on Android** (F15 shared part) — it could not have worked before.
