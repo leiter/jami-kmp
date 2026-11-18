@@ -28,6 +28,7 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
 
     private val daemonBridge: DaemonBridge by inject()
     private val callService: CallService by inject()
+    private val conversationFacade: net.jami.services.ConversationFacade by inject()
 
     override fun onReceive(context: Context, intent: Intent) {
         val accountId = intent.getStringExtra(AndroidNotificationService.KEY_ACCOUNT_ID) ?: run {
@@ -140,11 +141,12 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
         Log.d(TAG, "Marking conversation $conversationId as read")
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                daemonBridge.setConversationPreferences(
-                    accountId,
-                    conversationId,
-                    mapOf("read" to "true")
-                )
+                // Used to write a "read" conversation *preference*, which the daemon does not
+                // know: nothing was marked and the conversation kept its badge. Marks the
+                // conversation read and tells the daemon (read position + receipt).
+                if (!conversationFacade.markConversationRead(accountId, conversationId)) {
+                    Log.w(TAG, "Mark read: nothing marked for $conversationId")
+                }
                 if (notifId != -1) cancelNotification(context, notifId)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to mark conversation as read", e)

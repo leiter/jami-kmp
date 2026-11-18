@@ -797,6 +797,8 @@ class AndroidNotificationService(
             notificationManager.cancel(notifId)
             Log.d(TAG, "Cancelled text notification: $conversationKey")
         }
+        // The conversation's group summary too, or it stays in the shade on its own.
+        notificationManager.cancel(NOTIF_MESSAGE_GROUP_SUMMARY_BASE + conversationKey.hashCode())
     }
 
     override fun cancelAll() {

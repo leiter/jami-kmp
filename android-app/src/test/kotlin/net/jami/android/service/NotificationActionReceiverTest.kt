@@ -14,6 +14,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import net.jami.services.CallService
+import net.jami.services.ConversationFacade
 import net.jami.services.DaemonBridge
 import net.jami.services.AndroidNotificationService
 import org.junit.After
@@ -30,6 +31,7 @@ class NotificationActionReceiverTest : KoinTest {
 
     private val daemonBridge: DaemonBridge by inject()
     private val callService: CallService by inject()
+    private val conversationFacade: ConversationFacade by inject()
 
     private val receiver = NotificationActionReceiver()
     private val context: Context = mockk(relaxed = true)
@@ -45,6 +47,7 @@ class NotificationActionReceiverTest : KoinTest {
             modules(module {
                 single { mockk<DaemonBridge>(relaxed = true) }
                 single { mockk<CallService>(relaxed = true) }
+                single { mockk<ConversationFacade>(relaxed = true) }
             })
         }
     }
@@ -83,7 +86,7 @@ class NotificationActionReceiverTest : KoinTest {
     }
 
     @Test
-    fun `onReceive with mark read action calls setConversationPreferences`() {
+    fun `onReceive with mark read action marks the conversation read`() {
         val intent = Intent(AndroidNotificationService.ACTION_MARK_READ).apply {
             putExtra(AndroidNotificationService.KEY_ACCOUNT_ID, "test_account")
             putExtra(AndroidNotificationService.KEY_CONVERSATION_ID, "test_conv_id")
@@ -92,6 +95,8 @@ class NotificationActionReceiverTest : KoinTest {
         receiver.onReceive(context, intent)
         testDispatcher.scheduler.advanceUntilIdle()
 
-        coVerify { daemonBridge.setConversationPreferences("test_account", "test_conv_id", mapOf("read" to "true")) }
+        // Not the old "read" conversation preference, which the daemon ignores.
+        coVerify(timeout = 2000) { conversationFacade.markConversationRead("test_account", "test_conv_id") }
+        coVerify(exactly = 0) { daemonBridge.setConversationPreferences(any(), any(), any()) }
     }
 }

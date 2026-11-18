@@ -80,6 +80,29 @@ class VCardService(
         return result
     }
 
+    // Peer display names from the vcf on disk; "" caches "no name in the vcf".
+    private val nameCache = mutableMapOf<String, String>()
+
+    /**
+     * The peer's display name (vCard FN) from the vcf the daemon stored, or null.
+     *
+     * A name otherwise only reaches the app when the daemon *receives* a profile during the
+     * current session (ContactService.onProfileReceived), and the daemon does not resend one a
+     * peer already has. So after every restart — routinely on iOS — peers showed as their
+     * 40-hex id in the list, the chat and notifications until they changed their profile.
+     */
+    @OptIn(ExperimentalEncodingApi::class)
+    fun loadPeerName(accountId: String, peerUri: String): String? {
+        val key = "$accountId:$peerUri"
+        nameCache[key]?.let { return it.ifEmpty { null } }
+        val encodedUri = Base64.UrlSafe.encode(peerUri.encodeToByteArray())
+        val content = FileUtils.readText("${deviceRuntimeService.getDataPath()}/$accountId/profiles/$encodedUri.vcf")
+        val name = content?.let { VCardUtils.parseVCard(it) }?.formattedName?.trim().orEmpty()
+        // Don't cache a missing file: the vcf may arrive later this session.
+        if (content != null) nameCache[key] = name
+        return name.ifEmpty { null }
+    }
+
     /**
      * Invalidate the in-memory cache entry for a peer's avatar so the next
      * [loadPeerAvatar] call re-reads and re-scales from disk.
@@ -88,6 +111,7 @@ class VCardService(
     @OptIn(ExperimentalEncodingApi::class)
     fun invalidatePeer(accountId: String, peerUri: String) {
         memoryCache.remove("$accountId:$peerUri")
+        nameCache.remove("$accountId:$peerUri")
         // Also delete the stale disk cache so loadWithCache rescales from the new vcf.
         val cachePath = deviceRuntimeService.getCachePath()
         val encodedUri = Base64.UrlSafe.encode(peerUri.encodeToByteArray())

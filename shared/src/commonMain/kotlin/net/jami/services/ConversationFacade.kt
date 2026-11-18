@@ -410,6 +410,46 @@ class ConversationFacade(
     }
 
     /**
+     * "Mark as read" from a message notification, on both platforms.
+     *
+     * The action can arrive when the app was relaunched just for it (iOS, from the lock
+     * screen), before the account and its conversations are loaded — [readMessages] then
+     * returned null without a trace and nothing was marked, so the conversation kept its
+     * badge. This waits for the account's smartlist, marks the in-memory conversation read
+     * (the list updates through [ConversationEvent.MessagesRead]) and always tells the daemon,
+     * which persists the read position across restarts and sends the read receipt.
+     *
+     * @param conversationId the swarm id, with or without the `swarm:` prefix.
+     * @return true when something was marked.
+     */
+    suspend fun markConversationRead(accountId: String, conversationId: String): Boolean {
+        val uri = Uri(Uri.SWARM_SCHEME, conversationId.removePrefix(Uri.SWARM_SCHEME))
+        val account = try {
+            getAccountWithSmartlist(accountId)
+        } catch (e: Exception) {
+            Log.w(TAG, "markConversationRead: account $accountId unavailable: ${e.message}")
+            return false
+        }
+        val conversation = findConversation(account, uri)
+        if (conversation == null) {
+            Log.w(TAG, "markConversationRead: no conversation ${uri.uri} in $accountId")
+            return false
+        }
+        if (readMessages(account, conversation, true) != null) return true
+        // Nothing unread in the loaded history (e.g. it is not loaded yet): still move the
+        // daemon's read position to the newest message we know of.
+        val newest = conversation.lastEvent?.messageId
+        if (newest == null) {
+            Log.w(TAG, "markConversationRead: nothing to mark in ${uri.uri}")
+            return false
+        }
+        accountService.setMessageDisplayed(accountId, conversation.uri, newest)
+        notificationService.cancelTextNotification(accountId, conversation.uri)
+        _conversationEvents.emit(ConversationEvent.MessagesRead(accountId, conversation.uri.rawRingId))
+        return true
+    }
+
+    /**
      * Mark messages as read for a conversation.
      */
     suspend fun readMessages(
@@ -934,6 +974,7 @@ class ConversationFacade(
                             val contact = account.getContactFromCache(memberUriParsed)
                             val role = MemberRole.fromString(member["role"] ?: "")
                             conversation.addContact(contact, role)
+                            contactService.restoreProfileFromDisk(account.accountId, contact)
                         }
                     }
 
@@ -1435,6 +1476,7 @@ class ConversationFacade(
                 if (conversation.findContact(parsed) == null) {
                     val contact = account.getContactFromCache(parsed)
                     conversation.addContact(contact, MemberRole.fromString(member["role"] ?: ""))
+                    contactService.restoreProfileFromDisk(account.accountId, contact)
                 }
             }
         } catch (e: Exception) {
@@ -1502,6 +1544,7 @@ class ConversationFacade(
                     val contact = account.getContactFromCache(memberUriParsed)
                     val role = MemberRole.fromString(member["role"] ?: "")
                     conversation.addContact(contact, role)
+                    contactService.restoreProfileFromDisk(account.accountId, contact)
                 }
             }
         } catch (e: Exception) {

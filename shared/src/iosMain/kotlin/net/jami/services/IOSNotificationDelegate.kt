@@ -9,7 +9,8 @@ import org.koin.mp.KoinPlatformTools
 import platform.UserNotifications.UNNotification
 import platform.UserNotifications.UNNotificationDefaultActionIdentifier
 import platform.UserNotifications.UNNotificationDismissActionIdentifier
-import platform.UserNotifications.UNNotificationPresentationOptionAlert
+import platform.UserNotifications.UNNotificationPresentationOptionBanner
+import platform.UserNotifications.UNNotificationPresentationOptionList
 import platform.UserNotifications.UNNotificationPresentationOptionBadge
 import platform.UserNotifications.UNNotificationPresentationOptionSound
 import platform.UserNotifications.UNNotificationResponse
@@ -36,11 +37,30 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
         willPresentNotification: UNNotification,
         withCompletionHandler: (ULong) -> Unit
     ) {
+        // Banner + List replace the deprecated Alert (iOS 14+). Sound plays only if the
+        // notification carries one (applySound) and iOS allows it: the ring/silent switch, a
+        // Focus, or Settings → Notifications → Jami → Sounds can each mute it.
         withCompletionHandler(
-            UNNotificationPresentationOptionAlert or
+            UNNotificationPresentationOptionBanner or
+                UNNotificationPresentationOptionList or
                 UNNotificationPresentationOptionSound or
                 UNNotificationPresentationOptionBadge
         )
+        logSoundSettingsOnce(center)
+    }
+
+    private var soundSettingsLogged = false
+
+    /** Logs whether iOS itself allows Jami's sounds, to tell "no sound" causes apart. */
+    private fun logSoundSettingsOnce(center: UNUserNotificationCenter) {
+        if (soundSettingsLogged) return
+        soundSettingsLogged = true
+        center.getNotificationSettingsWithCompletionHandler { settings ->
+            if (settings == null) return@getNotificationSettingsWithCompletionHandler
+            // UNNotificationSetting: 0 not supported, 1 disabled, 2 enabled.
+            Log.i(TAG, "Notification settings: sound=${settings.soundSetting} " +
+                "alert=${settings.alertSetting} authorization=${settings.authorizationStatus}")
+        }
     }
 
     override fun userNotificationCenter(
@@ -112,7 +132,8 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
 
         override suspend fun markRead(accountId: String, conversationId: String) {
             Log.d(TAG, "Mark read: $conversationId")
-            conversationFacade.readMessages(accountId, Uri.fromString(conversationId))
+            // Waits for the account to load: a lock-screen action relaunches the app first.
+            conversationFacade.markConversationRead(accountId, conversationId)
         }
 
         override suspend fun acceptRequest(accountId: String, conversationId: String) {

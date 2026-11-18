@@ -158,7 +158,8 @@ internal class CommunicationNotifications(
         val name = knownName?.takeIf { it.isNotBlank() }
             ?: contact?.displayName?.takeIf { it.isNotBlank() }
             ?: contact?.username?.takeIf { it.isNotBlank() }
-            ?: uri.rawRingId
+            ?: runCatching { vCardService.loadPeerName(accountId, uri.rawRingId) }.getOrNull()
+            ?: uri.rawRingId.take(12)
         // In-memory profile first; it only carries a picture if a vCard arrived this session,
         // so fall back to the peer's vcf on disk, as Android does (VCardService caches it).
         val avatar = contact?.let { it.customProfile.avatar ?: it.loadedProfile.avatar }

@@ -438,6 +438,17 @@ class ContactService(
     // ==================== Profile ====================
 
     /**
+     * Gives [contact] the display name from the peer's stored vCard when nothing this session
+     * has set one yet (see [VCardService.loadPeerName]). The avatar is left to VCardService,
+     * which every avatar path already consults. A profile received later replaces it as usual.
+     */
+    fun restoreProfileFromDisk(accountId: String, contact: Contact) {
+        if (contact.isUser || contact.loadedProfile.displayName != null) return
+        val name = vCardService.loadPeerName(accountId, contact.uri.rawRingId) ?: return
+        contact.loadedProfile = Profile(displayName = name, avatar = contact.loadedProfile.avatar)
+    }
+
+    /**
      * Load contact profile (name and photo).
      */
     suspend fun loadContactData(contact: Contact, accountId: String): Profile {

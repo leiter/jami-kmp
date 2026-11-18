@@ -323,7 +323,7 @@ class IOSNotificationService(
         val content = UNMutableNotificationContent().apply {
             setTitle(runBlocking { getString(Res.string.notif_missed_incoming_call) })
             if (!hiddenNames()) setBody(call.getDisplayName())
-            setSound(UNNotificationSound.defaultSound())
+            applySound(this)
         }
         // The caller's photo in place of the app icon. Not with names hidden: the photo says
         // who it was as plainly as the name does.
@@ -364,7 +364,7 @@ class IOSNotificationService(
             setTitle(runBlocking { getString(Res.string.notif_inprogress_group_call) })
             setBody(conversation.getDisplayName())
             setCategoryIdentifier(CATEGORY_CALL)
-            setSound(UNNotificationSound.defaultSound())
+            applySound(this)
         }
 
         val request = UNNotificationRequest.requestWithIdentifier(
@@ -409,7 +409,9 @@ class IOSNotificationService(
             // Apply sound based on settings — the sound setting, not the vibration one; see
             // applySound().
             applySound(this)
-            setBadge(platform.Foundation.NSNumber(int = 1))
+            // The number of conversations with an unread message notification. It used to be a
+            // constant 1 that nothing ever cleared, so the icon kept a badge after reading.
+            setBadge(platform.Foundation.NSNumber(int = activeNotifications.size))
             setUserInfo(mapOf<Any?, Any?>(
                 KEY_ACCOUNT_ID to conversation.accountId,
                 KEY_CONVERSATION_ID to conversation.uri.uri
@@ -443,6 +445,13 @@ class IOSNotificationService(
             notificationCenter.removeDeliveredNotificationsWithIdentifiers(listOf(identifier))
             Log.d(TAG, "Cancelled text notification: $conversationKey")
         }
+        updateAppBadge()
+    }
+
+    private fun updateAppBadge() {
+        notificationCenter.setBadgeCount(activeNotifications.size.toLong()) { error ->
+            if (error != null) Log.w(TAG, "setBadgeCount failed: ${error.localizedDescription}")
+        }
     }
 
     override fun cancelAll() {
@@ -450,6 +459,7 @@ class IOSNotificationService(
         notificationCenter.removeAllPendingNotificationRequests()
         activeNotifications.clear()
         currentCallNotificationId = null
+        updateAppBadge()
         Log.d(TAG, "Cancelled all notifications")
     }
 
