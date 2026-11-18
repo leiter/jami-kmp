@@ -38,12 +38,28 @@ kotlin {
                 implementation(libs.firebase.messaging)
             }
         }
+        // JVM unit tests (src/test). They had no test dependencies at all, so they never
+        // compiled: the receiver test had been dead since it was written.
+        val androidUnitTest by getting {
+            dependencies {
+                implementation(libs.kotlin.test.junit)
+                implementation(libs.robolectric)
+                implementation(libs.mockk)
+                implementation(libs.koin.test)
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
     }
 }
 
 android {
     namespace = "net.jami.android"
     compileSdk = libs.versions.androidCompileSdk.get().toInt()
+
+    testOptions {
+        // Robolectric needs the merged manifest and resources to build its Context.
+        unitTests.isIncludeAndroidResources = true
+    }
 
     // E2E test harness flavor (out-of-band agent; see doc/end2endTesting.md).
     // `standard` is the production build; `harness` adds the on-device agent and
