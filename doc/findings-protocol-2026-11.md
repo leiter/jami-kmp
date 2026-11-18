@@ -23,7 +23,7 @@ open items in `doc/TODO.md`. Plan: `~/.claude/plans/i-want-to-create-robust-glad
 | F11 | Re-adding a contact hangs | **not reproduced** on sims (works) | to retest on the Pixels | no change |
 | F12 | "Block unknown" refuses peers we sync with | not testable on sims (needs calls) | to retest on the Pixels | no change |
 | F13 | Self-conversation / call to own account possible | **guarded** `6dde67e` | **guarded** `6dde67e` | done |
-| F14 | Refused incoming call still reaches Telecom / CallKit | to check | bug (2026-11-07) | open |
+| F14 | Refused incoming call still reaches Telecom / CallKit | **fixed** `1c66e38` (shared) | **fixed** `1c66e38`; outgoing Telecom extras too | device test |
 | F15 | Account export / import fails (user, 2026-11-18) | **fixed** `36d8b9c` | link-device import fixed too | device test |
 | F17 | Edit: composer not focused, not cleared after sending | **fixed** `84ffbd9` | same shared code, fixed | done |
 | F19 | Deleted message shown as an empty "edited" bubble | **fixed** `c431e02` | same shared code | done |
@@ -202,3 +202,27 @@ The Android APK must be rebuilt from this branch for the Android items (shared f
 14. **Block unknown** (F12): with "Only accept messages from your contacts" on, a peer you share
     a conversation with can still call you; a stranger cannot.
 15. **Link from another device on Android** (F15 shared part) — it could not have worked before.
+
+## Follow-up round — 2026-11-18 afternoon (after build 47)
+
+- **F14** (`1c66e38`): the block check now also runs where a state change creates a call;
+  refused ids are remembered and their later state changes dropped; a call already announced
+  is taken down. Tests cover both orders. Android: the outgoing-call ids now go in
+  `EXTRA_OUTGOING_CALL_EXTRAS`, the only bundle Telecom forwards to the ConnectionService
+  (explains "missing callId or accountId"); needs a Pixel check.
+- **android-app unit tests** (`16ab477`): the test source set had no dependencies; added
+  JUnit, Robolectric, MockK, koin-test, coroutines-test. NotificationActionReceiverTest is
+  rewritten for the current receiver and passes 4/4 (`./gradlew :android-app:testStandardDebugUnitTest`).
+- **Side notes from the simulators fixed** (`1b10c76`): member names in details ("Alice",
+  "You"); "Leave conversation" on a 1:1; "Conversation ended." replaces the composer once
+  everyone else left; rows rendered before a profile arrived get the name. Harness react phase
+  now requires a real chip. Verified on the simulators.
+- **Account items** (`faf94a3`): link-device events before addDevice() returns are replayed;
+  export runs off the main thread; the iOS save dialog presents from the topmost controller;
+  registration state passes the daemon's raw string (wrapper rebuilt) and the shared parser
+  maps READY → REGISTERED (Android showed a READY account offline) and unknown ERROR_* →
+  ERROR_GENERIC.
+- Harness run 7 failed at `accept` on network flakiness (Alice's DHT proxy connection dropped
+  and reconnected every few seconds; the invitation went out during a reconnect); run 8 on the
+  same build passed every phase.
+- Still open: the call buttons remain in an ended chat; the leave has no confirmation dialog.
