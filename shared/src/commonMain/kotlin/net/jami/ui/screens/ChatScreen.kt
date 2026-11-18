@@ -156,6 +156,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -2132,9 +2134,18 @@ private fun MessageInputBar(
 
                 // Text input field — BasicTextField for full padding control
                 val writeAMessage = stringResource(Res.string.write_a_message)
+                // Selection is kept here; text set from outside (an edit fills the composer)
+                // gets the cursor at its end. With a plain String value the cursor stayed at
+                // the start, so typing went in front of the text being edited.
+                var fieldState by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
+                val fieldValue = if (fieldState.text == value) fieldState
+                    else TextFieldValue(value, TextRange(value.length))
                 BasicTextField(
-                    value = value,
-                    onValueChange = onValueChange,
+                    value = fieldValue,
+                    onValueChange = {
+                        fieldState = it
+                        if (it.text != value) onValueChange(it.text)
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .padding(vertical = 8.dp)
