@@ -702,7 +702,7 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
                   accountId.c_str(), state.c_str(), code, detail.c_str());
             // Copy data before async dispatch to avoid use-after-free
             NSString *accountIdNS = toNSString(accountId);
-            JBRegistrationState stateEnum = toRegistrationState(state);
+            NSString *stateNS = toNSString(state);
             NSString *detailNS = toNSString(detail);
             dispatch_async(dispatch_get_main_queue(), ^{
                 JamiBridgeWrapper *strongSelf = weakSelf;
@@ -711,7 +711,7 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
                           strongSelf.delegate != nil);
                     if ([strongSelf.delegate respondsToSelector:@selector(onRegistrationStateChanged:state:code:detail:)]) {
                         [strongSelf.delegate onRegistrationStateChanged:accountIdNS
-                                                                  state:stateEnum
+                                                                  state:stateNS
                                                                    code:code
                                                                  detail:detailNS];
                         FILE_LOG_I("JamiBridge-C++", @"RegistrationStateChanged forwarded to delegate");

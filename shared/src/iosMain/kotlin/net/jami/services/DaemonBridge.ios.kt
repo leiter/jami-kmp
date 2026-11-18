@@ -991,24 +991,12 @@ private class JamiBridgeDelegateImpl(
 
     override fun onRegistrationStateChanged(
         accountId: String,
-        state: JBRegistrationState,
+        state: String,
         code: Int,
         detail: String
     ) {
-        val stateStr = when (state) {
-            JBRegistrationState.JBRegistrationStateUnregistered -> "UNREGISTERED"
-            JBRegistrationState.JBRegistrationStateTrying -> "TRYING"
-            JBRegistrationState.JBRegistrationStateRegistered -> "REGISTERED"
-            JBRegistrationState.JBRegistrationStateErrorGeneric -> "ERROR_GENERIC"
-            JBRegistrationState.JBRegistrationStateErrorAuth -> "ERROR_AUTH"
-            JBRegistrationState.JBRegistrationStateErrorNetwork -> "ERROR_NETWORK"
-            JBRegistrationState.JBRegistrationStateErrorHost -> "ERROR_HOST"
-            JBRegistrationState.JBRegistrationStateErrorServiceUnavailable -> "ERROR_SERVICE_UNAVAILABLE"
-            JBRegistrationState.JBRegistrationStateErrorNeedMigration -> "ERROR_NEED_MIGRATION"
-            JBRegistrationState.JBRegistrationStateInitializing -> "INITIALIZING"
-            else -> "UNKNOWN"
-        }
-        callbacks.onRegistrationStateChanged(accountId, stateStr, code, detail)
+        // The daemon's string as is, like Android's SWIG callback.
+        callbacks.onRegistrationStateChanged(accountId, state, code, detail)
     }
 
     override fun onAccountDetailsChanged(accountId: String, details: Map<Any?, *>) {

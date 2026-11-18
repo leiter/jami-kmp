@@ -141,12 +141,14 @@ fun AccountDetailsSettingsScreen(
             onDismiss = { showExportDialog = false },
             onExport = { password ->
                 showExportDialog = false
-                val exportPath = viewModel.exportAccount(password)
-                if (exportPath != null) {
-                    // Success is only reported once the archive is saved where the user chose.
-                    pendingExportPath = exportPath
-                } else {
-                    coroutineScope.launch { snackbarHostState.showSnackbar(exportErrorMsg) }
+                coroutineScope.launch {
+                    val exportPath = viewModel.exportAccount(password)
+                    if (exportPath != null) {
+                        // Success is only reported once the archive is saved where the user chose.
+                        pendingExportPath = exportPath
+                    } else {
+                        snackbarHostState.showSnackbar(exportErrorMsg)
+                    }
                 }
             },
         )

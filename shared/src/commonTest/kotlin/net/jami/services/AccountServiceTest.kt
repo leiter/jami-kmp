@@ -206,6 +206,9 @@ class AccountServiceTest {
         assertEquals(Account.RegistrationState.TRYING, Account.RegistrationState.fromString("TRYING"))
         assertEquals(Account.RegistrationState.ERROR_AUTH, Account.RegistrationState.fromString("ERROR_AUTH"))
         assertEquals(Account.RegistrationState.UNREGISTERED, Account.RegistrationState.fromString("UNKNOWN_STATE"))
+        // The iOS bridge now passes the daemon's raw strings, as Android always did.
+        assertEquals(Account.RegistrationState.REGISTERED, Account.RegistrationState.fromString("READY"))
+        assertEquals(Account.RegistrationState.ERROR_GENERIC, Account.RegistrationState.fromString("ERROR_EXIST_STUN"))
     }
 
     @Test

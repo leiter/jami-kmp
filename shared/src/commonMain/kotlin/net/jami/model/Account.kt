@@ -333,7 +333,12 @@ class Account(
                 "ERROR_SERVICE_UNAVAILABLE" -> ERROR_SERVICE_UNAVAILABLE
                 "ERROR_NEED_MIGRATION" -> ERROR_NEED_MIGRATION
                 "INITIALIZING" -> INITIALIZING
-                else -> UNREGISTERED
+                // Account::States::READY: the account is usable (IP2IP / SIP without a
+                // registrar). Read as UNREGISTERED it showed a working account as offline.
+                "READY" -> REGISTERED
+                // Daemon errors without a value of their own here (ERROR_EXIST_STUN,
+                // ERROR_NOT_ACCEPTABLE, …) are errors, not "unregistered".
+                else -> if (state.startsWith("ERROR")) ERROR_GENERIC else UNREGISTERED
             }
         }
     }

@@ -59,7 +59,10 @@ actual fun FileSaverEffect(
         // "Save to Files" — exports a copy of the temp file to a user-chosen location.
         val picker = UIDocumentPickerViewController(forExportingURLs = listOf(source), asCopy = true)
         picker.delegate = delegate
-        val presenter = rootVc.presentedViewController ?: rootVc
+        // The topmost presented controller: one level was not enough when the export started
+        // from a sheet over a sheet, and presenting from a covered controller does nothing.
+        var presenter: platform.UIKit.UIViewController = rootVc
+        while (true) presenter = presenter.presentedViewController ?: break
         presenter.presentViewController(picker, animated = true, completion = null)
     }
 }

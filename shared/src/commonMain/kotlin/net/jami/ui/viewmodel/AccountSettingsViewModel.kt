@@ -198,6 +198,33 @@ class AccountSettingsViewModel(
     /** Operation ID of the in-flight add-device export, or null if none. */
     private var _linkOperationId: Long? = null
 
+    /** Between startLinkDevice() calling addDevice() and that call returning its id. */
+    private var linkStarting = false
+    /** Link events that arrived while [linkStarting]: replayed once the id is known. */
+    private val earlyLinkEvents = mutableListOf<AccountEvent.AddDeviceStateChanged>()
+    /** The event collector and startLinkDevice run on different Default threads. */
+    private val linkLock = kotlinx.atomicfu.locks.SynchronizedObject()
+
+    private fun applyLinkDeviceState(event: AccountEvent.AddDeviceStateChanged) {
+        val newState = when (AuthState.fromInt(event.state)) {
+            AuthState.CONNECTING ->
+                AddDeviceExportState.Connecting
+            AuthState.AUTHENTICATING ->
+                AddDeviceExportState.Authenticating(event.details["peer_address"])
+            AuthState.IN_PROGRESS ->
+                AddDeviceExportState.InProgress
+            AuthState.DONE -> {
+                _linkOperationId = null
+                val errStr = event.details["error"]
+                val error = if (errStr.isNullOrEmpty() || errStr == "none") null
+                            else AuthError.fromString(errStr)
+                AddDeviceExportState.Done(error)
+            }
+            else -> return
+        }
+        _state.update { it.copy(linkDeviceState = newState) }
+    }
+
     private val _state = MutableStateFlow(AccountSettingsState())
     val state: StateFlow<AccountSettingsState> = _state.asStateFlow()
 
@@ -231,25 +258,15 @@ class AccountSettingsViewModel(
                     is AccountEvent.AddDeviceStateChanged -> {
                         val account = accountService.currentAccount.value ?: return@collect
                         if (event.accountId != account.accountId) return@collect
-                        val opId = _linkOperationId ?: return@collect
-                        if (event.opId != opId) return@collect
-                        val newState = when (AuthState.fromInt(event.state)) {
-                            AuthState.CONNECTING ->
-                                AddDeviceExportState.Connecting
-                            AuthState.AUTHENTICATING ->
-                                AddDeviceExportState.Authenticating(event.details["peer_address"])
-                            AuthState.IN_PROGRESS ->
-                                AddDeviceExportState.InProgress
-                            AuthState.DONE -> {
-                                _linkOperationId = null
-                                val errStr = event.details["error"]
-                                val error = if (errStr.isNullOrEmpty() || errStr == "none") null
-                                            else AuthError.fromString(errStr)
-                                AddDeviceExportState.Done(error)
+                        val opId = kotlinx.atomicfu.locks.synchronized(linkLock) {
+                            _linkOperationId.also {
+                                // addDevice() has not returned its id yet, but the daemon
+                                // already reports CONNECTING; keep it for startLinkDevice.
+                                if (it == null && linkStarting) earlyLinkEvents.add(event)
                             }
-                            else -> return@collect
-                        }
-                        _state.update { it.copy(linkDeviceState = newState) }
+                        } ?: return@collect
+                        if (event.opId != opId) return@collect
+                        applyLinkDeviceState(event)
                     }
                     is AccountEvent.NameRegistrationEnded -> {
                         val account = accountService.currentAccount.value ?: return@collect
@@ -476,7 +493,12 @@ class AccountSettingsViewModel(
      *         The caller should present the file to the user (e.g. via a share sheet on iOS or
      *         a file-sharing intent on Android) so it is not lost in the sandbox temp dir.
      */
-    fun exportAccount(password: String): String? {
+    /** Off the main thread: the daemon decrypts and re-encrypts the whole archive here. */
+    suspend fun exportAccount(password: String): String? = kotlinx.coroutines.withContext(Dispatchers.Default) {
+        exportAccountBlocking(password)
+    }
+
+    private fun exportAccountBlocking(password: String): String? {
         val account = accountService.currentAccount.value ?: return null
         val dir = deviceRuntimeService?.getTempPath() ?: "/tmp"
         // The file name doubles as the prefilled name in the "Save as" dialog.
@@ -637,12 +659,23 @@ class AccountSettingsViewModel(
         }
         scope.launch {
             val account = accountService.currentAccount.value ?: return@launch
+            kotlinx.atomicfu.locks.synchronized(linkLock) {
+                earlyLinkEvents.clear()
+                linkStarting = true
+            }
             val opId = accountService.addDevice(account.accountId, uri)
+            // The daemon posts CONNECTING before addDevice() returns; those events were dropped
+            // while the id was unknown, so the screen skipped the state. Replay them.
+            val early = kotlinx.atomicfu.locks.synchronized(linkLock) {
+                linkStarting = false
+                if (opId >= 0) _linkOperationId = opId
+                earlyLinkEvents.filter { it.opId == opId }.also { earlyLinkEvents.clear() }
+            }
             if (opId < 0) {
                 _state.update { it.copy(linkDeviceState = AddDeviceExportState.Init(ExportInputError.INVALID_INPUT)) }
                 return@launch
             }
-            _linkOperationId = opId
+            early.forEach { applyLinkDeviceState(it) }
             // State will advance through the state machine via AddDeviceStateChanged callbacks
         }
     }

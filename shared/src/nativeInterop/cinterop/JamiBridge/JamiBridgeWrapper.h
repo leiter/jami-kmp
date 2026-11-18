@@ -144,8 +144,10 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 // Account Events
 - (void)onAccountsChanged;
 
+/// state is the daemon's own string ("REGISTERED", "READY", "ERROR_EXIST_STUN", …), as Android
+/// receives it; the old enum round trip turned unknown states into ERROR_GENERIC.
 - (void)onRegistrationStateChanged:(NSString *)accountId
-                             state:(JBRegistrationState)state
+                             state:(NSString *)state
                               code:(int)code
                             detail:(NSString *)detail;
 
