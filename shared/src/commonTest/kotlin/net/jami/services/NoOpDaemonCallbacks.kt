@@ -32,6 +32,7 @@ object NoOpDaemonCallbacks : DaemonCallbacks {
     override fun onKnownDevicesChanged(accountId: String, devices: Map<String, String>) {}
     override fun onDeviceRevocationEnded(accountId: String, deviceId: String, state: Int) {}
     override fun onAddDeviceStateChanged(accountId: String, opId: Long, state: Int, details: Map<String, String>) {}
+    override fun onDeviceAuthStateChanged(accountId: String, state: Int, details: Map<String, String>) {}
     override fun onMigrationEnded(accountId: String, state: String) {}
     override fun onAccountProfileReceived(accountId: String, name: String, photo: String) {}
     override fun onCallStateChanged(accountId: String, callId: String, state: String, code: Int) {}

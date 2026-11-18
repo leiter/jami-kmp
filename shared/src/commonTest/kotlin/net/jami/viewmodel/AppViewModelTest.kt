@@ -73,6 +73,26 @@ class AppViewModelTest {
     }
 
     @Test
+    fun removingTheLastAccountGoesToNoAccounts() = runTest {
+        val stub = StubDaemonBridge()
+        stub.accountIds = listOf(TEST_ACCOUNT_ID)
+        stub.accountDetails[TEST_ACCOUNT_ID] = mapOf(ConfigKey.ACCOUNT_TYPE.key to "RING")
+        val accountService = makeAccountService(stub, this)
+        val vm = AppViewModel(accountService, testBiometricService(), viewModelScope())
+        accountService.loadAccountsFromDaemon(isConnected = true)
+        advanceUntilIdle()
+        assertIs<AppState.HasAccounts>(vm.appState.value)
+
+        stub.accountIds = emptyList()
+        accountService.removeAccount(TEST_ACCOUNT_ID)
+        // The daemon's AccountsChanged after a removal re-publishes the empty list; it must not
+        // bring HasAccounts back.
+        accountService.loadAccountsFromDaemon(isConnected = true)
+        advanceUntilIdle()
+        assertIs<AppState.NoAccounts>(vm.appState.value)
+    }
+
+    @Test
     fun hasAccountsWithoutMigrationFlagFalse() = runTest {
         val stub = StubDaemonBridge()
         stub.accountIds = listOf(TEST_ACCOUNT_ID)

@@ -199,6 +199,10 @@ class DaemonCallbacksImpl(
         scope.launch { accountService.onDeviceRevocationEnded(accountId, deviceId, state) }
     }
 
+    override fun onDeviceAuthStateChanged(accountId: String, state: Int, details: Map<String, String>) {
+        scope.launch { accountService.onDeviceAuthStateChanged(accountId, state, details) }
+    }
+
     override fun onAddDeviceStateChanged(accountId: String, opId: Long, state: Int, details: Map<String, String>) {
         scope.launch { accountService.onAddDeviceStateChanged(accountId, opId, state, details) }
     }

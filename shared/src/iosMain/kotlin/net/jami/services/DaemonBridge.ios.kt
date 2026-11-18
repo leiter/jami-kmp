@@ -112,9 +112,11 @@ actual class DaemonBridge() : DaemonBridgeApi, IOSVideoFrameBridge {
     // ==================== Account Operations ====================
 
     override fun addAccount(details: Map<String, String>): String {
-        val displayName = details["Account.displayName"] ?: ""
-        val password = details["Account.archivePassword"] ?: ""
-        return bridge.createAccountWithDisplayName(displayName, password = password) ?: ""
+        // The caller's details reach the daemon unchanged, as on Android. The old path rebuilt a
+        // fresh RING map from the display name and password alone, dropping Account.archivePath
+        // (archive import) and Account.archiveURL = "jami-auth" (device linking) — each such
+        // import silently created a brand-new identity instead.
+        return bridge.addAccount(details.toNSDictionary()) ?: ""
     }
 
     override fun removeAccount(accountId: String) {
@@ -137,6 +139,16 @@ actual class DaemonBridge() : DaemonBridgeApi, IOSVideoFrameBridge {
         bridge.setAccountActive(accountId, active = active)
     }
 
+    /**
+     * iOS only: (de)activates an account and, with [shutdownConnections], closes every peer
+     * connection too — what jami-client-ios does when the app leaves the foreground, since a
+     * suspended app's sockets die anyway and the daemon repairs its conversations only on
+     * reactivation (`conversation.cpp`, "A mobile client reaches that state…").
+     */
+    fun setAccountActive(accountId: String, active: Boolean, shutdownConnections: Boolean) {
+        bridge.setAccountActive(accountId, active = active, shutdownConnections = shutdownConnections)
+    }
+
     override fun getAccountTemplate(accountType: String): Map<String, String> =
         bridge.getAccountTemplate(accountType)?.toKotlinMap() ?: emptyMap()
 
@@ -145,7 +157,8 @@ actual class DaemonBridge() : DaemonBridgeApi, IOSVideoFrameBridge {
     }
 
     override fun sendRegister(accountId: String, enable: Boolean) {
-        bridge.setAccountActive(accountId, active = enable)
+        // libjami::sendRegister persists Account.enable; setAccountActive does not.
+        bridge.sendRegister(accountId, enable = enable)
     }
 
     override fun setAccountsOrder(order: String) {
@@ -156,7 +169,9 @@ actual class DaemonBridge() : DaemonBridgeApi, IOSVideoFrameBridge {
         bridge.changeAccountPassword(accountId, oldPassword = oldPassword, newPassword = newPassword)
 
     override fun exportToFile(accountId: String, path: String, scheme: String, password: String): Boolean {
-        return bridge.exportAccount(accountId, toDestinationPath = path, withPassword = password)
+        // The scheme ("password") must reach the daemon: without it a password-protected archive
+        // is never decrypted and the export fails.
+        return bridge.exportAccount(accountId, toDestinationPath = path, scheme = scheme, withPassword = password)
     }
 
     // ==================== Credentials ====================
@@ -460,7 +475,9 @@ actual class DaemonBridge() : DaemonBridgeApi, IOSVideoFrameBridge {
         replyTo: String,
         flag: Int
     ) {
-        bridge.sendMessage(accountId, conversationId = conversationId, message = message, replyTo = replyTo.takeIf { it.isNotEmpty() })
+        // flag must reach the daemon: 1 = edit and 2 = reaction of `replyTo`. Dropped, an edit
+        // or a reaction went out as a plain reply quoting the original.
+        bridge.sendMessage(accountId, conversationId = conversationId, message = message, replyTo = replyTo.takeIf { it.isNotEmpty() }, flag = flag)
     }
 
     override fun loadConversation(
@@ -473,16 +490,10 @@ actual class DaemonBridge() : DaemonBridgeApi, IOSVideoFrameBridge {
     }
 
     override fun getConversationMembers(accountId: String, conversationId: String): List<Map<String, String>> {
-        val members = bridge.getConversationMembers(accountId, conversationId = conversationId) ?: return emptyList()
-        @Suppress("UNCHECKED_CAST")
-        val memberList = members as? List<Any> ?: return emptyList()
-        return memberList.mapNotNull { member ->
-            val jbMember = member as? JBConversationMember ?: return@mapNotNull null
-            mapOf(
-                "uri" to (jbMember.uri ?: ""),
-                "role" to jbMember.role.toString()
-            )
-        }
+        // The daemon's maps unchanged, as on Android: role as "admin"/"member"/"invited"/
+        // "banned"/"left" (MemberRole.fromString), plus "lastDisplayed". The JBConversationMember
+        // path turned the role into an enum name that matched nothing, so every role was UNKNOWN.
+        return bridge.getConversationMemberMaps(accountId, conversationId = conversationId).toKotlinMapList()
     }
 
     override fun getConversationInfo(accountId: String, conversationId: String): Map<String, String> {
@@ -671,17 +682,19 @@ actual class DaemonBridge() : DaemonBridgeApi, IOSVideoFrameBridge {
     // ==================== Name Lookup ====================
 
     override fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
-        val result = bridge.lookupName(accountId, name = name)
-        return result != null && result.state == JBLookupState.JBLookupStateSuccess
+        // The wrapper returns nil and the answer comes through RegisteredNameFound; report the
+        // request as issued, as Android's libjami bool does, rather than as a failure.
+        bridge.lookupName(accountId, name = name)
+        return true
     }
 
     override fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean {
-        val result = bridge.lookupAddress(accountId, address = address)
-        return result != null && result.state == JBLookupState.JBLookupStateSuccess
+        bridge.lookupAddress(accountId, address = address)
+        return true
     }
 
     override fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean {
-        return bridge.registerName(accountId, name = name, password = password)
+        return bridge.registerName(accountId, name = name, scheme = scheme, password = password)
     }
 
     override fun searchUser(accountId: String, query: String): Boolean =
@@ -1045,6 +1058,10 @@ private class JamiBridgeDelegateImpl(
         callbacks.onAddDeviceStateChanged(accountId, opId.toLong(), state, details.toKotlinMap())
     }
 
+    override fun onDeviceAuthStateChanged(accountId: String, state: Int, details: Map<Any?, *>) {
+        callbacks.onDeviceAuthStateChanged(accountId, state, details.toKotlinMap())
+    }
+
     override fun onVolatileAccountDetailsChanged(accountId: String, details: Map<Any?, *>) {
         callbacks.onVolatileAccountDetailsChanged(accountId, details.toKotlinMap())
     }
@@ -1373,16 +1390,11 @@ private class JamiBridgeDelegateImpl(
         accountId: String,
         conversationId: String,
         memberUri: String,
-        event: JBMemberEventType
+        event: Int
     ) {
-        val eventInt = when (event) {
-            JBMemberEventType.JBMemberEventTypeJoin -> 0
-            JBMemberEventType.JBMemberEventTypeLeave -> 1
-            JBMemberEventType.JBMemberEventTypeBan -> 2
-            JBMemberEventType.JBMemberEventTypeUnban -> 3
-            else -> 0
-        }
-        callbacks.onConversationMemberEvent(accountId, conversationId, memberUri, eventInt)
+        // Raw daemon code (0 add, 1 join, 2 remove, 3 ban, 4 unban), the values
+        // ConversationFacade expects. The old enum round trip turned a leave into a join.
+        callbacks.onConversationMemberEvent(accountId, conversationId, memberUri, event)
     }
 
     override fun onComposingStatusChanged(
@@ -1522,7 +1534,9 @@ private fun JBSwarmMessage.toKotlinSwarmMessage(): SwarmMessage {
     return SwarmMessage(
         id = this.messageId ?: "",
         type = this.type ?: "",
-        linearizedParent = this.replyTo ?: "",
+        // The previous message in the history, not the reply target: Conversation.addSwarmElement
+        // chains messages by it, and a reply id here mis-ordered history and read state.
+        linearizedParent = this.linearizedParent ?: "",
         body = bodyMap,
         reactions = reactionsMap,
         reactionEntries = reactionEntries,

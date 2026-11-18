@@ -729,6 +729,12 @@ interface DaemonCallbacks {
     fun onKnownDevicesChanged(accountId: String, devices: Map<String, String>)
     fun onDeviceRevocationEnded(accountId: String, deviceId: String, state: Int)
     fun onAddDeviceStateChanged(accountId: String, opId: Long, state: Int, details: Map<String, String>)
+
+    /**
+     * Device-linking progress on the device being linked (the "jami-auth" import): the daemon
+     * emits only this signal there; [onAddDeviceStateChanged] is the exporting device's side.
+     */
+    fun onDeviceAuthStateChanged(accountId: String, state: Int, details: Map<String, String>) {}
     fun onMigrationEnded(accountId: String, state: String)
     fun onAccountProfileReceived(accountId: String, name: String, photo: String)
 

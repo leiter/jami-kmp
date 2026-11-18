@@ -18,7 +18,9 @@ package net.jami.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -68,7 +70,7 @@ sealed class AddDeviceImportState {
  *   3. Calls addAccount() — the daemon creates a temp account and begins the
  *      TOKEN_AVAILABLE → CONNECTING → AUTHENTICATING → IN_PROGRESS → DONE flow.
  *
- * The flow's state is driven by [AccountEvent.AddDeviceStateChanged] events
+ * The flow's state is driven by [AccountEvent.DeviceAuthStateChanged] events
  * filtered to the temp account. On success [onCleared] keeps the account; on
  * cancellation or error [onCleared] removes it so it doesn't pollute the list.
  */
@@ -84,6 +86,22 @@ class LinkDeviceImportViewModel(
     private var tempAccountId: String? = null
 
     init {
+        // Listen before addAccount: the daemon can report TOKEN_AVAILABLE before addAccount has
+        // returned, and accountEvents does not replay. Events wait for the id here.
+        val createdAccountId = CompletableDeferred<String>()
+        scope.launch(start = CoroutineStart.UNDISPATCHED) {
+            accountService.accountEvents.collect { event ->
+                // The device being linked receives DeviceAuthStateChanged; AddDeviceStateChanged
+                // is the exporting device's signal and is kept only as a fallback.
+                val (eventAccountId, state, details) = when (event) {
+                    is AccountEvent.DeviceAuthStateChanged -> Triple(event.accountId, event.state, event.details)
+                    is AccountEvent.AddDeviceStateChanged -> Triple(event.accountId, event.state, event.details)
+                    else -> return@collect
+                }
+                val accountId = try { createdAccountId.await() } catch (e: Exception) { return@collect }
+                if (eventAccountId == accountId) handleStateChange(state, details)
+            }
+        }
         scope.launch {
             try {
                 val details = accountService.getAccountTemplate(AccountConfig.ACCOUNT_TYPE_JAMI)
@@ -91,15 +109,9 @@ class LinkDeviceImportViewModel(
                 details[ConfigKey.ACCOUNT_ARCHIVE_URL.key] = "jami-auth"
                 val accountId = accountService.addAccount(details)
                 tempAccountId = accountId
-
-                accountService.accountEvents.collect { event ->
-                    if (event is AccountEvent.AddDeviceStateChanged
-                        && event.accountId == accountId
-                    ) {
-                        handleStateChange(event.state, event.details)
-                    }
-                }
+                createdAccountId.complete(accountId)
             } catch (e: Exception) {
+                createdAccountId.completeExceptionally(e)
                 Log.e(TAG, "Failed to create temp import account", e)
                 _state.value = AddDeviceImportState.Done(AuthError.UNKNOWN)
             }

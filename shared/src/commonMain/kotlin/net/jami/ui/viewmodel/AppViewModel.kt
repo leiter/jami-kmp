@@ -97,8 +97,14 @@ class AppViewModel(
 
             accountService.accounts.collect { accountList ->
                 val current = _appState.value
+                if (accountList.isNotEmpty()) accountService.clearLastAccountRemoved()
                 val next = when {
                     onboardingInProgress -> AppState.Onboarding
+                    // The user deleted the last account. Checked in this collector, the one
+                    // writer that sees the empty list: the AccountRemoved handler below used to
+                    // set NoAccounts on its own, and this collector could overwrite it with the
+                    // HasAccounts it had read just before (seen on iOS, 2026-11-18).
+                    accountList.isEmpty() && accountService.lastAccountRemovedByUser -> AppState.NoAccounts
                     // Keep HasAccounts during transient daemon-driven empty states (e.g. on
                     // reconnect). Deliberate deletions are handled separately via AccountRemoved.
                     accountList.isEmpty() && current is AppState.HasAccounts -> current

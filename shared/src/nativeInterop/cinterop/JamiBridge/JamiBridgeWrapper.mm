@@ -268,6 +268,7 @@ static JBSwarmMessage* toJBSwarmMessage(const SwarmMessage& msg) {
     JBSwarmMessage *jbMsg = [[JBSwarmMessage alloc] init];
     jbMsg.messageId = toNSString(msg.id);
     jbMsg.type = toNSString(msg.type);
+    jbMsg.linearizedParent = toNSString(msg.linearizedParent);
     jbMsg.author = toNSString(msg.body.count("author") ? msg.body.at("author") : "");
     jbMsg.body = toNSDictionary(msg.body);
     jbMsg.editions = toNSArrayOfDictionaries(msg.editions);
@@ -1319,14 +1320,10 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
             NSString *accountIdNS = toNSString(accountId);
             NSString *conversationIdNS = toNSString(conversationId);
             NSString *memberUriNS = toNSString(memberUri);
-            JBMemberEventType eventType;
-            switch (event) {
-                case 0: eventType = JBMemberEventTypeJoin; break; // Add
-                case 1: eventType = JBMemberEventTypeJoin; break; // Joins
-                case 2: eventType = JBMemberEventTypeLeave; break; // Leave
-                case 3: eventType = JBMemberEventTypeBan; break; // Banned
-                default: eventType = JBMemberEventTypeJoin; break;
-            }
+            // Passed through unchanged (0 add, 1 join, 2 remove, 3 ban, 4 unban), as on
+            // Android. The old enum folded add into join and remove into "leave"=1, so the
+            // shared code saw a leave as a join.
+            int eventType = event;
             dispatch_async(dispatch_get_main_queue(), ^{
                 JamiBridgeWrapper *strongSelf = weakSelf;
                 if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onConversationMemberEvent:conversationId:memberUri:event:)]) {
@@ -1558,6 +1555,18 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
                 JamiBridgeWrapper *strongSelf = weakSelf;
                 if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onAddDeviceStateChanged:opId:state:details:)]) {
                     [strongSelf.delegate onAddDeviceStateChanged:accountIdNS opId:opId state:state details:detailsNS];
+                }
+            });
+        }));
+
+    handlers.insert(exportable_callback<ConfigurationSignal::DeviceAuthStateChanged>(
+        [weakSelf](const std::string& accountId, int state, const std::map<std::string, std::string>& details) {
+            NSString *accountIdNS = toNSString(accountId);
+            NSDictionary *detailsNS = toNSDictionary(details);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                JamiBridgeWrapper *strongSelf = weakSelf;
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onDeviceAuthStateChanged:state:details:)]) {
+                    [strongSelf.delegate onDeviceAuthStateChanged:accountIdNS state:state details:detailsNS];
                 }
             });
         }));
@@ -1971,6 +1980,25 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
     return libjami::exportToFile(toCppString(accountId), toCppString(destinationPath), "", toCppString(password));
 }
 
+- (BOOL)exportAccount:(NSString *)accountId
+    toDestinationPath:(NSString *)destinationPath
+               scheme:(NSString *)scheme
+         withPassword:(NSString *)password {
+    NSLog(@"[JamiBridge] exportAccount: %@ to %@ scheme=%@", accountId, destinationPath, scheme);
+    return libjami::exportToFile(toCppString(accountId), toCppString(destinationPath),
+                                 toCppString(scheme), toCppString(password));
+}
+
+- (NSString *)addAccount:(NSDictionary<NSString *, NSString *> *)details {
+    FILE_LOG_I("JamiBridge", @"addAccount: %lu details", (unsigned long)details.count);
+    return toNSString(libjami::addAccount(toCppMap(details)));
+}
+
+- (void)sendRegister:(NSString *)accountId enable:(BOOL)enable {
+    NSLog(@"[JamiBridge] sendRegister: %@ enable: %d", accountId, enable);
+    libjami::sendRegister(toCppString(accountId), enable);
+}
+
 - (void)deleteAccount:(NSString *)accountId {
     NSLog(@"[JamiBridge] deleteAccount: %@", accountId);
     libjami::removeAccount(toCppString(accountId));
@@ -2000,6 +2028,11 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
 - (void)setAccountActive:(NSString *)accountId active:(BOOL)active {
     NSLog(@"[JamiBridge] setAccountActive: %@ active: %d", accountId, active);
     libjami::setAccountActive(toCppString(accountId), active);
+}
+
+- (void)setAccountActive:(NSString *)accountId active:(BOOL)active shutdownConnections:(BOOL)shutdownConnections {
+    NSLog(@"[JamiBridge] setAccountActive: %@ active: %d shutdownConnections: %d", accountId, active, shutdownConnections);
+    libjami::setAccountActive(toCppString(accountId), active, shutdownConnections);
 }
 
 - (void)updateProfile:(NSString *)accountId
@@ -2045,6 +2078,15 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
 - (BOOL)registerName:(NSString *)accountId name:(NSString *)name password:(NSString *)password {
     NSLog(@"[JamiBridge] registerName: %@ name: %@", accountId, name);
     return libjami::registerName(toCppString(accountId), toCppString(name), "", toCppString(password));
+}
+
+- (BOOL)registerName:(NSString *)accountId
+                name:(NSString *)name
+              scheme:(NSString *)scheme
+            password:(NSString *)password {
+    NSLog(@"[JamiBridge] registerName: %@ name: %@ scheme: %@", accountId, name, scheme);
+    return libjami::registerName(toCppString(accountId), toCppString(name),
+                                 toCppString(scheme), toCppString(password));
 }
 
 - (nullable JBLookupResult *)lookupName:(NSString *)accountId name:(NSString *)name {
@@ -2359,6 +2401,11 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
     return [result copy];
 }
 
+- (NSArray<NSDictionary<NSString *, NSString *> *> *)getConversationMemberMaps:(NSString *)accountId
+                                                                conversationId:(NSString *)conversationId {
+    return toNSArrayOfDictionaries(libjami::getConversationMembers(toCppString(accountId), toCppString(conversationId)));
+}
+
 - (void)addConversationMember:(NSString *)accountId
                conversationId:(NSString *)conversationId
                    contactUri:(NSString *)contactUri {
@@ -2410,13 +2457,15 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
 - (NSString *)sendMessage:(NSString *)accountId
            conversationId:(NSString *)conversationId
                   message:(NSString *)message
-                  replyTo:(nullable NSString *)replyTo {
-    NSLog(@"[JamiBridge] sendMessage to %@: %@", conversationId, message);
+                  replyTo:(nullable NSString *)replyTo
+                     flag:(int)flag {
+    NSLog(@"[JamiBridge] sendMessage to %@ flag=%d: %@", conversationId, flag, message);
+    // flag 1 = edit of replyTo, 2 = reaction to replyTo; 0 = plain message or reply.
     libjami::sendMessage(toCppString(accountId),
                         toCppString(conversationId),
                         toCppString(message),
                         replyTo ? toCppString(replyTo) : "",
-                        0);
+                        flag);
     return @"";  // Message ID comes via callback
 }
 

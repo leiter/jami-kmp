@@ -73,6 +73,18 @@ class AccountService(
     // ==================== State Flows ====================
 
     private val _accounts = MutableStateFlow<List<Account>>(emptyList())
+
+    /**
+     * True from the moment the user removes their last account until an account exists again.
+     * Lets [net.jami.ui.viewmodel.AppViewModel] tell that empty list from a transient one.
+     */
+    @kotlin.concurrent.Volatile
+    var lastAccountRemovedByUser: Boolean = false
+        private set
+
+    fun clearLastAccountRemoved() {
+        lastAccountRemovedByUser = false
+    }
     val accounts: StateFlow<List<Account>> = _accounts.asStateFlow()
 
     private val _currentAccount = MutableStateFlow<Account?>(null)
@@ -370,6 +382,9 @@ class AccountService(
     fun removeAccount(accountId: String) {
         daemonBridge.removeAccount(accountId)
         accountsMap.remove(accountId)
+        // Set before the empty list is published, so the AppViewModel collector that sees it
+        // already knows the emptiness is the user's doing (not a transient daemon state).
+        lastAccountRemovedByUser = accountsMap.isEmpty()
         _accounts.value = accountsMap.values.toList()
 
         if (_currentAccount.value?.accountId == accountId) {
@@ -1338,6 +1353,13 @@ class AccountService(
         }
     }
 
+    internal fun onDeviceAuthStateChanged(accountId: String, state: Int, details: Map<String, String>) {
+        Log.d(TAG, "onDeviceAuthStateChanged: $accountId state=$state")
+        scope.launch {
+            _accountEvents.emit(AccountEvent.DeviceAuthStateChanged(accountId, state, details))
+        }
+    }
+
     internal fun onAddDeviceStateChanged(accountId: String, opId: Long, state: Int, details: Map<String, String>) {
         scope.launch {
             _accountEvents.emit(AccountEvent.AddDeviceStateChanged(accountId, opId, state, details))
@@ -1671,6 +1693,13 @@ sealed class AccountEvent {
         val accountId: String,
         val deviceId: String,
         val state: Int
+    ) : AccountEvent()
+
+    /** Linking progress on the device being linked (daemon DeviceAuthStateChanged). */
+    data class DeviceAuthStateChanged(
+        val accountId: String,
+        val state: Int,
+        val details: Map<String, String>
     ) : AccountEvent()
 
     data class AddDeviceStateChanged(

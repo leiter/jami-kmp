@@ -127,6 +127,9 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 @property (nonatomic, strong) NSArray<NSDictionary<NSString *, NSString *> *> *editions;
 @property (nonatomic, assign) int64_t timestamp;
 @property (nonatomic, copy, nullable) NSString *replyTo;
+/// The previous message in the linearized history (libjami SwarmMessage::linearizedParent).
+/// Not the reply target: history is chained by this id.
+@property (nonatomic, copy) NSString *linearizedParent;
 @property (nonatomic, strong) NSDictionary<NSString *, NSNumber *> *status;
 @end
 
@@ -261,7 +264,7 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (void)onConversationMemberEvent:(NSString *)accountId
                    conversationId:(NSString *)conversationId
                         memberUri:(NSString *)memberUri
-                            event:(JBMemberEventType)event;
+                            event:(int)event;  // raw daemon code: 0 add, 1 join, 2 remove, 3 ban, 4 unban
 
 - (void)onComposingStatusChanged:(NSString *)accountId
                   conversationId:(NSString *)conversationId
@@ -294,6 +297,12 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                         details:(NSDictionary<NSString *, NSString *> *)details;
 
 - (void)onMigrationEnded:(NSString *)accountId state:(NSString *)state;
+
+/// Device-linking progress on the device being linked (jami-auth import): token available,
+/// connecting, authenticating (password needed), in progress, done — with an error in details.
+- (void)onDeviceAuthStateChanged:(NSString *)accountId
+                           state:(int)state
+                         details:(NSDictionary<NSString *, NSString *> *)details;
 
 // =============================================================================
 // Messaging
@@ -473,6 +482,20 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
     toDestinationPath:(NSString *)destinationPath
          withPassword:(NSString *)password;
 
+/// libjami::exportToFile with its scheme ("password", "key", or "" for none). Without the scheme a
+/// password-protected account fails to export.
+- (BOOL)exportAccount:(NSString *)accountId
+    toDestinationPath:(NSString *)destinationPath
+               scheme:(NSString *)scheme
+         withPassword:(NSString *)password;
+
+/// libjami::addAccount with the caller's details unchanged (Account.archivePath for an archive
+/// import, Account.archiveURL = "jami-auth" for device linking, SIP accounts, template values).
+- (NSString *)addAccount:(NSDictionary<NSString *, NSString *> *)details;
+
+/// libjami::sendRegister — persists Account.enable, unlike setAccountActive.
+- (void)sendRegister:(NSString *)accountId enable:(BOOL)enable;
+
 - (void)deleteAccount:(NSString *)accountId;
 
 - (NSArray<NSString *> *)getAccountIds;
@@ -485,6 +508,8 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                   details:(NSDictionary<NSString *, NSString *> *)details;
 
 - (void)setAccountActive:(NSString *)accountId active:(BOOL)active;
+/// shutdownConnections closes every peer connection too, as jami-client-ios does on background.
+- (void)setAccountActive:(NSString *)accountId active:(BOOL)active shutdownConnections:(BOOL)shutdownConnections;
 
 - (void)updateProfile:(NSString *)accountId
           displayName:(NSString *)displayName
@@ -501,6 +526,11 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 
 - (BOOL)registerName:(NSString *)accountId
                 name:(NSString *)name
+            password:(NSString *)password;
+
+- (BOOL)registerName:(NSString *)accountId
+                name:(NSString *)name
+              scheme:(NSString *)scheme
             password:(NSString *)password;
 
 - (nullable JBLookupResult *)lookupName:(NSString *)accountId name:(NSString *)name;
@@ -584,6 +614,11 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (NSArray<JBConversationMember *> *)getConversationMembers:(NSString *)accountId
                                              conversationId:(NSString *)conversationId;
 
+/// The daemon's member maps unchanged ("uri", "role" as "admin"/"member"/"invited"/"banned"/
+/// "left", "lastDisplayed", …), as Android receives them.
+- (NSArray<NSDictionary<NSString *, NSString *> *> *)getConversationMemberMaps:(NSString *)accountId
+                                                                conversationId:(NSString *)conversationId;
+
 - (void)addConversationMember:(NSString *)accountId
                conversationId:(NSString *)conversationId
                    contactUri:(NSString *)contactUri;
@@ -607,7 +642,8 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (NSString *)sendMessage:(NSString *)accountId
            conversationId:(NSString *)conversationId
                   message:(NSString *)message
-                  replyTo:(nullable NSString *)replyTo;
+                  replyTo:(nullable NSString *)replyTo
+                     flag:(int)flag;  // 0 message/reply, 1 edit, 2 reaction
 
 - (int)loadConversationMessages:(NSString *)accountId
                  conversationId:(NSString *)conversationId

@@ -892,6 +892,10 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
             callbacks.onDeviceRevocationEnded(accountId, deviceId, state)
         }
 
+        override fun deviceAuthStateChanged(accountId: String, state: Int, details: StringMap) {
+            callbacks.onDeviceAuthStateChanged(accountId, state, details.toNative())
+        }
+
         override fun addDeviceStateChanged(accountId: String, op_id: Long, state: Int, details: StringMap) {
             callbacks.onAddDeviceStateChanged(accountId, op_id, state, details.toNative())
         }
