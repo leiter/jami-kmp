@@ -12,6 +12,12 @@ Android 14+ requires)
 
 All major mobile features are implemented, including CallKit (iOS) and Telecom API/ConnectionService (Android). The remaining gaps are:
 
+- **Duplicate 1:1 rows after deleting a conversation — decision parked (2026-11-18).** Deleting a
+  live 1:1 makes the daemon start a new one that the peer joins silently while keeping the ended
+  copy; reproduced on the simulators. Options and the related New Conversation redesign (two real
+  modes, "separate conversation" with an existing peer):
+  `doc/findings-protocol-2026-11.md` → "Parked decision — 1:1 deletion and conversation creation".
+
 - **Push notifications** — Android (FCM) and iOS (APNs + PushKit) client integration are both done (2026-07-27, see `doc/push-notifications.md`). Delivery still needs a push-capable DHT proxy holding the FCM/APNs credentials for this app, so calls and messages currently still rely on the daemon running. The iOS half now compiles and runs (it was written on a Linux host, where Apple targets are skipped, and needed five fixes on the first Mac build — see `ios_implementation_gap.md` §4.1).
 - **~~Apple wrapper batch~~ — closed 2026-11-11 for iOS.** The wrapper now exposes
 `connectivityChanged`, `publish` (+ the presence callback carries status and `lineStatus`), a real

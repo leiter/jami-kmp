@@ -162,6 +162,51 @@ Then by hand on the same pair:
   predates `9d5d508`, which made addContact send the trust request).
 - **F12** needs calls; out of scope on the simulators. Android retest owed.
 
+### Parked decision — 1:1 deletion and conversation creation (2026-11-18, evening)
+
+**Reproduced on the simulators** (fresh Alice/Bob, current build). The user sees the same on
+Android and iOS devices, sometimes three rows for one peer; removing the contact is their only
+way to get rid of them.
+
+| Step | Action | Alice's repos | Bob's repos | Rows |
+|---|---|---|---|---|
+| 0 | invite, accept, one message | `d45b596c` 1:1 | `d45b596c` | A 1 · B 1 |
+| 1 | Alice deletes the 1:1 | `87235cb9` **new** | `d45b596c` ended + `87235cb9` **auto-joined, no request** | A 1 · **B 2** |
+| 2 | Bob deletes the *ended* row | — | `87235cb9` | A 1 · B 1 |
+| 3 | Bob deletes the *live* one | `87235cb9` ended + `97f8b6a8` **new**, auto-joined | `97f8b6a8` | **A 2** · B 1 |
+
+- Deleting a **live** 1:1 makes the deleter's daemon start a fresh one at once
+  (`ConversationModule::removeConversation` → `handleNewConversation`); the peer, being a
+  contact, joins it silently and keeps the ended copy. Deleting an **ended** copy is harmless
+  (`findMatchingOneToOneConversation` finds the live one). Both sides deleting live ones before
+  syncing (or while one is offline) gives each a replacement — the likely source of three rows.
+- Our trigger: `18e6461` (2026-11-17) made "Delete conversation" on a 1:1 leave via
+  `removeConversation` so the peer sees "X left". The reference removes the **contact**
+  instead: no recreation, but the peer is told nothing. Not established: whether the user's
+  devices showed duplicates before that build.
+- Side finding: Bob's first clone after accepting took ~2–3 min ("Downloading conversation from
+  peer"), so the harness's `accept` assertion timed out.
+
+**Options (undecided):**
+1. Split the 1:1 actions like the reference: "Clear history" (leave → daemon recreates; matches
+   what actually happens) vs "Remove contact" (gone for good). No plain "Delete" on a 1:1.
+2. Hide superseded 1:1s: an ended `ONE_TO_ONE` gets no list row when the contact has a newer live
+   1:1 (`contact.conversationUri`); old history reachable from contact details, or dropped.
+3. Revert to the reference (delete = remove contact); simpler, the peer is not told.
+
+Claude's recommendation: 1 + 2.
+
+**Related idea, also parked — conversation creation.** Only two of the daemon's modes are real:
+`ONE_TO_ONE` (made by `addContact`) and `INVITES_ONLY` (`libjami::startConversation`, no mode
+parameter). `ADMIN_INVITES_ONLY` and `PUBLIC` cannot be created through the public API and are
+not enforced (`checkValidAdd` / `Conversation::addMember` only special-case 1:1), so they are
+out. Planned direction: redesign New Conversation around the two real modes (1:1: search, pick
+one, open; group: search incl. directory, pick many as chips, optional title). Starting a 1:1
+with an existing peer keeps redirecting to it; a "separate conversation" with that peer would
+have to be an `INVITES_ONLY` swarm with one invitee (peer must accept, it is a group with you as
+admin, calls take the swarm-conference path, removal is only local). Open: where the option
+lives, whether a title is required, group vs 1:1 look, cleanup action.
+
 ## Device test checklist — build 47 (iPhone + Pixel pair)
 
 The Android APK must be rebuilt from this branch for the Android items (shared fixes).
