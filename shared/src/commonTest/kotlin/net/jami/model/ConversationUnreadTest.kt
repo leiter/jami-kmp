@@ -113,4 +113,23 @@ class ConversationUnreadTest {
 
         assertEquals(1, conv.unreadMessageCount())
     }
+
+    /**
+     * The read position restored from the daemon's lastDisplayed can be a non-text commit (a
+     * reaction, an edit). It must still end the walk, or a restart re-counts read messages.
+     */
+    @Test
+    fun aNonTextReadPositionAlsoEndsTheWalk() = runTest {
+        val conv = conversation()
+        conv.addElement(incoming("read long ago"))
+        conv.addElement(Interaction("acc").apply {
+            author = peer.uri.uri
+            type = Interaction.InteractionType.CALL
+            setSwarmInfo("conv1", "reaction-commit", null)
+        })
+        conv.addElement(incoming("new"))
+        conv.setLastMessageRead("reaction-commit")
+
+        assertEquals(1, conv.unreadMessageCount())
+    }
 }

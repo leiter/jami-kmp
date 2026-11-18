@@ -472,9 +472,14 @@ class Conversation(
     fun unreadMessageCount(): Int {
         var count = 0
         for (interaction in aggregateHistory.asReversed()) {
-            if (interaction.type != Interaction.InteractionType.TEXT) continue
             val isOutgoing = interaction.author == null || interaction.contact?.isUser == true
             if (isOutgoing) continue
+            if (interaction.type != Interaction.InteractionType.TEXT) {
+                // The read position restored from the daemon's lastDisplayed can be any commit,
+                // a reaction or an edit included; it still ends the walk.
+                if (lastRead != null && interaction.messageId == lastRead) break
+                continue
+            }
             if (interaction.isRead || interaction.isNotified) break
             count++
         }

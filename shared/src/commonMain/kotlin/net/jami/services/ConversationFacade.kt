@@ -969,6 +969,7 @@ class ConversationFacade(
                     val members = daemonBridge.getConversationMembers(account.accountId, convId)
                     for (member in members) {
                         val memberUri = member["uri"] ?: continue
+                        restoreOwnReadPosition(account, conversation, member)
                         val memberUriParsed = Uri.fromString(memberUri)
                         if (conversation.findContact(memberUriParsed) == null) {
                             val contact = account.getContactFromCache(memberUriParsed)
@@ -1376,6 +1377,21 @@ class ConversationFacade(
 
     // ==================== Helper Functions ====================
 
+    /**
+     * The daemon keeps each member's last displayed message ("lastDisplayed" in the member
+     * map) and syncs it across devices; for our own member it is the read position. Without
+     * it a restart forgot what had been read, and the list counted read messages as unread
+     * again (two-simulator run, 2026-11-18). libjamiclient does the same on load.
+     */
+    private fun restoreOwnReadPosition(account: Account, conversation: Conversation, member: Map<String, String>) {
+        val lastDisplayed = member["lastDisplayed"]?.takeIf { it.isNotEmpty() } ?: return
+        val memberUri = member["uri"] ?: return
+        if (!account.isOwn(memberUri)) return
+        conversation.setLastMessageRead(lastDisplayed)
+        // Already loaded? Mark it now; later loads are matched in addSwarmElement.
+        conversation.getMessage(lastDisplayed)?.read()
+    }
+
     private fun findConversation(account: Account?, uri: Uri): Conversation? {
         if (account == null) return null
         return account.getByUri(uri) ?: account.getByContact(uri)
@@ -1472,6 +1488,7 @@ class ConversationFacade(
         try {
             for (member in daemonBridge.getConversationMembers(account.accountId, conversationId)) {
                 val memberUri = member["uri"] ?: continue
+                restoreOwnReadPosition(account, conversation, member)
                 val parsed = Uri.fromString(memberUri)
                 if (conversation.findContact(parsed) == null) {
                     val contact = account.getContactFromCache(parsed)
@@ -1539,6 +1556,7 @@ class ConversationFacade(
         try {
             for (member in daemonBridge.getConversationMembers(accountId, conversationId)) {
                 val memberUri = member["uri"] ?: continue
+                restoreOwnReadPosition(account, conversation, member)
                 val memberUriParsed = Uri.fromString(memberUri)
                 if (conversation.findContact(memberUriParsed) == null) {
                     val contact = account.getContactFromCache(memberUriParsed)
