@@ -198,6 +198,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.text.font.FontWeight
 import net.jami.ui.viewmodel.ReplyPreview
 import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.conversation_ended
 import jami_kmp.shared.generated.resources.conversation_reply_you
 import jami_kmp.shared.generated.resources.conversation_message_deleted
 import jami_kmp.shared.generated.resources.*
@@ -986,7 +987,19 @@ fun ChatScreen(
                     onSelect = { viewModel.insertMention(it) },
                 )
             }
-            if (!state.isSearchActive && !state.isLegacy) {
+            if (state.isEnded && !state.isSearchActive) {
+                // Everyone else has left: say so instead of offering a composer that reaches
+                // no one.
+                Text(
+                    text = stringResource(Res.string.conversation_ended),
+                    style = JamiTheme.typography.bodyMedium,
+                    color = JamiTheme.colors.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(JamiTheme.spacing.l),
+                )
+            } else if (!state.isSearchActive && !state.isLegacy) {
                 MessageInputBar(
                     value = state.inputText,
                     onValueChange = { viewModel.updateInput(it) },

@@ -147,7 +147,7 @@ phase_edit() {
 # Bob reacts to Alice's message; Alice sees the reaction.
 phase_react() {
     flow "$B" react TEXT="Hello from Alice, edited"
-    flow "$A" expect TEXT=".*👍.*"
+    flow "$A" expect-reaction TEXT="Hello from Alice, edited" EMOJI="👍"
 }
 
 # Alice sends a throwaway message, Bob receives it, Alice deletes it, it disappears for Bob.

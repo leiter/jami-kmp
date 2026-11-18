@@ -65,6 +65,10 @@ data class ContactDetailsState(
     val memberUris: List<String> = emptyList(),
     /** Per-member role (admin/member/invited/…), keyed by member URI. Swarm groups only. */
     val memberRoles: Map<String, MemberRole> = emptyMap(),
+    /** Display names for [memberUris] where known; absent members show their id. */
+    val memberNames: Map<String, String> = emptyMap(),
+    /** The entry of [memberUris] that is this account, shown as "You". */
+    val selfMemberUri: String? = null,
     /** Group title, editable by admins. Empty for 1:1 conversations. */
     val groupTitle: String = "",
     /** Group avatar, editable by admins. Falls back to [avatarBytes] when unset. */
@@ -200,6 +204,12 @@ class ContactDetailsViewModel(
                     conversation!!.roles.keys.toList()
                 } else emptyList()
                 val memberRoles = if (isSwarm) conversation!!.roles.toMap() else emptyMap()
+                // Names, not 40-hex ids, in the member list (seen on the simulators 2026-11-18).
+                val memberContacts = memberUris.associateWith { conversation?.findContact(net.jami.model.Uri.fromString(it)) }
+                val memberNames = memberContacts.mapNotNull { (uri, contact) ->
+                    (contact?.displayName ?: contact?.username)?.takeIf { it.isNotBlank() }?.let { uri to it }
+                }.toMap()
+                val selfMemberUri = memberContacts.entries.firstOrNull { it.value?.isUser == true }?.key
                 val groupProfile = if (isSwarm) conversation!!.profileFlow.value else Profile.EMPTY_PROFILE
 
                 _state.value = ContactDetailsState(
@@ -222,6 +232,8 @@ class ContactDetailsViewModel(
                     isAdmin = isAdmin,
                     memberUris = memberUris,
                     memberRoles = memberRoles,
+                    memberNames = memberNames,
+                    selfMemberUri = selfMemberUri,
                     groupTitle = groupProfile.displayName ?: "",
                     groupAvatarBytes = groupProfile.avatar,
                 )

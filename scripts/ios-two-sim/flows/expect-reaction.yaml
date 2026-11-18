@@ -1,0 +1,15 @@
+# In an open chat: a ${EMOJI} reaction chip shows under ${TEXT}.
+# The old check ("any text containing the emoji") also passed when the reaction arrived as a
+# quoting reply with the emoji as its body — exactly the iOS bug it was meant to catch
+# (2026-11-18). A chip is the emoji alone (optionally a count), between the message and the
+# composer, whose own 👍 button sits on the composer row.
+appId: net.jami.iosapp
+---
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      text: "${EMOJI}( ?\\d+)?"
+      below: "${TEXT}(\\n[\\s\\S]*)?"
+      above: "Write message"
+    timeout: 60000

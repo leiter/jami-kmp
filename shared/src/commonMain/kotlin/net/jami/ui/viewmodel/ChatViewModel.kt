@@ -255,6 +255,12 @@ data class ChatState(
      */
     val messageHold: MessageHold? = null,
     /**
+     * Every other member has left (or been blocked): nothing written here would reach anyone.
+     * The composer gives way to "Conversation ended." — it stayed active after the peer left a
+     * 1:1 (two simulators, 2026-11-18).
+     */
+    val isEnded: Boolean = false,
+    /**
      * The conversation this screen is open on no longer exists — its contact was deleted or
      * blocked, the group was left, or it was removed from another device. The host navigates
      * back when this turns true; a state flag rather than an event, so acting on it twice is
@@ -590,6 +596,9 @@ class ChatViewModel(
                 _state.update {
                     it.copy(conversationTitle = contact.displayUsername, contactAvatarBytes = avatarBytes)
                 }
+                // Rows rendered before the profile arrived ("<hex> has joined…") show the hex id
+                // until the chat is reopened; give them the name now, as a resolved username does.
+                contact.displayName?.let { applyResolvedName(contact.uri.rawRingId, it) }
             }
         }
     }
@@ -727,6 +736,10 @@ class ChatViewModel(
         }
         if (_state.value.messageHold != hold) {
             _state.update { it.copy(messageHold = hold) }
+        }
+        val ended = conversationFacade.getConversation(accountId, uri)?.isEnded == true
+        if (_state.value.isEnded != ended) {
+            _state.update { it.copy(isEnded = ended) }
         }
     }
 

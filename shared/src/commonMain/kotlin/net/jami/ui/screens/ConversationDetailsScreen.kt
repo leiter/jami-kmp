@@ -89,6 +89,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.leave_conversation
+import jami_kmp.shared.generated.resources.conversation_info_contact_you
 import jami_kmp.shared.generated.resources.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -631,6 +633,9 @@ private fun DetailsTabContent(
             GroupMemberSection(
                 memberUris = state.memberUris,
                 memberRoles = state.memberRoles,
+                memberNames = state.memberNames,
+                selfMemberUri = state.selfMemberUri,
+                isGroup = state.isGroup,
                 isAdmin = state.isAdmin,
                 onLeave = onLeaveConversation,
                 onAdd = onAddMember,
@@ -706,6 +711,9 @@ private fun DetailsTabContent(
 private fun GroupMemberSection(
     memberUris: List<String>,
     memberRoles: Map<String, MemberRole> = emptyMap(),
+    memberNames: Map<String, String> = emptyMap(),
+    selfMemberUri: String? = null,
+    isGroup: Boolean = true,
     isAdmin: Boolean,
     onLeave: () -> Unit,
     onAdd: (String) -> Unit,
@@ -748,10 +756,12 @@ private fun GroupMemberSection(
                         .padding(horizontal = JamiTheme.spacing.m, vertical = JamiTheme.spacing.s),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    val name = if (uri == selfMemberUri) stringResource(Res.string.conversation_info_contact_you)
+                        else memberNames[uri]
                     Text(
-                        text = uri,
-                        style = JamiTheme.typography.bodySmall,
-                        color = JamiTheme.colors.onSurfaceVariant,
+                        text = name ?: uri,
+                        style = if (name != null) JamiTheme.typography.bodyMedium else JamiTheme.typography.bodySmall,
+                        color = if (name != null) JamiTheme.colors.onSurface else JamiTheme.colors.onSurfaceVariant,
                         modifier = Modifier.weight(1f),
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
@@ -785,7 +795,10 @@ private fun GroupMemberSection(
                     .padding(horizontal = JamiTheme.spacing.s),
             ) {
                 Text(
-                    text = stringResource(Res.string.swarm_group_action_leave),
+                    // A 1:1 is a swarm too; "Leave group" read wrong there.
+                    text = stringResource(
+                        if (isGroup) Res.string.swarm_group_action_leave else Res.string.leave_conversation
+                    ),
                     color = JamiTheme.colors.error,
                 )
             }
