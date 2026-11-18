@@ -10,22 +10,26 @@ open items in `doc/TODO.md`. Plan: `~/.claude/plans/i-want-to-create-robust-glad
 
 | # | Finding | iOS | Android | Status |
 |---|---|---|---|---|
-| F1 | Edit becomes a quote | bug (bridge drops `flag`) | not affected | open |
-| F2 | Own reaction becomes a quote; peer reactions missing | bug (same) | not affected | open |
-| F3 | Message order / parent id wrong | bug (`linearizedParent` missing) | not affected | open |
-| F4 | Member roles and events mistranslated (1:1 leave not seen) | bug | not affected | open |
-| F5 | No sync after background, until restart | bug | not affected (foreground service) | open |
-| F6 | Unread badge never clears | bug | works (user, 2026-11-18) | open |
-| F7 | "Mark as read" in a notification has no effect | bug | bug | open |
-| F8 | Notification shows hash and app icon | bug | to check | open |
-| F9 | Notification sound inaudible | to check | — | open |
+| F1 | Edit becomes a quote | **fixed** `36d8b9c`, verified on sims | not affected | done (iOS) |
+| F2 | Own reaction becomes a quote; peer reactions missing | **fixed** `36d8b9c`, verified on sims | not affected | done (iOS) |
+| F3 | Message order / parent id wrong | **fixed** `36d8b9c`, verified on sims | not affected | done (iOS) |
+| F4 | Member roles and events mistranslated (1:1 leave not seen) | **fixed** `36d8b9c` + `3f2292b`, verified on sims | `3f2292b` shared (details-screen leave) | done (iOS) |
+| F5 | No sync after background, until restart | **fixed** `35c9397`, verified on sims | not affected (foreground service) | device test |
+| F6 | Unread badge never clears | **fixed** `36d8b9c` + `6928afb` (restart) | shared restart fix also applies | verify restart |
+| F7 | "Mark as read" in a notification has no effect | **fixed** `698c86d` | **fixed** `698c86d` | device test |
+| F8 | Notification shows hash and app icon | **fixed** (names) `698c86d` | shared change | device test |
+| F9 | Notification sound inaudible | code was fine; logging + small fixes `698c86d` | — | check iPhone settings |
 | F10 | vCard (profile) sync | to check | works live (user) | open |
 | F11 | Re-adding a contact hangs | to reproduce | to retest (seen 2026-11-07) | open |
 | F12 | "Block unknown" refuses peers we sync with | to reproduce | to retest (seen 2026-11-07) | open |
-| F13 | Self-conversation / call to own account possible | missing guard | missing guard | open |
+| F13 | Self-conversation / call to own account possible | **guarded** `6dde67e` | **guarded** `6dde67e` | done |
 | F14 | Refused incoming call still reaches Telecom / CallKit | to check | bug (2026-11-07) | open |
-| F15 | Account export / import fails (user, 2026-11-18) | bug | works | investigating |
-| F16 | No navigation to onboarding after deleting the account (user, 2026-11-18) | bug | works | investigating |
+| F15 | Account export / import fails (user, 2026-11-18) | **fixed** `36d8b9c` | link-device import fixed too | device test |
+| F17 | Edit: composer not focused, not cleared after sending | **fixed** `84ffbd9` | same shared code, fixed | done |
+| F19 | Deleted message shown as an empty "edited" bubble | **fixed** `c431e02` | same shared code | done |
+| F20 | Details-screen leave / member actions passed `swarm:<id>` to the daemon | **fixed** `3f2292b`, verified | same shared code, fixed | done |
+| F18 | UPnP flapping after the addAccount fix (regression, caught on sims) | **fixed** `eb9cb44` | not affected | done |
+| F16 | No navigation to onboarding after deleting the account (user, 2026-11-18) | **fixed** `36d8b9c` | shared race fixed | device test |
 
 Calls: the user reports calls working on both platforms (2026-11-18), so the call items stay
 out of this round except F14.
@@ -94,3 +98,49 @@ Two simulators, fresh accounts (Alice `d97d48db…`, Bob `17f55b4d…`). Screens
 after 10 s (wait 30 s); taps during a screen's slide-in hit the wrong element — "Accept" landed
 on Decline (log: `PendingRequestsVM: discard`), and the directory result tap was lost — so the
 flows now wait for the animation to end and retry the result tap once.
+
+## After the fixes — two-simulator runs, 2026-11-18
+
+- **Regression caught (F18):** the first run after `36d8b9c` failed at `accept` — Bob never
+  got the invitation. Alice had sent it (`sendTrustRequest … payload=75 bytes`), but her
+  account flapped REGISTERED/TRYING/UNREGISTERED 19 times: passing the caller's details to
+  `addAccount` also passed the shared default UPnP=on, and every IGD search on the simulator
+  restarted the DHT. The old wrapper and jami-client-ios both keep UPnP off; the iOS actual now
+  does too (`eb9cb44`). The Mac's own connection to ns.jami.net / dhtproxy was fine.
+- **F1 fixed:** the edit is applied in place with an "edited" label — no quote bubble.
+  It also exposed **F17**: after "Edit" the composer had no focus (text could not be
+  changed), and kept the old text after sending. Fixed in shared code (`84ffbd9`).
+- **F2 fixed:** Bob's 👍 shows as a reaction chip under his message on Alice's screen.
+- **F3/F6 fixed (live):** with Bob on the list, Alice's "Unread one"/"Unread two" update the
+  row immediately ("Now Unread two") with a **2** badge.
+- **F6 after a restart — new finding, fixed:** restarting Bob showed **3**: "Hello from Alice",
+  read with the chat open, was counted again. The read position lived only in memory; it is
+  now restored from the daemon's per-member `lastDisplayed` (`6928afb`, shared — Android too).
+
+**Not testable here / owed on devices:** notification sound (F9 — check the ring/silent
+switch, Focus, and Settings → Notifications → Jami → Sounds; the app now logs
+`Notification settings: sound=…` once), lock-screen "Mark as read" (F7), export/import/link
+(F15), delete-to-onboarding (F16).
+
+**Android unit tests:** `android-app/src/test` does not compile on HEAD (mockk, JUnit and
+koin-test are missing from that source set; 48 errors) — `NotificationActionReceiverTest` was
+updated but cannot run. Recorded, not fixed in this round.
+
+### Run 6 (07:01–07:15) — first fully green harness run
+
+`setup onboard invite accept chat edit react delete offline`: **all pass** on `3f2292b`.
+Then by hand on the same pair:
+- **F5 (background):** Alice sent to the background (Settings app in front) for 35 s — the log
+  shows `enterBackground`, after 16 s `setAccountActive … active: 0 shutdownConnections: 1` and
+  `accounts released`. Bob sent "Sent while Alice is away"; on return `enterForeground
+  (accounts released: true)` and the message arrived **4 s later, no restart**. (A simulator does
+  not suspend a backgrounded app the way an iPhone does; the device test is still owed.)
+- **F4 (leave):** Bob → conversation details → "Leave group". First attempt did nothing — the
+  daemon got `swarm:e4edc3be…` (**F20**, shared: the details screen stored the prefixed id).
+  After `3f2292b`: `removeConversation … conversationId: 807b51f1…` (bare) and Alice shows
+  **"Bob has left the conversation."** within a second. Member roles now show (Admin badge).
+- **F19:** a deleted message showed as an empty bubble labelled "edited" on both sides — now
+  "<who> deleted a message".
+- Side notes, not fixed: the details screen lists members as hex ids; "Leave group" is the
+  label on a 1:1 too; the "edited" label sits below a reaction chip; event rows written before
+  a peer's name arrived keep the hex id until the chat is reopened.
