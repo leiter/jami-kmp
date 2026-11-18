@@ -18,6 +18,9 @@ package net.jami
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.jami.services.AccountService
 import net.jami.services.ContactService
@@ -43,6 +46,8 @@ private object JamiLifecycle : KoinComponent {
     private val sendQueue: net.jami.services.SendQueueService by inject()
     private val callRinging: net.jami.services.IOSCallRinging by inject()
     private val shortcutPublisher: net.jami.services.ConversationShortcutPublisher by inject()
+    private val callService: net.jami.services.CallService by inject()
+    private val conversationFacade: net.jami.services.ConversationFacade by inject()
 
     fun start() {
         try {
@@ -99,14 +104,48 @@ private object JamiLifecycle : KoinComponent {
      * which [enterForeground] restores.
      */
     fun enterBackground() {
+        Log.i(TAG, "enterBackground")
         try {
             syncManager.startBackgroundSync()
             // Nothing can display presence once the app is suspended, and each subscription
             // costs DHT traffic until it is released. Matches jami-client-ios, which calls
             // subscribeBuddies(..., subscribe: false) in sceneDidEnterBackground.
             contactService.suspendPresence()
+            scheduleAccountRelease()
         } catch (e: Exception) {
             Log.e(TAG, "Exception entering background: $e")
+        }
+    }
+
+    private val lifecycleScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var releaseJob: Job? = null
+    private var accountsReleased = false
+
+    /**
+     * Once the app is suspended its sockets die, but the daemon still believes the account is
+     * connected; nothing repairs the dead DHT and swarm links until the account is reactivated
+     * (`conversation.cpp`: "the conversation stays silent until the process is restarted").
+     * So, as jami-client-ios does (`ConversationsManager.updateBackgroundState`), the accounts
+     * are released while backgrounded and reactivated on return. The release waits out a grace
+     * period first, inside the background task, so a message sent just before leaving still
+     * goes out; it is skipped while a call is running.
+     */
+    private fun scheduleAccountRelease() {
+        releaseJob?.cancel()
+        releaseJob = lifecycleScope.launch {
+            delay(BACKGROUND_GRACE_MS)
+            if (callService.currentCalls.value.isNotEmpty()) {
+                Log.i(TAG, "background: a call is running — accounts stay active")
+            } else {
+                val bridge = daemonBridge as? net.jami.services.DaemonBridge
+                for (accountId in daemonBridge.getAccountList()) {
+                    bridge?.setAccountActive(accountId, active = false, shutdownConnections = true)
+                        ?: daemonBridge.setAccountActive(accountId, false)
+                }
+                accountsReleased = true
+                Log.i(TAG, "background: accounts released (connections shut down)")
+            }
+            syncManager.stopBackgroundSync()
         }
     }
 
@@ -124,8 +163,18 @@ private object JamiLifecycle : KoinComponent {
      * jami-client-ios, whose scene-foreground handlers only resubscribe presence.
      */
     fun enterForeground() {
+        Log.i(TAG, "enterForeground (accounts released: $accountsReleased)")
         try {
+            releaseJob?.cancel()
+            releaseJob = null
             syncManager.stopBackgroundSync()
+            if (accountsReleased) {
+                accountsReleased = false
+                // Reactivation is what makes the daemon reconnect and repair its swarms; then
+                // reload the list, as jami-client-ios does in updateForegroundState.
+                accountService.setAccountsActive(true)
+                conversationFacade.refreshAllConversations()
+            }
             contactService.resumePresence()
         } catch (e: Exception) {
             Log.e(TAG, "Exception entering foreground: $e")
@@ -139,6 +188,9 @@ private object JamiLifecycle : KoinComponent {
             Log.e(TAG, "Exception during daemon shutdown: $e")
         }
     }
+
+    /** Time a just-backgrounded app keeps its accounts, inside the ~30 s background task. */
+    private const val BACKGROUND_GRACE_MS = 15_000L
 
     private const val TAG = "IOSApplicationHelper"
 }

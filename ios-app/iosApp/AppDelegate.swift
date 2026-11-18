@@ -86,15 +86,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         return true
     }
 
-    func applicationDidEnterBackground(_ application: UIApplication) {
-        // Requests the ~30s execution window iOS allows so the daemon can finish
-        // in-flight work instead of being suspended mid-operation.
-        IOSApplicationHelperKt.jamiDidEnterBackground()
-    }
-
-    func applicationWillEnterForeground(_ application: UIApplication) {
-        IOSApplicationHelperKt.jamiWillEnterForeground()
-    }
+    // Background / foreground: handled by SceneDelegate. This app uses scenes, and iOS then
+    // never calls applicationDidEnterBackground / applicationWillEnterForeground here — the
+    // hooks that used to live here never ran, so a backgrounded app kept dead connections
+    // until it was restarted.
 
     func applicationWillTerminate(_ application: UIApplication) {
         IOSApplicationHelperKt.stopJami()
@@ -209,6 +204,17 @@ final class SceneDelegate: NSObject, UIWindowSceneDelegate {
         if let item = connectionOptions.shortcutItem {
             _ = SceneDelegate.open(item)
         }
+    }
+
+    /// The app left the foreground: requests the ~30 s background window and, after a grace
+    /// period, releases the accounts (see IOSApplicationHelper.enterBackground).
+    func sceneDidEnterBackground(_ scene: UIScene) {
+        IOSApplicationHelperKt.jamiDidEnterBackground()
+    }
+
+    /// The app is coming back: reactivates the accounts so the daemon reconnects and resyncs.
+    func sceneWillEnterForeground(_ scene: UIScene) {
+        IOSApplicationHelperKt.jamiWillEnterForeground()
     }
 
     /// Quick action while the app is already running or suspended.
