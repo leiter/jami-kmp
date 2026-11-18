@@ -226,3 +226,28 @@ The Android APK must be rebuilt from this branch for the Android items (shared f
   and reconnected every few seconds; the invitation went out during a reconnect); run 8 on the
   same build passed every phase.
 - Still open: the call buttons remain in an ended chat; the leave has no confirmation dialog.
+
+## Video call test session (build 48, iPhone ↔ Pixel, 2026-11-18)
+Plan: `~/.claude/plans/ios-video-receive-end.md` (R1–R6, E1–E4). Results reported by the user:
+
+- **Test 1** (Pixel video-calls, answered in Jami's screen): Jami's screen and a banner both
+  show; no own preview while ringing; the Pixel's image sometimes shows, then goes black with the
+  controls; the iOS call screen takes over and Jami's screen is black and unresponsive; it
+  sometimes rings on after pickup. The Pixel sees the iPhone. Hang-up on the iPhone works.
+- **Test 2** (answered by tapping the notification): the iPhone shows **its own camera full
+  screen** as the received video; taps do not bring the controls back.
+- **Test 3** (hang-ups): all four directions end both sides, and a new call can be placed right
+  away. But the iPhone hanging up a Pixel-placed call **leaves the ringing screen** on the iPhone,
+  and the **Android notification's "Hang up" does nothing**.
+
+Causes and fixes (`1cbbc3b`, build 49):
+| Symptom | Cause | Platform |
+|---|---|---|
+| Own camera as remote video, then black | `CallViewModel.handleVideoEvent` took every started sink as remote, the daemon's `camera://…` sink included | shared |
+| No own preview | iOS `addPreviewVideoSurface` only stored the view; nothing drew the camera (`LocalPreviewView` now) | iOS |
+| Controls cannot be brought back | the interactive UIKit interop view swallowed the tap | iOS |
+| Rings on, iOS call screen takes over | an answer in the app never reached CallKit (R2); now a `CXAnswerCallAction` | iOS |
+| Notification "Hang up" dead | `hangUpAny` hung up a 1:1 call's one-participant wrapper as a daemon conference | shared (Android visible) |
+| Ringing screen stays after hang-up | `initIncoming` showed a call that was already gone as ringing | shared |
+
+Still open: R1 (answering via CallKit turns our video off), R3, R4, R5, E1 (see the plan).
