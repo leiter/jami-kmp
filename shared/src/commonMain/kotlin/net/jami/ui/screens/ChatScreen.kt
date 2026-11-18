@@ -376,6 +376,11 @@ fun ChatScreen(
     LaunchedEffect(state.replyingTo?.messageId) {
         if (state.replyingTo != null) runCatching { inputFocusRequester.requestFocus() }
     }
+    // Editing puts the text in the composer; focus it too, as a reply does — without focus
+    // the keyboard stays down and the text cannot be changed before sending.
+    LaunchedEffect(editingMessageId) {
+        if (editingMessageId != null) runCatching { inputFocusRequester.requestFocus() }
+    }
 
     // Camera permission and capture state
     var requestCameraPermission by remember { mutableStateOf(false) }

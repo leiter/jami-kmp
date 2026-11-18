@@ -1010,6 +1010,8 @@ class ChatViewModel(
      * Edit a message by its ID.
      */
     fun editMessage(messageId: String, newText: String) {
+        // The edited text was put in the composer; it used to stay there after sending.
+        _state.update { it.copy(inputText = "") }
         scope.launch {
             val accountId = currentAccountId ?: return@launch
             val conversationId = currentConversationId ?: return@launch

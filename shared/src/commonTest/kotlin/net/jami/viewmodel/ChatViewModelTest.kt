@@ -167,6 +167,16 @@ class ChatViewModelTest {
     }
 
     @Test
+    fun sendingAnEditClearsTheComposer() = runTest {
+        val stub = StubDaemonBridge()
+        val vm = makeVm(stub, this)
+        vm.updateInput("updated text")
+        vm.editMessage("msg_001", "updated text")
+        advanceUntilIdle()
+        kotlin.test.assertEquals("", vm.state.value.inputText)
+    }
+
+    @Test
     fun loadMoreWithNoConversationDoesNotCrash() = runTest {
         val stub = StubDaemonBridge()
         val vm = makeVm(stub, this)
