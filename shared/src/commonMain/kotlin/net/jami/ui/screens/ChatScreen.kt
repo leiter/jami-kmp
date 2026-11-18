@@ -198,6 +198,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.text.font.FontWeight
 import net.jami.ui.viewmodel.ReplyPreview
 import jami_kmp.shared.generated.resources.Res
+import jami_kmp.shared.generated.resources.conversation_reply_you
+import jami_kmp.shared.generated.resources.conversation_message_deleted
 import jami_kmp.shared.generated.resources.*
 import net.jami.ui.TestTags
 import org.jetbrains.compose.resources.getString
@@ -753,7 +755,11 @@ fun ChatScreen(
                                 onReplyQuoteClick = { viewModel.scrollToMessage(it) },
                                 onRetry = { viewModel.retryFileTransfer(message.id) },
                             )
-                            else -> ChatBubble(
+                            // A deleted message is an edit to an empty body; it used to render as
+                            // an empty bubble labelled "edited". Shown as the reference does.
+                            else -> if (message.type == MessageType.Text && message.isEdited && message.text.isBlank()) {
+                                DeletedMessage(message)
+                            } else ChatBubble(
                                 message = message,
                                 isHighlighted = message.id == state.highlightedMessageId,
                                 showLinkPreviews = showLinkPreviews,
@@ -1521,6 +1527,27 @@ private fun ChatBubble(
                 }
             }
         }
+    }
+}
+
+/** "<who> deleted a message" in place of the message, styled like a system line. */
+@Composable
+private fun DeletedMessage(message: MessageItem) {
+    val who = if (message.isOutgoing || message.author.isBlank()) {
+        stringResource(Res.string.conversation_reply_you)
+    } else message.author
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = JamiTheme.spacing.s),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(Res.string.conversation_message_deleted, who),
+            style = JamiTheme.typography.bodySmall,
+            color = JamiTheme.colors.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
