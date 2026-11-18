@@ -227,6 +227,11 @@ data class ChatState(
      * "Found 0 device(s)" because the daemon treats it as an unknown ring ID.
      */
     val peerUri: String = "",
+    /**
+     * False when the only party to call would be this account itself (a self-conversation):
+     * the call buttons are hidden instead of dialling the own id.
+     */
+    val canCall: Boolean = true,
     /** True for SIP/legacy conversations that do not support messaging. */
     val isLegacy: Boolean = false,
     /**
@@ -465,6 +470,7 @@ class ChatViewModel(
                     isLoadingMore = false,
                     replyingTo = null,
                     peerUri = peerUri,
+                    canCall = conversation?.isSelfConversation != true && !account.isOwn(peerUri),
                     isLegacy = isLegacy,
                 )
                 // Before the history load below, which suspends until the daemon answers:

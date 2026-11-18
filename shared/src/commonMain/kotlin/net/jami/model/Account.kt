@@ -72,6 +72,18 @@ class Account(
             details[ConfigKey.ACCOUNT_USERNAME.key] ?: ""
         }
 
+    /**
+     * True when [uri] (any form: bare hex, `jami:…`, `ring:…`) is this account's own id.
+     * Calling or inviting yourself makes no sense and the daemon does not stop it: a call to
+     * your own id rang your own device and failed with 500, and a self-conversation never syncs.
+     */
+    fun isOwn(uri: String): Boolean {
+        if (username.isEmpty() || uri.isBlank()) return false
+        return Uri.fromString(uri).rawRingId.equals(Uri.fromString(username).rawRingId, ignoreCase = true)
+    }
+
+    fun isOwn(uri: Uri): Boolean = isOwn(uri.uri)
+
     val alias: String
         get() = details[ConfigKey.ACCOUNT_ALIAS.key] ?: ""
 

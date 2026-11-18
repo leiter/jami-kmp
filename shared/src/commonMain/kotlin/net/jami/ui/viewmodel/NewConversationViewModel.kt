@@ -132,7 +132,7 @@ class NewConversationViewModel(
         val account = accountService.currentAccount.value ?: return
         val accountId = account.accountId
         val filesDir = deviceRuntimeService.getDataPath()
-        val convResults = account.getConversations().mapNotNull { conversation ->
+        val convResults = account.getConversations().filterNot { it.isSelfConversation }.mapNotNull { conversation ->
             val contact = conversation.contactOrNull
             val displayName = conversation.profileFlow.value.displayName?.takeIf { it.isNotBlank() }
                 ?: contact?.displayUsername
@@ -221,7 +221,7 @@ class NewConversationViewModel(
         val lowerQuery = query.lowercase()
 
         // Filter existing conversations by query
-        val convResults = account.getConversations().mapNotNull { conversation ->
+        val convResults = account.getConversations().filterNot { it.isSelfConversation }.mapNotNull { conversation ->
             val contact = conversation.contactOrNull
             val displayName = conversation.profileFlow.value.displayName?.takeIf { it.isNotBlank() }
                 ?: contact?.displayUsername
@@ -252,6 +252,10 @@ class NewConversationViewModel(
         // Route public directory lookup: hex ID / username@server / plain name
         _state.value = _state.value.copy(isLoading = true)
         when {
+            isJamiId(query) && account.isOwn(query) -> {
+                // Your own id: nothing to start a conversation with.
+                _state.value = _state.value.copy(publicDirectoryResults = emptyList(), isLoading = false)
+            }
             isJamiId(query) -> {
                 // Show immediately as a tappable result; also resolve username via nameserver
                 _state.value = _state.value.copy(
@@ -428,6 +432,10 @@ class NewConversationViewModel(
         // Match by the original query sent to daemon, or by the resolved name/address
         if (event.query != currentQuery && event.name != currentQuery && event.address != currentQuery) return
 
+        if (accountService.currentAccount.value?.isOwn(event.address) == true) {
+            _state.value = _state.value.copy(isLoading = false)
+            return
+        }
         if (event.state == 0 && event.address.isNotEmpty()) {
             val newResult = ContactItem(
                 uri = event.address,
@@ -458,8 +466,10 @@ class NewConversationViewModel(
     private fun handleSearchResults(event: AccountEvent.UserSearchEnded) {
         if (event.query != _state.value.searchQuery) return
 
+        val account = accountService.currentAccount.value
         val results = event.results.mapNotNull { result ->
             val address = result["id"] ?: return@mapNotNull null
+            if (account?.isOwn(address) == true) return@mapNotNull null
             val username = result["username"] ?: ""
             val firstName = result["firstName"] ?: ""
             val lastName = result["lastName"] ?: ""

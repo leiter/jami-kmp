@@ -198,6 +198,9 @@ class CallService(
         conversationUri: Uri? = null
     ): Call {
         Log.d(TAG, "placeCall: accountId=$accountId contactUri=${contactUri.uri} scheme=${contactUri.scheme} hasVideo=$hasVideo conversationUri=${conversationUri?.uri}")
+        if (!contactUri.isSwarm && accountService.getAccount(accountId)?.isOwn(contactUri) == true) {
+            throw IllegalStateException("Refusing to call the account's own id")
+        }
         val mediaList = if (hasVideo) {
             listOf(Media.DEFAULT_AUDIO, Media.DEFAULT_VIDEO)
         } else {

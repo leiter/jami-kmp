@@ -269,6 +269,14 @@ class Conversation(
     val isGroup: Boolean
         get() = isSwarm && contacts.size > 2
 
+    /**
+     * A 1:1 swarm whose only member is this account — a conversation with oneself. Seen on a
+     * device (A holding a swarm with its own fingerprint as admin and invited); it never syncs
+     * and its call buttons dialled the own account. Hidden from search, no call buttons.
+     */
+    val isSelfConversation: Boolean
+        get() = isSwarm && !isGroup && contacts.isNotEmpty() && contacts.all { it.isUser }
+
     val isLegacy: Boolean
         get() = mode == Mode.Legacy
 

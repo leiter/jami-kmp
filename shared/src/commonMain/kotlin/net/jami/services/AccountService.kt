@@ -917,6 +917,10 @@ class AccountService(
      * Without it the peer never hears of us. A contact who already accepted is not re-invited.
      */
     fun addContact(accountId: String, uri: String) {
+        if (getAccount(accountId)?.isOwn(uri) == true) {
+            Log.w(TAG, "addContact: refusing the account's own id")
+            return
+        }
         daemonBridge.addContact(accountId, uri)
         val peer = Uri.fromString(uri).rawRingId
         if (daemonBridge.getContactDetails(accountId, peer)["confirmed"] == "true") return
@@ -991,6 +995,7 @@ class AccountService(
      * Send a trust request.
      */
     fun sendTrustRequest(accountId: String, to: Uri, payload: ByteArray = ByteArray(0)) {
+        if (getAccount(accountId)?.isOwn(to) == true) return
         daemonBridge.sendTrustRequest(accountId, to.rawRingId, payload)
     }
 
@@ -1181,7 +1186,9 @@ class AccountService(
      * Add members to a conversation.
      */
     fun addConversationMembers(accountId: String, conversationId: String, uris: List<Uri>) {
+        val account = getAccount(accountId)
         for (uri in uris) {
+            if (account?.isOwn(uri) == true) continue
             daemonBridge.addConversationMember(accountId, conversationId, uri.rawRingId)
         }
     }

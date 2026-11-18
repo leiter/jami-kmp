@@ -598,7 +598,9 @@ fun ChatScreen(
                             )
                         }
                     } else {
-                        // Normal mode: call buttons + overflow
+                        // Normal mode: call buttons + overflow. No call buttons when the only
+                        // party would be this account itself.
+                        if (state.canCall) {
                         IconButton(onClick = { onCallClick(state.peerUri.ifEmpty { conversationId }, false) }) {
                             Icon(
                                 imageVector = Icons.Default.Call,
@@ -612,6 +614,7 @@ fun ChatScreen(
                                 contentDescription = stringResource(Res.string.content_desc_video_call),
                                 tint = JamiTheme.colors.onSurface,
                             )
+                        }
                         }
                         Box {
                             IconButton(onClick = { overflowMenuExpanded = true }) {
