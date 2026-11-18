@@ -240,7 +240,7 @@ Plan: `~/.claude/plans/ios-video-receive-end.md` (R1–R6, E1–E4). Results rep
   away. But the iPhone hanging up a Pixel-placed call **leaves the ringing screen** on the iPhone,
   and the **Android notification's "Hang up" does nothing**.
 
-Causes and fixes (`1cbbc3b`, build 49):
+Causes and fixes (`1cbbc3b`, TestFlight build 50):
 | Symptom | Cause | Platform |
 |---|---|---|
 | Own camera as remote video, then black | `CallViewModel.handleVideoEvent` took every started sink as remote, the daemon's `camera://…` sink included | shared |
