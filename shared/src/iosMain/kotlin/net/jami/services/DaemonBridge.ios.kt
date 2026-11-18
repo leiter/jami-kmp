@@ -20,6 +20,7 @@ package net.jami.services
 
 import kotlinx.cinterop.*
 import net.jami.bridge.*
+import net.jami.model.ConfigKey
 import net.jami.model.MediaAttribute
 import net.jami.model.SwarmMessage
 import net.jami.utils.Log
@@ -116,7 +117,14 @@ actual class DaemonBridge() : DaemonBridgeApi, IOSVideoFrameBridge {
         // fresh RING map from the display name and password alone, dropping Account.archivePath
         // (archive import) and Account.archiveURL = "jami-auth" (device linking) — each such
         // import silently created a brand-new identity instead.
-        return bridge.addAccount(details.toNSDictionary()) ?: ""
+        // UPnP stays off on iOS, as the old wrapper path always set it and as jami-client-ios
+        // defaults it: on the simulator every IGD search restarted the DHT, and the account
+        // flapped REGISTERED/UNREGISTERED often enough that an invitation never arrived
+        // (two-simulator run, 2026-11-18). The shared default (on) suits Android.
+        val iosDetails = if (details.containsKey(ConfigKey.ACCOUNT_UPNP_ENABLE.key)) {
+            details + (ConfigKey.ACCOUNT_UPNP_ENABLE.key to "false")
+        } else details
+        return bridge.addAccount(iosDetails.toNSDictionary()) ?: ""
     }
 
     override fun removeAccount(accountId: String) {
