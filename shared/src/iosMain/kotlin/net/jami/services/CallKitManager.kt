@@ -119,6 +119,15 @@ class CallKitManager(
     private val callToAccount = mutableMapOf<String, String>()
 
     /**
+     * Incoming calls whose answer CallKit knows of: answered through CallKit, or reported to it
+     * after an answer in the app. See [reportAnsweredInApp].
+     */
+    private val answerKnownToCallKit = mutableSetOf<String>()
+
+    /** Incoming calls answered in the app whose CXAnswerCallAction is still on its way. */
+    private val answeredInApp = mutableSetOf<String>()
+
+    /**
      * A CallKit call reported straight off a VoIP push, before the daemon knows about it.
      *
      * iOS 13+ terminates the app if a PushKit VoIP push does not produce a
@@ -243,13 +252,15 @@ class CallKitManager(
                 }
             }
             Call.CallStatus.CURRENT -> {
-                // Outgoing call connected — inform CallKit it is now live. Outgoing only: an
-                // answered incoming call is already live to CallKit through performAnswerCallAction,
-                // and this used to report it as a connected *outgoing* call as well.
+                // Outgoing call connected — inform CallKit it is now live. An answered incoming
+                // call is live to CallKit through performAnswerCallAction — but only if it was
+                // answered there; see reportAnsweredInApp.
                 if (!call.isIncoming) {
                     callToUuid[callId]?.let { uuid ->
                         provider.reportOutgoingCallWithUUID(uuid, connectedAtDate = null)
                     }
+                } else {
+                    reportAnsweredInApp(callId)
                 }
             }
             Call.CallStatus.OVER -> {
@@ -371,6 +382,7 @@ class CallKitManager(
         when {
             pending.answered -> {
                 Log.d(TAG, "Applying deferred answer to $callId")
+                answerKnownToCallKit += callId
                 scope.launch { callService.accept(accountId, callId, hasVideo = false) }
             }
             pending.rejected -> {
@@ -440,7 +452,30 @@ class CallKitManager(
         }
     }
 
+    /**
+     * An incoming call answered in Jami's own screen never reached CallKit, which went on
+     * ringing and after a while put its own call screen over the app, leaving Jami's black and
+     * unusable (iPhone, 2026-11-18). Telling CallKit with an answer transaction is what
+     * Android's Telecom gets from `setActive()`. Its performAnswerCallAction must not accept the
+     * call a second time, hence [answeredInApp].
+     */
+    private fun reportAnsweredInApp(callId: String) {
+        val uuid = callToUuid[callId] ?: return
+        if (callId in answerKnownToCallKit) return
+        answerKnownToCallKit += callId
+        answeredInApp += callId
+        Log.d(TAG, "Answered in the app, telling CallKit: $callId")
+        callController.requestTransaction(CXTransaction(action = CXAnswerCallAction(callUUID = uuid))) { error ->
+            if (error != null) {
+                Log.e(TAG, "Answer transaction failed for $callId: ${error.localizedDescription}")
+                answeredInApp -= callId
+            }
+        }
+    }
+
     private fun endTrackedCall(callId: String, reason: Long) {
+        answerKnownToCallKit -= callId
+        answeredInApp -= callId
         val uuid = callToUuid.remove(callId) ?: return
         uuidToCall.remove(uuid.UUIDString)
         callToAccount.remove(callId)
@@ -452,6 +487,8 @@ class CallKitManager(
 
     override fun providerDidReset(provider: CXProvider) {
         Log.d(TAG, "providerDidReset — clearing all tracked calls")
+        answerKnownToCallKit.clear()
+        answeredInApp.clear()
         callToUuid.clear()
         uuidToCall.clear()
         callToAccount.clear()
@@ -476,6 +513,12 @@ class CallKitManager(
         if (callId == null || accountId == null) {
             Log.e(TAG, "performAnswerCallAction: unknown uuid=${performAnswerCallAction.callUUID.UUIDString}")
             performAnswerCallAction.fail()
+            return
+        }
+        answerKnownToCallKit += callId
+        if (answeredInApp.remove(callId)) {
+            Log.d(TAG, "CallKit confirms the answer given in the app: $callId")
+            performAnswerCallAction.fulfill()
             return
         }
         Log.d(TAG, "Answer via CallKit: $callId")
@@ -513,6 +556,8 @@ class CallKitManager(
             }
         }
         // Remove eagerly — the callUpdates OVER event will also fire but find nothing to remove
+        answerKnownToCallKit -= callId
+        answeredInApp -= callId
         uuidToCall.remove(performEndCallAction.callUUID.UUIDString)
         callToUuid.remove(callId)
         callToAccount.remove(callId)

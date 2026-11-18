@@ -216,6 +216,19 @@ class CallViewModelTest {
         vm.onCleared() // cancel duration/video-loss timers before runTest cleanup
     }
 
+    /** A screen opened for a call that already ended used to show the ringing screen forever. */
+    @Test
+    fun aScreenForACallThatIsGoneEndsAtOnce() = runTest {
+        val stub = StubDaemonBridge()
+        val scope = viewModelScope()
+        val (vm, _, accountService) = makeVm(stub, scope)
+        prepareAccountInService(stub, accountService)
+        vm.initIncoming("call_gone")
+        runCurrent()
+        assertIs<CallMode.Ended>(vm.state.value.callMode)
+        vm.onCleared()
+    }
+
     @Test
     fun busyCallSetsHangupReasonBusy() = runTest {
         val stub = StubDaemonBridge()

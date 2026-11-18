@@ -115,6 +115,9 @@ actual class HardwareService : KoinComponent {
         videoBridge?.layoutVideoLayer(layer)
     }
     private var previewSurface: UIView? = null
+    /** The camera preview drawn into [previewSurface], and what keeps it on the live session. */
+    private var previewView: net.jami.services.LocalPreviewView? = null
+    private var previewJob: kotlinx.coroutines.Job? = null
     private var speakerphoneOn = false
     private var routeObserver: Any? = null
     private var pathMonitor: nw_path_monitor_t = null
@@ -458,12 +461,37 @@ actual class HardwareService : KoinComponent {
         }
     }
 
+    /**
+     * Draws the local camera into [holder]: the ringing screen's full-screen preview and the
+     * small in-call one. Only one is shown at a time, so a new surface replaces the old.
+     */
     actual fun addPreviewVideoSurface(holder: Any, conference: Conference?) {
-        previewSurface = holder as? UIView
+        val view = holder as? UIView ?: return
+        removePreviewVideoSurface()
+        previewSurface = view
+        val preview = net.jami.services.LocalPreviewView { cameraService.previewLayerForCurrentSession() }
+        preview.setFrame(view.bounds)
+        view.addSubview(preview)
+        previewView = preview
+        preview.refresh()
+        // The camera opens after the screen is composed and reopens on a switch; follow it.
+        previewJob = scope.launch { cameraService.cameraState.collect { previewView?.refresh() } }
+        Log.d(tag, "Local preview attached")
+    }
+
+    /** Removes the preview only if [holder] is still the surface showing it. */
+    fun removePreviewVideoSurface(holder: Any) {
+        if (previewSurface === holder) removePreviewVideoSurface()
     }
 
     actual fun updatePreviewVideoSurface(conference: Conference) {}
-    actual fun removePreviewVideoSurface() { previewSurface = null }
+    actual fun removePreviewVideoSurface() {
+        previewJob?.cancel()
+        previewJob = null
+        previewView?.removeFromSuperview()
+        previewView = null
+        previewSurface = null
+    }
     actual fun addFullScreenPreviewSurface(holder: Any) { addPreviewVideoSurface(holder, null) }
     actual fun removeFullScreenPreviewSurface() { removePreviewVideoSurface() }
 

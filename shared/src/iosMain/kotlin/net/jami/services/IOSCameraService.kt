@@ -507,6 +507,16 @@ class IOSCameraService(
 
     fun getPreviewLayer(): AVCaptureVideoPreviewLayer? = previewLayer
 
+    /**
+     * The preview layer for the session open now, made when there is none or the one there
+     * belongs to a session since closed. Null while no camera is open.
+     */
+    fun previewLayerForCurrentSession(): AVCaptureVideoPreviewLayer? {
+        val session = captureSession ?: return null
+        previewLayer?.let { if (it.session === session) return it }
+        return createPreviewLayer()?.also { updateVideoOrientation() }
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     // Orientation Handling
     // ══════════════════════════════════════════════════════════════════════════

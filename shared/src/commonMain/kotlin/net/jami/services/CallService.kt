@@ -419,7 +419,11 @@ class CallService(
      * conference running, so the call never ends for the host.
      */
     fun hangUpAny(accountId: String, callOrConfId: String) {
-        val confId = conferences[callOrConfId]?.id ?: calls[callOrConfId]?.confId
+        // A 1:1 call shown on a call screen also has an entry here — a one-participant wrapper
+        // under its own call id (conferenceFor). The daemon has no conference by that id, so
+        // hanging it up as one did nothing: the notification's "Hang up" was dead (2026-11-18).
+        val conf = conferences[callOrConfId]?.takeUnless { it.isSimpleCall }
+        val confId = conf?.id ?: calls[callOrConfId]?.confId
         if (confId != null) hangUpConference(accountId, confId)
         else hangUp(accountId, callOrConfId)
     }

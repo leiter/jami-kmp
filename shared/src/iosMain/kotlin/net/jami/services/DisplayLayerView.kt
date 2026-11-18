@@ -71,3 +71,42 @@ internal class DisplayLayerView private constructor(
         }
     }
 }
+
+/**
+ * Hosts the local camera preview: an `AVCaptureVideoPreviewLayer` on the capture session,
+ * sized to the view. The session may not exist yet when the call screen is composed (the
+ * camera opens asynchronously) and is replaced when the camera is reopened, so [refresh] is
+ * called again on every camera state change and swaps in a layer for the current session.
+ *
+ * Until 2026-11-18 the call screen's preview views were empty: `addPreviewVideoSurface` only
+ * kept the view, and nothing drew the camera into it.
+ */
+@OptIn(ExperimentalForeignApi::class)
+internal class LocalPreviewView(
+    private val provide: () -> platform.AVFoundation.AVCaptureVideoPreviewLayer?,
+) : UIView(platform.CoreGraphics.CGRectMake(0.0, 0.0, 0.0, 0.0)) {
+
+    private var current: platform.AVFoundation.AVCaptureVideoPreviewLayer? = null
+
+    init {
+        backgroundColor = UIColor.blackColor
+        userInteractionEnabled = false
+        autoresizingMask = UIViewAutoresizingFlexibleWidth or UIViewAutoresizingFlexibleHeight
+    }
+
+    /** Main thread only. */
+    fun refresh() {
+        val wanted = provide()
+        if (wanted !== current) {
+            current?.let { if (it.superlayer === layer) it.removeFromSuperlayer() }
+            wanted?.let { layer.addSublayer(it) }
+            current = wanted
+        }
+        setNeedsLayout()
+    }
+
+    override fun layoutSubviews() {
+        super.layoutSubviews()
+        current?.setFrame(bounds)
+    }
+}

@@ -395,6 +395,13 @@ class CallViewModel(
             Call.CallStatus.BUSY -> CallMode.Ended(
                 call.hangupReason.takeIf { it != Call.HangupReason.NONE } ?: Call.HangupReason.REMOTE
             )
+            // An ended call is removed from CallService, so a screen opened for it afterwards
+            // (a late notification tap or navigation) finds nothing. It used to show the
+            // ringing screen, which then never went away (iPhone, 2026-11-18).
+            null -> {
+                Log.w(TAG, "initIncoming: call $callId is gone; closing the screen")
+                CallMode.Ended(Call.HangupReason.REMOTE)
+            }
             else -> CallMode.Incoming
         }
 
@@ -1042,6 +1049,17 @@ class CallViewModel(
         val callId = currentCallId ?: return
         Log.d(TAG, "handleVideoEvent: sinkId=${event.sinkId} started=${event.started} ${event.width}x${event.height} callId=$callId")
 
+        // The daemon also announces a sink for our own camera input ("camera://…"). Taking
+        // every started sink as the remote picture showed the iPhone its own camera full
+        // screen, and turned black when that sink stopped (2026-11-18). The native iOS client
+        // matches sinks to the call by id the same way.
+        if (!isRemoteVideoSink(event.sinkId, _state.value.remoteVideoSinkId,
+                listOfNotNull(currentCallId, currentConference?.id))
+        ) {
+            Log.d(TAG, "handleVideoEvent: ${event.sinkId} is not this call's remote video; ignored")
+            return
+        }
+
         if (event.started && event.width > 0 && event.height > 0) {
             // Remote video started — update last event time for loss detection
             lastRemoteVideoEventTime = net.jami.utils.currentTimeMillis()
@@ -1263,4 +1281,20 @@ internal fun callPeerTitle(
         ?: rawId
     val subtitle = if (name != null && name != title) name else ""
     return title to subtitle
+}
+
+/**
+ * Whether the daemon sink [sinkId] is the remote picture of the call named by [callIds] (its call
+ * and conference ids), given the sink shown now ([shownSinkId], empty for none).
+ *
+ * - A sink fed by one of our own inputs is named by its URI ("camera://…", "file://…"); it is
+ *   never remote video.
+ * - Remote sinks are named after the call or conference ("<id>" or "<id>_video_0"). Once such a
+ *   sink is shown, a sink that is not the call's does not replace it.
+ */
+internal fun isRemoteVideoSink(sinkId: String, shownSinkId: String, callIds: List<String>): Boolean {
+    if (sinkId.isEmpty() || "://" in sinkId) return false
+    fun ofCall(id: String) = callIds.any { it.isNotEmpty() && id.startsWith(it) }
+    if (shownSinkId.isNotEmpty() && shownSinkId != sinkId && ofCall(shownSinkId) && !ofCall(sinkId)) return false
+    return true
 }

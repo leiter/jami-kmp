@@ -233,6 +233,29 @@ class CallServiceIntegrationTest {
         assertFalse(callService.getCall("call_out")!!.isIncoming, "we placed this one")
     }
 
+    /**
+     * The Android notification's "Hang up" uses hangUpAny. Once a call screen has asked for the
+     * call's conference, a 1:1 call has a one-participant wrapper under its own id, and it was
+     * hung up as a conference — which the daemon does not know, so nothing happened.
+     */
+    @Test
+    fun hangUpAnyEndsAOneToOneCallThatHasAWrapper() = runTest {
+        val stub = StubDaemonBridge()
+        val (_, callService) = makeServices(stub, this)
+        callService.onCallStateChanged("acc1", "call_1to1", "CURRENT", 0)
+        advanceUntilIdle()
+        // What a call screen does: this creates the wrapper.
+        val collector = launch { callService.getConfUpdates("call_1to1").collect {} }
+        advanceUntilIdle()
+
+        callService.hangUpAny("acc1", "call_1to1")
+        advanceUntilIdle()
+        collector.cancel()
+
+        assertTrue(("acc1" to "call_1to1") in stub.hungUpCalls, "hung up: ${stub.hungUpCalls}")
+        assertTrue(stub.hungUpConferences.isEmpty(), "conferences: ${stub.hungUpConferences}")
+    }
+
     @Test
     fun hangUpCallsDaemonBridge() = runTest {
         val stub = StubDaemonBridge()
