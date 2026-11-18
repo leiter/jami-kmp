@@ -190,7 +190,11 @@ class ContactDetailsViewModel(
                 }
                 val isSwarm = conversation?.isSwarm == true
                 val isGroup = conversation?.isGroup == true
-                val swarmId = if (isSwarm) conversation!!.uri.uri else ""
+                // The bare id: every daemon call made with it (leave, add/remove/block member,
+                // rename) expects it. `uri.uri` carried the "swarm:" prefix, and the daemon
+                // matched no conversation — "Leave group" on a 1:1 did nothing (simulators,
+                // 2026-11-18: `removeConversation … conversationId: swarm:e4edc3be…`).
+                val swarmId = if (isSwarm) conversation!!.uri.rawRingId else ""
                 val isAdmin = conversation?.isUserGroupAdmin() == true
                 val memberUris = if (isSwarm) {
                     conversation!!.roles.keys.toList()

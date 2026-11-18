@@ -125,6 +125,31 @@ class ContactDetailsViewModelTest {
     }
 
     /**
+     * "Leave group" passed the daemon `swarm:<id>`, which matches no conversation, so leaving
+     * from this screen did nothing (two simulators, 2026-11-18). The daemon gets the bare id.
+     */
+    @Test
+    fun leavingFromDetailsPassesTheBareSwarmId() = runTest {
+        val stub = StubDaemonBridge()
+        val accountService = makeAccountService(stub, this)
+        val contactService = makeContactService(stub, accountService, this)
+        val callService = makeCallService(stub, accountService, scope = this)
+        val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
+        val account = prepareAccountInService(stub, accountService)
+        val conv = account.newSwarm(SWARM_ID, net.jami.model.Conversation.Mode.OneToOne)
+        conv.addContact(net.jami.model.Contact(net.jami.model.Uri.fromString(PEER_ID)))
+        account.conversationStarted(conv)
+
+        val vm = ContactDetailsViewModel(accountService, contactService, facade, StubDeviceRuntimeService(), viewModelScope())
+        vm.loadContact("swarm:$SWARM_ID")
+        advanceUntilIdle()
+        vm.leaveConversation()
+        advanceUntilIdle()
+
+        assertEquals(SWARM_ID, stub.removedConversations.single().second)
+    }
+
+    /**
      * The screen stayed open on a conversation it had just deleted (seen on a device
      * 2026-11-07): the delete looked like it had done nothing. The reference pops back after
      * delete, block, unblock and leave alike.
