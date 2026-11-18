@@ -687,6 +687,10 @@ class CallService(
 
                 // Get or create call
                 var call = calls[callId]
+                if (call == null && callId in refusedCalls) {
+                    if (callState == CallStatus.OVER || callState == CallStatus.FAILURE) refusedCalls.remove(callId)
+                    return@withLock
+                }
                 if (call != null) {
                     call.setCallState(callState)
                 } else if (callState != CallStatus.OVER && callState != CallStatus.FAILURE) {
@@ -716,6 +720,16 @@ class CallService(
                         _pendingCallNavId.value = callId
                     }
                     val wePlacedIt = isOurConferenceDial || callId in locallyPlacedCalls
+                    // A call "Block unknown contacts" refuses must reach no consumer. The state
+                    // change usually beats the incomingCall signal, and creating the call here
+                    // announced it to Telecom / CallKit before onIncomingCall refused it — a
+                    // phantom call on the system call screen (Pixel, 2026-11-07).
+                    if (!wePlacedIt && (callId in refusedCalls ||
+                            refusesAsStranger(accountId, peerNumber))) {
+                        refusedCalls.add(callId)
+                        Log.d(TAG, "onCallStateChanged: $callId is refused (unknown caller); not announced")
+                        return@withLock
+                    }
                     val callType = if (wePlacedIt) Call.Direction.OUTGOING.value
                         else Call.Direction.INCOMING.value
                     Log.d(TAG, "onCallStateChanged: creating $callId as " +
@@ -750,6 +764,16 @@ class CallService(
      * Called when an incoming call is received.
      * Automatically accepts if auto-answer is enabled in call settings.
      */
+    /** Ids of calls refused as unknown callers; their later state changes are ignored. */
+    private val refusedCalls = mutableSetOf<String>()
+
+    private fun refusesAsStranger(accountId: String, peer: String?): Boolean {
+        if (!settingsRepository.privacySettings.value.blockUnknownContacts) return false
+        if (peer.isNullOrBlank()) return false
+        val (peerUri, _) = Uri.fromStringWithName(peer)
+        return !daemonBridge.isConfirmedContact(accountId, peerUri)
+    }
+
     internal fun onIncomingCall(
         accountId: String,
         callId: String,
@@ -766,10 +790,18 @@ class CallService(
             // Android's Telecom ConnectionService, iOS CallKit — and a stranger's call must not
             // reach any of them. Refusing rather than staying silent is deliberate: ignoring
             // the call would leave the caller listening to ringback until the daemon times out.
-            if (settingsRepository.privacySettings.value.blockUnknownContacts &&
-                !daemonBridge.isConfirmedContact(accountId, peerUri)
-            ) {
+            if (callId in refusedCalls || refusesAsStranger(accountId, peerUri.uri)) {
                 Log.w(TAG, "onIncomingCall: refusing call from a non-contact (block unknown contacts is on)")
+                mutex.withLock {
+                    refusedCalls.add(callId)
+                    // Created by an earlier state change before the check above existed there,
+                    // or announced in some other race: take it down for every consumer.
+                    calls.remove(callId)?.let { announced ->
+                        announced.setCallState(CallStatus.OVER)
+                        _callUpdates.emit(announced)
+                        updateCurrentCalls()
+                    }
+                }
                 daemonBridge.refuse(accountId, callId)
                 daemonBridge.hangUp(accountId, callId)
                 return@launch

@@ -20,6 +20,7 @@ import net.jami.testHardwareService
 
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.launch
 import net.jami.model.AccountConfig
 import net.jami.model.Call
 import net.jami.model.ConfigKey
@@ -160,6 +161,60 @@ class CallServiceIntegrationTest {
         val call = callService.getCall("call_in")
         assertNotNull(call)
         assertTrue(call.isIncoming, "the incomingCall signal is authoritative about direction")
+    }
+
+    private fun makeBlockingServices(
+        stub: StubDaemonBridge,
+        scope: kotlinx.coroutines.test.TestScope
+    ): Pair<CallService, net.jami.repository.SettingsRepository> {
+        val serviceScope = scope.serviceScope()
+        val accountService = AccountService(stub, testHardwareService(), StubDeviceRuntimeService(), serviceScope)
+        val settings = net.jami.repository.SettingsRepository(stub, InMemoryClientSettingsStore(), serviceScope)
+        settings.updateBlockUnknownContacts(true)
+        return CallService(stub, accountService, settings, serviceScope) to settings
+    }
+
+    /**
+     * F14: with "Block unknown contacts" on, a stranger's call was announced to Telecom /
+     * CallKit by the state change that beat the incomingCall signal, then refused — a phantom
+     * on the system call screen. It must reach no consumer at all.
+     */
+    @Test
+    fun aRefusedStrangersCallIsNeverAnnouncedWhenTheStateChangeComesFirst() = runTest {
+        val stub = StubDaemonBridge()
+        val (callService, _) = makeBlockingServices(stub, this)
+        stub.callDetails["call_x"] = mapOf(Call.KEY_PEER_NUMBER to "jami:stranger1")
+        val announced = mutableListOf<String?>()
+        val collector = launch { callService.callUpdates.collect { announced += it.daemonId } }
+
+        callService.onCallStateChanged("acc1", "call_x", "CONNECTING", 0)
+        advanceUntilIdle()
+        callService.onIncomingCall("acc1", "call_x", "jami:stranger1", emptyList())
+        advanceUntilIdle()
+        callService.onCallStateChanged("acc1", "call_x", "RINGING", 0)
+        callService.onCallStateChanged("acc1", "call_x", "OVER", 0)
+        advanceUntilIdle()
+        collector.cancel()
+
+        assertTrue(announced.none { it == "call_x" }, "announced: $announced")
+        assertEquals(null, callService.getCall("call_x"))
+    }
+
+    @Test
+    fun aRefusedStrangersCallIsNeverAnnouncedWhenTheSignalComesFirst() = runTest {
+        val stub = StubDaemonBridge()
+        val (callService, _) = makeBlockingServices(stub, this)
+        stub.callDetails["call_y"] = mapOf(Call.KEY_PEER_NUMBER to "jami:stranger2")
+        val announced = mutableListOf<String?>()
+        val collector = launch { callService.callUpdates.collect { announced += it.daemonId } }
+
+        callService.onIncomingCall("acc1", "call_y", "jami:stranger2", emptyList())
+        advanceUntilIdle()
+        callService.onCallStateChanged("acc1", "call_y", "CONNECTING", 0)
+        advanceUntilIdle()
+        collector.cancel()
+
+        assertTrue(announced.none { it == "call_y" }, "announced: $announced")
     }
 
     @Test

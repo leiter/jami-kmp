@@ -228,11 +228,18 @@ class JamiTelecomManager(
         val handle = phoneAccountHandle ?: return
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
 
-        val extras = Bundle().apply {
-            putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, handle)
+        // Only the bundle under EXTRA_OUTGOING_CALL_EXTRAS reaches the ConnectionService
+        // (ConnectionRequest.getExtras()); top-level placeCall extras are Telecom's own. With the
+        // ids at the top level only, onCreateOutgoingConnection found no callId or accountId.
+        val callExtras = Bundle().apply {
             putString(EXTRA_CALL_ID, callId)
             putString(EXTRA_ACCOUNT_ID, accountId)
             putBoolean(EXTRA_HAS_VIDEO, hasVideo)
+        }
+        val extras = Bundle().apply {
+            putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, handle)
+            putBundle(TelecomManager.EXTRA_OUTGOING_CALL_EXTRAS, callExtras)
+            putAll(callExtras)
         }
         try {
             tm.placeCall(Uri.fromParts("jami", peerUri, null), extras)
