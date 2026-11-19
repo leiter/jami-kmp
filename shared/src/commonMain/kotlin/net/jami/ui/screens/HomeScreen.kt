@@ -435,6 +435,10 @@ fun HomeScreen(
                         )
 
                         SwipeToDismissBox(
+                            // The list re-sorts whenever a message arrives, and a pinned or
+                            // muted row jumps too. Without this the row teleports to its new
+                            // position between frames; with it, it travels there.
+                            modifier = Modifier.animateItem(),
                             state = dismissState,
                             backgroundContent = {
                                 val color by animateColorAsState(

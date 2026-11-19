@@ -55,6 +55,8 @@ import jami_kmp.shared.generated.resources.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.stringResource
+import net.jami.ui.components.mediaSharedKey
+import net.jami.ui.components.sharedMediaElement
 import net.jami.di.getViewModel
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.utils.toImageBitmap
@@ -170,7 +172,16 @@ private fun MediaGalleryTile(
                 Image(
                     bitmap = bitmap,
                     contentDescription = stringResource(Res.string.content_desc_media_thumbnail),
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        // The grid is the other place a full-screen image can be opened from,
+                        // so a tile is a shared element too — same key as the viewer and as the
+                        // chat bubble showing the same file.
+                        .then(
+                            item.destinationPath
+                                ?.let { Modifier.sharedMediaElement(mediaSharedKey(it)) }
+                                ?: Modifier
+                        ),
                     contentScale = ContentScale.Crop,
                 )
             } else {

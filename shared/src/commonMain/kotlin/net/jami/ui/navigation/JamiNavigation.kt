@@ -34,10 +34,15 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavType
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import net.jami.ui.components.LocalNavAnimatedVisibilityScope
+import net.jami.ui.components.LocalSharedTransitionScope
 import net.jami.di.getViewModel
 import net.jami.model.Call
 import net.jami.services.AccountService
@@ -208,6 +213,7 @@ private fun OnboardingNavigation(appViewModel: AppViewModel) {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun MainNavigation(needsMigration: Boolean) {
     val navController = rememberNavController()
@@ -317,6 +323,11 @@ private fun MainNavigation(needsMigration: Boolean) {
         }
     }
 
+    // Owns the overlay a shared element flies through on its way between a thumbnail and the
+    // full-screen viewer. It wraps the whole graph because the two ends live in different
+    // destinations; see net.jami.ui.components.SharedMedia.
+    SharedTransitionLayout {
+    CompositionLocalProvider(LocalSharedTransitionScope provides this) {
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route,
@@ -416,6 +427,7 @@ private fun MainNavigation(needsMigration: Boolean) {
         ) { backStackEntry ->
             val conversationId = backStackEntry.extractArg("conversationId")
             if (conversationId.isEmpty()) return@composable
+            CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
             ChatScreen(
                 conversationId = conversationId,
                 onBack = { navController.popBackStack() },
@@ -448,6 +460,7 @@ private fun MainNavigation(needsMigration: Boolean) {
                     navController.navigate(Screen.MediaGallery.createRoute(conversationId))
                 },
             )
+            }
         }
 
         composable(
@@ -458,20 +471,22 @@ private fun MainNavigation(needsMigration: Boolean) {
         ) { backStackEntry ->
             val conversationId = backStackEntry.extractArg("conversationId")
             if (conversationId.isEmpty()) return@composable
-            MediaGalleryScreen(
-                conversationId = conversationId,
-                onBack = { navController.popBackStack() },
-                onImageClick = { filePath ->
-                    MediaNavigationState.filePath = filePath
-                    MediaNavigationState.fileName = ""
-                    navController.navigate(Screen.MediaViewer.route)
-                },
-                onVideoClick = { filePath, fileName ->
-                    MediaNavigationState.filePath = filePath
-                    MediaNavigationState.fileName = fileName
-                    navController.navigate(Screen.VideoPlayer.route)
-                },
-            )
+            CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
+                MediaGalleryScreen(
+                    conversationId = conversationId,
+                    onBack = { navController.popBackStack() },
+                    onImageClick = { filePath ->
+                        MediaNavigationState.filePath = filePath
+                        MediaNavigationState.fileName = ""
+                        navController.navigate(Screen.MediaViewer.route)
+                    },
+                    onVideoClick = { filePath, fileName ->
+                        MediaNavigationState.filePath = filePath
+                        MediaNavigationState.fileName = fileName
+                        navController.navigate(Screen.VideoPlayer.route)
+                    },
+                )
+            }
         }
 
         composable(
@@ -656,10 +671,12 @@ private fun MainNavigation(needsMigration: Boolean) {
         // ==================== Media Viewer ====================
 
         composable(Screen.MediaViewer.route) {
-            MediaViewerScreen(
-                filePath = MediaNavigationState.filePath,
-                onBack = { navController.popBackStack() },
-            )
+            CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
+                MediaViewerScreen(
+                    filePath = MediaNavigationState.filePath,
+                    onBack = { navController.popBackStack() },
+                )
+            }
         }
 
         // ==================== Video Player ====================
@@ -671,5 +688,7 @@ private fun MainNavigation(needsMigration: Boolean) {
                 onBack = { navController.popBackStack() },
             )
         }
+    }
+    }
     }
 }

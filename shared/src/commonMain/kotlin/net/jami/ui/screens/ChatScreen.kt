@@ -206,6 +206,8 @@ import net.jami.ui.TestTags
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import net.jami.di.getViewModel
+import net.jami.ui.components.mediaSharedKey
+import net.jami.ui.components.sharedMediaElement
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.PresenceStatus
@@ -727,6 +729,10 @@ fun ChatScreen(
                         val announces = message.id == newestIncomingId
                         Box(
                             Modifier
+                                // A new message fades in where it lands instead of appearing
+                                // fully formed, and a send that resolves into its real bubble
+                                // does not make the column jump.
+                                .animateItem()
                                 .swipeToReply(enabled = canReply) { startReply(message.id) }
                                 .then(
                                     if (!announces) Modifier
@@ -1970,6 +1976,14 @@ private fun FileTransferMessage(
                             .fillMaxWidth()
                             .heightIn(max = 200.dp)
                             .clip(RoundedCornerShape(JamiTheme.radius.s))
+                            // The thumbnail end of the shared-element transition into the
+                            // full-screen viewer: keyed on the file, so the viewer's image is
+                            // recognised as the same thing and flies out of this bubble.
+                            .then(
+                                message.destinationPath
+                                    ?.let { Modifier.sharedMediaElement(mediaSharedKey(it)) }
+                                    ?: Modifier
+                            )
                             .combinedClickable(
                                 onClick = { message.destinationPath?.let { onImageClick(it) } },
                                 onLongClick = openMenu,

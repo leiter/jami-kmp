@@ -11,6 +11,7 @@ package net.jami.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
@@ -54,7 +55,18 @@ import net.jami.ui.platform.FileSaverEffect
 import net.jami.utils.shareFile
 import org.jetbrains.compose.resources.stringResource
 import net.jami.utils.FileUtils
+import net.jami.ui.components.mediaSharedKey
+import net.jami.ui.components.sharedMediaElement
 import net.jami.ui.utils.toImageBitmap
+import kotlin.math.abs
+
+/**
+ * How far the image has to be dragged for the swipe to dismiss it.
+ *
+ * Expressed in pixels rather than dp because it is compared against raw drag deltas inside a
+ * pointer-input block, where no density is in scope. Half of it is the commit threshold.
+ */
+private const val DISMISS_DISTANCE_PX = 600f
 
 @Composable
 fun MediaViewerScreen(
@@ -98,16 +110,36 @@ fun MediaViewerScreen(
         if (scale > 1f) offset += panChange else offset = Offset.Zero
     }
 
+    // Swipe the image away instead of reaching for the back button, the gesture every gallery
+    // has. Only while unzoomed: once the image is scaled up a vertical drag is a pan, and
+    // stealing it would make a zoomed image impossible to move around.
+    var dismissOffset by remember { mutableFloatStateOf(0f) }
+    val dismissProgress = (abs(dismissOffset) / DISMISS_DISTANCE_PX).coerceIn(0f, 1f)
+    // The backdrop thins out as the image is dragged, so the chat behind it comes back into
+    // view and the gesture reads as reversible before it commits.
+    val backdropAlpha = 1f - dismissProgress * 0.85f
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(Color.Black.copy(alpha = backdropAlpha))
             .pointerInput(Unit) {
                 detectTapGestures(
                     onDoubleTap = {
                         scale = 1f
                         offset = Offset.Zero
                     },
+                )
+            }
+            .pointerInput(scale) {
+                if (scale > 1f) return@pointerInput
+                detectVerticalDragGestures(
+                    onDragEnd = {
+                        if (abs(dismissOffset) > DISMISS_DISTANCE_PX / 2f) onBack()
+                        else dismissOffset = 0f
+                    },
+                    onDragCancel = { dismissOffset = 0f },
+                    onVerticalDrag = { _, delta -> dismissOffset += delta },
                 )
             },
     ) {
@@ -121,12 +153,16 @@ fun MediaViewerScreen(
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()
+                    // The full-screen end of the shared-element transition: the same key as the
+                    // chat bubble's thumbnail, so the image flies between the two.
+                    .sharedMediaElement(mediaSharedKey(filePath))
                     .transformable(transformableState)
                     .graphicsLayer(
                         scaleX = scale,
                         scaleY = scale,
                         translationX = offset.x,
-                        translationY = offset.y,
+                        // The drag rides on top of any pan the user has already applied.
+                        translationY = offset.y + dismissOffset,
                     ),
                 contentScale = ContentScale.Fit,
             )
