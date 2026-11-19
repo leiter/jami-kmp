@@ -805,30 +805,63 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
 A sweep for dead clicks and polish gaps. **There are no dead clicks left**: every
 `onClick = {}` in the tree is the required no-op half of a `combinedClickable` whose
 `onLongClick` does the work, no control is hardcoded `enabled = false`, and no handler only
-logs. The stock of remaining work is refinement, and the finding behind most of it is that the
-app has essentially **no motion layer**.
+logs. The stock of remaining work is refinement, and the finding behind most of it was that the
+app had essentially **no motion layer**.
 
-- [ ] **No navigation transitions anywhere.** `JamiNavigation.kt` has 35 `composable(...)`
-  entries and not one `enterTransition`/`exitTransition`, so every screen change is Compose
-  Navigation's default. The whole animation vocabulary in `shared/src/commonMain` is 7
-  `AnimatedVisibility`, 6 `fadeIn`, and 2 each of `animateFloatAsState` / `animateColorAsState` /
-  `animateContentSize`. No `SharedTransitionLayout`, no `sharedElement`, no `Crossfade`, no
-  `LookaheadScope`.
-- [ ] **No shared-element transition for the image → full-screen path.** Tapping an image bubble
-  (`ChatScreen.kt:1888`) hard-cuts to `MediaViewerScreen`, which already does pinch-zoom and
-  double-tap-to-reset (`MediaViewerScreen.kt:95-128`) but is entered and left without motion.
-  Same cut on `MediaGalleryScreen` → `MediaViewerScreen`. The conversation row → `ChatScreen`
-  open is the other natural container transform.
-- [ ] **`animateItem()` is used nowhere in the repo.** The conversation list re-sorts on every
-  incoming message, so rows teleport to their new position; new chat messages pop in. One
-  modifier per `LazyColumn` item.
+Four of the items below were implemented the same day (`62f7120`, `6db96c3`): message
+sequencing, the media shared-element transition, swipe-to-dismiss and `animateItem()`. None of
+the four has been seen on a device yet — they compile for Android and desktop and the suite is
+green at 1079, but motion is exactly the kind of thing a test cannot sign off.
+
+- [ ] **No per-route navigation transitions.** `JamiNavigation.kt`'s 35 `composable(...)` entries
+  still carry no `enterTransition`/`exitTransition`, so every screen change is Compose
+  Navigation's default. Partly addressed 2026-11-19: the graph is now wrapped in a
+  `SharedTransitionLayout` (below), which is the piece the media transition needed. Giving the
+  remaining routes a motion spec — the conversation row → chat container transform above all —
+  is what is left.
+- [x] **Shared-element transition for the image → full-screen path** (2026-11-19). The image
+  now flies out of the bubble, or out of the gallery tile, into `MediaViewerScreen` and back.
+  `ui/components/SharedMedia.kt` carries the two scopes a shared element needs — the
+  `SharedTransitionScope` wrapping the `NavHost`, and each destination's
+  `AnimatedVisibilityScope` — as composition locals, because neither is anywhere near the
+  composable that draws a thumbnail inside a bubble inside a list inside a screen, and
+  threading them through every signature in between would put animation parameters on
+  composables that have nothing else to do with animation.
+  - Both locals default to null and `Modifier.sharedMediaElement` is then a no-op, so a screen
+    rendered outside the main graph — a preview, a test, a host that has not opted in — still
+    draws its images.
+  - The key names the **file**, not the place it is drawn, so the chat bubble, the gallery tile
+    and the viewer all resolve to the same element. `mediaSharedKey` builds it so the three
+    call sites cannot drift apart.
+  - **Not yet seen on a device**; it compiles for Android and desktop.
+- [x] **`animateItem()` on the conversation list and the message list** (2026-11-19). The
+  conversation list re-sorts on every incoming message and on pin/mute, which until then moved
+  rows between frames with nothing in between; a new message now fades in where it lands.
+  **Not yet seen on a device.**
 - [ ] **No "jump to latest" FAB in chat.** The reference has one, shown and hidden from the
   scroll position (`ConversationFragment.kt:340`, `:402-403`). KMP has nothing, so returning from
   a scroll back through history is manual.
-- [ ] **`MediaViewerScreen` has no swipe-down-to-dismiss and no pager** — one image, back button
-  only. Pairs naturally with the shared-element work above.
-- [ ] **No message sequencing, and no sender avatars in group chats.** This is the largest single
-  chat-UI gap and it carries a visible defect, not just polish. The reference
+- [x] **`MediaViewerScreen` swipe-to-dismiss** (2026-11-19) — the gesture every gallery has.
+  Live only while unzoomed: once the image is scaled up a vertical drag is a pan, and stealing
+  it would leave a zoomed image impossible to move. The backdrop thins as the image is dragged,
+  so the gesture reads as reversible before it commits, and it commits at half the travel.
+  **Not yet seen on a device.**
+- [ ] **`MediaViewerScreen` still has no pager** — it shows the one file it was opened with, so
+  there is no swiping left and right through a conversation's images. The gallery already has
+  the list this would page over.
+- [x] **Message sequencing and group sender avatars** (2026-11-19) — done; what follows is the
+  gap as it was found, kept because it explains the shape of the fix. `applySequencingTo` marks
+  each message as the first and/or last of a run, following the reference's `isSeqBreak` /
+  `isAlwaysSingleMsg`; the name now heads a run and only in a group, incoming group messages
+  get an avatar gutter drawn on the run's last message, the author-side top corner is only
+  round on the first, and the vertical padding is spent at the ends of a run rather than
+  between every message. File transfers get the same name and avatar — a transfer is always a
+  run of one, and one person's photo should be attributed like their words.
+  `MessageItem.authorUri` was added because `author` is a display name and cannot stand in for
+  identity: two members may share one, and a name resolves asynchronously, so grouping on it
+  would regroup the list the moment a lookup landed. 15 tests in `MessageSequencingTest`.
+  **Not yet seen on a device.** The gap as found:
+  - The reference
   `ConversationAdapter` runs a full `startOfSeq`/`endOfSeq` model: in a group the sender avatar
   renders only on the **last** message of a run (`:1548`) with a fade (`:1553`), the peer name
   only on the **first** (`:1740`), and both are hidden entirely in 1:1 (`:1186`, `:1722`).
