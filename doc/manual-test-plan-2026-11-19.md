@@ -4,8 +4,10 @@ Covers `62f7120`, `6db96c3`, `8185c11`, `1cfbc80`, `68bca0e`. All of it is share
 applies to Android and iOS alike; the steps below are written for the Pixel pair because that is
 the quicker loop.
 
-Everything here is **unverified on hardware**. The suite (1082, green) says nothing about motion,
-bubble layout or anything whose failure mode is "looks wrong" — which is most of this list.
+**Sections A and B passed on the Pixel pair, 2026-11-19.** C, D and F are still outstanding.
+
+The suite (1082, green) says nothing about motion, bubble layout or anything whose failure mode
+is "looks wrong" — which is most of this list, hence the walk.
 
 ## Build and install
 
@@ -24,7 +26,7 @@ App id is `net.jami.android` (the `.harness` suffix is the e2e flavour — not t
 
 ---
 
-## A. Message runs, group avatars, and the 1:1 name — `62f7120`
+## A. Message runs, group avatars, and the 1:1 name — `62f7120` — PASSED 2026-11-19
 
 **A1 — the defect this fixes (1:1).** Open any 1:1 conversation with history.
 
@@ -61,7 +63,7 @@ The 10-minute one is the slow case; it can be left until the end, or trusted to
 
 ---
 
-## B. Media transition and swipe-to-dismiss — `6db96c3`
+## B. Media transition and swipe-to-dismiss — `6db96c3` — PASSED 2026-11-19
 
 Needs a conversation with at least one **received, downloaded** image.
 

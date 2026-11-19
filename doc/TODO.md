@@ -809,9 +809,10 @@ logs. The stock of remaining work is refinement, and the finding behind most of 
 app had essentially **no motion layer**.
 
 Four of the items below were implemented the same day (`62f7120`, `6db96c3`): message
-sequencing, the media shared-element transition, swipe-to-dismiss and `animateItem()`. None of
-the four has been seen on a device yet — they compile for Android and desktop and the suite is
-green at 1079, but motion is exactly the kind of thing a test cannot sign off.
+sequencing, the media shared-element transition, swipe-to-dismiss and `animateItem()`. **All
+four were walked on the Pixel pair the same evening and are confirmed** (sections A and B of
+`doc/manual-test-plan-2026-11-19.md`), which matters more than the green suite here — motion and
+bubble layout fail by looking wrong, which no test in this repo can see.
 
 - [ ] **No per-route navigation transitions.** `JamiNavigation.kt`'s 35 `composable(...)` entries
   still carry no `enterTransition`/`exitTransition`, so every screen change is Compose
@@ -833,11 +834,12 @@ green at 1079, but motion is exactly the kind of thing a test cannot sign off.
   - The key names the **file**, not the place it is drawn, so the chat bubble, the gallery tile
     and the viewer all resolve to the same element. `mediaSharedKey` builds it so the three
     call sites cannot drift apart.
-  - **Not yet seen on a device**; it compiles for Android and desktop.
+  - **Verified on the Pixel pair 2026-11-19**, both ends: the image grows out of the chat
+    bubble and out of a gallery tile, and shrinks back into it on the way out.
 - [x] **`animateItem()` on the conversation list and the message list** (2026-11-19). The
   conversation list re-sorts on every incoming message and on pin/mute, which until then moved
   rows between frames with nothing in between; a new message now fades in where it lands.
-  **Not yet seen on a device.**
+  **Verified on the Pixel pair 2026-11-19** — a row that moves up now travels there.
 - [x] **"Jump to latest" button in chat** (2026-11-19) — a small FAB over the bottom of the
   list, above the composer, appearing once the newest message is more than 8 items away and
   hiding again on the way back, as the reference does (`ConversationFragment.kt:340`,
@@ -858,7 +860,8 @@ green at 1079, but motion is exactly the kind of thing a test cannot sign off.
   Live only while unzoomed: once the image is scaled up a vertical drag is a pan, and stealing
   it would leave a zoomed image impossible to move. The backdrop thins as the image is dragged,
   so the gesture reads as reversible before it commits, and it commits at half the travel.
-  **Not yet seen on a device.**
+  **Verified on the Pixel pair 2026-11-19**, including the case that mattered most: a zoomed
+  image pans under a vertical drag instead of dismissing.
 - [ ] **`MediaViewerScreen` still has no pager** — it shows the one file it was opened with, so
   there is no swiping left and right through a conversation's images. The gallery already has
   the list this would page over.
@@ -873,7 +876,9 @@ green at 1079, but motion is exactly the kind of thing a test cannot sign off.
   `MessageItem.authorUri` was added because `author` is a display name and cannot stand in for
   identity: two members may share one, and a name resolves asynchronously, so grouping on it
   would regroup the list the moment a lookup landed. 15 tests in `MessageSequencingTest`.
-  **Not yet seen on a device.** The gap as found:
+  **Verified on the Pixel pair 2026-11-19**: the 1:1 no longer repeats the peer's name, a group
+  run carries one name and one avatar with the bubbles aligned, and the breaks behave. The gap
+  as found:
   - The reference
   `ConversationAdapter` runs a full `startOfSeq`/`endOfSeq` model: in a group the sender avatar
   renders only on the **last** message of a run (`:1548`) with a fade (`:1553`), the peer name
