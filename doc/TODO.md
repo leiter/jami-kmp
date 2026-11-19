@@ -1364,7 +1364,25 @@ Reported from a device: the call screen titled the peer with their 40-hex id.
   flows rather than listening for events is exposed to it. Merging them — most plausibly by
   making `ContactService` the single owner and having `Account` delegate — is a real piece of
   work and should not be done from inside a call-screen fix.
-- **Not yet confirmed on a device** in its second form.
+- **The second fix was also not enough — and the logcat showed why** (2026-11-19, Pixel 2,
+  outgoing call to `unitedhumans`). The event handler worked: `nameFound: address=66d5… name=
+  'unitedhumans' state=0 waitingFor=66d5…` matched and set the title. Three seconds later
+  `peerTitle: title='66d5…' … username='null'` put the hash back.
+  - `initOutgoing` resolves the contact **twice** — once before placing the call, once with the
+    resulting `Call` — and each resolve started its own collector on its own `Contact`.
+    `Contact.usernameFlow` is a `StateFlow<String?>` that is null until something fills it, and
+    the object the answer is written to is not the one this screen holds (the two-cache split
+    above), so the second collector emitted null *after* the answer had arrived and overwrote it.
+  - That also explains the asymmetry the user reported — the callee saw the caller's name while
+    the caller saw a hash. Only the outgoing path resolves twice.
+  - Fixed three ways: `resolveContactName` cancels its own previous collector instead of
+    stacking another; `rememberPeerUsername` never forgets a name it already has; and
+    `applyPeerTitle` is the single place the title is written, so the flow and the event cannot
+    disagree. `aLateEmptyUsernameDoesNotUndoAResolvedName` reproduces the device behaviour and
+    was verified to fail without the fix.
+  - `resolveContactName` also logged `JobCancellationException` as a failure on every screen
+    teardown; cancellation is now rethrown rather than reported.
+- **Not yet confirmed on a device** in its third form.
 
 ## Peer turning their camera off blanked the call screen (2026-11-19) — fixed
 

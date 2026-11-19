@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModel
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -223,7 +224,10 @@ class CallViewModel(
     private var peerProfileName: String? = null
     private var peerContactName: String? = null
     private var peerRawId: String = ""
+    /** Best registered name known for the peer; see [rememberPeerUsername]. */
+    private var peerUsername: String? = null
     private var peerNameEventsJob: Job? = null
+    private var peerNameJob: Job? = null
 
     private val _cameraPermissionRequest = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val cameraPermissionRequest: SharedFlow<Unit> = _cameraPermissionRequest.asSharedFlow()
@@ -1216,9 +1220,15 @@ class CallViewModel(
     /**
      * Name, registered name and picture of the peer, as the Android call screen shows them:
      * profile name, else contact name, else registered username, else the Jami ID.
+     *
+     * Called more than once per call — `initOutgoing` resolves before placing the call and again
+     * once it has a `Call` — so it replaces its own collector rather than stacking another.
+     * Two live collectors was how the fixed title got un-fixed: each held its own `Contact` and
+     * wrote the title from it, so the one with no username clobbered the one that had it.
      */
     private fun resolveContactName(accountId: String, peerUri: Uri, call: Call?) {
-        scope.launch {
+        peerNameJob?.cancel()
+        peerNameJob = scope.launch {
             try {
                 val contact = contactService.findContact(accountId, peerUri)
                 val profile = contactService.loadContactData(contact, accountId)
@@ -1228,27 +1238,22 @@ class CallViewModel(
                 peerRawId = peerUri.rawRingId
                 observePeerNameLookups()
                 _state.value = _state.value.copy(peerAvatar = profile.avatar)
+                applyPeerTitle()
                 // The registered name is often looked up after the call starts: follow it, so
                 // the title moves from the Jami ID to the name once it is known.
                 contact.usernameFlow.collect { username ->
-                    val (title, subtitle) = callPeerTitle(
-                        profileName = profile.displayName,
-                        contactName = contact.displayName,
-                        username = username,
-                        rawId = peerUri.rawRingId,
-                    )
-                    Log.d(TAG, "peerTitle: title='$title' sub='$subtitle' " +
-                        "profile='${profile.displayName}' contact='${contact.displayName}' " +
-                        "username='$username' raw=${peerUri.rawRingId}")
-                    _state.value = _state.value.copy(peerName = title, peerSubtitle = subtitle)
+                    rememberPeerUsername(username)
+                    applyPeerTitle()
                     // Following usernameFlow is not enough on its own: nothing fills it unless
                     // someone asks the name service. ConversationFacade does so on registration
                     // changes and smartlist loads, neither of which a call goes through, so a
                     // peer whose name had not already been resolved in this process showed as
-                    // their 40-hex Jami ID for the whole call. Ask once, here, when the title
-                    // we just built *is* that id; the collect above then picks up the answer.
-                    if (title == peerUri.rawRingId) requestPeerNameLookup(accountId, peerUri)
+                    // their 40-hex Jami ID for the whole call. Ask once, here, while the best
+                    // name we have is still that id.
+                    if (peerUsername.isNullOrBlank()) requestPeerNameLookup(accountId, peerUri)
                 }
+            } catch (e: CancellationException) {
+                throw e  // screen closed, or a second resolve replaced this one
             } catch (e: Exception) {
                 // Keep the Jami ID as display name on failure. Logged because it used to be
                 // swallowed outright, which made "the screen shows a hash" indistinguishable
@@ -1256,6 +1261,32 @@ class CallViewModel(
                 Log.w(TAG, "resolveContactName failed for ${peerUri.rawRingId}: $e")
             }
         }
+    }
+
+    /**
+     * Record a registered name for the peer, never forgetting one already known.
+     *
+     * `Contact.usernameFlow` is a `StateFlow<String?>` whose value is null until someone fills
+     * it, and the `Contact` this screen holds is not the one the name service's answer is
+     * written to (see [observePeerNameLookups]). So a fresh collector emits null *after* the
+     * answer has already arrived by the other route, and taking that at face value put the
+     * Jami ID back on screen — which is what a device showed: the title flipped to
+     * "unitedhumans" and three seconds later flipped back to the hash.
+     */
+    private fun rememberPeerUsername(username: String?) {
+        if (!username.isNullOrBlank()) peerUsername = username
+    }
+
+    /** The single place the peer's title is written, from everything known so far. */
+    private fun applyPeerTitle() {
+        val (title, subtitle) = callPeerTitle(
+            profileName = peerProfileName,
+            contactName = peerContactName,
+            username = peerUsername,
+            rawId = peerRawId,
+        )
+        if (title.isEmpty()) return
+        _state.value = _state.value.copy(peerName = title, peerSubtitle = subtitle)
     }
 
     /**
@@ -1282,13 +1313,8 @@ class CallViewModel(
                 if (event.state != 0 || event.name.isEmpty()) return@collect
                 if (peerRawId.isEmpty()) return@collect
                 if (Uri.fromString(event.address).rawRingId != peerRawId) return@collect
-                val (title, subtitle) = callPeerTitle(
-                    profileName = peerProfileName,
-                    contactName = peerContactName,
-                    username = event.name,
-                    rawId = peerRawId,
-                )
-                _state.value = _state.value.copy(peerName = title, peerSubtitle = subtitle)
+                rememberPeerUsername(event.name)
+                applyPeerTitle()
             }
         }
     }
@@ -1326,6 +1352,7 @@ class CallViewModel(
         videoLossJob?.cancel()
         inCallMessagesJob?.cancel()
         callStatsJob?.cancel()
+        peerNameJob?.cancel()
         peerNameEventsJob?.cancel()
         hostedConfWatchdogJob?.cancel()
         hardwareService.cameraCleanup()

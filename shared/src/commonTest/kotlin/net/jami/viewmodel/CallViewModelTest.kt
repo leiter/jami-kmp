@@ -422,4 +422,43 @@ class CallViewModelTest {
 
         assertEquals("anna77", vm.state.value.peerName)
     }
+
+    /**
+     * The title must not flip back to the Jami ID once a name is known.
+     *
+     * Caught on a device and then in the log: the title became "unitedhumans" and three seconds
+     * later became the hash again. `initOutgoing` resolves the contact twice — once before
+     * placing the call, once with the resulting `Call` — and each resolve used to start its own
+     * collector on its own `Contact`. `Contact.usernameFlow` is a `StateFlow<String?>` that is
+     * null until something fills it, and the object the name service's answer is written to is
+     * not the one this screen holds, so the second collector emitted null *after* the answer had
+     * arrived and overwrote it.
+     *
+     * Reconnecting (which is what the second resolve amounts to here) therefore has to leave a
+     * known name alone.
+     */
+    @Test
+    fun aLateEmptyUsernameDoesNotUndoAResolvedName() = runTest {
+        val stub = StubDaemonBridge()
+        val (vm, _, accountService) = makeVm(stub, viewModelScope())
+        prepareAccountInService(stub, accountService)
+
+        val peerId = "4f3b0a1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+        vm.initOutgoing(TEST_ACCOUNT_ID, contactUri = peerId, hasVideo = false)
+        settle()
+        accountService.onRegisteredNameFound(TEST_ACCOUNT_ID, 0, peerId, "anna77", peerId)
+        settle()
+        assertEquals("anna77", vm.state.value.peerName)
+
+        // A second resolve, as placing the call triggers: its contact still carries no username.
+        vm.initOutgoing(TEST_ACCOUNT_ID, contactUri = peerId, hasVideo = false)
+        settle()
+        settle()
+
+        assertEquals(
+            "anna77",
+            vm.state.value.peerName,
+            "a resolve that knows no name must not replace one that is already on screen",
+        )
+    }
 }
