@@ -1404,13 +1404,29 @@ Two defects, both in `CallScreen`, which together produced exactly that:
   its own, since it carries its own buttons), and the controls now also reappear by themselves
   when the remote picture goes away.
 
-- [ ] **Still open: video takes a while to come back when the peer re-enables it.** Reported in
-  the same breath and *not* addressed here. `handleVideoEvent` clears `remoteVideoSinkId` on
-  stop, so the restart arrives as a new sink and `VideoRenderer` — which is keyed on that id —
-  is recreated along with its surface rather than resumed. Whether that is the cost, or whether
-  it is the daemon waiting on a keyframe, is unmeasured; a logcat of the stop/start cycle with
-  timestamps on both `handleVideoEvent` and the renderer would say which. Do not guess at a fix
-  before that measurement.
+- [ ] **Still open: video takes a while to come back when the peer re-enables it.**
+  **Measured 2026-11-19** (both Pixels, `scratchpad/video-7a.log`, `video-p2.log`). The run did
+  *not* reproduce the bad case — the user judged it fine — but it settled the mechanism:
+
+  - **The surface really is destroyed and rebuilt on every stop/start.** `HardwareService` logs
+    a different native window handle each time the picture returns:
+    `addVideoSurface id=1224360945258036 window=…138000` at 20:35:45, then `window=…105040` at
+    20:35:57, then `window=…114928` at 20:36:08. So clearing `remoteVideoSinkId` on stop does
+    unmount `VideoRenderer` and take the `SurfaceView` with it. That part is ours, and the
+    hypothesis above is confirmed.
+  - **But it is not obviously the cost.** On the 7a the gap between `started=false` and the next
+    `started=true` was 1.21 s and 1.26 s — a rebuild per toggle, not a stall.
+  - **One gap that does want explaining:** on the Pixel 2 the matching pair is
+    20:35:55.819 `started=false` → 20:36:08.113 `started=true`, **12.3 s**. It cannot be told
+    apart from "the camera was simply off for twelve seconds" without knowing when the toggle
+    happened, so it is a lead, not a finding. Note also that both devices' sinks stopped within
+    50 ms of each other at ~20:35:55.8, which looks like a renegotiation rather than a user
+    action — worth understanding before reading anything into the 12 s.
+  - **Not fixing it on this evidence.** Holding the surface across a transient stop is a
+    defensible change on its own merits (no rebuild per toggle), but nothing measured so far
+    shows it would have saved the user any time, and it risks parking a stale frame on screen.
+    The next step is a capture where the slow case actually happens, with the toggle moment
+    noted.
 
 ## A peer's avatar showed in the list and a letter in the chat header (2026-11-19) — fixed
 
