@@ -838,9 +838,19 @@ green at 1079, but motion is exactly the kind of thing a test cannot sign off.
   conversation list re-sorts on every incoming message and on pin/mute, which until then moved
   rows between frames with nothing in between; a new message now fades in where it lands.
   **Not yet seen on a device.**
-- [ ] **No "jump to latest" FAB in chat.** The reference has one, shown and hidden from the
-  scroll position (`ConversationFragment.kt:340`, `:402-403`). KMP has nothing, so returning from
-  a scroll back through history is manual.
+- [x] **"Jump to latest" button in chat** (2026-11-19) — a small FAB over the bottom of the
+  list, above the composer, appearing once the newest message is more than 8 items away and
+  hiding again on the way back, as the reference does (`ConversationFragment.kt:340`,
+  `:402-403`, `visibleLatestThreshold`). The list is reversed, so `firstVisibleItemIndex` is
+  already the distance the reference computes; read through `derivedStateOf` so a scroll
+  recomposes the button only when the answer flips. `conversation_action_latest` was already in
+  `values/`. **Not yet seen on a device.**
+  - **Open question it raises:** `ChatScreen` auto-scrolls to the bottom whenever the newest
+    message id changes, with no check for where the reader is. Someone reading history is
+    therefore yanked to the latest message the moment one arrives — which is the thing this
+    button exists to make unnecessary. The usual rule is to auto-scroll only when already at
+    the bottom and otherwise leave the reader alone (the button, optionally badged, is then the
+    way down). Left alone here because it was not part of the ask.
 - [x] **`MediaViewerScreen` swipe-to-dismiss** (2026-11-19) — the gesture every gallery has.
   Live only while unzoomed: once the image is scaled up a vertical drag is a pan, and stealing
   it would leave a zoomed image impossible to move. The backdrop thins as the image is dragged,
@@ -1280,6 +1290,27 @@ verdict — the plan entries were rewritten to test the fix rather than confirm 
   call with no capture session to back it, as its own manifest comment says.
   **Neither the defect nor the fix has been run on a device** — one screen-share attempt on an
   Android 14+ device settles both. See `Permissions.md`.
+
+## Candidate defect found while adding the jump-to-latest button (2026-11-19)
+
+- [ ] **`AccountService.explicitlyDeactivatedAccounts` can be read before it is initialised.**
+  Surfaced as four `CallServiceTest` failures in one full-suite run and not in three reruns, so
+  it looks like a flake; it is an ordering hazard that happens to be timing-dependent.
+  - `init` at `AccountService.kt:154` launches a collector on `hardwareService.connectivityState`,
+    a `StateFlow`, which therefore emits its current value immediately. The handler calls
+    `setAccountsActive(isConnected)` (`:579`), whose first statement is
+    `explicitlyDeactivatedAccounts.clear()` (`:582`).
+  - That property is declared at `:463`, **after** the `init` block. Kotlin runs initialisers and
+    `init` blocks in declaration order, so whenever the launched coroutine gets to run before
+    construction finishes, the set is still null: `NullPointerException: Cannot invoke
+    "java.util.Set.clear()" because "this.explicitlyDeactivatedAccounts" is null`. The other
+    three failures in that run are the same thing seen through the coroutine machinery
+    (`UncaughtExceptionsBeforeTest`, then a test that never completes).
+  - Production normally escapes it because the dispatcher defers the launch past construction;
+    `runTest` with an eager dispatcher does not, which is why only the tests have shown it.
+  - **The fix is to move the property declaration above the `init` block** — one line, no
+    behaviour change. Not applied here because it was outside the task in hand; it should be
+    done before anyone spends time chasing the "flaky" `CallServiceTest`.
 
 ## Open Decisions
 
