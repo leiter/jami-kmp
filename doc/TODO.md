@@ -1412,6 +1412,42 @@ Two defects, both in `CallScreen`, which together produced exactly that:
   timestamps on both `handleVideoEvent` and the renderer would say which. Do not guess at a fix
   before that measurement.
 
+## A peer's avatar showed in the list and a letter in the chat header (2026-11-19) — fixed
+
+Spotted on the Pixel 7a: `peace4us` had their photo in the conversation list and the "P"
+placeholder in the chat header of the very same conversation, at the same moment.
+
+The two screens read the avatar from different places, and only one of them knew about the
+daemon's 0-byte placeholder:
+
+- `ConversationsViewModel` → `vCardService.loadPeerAvatar(...)`.
+- `ChatViewModel` → `VCardUtils.loadPeerProfileFromDisk(...)`, a raw read of
+  `profiles/{base64url(uri)}.vcf`.
+
+On the device that vcf was **0 bytes** (18 Nov 12:50) while the scaled picture sat in the cache
+at `cache/<account>/profiles/<encoded>`, **24 099 bytes** (18 Nov 02:06). `VCardService`
+already handles exactly this — "an empty or unreadable vcf means *this peer's profile has not
+arrived*, not *this peer has no picture*" — and falls back to the cache. The raw read has none
+of that logic, so it reported "no avatar" and blanked a picture the device was holding.
+
+Fixed by routing **every** peer-avatar read through `VCardService`: seven call sites across
+`ChatViewModel` (header, profile updates, group member avatars, read markers),
+`ContactDetailsViewModel` and `NewConversationViewModel`. `loadPeerProfileFromDisk` now has no
+callers left in `commonMain`, which is the point — the 0-byte rule should live in one place and
+be impossible to bypass by accident.
+
+- The three ViewModels take `VCardService` with a default so their many construction sites keep
+  working; Koin passes the shared singleton, which is what makes the in-memory cache common to
+  every screen.
+- Two of the seven sites were the group-member and read-marker avatars added earlier the same
+  day, so they were born with this bug.
+- **Not yet confirmed on a device.**
+- [ ] **Not explained: why the vcf became 0 bytes at all.** The daemon writes that placeholder
+  when a profile transfer starts and does not complete, so a peer's profile is evidently failing
+  to transfer and leaving the stub behind. The avatar survives only because something cached it
+  earlier; a peer whose profile never transferred at all still has nothing to show. Worth
+  tracing separately.
+
 ## Open Decisions
 
 - [x] **Publish a presence status note** *(done 2026-10-28, Android only — `publish` is not in

@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 import net.jami.model.Contact
 import net.jami.model.TextMessage
 import net.jami.model.Uri
+import net.jami.services.VCardService
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.services.CallService
@@ -78,7 +79,22 @@ class NewConversationViewModel(
     private val accountService: AccountService,
     private val deviceRuntimeService: DeviceRuntimeService,
     private val callService: CallService,
-    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    /**
+     * Peer avatars go through [VCardService], never through a raw read of the vcf on disk.
+     *
+     * The daemon leaves a **0-byte** `profiles/{base64url(uri)}.vcf` behind when a profile
+     * transfer starts and does not complete, and that placeholder is *newer* than the cached
+     * picture. A raw read sees an empty file and reports "no avatar", blanking a picture the
+     * device already has; [VCardService.loadPeerAvatar] knows that case and falls back to the
+     * cache. This is why a peer's photo showed in the conversation list and a letter in the
+     * chat header at the same moment (device, 2026-11-19): the list went through the service
+     * and this screen did not.
+     *
+     * Defaulted so the many existing construction sites keep working; Koin passes the shared
+     * singleton, which is what makes the in-memory cache common to every screen.
+     */
+    private val vCardService: VCardService = VCardService(deviceRuntimeService)
 ) : ViewModel() {
     private val scope = scope
     private var searchJob: Job? = null
@@ -141,7 +157,7 @@ class NewConversationViewModel(
             val lastMessage = if (lastEvent is TextMessage) lastEvent.body ?: "" else ""
             val timestamp = lastEvent?.timestamp ?: 0L
             val avatarBytes = contact?.let { c ->
-                VCardUtils.loadPeerProfileFromDisk(filesDir, accountId, c.uri.rawRingId)
+                vCardService.loadPeerAvatar(accountId, c.uri.rawRingId)
             }
             ConversationItem(
                 id = conversation.uri.rawRingId,
@@ -232,7 +248,7 @@ class NewConversationViewModel(
             val lastMessage = if (lastEvent is TextMessage) lastEvent.body ?: "" else ""
             val timestamp = lastEvent?.timestamp ?: 0L
             val avatarBytes = contact?.let { c ->
-                VCardUtils.loadPeerProfileFromDisk(filesDir, accountId, c.uri.rawRingId)
+                vCardService.loadPeerAvatar(accountId, c.uri.rawRingId)
             }
 
             ConversationItem(

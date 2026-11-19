@@ -277,7 +277,7 @@ val jamiModule = module {
     // ==================== ViewModels ====================
 
     viewModelFactory { ConversationsViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModelFactory { ChatViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModelFactory { ChatViewModel(get(), get(), get(), get(), get(), get(), vCardService = get()) }
     viewModelFactory { AccountCreationViewModel(get()) }
     viewModelFactory { ImportAccountViewModel(get()) }
     viewModelFactory { LinkDeviceImportViewModel(get()) }
@@ -287,8 +287,8 @@ val jamiModule = module {
     viewModelFactory { PendingRequestsViewModel(get(), get()) }
     viewModelFactory { CallViewModel(get(), get(), get(), get(), get(), get()) }
     viewModelFactory { ContactsViewModel(get(), get()) }
-    viewModelFactory { ContactDetailsViewModel(get(), get(), get(), get()) }
-    viewModelFactory { NewConversationViewModel(get(), get(), get(), get(), get()) }
+    viewModelFactory { ContactDetailsViewModel(get(), get(), get(), get(), vCardService = get()) }
+    viewModelFactory { NewConversationViewModel(get(), get(), get(), get(), get(), vCardService = get()) }
     viewModelFactory { AboutViewModel() }
     viewModelFactory { DebugLogsViewModel(get(), get(), get(), get()) }
     viewModelFactory { RecordingsViewModel(get()) }

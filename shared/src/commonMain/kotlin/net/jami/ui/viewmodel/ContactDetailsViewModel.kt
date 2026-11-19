@@ -31,6 +31,7 @@ import net.jami.model.Conversation
 import net.jami.model.MemberRole
 import net.jami.model.Profile
 import net.jami.model.Uri
+import net.jami.services.VCardService
 import net.jami.services.AccountService
 import net.jami.services.ContactEvent
 import net.jami.services.ContactService
@@ -92,7 +93,22 @@ class ContactDetailsViewModel(
     private val contactService: ContactService,
     private val conversationFacade: ConversationFacade,
     private val deviceRuntimeService: DeviceRuntimeService,
-    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    /**
+     * Peer avatars go through [VCardService], never through a raw read of the vcf on disk.
+     *
+     * The daemon leaves a **0-byte** `profiles/{base64url(uri)}.vcf` behind when a profile
+     * transfer starts and does not complete, and that placeholder is *newer* than the cached
+     * picture. A raw read sees an empty file and reports "no avatar", blanking a picture the
+     * device already has; [VCardService.loadPeerAvatar] knows that case and falls back to the
+     * cache. This is why a peer's photo showed in the conversation list and a letter in the
+     * chat header at the same moment (device, 2026-11-19): the list went through the service
+     * and this screen did not.
+     *
+     * Defaulted so the many existing construction sites keep working; Koin passes the shared
+     * singleton, which is what makes the in-memory cache common to every screen.
+     */
+    private val vCardService: VCardService = VCardService(deviceRuntimeService)
 ) : ViewModel() {
     private val scope = scope
 
@@ -178,11 +194,8 @@ class ContactDetailsViewModel(
                 val profile = contactService.loadContactData(contact, accountId)
                 currentProfile = profile
 
-                // Load avatar from VCard on disk (same path as NewConversationViewModel)
-                val filesDir = deviceRuntimeService.getDataPath()
-                val avatarBytes = VCardUtils.loadPeerProfileFromDisk(
-                    filesDir, accountId, contact.uri.rawRingId
-                )
+                // Through VCardService, which survives the daemon's 0-byte vcf placeholder.
+                val avatarBytes = vCardService.loadPeerAvatar(accountId, contact.uri.rawRingId)
 
                 val convType = when (conversation?.mode) {
                     Conversation.Mode.OneToOne -> getString(Res.string.conversation_type_private)

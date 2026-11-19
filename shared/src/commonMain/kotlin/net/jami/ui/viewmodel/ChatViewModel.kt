@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import net.jami.services.VCardService
 import net.jami.services.AccountEvent
 import net.jami.services.expect.AudioRecorderService
 import kotlinx.datetime.Clock
@@ -323,7 +324,22 @@ class ChatViewModel(
     private val draftRepository: DraftRepository,
     private val audioRecorderService: AudioRecorderService,
     private val sendQueue: net.jami.services.SendQueueService,
-    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    /**
+     * Peer avatars go through [VCardService], never through a raw read of the vcf on disk.
+     *
+     * The daemon leaves a **0-byte** `profiles/{base64url(uri)}.vcf` behind when a profile
+     * transfer starts and does not complete, and that placeholder is *newer* than the cached
+     * picture. A raw read sees an empty file and reports "no avatar", blanking a picture the
+     * device already has; [VCardService.loadPeerAvatar] knows that case and falls back to the
+     * cache. This is why a peer's photo showed in the conversation list and a letter in the
+     * chat header at the same moment (device, 2026-11-19): the list went through the service
+     * and this screen did not.
+     *
+     * Defaulted so the many existing construction sites keep working; Koin passes the shared
+     * singleton, which is what makes the in-memory cache common to every screen.
+     */
+    private val vCardService: VCardService = VCardService(deviceRuntimeService)
 ) : ViewModel() {
     private val scope = scope
 
@@ -496,11 +512,7 @@ class ChatViewModel(
                 val title = conversation?.title?.takeIf { it.isNotBlank() }
                     ?: if (isTitleSyncing) "" else conversationId
                 val avatarBytes = conversation?.contactOrNull?.let { contact ->
-                    VCardUtils.loadPeerProfileFromDisk(
-                        filesDir = deviceRuntimeService.getDataPath(),
-                        accountId = account.accountId,
-                        peerUri = contact.uri.rawRingId
-                    )
+                    vCardService.loadPeerAvatar(account.accountId, contact.uri.rawRingId)
                 }
                 val peerUri = conversation?.contactOrNull?.uri?.uri ?: ""
                 val isLegacy = conversation?.isLegacy ?: false
@@ -628,11 +640,7 @@ class ChatViewModel(
         profileJob = scope.launch {
             // Skip the current value: loadConversation() has just rendered it.
             contact.profileFlow.drop(1).collect {
-                val avatarBytes = VCardUtils.loadPeerProfileFromDisk(
-                    filesDir = deviceRuntimeService.getDataPath(),
-                    accountId = accountId,
-                    peerUri = contact.uri.rawRingId
-                )
+                val avatarBytes = vCardService.loadPeerAvatar(accountId, contact.uri.rawRingId)
                 _state.update {
                     it.copy(conversationTitle = contact.displayUsername, contactAvatarBytes = avatarBytes)
                 }
@@ -1021,13 +1029,7 @@ class ChatViewModel(
             .associate { contact ->
                 val id = contact.uri.rawRingId
                 id to peerAvatarCache.getOrPut(id) {
-                    runCatching {
-                        VCardUtils.loadPeerProfileFromDisk(
-                            filesDir = deviceRuntimeService.getDataPath(),
-                            accountId = accountId,
-                            peerUri = id,
-                        )
-                    }.getOrNull()
+                    runCatching { vCardService.loadPeerAvatar(accountId, id) }.getOrNull()
                 }
             }
     }
@@ -1805,13 +1807,7 @@ class ChatViewModel(
             if (contact?.isUser == true) continue
             val rawRingId = contact?.uri?.rawRingId ?: Uri.fromString(peerKey).rawRingId
             val avatar = peerAvatarCache.getOrPut(rawRingId) {
-                runCatching {
-                    VCardUtils.loadPeerProfileFromDisk(
-                        filesDir = deviceRuntimeService.getDataPath(),
-                        accountId = accountId,
-                        peerUri = rawRingId,
-                    )
-                }.getOrNull()
+                runCatching { vCardService.loadPeerAvatar(accountId, rawRingId) }.getOrNull()
             }
             readers.getOrPut(messageId) { mutableListOf() }
                 .add(SeenBy(rawRingId, displayNameFor(contact, peerKey), avatar))
