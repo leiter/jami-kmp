@@ -1323,6 +1323,33 @@ verdict — the plan entries were rewritten to test the fix rather than confirm 
     `CoroutineExceptionHandler` makes the throw observable. Verified to fail on the old
     declaration order and pass on the new one.
 
+## The call screen showed a peer's Jami ID instead of their name (2026-11-19) — fixed
+
+Reported from a device: the call screen titled the peer with their 40-hex id.
+
+- `callPeerTitle` was not at fault — profile name, contact name, registered username, raw id,
+  in that order, is right and `CallPeerTitleTest` already covered it. Every input above the raw
+  id was simply empty.
+- `CallViewModel.resolveContactName` **follows** `Contact.usernameFlow` ("the registered name is
+  often looked up after the call starts") but never **asks** for the lookup. Nothing fills that
+  flow by itself: the only two callers of `lookupAddress` for a peer are in `ConversationFacade`
+  (`:304`, `:1016`), on registration-state changes and smartlist loads, and a call goes through
+  neither. So a peer whose name had not already been resolved in this process had no username
+  for the whole call, and the title fell through to the id.
+- Fixed by asking once, from `resolveContactName`, when the title it just built *is* the raw id
+  — the `usernameFlow.collect` already there picks up the answer and retitles. This is the same
+  shape as the group join/invite rows fixed on 2026-10-30, where `ChatViewModel.displayNameFor`
+  had to request a lookup for the same reason; `requestPeerNameLookup` mirrors
+  `ChatViewModel.requestNameLookup` deliberately.
+- Two tests in `CallViewModelTest`, verified to fail without the fix. They use `viewModelScope()`
+  and `settle()` rather than `advanceUntilIdle()`: `resolveContactName` collects `usernameFlow`
+  for as long as the screen is open, so it is one of the never-completing coroutines that
+  file's `settle()` exists for — the first version hung for a minute and failed with
+  `UncompletedCoroutinesError`, which looks nothing like the assertion it was meant to make.
+- **Not yet confirmed on a device.** A peer whose name *had* already been resolved would have
+  shown correctly before this change too, so reproducing it needs a peer that is new to the
+  running process.
+
 ## Open Decisions
 
 - [x] **Publish a presence status note** *(done 2026-10-28, Android only — `publish` is not in

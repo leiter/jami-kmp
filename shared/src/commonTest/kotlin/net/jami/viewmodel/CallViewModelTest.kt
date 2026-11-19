@@ -351,4 +351,48 @@ class CallViewModelTest {
         assertFalse(vm.state.value.hasVideo, "the setting is off, so there is no video")
         assertFalse(vm.state.value.hasLocalVideo)
     }
+
+    /**
+     * The call screen showed a peer's 40-hex Jami ID instead of their name.
+     *
+     * `resolveContactName` followed `Contact.usernameFlow`, but nothing fills that flow unless
+     * someone asks the name service, and the two places that do — `ConversationFacade`, on
+     * registration changes and on smartlist loads — are not on any path a call takes. A peer
+     * whose name had not already been resolved in this process therefore had none, and the
+     * title fell through to the raw id for the whole call.
+     */
+    @Test
+    fun aPeerWithNoResolvedNameIsLookedUpSoTheTitleCanStopBeingTheJamiId() = runTest {
+        val stub = StubDaemonBridge()
+        // viewModelScope(), and settle() rather than advanceUntilIdle(): resolveContactName
+        // collects usernameFlow for as long as the screen is open, so it is one of the
+        // never-completing coroutines this file's settle() exists for.
+        val (vm, _, accountService) = makeVm(stub, viewModelScope())
+        prepareAccountInService(stub, accountService)
+
+        val peerId = "4f3b0a1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+        vm.initOutgoing(TEST_ACCOUNT_ID, contactUri = peerId, hasVideo = false)
+        settle()
+
+        assertTrue(
+            peerId in stub.lookedUpAddresses,
+            "the name service was never asked about the peer, so the title can only ever be " +
+                "the Jami ID; asked for: ${stub.lookedUpAddresses}",
+        )
+    }
+
+    /** Asked once, not once per emission of the username flow. */
+    @Test
+    fun thePeerNameLookupIsNotRepeated() = runTest {
+        val stub = StubDaemonBridge()
+        val (vm, _, accountService) = makeVm(stub, viewModelScope())
+        prepareAccountInService(stub, accountService)
+
+        val peerId = "4f3b0a1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+        vm.initOutgoing(TEST_ACCOUNT_ID, contactUri = peerId, hasVideo = false)
+        settle()
+        settle()
+
+        assertEquals(1, stub.lookedUpAddresses.count { it == peerId })
+    }
 }

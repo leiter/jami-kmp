@@ -212,6 +212,9 @@ class CallViewModel(
 ) : ViewModel() {
     private val scope = scope
 
+    /** Peers already asked about by [requestPeerNameLookup], so the daemon is asked once each. */
+    private val requestedNameLookups = mutableSetOf<String>()
+
     private val _cameraPermissionRequest = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val cameraPermissionRequest: SharedFlow<Unit> = _cameraPermissionRequest.asSharedFlow()
 
@@ -1221,11 +1224,32 @@ class CallViewModel(
                         rawId = peerUri.rawRingId,
                     )
                     _state.value = _state.value.copy(peerName = title, peerSubtitle = subtitle)
+                    // Following usernameFlow is not enough on its own: nothing fills it unless
+                    // someone asks the name service. ConversationFacade does so on registration
+                    // changes and smartlist loads, neither of which a call goes through, so a
+                    // peer whose name had not already been resolved in this process showed as
+                    // their 40-hex Jami ID for the whole call. Ask once, here, when the title
+                    // we just built *is* that id; the collect above then picks up the answer.
+                    if (title == peerUri.rawRingId) requestPeerNameLookup(accountId, peerUri)
                 }
             } catch (_: Exception) {
                 // Keep the Jami ID as display name on failure
             }
         }
+    }
+
+    /**
+     * Ask the name service what [peerUri] is registered as, at most once per call screen.
+     *
+     * Mirrors `ChatViewModel.requestNameLookup`. The result arrives asynchronously and reaches
+     * the title through [net.jami.model.Contact.usernameFlow], so there is nothing to await
+     * here — and nothing to retry, since a peer with no registered name simply has none.
+     */
+    private fun requestPeerNameLookup(accountId: String, peerUri: Uri) {
+        val rawRingId = peerUri.rawRingId
+        if (rawRingId.isEmpty()) return
+        if (!requestedNameLookups.add(rawRingId)) return
+        accountService.lookupAddress(accountId, rawRingId)
     }
 
     private fun startDurationTimer() {
