@@ -1,7 +1,8 @@
 # Jami KMP - Implementation Status
 
-**Last Updated:** 2026-11-05 (screen sharing given the `mediaProjection` foreground service
-Android 14+ requires)
+**Last Updated:** 2026-11-19 (docs reconciled against the code: nine TODO items that had
+shipped were still unchecked, and the iOS video gap below was rewritten — it *has* been
+exercised in a call now)
 **Version:** In Development
 **Primary Platforms:** Android, iOS
 
@@ -30,12 +31,18 @@ paths has been exercised live yet. `setDefaultModerator` was dropped from the ba
 account details (`ConfigKey.DEFAULT_MODERATORS`) on every platform. macOS keeps stubs (its `.a` is not rebuilt).
 See `doc/apple-bridge-rebuild.md`.
 - **macOS target does not compile** — ~95 errors, mostly in `MacOSHardwareService.kt`. Since the iOS and macOS Darwin implementations are now substantively identical, the right fix is a shared `appleMain` source set. A start exists on `origin/macos-build-and-apple-source-set` (`f0f66ce`, 2026-10-01); it predates the nine wrapper commits and is 149 commits behind `ios-catch-up-2026-11` (2026-11-11), so it needs rebasing first. `build-jamibridge.sh`'s macOS stage also fails independently, on UIKit code compiled against the macOS SDK — long-standing, not caused by recent work.
-- **iOS video in calls** — implemented 2026-11-11 (branch `ios-video-pipeline`), **not yet
-  verified in a call**: outgoing frames via `getNewFrame`/`publishFrame`, incoming via a
-  `SinkTarget` per sink rendered into an `AVSampleBufferDisplayLayer`. Builds, links, the app
-  starts, `iosSimulatorArm64Test` passes; the simulator has no camera, so a device call against
-  another client is still needed. Before this, cameras were registered with the daemon without
-  capabilities and silently dropped. PiP not done. See `doc/ios-video-pipeline.md` §0.
+- **iOS video in calls** — implemented 2026-11-11 (branch `ios-video-pipeline`); **exercised in
+  a real call on 2026-11-18** (build 48, iPhone ↔ Pixel) and found broken in six distinct ways.
+  All six were fixed in `1cbbc3b` and shipped as TestFlight build 50, which is **not itself
+  re-verified**. Outgoing frames go via `getNewFrame`/`publishFrame`, incoming via a `SinkTarget`
+  per sink rendered into an `AVSampleBufferDisplayLayer`.
+  - The sharpest of the six was shared, not iOS: `CallViewModel.handleVideoEvent` took *every*
+    started sink as the remote one, the daemon's own `camera://…` sink included, so the iPhone
+    showed its own camera full screen as the received video.
+  - Still open from that session: R1 (answering via CallKit turns our video off), R3, R4, R5, E1
+    — see `doc/findings-protocol-2026-11.md` → "Video call test session (build 48…)" for the
+    symptom/cause table, and `~/.claude/plans/ios-video-receive-end.md` for the plan items.
+  - PiP still not done. See `doc/ios-video-pipeline.md` §0.
 - **Chat plugins** — Jami plugin system not ported to KMP. Menu item shows a "not yet supported" snackbar.
 - **OsmMapView (Desktop/macOS)** — no viable JVM or AppKit map library in scope; shows coordinate text instead of a map.
 - **Desktop DaemonBridge** — all 100+ methods are no-ops. Architectural blocker: SWIG-generated JNI classes conflict with KMP's Android plugin, requiring a separate JVM module. Deprioritised.
@@ -47,7 +54,8 @@ See `doc/apple-bridge-rebuild.md`.
 ## ✅ Fully Implemented & Working
 
 ### UI / Navigation
-- 33 screen files with type-safe navigation (32 routes)
+- 34 screen files with type-safe navigation (32 routes), 20 ViewModels, 33 services
+  (counted 2026-11-19)
 - Loading, Onboarding, and Main navigation graphs
 - Material 3 design with JamiTheme (semantic + component token layers)
 - Reusable UI components (buttons, inputs, avatars, dialogs, etc.)

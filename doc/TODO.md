@@ -646,7 +646,11 @@ Pixel pair.**
 
 - [x] **Message reactions UI** — `ReactionGroup` data class aggregates emoji+count+isMine. `ChatViewModel` handles `ReactionAdded/ReactionRemoved` events via `rebuildMessageReactions`; `interactionToMessageItem` snapshots reactions via `groupReactions`. `ConversationFacade.onReactionAdded/Removed` now updates the `Conversation` model before emitting events; `swarmMessageToInteraction` loads history reactions from `SwarmMessage.reactions`. `ChatBubble` shows reaction pills below bubbles and an emoji quick-picker (👍 ❤️ 😂 😮 😢 👏) in the long-press menu.
 - [x] **Read receipt display (checkmarks)** — `DeliveryStatus` enum (SENDING/DELIVERED/READ/FAILED) added to `ChatViewModel`. `aggregateStatus()` derives it from `Interaction.statusMap` (DISPLAYED→READ, SUCCESS→DELIVERED, else SENDING). `MessageItem.deliveryStatus` wired from `interactionToMessageItem` TEXT case. `ChatBubble` overlays a `Row[timestamp, Icon]` at bottom-right of outgoing bubbles: `Done` (single tick, gray) = SENDING, `DoneAll` (double tick, gray) = DELIVERED, `DoneAll` (double tick, primary color) = READ, `Warning` (error color) = FAILED. See the 2026-08-16 entry below for the FAILED state + retry addition.
-- [ ] **@Mentions in group chat** — Reference client parses `@username` in message text and highlights them. No mention system in KMP's chat UI or viewmodel.
+- [x] **@Mentions in group chat** — Done; this item was left unchecked long after it landed
+  (verified against the code 2026-11-19). `ui/utils/Mentions.kt` supplies `trailingQuery`,
+  `suggestions` and `complete`; `ChatViewModel.insertMention` (`:942`) and the suggestion list
+  (`:950`) drive a `MentionSuggestions` row above the composer (`ChatScreen.kt:985`, `:2689`),
+  and mention runs are highlighted in bubbles by `MessageBody`. `MentionsTest` covers the parser.
 - [x] **Full-screen image viewer** — `ui/screens/MediaViewerScreen.kt`.
 - [x] **Video message playback in chat** — `ui/components/video/VideoPlayerView.kt` + `ui/screens/VideoPlayerScreen.kt`, routed via `MediaNavigationState`.
 - [x] **Retry failed file transfer** (2026-09-25) — Tap a failed outgoing transfer bubble
@@ -772,18 +776,78 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
   now carries `reply-to` through `sendFile`'s `parent`, a retry keeps it, and the quote is drawn
   on file bubbles. Verified on device against the swarm commit. iOS/macOS still drop the parent —
   the Apple wrapper's `sendFile` has no such argument.
-- [ ] **Markdown** — reference renders message text with Markwon (bold, italics, code, …); KMP
-  shows plain text. *Clickable links done 2026-09-18:* http(s) URLs in bubbles are `LinkAnnotation`s.
-- [ ] **Read markers** — reference shows peers' avatars at the last message each has read
-  (`Conversation.lastDisplayedMessages`) and a status icon only on the last sent message
-  (`lastSent`). KMP shows a tick on every outgoing message and no read avatars.
-  `Conversation.updateSwarmInteraction` already records `lastDisplayedMessages` / `lastSent`.
-- [ ] **Full emoji picker for reactions** — reference has a "more" button opening a full emoji
-  picker; KMP offers 6 fixed emojis.
+- [x] **Markdown** — Done; this item was left unchecked long after it landed (verified against
+  the code 2026-11-19). `ui/utils/MessageBody.kt` cuts a body into draw-ready runs in **one**
+  pass, because the three markups have to agree about one string and Markdown is the awkward one:
+  its delimiters are removed, so every offset after the first `**` shifts. Inline Markdown,
+  http(s) `LinkAnnotation`s and `@mentions` all come out of it (`ChatScreen.kt:1268`).
+  `MessageBodyTest` covers it.
+- [x] **Read markers** — Done; this item was left unchecked long after it landed (verified
+  against the code 2026-11-19), and its "KMP shows a tick on every outgoing message" description
+  is no longer true. `ChatViewModel` reads `conversation.lastDisplayedMessages` (`:1723`) into
+  `MessageItem.seenBy` and sets `isLastSent` (`:1797`); `DeliveryIndicatorKind` (`:1824`) then
+  yields `SeenBy` — a row of tiny reader avatars with a combined content description
+  (`ChatScreen.kt:249-267`) — in place of the tick, and the tick itself is confined to the last
+  sent message.
+- [x] **Full emoji picker for reactions** — Done; this item was left unchecked long after it
+  landed (verified against the code 2026-11-19). The six-emoji quick row still opens first
+  (`ChatScreen.kt:1364`), and its "more" entry sets `showFullEmojiPicker` (`:1181`, `:1408`),
+  which opens `EmojiPickerDialog` over the catalog in `components/inputs/EmojiCatalog.kt`.
+  Single codepoints only — skin-tone modifiers and ZWJ sequences multiply the list. Covered by
+  `EmojiCatalogTest`.
 - [x] **Share text** — Done 2026-09-18: "Share" in the text message long-press menu (`shareText`).
 - [x] **Edit history** — Done 2026-09-18: "Message history" in the long-press menu of edited
   messages opens a dialog with every version, newest first. `swarmMessageToInteraction` now keeps
   `SwarmMessage.editions` as `Interaction.history` (libjamiclient `addEdits`).
+
+## UI Refinement — motion and bubble layout (surveyed 2026-11-19)
+
+A sweep for dead clicks and polish gaps. **There are no dead clicks left**: every
+`onClick = {}` in the tree is the required no-op half of a `combinedClickable` whose
+`onLongClick` does the work, no control is hardcoded `enabled = false`, and no handler only
+logs. The stock of remaining work is refinement, and the finding behind most of it is that the
+app has essentially **no motion layer**.
+
+- [ ] **No navigation transitions anywhere.** `JamiNavigation.kt` has 35 `composable(...)`
+  entries and not one `enterTransition`/`exitTransition`, so every screen change is Compose
+  Navigation's default. The whole animation vocabulary in `shared/src/commonMain` is 7
+  `AnimatedVisibility`, 6 `fadeIn`, and 2 each of `animateFloatAsState` / `animateColorAsState` /
+  `animateContentSize`. No `SharedTransitionLayout`, no `sharedElement`, no `Crossfade`, no
+  `LookaheadScope`.
+- [ ] **No shared-element transition for the image → full-screen path.** Tapping an image bubble
+  (`ChatScreen.kt:1888`) hard-cuts to `MediaViewerScreen`, which already does pinch-zoom and
+  double-tap-to-reset (`MediaViewerScreen.kt:95-128`) but is entered and left without motion.
+  Same cut on `MediaGalleryScreen` → `MediaViewerScreen`. The conversation row → `ChatScreen`
+  open is the other natural container transform.
+- [ ] **`animateItem()` is used nowhere in the repo.** The conversation list re-sorts on every
+  incoming message, so rows teleport to their new position; new chat messages pop in. One
+  modifier per `LazyColumn` item.
+- [ ] **No "jump to latest" FAB in chat.** The reference has one, shown and hidden from the
+  scroll position (`ConversationFragment.kt:340`, `:402-403`). KMP has nothing, so returning from
+  a scroll back through history is manual.
+- [ ] **`MediaViewerScreen` has no swipe-down-to-dismiss and no pager** — one image, back button
+  only. Pairs naturally with the shared-element work above.
+- [ ] **No message sequencing, and no sender avatars in group chats.** This is the largest single
+  chat-UI gap and it carries a visible defect, not just polish. The reference
+  `ConversationAdapter` runs a full `startOfSeq`/`endOfSeq` model: in a group the sender avatar
+  renders only on the **last** message of a run (`:1548`) with a fade (`:1553`), the peer name
+  only on the **first** (`:1740`), and both are hidden entirely in 1:1 (`:1186`, `:1722`).
+  - KMP has none of it — `startOfSeq`/`endOfSeq`/`isFirstInGroup` match nothing, and
+    `ChatScreen.kt` has only **two** `JamiAvatar` call sites, the read-receipt row (`:260`) and
+    the top bar (`:561`). So messages never group and incoming bubbles carry no avatar at all.
+  - **The defect:** the author name is drawn above *every* incoming message with no group guard
+    (`ChatScreen.kt:1209`, `if (!isOutgoing && message.author.isNotEmpty())`), so in a 1:1 chat
+    the peer's name repeats above every single bubble. The reference shows it in groups only.
+  - One task covers grouping, per-position corner radii, group avatars and the name rule.
+- [ ] **Haptics exist only in the call flow** — see the call item above; the message long-press
+  menu, swipe-to-reply, swipe-to-delete and the reaction picker have none.
+- [ ] **Video tiles in the media gallery have no thumbnail** — `MediaGalleryScreen.kt:180` draws
+  a play-icon placeholder; frame extraction is not implemented.
+- [ ] **The 1:1 peer avatar in conversation details is inert.** `ConversationDetailsScreen.kt:301`
+  makes the XL avatar clickable only when `canEditGroup` (to change a group photo), which is
+  deliberate and documented. Tapping a 1:1 peer's avatar to see the photo full-size would reuse
+  the shared-element plumbing above. **Not verified against the reference** — check
+  `ContactDetails` upstream before treating this as a parity gap rather than an addition.
 
 ## Home Screen — Missing Features
 
@@ -804,8 +868,24 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
   (`pref_proximity_title`), with `SettingsRepository.updateProximityEnabled` persisting it;
   covered by `toggleProximityPersistsToCallSettings`. **Android only** — not yet verified on a
   device, and iOS has `AVAudioSession`'s own proximity handling, not this.
-- [ ] **Haptic feedback on call answer/decline** — No `Vibrator` / `HapticFeedbackConstants` calls in the call flow.
-- [ ] **Bluetooth headset routing** — `toggleSpeaker()` backend exists; full 3-way routing (earpiece / speaker / BT) may not be fully wired through `AudioManager`.
+- [x] **Haptic feedback on call answer/decline** — Done; this item was left unchecked long after
+  it landed (verified against the code 2026-11-19), and its "no calls in the call flow" claim is
+  wrong. `CallScreen.kt` takes `LocalHapticFeedback` (`:212`, `:344`) and fires
+  `HapticFeedbackType.Confirm` on answer and `Reject` on decline/hang-up (`:218-236`, `:350-355`)
+  — Compose's multiplatform haptics rather than Android's `Vibrator`, which is why a grep for the
+  Android API found nothing.
+  - **Still open, and the broader half of this:** haptics exist *only* in the call flow. Nothing
+    else in the app has any — not the message long-press menu, not swipe-to-reply, not
+    swipe-to-delete on a conversation row, not the reaction picker. Those are the gestures where
+    a reference Android app would give feedback.
+- [ ] **Bluetooth headset routing** — Re-checked 2026-11-19; the "may not be" is now settled as
+  **no**. The *backend* is further along than this item implied: Android `HardwareService` holds
+  an `AudioState` over an `AudioOutput`/`AudioOutputType` model (`:48`), emits `bluetoothEvents`
+  (`:47`, `:176`) and reads `audioManager.communicationDevice` (`:291`). What is missing is the
+  **UI and the third route**: `CallScreen` offers one binary speaker toggle
+  (`:1292-1298` → `toggleSpeaker()`), so there is no way to pick earpiece / speaker / BT, and
+  `routeToSpeaker()`/its counterpart only ever move between `SPEAKERS` and `INTERNAL` (`:133`,
+  `:140`). A route picker sheet on the call controls is the task.
 
 ## Notifications — Missing Features
 
@@ -820,13 +900,24 @@ Parity gaps found 2026-09-18 comparing chat interactions with jami-android-clien
 
 ## App Settings — Missing Features
 
-- [ ] **Battery optimisation exemption prompt** — Reference prompts the user to whitelist the app. No `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` intent in KMP.
-- [ ] **Language selector** — Reference has a locale preference. Not found in `AppSettingsScreen`.
+- [x] **Battery optimisation exemption prompt** — Done; this item was left unchecked long after
+  it landed (verified against the code 2026-11-19). `ui/platform/BatteryOptimization.kt` is an
+  expect/actual with `rememberBatteryOptimizationState()`, consumed by `AppSettingsScreen.kt:120`
+  and shown as a row whose summary reflects `isExempt` (`:564-567`). A no-op where
+  `isSupported` is false, so the row hides itself off Android.
+- [x] **Language selector** — Done; this item was left unchecked long after it landed (verified
+  against the code 2026-11-19). `ui/platform/AppLanguage.kt` + `AppSettingsScreen.kt:215-218`,
+  with the picker at `:747`. It offers only the translations this build actually ships, and names
+  each language in itself ("polski", not "Polish"); system default is the empty value.
 - [ ] **Display name in notifications setting** — Reference lets users hide contact names from notifications for privacy. Not in `AppSettingsScreen`.
 - [x] **Log export / debug mode** — `DebugLogsScreen` + `DebugLogsViewModel` (AppSettings → Advanced
   → Debug logs): scrollable monospace view, refresh, share. `LogCapture` expect/actual reads logcat
   on Android and is a no-op elsewhere. (This item was left unchecked long after the screen landed.)
-- [ ] **App shortcuts** — Reference `AndroidManifest.xml` declares conversation shortcuts. Not in KMP manifest.
+- [x] **App shortcuts** — Done; this item was left unchecked long after it landed (verified
+  against the code 2026-11-19), and it was looking in the wrong place. These are *dynamic*
+  shortcuts, not manifest-declared ones: `services/AndroidConversationShortcuts.kt` implements
+  `ConversationShortcutService` over `ShortcutManagerCompat`/`ShortcutInfoCompat` and publishes
+  recent conversations to the launcher icon's long-press menu.
 
 ### Contact requests raised no notification at all (2026-11-06)
 
