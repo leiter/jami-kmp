@@ -1382,7 +1382,7 @@ Reported from a device: the call screen titled the peer with their 40-hex id.
     was verified to fail without the fix.
   - `resolveContactName` also logged `JobCancellationException` as a failure on every screen
     teardown; cancellation is now rethrown rather than reported.
-- **Not yet confirmed on a device** in its third form.
+- **Confirmed on the device in its third form, 2026-11-19.**
 
 ## Peer turning their camera off blanked the call screen (2026-11-19) — fixed
 
@@ -1441,7 +1441,7 @@ be impossible to bypass by accident.
   every screen.
 - Two of the seven sites were the group-member and read-marker avatars added earlier the same
   day, so they were born with this bug.
-- **Not yet confirmed on a device.**
+- **Confirmed on the device 2026-11-19**: the chat header now shows the same picture as the list.
 - [ ] **Not explained: why the vcf became 0 bytes at all.** The daemon writes that placeholder
   when a profile transfer starts and does not complete, so a peer's profile is evidently failing
   to transfer and leaving the stub behind. The avatar survives only because something cached it

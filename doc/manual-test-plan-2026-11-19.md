@@ -4,7 +4,10 @@ Covers `62f7120`, `6db96c3`, `8185c11`, `1cfbc80`, `68bca0e`. All of it is share
 applies to Android and iOS alike; the steps below are written for the Pixel pair because that is
 the quicker loop.
 
-**Sections A and B passed on the Pixel pair, 2026-11-19.** C, D and F are still outstanding.
+**Sections A, B, C and D passed on the Pixel pair, 2026-11-19**, D only after three attempts —
+see `doc/TODO.md` for what the first two fixes missed. The call screen no longer blanks when a
+peer switches their camera off, and a peer's avatar now matches between the conversation list
+and the chat header. F is still outstanding, as is the slow video recovery.
 
 The suite (1082, green) says nothing about motion, bubble layout or anything whose failure mode
 is "looks wrong" — which is most of this list, hence the walk.
