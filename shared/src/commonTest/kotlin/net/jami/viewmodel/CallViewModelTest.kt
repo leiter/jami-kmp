@@ -395,4 +395,31 @@ class CallViewModelTest {
 
         assertEquals(1, stub.lookedUpAddresses.count { it == peerId })
     }
+
+    /**
+     * Asking was not enough: the answer has to reach the screen.
+     *
+     * `AccountService.onRegisteredNameFound` writes the name onto the `Contact` in
+     * `Account.contacts`, while `ContactService.findContact` hands out a `Contact` from its own
+     * separate cache — two maps, two objects per peer. The call screen collected the
+     * `usernameFlow` of the one the name is never written to, so the title stayed the Jami ID
+     * even once the lookup had come back. It now listens for the event, as ChatViewModel does.
+     */
+    @Test
+    fun aRegisteredNameThatArrivesMidCallRetitlesThePeer() = runTest {
+        val stub = StubDaemonBridge()
+        val (vm, _, accountService) = makeVm(stub, viewModelScope())
+        prepareAccountInService(stub, accountService)
+
+        val peerId = "4f3b0a1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f70"
+        vm.initOutgoing(TEST_ACCOUNT_ID, contactUri = peerId, hasVideo = false)
+        settle()
+        assertEquals(peerId, vm.state.value.peerName, "nothing is known yet, so the id stands")
+
+        // What the daemon's reply arrives as, once lookupAddress comes back.
+        accountService.onRegisteredNameFound(TEST_ACCOUNT_ID, 0, peerId, "anna77", peerId)
+        settle()
+
+        assertEquals("anna77", vm.state.value.peerName)
+    }
 }

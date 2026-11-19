@@ -476,12 +476,20 @@ private fun CallScreenContent(
     }
     var showControls by remember { mutableStateOf(true) }
 
-    // Auto-hide controls after 3 seconds during ongoing video call
+    // Controls get out of the way only while there is a remote picture worth seeing.
     LaunchedEffect(showControls, state.hasRemoteVideo) {
         if (showControls && state.hasRemoteVideo && state.callMode is CallMode.OnGoing) {
             kotlinx.coroutines.delay(5000)
             showControls = false
         }
+    }
+
+    // ...and come back the moment it goes away. Without this, a peer turning their camera off
+    // left the controls hidden with no way to recall them: the tap below used to be gated on
+    // hasRemoteVideo, so the one gesture that could show them again did nothing precisely when
+    // it was needed. Reported from a device, 2026-11-19.
+    LaunchedEffect(state.hasRemoteVideo) {
+        if (!state.hasRemoteVideo) showControls = true
     }
 
     Box(
@@ -492,7 +500,10 @@ private fun CallScreenContent(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) {
-                if (state.hasRemoteVideo && !state.videoLoss.isVideoLost) {
+                // Not gated on hasRemoteVideo: with no remote picture the controls are the only
+                // thing on screen to interact with. The loss overlay carries its own buttons,
+                // so leave it alone.
+                if (!state.videoLoss.isVideoLost) {
                     showControls = !showControls
                 }
             },
@@ -514,6 +525,27 @@ private fun CallScreenContent(
                     isLocalVideo = false
                 )
             }
+        }
+
+        // Whatever stands in for a picture when there is none: the peer's avatar and name.
+        //
+        // This is drawn *before* the local previews rather than after, which is the whole point.
+        // It used to come last, so to keep it from painting over the draggable self-view it was
+        // suppressed whenever local video was active — and a peer switching their camera off
+        // mid-call then left nothing at all behind the small preview: a pitch-black screen,
+        // reported from a device 2026-11-19. Ordering it as a background instead means it can be
+        // shown whenever there is no remote picture, without hiding anything.
+        //
+        // The ringing self-view is the one case that really is full-screen, so it still wins.
+        val hasIncomingVideoPreview =
+            state.callMode is CallMode.Incoming && state.isVideo && state.hasLocalVideo
+        if (!callEnded &&
+            (!state.hasRemoteVideo || state.videoLoss.isFallbackToAudioOnly) &&
+            !hasIncomingVideoPreview) {
+            AudioCallBackground(
+                state = state,
+                modifier = Modifier.fillMaxSize()
+            )
         }
 
         // Local camera preview while an incoming video call is ringing (full-screen, not draggable).
@@ -539,20 +571,6 @@ private fun CallScreenContent(
                     isLocalVideo = true
                 )
             }
-        }
-
-        // Audio-only call background if no video is active or in fallback mode.
-        // Not shown when there is a local incoming-video preview, active local video, or
-        // the call has ended (navigation is imminent; keep the screen clean).
-        val hasIncomingVideoPreview = state.callMode is CallMode.Incoming && state.isVideo && state.hasLocalVideo
-        if (!callEnded &&
-            (!state.hasRemoteVideo || state.videoLoss.isFallbackToAudioOnly) &&
-            !(state.hasLocalVideo && !state.isVideoMuted && state.callMode is CallMode.OnGoing) &&
-            !hasIncomingVideoPreview) {
-            AudioCallBackground(
-                state = state,
-                modifier = Modifier.fillMaxSize()
-            )
         }
 
         // Hold overlay (semi-transparent dimmer)

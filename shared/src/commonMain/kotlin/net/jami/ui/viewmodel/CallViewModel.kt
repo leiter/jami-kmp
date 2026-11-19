@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
+import net.jami.services.AccountEvent
 import net.jami.services.AccountService
 import net.jami.repository.SettingsRepository
 import net.jami.services.CallService
@@ -214,6 +215,15 @@ class CallViewModel(
 
     /** Peers already asked about by [requestPeerNameLookup], so the daemon is asked once each. */
     private val requestedNameLookups = mutableSetOf<String>()
+
+    /**
+     * The inputs to [callPeerTitle] that do not come from the name service, kept so a lookup
+     * that lands mid-call can rebuild the title without re-reading the contact.
+     */
+    private var peerProfileName: String? = null
+    private var peerContactName: String? = null
+    private var peerRawId: String = ""
+    private var peerNameEventsJob: Job? = null
 
     private val _cameraPermissionRequest = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val cameraPermissionRequest: SharedFlow<Unit> = _cameraPermissionRequest.asSharedFlow()
@@ -1213,6 +1223,10 @@ class CallViewModel(
                 val contact = contactService.findContact(accountId, peerUri)
                 val profile = contactService.loadContactData(contact, accountId)
                 call?.contact = contact
+                peerProfileName = profile.displayName
+                peerContactName = contact.displayName
+                peerRawId = peerUri.rawRingId
+                observePeerNameLookups()
                 _state.value = _state.value.copy(peerAvatar = profile.avatar)
                 // The registered name is often looked up after the call starts: follow it, so
                 // the title moves from the Jami ID to the name once it is known.
@@ -1234,6 +1248,39 @@ class CallViewModel(
                 }
             } catch (_: Exception) {
                 // Keep the Jami ID as display name on failure
+            }
+        }
+    }
+
+    /**
+     * Retitle the peer when the name service answers, for as long as this screen is open.
+     *
+     * [requestPeerNameLookup] asks the question but the answer does not come back through the
+     * `Contact` this screen holds. `AccountService.onRegisteredNameFound` writes the name onto
+     * `Account.getContactFromCache(...)`, while `ContactService.findContact(...)` hands out a
+     * `Contact` from its *own* cache — two maps, two objects per peer, so the username that
+     * arrives is set on one of them while this screen collects the `usernameFlow` of the other
+     * and never sees it. Listening to the event instead is what `ChatViewModel` does, and for
+     * the same reason.
+     *
+     * Merging the two caches would be the real fix and is not one to make from the call screen;
+     * see doc/TODO.md.
+     */
+    private fun observePeerNameLookups() {
+        if (peerNameEventsJob != null) return
+        peerNameEventsJob = scope.launch {
+            accountService.accountEvents.collect { event ->
+                if (event !is AccountEvent.RegisteredNameFound) return@collect
+                if (event.state != 0 || event.name.isEmpty()) return@collect
+                if (peerRawId.isEmpty()) return@collect
+                if (Uri.fromString(event.address).rawRingId != peerRawId) return@collect
+                val (title, subtitle) = callPeerTitle(
+                    profileName = peerProfileName,
+                    contactName = peerContactName,
+                    username = event.name,
+                    rawId = peerRawId,
+                )
+                _state.value = _state.value.copy(peerName = title, peerSubtitle = subtitle)
             }
         }
     }
@@ -1271,6 +1318,7 @@ class CallViewModel(
         videoLossJob?.cancel()
         inCallMessagesJob?.cancel()
         callStatsJob?.cancel()
+        peerNameEventsJob?.cancel()
         hostedConfWatchdogJob?.cancel()
         hardwareService.cameraCleanup()
         scope.cancel()

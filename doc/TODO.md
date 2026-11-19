@@ -1328,7 +1328,7 @@ verdict — the plan entries were rewritten to test the fix rather than confirm 
     `CoroutineExceptionHandler` makes the throw observable. Verified to fail on the old
     declaration order and pass on the new one.
 
-## The call screen showed a peer's Jami ID instead of their name (2026-11-19) — fixed
+## The call screen showed a peer's Jami ID instead of their name (2026-11-19) — fixed, twice
 
 Reported from a device: the call screen titled the peer with their 40-hex id.
 
@@ -1351,9 +1351,48 @@ Reported from a device: the call screen titled the peer with their 40-hex id.
   for as long as the screen is open, so it is one of the never-completing coroutines that
   file's `settle()` exists for — the first version hung for a minute and failed with
   `UncompletedCoroutinesError`, which looks nothing like the assertion it was meant to make.
-- **Not yet confirmed on a device.** A peer whose name *had* already been resolved would have
-  shown correctly before this change too, so reproducing it needs a peer that is new to the
-  running process.
+- **The first fix was not enough, and the device said so** (hash still shown in the call
+  overlay and under the ringing avatar). Asking the question was only half of it: the answer
+  never reached this screen. `AccountService.onRegisteredNameFound` writes the name onto the
+  `Contact` in `Account.contacts`, while `ContactService.findContact` hands out a `Contact` from
+  its **own** cache — two maps, two objects per peer — so the username was set on one while the
+  call screen collected the `usernameFlow` of the other. `CallViewModel` now listens for
+  `AccountEvent.RegisteredNameFound` and retitles, which is what `ChatViewModel` does and for
+  exactly this reason. Covered by `aRegisteredNameThatArrivesMidCallRetitlesThePeer`.
+- [ ] **The underlying duplication is untouched.** Two contact caches for the same peer is a
+  trap that has now cost two bugs' worth of time, and every screen that follows a `Contact`'s
+  flows rather than listening for events is exposed to it. Merging them — most plausibly by
+  making `ContactService` the single owner and having `Account` delegate — is a real piece of
+  work and should not be done from inside a call-screen fix.
+- **Not yet confirmed on a device** in its second form.
+
+## Peer turning their camera off blanked the call screen (2026-11-19) — fixed
+
+Reported from a device: when one party stops sending video, the receiver's screen goes pitch
+black with no controls and nothing to tap.
+
+Two defects, both in `CallScreen`, which together produced exactly that:
+
+- **The black screen.** `AudioCallBackground` — the peer's avatar and name, what stands in for a
+  picture when there is none — was drawn *last* in the `Box`, so to stop it painting over the
+  draggable self-view it was suppressed whenever local video was active. With the remote picture
+  gone and our own camera still on, the remote block was skipped and the background suppressed,
+  leaving nothing full-screen behind a small preview. It is now drawn **before** the previews,
+  as a background, so it can be shown whenever there is no remote picture without hiding
+  anything. The ringing full-screen self-view still wins.
+- **The unrecoverable controls.** They auto-hide after five seconds of remote video, and the tap
+  that toggles them was gated on `hasRemoteVideo` — so the one gesture that could bring them
+  back did nothing precisely when they were gone. The gate is dropped (the loss overlay keeps
+  its own, since it carries its own buttons), and the controls now also reappear by themselves
+  when the remote picture goes away.
+
+- [ ] **Still open: video takes a while to come back when the peer re-enables it.** Reported in
+  the same breath and *not* addressed here. `handleVideoEvent` clears `remoteVideoSinkId` on
+  stop, so the restart arrives as a new sink and `VideoRenderer` — which is keyed on that id —
+  is recreated along with its surface rather than resumed. Whether that is the cost, or whether
+  it is the daemon waiting on a keyframe, is unmeasured; a logcat of the stop/start cycle with
+  timestamps on both `handleVideoEvent` and the renderer would say which. Do not guess at a fix
+  before that measurement.
 
 ## Open Decisions
 
