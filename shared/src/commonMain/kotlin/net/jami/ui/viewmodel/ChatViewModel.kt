@@ -54,6 +54,7 @@ import net.jami.services.ConversationEvent
 import net.jami.services.DeviceRuntimeService
 import net.jami.services.LocationUpdate
 import net.jami.utils.Log
+import net.jami.utils.StringUtils
 import net.jami.utils.VCardUtils
 import net.jami.ui.utils.Mentions
 
@@ -77,6 +78,14 @@ data class MessageItem(
     val id: String,
     val text: String,
     val author: String,
+    /**
+     * Raw ring id of the author, empty on an outgoing message and on list decorations.
+     *
+     * [author] is a display name and cannot stand in for it: two members of a group may carry
+     * the same one, and a name resolves asynchronously, so grouping on it would regroup the
+     * list the moment a lookup lands. Sequencing and the group avatar both key on this.
+     */
+    val authorUri: String = "",
     val timestamp: Long,
     val isOutgoing: Boolean,
     val type: MessageType = MessageType.Text,
@@ -113,6 +122,19 @@ data class MessageItem(
      * has read how far. Empty on every other message, including older ones they have read.
      */
     val seenBy: List<SeenBy> = emptyList(),
+    /**
+     * First of a run of messages from one author, so this is the one that carries their name
+     * (in a group) and the bubble's outer top corner.
+     *
+     * Both default to true, which makes every message a run of one — the ungrouped rendering
+     * this screen had before [applySequencingTo] existed.
+     */
+    val isFirstInSequence: Boolean = true,
+    /**
+     * Last of that run: the one that carries the author's avatar (in a group), the timestamp
+     * and the bubble's outer bottom corner.
+     */
+    val isLastInSequence: Boolean = true,
 )
 
 /**
@@ -240,6 +262,22 @@ data class ChatState(
      * disambiguate between.
      */
     val memberNames: List<String> = emptyList(),
+    /**
+     * True for a group (swarm with more than two parties), false for a 1:1.
+     *
+     * The bubbles need it for the two rules the reference applies only in a group: the author's
+     * name above the first message of a run, and their avatar beside the last. Naming the one
+     * other person above every bubble of a 1:1 is noise, which is what this screen did before.
+     */
+    val isGroup: Boolean = false,
+    /**
+     * Group members' avatars by raw ring id, for the avatar beside an incoming run.
+     *
+     * Read from disk once per peer and memoised, so the `ByteArray`s are the same instances on
+     * every rebuild and this map compares equal across state updates despite `ByteArray`
+     * equality being identity. Empty outside a group.
+     */
+    val memberAvatars: Map<String, ByteArray?> = emptyMap(),
     /** Members matching the mention being typed; empty when the user is not typing one. */
     val mentionSuggestions: List<String> = emptyList(),
     /** The message the next sent text replies to (composer reply bar); null when not replying. */
@@ -471,6 +509,8 @@ class ChatViewModel(
                     conversationTitle = title,
                     isTitleSyncing = isTitleSyncing,
                     memberNames = groupMemberNames(conversation),
+                    isGroup = conversation?.mode?.isGroup == true,
+                    memberAvatars = groupMemberAvatars(conversation),
                     contactAvatarBytes = avatarBytes,
                     hasMoreHistory = true,
                     isLoadingMore = false,
@@ -670,7 +710,7 @@ class ChatViewModel(
         if (failed.deliveryStatus != DeliveryStatus.FAILED) return
 
         _state.update { current ->
-            current.copy(messages = current.messages.filterNot { it.id == messageId })
+            current.copy(messages = applySequencingTo(current.messages.filterNot { it.id == messageId }))
         }
 
         sendOptimistic(accountId, conversationUri, failed.text, failed.replyTo?.messageId)
@@ -694,7 +734,7 @@ class ChatViewModel(
                     val id = outboxBubbleId(entry.id)
                     // enqueue() may already have sent it (conversation went live meanwhile).
                     if (current.messages.any { it.id == id }) current
-                    else current.copy(messages = current.messages + heldBubble(entry))
+                    else current.copy(messages = applySequencingTo(current.messages + heldBubble(entry)))
                 }
                 refreshMessageHold()
             }
@@ -711,7 +751,7 @@ class ChatViewModel(
             deliveryStatus = DeliveryStatus.SENDING,
             replyTo = replyTo?.let { replyPreview(it) },
         )
-        _state.update { it.copy(messages = it.messages + optimisticItem) }
+        _state.update { it.copy(messages = applySequencingTo(it.messages + optimisticItem)) }
 
         dispatchSend(accountId, conversationUri, optimisticId, text, replyTo)
     }
@@ -965,12 +1005,45 @@ class ChatViewModel(
             .distinct()
     }
 
+    /**
+     * Group members' avatars by raw ring id, for the avatar beside an incoming run.
+     *
+     * Shares [peerAvatarCache] with the read markers, so a member pictured in both places is
+     * read from disk once and the two maps hand out the same `ByteArray` instance — which is
+     * what lets [ChatState.memberAvatars] compare equal across state updates. Empty for a 1:1,
+     * where the bubbles draw no avatar at all.
+     */
+    private fun groupMemberAvatars(conversation: Conversation?): Map<String, ByteArray?> {
+        if (conversation?.mode?.isGroup != true) return emptyMap()
+        val accountId = currentAccountId ?: return emptyMap()
+        return conversation.contacts
+            .filterNot { it.isUser }
+            .associate { contact ->
+                val id = contact.uri.rawRingId
+                id to peerAvatarCache.getOrPut(id) {
+                    runCatching {
+                        VCardUtils.loadPeerProfileFromDisk(
+                            filesDir = deviceRuntimeService.getDataPath(),
+                            accountId = accountId,
+                            peerUri = id,
+                        )
+                    }.getOrNull()
+                }
+            }
+    }
+
     private fun refreshMemberNames() {
         val accountId = currentAccountId ?: return
         val conversationId = currentConversationId ?: return
         val conversation =
             conversationFacade.getConversation(accountId, Uri(Uri.SWARM_SCHEME, conversationId))
-        _state.update { it.copy(memberNames = groupMemberNames(conversation)) }
+        _state.update {
+            it.copy(
+                memberNames = groupMemberNames(conversation),
+                isGroup = conversation?.mode?.isGroup == true,
+                memberAvatars = groupMemberAvatars(conversation),
+            )
+        }
     }
 
     /**
@@ -1175,7 +1248,7 @@ class ChatViewModel(
             val inFlight = _state.value.messages.filter { it.id.startsWith("pending-") }
             val held = sendQueue.queued(accountId, conversationId).map { heldBubble(it) }
             _state.value = _state.value.copy(
-                messages = applyReadMarkers(withSeparators) + inFlight + held,
+                messages = applySequencingTo(applyReadMarkers(withSeparators) + inFlight + held),
                 isLoading = false,
             )
             refreshMessageHold()
@@ -1196,10 +1269,15 @@ class ChatViewModel(
         val author = displayNameFor(interaction.contact, interaction.author ?: "")
         val timestamp = interaction.timestamp  // already milliseconds
         val isOutgoing = interaction.author == null || interaction.contact?.isUser == true
+        // Identity, not presentation: see MessageItem.authorUri. Left empty on our own
+        // messages, which never group across a peer's and never draw an avatar.
+        val authorUri = if (isOutgoing) "" else interaction.contact?.uri?.rawRingId
+            ?: interaction.author?.takeIf { it.isNotBlank() }?.let { Uri.fromString(it).rawRingId }
+            ?: ""
 
         return when (interaction.type) {
             Interaction.InteractionType.TEXT -> MessageItem(
-                id = id, text = interaction.body ?: "", author = author,
+                id = id, text = interaction.body ?: "", author = author, authorUri = authorUri,
                 timestamp = timestamp, isOutgoing = isOutgoing, type = MessageType.Text,
                 reactions = groupReactions(interaction.reactions),
                 deliveryStatus = if (isOutgoing) aggregateStatus(interaction.statusMap) else DeliveryStatus.SENDING,
@@ -1209,7 +1287,7 @@ class ChatViewModel(
             Interaction.InteractionType.CALL -> {
                 val call = interaction as? CallHistory
                 MessageItem(
-                    id = id, text = "", author = author,
+                    id = id, text = "", author = author, authorUri = authorUri,
                     timestamp = timestamp, isOutgoing = isOutgoing, type = MessageType.Call,
                     isMissed = call?.isMissed ?: true,
                     callDuration = call?.duration ?: 0L
@@ -1218,7 +1296,7 @@ class ChatViewModel(
             Interaction.InteractionType.CONTACT -> {
                 val event = interaction as? ContactEvent
                 MessageItem(
-                    id = id, text = "", author = author,
+                    id = id, text = "", author = author, authorUri = authorUri,
                     timestamp = timestamp, isOutgoing = false, type = MessageType.System,
                     contactEventType = event?.event
                 )
@@ -1226,7 +1304,7 @@ class ChatViewModel(
             Interaction.InteractionType.DATA_TRANSFER -> {
                 val transfer = interaction as? DataTransfer
                 MessageItem(
-                    id = id, text = interaction.body ?: "", author = author,
+                    id = id, text = interaction.body ?: "", author = author, authorUri = authorUri,
                     timestamp = timestamp, isOutgoing = isOutgoing, type = MessageType.Transfer,
                     transferStatus = transfer?.transferStatus ?: Interaction.TransferStatus.INVALID,
                     totalSize = transfer?.totalSize ?: 0L,
@@ -1465,11 +1543,11 @@ class ChatViewModel(
         }
         if (item == null) {
             if (withoutOptimistic !== current) {
-                _state.value = _state.value.copy(messages = withoutOptimistic)
+                _state.value = _state.value.copy(messages = applySequencingTo(withoutOptimistic))
             }
             return
         }
-        _state.value = _state.value.copy(messages = withoutOptimistic + item)
+        _state.value = _state.value.copy(messages = applySequencingTo(withoutOptimistic + item))
     }
 
     /** True when the open conversation is a swarm group rather than a 1:1. */
@@ -1493,7 +1571,7 @@ class ChatViewModel(
                 item
             }
         }
-        _state.value = _state.value.copy(messages = updated)
+        _state.value = _state.value.copy(messages = applySequencingTo(updated))
     }
 
     /**
@@ -1685,9 +1763,11 @@ class ChatViewModel(
             } else if (deliveryRank(newStatus) <= deliveryRank(old)) return@update current
             // A status change can move lastSent or a read position, so the markers are
             // recomputed across the list, not just on the message that changed.
-            current.copy(messages = applyReadMarkers(current.messages.toMutableList().also {
-                it[idx] = it[idx].copy(deliveryStatus = newStatus)
-            }))
+            current.copy(messages = applySequencingTo(applyReadMarkers(
+                current.messages.toMutableList().also {
+                    it[idx] = it[idx].copy(deliveryStatus = newStatus)
+                }
+            )))
         }
     }
 
@@ -1779,6 +1859,67 @@ class ChatViewModel(
         private const val SEND_TIMEOUT_MS = 20_000L
     }
 }
+
+/**
+ * How long a gap may be before two messages from one author stop reading as one run.
+ *
+ * The reference's value (`ConversationAdapter.isSeqBreak`, 10 minutes).
+ */
+internal const val SEQUENCE_GAP_MS = 10 * 60 * 1000L
+
+/**
+ * Mark each message as the first and/or last of a run by one author.
+ *
+ * A "run" is what every modern messenger draws as one visual block: consecutive messages from
+ * the same person, close together in time, sharing a tail and — in a group — one name above and
+ * one avatar beside. This screen had no such notion: every message was its own block, so a
+ * group showed no avatars at all and a 1:1 repeated the peer's name above every bubble.
+ *
+ * The rule is `ConversationAdapter.isSeqBreak` / `isAlwaysSingleMsg` from the reference client,
+ * translated to [MessageItem]. A run breaks when the direction changes, the author changes, the
+ * later message is a reply (its quote needs the full header), either side is not a plain text
+ * or call entry, the "is it only emoji" character of the two differs, or more than
+ * [SEQUENCE_GAP_MS] separates them.
+ *
+ * Date separators need no special case: they are neither text nor call, so they are always
+ * single and break the runs on both sides of them — which is exactly the reference's
+ * `hasPermanentDateString` condition.
+ *
+ * Pure, so the whole of it is testable without a conversation or a composition.
+ */
+internal fun applySequencingTo(items: List<MessageItem>): List<MessageItem> {
+    if (items.isEmpty()) return items
+    return items.mapIndexed { i, item ->
+        if (isAlwaysSingle(item)) {
+            item.copy(isFirstInSequence = true, isLastInSequence = true)
+        } else {
+            val prev = items.getOrNull(i - 1)
+            val next = items.getOrNull(i + 1)
+            item.copy(
+                isFirstInSequence = prev == null || isSeqBreak(prev, item),
+                isLastInSequence = next == null || isSeqBreak(item, next),
+            )
+        }
+    }
+}
+
+/**
+ * A message that never joins a run: anything that is not plain text or a call entry (a file, a
+ * system event, a date separator), and an emoji-only message, which the reference draws large
+ * and unbubbled.
+ */
+private fun isAlwaysSingle(item: MessageItem): Boolean =
+    (item.type != MessageType.Text && item.type != MessageType.Call) ||
+        StringUtils.isOnlyEmoji(item.text)
+
+/** True when [first] and [second], in list order, must not be drawn as one run. */
+private fun isSeqBreak(first: MessageItem, second: MessageItem): Boolean =
+    first.isOutgoing != second.isOutgoing ||
+        first.authorUri != second.authorUri ||
+        second.replyTo != null ||
+        isAlwaysSingle(first) ||
+        isAlwaysSingle(second) ||
+        (second.timestamp - first.timestamp) > SEQUENCE_GAP_MS
 
 /**
  * The read-marker pass itself, separated from reading the conversation so it can be tested.

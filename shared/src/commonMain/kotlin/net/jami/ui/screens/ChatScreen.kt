@@ -755,6 +755,8 @@ fun ChatScreen(
                                 onReply = if (canReply) ({ startReply(message.id) }) else null,
                                 onReplyQuoteClick = { viewModel.scrollToMessage(it) },
                                 onRetry = { viewModel.retryFileTransfer(message.id) },
+                                isGroup = state.isGroup,
+                                authorAvatar = state.memberAvatars[message.authorUri],
                             )
                             // A deleted message is an edit to an empty body; it used to render as
                             // an empty bubble labelled "edited". Shown as the reference does.
@@ -778,6 +780,8 @@ fun ChatScreen(
                                 loadEditHistory = { viewModel.getEditHistory(message.id) },
                                 onRetry = { viewModel.retryMessage(message.id) },
                                 memberNames = state.memberNames,
+                                isGroup = state.isGroup,
+                                authorAvatar = state.memberAvatars[message.authorUri],
                             )
                         }
                         }
@@ -1160,6 +1164,14 @@ private fun ChatBubble(
     onReplyQuoteClick: (String) -> Unit = {},
     /** Group members, so `@name` can be told apart from an email address. Empty in a 1:1. */
     memberNames: List<String> = emptyList(),
+    /**
+     * True in a group. Two of the reference's rules apply only there: the author's name above
+     * the first message of a run, and their avatar beside the last. In a 1:1 both are noise —
+     * there is one other person, and this screen used to print their name above every bubble.
+     */
+    isGroup: Boolean = false,
+    /** The author's avatar, for the group gutter. Null falls back to their coloured initials. */
+    authorAvatar: ByteArray? = null,
 ) {
     val isOutgoing = message.isOutgoing
     var editHistory by remember { mutableStateOf<List<Pair<Long, String>>?>(null) }
@@ -1169,9 +1181,13 @@ private fun ChatBubble(
     val textColor = if (isOutgoing) JamiTheme.colors.onMessageSent
     else JamiTheme.colors.onMessageReceived
     val timeColor = textColor.copy(alpha = 0.7f)
+    // The author's side carries the run: its top corner is only round on the first message, so
+    // consecutive bubbles meet tightly and read as one block. The far side stays round
+    // throughout, and the bottom keeps the existing tail.
+    val runTop = if (message.isFirstInSequence) JamiTheme.radius.m else JamiTheme.radius.xs
     val bubbleShape = RoundedCornerShape(
-        topStart = JamiTheme.radius.m,
-        topEnd = JamiTheme.radius.m,
+        topStart = if (isOutgoing) JamiTheme.radius.m else runTop,
+        topEnd = if (isOutgoing) runTop else JamiTheme.radius.m,
         bottomStart = if (isOutgoing) JamiTheme.radius.m else JamiTheme.radius.xs,
         bottomEnd = if (isOutgoing) JamiTheme.radius.xs else JamiTheme.radius.m,
     )
@@ -1189,10 +1205,18 @@ private fun ChatBubble(
     }
     val retrySendLabel = stringResource(Res.string.content_desc_retry_send)
 
-    Column(
+    // Incoming messages in a group reserve a column for the author's avatar.
+    val hasAvatarGutter = !isOutgoing && isGroup
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = JamiTheme.spacing.xxs)
+            // Messages inside one run sit flush against each other; the padding is spent at the
+            // two ends of the run instead, which is what makes it read as a block.
+            .padding(
+                top = if (message.isFirstInSequence) JamiTheme.spacing.xxs else 0.dp,
+                bottom = if (message.isLastInSequence) JamiTheme.spacing.xxs else 0.dp,
+            )
             .then(
                 // Add horizontal padding to create more visual separation
                 if (isOutgoing) {
@@ -1203,10 +1227,33 @@ private fun ChatBubble(
                     Modifier.padding(start = 8.dp, end = 56.dp)
                 }
             ),
-        horizontalAlignment = if (isOutgoing) Alignment.End else Alignment.Start,
+        verticalAlignment = Alignment.Bottom,
     ) {
-        // Show sender name for incoming messages
-        if (!isOutgoing && message.author.isNotEmpty()) {
+      if (hasAvatarGutter) {
+        // Drawn only on the last message of a run, as the reference does (`ConversationAdapter`,
+        // endOfSeq). The earlier messages still occupy the column, so every bubble in the run
+        // keeps the same left edge.
+        Box(modifier = Modifier.size(JamiTheme.sizes.avatarSmall)) {
+            if (message.isLastInSequence) {
+                JamiAvatar(
+                    displayName = message.author,
+                    avatarBytes = authorAvatar,
+                    size = AvatarSize.Small,
+                    // The name already heads the run; announcing it again on the avatar would
+                    // read the author twice.
+                    contentDescription = null,
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(JamiTheme.spacing.xs))
+      }
+      Column(
+        modifier = Modifier.weight(1f),
+        horizontalAlignment = if (isOutgoing) Alignment.End else Alignment.Start,
+      ) {
+        // The author's name heads a run, and only in a group: in a 1:1 there is one other
+        // person, and repeating their name above every bubble says nothing.
+        if (!isOutgoing && isGroup && message.isFirstInSequence && message.author.isNotEmpty()) {
             Text(
                 text = message.author,
                 style = JamiTheme.typography.labelSmall,
@@ -1540,6 +1587,7 @@ private fun ChatBubble(
                 }
             }
         }
+      }
     }
 }
 
@@ -1723,6 +1771,10 @@ private fun FileTransferMessage(
     onReply: (() -> Unit)? = null,
     onReplyQuoteClick: (String) -> Unit = {},
     onRetry: () -> Unit = {},
+    /** True in a group, where an incoming file carries its sender's name and avatar. */
+    isGroup: Boolean = false,
+    /** The sender's avatar, for the group gutter. Null falls back to coloured initials. */
+    authorAvatar: ByteArray? = null,
 ) {
     // Asynchronously load image bytes for completed picture transfers
     var imageBitmap by remember(message.destinationPath) { mutableStateOf<ImageBitmap?>(null) }
@@ -1802,10 +1854,44 @@ private fun FileTransferMessage(
 
     val timeText = formatMessageTime(message.timestamp)
 
-    Box(
+    // A transfer is never part of a run (the reference's `isAlwaysSingleMsg`), so it always
+    // carries the sender's name and avatar in a group — the same two rules as a text bubble,
+    // applied here so one person's photo and their words are attributed alike.
+    val hasAvatarGutter = !isOutgoing && isGroup
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = JamiTheme.spacing.xxs),
+        verticalAlignment = Alignment.Bottom,
+    ) {
+      if (hasAvatarGutter) {
+        JamiAvatar(
+            displayName = message.author,
+            avatarBytes = authorAvatar,
+            size = AvatarSize.Small,
+            // Named by the label above the bubble; announcing it here would repeat the sender.
+            contentDescription = null,
+        )
+        Spacer(modifier = Modifier.width(JamiTheme.spacing.xs))
+      }
+      Column(
+        modifier = Modifier.weight(1f),
+        horizontalAlignment = if (isOutgoing) Alignment.End else Alignment.Start,
+      ) {
+        if (hasAvatarGutter && message.author.isNotEmpty()) {
+            Text(
+                text = message.author,
+                style = JamiTheme.typography.labelSmall,
+                color = JamiTheme.colors.onSurfaceVariant,
+                modifier = Modifier.padding(
+                    start = JamiTheme.spacing.m,
+                    bottom = JamiTheme.spacing.xxs,
+                ),
+            )
+        }
+      Box(
+        modifier = Modifier.fillMaxWidth(),
         contentAlignment = alignment,
     ) {
         Box {
@@ -1999,6 +2085,8 @@ private fun FileTransferMessage(
             }
         }
         }
+    }
+      }
     }
 }
 
