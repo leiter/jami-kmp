@@ -1237,6 +1237,9 @@ class CallViewModel(
                         username = username,
                         rawId = peerUri.rawRingId,
                     )
+                    Log.d(TAG, "peerTitle: title='$title' sub='$subtitle' " +
+                        "profile='${profile.displayName}' contact='${contact.displayName}' " +
+                        "username='$username' raw=${peerUri.rawRingId}")
                     _state.value = _state.value.copy(peerName = title, peerSubtitle = subtitle)
                     // Following usernameFlow is not enough on its own: nothing fills it unless
                     // someone asks the name service. ConversationFacade does so on registration
@@ -1246,8 +1249,11 @@ class CallViewModel(
                     // we just built *is* that id; the collect above then picks up the answer.
                     if (title == peerUri.rawRingId) requestPeerNameLookup(accountId, peerUri)
                 }
-            } catch (_: Exception) {
-                // Keep the Jami ID as display name on failure
+            } catch (e: Exception) {
+                // Keep the Jami ID as display name on failure. Logged because it used to be
+                // swallowed outright, which made "the screen shows a hash" indistinguishable
+                // from "the contact lookup threw".
+                Log.w(TAG, "resolveContactName failed for ${peerUri.rawRingId}: $e")
             }
         }
     }
@@ -1271,6 +1277,8 @@ class CallViewModel(
         peerNameEventsJob = scope.launch {
             accountService.accountEvents.collect { event ->
                 if (event !is AccountEvent.RegisteredNameFound) return@collect
+                Log.d(TAG, "nameFound: address=${event.address} name='${event.name}' " +
+                    "state=${event.state} waitingFor=$peerRawId")
                 if (event.state != 0 || event.name.isEmpty()) return@collect
                 if (peerRawId.isEmpty()) return@collect
                 if (Uri.fromString(event.address).rawRingId != peerRawId) return@collect
