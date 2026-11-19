@@ -16,6 +16,11 @@
  */
 package net.jami.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.StartOffset
@@ -81,6 +86,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.foundation.Image
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CallMade
@@ -133,6 +139,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -443,6 +450,13 @@ fun ChatScreen(
         }
     }
 
+    // Whether the newest message is far enough above the viewport to offer a way back to it.
+    // derivedStateOf so that scrolling recomposes the button only when the answer flips, not on
+    // every pixel of every scroll.
+    val showJumpToLatest by remember {
+        derivedStateOf { listState.firstVisibleItemIndex > JUMP_TO_LATEST_THRESHOLD }
+    }
+
     // Auto-focus search field when search mode opens
     LaunchedEffect(state.isSearchActive) {
         if (state.isSearchActive) {
@@ -708,10 +722,12 @@ fun ChatScreen(
                 }
 
                 // ── Normal mode: scrollable message list ──
+                // Boxed so the jump-to-latest button can sit over the list's bottom edge,
+                // where the reference puts it (`fabLatest`, above the composer).
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 LazyColumn(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
+                        .fillMaxSize()
                         .padding(horizontal = JamiTheme.spacing.l),
                     state = listState,
                     reverseLayout = true,
@@ -809,6 +825,21 @@ fun ChatScreen(
                             }
                         }
                     }
+                }
+
+                // ── Jump to latest ──
+                // Scrolled back through history, the way down was the scrollbar and patience.
+                // The reference shows a small FAB once the newest message is far enough away
+                // (`ConversationFragment`, visibleLatestThreshold = 8); index 0 is the newest
+                // here because the list is reversed, so the first visible index *is* that
+                // distance.
+                JumpToLatestButton(
+                    visible = showJumpToLatest,
+                    onClick = { coroutineScope.launch { listState.animateScrollToItem(0) } },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = JamiTheme.spacing.s),
+                )
                 }
 
                 // Typing indicator — an incoming-style bubble with three bouncing dots,
@@ -1138,6 +1169,48 @@ private fun TypingDot(color: Color, index: Int) {
             .graphicsLayer { translationY = offsetY }
             .background(color, CircleShape),
     )
+}
+
+/**
+ * How far the newest message has to be above the viewport before the jump-to-latest button
+ * appears, in list items.
+ *
+ * The reference's `visibleLatestThreshold`. The list is reversed, so index 0 is the newest
+ * message and `firstVisibleItemIndex` is already that distance.
+ */
+private const val JUMP_TO_LATEST_THRESHOLD = 8
+
+/**
+ * The button that takes a reader scrolled back through history straight to the newest message.
+ *
+ * Its own composable rather than an `AnimatedVisibility` at the call site: that call sits
+ * inside a `Box` inside a `Column`, and `BoxScope`'s `@LayoutScopeMarker` shadows the outer
+ * `ColumnScope`, so overload resolution picks `ColumnScope.AnimatedVisibility` and then finds
+ * no receiver for it. A plain composable is in neither scope and resolves to the top-level one.
+ */
+@Composable
+private fun JumpToLatestButton(
+    visible: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn() + scaleIn(initialScale = 0.8f),
+        exit = fadeOut() + scaleOut(targetScale = 0.8f),
+        modifier = modifier,
+    ) {
+        SmallFloatingActionButton(
+            onClick = onClick,
+            containerColor = JamiTheme.colors.surfaceVariant,
+            contentColor = JamiTheme.colors.onSurfaceVariant,
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowDownward,
+                contentDescription = stringResource(Res.string.conversation_action_latest),
+            )
+        }
+    }
 }
 
 /**
