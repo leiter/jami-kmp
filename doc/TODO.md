@@ -845,12 +845,15 @@ green at 1079, but motion is exactly the kind of thing a test cannot sign off.
   already the distance the reference computes; read through `derivedStateOf` so a scroll
   recomposes the button only when the answer flips. `conversation_action_latest` was already in
   `values/`. **Not yet seen on a device.**
-  - **Open question it raises:** `ChatScreen` auto-scrolls to the bottom whenever the newest
-    message id changes, with no check for where the reader is. Someone reading history is
-    therefore yanked to the latest message the moment one arrives — which is the thing this
-    button exists to make unnecessary. The usual rule is to auto-scroll only when already at
-    the bottom and otherwise leave the reader alone (the button, optionally badged, is then the
-    way down). Left alone here because it was not part of the ask.
+  - **The auto-scroll it exposed, fixed 2026-11-19.** `ChatScreen` used to scroll to the bottom
+    whenever the newest message id changed, with no check for where the reader was, so a peer's
+    message arriving while you read history yanked you to the latest one and lost your place —
+    the thing this button exists to make unnecessary. It now stays pinned to the newest message
+    only while already there, and otherwise leaves the reader alone; your own sends are still
+    always followed down, since sending is a request to see the result, as the reference does.
+    The threshold is 2 rather than 0 because inserting at index 0 of a reversed list moves the
+    anchored item from 0 to 1, so someone sitting exactly at the bottom reads as 1 by the time
+    the check runs.
 - [x] **`MediaViewerScreen` swipe-to-dismiss** (2026-11-19) — the gesture every gallery has.
   Live only while unzoomed: once the image is scaled up a vertical drag is a pan, and stealing
   it would leave a zoomed image impossible to move. The backdrop thins as the image is dragged,
@@ -1291,7 +1294,7 @@ verdict — the plan entries were rewritten to test the fix rather than confirm 
   **Neither the defect nor the fix has been run on a device** — one screen-share attempt on an
   Android 14+ device settles both. See `Permissions.md`.
 
-## Candidate defect found while adding the jump-to-latest button (2026-11-19)
+## Defect found while adding the jump-to-latest button (2026-11-19) — fixed
 
 - [ ] **`AccountService.explicitlyDeactivatedAccounts` can be read before it is initialised.**
   Surfaced as four `CallServiceTest` failures in one full-suite run and not in three reruns, so
@@ -1308,9 +1311,17 @@ verdict — the plan entries were rewritten to test the fix rather than confirm 
     (`UncaughtExceptionsBeforeTest`, then a test that never completes).
   - Production normally escapes it because the dispatcher defers the launch past construction;
     `runTest` with an eager dispatcher does not, which is why only the tests have shown it.
-  - **The fix is to move the property declaration above the `init` block** — one line, no
-    behaviour change. Not applied here because it was outside the task in hand; it should be
-    done before anyone spends time chasing the "flaky" `CallServiceTest`.
+  - **Fixed 2026-11-19** by moving the declaration above the `init` block, with a comment there
+    saying that everything the collector reaches has to be declared above it.
+  - **Confirmed, not assumed.** A probe inside the collector printed `fieldIsNull=true` on the
+    old code. The reason it never looked like a constructor failure is that the NPE is thrown
+    *inside the launched coroutine*, so it goes to the scope's uncaught-exception handler rather
+    than to the caller — which is why it surfaced as `UncaughtExceptionsBeforeTest` in whichever
+    test happened to run next instead of where it was caused.
+  - `AccountServiceInitOrderTest` pins it: an unconfined scope makes the launch run inline so
+    the `StateFlow`'s current value reaches the collector before the constructor returns, and a
+    `CoroutineExceptionHandler` makes the throw observable. Verified to fail on the old
+    declaration order and pass on the new one.
 
 ## Open Decisions
 

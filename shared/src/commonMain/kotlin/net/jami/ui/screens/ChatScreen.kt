@@ -441,11 +441,21 @@ fun ChatScreen(
         onDispose { viewModel.onLeave() }
     }
 
-    // Scroll to bottom only when a new message is appended (newest ID changes),
-    // not when older history is prepended by loadMore().
-    val newestMessageId = state.messages.lastOrNull { it.type != MessageType.DateSeparator }?.id
+    // Scroll to bottom when a new message is appended (newest ID changes), not when older
+    // history is prepended by loadMore() — and not over a reader who has scrolled back.
+    //
+    // This used to jump unconditionally, so a peer's message arriving while you were reading
+    // history yanked you to the bottom and lost your place. The rule now is the usual one: stay
+    // pinned to the newest message while you are already there, and otherwise leave the reader
+    // where they are. The jump-to-latest button is the way back down.
+    val newestMessage = state.messages.lastOrNull { it.type != MessageType.DateSeparator }
+    val newestMessageId = newestMessage?.id
     LaunchedEffect(newestMessageId) {
-        if (newestMessageId != null && !state.isSearchActive) {
+        if (newestMessageId == null || state.isSearchActive) return@LaunchedEffect
+        // Your own message is always followed down: sending is a request to see the result.
+        // The reference scrolls to the end on send for the same reason.
+        val isOwnSend = newestMessage.isOutgoing
+        if (isOwnSend || listState.firstVisibleItemIndex <= AUTO_SCROLL_STICKY_THRESHOLD) {
             listState.animateScrollToItem(0)
         }
     }
@@ -1179,6 +1189,17 @@ private fun TypingDot(color: Color, index: Int) {
  * message and `firstVisibleItemIndex` is already that distance.
  */
 private const val JUMP_TO_LATEST_THRESHOLD = 8
+
+/**
+ * How close to the newest message the reader has to be for an arriving message to scroll the
+ * list, in list items.
+ *
+ * Not zero, because inserting at index 0 of a reversed list moves the item the viewport is
+ * anchored to from 0 to 1 — someone sitting exactly at the bottom reads as 1, not 0, by the
+ * time this is checked. Two leaves a little room without reaching far enough up to yank anyone
+ * who has deliberately scrolled back.
+ */
+private const val AUTO_SCROLL_STICKY_THRESHOLD = 2
 
 /**
  * The button that takes a reader scrolled back through history straight to the newest message.

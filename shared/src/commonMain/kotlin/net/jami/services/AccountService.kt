@@ -151,8 +151,23 @@ class AccountService(
     private val _daemonAccountsReady = MutableStateFlow(false)
     val daemonAccountsReady: StateFlow<Boolean> = _daemonAccountsReady.asStateFlow()
 
+    // Account ids explicitly deactivated via setAccountActive(id, false), tracked synchronously so
+    // it stays authoritative regardless of coroutine ordering or a stale isActive read. A future
+    // background proxy-deactivation/restore path must consult this before reactivating an account,
+    // so a battery-saving deactivation cannot resurrect one the user turned off on purpose.
+    // In-memory only — the in-process daemon resets every account to active on (re)load, so
+    // persisting ids would only produce stale state. Ported from libjamiclient AccountService.kt.
+    private val explicitlyDeactivatedAccounts = mutableSetOf<String>()
+
     init {
-        // Subscribe to connectivity changes - activate/deactivate accounts for DHT sync
+        // Subscribe to connectivity changes - activate/deactivate accounts for DHT sync.
+        // Everything this collector reaches must be declared *above* this block:
+        // connectivityState is a StateFlow, so it emits its current value as soon as the
+        // collector attaches, and Kotlin runs property initialisers and init blocks in
+        // declaration order. explicitlyDeactivatedAccounts used to be declared 300 lines below
+        // and was therefore still null when setAccountsActive() cleared it, which surfaced as
+        // an intermittent NullPointerException in CallServiceTest. Only an eager dispatcher
+        // makes it reliable enough to see, which is why it looked like a flaky test.
         scope.launch {
             hardwareService.connectivityState.collect { isConnected ->
                 Log.d(TAG, "Network connectivity changed: $isConnected")
@@ -453,14 +468,6 @@ class AccountService(
     fun setAccountEnabled(accountId: String, enabled: Boolean) {
         daemonBridge.sendRegister(accountId, enabled)
     }
-
-    // Account ids explicitly deactivated via setAccountActive(id, false), tracked synchronously so
-    // it stays authoritative regardless of coroutine ordering or a stale isActive read. A future
-    // background proxy-deactivation/restore path must consult this before reactivating an account,
-    // so a battery-saving deactivation cannot resurrect one the user turned off on purpose.
-    // In-memory only — the in-process daemon resets every account to active on (re)load, so
-    // persisting ids would only produce stale state. Ported from libjamiclient AccountService.kt.
-    private val explicitlyDeactivatedAccounts = mutableSetOf<String>()
 
     private val _daemonDiagnostics = MutableStateFlow(DaemonDiagnostics())
 
