@@ -76,6 +76,16 @@ every history load). The reference applies the pushed set directly —
 push channel is one line inside the forced signature fix. See
 [conversation permissions](#conversation-permissions-follow-up) below.
 
+### 1a. `onConferenceInfosUpdated` → `conferenceInfosUpdated` — a second forced rename
+
+**Added 2026-11-20 after generating the real bindings.** This document originally claimed
+`swarmLoaded` was the *only* signature change. It is not: `Callback::onConferenceInfosUpdated`
+(2 args) is **removed** and replaced by `conferenceInfosUpdated` with the same two arguments.
+jami-kmp overrides the old name (`DaemonBridge.android.kt:1084`), so this too fails the compile
+after the bump. Predicting from the reference client's call sites missed it because the reference
+had already been updated to the new name, so the symbol simply never appeared in the diff of
+"what they call that we do not".
+
 ### 2. `ExposedService` → `SharedService` — a pure rename
 
 Four methods, identical shapes, new spelling:
@@ -117,9 +127,22 @@ New and unused by us: the `collaborative*` family (15 calls), `setContactMetadat
 `getContactMetadata`, `startFeedConversation`, `getConversationPermissions`,
 `getConversationPreferences` additions.
 
-**No other signature changes exist on the pull side.** Every `JamiService.*` call site in the
-reference was compared against the arity our `JamiService.java` declares; `swarmLoaded` is the only
-mismatch, and it is a callback, not a call.
+**Verified against generated bindings, 2026-11-20.** `swig 4.2.0` was run over
+`origin/master` (`4117f880c`, 2026-10-14, 263 commits past our pin) in a throwaway worktree —
+`make-swig.sh` needs no C++ build — and the output diffed against the committed bindings. The
+real numbers, replacing the earlier estimates from call sites:
+
+| | |
+|---|---|
+| `JamiService` methods | 253 → 278 (29 added, 4 removed) |
+| Methods removed | exactly the four `ExposedService` ones |
+| Callback signature changes | `swarmLoaded` 4 → 5 args |
+| Callbacks renamed | `onConferenceInfosUpdated` → `conferenceInfosUpdated` |
+| Callbacks added | 10 (6 collaborative + `collaborativeDocumentReplicated`, `contactMetadataChanged`, `accountMetadataChanged`, `BlobMap::clear`) |
+| New binding class | `BlobMap.java` (24 → 25 files) |
+
+So jami-kmp has **three** forced changes, not two: `swarmLoaded`, `conferenceInfosUpdated`, and
+the four renamed service calls. Everything else is additive.
 
 ---
 
