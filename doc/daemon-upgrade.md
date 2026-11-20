@@ -7,6 +7,12 @@ checked out. Arity was compared mechanically, not by eye._
 
 ## Why this document exists
 
+Not to be confused with `plan_daemon_stability_sync.md` (2026-09-06), which is about *how* this
+client drives the daemon it already has — callback ordering, load gating, sync health. This
+document is only about moving to a newer daemon generation: which APIs changed and what the bump
+costs.
+
+
 jami-kmp is pinned to a daemon generation from around 2026-08. The reference client has moved
 past it and now calls APIs that do not exist in our bindings. Three of those gaps are additive
 and cost nothing; two force code changes, and one of them is a hard compile break. This records
