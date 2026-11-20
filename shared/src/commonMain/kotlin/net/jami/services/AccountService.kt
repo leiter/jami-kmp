@@ -46,6 +46,7 @@ import net.jami.model.Contact
 import net.jami.model.ContactLocation
 import net.jami.model.ContactLocationEntry
 import net.jami.model.Conversation
+import net.jami.model.ConversationPermission
 import net.jami.model.Interaction
 import net.jami.model.MemberRole
 import net.jami.model.SwarmMessage
@@ -1044,7 +1045,50 @@ class AccountService(
      * Send a message to a conversation.
      */
     fun sendConversationMessage(accountId: String, conversationUri: Uri, message: String, replyTo: String? = null, flag: Int = 0) {
+        requireSendPermission(accountId, conversationUri, message, replyTo, flag)
         daemonBridge.sendMessage(accountId, conversationUri.rawRingId, message, replyTo ?: "", flag)
+    }
+
+    /**
+     * The conversation [conversationUri] names, looked up the way a swarm actually indexes.
+     *
+     * [Account.getByUri] alone is not enough: [Account.newSwarm] only files a swarm under its
+     * id, and [Account.conversationStarted] is what later puts it in the URI map — so between
+     * those two a live swarm is invisible to `getByUri`, and a permission check that relied on
+     * it would wave the operation through. The swarm id is tried first for that reason.
+     */
+    private fun resolveConversation(accountId: String, conversationUri: Uri): Conversation? {
+        val account = getAccount(accountId) ?: return null
+        return account.getSwarm(conversationUri.rawRingId) ?: account.getByUri(conversationUri)
+    }
+
+    /**
+     * The last line of defence before a send reaches the daemon, mirroring the reference's
+     * `sendConversationMessage`. The UI should already have hidden whatever is refused here, so
+     * a throw from this marks a client bug rather than a user error.
+     *
+     * The daemon's message flags: 0 = new message, 1 = edit (or delete, when the text is empty),
+     * 2 = reaction. An unknown conversation is left to the daemon to reject — this is a
+     * permission check, not a validity check, and the reference's `checkNotNull` there turned a
+     * stale screen into a crash.
+     */
+    private fun requireSendPermission(
+        accountId: String, conversationUri: Uri, message: String, replyTo: String?, flag: Int,
+    ) {
+        val conversation = resolveConversation(accountId, conversationUri) ?: return
+        when (flag) {
+            0 -> conversation.requirePermission(
+                if (replyTo.isNullOrEmpty()) ConversationPermission.Text
+                else ConversationPermission.TextReply
+            )
+            1 -> {
+                if (message.isEmpty())
+                    conversation.requireMessageDeletion(replyTo?.let(conversation::getMessage)?.type)
+                else
+                    conversation.requirePermission(ConversationPermission.Edit)
+            }
+            2 -> conversation.requirePermission(ConversationPermission.Reaction)
+        }
     }
 
     /**
@@ -1137,6 +1181,9 @@ class AccountService(
      * Send a file in a conversation.
      */
     fun sendFile(accountId: String, conversationId: String, filePath: String, displayName: String = "", parent: String = "") {
+        getAccount(accountId)?.getSwarm(conversationId)?.requirePermission(
+            if (parent.isEmpty()) ConversationPermission.File else ConversationPermission.FileReply
+        )
         daemonBridge.sendFile(accountId, conversationId, filePath, displayName, parent)
     }
 
@@ -1172,6 +1219,11 @@ class AccountService(
      * Update conversation info (title, description, avatar).
      */
     fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {
+        // A 1:1 is not permission-gated here: canUpdateProfile() grants it outright.
+        getAccount(accountId)?.getSwarm(conversationId)?.let { conversation ->
+            if (!conversation.canUpdateProfile())
+                conversation.requirePermission(ConversationPermission.UpdateProfile)
+        }
         daemonBridge.updateConversationInfo(accountId, conversationId, info)
     }
 
@@ -1181,6 +1233,17 @@ class AccountService(
     fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {
         daemonBridge.setConversationPreferences(accountId, conversationId, prefs)
     }
+
+    /**
+     * What this account may do in the given swarm, or null when the daemon does not report it.
+     */
+    fun getConversationPermissions(accountId: String, conversationId: String): List<String>? =
+        try {
+            daemonBridge.getConversationPermissions(accountId, conversationId)
+        } catch (e: Exception) {
+            Log.w(TAG, "getConversationPermissions failed for $conversationId", e)
+            null
+        }
 
     /**
      * Get conversation preferences.
@@ -1194,6 +1257,15 @@ class AccountService(
      */
     fun addConversationMembers(accountId: String, conversationId: String, uris: List<Uri>) {
         val account = getAccount(accountId)
+        val conversation = account?.getSwarm(conversationId)
+        // Re-adding a blocked member is an unban, a different grant from adding a new one. Both
+        // are checked up front, for every uri, so a partial add cannot happen.
+        if (conversation != null) {
+            uris.map { uri ->
+                if (conversation.roles[uri.uri] == MemberRole.BLOCKED) ConversationPermission.BanUnbanMember
+                else ConversationPermission.AddMember
+            }.distinct().forEach(conversation::requirePermission)
+        }
         for (uri in uris) {
             if (account?.isOwn(uri) == true) continue
             daemonBridge.addConversationMember(accountId, conversationId, uri.rawRingId)
@@ -1204,6 +1276,8 @@ class AccountService(
      * Remove a member from a conversation.
      */
     fun removeConversationMember(accountId: String, conversationId: String, uri: Uri) {
+        getAccount(accountId)?.getSwarm(conversationId)
+            ?.requirePermission(ConversationPermission.BanUnbanMember)
         daemonBridge.removeConversationMember(accountId, conversationId, uri.rawRingId)
     }
 

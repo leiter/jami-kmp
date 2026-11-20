@@ -957,6 +957,7 @@ class ConversationFacade(
                     val conversation = account.getSwarm(convId)
                         ?: account.newSwarm(convId, mode)
                     conversation.setMode(mode)
+                    refreshConversationPermissions(conversation)
                     if (isSyncing) {
                         conversation.requestMode = realMode
                         val created = (info["created"]?.toLongOrNull() ?: 0L) * 1000L
@@ -1462,6 +1463,31 @@ class ConversationFacade(
      * handler did `?: return` and the traffic was dropped with nothing to rebuild the conversation
      * (the F1/F4 "silent no-op" shape). This self-heals from the daemon's own data instead.
      */
+    /**
+     * Re-read what this account may do in [conversation] from the daemon.
+     *
+     * Mirrors libjamiclient `AccountService.refreshConversationPermissions`, and is called from
+     * the same three places it is: when a swarm is first indexed, when it becomes ready, and on
+     * every member event — a role change (promotion, ban, unban) is exactly what alters the
+     * grants, and the daemon sends no permission signal of its own.
+     *
+     * A null answer means the daemon does not report permissions, which leaves the conversation
+     * permissive; see [Conversation.permissionsFlow].
+     */
+    internal fun refreshConversationPermissions(conversation: Conversation) {
+        if (!conversation.isSwarm) return
+        conversation.setPermissions(
+            try {
+                daemonBridge.getConversationPermissions(
+                    conversation.accountId, conversation.uri.rawRingId
+                )
+            } catch (e: Exception) {
+                Log.w(TAG, "refreshConversationPermissions failed for ${conversation.uri}", e)
+                null
+            }
+        )
+    }
+
     private suspend fun ensureSwarm(account: Account, conversationId: String): Conversation {
         account.getSwarm(conversationId)?.let { return it }
         Log.w(TAG, "ensureSwarm: rebuilding unknown conversation $conversationId for ${account.accountId}")
@@ -1484,6 +1510,7 @@ class ConversationFacade(
         val conversation = account.newSwarm(conversationId, mode)
         conversation.setMode(mode)
         if (isSyncing) conversation.requestMode = realMode
+        refreshConversationPermissions(conversation)
 
         try {
             for (member in daemonBridge.getConversationMembers(account.accountId, conversationId)) {
@@ -1543,6 +1570,7 @@ class ConversationFacade(
 
         val existing = account.getSwarm(conversationId)
         val conversation = existing ?: account.newSwarm(conversationId, mode)
+        refreshConversationPermissions(conversation)
         // Only pass a mode to conversationStarted() when it actually changes (e.g. Request/Syncing
         // -> OneToOne), as the reference does.
         val newMode = if (existing != null && existing.mode != mode) mode else null
@@ -1756,6 +1784,7 @@ class ConversationFacade(
                 MEMBER_EVENT_BLOCK -> conversation.removeContact(contact, MemberRole.BLOCKED)
                 else -> Log.w(TAG, "onConversationMemberEvent: unknown event $event")
             }
+            refreshConversationPermissions(conversation)
             _conversationEvents.emit(ConversationEvent.MemberEvent(accountId, conversationId, memberId, event))
         }
     }

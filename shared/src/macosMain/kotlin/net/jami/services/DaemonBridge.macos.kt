@@ -429,6 +429,8 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.updateConversationInfo(accountId, conversationId = conversationId, info = info.toNSDictionary())
     }
 
+    override fun getConversationPermissions(accountId: String, conversationId: String): List<String>? = null
+
     override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
         return emptyMap()
     }

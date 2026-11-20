@@ -496,6 +496,15 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         JamiService.updateConversationInfos(accountId, conversationId, StringMap.toSwig(info))
     }
 
+    /**
+     * Not wired: the shipped `libjami-core-jni.so` has no `getConversationPermissions` symbol,
+     * so the SWIG-generated `JamiService` has no such method to call and this cannot compile
+     * against it. Returning null keeps every conversation permissive until the daemon is
+     * updated, at which point the body becomes
+     * `JamiService.getConversationPermissions(accountId, conversationId).toList()`.
+     */
+    override fun getConversationPermissions(accountId: String, conversationId: String): List<String>? = null
+
     override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
         return JamiService.getConversationPreferences(accountId, conversationId).toNative()
     }

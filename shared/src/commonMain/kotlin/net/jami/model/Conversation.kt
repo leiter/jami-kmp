@@ -82,6 +82,22 @@ class Conversation(
     val currentCall: Conference?
         get() = currentCalls.firstOrNull()
 
+    // ==================== Permissions ====================
+
+    /**
+     * What the daemon says this account may do here, or null while it has not said.
+     *
+     * Null is not "nothing is allowed": it is "not reported yet", and every predicate below
+     * reads it as permissive. The reference client treats an unloaded set as denying everything,
+     * which is safe there because it fills the set synchronously the moment a swarm is
+     * registered. Here the refresh is asynchronous and, on a daemon that predates
+     * `getConversationPermissions`, never answers at all — so denying on null would silently
+     * disable sending in every swarm. Fail open on unknown, enforce only what was actually
+     * reported.
+     */
+    private val _permissions = MutableStateFlow<Set<String>?>(null)
+    val permissionsFlow: StateFlow<Set<String>?> = _permissions.asStateFlow()
+
     // ==================== Updates ====================
 
     private val _updatedElements = MutableSharedFlow<Pair<Interaction, ElementStatus>>()
@@ -361,6 +377,81 @@ class Conversation(
     fun isUserGroupAdmin(): Boolean {
         if (!isSwarmGroup) return false
         return getUser()?.let { roles[it.uri.uri] == MemberRole.ADMIN } ?: false
+    }
+
+    // ==================== Permissions ====================
+
+    /** Record the daemon's answer; null clears it back to "not reported". */
+    fun setPermissions(permissions: Collection<String>?) {
+        _permissions.value = permissions?.toSet()
+    }
+
+    /**
+     * Whether [permission] is granted.
+     *
+     * A non-swarm conversation (SIP, legacy) has no permission model at all and grants
+     * everything, as does a swarm whose permissions have not been reported — see [_permissions].
+     */
+    fun hasPermission(permission: ConversationPermission): Boolean {
+        if (!isSwarm) return true
+        val granted = _permissions.value ?: return true
+        return permission.key in granted
+    }
+
+    /** Throws [ConversationPermissionException] unless [permission] is granted. */
+    fun requirePermission(permission: ConversationPermission) {
+        if (!hasPermission(permission)) throw ConversationPermissionException(permission)
+    }
+
+    /**
+     * Sending a reply is a separate grant from sending a new message, so the composer's state
+     * depends on whether a reply target is set.
+     */
+    fun canSendText(replyTo: String? = null): Boolean =
+        hasPermission(
+            if (replyTo.isNullOrEmpty()) ConversationPermission.Text
+            else ConversationPermission.TextReply
+        )
+
+    fun canSendFile(replyTo: String? = null): Boolean =
+        hasPermission(
+            if (replyTo.isNullOrEmpty()) ConversationPermission.File
+            else ConversationPermission.FileReply
+        )
+
+    /** Either grant is enough: hosting a conference implies being allowed to place the call. */
+    fun canPlaceCall(): Boolean =
+        hasPermission(ConversationPermission.Call) ||
+            hasPermission(ConversationPermission.HostConference)
+
+    fun canAddMember(): Boolean = hasPermission(ConversationPermission.AddMember)
+
+    fun canBanUnbanMember(): Boolean = hasPermission(ConversationPermission.BanUnbanMember)
+
+    /** A 1:1's profile is this device's own business; only a group's is permission-gated. */
+    fun canUpdateProfile(): Boolean =
+        !isSwarmGroup || hasPermission(ConversationPermission.UpdateProfile)
+
+    fun canReact(): Boolean = hasPermission(ConversationPermission.Reaction)
+
+    fun canEditMessage(): Boolean = hasPermission(ConversationPermission.Edit)
+
+    /**
+     * Deleting a file is a separate grant from deleting a message, and a call entry is not a
+     * commit anyone can delete — null means "no permission governs this", i.e. allowed.
+     */
+    private fun deletionPermission(type: Interaction.InteractionType?): ConversationPermission? =
+        when (type) {
+            Interaction.InteractionType.DATA_TRANSFER -> ConversationPermission.DeleteFile
+            Interaction.InteractionType.CALL -> null
+            else -> ConversationPermission.Delete
+        }
+
+    fun canDeleteMessage(type: Interaction.InteractionType?): Boolean =
+        deletionPermission(type)?.let(::hasPermission) ?: true
+
+    fun requireMessageDeletion(type: Interaction.InteractionType?) {
+        deletionPermission(type)?.let(::requirePermission)
     }
 
     // ==================== Mode ====================

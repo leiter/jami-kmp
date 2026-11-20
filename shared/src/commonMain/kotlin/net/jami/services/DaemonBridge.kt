@@ -154,6 +154,16 @@ interface DaemonBridgeApi {
     fun addConversationMember(accountId: String, conversationId: String, uri: String)
     fun removeConversationMember(accountId: String, conversationId: String, uri: String)
     fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>)
+    /**
+     * What this account may do in a swarm, as daemon permission keys
+     * ([net.jami.model.ConversationPermission.key]).
+     *
+     * Returns null when the daemon does not report permissions — either the capability is
+     * absent from this build of libjami, or the call failed. Null means "unknown", which
+     * [net.jami.model.Conversation] reads as permissive; an empty list means the daemon
+     * answered and grants nothing.
+     */
+    fun getConversationPermissions(accountId: String, conversationId: String): List<String>?
     fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String>
     fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>)
     fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int)
@@ -889,6 +899,13 @@ class StubDaemonBridge : DaemonBridgeApi {
     var conversationInfo: MutableMap<String, Map<String, String>> = mutableMapOf()
     // Daemon-side conversation preferences, keyed "accountId:conversationId"
     var conversationPreferences: MutableMap<String, Map<String, String>> = mutableMapOf()
+
+    /**
+     * Permissions per `"accountId:conversationId"`. An absent entry reports null — "the daemon
+     * does not say" — which is what an un-updated daemon does and what [Conversation] reads as
+     * permissive. Put an explicit (possibly empty) list here to test a denied grant.
+     */
+    var conversationPermissions: MutableMap<String, List<String>> = mutableMapOf()
     var contacts: MutableMap<String, List<Map<String, String>>> = mutableMapOf()
     var codecs: List<Long> = emptyList()
     var addAccountResult: String = ""
@@ -1176,6 +1193,9 @@ class StubDaemonBridge : DaemonBridgeApi {
     }
     override fun removeConversationMember(accountId: String, conversationId: String, uri: String) {}
     override fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {}
+    override fun getConversationPermissions(accountId: String, conversationId: String): List<String>? =
+        conversationPermissions["$accountId:$conversationId"]
+
     override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> =
         conversationPreferences["$accountId:$conversationId"] ?: emptyMap()
     override fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {

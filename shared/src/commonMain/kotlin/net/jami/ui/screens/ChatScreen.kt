@@ -751,7 +751,11 @@ fun ChatScreen(
                         items = state.messages.reversed(),
                         key = { it.id },
                     ) { message ->
-                        val canReply = viewModel.isReplyable(message)
+                        // Replying needs a reply grant for whichever kind of reply could be
+                        // sent, matching the reference's convActionReply visibility rule.
+                        val canReply = viewModel.isReplyable(message) &&
+                            (state.permissions.canSendText(message.id) ||
+                                state.permissions.canSendFile(message.id))
                         val announces = message.id == newestIncomingId
                         Box(
                             Modifier
@@ -789,6 +793,7 @@ fun ChatScreen(
                                 onRetry = { viewModel.retryFileTransfer(message.id) },
                                 isGroup = state.isGroup,
                                 authorAvatar = state.memberAvatars[message.authorUri],
+                                canDelete = state.permissions.canDelete(message.type),
                             )
                             // A deleted message is an edit to an empty body; it used to render as
                             // an empty bubble labelled "edited". Shown as the reference does.
@@ -813,6 +818,9 @@ fun ChatScreen(
                                 onRetry = { viewModel.retryMessage(message.id) },
                                 memberNames = state.memberNames,
                                 isGroup = state.isGroup,
+                                canReact = state.permissions.react,
+                                canEdit = state.permissions.edit,
+                                canDelete = state.permissions.canDelete(message.type),
                                 authorAvatar = state.memberAvatars[message.authorUri],
                             )
                         }
@@ -1096,6 +1104,10 @@ fun ChatScreen(
                             requestLocationPermission = true
                         }
                     },
+                    // The reply bar being open changes which grant applies: replying is a
+                    // separate permission from starting a new message.
+                    canSendText = state.permissions.canSendText(state.replyingTo?.messageId),
+                    canSendFile = state.permissions.canSendFile(state.replyingTo?.messageId),
                     onStartAudioRecording = { viewModel.startAudioRecording() },
                     onVideoRecordingUnsupported = {
                         coroutineScope.launch {
@@ -1270,6 +1282,12 @@ private fun ChatBubble(
      * there is one other person, and this screen used to print their name above every bubble.
      */
     isGroup: Boolean = false,
+    /** The daemon's reaction grant: false removes "React" and the quick-reaction row. */
+    canReact: Boolean = true,
+    /** The daemon's edit grant: false removes "Edit" from an own message's menu. */
+    canEdit: Boolean = true,
+    /** The daemon's delete grant for this message's kind: false removes "Delete". */
+    canDelete: Boolean = true,
     /** The author's avatar, for the group gutter. Null falls back to their coloured initials. */
     authorAvatar: ByteArray? = null,
 ) {
@@ -1504,13 +1522,15 @@ private fun ChatBubble(
                         },
                     )
                 }
-                DropdownMenuItem(
-                    text = { Text(stringResource(Res.string.menu_message_react)) },
-                    onClick = {
-                        showMenu = false
-                        showEmojiPicker = true
-                    },
-                )
+                if (canReact) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(Res.string.menu_message_react)) },
+                        onClick = {
+                            showMenu = false
+                            showEmojiPicker = true
+                        },
+                    )
+                }
                 DropdownMenuItem(
                     text = { Text(stringResource(Res.string.menu_item_copy)) },
                     onClick = {
@@ -1534,7 +1554,7 @@ private fun ChatBubble(
                         },
                     )
                 }
-                if (isOutgoing) {
+                if (isOutgoing && canEdit) {
                     DropdownMenuItem(
                         text = { Text(stringResource(Res.string.menu_item_edit)) },
                         onClick = {
@@ -1543,13 +1563,15 @@ private fun ChatBubble(
                         },
                     )
                 }
-                DropdownMenuItem(
-                    text = { Text(stringResource(Res.string.ic_delete_menu)) },
-                    onClick = {
-                        showMenu = false
-                        onDelete()
-                    },
-                )
+                if (canDelete) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(Res.string.ic_delete_menu)) },
+                        onClick = {
+                            showMenu = false
+                            onDelete()
+                        },
+                    )
+                }
             }
 
             if (showFullEmojiPicker) {
@@ -1873,6 +1895,8 @@ private fun FileTransferMessage(
     onRetry: () -> Unit = {},
     /** True in a group, where an incoming file carries its sender's name and avatar. */
     isGroup: Boolean = false,
+    /** The daemon's file-delete grant: false removes "Delete" from the menu. */
+    canDelete: Boolean = true,
     /** The sender's avatar, for the group gutter. Null falls back to coloured initials. */
     authorAvatar: ByteArray? = null,
 ) {
@@ -2185,7 +2209,9 @@ private fun FileTransferMessage(
                     onClick = { showMenu = false; onDeleteFile() },
                 )
             }
-            if (isOutgoing) {
+            // "Delete file" above removes this device's copy and needs no grant; removing the
+            // interaction itself is a commit, and takes the daemon's file-delete grant.
+            if (isOutgoing && canDelete) {
                 DropdownMenuItem(
                     text = { Text(stringResource(Res.string.menu_message_delete)) },
                     onClick = { showMenu = false; onDelete() },
@@ -2216,6 +2242,10 @@ private fun MessageInputBar(
     onVideoRecordingUnsupported: () -> Unit = {},
     onChatExtensionsUnsupported: () -> Unit = {},
     focusRequester: FocusRequester = remember { FocusRequester() },
+    /** The daemon's text grant: false leaves the field and send button inert. */
+    canSendText: Boolean = true,
+    /** The daemon's file grant: false removes the attachment entries from the overflow menu. */
+    canSendFile: Boolean = true,
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -2262,80 +2292,86 @@ private fun MessageInputBar(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false },
                     ) {
-                        // Share location
-                        DropdownMenuItem(
-                            text = { Text(stringResource(Res.string.conversation_share_location)) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.LocationOn,
-                                    contentDescription = null,
-                                )
-                            },
-                            onClick = {
-                                showMenu = false
-                                onShareLocation()
-                            },
-                        )
+                        // Share location sends a message into the conversation, so it
+                        // follows the text grant rather than the file one.
+                        if (canSendText) {
+                            // Share location
+                            DropdownMenuItem(
+                                text = { Text(stringResource(Res.string.conversation_share_location)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.LocationOn,
+                                        contentDescription = null,
+                                    )
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onShareLocation()
+                                },
+                            )
+                        }
 
-                        // Record audio
-                        DropdownMenuItem(
-                            text = { Text(stringResource(Res.string.conversation_send_audio)) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Mic,
-                                    contentDescription = null,
-                                )
-                            },
-                            onClick = {
-                                showMenu = false
-                                onStartAudioRecording()
-                            },
-                        )
+                        if (canSendFile) {
+                            // Record audio
+                            DropdownMenuItem(
+                                text = { Text(stringResource(Res.string.conversation_send_audio)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Mic,
+                                        contentDescription = null,
+                                    )
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onStartAudioRecording()
+                                },
+                            )
 
-                        // Record video
-                        DropdownMenuItem(
-                            text = { Text(stringResource(Res.string.conversation_send_video)) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Videocam,
-                                    contentDescription = null,
-                                )
-                            },
-                            onClick = {
-                                showMenu = false
-                                onVideoRecordingUnsupported()
-                            },
-                        )
+                            // Record video
+                            DropdownMenuItem(
+                                text = { Text(stringResource(Res.string.conversation_send_video)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Videocam,
+                                        contentDescription = null,
+                                    )
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onVideoRecordingUnsupported()
+                                },
+                            )
 
-                        // Select media (gallery)
-                        DropdownMenuItem(
-                            text = { Text(stringResource(Res.string.select_media)) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Photo,
-                                    contentDescription = null,
-                                )
-                            },
-                            onClick = {
-                                showMenu = false
-                                onSelectMedia()
-                            },
-                        )
+                            // Select media (gallery)
+                            DropdownMenuItem(
+                                text = { Text(stringResource(Res.string.select_media)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Photo,
+                                        contentDescription = null,
+                                    )
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onSelectMedia()
+                                },
+                            )
 
-                        // Send file
-                        DropdownMenuItem(
-                            text = { Text(stringResource(Res.string.send_file)) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.AttachFile,
-                                    contentDescription = null,
-                                )
-                            },
-                            onClick = {
-                                showMenu = false
-                                onSendFile()
-                            },
-                        )
+                            // Send file
+                            DropdownMenuItem(
+                                text = { Text(stringResource(Res.string.send_file)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.AttachFile,
+                                        contentDescription = null,
+                                    )
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onSendFile()
+                                },
+                            )
+                        }
 
                         // Chat extensions
                         DropdownMenuItem(
@@ -2354,22 +2390,25 @@ private fun MessageInputBar(
                     }
                 }
 
-                // Camera button
-                IconButton(
-                    onClick = onTakePicture,
-                    // 48dp is the Material minimum touch target; the icon inside stays 20dp.
-                    modifier = Modifier.size(48.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PhotoCamera,
-                        contentDescription = stringResource(Res.string.content_desc_take_photo),
-                        tint = JamiTheme.colors.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp),
-                    )
+                // Camera button — a picture is a file transfer, so it follows that grant.
+                if (canSendFile) {
+                    IconButton(
+                        onClick = onTakePicture,
+                        // 48dp is the Material minimum touch target; the icon inside stays 20dp.
+                        modifier = Modifier.size(48.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PhotoCamera,
+                            contentDescription = stringResource(Res.string.content_desc_take_photo),
+                            tint = JamiTheme.colors.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
                 }
 
                 // Text input field — BasicTextField for full padding control
                 val writeAMessage = stringResource(Res.string.write_a_message)
+                val readOnlyNotice = stringResource(Res.string.conversation_read_only)
                 // Selection is kept here; text set from outside (an edit fills the composer)
                 // gets the cursor at its end. With a plain String value the cursor stayed at
                 // the start, so typing went in front of the text being edited.
@@ -2382,6 +2421,9 @@ private fun MessageInputBar(
                         fieldState = it
                         if (it.text != value) onValueChange(it.text)
                     },
+                    // Read-only rather than removed: the bar keeps its shape, and the
+                    // placeholder below says why nothing can be typed.
+                    readOnly = !canSendText,
                     modifier = Modifier
                         .weight(1f)
                         .padding(vertical = 8.dp)
@@ -2401,7 +2443,7 @@ private fun MessageInputBar(
                         Box(contentAlignment = Alignment.CenterStart) {
                             if (value.isEmpty()) {
                                 Text(
-                                    text = writeAMessage,
+                                    text = if (canSendText) writeAMessage else readOnlyNotice,
                                     style = JamiTheme.typography.bodyLarge,
                                     color = JamiTheme.colors.onSurfaceVariant,
                                 )
@@ -2412,7 +2454,10 @@ private fun MessageInputBar(
                 )
 
                 // Send button or thumbs up emoji button
-                if (value.isNotBlank()) {
+                if (!canSendText) {
+                    // Nothing to offer: no send, and no one-tap emoji either — that is a
+                    // message too.
+                } else if (value.isNotBlank()) {
                     // Send button (visible when text is present)
                     IconButton(
                         onClick = onSend,

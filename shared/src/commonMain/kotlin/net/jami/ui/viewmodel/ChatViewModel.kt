@@ -45,6 +45,7 @@ import net.jami.model.Contact
 import net.jami.model.ContactEvent
 import net.jami.model.ContactLocation
 import net.jami.model.Conversation
+import net.jami.model.ConversationPermission
 import net.jami.model.DataTransfer
 import net.jami.model.Interaction
 import net.jami.model.Uri
@@ -222,6 +223,52 @@ data class ContactSharingInfo(
 /**
  * State for the chat / conversation detail screen.
  */
+/**
+ * What the daemon lets this account do in the open conversation, as the chat screen needs it.
+ *
+ * Every field defaults to true: a conversation whose permissions the daemon has not reported is
+ * permissive (see [net.jami.model.Conversation.permissionsFlow]), and so is a SIP/legacy one,
+ * which has no permission model at all. Sending a reply is a separate grant from sending a new
+ * message, hence the pairs and the two helpers that pick between them.
+ */
+data class ChatPermissions(
+    val sendText: Boolean = true,
+    val sendTextReply: Boolean = true,
+    val sendFile: Boolean = true,
+    val sendFileReply: Boolean = true,
+    val react: Boolean = true,
+    val edit: Boolean = true,
+    val deleteMessage: Boolean = true,
+    val deleteFile: Boolean = true,
+    val call: Boolean = true,
+) {
+    fun canSendText(replyTo: String?): Boolean =
+        if (replyTo.isNullOrEmpty()) sendText else sendTextReply
+
+    fun canSendFile(replyTo: String?): Boolean =
+        if (replyTo.isNullOrEmpty()) sendFile else sendFileReply
+
+    /** Deleting a file transfer is governed by its own grant; a call entry by neither. */
+    fun canDelete(type: MessageType): Boolean = when (type) {
+        MessageType.Transfer -> deleteFile
+        MessageType.Call -> true
+        else -> deleteMessage
+    }
+}
+
+/** Read this conversation's daemon grants into the shape the chat screen consumes. */
+private fun Conversation.chatPermissions(): ChatPermissions = ChatPermissions(
+    sendText = hasPermission(ConversationPermission.Text),
+    sendTextReply = hasPermission(ConversationPermission.TextReply),
+    sendFile = hasPermission(ConversationPermission.File),
+    sendFileReply = hasPermission(ConversationPermission.FileReply),
+    react = canReact(),
+    edit = canEditMessage(),
+    deleteMessage = hasPermission(ConversationPermission.Delete),
+    deleteFile = hasPermission(ConversationPermission.DeleteFile),
+    call = canPlaceCall(),
+)
+
 data class ChatState(
     val messages: List<MessageItem> = emptyList(),
     val inputText: String = "",
@@ -308,6 +355,11 @@ data class ChatState(
      * daemon had already dropped (seen on a device 2026-11-07). The reference closes the whole
      * conversation.
      */
+    /**
+     * The grants that gate this screen's actions. The composer, the attach menu and the bubble
+     * long-press menu read it rather than offering an action the daemon would refuse.
+     */
+    val permissions: ChatPermissions = ChatPermissions(),
     val isGone: Boolean = false,
 )
 
@@ -352,6 +404,7 @@ class ChatViewModel(
     private var presenceJob: kotlinx.coroutines.Job? = null
     private var statusNoteJob: kotlinx.coroutines.Job? = null
     private var profileJob: kotlinx.coroutines.Job? = null
+    private var permissionsJob: kotlinx.coroutines.Job? = null
     /** Replied-to message ids already requested from the daemon (see [replyPreview]). */
     private val requestedReplyOriginals = mutableSetOf<String>()
 
@@ -528,9 +581,13 @@ class ChatViewModel(
                     isLoadingMore = false,
                     replyingTo = null,
                     peerUri = peerUri,
-                    canCall = conversation?.isSelfConversation != true && !account.isOwn(peerUri),
+                    canCall = conversation?.isSelfConversation != true &&
+                        !account.isOwn(peerUri) &&
+                        conversation?.canPlaceCall() != false,
                     isLegacy = isLegacy,
+                    permissions = conversation?.chatPermissions() ?: ChatPermissions(),
                 )
+                conversation?.let(::subscribeToPermissions)
                 // Before the history load below, which suspends until the daemon answers:
                 // the composer notice must be right from the moment the screen appears.
                 refreshMessageHold()
@@ -626,6 +683,22 @@ class ChatViewModel(
         statusNoteJob = scope.launch {
             contact.statusNote.collect { note ->
                 _state.value = _state.value.copy(contactStatusNote = note)
+            }
+        }
+    }
+
+    /**
+     * Keep the screen's grants current while it is open.
+     *
+     * A role change — being promoted, banned or unbanned — alters what this account may do
+     * without the conversation being reopened, and `ConversationFacade` re-reads the grants on
+     * every member event, so this screen follows the flow rather than sampling it once.
+     */
+    private fun subscribeToPermissions(conversation: Conversation) {
+        permissionsJob?.cancel()
+        permissionsJob = scope.launch {
+            conversation.permissionsFlow.collect {
+                _state.update { state -> state.copy(permissions = conversation.chatPermissions()) }
             }
         }
     }

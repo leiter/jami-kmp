@@ -286,7 +286,9 @@ fun ConversationDetailsScreen(
             // instead of the peer's, so the person you were looking at was always a letter
             // (seen on a device 2026-11-11), and the admin camera badge offered to set a group
             // photo on a conversation that cannot have one.
-            val canEditGroup = state.isGroup && state.isAdmin
+            // The daemon's profile grant on top of the local role: editing a group's name or
+            // picture is a commit it can refuse.
+            val canEditGroup = state.isGroup && state.isAdmin && state.canUpdateProfile
             val headerAvatarBytes = if (state.isGroup) state.groupAvatarBytes else state.avatarBytes
             // Never blank: a nameless peer falls back to its registered name and then to its
             // id, the same chain Contact.displayUsername and the chat header use. The literals
@@ -633,6 +635,8 @@ private fun DetailsTabContent(
             GroupMemberSection(
                 memberUris = state.memberUris,
                 memberRoles = state.memberRoles,
+                canAddMember = state.canAddMember,
+                canBanUnbanMember = state.canBanUnbanMember,
                 memberNames = state.memberNames,
                 selfMemberUri = state.selfMemberUri,
                 isGroup = state.isGroup,
@@ -711,6 +715,10 @@ private fun DetailsTabContent(
 private fun GroupMemberSection(
     memberUris: List<String>,
     memberRoles: Map<String, MemberRole> = emptyMap(),
+    /** The daemon's add-member grant; the reference gates this affordance on it alone. */
+    canAddMember: Boolean = true,
+    /** The daemon's ban/unban grant, required on top of [isAdmin] for remove and unblock. */
+    canBanUnbanMember: Boolean = true,
     memberNames: Map<String, String> = emptyMap(),
     selfMemberUri: String? = null,
     isGroup: Boolean = true,
@@ -742,7 +750,7 @@ private fun GroupMemberSection(
                     style = JamiTheme.typography.titleSmall,
                     color = JamiTheme.colors.onSurface,
                 )
-                if (isAdmin) {
+                if (isAdmin && canAddMember) {
                     TextButton(onClick = { showAddDialog = true }) {
                         Text(stringResource(Res.string.group_add_member))
                     }
@@ -771,7 +779,7 @@ private fun GroupMemberSection(
                     // (the daemon reports banned members too) and must not look like an ordinary
                     // one, or an admin cannot tell a ban took effect.
                     MemberRoleBadge(role)
-                    if (isAdmin) {
+                    if (isAdmin && canBanUnbanMember) {
                         if (role == MemberRole.BLOCKED) {
                             TextButton(onClick = { showUnbanUri = uri }) {
                                 Text(text = stringResource(Res.string.group_unblock_member))

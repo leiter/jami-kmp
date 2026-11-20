@@ -524,6 +524,13 @@ actual class DaemonBridge() : DaemonBridgeApi, IOSVideoFrameBridge {
         bridge.updateConversationInfo(accountId, conversationId = conversationId, info = info.toNSDictionary())
     }
 
+    /**
+     * Not wired: `JamiBridgeWrapper` exposes no `getConversationPermissions`, and adding one
+     * needs the ObjC++ wrapper rebuilt on a Mac against a daemon that has the call
+     * (`doc/apple-bridge-rebuild.md`). Null until then — see the Android actual.
+     */
+    override fun getConversationPermissions(accountId: String, conversationId: String): List<String>? = null
+
     override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> =
         bridge.getConversationPreferences(accountId, conversationId = conversationId)?.toKotlinMap() ?: emptyMap()
 

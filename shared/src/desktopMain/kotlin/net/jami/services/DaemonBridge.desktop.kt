@@ -335,6 +335,8 @@ actual class DaemonBridge() : DaemonBridgeApi {
         Log.d(TAG, "updateConversationInfo called (stub): $conversationId")
     }
 
+    override fun getConversationPermissions(accountId: String, conversationId: String): List<String>? = null
+
     override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
         Log.d(TAG, "getConversationPreferences called (stub): $conversationId")
         return emptyMap()
