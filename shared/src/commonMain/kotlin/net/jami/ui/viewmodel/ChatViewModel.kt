@@ -25,10 +25,15 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -44,6 +49,7 @@ import net.jami.model.CallHistory
 import net.jami.model.Contact
 import net.jami.model.ContactEvent
 import net.jami.model.ContactLocation
+import net.jami.model.Account
 import net.jami.model.Conversation
 import net.jami.model.ConversationPermission
 import net.jami.model.DataTransfer
@@ -224,6 +230,21 @@ data class ContactSharingInfo(
  * State for the chat / conversation detail screen.
  */
 /**
+ * Why this conversation cannot currently reach anyone, if it cannot.
+ *
+ * Mirrors the reference's two error panels (`ConversationView.displayNetworkErrorPanel` /
+ * `displayAccountOfflineErrorPanel`), including their precedence: a missing network is reported
+ * even when the account is also disabled, because it is the more immediate cause.
+ */
+enum class ConnectivityBanner {
+    /** No network on the device, and the account is not registered either. */
+    NoNetwork,
+
+    /** The network is fine but this account is switched off, so nothing will be sent. */
+    AccountOffline,
+}
+
+/**
  * What the daemon lets this account do in the open conversation, as the chat screen needs it.
  *
  * Every field defaults to true: a conversation whose permissions the daemon has not reported is
@@ -360,6 +381,15 @@ data class ChatState(
      * long-press menu read it rather than offering an action the daemon would refuse.
      */
     val permissions: ChatPermissions = ChatPermissions(),
+    /**
+     * Shown as a strip above the message list; null when the conversation can reach its peers.
+     *
+     * The composer is deliberately *not* disabled for either case — a message written offline is
+     * still committed locally and delivered when the swarm comes back (and, for a not-yet-live
+     * 1:1, held by the outbox). The reference does not disable it either; it only takes the call
+     * buttons away when the account itself is off.
+     */
+    val connectivityBanner: ConnectivityBanner? = null,
     val isGone: Boolean = false,
 )
 
@@ -377,6 +407,16 @@ class ChatViewModel(
     private val audioRecorderService: AudioRecorderService,
     private val sendQueue: net.jami.services.SendQueueService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    /**
+     * The source of device connectivity, for the "no network" banner.
+     *
+     * Optional because most tests have no interest in it and it is a platform `expect` class
+     * with no constructor common code can call. When absent, connectivity is read as **up** —
+     * never as down. Claiming "no network" because nothing is reporting one would be a lie, and
+     * it matches the reference's own bias: `isConnected || isRegistered` prefers saying nothing
+     * to crying offline at a working conversation. Production always supplies it through Koin.
+     */
+    private val hardwareService: net.jami.services.expect.HardwareService? = null,
     /**
      * Peer avatars go through [VCardService], never through a raw read of the vcf on disk.
      *
@@ -405,6 +445,7 @@ class ChatViewModel(
     private var statusNoteJob: kotlinx.coroutines.Job? = null
     private var profileJob: kotlinx.coroutines.Job? = null
     private var permissionsJob: kotlinx.coroutines.Job? = null
+    private var connectivityJob: kotlinx.coroutines.Job? = null
     /** Replied-to message ids already requested from the daemon (see [replyPreview]). */
     private val requestedReplyOriginals = mutableSetOf<String>()
 
@@ -588,6 +629,7 @@ class ChatViewModel(
                     permissions = conversation?.chatPermissions() ?: ChatPermissions(),
                 )
                 conversation?.let(::subscribeToPermissions)
+                observeConnectivity(account.accountId)
                 // Before the history load below, which suspends until the daemon answers:
                 // the composer notice must be right from the moment the screen appears.
                 refreshMessageHold()
@@ -686,6 +728,47 @@ class ChatViewModel(
             }
         }
     }
+
+    /**
+     * Watch device connectivity and this account's registration, and say which banner (if any)
+     * the screen should show.
+     *
+     * A faithful port of `ConversationPresenter.kt:194-205`, including the tolerance in
+     * `isConnected || isRegistered`: a registered account is reachable even if the platform's
+     * connectivity callback has not caught up, and the reference would rather say nothing than
+     * cry offline at a working conversation.
+     *
+     * Registration changes are taken from [AccountService.accountEvents], **not** from
+     * `accountService.accounts`: that `StateFlow` is re-assigned with a fresh `List` holding the
+     * same mutable `Account` instances, so the new value compares equal to the old one and the
+     * flow never emits. `accountEvents` always emits, and replays each account's current
+     * registration state on subscription, so the first banner value is correct rather than a
+     * guess. Any event re-reads the account, since what matters is its state afterwards and not
+     * which signal carried it.
+     */
+    private fun observeConnectivity(accountId: String) {
+        connectivityJob?.cancel()
+        connectivityJob = scope.launch {
+            combine(
+                hardwareService?.connectivityState ?: flowOf(true),
+                accountService.accountEvents.map { }.onStart { emit(Unit) },
+            ) { isConnected, _ ->
+                connectivityBanner(isConnected, accountService.getAccount(accountId))
+            }
+                .distinctUntilChanged()
+                .collect { banner ->
+                    _state.update { it.copy(connectivityBanner = banner) }
+                }
+        }
+    }
+
+    /** The reference's precedence: no network first, then a switched-off account. */
+    private fun connectivityBanner(isConnected: Boolean, account: Account?): ConnectivityBanner? =
+        when {
+            !(isConnected || account?.isRegistered == true) -> ConnectivityBanner.NoNetwork
+            account != null && !account.isEnabled -> ConnectivityBanner.AccountOffline
+            else -> null
+        }
 
     /**
      * Keep the screen's grants current while it is open.

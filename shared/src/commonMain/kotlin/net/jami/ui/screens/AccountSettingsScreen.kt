@@ -136,6 +136,9 @@ import jami_kmp.shared.generated.resources.account_status_note_error_long
 import jami_kmp.shared.generated.resources.account_status_note_label
 import jami_kmp.shared.generated.resources.account_status_note_save
 import jami_kmp.shared.generated.resources.account_status_note_summary
+import jami_kmp.shared.generated.resources.account_update_needed
+import jami_kmp.shared.generated.resources.account_status_connecting
+import jami_kmp.shared.generated.resources.account_status_connection_error
 import jami_kmp.shared.generated.resources.account_status_offline
 import jami_kmp.shared.generated.resources.account_status_online
 import jami_kmp.shared.generated.resources.action_link_device
@@ -197,6 +200,8 @@ import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.JamiSectionTitle
 import net.jami.ui.platform.FilePickerEffect
+import net.jami.ui.theme.JamiColors
+import net.jami.ui.viewmodel.AccountStatus
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.viewmodel.AccountSettingsViewModel
 import net.jami.ui.viewmodel.AddDeviceExportState
@@ -396,10 +401,25 @@ fun AccountSettingsScreen(
                     JamiAccountSwitch(
                         checked = state.isOnline,
                         onCheckedChange = { viewModel.setOnline(it) },
-                        label = if (state.isOnline)
-                            stringResource(Res.string.account_status_online)
-                        else
-                            stringResource(Res.string.account_status_offline),
+                        label = stringResource(
+                            when (state.accountStatus) {
+                                AccountStatus.Disabled, AccountStatus.Offline ->
+                                    Res.string.account_status_offline
+                                AccountStatus.Connecting -> Res.string.account_status_connecting
+                                AccountStatus.NeedsMigration -> Res.string.account_update_needed
+                                AccountStatus.ConnectionError ->
+                                    Res.string.account_status_connection_error
+                                AccountStatus.Online -> Res.string.account_status_online
+                            }
+                        ),
+                        // The reference colours the same control from the status: green online,
+                        // orange while trying, red on an error.
+                        onColor = when (state.accountStatus) {
+                            AccountStatus.Connecting -> JamiColors.Orange400
+                            AccountStatus.ConnectionError, AccountStatus.NeedsMigration ->
+                                JamiColors.Red400
+                            else -> JamiColors.Green400
+                        },
                         modifier = Modifier.padding(end = JamiTheme.spacing.m),
                     )
                 },

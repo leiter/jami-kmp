@@ -51,6 +51,27 @@ class Account(
     val needsMigration: Boolean
         get() = registrationState == RegistrationState.ERROR_NEED_MIGRATION
 
+    /** Registration is in flight — the reference shows a spinner for this, not "offline". */
+    val isTrying: Boolean
+        get() = registrationState == RegistrationState.TRYING
+
+    /**
+     * Registration failed for a reason worth telling the user apart from simply being offline.
+     *
+     * Mirrors the reference's `Account.isInError`: `ERROR_NEED_MIGRATION` is deliberately not in
+     * the set, because it has its own message and remedy, and `UNREGISTERED` is not an error at
+     * all — it is the normal state of a disabled account.
+     */
+    val isInError: Boolean
+        get() = when (registrationState) {
+            RegistrationState.ERROR_AUTH,
+            RegistrationState.ERROR_GENERIC,
+            RegistrationState.ERROR_HOST,
+            RegistrationState.ERROR_NETWORK,
+            RegistrationState.ERROR_SERVICE_UNAVAILABLE -> true
+            else -> false
+        }
+
     val isEnabled: Boolean
         get() = details[ConfigKey.ACCOUNT_ENABLE.key]?.toBoolean() ?: true
 

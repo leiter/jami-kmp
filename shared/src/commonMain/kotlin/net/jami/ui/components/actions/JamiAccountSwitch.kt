@@ -57,9 +57,14 @@ fun JamiAccountSwitch(
     onCheckedChange: (Boolean) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
+    /**
+     * The track colour once the thumb is at the "on" end. Defaults to the reference's green, but
+     * registration has more states than on/off — orange while trying, red on a connection error —
+     * and the reference drives the same control's `backColor` from them.
+     */
+    onColor: Color = JamiColors.Green400,
 ) {
     // Reference uses green_400 (#66BB6A) for ON and grey_400 (#BDBDBD) for OFF.
-    val onColor = JamiColors.Green400
     val offColor = JamiColors.Grey400
 
     val progress by animateFloatAsState(
