@@ -23,6 +23,8 @@ import net.jami.model.Account
 import net.jami.model.AccountConfig
 import net.jami.model.ConfigKey
 import net.jami.ui.viewmodel.AccountStatus
+import net.jami.ui.viewmodel.ConnectivityBanner
+import net.jami.ui.viewmodel.connectivityBannerFor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -122,6 +124,57 @@ class ChatConnectivityBannerTest {
         ).apply { volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATUS.key] = "READY" }
 
         assertEquals(AccountStatus.Online, AccountStatus.of(ready))
+    }
+
+    // ==================== The banner decision ====================
+
+    @Test
+    fun noNetworkAndNoRegistrationShowsTheNetworkBanner() {
+        assertEquals(
+            ConnectivityBanner.NoNetwork,
+            connectivityBannerFor(false, account(Account.RegistrationState.UNREGISTERED)),
+        )
+    }
+
+    @Test
+    fun aRegisteredAccountSuppressesTheNetworkBannerEvenWithNoConnectivity() {
+        // The reference's `isConnected || isRegistered` tolerance: it would rather say nothing
+        // than cry offline at a conversation that still works. The cost is that the banner can
+        // lag a network drop by however long the daemon takes to notice.
+        assertEquals(null, connectivityBannerFor(false, account(Account.RegistrationState.REGISTERED)))
+    }
+
+    @Test
+    fun connectivityWithoutAnAccountShowsNothing() {
+        // Nothing to report about reachability before an account exists.
+        assertEquals(null, connectivityBannerFor(true, null))
+    }
+
+    @Test
+    fun noConnectivityAndNoAccountStillShowsTheNetworkBanner() {
+        assertEquals(ConnectivityBanner.NoNetwork, connectivityBannerFor(false, null))
+    }
+
+    @Test
+    fun aDisabledAccountOnAWorkingNetworkShowsTheOfflineBanner() {
+        assertEquals(
+            ConnectivityBanner.AccountOffline,
+            connectivityBannerFor(true, account(Account.RegistrationState.UNREGISTERED, enabled = false)),
+        )
+    }
+
+    @Test
+    fun noNetworkOutranksADisabledAccount() {
+        // Both are true; the reference reports the network, as the more immediate cause.
+        assertEquals(
+            ConnectivityBanner.NoNetwork,
+            connectivityBannerFor(false, account(Account.RegistrationState.UNREGISTERED, enabled = false)),
+        )
+    }
+
+    @Test
+    fun anEnabledRegisteredAccountOnANetworkShowsNothing() {
+        assertEquals(null, connectivityBannerFor(true, account(Account.RegistrationState.REGISTERED)))
     }
 
     // ==================== accounts StateFlow does not report registration ====================

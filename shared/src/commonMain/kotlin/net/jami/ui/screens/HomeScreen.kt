@@ -94,6 +94,7 @@ import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.content.JamiBadge
 import net.jami.ui.components.content.PresenceStatus
+import net.jami.ui.components.notification.ConnectivityBannerStrip
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.components.actions.JamiFilterChip
 import net.jami.ui.components.notification.JamiAlertDialog
@@ -171,6 +172,9 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(padding),
         ) {
+            // Above the search bar: why nothing picked from this list will reach anyone.
+            state.connectivityBanner?.let { ConnectivityBannerStrip(it) }
+
             // Search bar row
             Surface(
                 modifier = Modifier

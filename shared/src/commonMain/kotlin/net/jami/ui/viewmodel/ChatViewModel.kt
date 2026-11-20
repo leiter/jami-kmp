@@ -230,21 +230,6 @@ data class ContactSharingInfo(
  * State for the chat / conversation detail screen.
  */
 /**
- * Why this conversation cannot currently reach anyone, if it cannot.
- *
- * Mirrors the reference's two error panels (`ConversationView.displayNetworkErrorPanel` /
- * `displayAccountOfflineErrorPanel`), including their precedence: a missing network is reported
- * even when the account is also disabled, because it is the more immediate cause.
- */
-enum class ConnectivityBanner {
-    /** No network on the device, and the account is not registered either. */
-    NoNetwork,
-
-    /** The network is fine but this account is switched off, so nothing will be sent. */
-    AccountOffline,
-}
-
-/**
  * What the daemon lets this account do in the open conversation, as the chat screen needs it.
  *
  * Every field defaults to true: a conversation whose permissions the daemon has not reported is
@@ -730,45 +715,21 @@ class ChatViewModel(
     }
 
     /**
-     * Watch device connectivity and this account's registration, and say which banner (if any)
-     * the screen should show.
+     * Watch device connectivity and this account's registration for the error strip.
      *
-     * A faithful port of `ConversationPresenter.kt:194-205`, including the tolerance in
-     * `isConnected || isRegistered`: a registered account is reachable even if the platform's
-     * connectivity callback has not caught up, and the reference would rather say nothing than
-     * cry offline at a working conversation.
-     *
-     * Registration changes are taken from [AccountService.accountEvents], **not** from
-     * `accountService.accounts`: that `StateFlow` is re-assigned with a fresh `List` holding the
-     * same mutable `Account` instances, so the new value compares equal to the old one and the
-     * flow never emits. `accountEvents` always emits, and replays each account's current
-     * registration state on subscription, so the first banner value is correct rather than a
-     * guess. Any event re-reads the account, since what matters is its state afterwards and not
-     * which signal carried it.
+     * Pinned to the conversation's account rather than the current one: the chat stays open on
+     * its own account even if another is switched to. See [connectivityBannerFlow] for why the
+     * account is read through `accountEvents`.
      */
     private fun observeConnectivity(accountId: String) {
         connectivityJob?.cancel()
         connectivityJob = scope.launch {
-            combine(
-                hardwareService?.connectivityState ?: flowOf(true),
-                accountService.accountEvents.map { }.onStart { emit(Unit) },
-            ) { isConnected, _ ->
-                connectivityBanner(isConnected, accountService.getAccount(accountId))
-            }
-                .distinctUntilChanged()
+            connectivityBannerFlow(hardwareService, accountService) { accountId }
                 .collect { banner ->
                     _state.update { it.copy(connectivityBanner = banner) }
                 }
         }
     }
-
-    /** The reference's precedence: no network first, then a switched-off account. */
-    private fun connectivityBanner(isConnected: Boolean, account: Account?): ConnectivityBanner? =
-        when {
-            !(isConnected || account?.isRegistered == true) -> ConnectivityBanner.NoNetwork
-            account != null && !account.isEnabled -> ConnectivityBanner.AccountOffline
-            else -> null
-        }
 
     /**
      * Keep the screen's grants current while it is open.

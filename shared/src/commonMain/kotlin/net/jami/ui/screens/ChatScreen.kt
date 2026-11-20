@@ -206,8 +206,6 @@ import androidx.compose.ui.text.font.FontWeight
 import net.jami.ui.viewmodel.ReplyPreview
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.conversation_ended
-import jami_kmp.shared.generated.resources.error_account_offline
-import jami_kmp.shared.generated.resources.error_no_network
 import jami_kmp.shared.generated.resources.conversation_reply_you
 import jami_kmp.shared.generated.resources.conversation_message_deleted
 import jami_kmp.shared.generated.resources.*
@@ -230,6 +228,7 @@ import net.jami.ui.components.inputs.EmojiCatalog
 import net.jami.ui.components.inputs.EmojiPickerDialog
 import net.jami.ui.components.inputs.RecentEmoji
 import net.jami.ui.theme.JamiTheme
+import net.jami.ui.components.notification.ConnectivityBannerStrip
 import net.jami.ui.viewmodel.ConnectivityBanner
 import net.jami.ui.viewmodel.ChatViewModel
 import net.jami.ui.viewmodel.MessageItem
@@ -1770,39 +1769,6 @@ private fun SystemMessage(message: MessageItem) {
             style = JamiTheme.typography.bodySmall,
             color = JamiTheme.colors.onSurfaceVariant,
             textAlign = TextAlign.Center,
-        )
-    }
-}
-
-/**
- * Full-width strip saying why this conversation cannot reach anyone.
- *
- * Matches the reference's `error_msg_pane`: the error colour across the full width, centred and
- * bold, above the toolbar's content rather than floating over the messages. A snackbar would be
- * wrong here — the condition persists, so the notice has to persist with it.
- */
-@Composable
-private fun ConnectivityBannerStrip(banner: ConnectivityBanner) {
-    val text = when (banner) {
-        ConnectivityBanner.NoNetwork -> stringResource(Res.string.error_no_network)
-        ConnectivityBanner.AccountOffline -> stringResource(Res.string.error_account_offline)
-    }
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = JamiTheme.colors.error,
-    ) {
-        Text(
-            text = text,
-            style = JamiTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold,
-            color = JamiTheme.colors.onError,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(JamiTheme.spacing.s)
-                // The strip is the screen's most important state; a reader arriving at the chat
-                // should hear it without hunting for it.
-                .semantics { liveRegion = LiveRegionMode.Polite },
         )
     }
 }

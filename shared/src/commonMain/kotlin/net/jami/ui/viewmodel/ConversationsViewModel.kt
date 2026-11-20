@@ -104,6 +104,13 @@ data class ConversationsState(
     val currentAccountAvatarBytes: ByteArray? = null,
     /** True when the current account is registered with the daemon. */
     val isAccountOnline: Boolean = false,
+    /**
+     * Shown as a strip above the list; null when the account can reach its peers.
+     *
+     * The reference has no banner on its smartlist — this screen is where you land, and a dead
+     * network is worth knowing before picking someone to message.
+     */
+    val connectivityBanner: ConnectivityBanner? = null,
     val accounts: List<AccountItem> = emptyList(),
     val activeFilter: ConversationFilter = ConversationFilter.ALL,
     /**
@@ -127,7 +134,13 @@ class ConversationsViewModel(
     private val contactService: ContactService,
     private val vCardService: VCardService,
     private val settingsRepository: SettingsRepository,
-    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    /**
+     * The source of device connectivity, for the offline strip. Optional for the same reasons as
+     * in [ChatViewModel]: tests do not care, it is a platform `expect` class common code cannot
+     * construct, and when absent connectivity reads as up rather than down.
+     */
+    private val hardwareService: net.jami.services.expect.HardwareService? = null,
 ) : ViewModel() {
     companion object {
         private const val TAG = "ConversationsVM"
@@ -148,6 +161,16 @@ class ConversationsViewModel(
     private val subscribedBuddies = mutableSetOf<Pair<String, String>>()
 
     init {
+        // The strip follows whichever account is current: switching accounts switches what this
+        // list shows, so it must switch what it reports about reachability too.
+        scope.launch {
+            connectivityBannerFlow(hardwareService, accountService) {
+                accountService.currentAccount.value?.accountId
+            }.collect { banner ->
+                _state.value = _state.value.copy(connectivityBanner = banner)
+            }
+        }
+
         // Observe current account changes and reload conversations
         scope.launch {
             accountService.currentAccount.filterNotNull().collect { account ->
