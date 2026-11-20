@@ -101,10 +101,29 @@ combineLatest(hardwareService.connectivityState, accountService.getObservableAcc
     }
 ```
 
-Ported to jami-kmp as `ChatState.connectivityBanner` + `ChatBanner` in `ChatScreen`, with the same
-precedence and the same `isConnected || isRegistered` tolerance. The account-status switch was also
-extended from binary online/offline to the reference's five states. See `Account.isTrying` /
-`Account.isInError`, added to match the reference's predicates.
+Ported to jami-kmp as `ChatState.connectivityBanner` + the shared `ConnectivityBannerStrip`, with
+the same precedence and the same `isConnected || isRegistered` tolerance. The strip also shows on
+the conversation list, which the reference does **not** do — that screen is where you land, and a
+dead network is worth knowing before picking someone to message. The account-status switch was
+extended from binary online/offline to the reference's five states (see `Account.isTrying` /
+`Account.isInError`, added to match the reference's predicates).
+
+**Verified on a Pixel 7a, 2026-11-20** — offline at launch, Wi-Fi off mid-session, and recovery.
+Getting there took two fixes that no test would have caught, both in Android connectivity
+detection rather than in the UI:
+
+1. `onLost` re-queried `connectivityManager.activeNetwork` and read a non-null answer as "still
+   online". `activeNetwork` is not cleared synchronously with `onLost`, and it reports a network
+   that is neither necessarily the default nor necessarily carrying internet — so switching Wi-Fi
+   off on a device with an idle SIM logged `onLost … (stillConnected=true)` and reported *online*.
+   Airplane mode kills every transport at once and happened to clear it in time, which is why the
+   first device check passed and looked conclusive. Now the default network is tracked and losing
+   it means offline, as `DaemonNetworkMonitor.monitor` does it.
+2. `registerDefaultNetworkCallback` reports *changes* only; with no network it delivers nothing
+   (`onUnavailable` belongs to a timed-out `requestNetwork`). A device already offline at app
+   start therefore kept `_connectivityState`'s optimistic `true`. The service now seeds itself
+   from a snapshot requiring `NET_CAPABILITY_VALIDATED` as well as `NET_CAPABILITY_INTERNET` — a
+   captive portal or a dataless SIM has the capability without the connectivity.
 
 ### 2.2 `loadSmartlist` is ungated and not single-flight
 
