@@ -653,26 +653,80 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
     }
 
+    /**
+     * Tracks the **default** network, mirroring the reference's `DaemonNetworkMonitor.monitor`.
+     *
+     * The callback is registered with `registerDefaultNetworkCallback`, so every event concerns
+     * the default network — but `onLost` can arrive for a network that has already been replaced,
+     * and the one that matters is the one we last saw as default.
+     *
+     * This deliberately does **not** re-query `connectivityManager.activeNetwork` on loss, which
+     * is what it used to do. `activeNetwork` is not cleared synchronously with `onLost`, and it
+     * also reports a network that is neither the default nor necessarily carrying internet — so
+     * turning Wi-Fi off on a device with an idle SIM logged `onLost … (stillConnected=true)` and
+     * reported the device as *online* (Pixel 7a, 2026-11-20). Killing every transport at once
+     * (airplane mode) happened to clear it in time, which is why this looked like it worked.
+     * The callback is the authority: losing the default network means offline until an
+     * `onAvailable` says otherwise.
+     */
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        private var defaultNetwork: Network? = null
+
         override fun onAvailable(network: Network) {
             Log.i(TAG, "Network onAvailable: $network")
+            defaultNetwork = network
             connectivityChanged(true)
         }
 
         override fun onLost(network: Network) {
-            // The default network may still exist (e.g. Wi-Fi dropped, cellular remains).
-            val stillConnected = connectivityManager?.activeNetwork != null
-            Log.i(TAG, "Network onLost: $network (stillConnected=$stillConnected)")
-            connectivityChanged(stillConnected)
+            // An event for a network we no longer consider default says nothing about reachability.
+            if (network != defaultNetwork) {
+                Log.i(TAG, "Network onLost: $network (not the default, ignored)")
+                return
+            }
+            Log.i(TAG, "Network onLost: $network (was default -> offline)")
+            defaultNetwork = null
+            connectivityChanged(false)
         }
 
         override fun onUnavailable() {
             Log.i(TAG, "Network onUnavailable")
+            defaultNetwork = null
             connectivityChanged(false)
         }
     }
 
+    /**
+     * Whether the default network can currently carry traffic, read as a snapshot.
+     *
+     * Needed because `registerDefaultNetworkCallback` reports *changes*: with no network at all,
+     * nothing is delivered — `onUnavailable` is for a `requestNetwork` that timed out, not for
+     * the default callback — so a device that was already offline when the app started would
+     * keep [_connectivityState]'s optimistic initial value and show nothing.
+     *
+     * `VALIDATED` as well as `INTERNET` on purpose: a captive portal or a SIM with no working
+     * data has the capability without the connectivity, and reporting that as online is how the
+     * banner failed to appear in the first place.
+     */
+    private fun readConnectivitySnapshot(): Boolean = try {
+        val cm = connectivityManager
+        val network = cm?.activeNetwork
+        val caps = network?.let { cm.getNetworkCapabilities(it) }
+        caps != null &&
+            caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+            caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    } catch (e: Exception) {
+        Log.w(TAG, "Can't read connectivity snapshot; assuming online", e)
+        // Assume online rather than offline: claiming "no network" on a failed read would put a
+        // false banner in front of a working app.
+        true
+    }
+
     init {
+        // Seed before registering, so the callback's first event (if any) wins over the snapshot.
+        val initial = readConnectivitySnapshot()
+        Log.i(TAG, "Initial connectivity snapshot: $initial")
+        connectivityChanged(initial)
         try {
             connectivityManager?.registerDefaultNetworkCallback(networkCallback)
         } catch (e: Exception) {
