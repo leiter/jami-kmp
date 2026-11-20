@@ -58,7 +58,7 @@ object NoOpDaemonCallbacks : DaemonCallbacks {
     override fun onMessageReceived(accountId: String, conversationId: String, message: SwarmMessage) {}
     override fun onMessageUpdated(accountId: String, conversationId: String, message: SwarmMessage) {}
     override fun onMessagesFound(messageId: Int, accountId: String, conversationId: String, messages: List<Map<String, String>>) {}
-    override fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<SwarmMessage>) {}
+    override fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<SwarmMessage>, permissions: List<String>?) {}
     override fun onConversationProfileUpdated(accountId: String, conversationId: String, profile: Map<String, String>) {}
     override fun onConversationPreferencesUpdated(accountId: String, conversationId: String, preferences: Map<String, String>) {}
     override fun onReactionAdded(accountId: String, conversationId: String, messageId: String, reaction: Map<String, String>) {}

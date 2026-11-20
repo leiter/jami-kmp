@@ -83,6 +83,14 @@ public class ConfigurationCallback {
     if (getClass() == ConfigurationCallback.class) JamiServiceJNI.ConfigurationCallback_accountDetailsChanged(swigCPtr, this, account_id, StringMap.getCPtr(details), details); else JamiServiceJNI.ConfigurationCallback_accountDetailsChangedSwigExplicitConfigurationCallback(swigCPtr, this, account_id, StringMap.getCPtr(details), details);
   }
 
+  public void accountMetadataChanged(String account_id, BlobMap metadata) {
+    if (getClass() == ConfigurationCallback.class) JamiServiceJNI.ConfigurationCallback_accountMetadataChanged(swigCPtr, this, account_id, BlobMap.getCPtr(metadata), metadata); else JamiServiceJNI.ConfigurationCallback_accountMetadataChangedSwigExplicitConfigurationCallback(swigCPtr, this, account_id, BlobMap.getCPtr(metadata), metadata);
+  }
+
+  public void contactMetadataChanged(String account_id, String uri, BlobMap metadata) {
+    if (getClass() == ConfigurationCallback.class) JamiServiceJNI.ConfigurationCallback_contactMetadataChanged(swigCPtr, this, account_id, uri, BlobMap.getCPtr(metadata), metadata); else JamiServiceJNI.ConfigurationCallback_contactMetadataChangedSwigExplicitConfigurationCallback(swigCPtr, this, account_id, uri, BlobMap.getCPtr(metadata), metadata);
+  }
+
   public void profileReceived(String arg0, String arg1, String arg2) {
     if (getClass() == ConfigurationCallback.class) JamiServiceJNI.ConfigurationCallback_profileReceived(swigCPtr, this, arg0, arg1, arg2); else JamiServiceJNI.ConfigurationCallback_profileReceivedSwigExplicitConfigurationCallback(swigCPtr, this, arg0, arg1, arg2);
   }

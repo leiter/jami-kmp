@@ -1902,8 +1902,14 @@ class ConversationFacade(
      * Populating the model first ensures loadMessagesFromHistory() in the ViewModel sees
      * a non-empty getSortedHistory() when it runs in response to this event.
      */
-    internal suspend fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<net.jami.model.SwarmMessage>) {
-        Log.d(TAG, "onSwarmLoaded: $conversationId messages=${messages.size}")
+    internal suspend fun onSwarmLoaded(
+        id: Long,
+        accountId: String,
+        conversationId: String,
+        messages: List<net.jami.model.SwarmMessage>,
+        permissions: List<String>? = null,
+    ) {
+        Log.d(TAG, "onSwarmLoaded: $conversationId messages=${messages.size} permissions=$permissions")
 
         val account = accountService.getAccount(accountId)
         // Self-heal: a swarm-load result for an unknown id means we missed the conversation on the
@@ -1911,6 +1917,10 @@ class ConversationFacade(
         val conversation = account?.let { ensureSwarm(it, conversationId) }
 
         if (account != null && conversation != null) {
+            // The daemon states the grants with the history, so take them from here rather than
+            // asking again. Only when it actually said something: null is "not reported", and
+            // overwriting a known set with it would silently widen the conversation.
+            if (permissions != null) conversation.setPermissions(permissions)
             for (message in messages) {
                 try {
                     val interaction = swarmMessageToInteraction(account, conversation, message)

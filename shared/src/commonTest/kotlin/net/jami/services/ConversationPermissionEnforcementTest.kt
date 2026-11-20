@@ -19,6 +19,7 @@ package net.jami.services
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import net.jami.model.AccountConfig
 import net.jami.model.ConfigKey
@@ -28,9 +29,11 @@ import net.jami.model.ConversationPermissionException
 import net.jami.model.MemberRole
 import net.jami.model.Uri
 import net.jami.testHardwareService
+import net.jami.viewmodel.makeTestServiceStack
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -220,6 +223,56 @@ class ConversationPermissionEnforcementTest {
         val (service, _) = serviceWithSwarm(emptyList())
 
         service.updateConversationInfo("acc1", "conv1", mapOf("title" to "x"))
+    }
+
+    // ==================== The push channel (SwarmLoaded) ====================
+
+    @Test
+    fun swarmLoadedAppliesThePermissionsTheDaemonSendsWithTheHistory() = runTest {
+        // The daemon states the grants as the fifth argument of SwarmLoaded, alongside the
+        // messages — the push half of the model. Nothing should need to ask again.
+        val stub = StubDaemonBridge()
+        stub.accountIds = listOf("acc1")
+        stub.accountDetails["acc1"] =
+            mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI)
+        val stack = makeTestServiceStack(stub, this)
+        stack.accountService.loadAccounts()
+        advanceUntilIdle()
+        stack.conversationFacade.onConversationReady("acc1", "conv1")
+        advanceUntilIdle()
+
+        stack.conversationFacade.onSwarmLoaded(
+            1L, "acc1", "conv1", emptyList(),
+            permissions = listOf(ConversationPermission.Text.key),
+        )
+        advanceUntilIdle()
+
+        val conversation = requireNotNull(stack.accountService.getAccount("acc1")?.getSwarm("conv1"))
+        assertTrue(conversation.canSendText())
+        assertFalse(conversation.canReact())
+    }
+
+    @Test
+    fun aNullPermissionVectorDoesNotClobberAKnownSet() = runTest {
+        // A platform whose bridge does not carry the vector yet passes null. Treating that as
+        // "grants nothing" would lock the conversation down; treating it as an overwrite would
+        // silently widen it. It must leave what is already known alone.
+        val stub = StubDaemonBridge()
+        stub.accountIds = listOf("acc1")
+        stub.accountDetails["acc1"] =
+            mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI)
+        val stack = makeTestServiceStack(stub, this)
+        stack.accountService.loadAccounts()
+        advanceUntilIdle()
+        stack.conversationFacade.onConversationReady("acc1", "conv1")
+        advanceUntilIdle()
+        val conversation = requireNotNull(stack.accountService.getAccount("acc1")?.getSwarm("conv1"))
+        conversation.setPermissions(listOf(ConversationPermission.Text.key))
+
+        stack.conversationFacade.onSwarmLoaded(1L, "acc1", "conv1", emptyList(), permissions = null)
+        advanceUntilIdle()
+
+        assertTrue(conversation.canSendText(), "the known grant survived a null report")
     }
 
     // ==================== Unknown permissions stay permissive ====================

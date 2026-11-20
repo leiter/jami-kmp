@@ -63,8 +63,8 @@ public class ConversationCallback {
     JamiServiceJNI.ConversationCallback_change_ownership(this, swigCPtr, true);
   }
 
-  public void swarmLoaded(long arg0, String arg1, String arg2, SwarmMessageVect arg3) {
-    if (getClass() == ConversationCallback.class) JamiServiceJNI.ConversationCallback_swarmLoaded(swigCPtr, this, arg0, arg1, arg2, SwarmMessageVect.getCPtr(arg3), arg3); else JamiServiceJNI.ConversationCallback_swarmLoadedSwigExplicitConversationCallback(swigCPtr, this, arg0, arg1, arg2, SwarmMessageVect.getCPtr(arg3), arg3);
+  public void swarmLoaded(long arg0, String arg1, String arg2, SwarmMessageVect arg3, StringVect arg4) {
+    if (getClass() == ConversationCallback.class) JamiServiceJNI.ConversationCallback_swarmLoaded(swigCPtr, this, arg0, arg1, arg2, SwarmMessageVect.getCPtr(arg3), arg3, StringVect.getCPtr(arg4), arg4); else JamiServiceJNI.ConversationCallback_swarmLoadedSwigExplicitConversationCallback(swigCPtr, this, arg0, arg1, arg2, SwarmMessageVect.getCPtr(arg3), arg3, StringVect.getCPtr(arg4), arg4);
   }
 
   public void messagesFound(long arg0, String arg1, String arg2, VectMap arg3) {
@@ -117,6 +117,34 @@ public class ConversationCallback {
 
   public void conversationPreferencesUpdated(String arg0, String arg1, StringMap arg2) {
     if (getClass() == ConversationCallback.class) JamiServiceJNI.ConversationCallback_conversationPreferencesUpdated(swigCPtr, this, arg0, arg1, StringMap.getCPtr(arg2), arg2); else JamiServiceJNI.ConversationCallback_conversationPreferencesUpdatedSwigExplicitConversationCallback(swigCPtr, this, arg0, arg1, StringMap.getCPtr(arg2), arg2);
+  }
+
+  public void collaborativeDocumentUpdate(String arg0, String arg1, String arg2, Blob arg3) {
+    if (getClass() == ConversationCallback.class) JamiServiceJNI.ConversationCallback_collaborativeDocumentUpdate(swigCPtr, this, arg0, arg1, arg2, Blob.getCPtr(arg3), arg3); else JamiServiceJNI.ConversationCallback_collaborativeDocumentUpdateSwigExplicitConversationCallback(swigCPtr, this, arg0, arg1, arg2, Blob.getCPtr(arg3), arg3);
+  }
+
+  public void collaborativeAwarenessChanged(String arg0, String arg1, String arg2, String arg3, long arg4, String arg5) {
+    if (getClass() == ConversationCallback.class) JamiServiceJNI.ConversationCallback_collaborativeAwarenessChanged(swigCPtr, this, arg0, arg1, arg2, arg3, arg4, arg5); else JamiServiceJNI.ConversationCallback_collaborativeAwarenessChangedSwigExplicitConversationCallback(swigCPtr, this, arg0, arg1, arg2, arg3, arg4, arg5);
+  }
+
+  public void collaborativeParticipantLeft(String arg0, String arg1, String arg2, String arg3, long arg4) {
+    if (getClass() == ConversationCallback.class) JamiServiceJNI.ConversationCallback_collaborativeParticipantLeft(swigCPtr, this, arg0, arg1, arg2, arg3, arg4); else JamiServiceJNI.ConversationCallback_collaborativeParticipantLeftSwigExplicitConversationCallback(swigCPtr, this, arg0, arg1, arg2, arg3, arg4);
+  }
+
+  public void collaborativeDocumentRenamed(String arg0, String arg1, String arg2, String arg3) {
+    if (getClass() == ConversationCallback.class) JamiServiceJNI.ConversationCallback_collaborativeDocumentRenamed(swigCPtr, this, arg0, arg1, arg2, arg3); else JamiServiceJNI.ConversationCallback_collaborativeDocumentRenamedSwigExplicitConversationCallback(swigCPtr, this, arg0, arg1, arg2, arg3);
+  }
+
+  public void collaborativeDocumentRemoved(String arg0, String arg1, String arg2, boolean arg3) {
+    if (getClass() == ConversationCallback.class) JamiServiceJNI.ConversationCallback_collaborativeDocumentRemoved(swigCPtr, this, arg0, arg1, arg2, arg3); else JamiServiceJNI.ConversationCallback_collaborativeDocumentRemovedSwigExplicitConversationCallback(swigCPtr, this, arg0, arg1, arg2, arg3);
+  }
+
+  public void collaborativeAttachmentAdded(String arg0, String arg1, String arg2, String arg3) {
+    if (getClass() == ConversationCallback.class) JamiServiceJNI.ConversationCallback_collaborativeAttachmentAdded(swigCPtr, this, arg0, arg1, arg2, arg3); else JamiServiceJNI.ConversationCallback_collaborativeAttachmentAddedSwigExplicitConversationCallback(swigCPtr, this, arg0, arg1, arg2, arg3);
+  }
+
+  public void collaborativeDocumentReplicated(String arg0, String arg1, String arg2, boolean arg3) {
+    if (getClass() == ConversationCallback.class) JamiServiceJNI.ConversationCallback_collaborativeDocumentReplicated(swigCPtr, this, arg0, arg1, arg2, arg3); else JamiServiceJNI.ConversationCallback_collaborativeDocumentReplicatedSwigExplicitConversationCallback(swigCPtr, this, arg0, arg1, arg2, arg3);
   }
 
   public ConversationCallback() {

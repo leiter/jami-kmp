@@ -125,6 +125,24 @@ public class JamiServiceJNI {
   public final static native byte[] Blob_getBytes(long jarg1, Blob jarg1_);
   public final static native void Blob_setBytes(long jarg1, Blob jarg1_, byte[] jarg2);
   public final static native void delete_Blob(long jarg1);
+  public final static native long new_BlobMap__SWIG_0();
+  public final static native long new_BlobMap__SWIG_1(long jarg1, BlobMap jarg1_);
+  public final static native long BlobMap_Iterator_getNextUnchecked(long jarg1, BlobMap.Iterator jarg1_);
+  public final static native boolean BlobMap_Iterator_isNot(long jarg1, BlobMap.Iterator jarg1_, long jarg2, BlobMap.Iterator jarg2_);
+  public final static native String BlobMap_Iterator_getKey(long jarg1, BlobMap.Iterator jarg1_);
+  public final static native long BlobMap_Iterator_getValue(long jarg1, BlobMap.Iterator jarg1_);
+  public final static native void BlobMap_Iterator_setValue(long jarg1, BlobMap.Iterator jarg1_, long jarg2, Blob jarg2_);
+  public final static native void delete_BlobMap_Iterator(long jarg1);
+  public final static native boolean BlobMap_isEmpty(long jarg1, BlobMap jarg1_);
+  public final static native void BlobMap_clear(long jarg1, BlobMap jarg1_);
+  public final static native long BlobMap_find(long jarg1, BlobMap jarg1_, String jarg2);
+  public final static native long BlobMap_begin(long jarg1, BlobMap jarg1_);
+  public final static native long BlobMap_end(long jarg1, BlobMap jarg1_);
+  public final static native int BlobMap_sizeImpl(long jarg1, BlobMap jarg1_);
+  public final static native boolean BlobMap_containsImpl(long jarg1, BlobMap jarg1_, String jarg2);
+  public final static native void BlobMap_putUnchecked(long jarg1, BlobMap jarg1_, String jarg2, long jarg3, Blob jarg3_);
+  public final static native void BlobMap_removeUnchecked(long jarg1, BlobMap jarg1_, long jarg2, BlobMap.Iterator jarg2_);
+  public final static native void delete_BlobMap(long jarg1);
   public final static native long new_FloatVect__SWIG_0();
   public final static native long new_FloatVect__SWIG_1(long jarg1, FloatVect jarg1_);
   public final static native boolean FloatVect_isEmpty(long jarg1, FloatVect jarg1_);
@@ -225,8 +243,8 @@ public class JamiServiceJNI {
   public final static native void Callback_recordStateChangeSwigExplicitCallback(long jarg1, Callback jarg1_, String jarg2, int jarg3);
   public final static native void Callback_onRtcpReportReceived(long jarg1, Callback jarg1_, String jarg2, long jarg3, IntegerMap jarg3_);
   public final static native void Callback_onRtcpReportReceivedSwigExplicitCallback(long jarg1, Callback jarg1_, String jarg2, long jarg3, IntegerMap jarg3_);
-  public final static native void Callback_onConferenceInfosUpdated(long jarg1, Callback jarg1_, String jarg2, long jarg3, VectMap jarg3_);
-  public final static native void Callback_onConferenceInfosUpdatedSwigExplicitCallback(long jarg1, Callback jarg1_, String jarg2, long jarg3, VectMap jarg3_);
+  public final static native void Callback_conferenceInfosUpdated(long jarg1, Callback jarg1_, String jarg2, long jarg3, VectMap jarg3_);
+  public final static native void Callback_conferenceInfosUpdatedSwigExplicitCallback(long jarg1, Callback jarg1_, String jarg2, long jarg3, VectMap jarg3_);
   public final static native void Callback_peerHold(long jarg1, Callback jarg1_, String jarg2, boolean jarg3);
   public final static native void Callback_peerHoldSwigExplicitCallback(long jarg1, Callback jarg1_, String jarg2, boolean jarg3);
   public final static native void Callback_audioMuted(long jarg1, Callback jarg1_, String jarg2, boolean jarg3);
@@ -266,6 +284,10 @@ public class JamiServiceJNI {
   public final static native long new_Message();
   public final static native void delete_Message(long jarg1);
   public final static native long getAccountDetails(String jarg1);
+  public final static native boolean getAccountMetadata(String jarg1, long jarg2, BlobMap jarg2_);
+  public final static native boolean setAccountMetadata(String jarg1, long jarg2, BlobMap jarg2_);
+  public final static native boolean getContactMetadata(String jarg1, String jarg2, long jarg3, BlobMap jarg3_);
+  public final static native boolean setContactMetadata(String jarg1, String jarg2, long jarg3, BlobMap jarg3_);
   public final static native long getVolatileAccountDetails(String jarg1);
   public final static native void setAccountDetails(String jarg1, long jarg2, StringMap jarg2_);
   public final static native void setAccountActive__SWIG_0(String jarg1, boolean jarg2, boolean jarg3);
@@ -341,6 +363,8 @@ public class JamiServiceJNI {
   public final static native void setRecordPreview(boolean jarg1);
   public final static native int getRecordQuality();
   public final static native void setRecordQuality(int jarg1);
+  public final static native String getConferenceResolution();
+  public final static native void setConferenceResolution(String jarg1);
   public final static native void setHistoryLimit(int jarg1);
   public final static native int getHistoryLimit();
   public final static native void setRingingTimeout(int jarg1);
@@ -372,8 +396,10 @@ public class JamiServiceJNI {
   public final static native void addContact(String jarg1, String jarg2);
   public final static native void removeContact(String jarg1, String jarg2, boolean jarg3);
   public final static native long getContacts(String jarg1);
+  public final static native long getDeviceList(String jarg1);
   public final static native long getContactDetails(String jarg1, String jarg2);
   public final static native void connectivityChanged();
+  public final static native void networkInterfaceChanged();
   public final static native void setPushNotificationConfig(long jarg1, StringMap jarg1_);
   public final static native void setPushNotificationToken(String jarg1);
   public final static native void pushNotificationReceived(String jarg1, long jarg2, StringMap jarg2_);
@@ -396,6 +422,10 @@ public class JamiServiceJNI {
   public final static native void ConfigurationCallback_stunStatusFailureSwigExplicitConfigurationCallback(long jarg1, ConfigurationCallback jarg1_, String jarg2);
   public final static native void ConfigurationCallback_accountDetailsChanged(long jarg1, ConfigurationCallback jarg1_, String jarg2, long jarg3, StringMap jarg3_);
   public final static native void ConfigurationCallback_accountDetailsChangedSwigExplicitConfigurationCallback(long jarg1, ConfigurationCallback jarg1_, String jarg2, long jarg3, StringMap jarg3_);
+  public final static native void ConfigurationCallback_accountMetadataChanged(long jarg1, ConfigurationCallback jarg1_, String jarg2, long jarg3, BlobMap jarg3_);
+  public final static native void ConfigurationCallback_accountMetadataChangedSwigExplicitConfigurationCallback(long jarg1, ConfigurationCallback jarg1_, String jarg2, long jarg3, BlobMap jarg3_);
+  public final static native void ConfigurationCallback_contactMetadataChanged(long jarg1, ConfigurationCallback jarg1_, String jarg2, String jarg3, long jarg4, BlobMap jarg4_);
+  public final static native void ConfigurationCallback_contactMetadataChangedSwigExplicitConfigurationCallback(long jarg1, ConfigurationCallback jarg1_, String jarg2, String jarg3, long jarg4, BlobMap jarg4_);
   public final static native void ConfigurationCallback_profileReceived(long jarg1, ConfigurationCallback jarg1_, String jarg2, String jarg3, String jarg4);
   public final static native void ConfigurationCallback_profileReceivedSwigExplicitConfigurationCallback(long jarg1, ConfigurationCallback jarg1_, String jarg2, String jarg3, String jarg4);
   public final static native void ConfigurationCallback_registrationStateChanged(long jarg1, ConfigurationCallback jarg1_, String jarg2, String jarg3, int jarg4, String jarg5);
@@ -616,6 +646,8 @@ public class JamiServiceJNI {
   public final static native long new_SwarmMessage();
   public final static native void delete_SwarmMessage(long jarg1);
   public final static native String startConversation(String jarg1);
+  public final static native String startFeedConversation__SWIG_0(String jarg1);
+  public final static native String startFeedConversation__SWIG_1(String jarg1, long jarg2, StringMap jarg2_, boolean jarg3);
   public final static native void acceptConversationRequest(String jarg1, String jarg2);
   public final static native void declineConversationRequest(String jarg1, String jarg2);
   public final static native boolean removeConversation(String jarg1, String jarg2);
@@ -628,6 +660,22 @@ public class JamiServiceJNI {
   public final static native void addConversationMember(String jarg1, String jarg2, String jarg3);
   public final static native void removeConversationMember(String jarg1, String jarg2, String jarg3);
   public final static native long getConversationMembers(String jarg1, String jarg2);
+  public final static native long getConversationPermissions(String jarg1, String jarg2);
+  public final static native String createCollaborativeDocument(String jarg1, String jarg2, String jarg3, String jarg4);
+  public final static native long openCollaborativeDocument(String jarg1, String jarg2, String jarg3);
+  public final static native boolean removeCollaborativeDocument(String jarg1, String jarg2, String jarg3);
+  public final static native boolean removeCollaborativeDocumentLocally(String jarg1, String jarg2, String jarg3);
+  public final static native void closeCollaborativeDocument(String jarg1, String jarg2, String jarg3);
+  public final static native void applyCollaborativeUpdate(String jarg1, String jarg2, String jarg3, long jarg4, Blob jarg4_);
+  public final static native void setCollaborativeAwareness(String jarg1, String jarg2, String jarg3, String jarg4);
+  public final static native long collaborativeDocumentState(String jarg1, String jarg2, String jarg3);
+  public final static native void setCollaborativeDocumentName(String jarg1, String jarg2, String jarg3, String jarg4);
+  public final static native String collaborativeDocumentName(String jarg1, String jarg2, String jarg3);
+  public final static native long getCollaborativeDocuments(String jarg1, String jarg2);
+  public final static native long getCollaborativeDocumentHistory(String jarg1, String jarg2, String jarg3, long jarg4);
+  public final static native long collaborativeDocumentStateAt(String jarg1, String jarg2, String jarg3, String jarg4);
+  public final static native String addCollaborativeAttachment(String jarg1, String jarg2, String jarg3, long jarg4, Blob jarg4_);
+  public final static native long collaborativeAttachment(String jarg1, String jarg2, String jarg3, String jarg4);
   public final static native void sendMessage(String jarg1, String jarg2, String jarg3, String jarg4, int jarg5);
   public final static native long loadConversation(String jarg1, String jarg2, String jarg3, long jarg4);
   public final static native long loadSwarmUntil(String jarg1, String jarg2, String jarg3, String jarg4);
@@ -635,8 +683,8 @@ public class JamiServiceJNI {
   public final static native void clearCache(String jarg1, String jarg2);
   public final static native long searchConversation(String jarg1, String jarg2, String jarg3, String jarg4, String jarg5, String jarg6, long jarg7, long jarg8, long jarg9, int jarg10);
   public final static native void delete_ConversationCallback(long jarg1);
-  public final static native void ConversationCallback_swarmLoaded(long jarg1, ConversationCallback jarg1_, long jarg2, String jarg3, String jarg4, long jarg5, SwarmMessageVect jarg5_);
-  public final static native void ConversationCallback_swarmLoadedSwigExplicitConversationCallback(long jarg1, ConversationCallback jarg1_, long jarg2, String jarg3, String jarg4, long jarg5, SwarmMessageVect jarg5_);
+  public final static native void ConversationCallback_swarmLoaded(long jarg1, ConversationCallback jarg1_, long jarg2, String jarg3, String jarg4, long jarg5, SwarmMessageVect jarg5_, long jarg6, StringVect jarg6_);
+  public final static native void ConversationCallback_swarmLoadedSwigExplicitConversationCallback(long jarg1, ConversationCallback jarg1_, long jarg2, String jarg3, String jarg4, long jarg5, SwarmMessageVect jarg5_, long jarg6, StringVect jarg6_);
   public final static native void ConversationCallback_messagesFound(long jarg1, ConversationCallback jarg1_, long jarg2, String jarg3, String jarg4, long jarg5, VectMap jarg5_);
   public final static native void ConversationCallback_messagesFoundSwigExplicitConversationCallback(long jarg1, ConversationCallback jarg1_, long jarg2, String jarg3, String jarg4, long jarg5, VectMap jarg5_);
   public final static native void ConversationCallback_swarmMessageReceived(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, long jarg4, SwarmMessage jarg4_);
@@ -663,13 +711,27 @@ public class JamiServiceJNI {
   public final static native void ConversationCallback_onConversationErrorSwigExplicitConversationCallback(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, long jarg4, String jarg5);
   public final static native void ConversationCallback_conversationPreferencesUpdated(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, long jarg4, StringMap jarg4_);
   public final static native void ConversationCallback_conversationPreferencesUpdatedSwigExplicitConversationCallback(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, long jarg4, StringMap jarg4_);
+  public final static native void ConversationCallback_collaborativeDocumentUpdate(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, long jarg5, Blob jarg5_);
+  public final static native void ConversationCallback_collaborativeDocumentUpdateSwigExplicitConversationCallback(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, long jarg5, Blob jarg5_);
+  public final static native void ConversationCallback_collaborativeAwarenessChanged(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, String jarg5, long jarg6, String jarg7);
+  public final static native void ConversationCallback_collaborativeAwarenessChangedSwigExplicitConversationCallback(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, String jarg5, long jarg6, String jarg7);
+  public final static native void ConversationCallback_collaborativeParticipantLeft(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, String jarg5, long jarg6);
+  public final static native void ConversationCallback_collaborativeParticipantLeftSwigExplicitConversationCallback(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, String jarg5, long jarg6);
+  public final static native void ConversationCallback_collaborativeDocumentRenamed(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, String jarg5);
+  public final static native void ConversationCallback_collaborativeDocumentRenamedSwigExplicitConversationCallback(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, String jarg5);
+  public final static native void ConversationCallback_collaborativeDocumentRemoved(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, boolean jarg5);
+  public final static native void ConversationCallback_collaborativeDocumentRemovedSwigExplicitConversationCallback(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, boolean jarg5);
+  public final static native void ConversationCallback_collaborativeAttachmentAdded(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, String jarg5);
+  public final static native void ConversationCallback_collaborativeAttachmentAddedSwigExplicitConversationCallback(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, String jarg5);
+  public final static native void ConversationCallback_collaborativeDocumentReplicated(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, boolean jarg5);
+  public final static native void ConversationCallback_collaborativeDocumentReplicatedSwigExplicitConversationCallback(long jarg1, ConversationCallback jarg1_, String jarg2, String jarg3, String jarg4, boolean jarg5);
   public final static native long new_ConversationCallback();
   public final static native void ConversationCallback_director_connect(ConversationCallback obj, long cptr, boolean mem_own, boolean weak_global);
   public final static native void ConversationCallback_change_ownership(ConversationCallback obj, long cptr, boolean take_or_release);
-  public final static native String addExposedService(String jarg1, long jarg2, StringMap jarg2_);
-  public final static native boolean updateExposedService(String jarg1, long jarg2, StringMap jarg2_);
-  public final static native boolean removeExposedService(String jarg1, String jarg2);
-  public final static native long getExposedServices(String jarg1);
+  public final static native String addSharedService(String jarg1, long jarg2, StringMap jarg2_);
+  public final static native boolean updateSharedService(String jarg1, long jarg2, StringMap jarg2_);
+  public final static native boolean removeSharedService(String jarg1, String jarg2);
+  public final static native long getSharedServices(String jarg1);
   public final static native long queryPeerServices(String jarg1, String jarg2);
   public final static native String openServiceTunnel(String jarg1, String jarg2, String jarg3, String jarg4, String jarg5, int jarg6);
   public final static native boolean closeServiceTunnel(String jarg1, String jarg2);
@@ -737,8 +799,8 @@ public class JamiServiceJNI {
   public static void SwigDirector_Callback_onRtcpReportReceived(Callback jself, String callId, long stats) {
     jself.onRtcpReportReceived(callId, new IntegerMap(stats, false));
   }
-  public static void SwigDirector_Callback_onConferenceInfosUpdated(Callback jself, String confId, long infos) {
-    jself.onConferenceInfosUpdated(confId, new VectMap(infos, false));
+  public static void SwigDirector_Callback_conferenceInfosUpdated(Callback jself, String confId, long infos) {
+    jself.conferenceInfosUpdated(confId, new VectMap(infos, false));
   }
   public static void SwigDirector_Callback_peerHold(Callback jself, String callId, boolean holding) {
     jself.peerHold(callId, holding);
@@ -772,6 +834,12 @@ public class JamiServiceJNI {
   }
   public static void SwigDirector_ConfigurationCallback_accountDetailsChanged(ConfigurationCallback jself, String account_id, long details) {
     jself.accountDetailsChanged(account_id, new StringMap(details, false));
+  }
+  public static void SwigDirector_ConfigurationCallback_accountMetadataChanged(ConfigurationCallback jself, String account_id, long metadata) {
+    jself.accountMetadataChanged(account_id, new BlobMap(metadata, false));
+  }
+  public static void SwigDirector_ConfigurationCallback_contactMetadataChanged(ConfigurationCallback jself, String account_id, String uri, long metadata) {
+    jself.contactMetadataChanged(account_id, uri, new BlobMap(metadata, false));
   }
   public static void SwigDirector_ConfigurationCallback_profileReceived(ConfigurationCallback jself, String arg0, String arg1, String arg2) {
     jself.profileReceived(arg0, arg1, arg2);
@@ -911,8 +979,8 @@ public class JamiServiceJNI {
   public static void SwigDirector_VideoCallback_decodingStopped(VideoCallback jself, String id, String shm_path, boolean is_mixer) {
     jself.decodingStopped(id, shm_path, is_mixer);
   }
-  public static void SwigDirector_ConversationCallback_swarmLoaded(ConversationCallback jself, long arg0, String arg1, String arg2, long arg3) {
-    jself.swarmLoaded(arg0, arg1, arg2, new SwarmMessageVect(arg3, true));
+  public static void SwigDirector_ConversationCallback_swarmLoaded(ConversationCallback jself, long arg0, String arg1, String arg2, long arg3, long arg4) {
+    jself.swarmLoaded(arg0, arg1, arg2, new SwarmMessageVect(arg3, true), new StringVect(arg4, true));
   }
   public static void SwigDirector_ConversationCallback_messagesFound(ConversationCallback jself, long arg0, String arg1, String arg2, long arg3) {
     jself.messagesFound(arg0, arg1, arg2, new VectMap(arg3, true));
@@ -952,6 +1020,27 @@ public class JamiServiceJNI {
   }
   public static void SwigDirector_ConversationCallback_conversationPreferencesUpdated(ConversationCallback jself, String arg0, String arg1, long arg2) {
     jself.conversationPreferencesUpdated(arg0, arg1, new StringMap(arg2, true));
+  }
+  public static void SwigDirector_ConversationCallback_collaborativeDocumentUpdate(ConversationCallback jself, String arg0, String arg1, String arg2, long arg3) {
+    jself.collaborativeDocumentUpdate(arg0, arg1, arg2, new Blob(arg3, false));
+  }
+  public static void SwigDirector_ConversationCallback_collaborativeAwarenessChanged(ConversationCallback jself, String arg0, String arg1, String arg2, String arg3, long arg4, String arg5) {
+    jself.collaborativeAwarenessChanged(arg0, arg1, arg2, arg3, arg4, arg5);
+  }
+  public static void SwigDirector_ConversationCallback_collaborativeParticipantLeft(ConversationCallback jself, String arg0, String arg1, String arg2, String arg3, long arg4) {
+    jself.collaborativeParticipantLeft(arg0, arg1, arg2, arg3, arg4);
+  }
+  public static void SwigDirector_ConversationCallback_collaborativeDocumentRenamed(ConversationCallback jself, String arg0, String arg1, String arg2, String arg3) {
+    jself.collaborativeDocumentRenamed(arg0, arg1, arg2, arg3);
+  }
+  public static void SwigDirector_ConversationCallback_collaborativeDocumentRemoved(ConversationCallback jself, String arg0, String arg1, String arg2, boolean arg3) {
+    jself.collaborativeDocumentRemoved(arg0, arg1, arg2, arg3);
+  }
+  public static void SwigDirector_ConversationCallback_collaborativeAttachmentAdded(ConversationCallback jself, String arg0, String arg1, String arg2, String arg3) {
+    jself.collaborativeAttachmentAdded(arg0, arg1, arg2, arg3);
+  }
+  public static void SwigDirector_ConversationCallback_collaborativeDocumentReplicated(ConversationCallback jself, String arg0, String arg1, String arg2, boolean arg3) {
+    jself.collaborativeDocumentReplicated(arg0, arg1, arg2, arg3);
   }
   public static void SwigDirector_NetworkServiceCallback_peerServicesReceived(NetworkServiceCallback jself, long arg0, String arg1, String arg2, int arg3, String arg4) {
     jself.peerServicesReceived(arg0, arg1, arg2, arg3, arg4);

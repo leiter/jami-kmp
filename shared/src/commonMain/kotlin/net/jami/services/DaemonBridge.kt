@@ -777,7 +777,24 @@ interface DaemonCallbacks {
     fun onMessageReceived(accountId: String, conversationId: String, message: SwarmMessage)
     fun onMessageUpdated(accountId: String, conversationId: String, message: SwarmMessage)
     fun onMessagesFound(messageId: Int, accountId: String, conversationId: String, messages: List<Map<String, String>>)
-    fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<SwarmMessage>)
+    /**
+     * A conversation's history, and what this account may do in it.
+     *
+     * [permissions] is the daemon's `SwarmLoaded` permission vector — the *push* half of the
+     * conversation-permission model, the pull half being
+     * [DaemonBridgeApi.getConversationPermissions]. Null means "not reported", which
+     * [net.jami.model.Conversation.setPermissions] reads as permissive; an empty list means the
+     * daemon answered and grants nothing. Platforms whose bridge does not carry it yet (iOS,
+     * macOS) pass null rather than an empty list, so they stay permissive instead of locking
+     * every conversation down.
+     */
+    fun onSwarmLoaded(
+        id: Long,
+        accountId: String,
+        conversationId: String,
+        messages: List<SwarmMessage>,
+        permissions: List<String>? = null,
+    )
     fun onConversationProfileUpdated(accountId: String, conversationId: String, profile: Map<String, String>)
     fun onConversationPreferencesUpdated(accountId: String, conversationId: String, preferences: Map<String, String>)
     fun onReactionAdded(accountId: String, conversationId: String, messageId: String, reaction: Map<String, String>)
