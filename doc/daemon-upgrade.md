@@ -159,6 +159,43 @@ the four renamed service calls. Everything else is additive.
 
 ---
 
+## Host prerequisites, as actually found (2026-11-21)
+
+The build is driven entirely by Gradle — `app/build.gradle.kts` passes `-DBUILD_CONTRIB=ON`, so
+the daemon's CMake builds contrib as well. There is no separate contrib step to run by hand.
+
+| Need | Where it comes from | Status on this host |
+|---|---|---|
+| NDK `30.0.16248370` | `app/build.gradle.kts: ndkVersion` | `~/Android/Sdk/ndk/` — present |
+| cmake `4.1.2` | `externalNativeBuild { cmake { version } }` | `~/Android/Sdk/cmake/4.1.2` — present (the *system* cmake is 3.22.1 and is not what Gradle uses) |
+| swig ≥ 4.0 | `bin/jni/make-swig.sh` | 4.2.0 — present |
+| ninja | SDK or system | system 1.10.1; note `~/Android/Sdk/cmake/4.1.2/bin` ships no ninja of its own |
+| disk | contrib + NDK | needs well over 12 GB free; ~21 GB is reclaimable from stale `~/.gradle/caches/<version>` dirs, `build-cache-1` and `jars-9`, none of which force a re-download (`modules-2` does — keep it) |
+
+**The daemon submodule carries a local patch that a checkout silently drops.**
+`contrib/src/main.mak` has `CMAKE_INTERPROCEDURAL_OPTIMIZATION` flipped to `OFF` at the Android
+`CMAKE` definition (line ~423) — an LTO workaround for this host. Stash it, check out, pop it:
+
+```bash
+cd jami-client-android/daemon
+git stash push -m "local LTO-off build patch" contrib/src/main.mak
+git checkout <new-rev>
+git stash pop
+```
+
+There is a *second* `INTERPROCEDURAL_OPTIMIZATION=ON` further down (line ~436). It is not a
+missed patch site: it sits in the non-Android branch of the makefile and is gated by
+`ifdef ENABLE_LTO`, so it has no effect here.
+
+Build and copy (arm64 only, as `pipe_so_files.sh` does):
+
+```bash
+cd jami-client-android/jami-android
+./gradlew assembleNoPushDebug -Parchs=arm64-v8a
+cp app/build/intermediates/merged_jni_libs/noPushDebug/*/out/arm64-v8a/*.so \
+   ../../jami-kmp/android-app/src/androidMain/jniLibs/arm64-v8a/
+```
+
 ## Checklist for the bump
 
 1. Bump `jami-client-android/daemon` to the revision that actually has the wanted APIs, and
