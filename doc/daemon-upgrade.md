@@ -5,6 +5,24 @@ against every `JamiService.*` call site and every callback override in `jami-cli
 `7e8edd73e` (2026-11-19), whose client code targets a **newer** daemon than either repo has
 checked out. Arity was compared mechanically, not by eye._
 
+## STATE: this repo now needs a locally built `.so` (2026-11-21)
+
+**`main` and `feat/conversation-permissions` carry SWIG bindings generated from daemon
+`4117f880c`, but `jniLibs/` is gitignored, so the matching `libjami-core-jni.so` is not in git
+and cannot be.** A fresh clone therefore builds and then fails at *runtime*: the committed
+bindings declare `getConversationPermissions`, `addSharedService` and a five-argument
+`swarmLoaded`, none of which exist in an older library. Symptoms are `UnsatisfiedLinkError` on
+peer services and conversation history that never loads.
+
+Anyone who needs a runnable Android build must produce the library themselves by following
+"Checklist for the bump" below against daemon `4117f880c` or later. There is no way to make git
+enforce this pairing; it is the structural hazard described under "How the daemon reaches
+jami-kmp", in its sharpest form.
+
+Known-good state on the machine this was done on (2026-11-21): daemon `4117f880c`,
+`libjami-core-jni.so` 42 MB stripped, `libc++_shared.so` from NDK 30, verified on a Pixel 7a —
+the daemon starts, the account registers, and `SwarmLoaded` delivers a real permission vector.
+
 ## Why this document exists
 
 Not to be confused with `plan_daemon_stability_sync.md` (2026-09-06), which is about *how* this
