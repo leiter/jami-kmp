@@ -52,7 +52,14 @@ class ConversationPermissionTest {
         assertEquals("banUnbanMember", ConversationPermission.BanUnbanMember.key)
         assertEquals("updateProfile", ConversationPermission.UpdateProfile.key)
         assertEquals("createDocument", ConversationPermission.CreateDocument.key)
-        assertEquals(14, ConversationPermission.entries.size)
+        // Five keys the reference client's enum does not have, taken from the daemon's own map
+        // in `conversationrepository.h` after a device reported `deleteDocument` and `leave`.
+        assertEquals("deleteDocument", ConversationPermission.DeleteDocument.key)
+        assertEquals("updateDocument", ConversationPermission.UpdateDocument.key)
+        assertEquals("addDocumentAttachment", ConversationPermission.AddDocumentAttachment.key)
+        assertEquals("join", ConversationPermission.Join.key)
+        assertEquals("leave", ConversationPermission.Leave.key)
+        assertEquals(19, ConversationPermission.entries.size)
     }
 
     @Test

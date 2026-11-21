@@ -434,6 +434,9 @@ class Conversation(
 
     fun canReact(): Boolean = hasPermission(ConversationPermission.Reaction)
 
+    /** Whether this account may leave the conversation at all. */
+    fun canLeave(): Boolean = hasPermission(ConversationPermission.Leave)
+
     fun canEditMessage(): Boolean = hasPermission(ConversationPermission.Edit)
 
     /**

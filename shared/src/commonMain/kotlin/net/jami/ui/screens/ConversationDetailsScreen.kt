@@ -637,6 +637,7 @@ private fun DetailsTabContent(
                 memberRoles = state.memberRoles,
                 canAddMember = state.canAddMember,
                 canBanUnbanMember = state.canBanUnbanMember,
+                canLeave = state.canLeave,
                 memberNames = state.memberNames,
                 selfMemberUri = state.selfMemberUri,
                 isGroup = state.isGroup,
@@ -719,6 +720,8 @@ private fun GroupMemberSection(
     canAddMember: Boolean = true,
     /** The daemon's ban/unban grant, required on top of [isAdmin] for remove and unblock. */
     canBanUnbanMember: Boolean = true,
+    /** The daemon's leave grant; without it the Leave action is not offered. */
+    canLeave: Boolean = true,
     memberNames: Map<String, String> = emptyMap(),
     selfMemberUri: String? = null,
     isGroup: Boolean = true,
@@ -796,19 +799,22 @@ private fun GroupMemberSection(
                 }
             }
             HorizontalDivider(color = JamiTheme.colors.outline.copy(alpha = 0.3f))
-            TextButton(
-                onClick = onLeave,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = JamiTheme.spacing.s),
-            ) {
-                Text(
-                    // A 1:1 is a swarm too; "Leave group" read wrong there.
-                    text = stringResource(
-                        if (isGroup) Res.string.swarm_group_action_leave else Res.string.leave_conversation
-                    ),
-                    color = JamiTheme.colors.error,
-                )
+            // The daemon has a `leave` grant of its own; without it, leaving is refused.
+            if (canLeave) {
+                TextButton(
+                    onClick = onLeave,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = JamiTheme.spacing.s),
+                ) {
+                    Text(
+                        // A 1:1 is a swarm too; "Leave group" read wrong there.
+                        text = stringResource(
+                            if (isGroup) Res.string.swarm_group_action_leave else Res.string.leave_conversation
+                        ),
+                        color = JamiTheme.colors.error,
+                    )
+                }
             }
         }
     }

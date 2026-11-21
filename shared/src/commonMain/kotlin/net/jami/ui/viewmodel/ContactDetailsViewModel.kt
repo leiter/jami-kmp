@@ -75,6 +75,8 @@ data class ContactDetailsState(
     val canBanUnbanMember: Boolean = true,
     /** The daemon's grant for editing a group's name and picture. */
     val canUpdateProfile: Boolean = true,
+    /** The daemon's grant for leaving the conversation. */
+    val canLeave: Boolean = true,
     val memberUris: List<String> = emptyList(),
     /** Per-member role (admin/member/invited/…), keyed by member URI. Swarm groups only. */
     val memberRoles: Map<String, MemberRole> = emptyMap(),
@@ -228,6 +230,7 @@ class ContactDetailsViewModel(
                 val canAddMember = conversation?.canAddMember() != false
                 val canBanUnbanMember = conversation?.canBanUnbanMember() != false
                 val canUpdateProfile = conversation?.canUpdateProfile() != false
+                val canLeave = conversation?.canLeave() != false
                 val memberUris = if (isSwarm) {
                     conversation!!.roles.keys.toList()
                 } else emptyList()
@@ -261,6 +264,7 @@ class ContactDetailsViewModel(
                     canAddMember = canAddMember,
                     canBanUnbanMember = canBanUnbanMember,
                     canUpdateProfile = canUpdateProfile,
+                    canLeave = canLeave,
                     memberUris = memberUris,
                     memberRoles = memberRoles,
                     memberNames = memberNames,

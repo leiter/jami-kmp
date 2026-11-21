@@ -39,6 +39,17 @@ enum class ConversationPermission(val key: String) {
     BanUnbanMember("banUnbanMember"),
     UpdateProfile("updateProfile"),
     CreateDocument("createDocument"),
+
+    // The five below are in the daemon's own map (`conversationrepository.h`) but *not* in
+    // jami-client-android's `Conversation.Permission`, which this file was ported from. Found by
+    // reading what the daemon actually sent on a device: a 1:1 reported `deleteDocument` and
+    // `leave`, neither of which the enum knew. Porting an enum from a client copies that
+    // client's blind spots, so these come from the daemon header instead.
+    DeleteDocument("deleteDocument"),
+    UpdateDocument("updateDocument"),
+    AddDocumentAttachment("addDocumentAttachment"),
+    Join("join"),
+    Leave("leave"),
     ;
 
     companion object {
