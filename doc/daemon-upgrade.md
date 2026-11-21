@@ -187,6 +187,39 @@ There is a *second* `INTERPROCEDURAL_OPTIMIZATION=ON` further down (line ~436). 
 missed patch site: it sits in the non-Android branch of the makefile and is gated by
 `ifdef ENABLE_LTO`, so it has no effect here.
 
+### A new contrib dependency will not build itself — and Rust is now one
+
+Two failures, both avoidable, before the first successful native build:
+
+**1. `yrs` (Y-CRDT) needs a Rust toolchain.** The collaborative-document work added
+`contrib/src/yffi`, a Rust package, and `CMakeLists.txt` declares
+`pkg_search_module (yrs REQUIRED ...)` with **no option to disable it**. There is also no cheaper
+pin to hide behind: the collab commits merged *after* our old pin (despite earlier author dates),
+and `getConversationPermissions` (`622a3f5ce`, 2026-10-05) came later still — so **any** revision
+with conversation permissions also requires Rust. Install it without touching the shell profile;
+the recipe falls back to `$HOME/.cargo/bin/cargo` on its own:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal
+~/.cargo/bin/rustup target add aarch64-linux-android
+```
+
+**2. The Gradle run does not build contrib.** `BUILD_CONTRIB=ON` registers a *build-time* target,
+but `pkg_search_module(... REQUIRED)` runs at CMake **configure** time — so a contrib package that
+does not exist yet fails configure before contrib is ever built, in about ten seconds, with
+`None of the required '<pkg>' found`. The August build only worked because contrib was already
+complete. Any bump that introduces a dependency therefore needs the new package built by hand
+first:
+
+```bash
+cd jami-client-android/daemon/contrib/build-aarch64-linux-android
+PATH="$HOME/.cargo/bin:$PATH" make .yffi      # one stamp target per package
+```
+
+Everything else in the August contrib tree stayed valid across a 263-commit jump — opendht,
+dhtnet, libgit2, ffmpeg, pjproject and the rest all resolved untouched — so only the genuinely
+new package needs building, not the whole tree.
+
 Build and copy (arm64 only, as `pipe_so_files.sh` does):
 
 ```bash
