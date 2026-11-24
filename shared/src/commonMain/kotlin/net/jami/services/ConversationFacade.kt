@@ -969,15 +969,7 @@ class ConversationFacade(
                     // Load members
                     val members = daemonBridge.getConversationMembers(account.accountId, convId)
                     for (member in members) {
-                        val memberUri = member["uri"] ?: continue
-                        restoreOwnReadPosition(account, conversation, member)
-                        val memberUriParsed = Uri.fromString(memberUri)
-                        if (conversation.findContact(memberUriParsed) == null) {
-                            val contact = account.getContactFromCache(memberUriParsed)
-                            val role = MemberRole.fromString(member["role"] ?: "")
-                            conversation.addContact(contact, role)
-                            contactService.restoreProfileFromDisk(account.accountId, contact)
-                        }
+                        applyDaemonMember(account, conversation, member)
                     }
 
                     // Set title if available
@@ -1379,6 +1371,30 @@ class ConversationFacade(
     // ==================== Helper Functions ====================
 
     /**
+     * Records one entry of the daemon's member list on [conversation].
+     *
+     * A member that is already present still gets its role. The usual case is the sender a
+     * pending request was seeded with ([seedPendingRequest]), which carries no role: skipping
+     * it left a non-admin's freshly accepted group with no peer holding a role, which
+     * [Conversation.isEnded] reads as "everyone left", hiding the composer until a restart
+     * (two-simulator run, 2026-11-24).
+     */
+    private fun applyDaemonMember(account: Account, conversation: Conversation, member: Map<String, String>) {
+        val memberUri = member["uri"] ?: return
+        restoreOwnReadPosition(account, conversation, member)
+        val uri = Uri.fromString(memberUri)
+        val role = MemberRole.fromString(member["role"] ?: "")
+        val existing = conversation.findContact(uri)
+        if (existing != null) {
+            conversation.addContact(existing, role)
+        } else {
+            val contact = account.getContactFromCache(uri)
+            conversation.addContact(contact, role)
+            contactService.restoreProfileFromDisk(account.accountId, contact)
+        }
+    }
+
+    /**
      * The daemon keeps each member's last displayed message ("lastDisplayed" in the member
      * map) and syncs it across devices; for our own member it is the read position. Without
      * it a restart forgot what had been read, and the list counted read messages as unread
@@ -1514,14 +1530,7 @@ class ConversationFacade(
 
         try {
             for (member in daemonBridge.getConversationMembers(account.accountId, conversationId)) {
-                val memberUri = member["uri"] ?: continue
-                restoreOwnReadPosition(account, conversation, member)
-                val parsed = Uri.fromString(memberUri)
-                if (conversation.findContact(parsed) == null) {
-                    val contact = account.getContactFromCache(parsed)
-                    conversation.addContact(contact, MemberRole.fromString(member["role"] ?: ""))
-                    contactService.restoreProfileFromDisk(account.accountId, contact)
-                }
+                applyDaemonMember(account, conversation, member)
             }
         } catch (e: Exception) {
             Log.w(TAG, "ensureSwarm: member load failed for $conversationId", e)
@@ -1583,15 +1592,7 @@ class ConversationFacade(
         // Members first, so conversation.contact is resolvable when conversationStarted() runs.
         try {
             for (member in daemonBridge.getConversationMembers(accountId, conversationId)) {
-                val memberUri = member["uri"] ?: continue
-                restoreOwnReadPosition(account, conversation, member)
-                val memberUriParsed = Uri.fromString(memberUri)
-                if (conversation.findContact(memberUriParsed) == null) {
-                    val contact = account.getContactFromCache(memberUriParsed)
-                    val role = MemberRole.fromString(member["role"] ?: "")
-                    conversation.addContact(contact, role)
-                    contactService.restoreProfileFromDisk(account.accountId, contact)
-                }
+                applyDaemonMember(account, conversation, member)
             }
         } catch (e: Exception) {
             Log.e(TAG, "onConversationReady: failed to load members", e)
