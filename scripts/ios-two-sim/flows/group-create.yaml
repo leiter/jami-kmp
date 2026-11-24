@@ -1,0 +1,39 @@
+# From the conversation list: search → "New Group" → pick ${PEER_NAME} → create, which opens
+# the new group chat. The sheet's title and its button share the label "Select contacts";
+# the button is the one below the contact list.
+appId: net.jami.iosapp
+---
+- launchApp:
+    stopApp: false
+# Leave an open chat first, if any (the back arrow is "Back").
+- runFlow:
+    when:
+      visible: "Write message"
+    commands:
+      - tapOn: "Back"
+# A chat opened from search (as invite.yaml does) goes back to the search screen, where
+# "New Group" already shows; only open search from the conversation list.
+- runFlow:
+    when:
+      notVisible: "New Group"
+    commands:
+      - tapOn: "Search conversations"
+- extendedWaitUntil:
+    visible: "New Group"
+    timeout: 15000
+- tapOn: "New Group"
+- extendedWaitUntil:
+    visible: ".*${PEER_NAME}.*"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn:
+    text: ".*${PEER_NAME}.*"
+    below: "Select contacts"
+- tapOn:
+    text: "Select contacts"
+    below: ".*${PEER_NAME}.*"
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible: "Write message"
+    timeout: 30000

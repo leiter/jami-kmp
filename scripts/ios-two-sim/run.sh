@@ -168,6 +168,26 @@ phase_offline() {
     flow "$B" expect TEXT="Sent while Bob was away"
 }
 
+# Alice creates an invites-only group with Bob, Bob accepts. Bob, a plain member, must get the
+# composer, and the daemon's permission lists must differ by role: the admin-only keys
+# (banUnbanMember, updateProfile) for Alice, not for Bob. hostConference marks the group's
+# SwarmLoaded line (a 1:1 grants call instead).
+phase_group() {
+    local since; since=$(date '+%Y-%m-%d %H:%M:%S')
+    flow "$A" group-create PEER_NAME=Bob
+    flow "$B" home
+    flow "$B" accept
+    flow "$B" expect-composer
+    local la lb
+    la=$(xcrun simctl spawn "$A" log show --start "$since" --style compact 2>/dev/null | grep 'onSwarmLoaded:.*hostConference' || true)
+    lb=$(xcrun simctl spawn "$B" log show --start "$since" --style compact 2>/dev/null | grep 'onSwarmLoaded:.*hostConference' || true)
+    [ -n "$la" ] && [ -n "$lb" ] || { echo "FAIL: no group SwarmLoaded permission line on $([ -z "$la" ] && echo A || echo B)" >&2; exit 1; }
+    echo "$la" | grep -q 'banUnbanMember, updateProfile' || { echo "FAIL: Alice (admin) lacks the admin-only permissions" >&2; exit 1; }
+    if echo "$lb" | grep -qE 'banUnbanMember|updateProfile'; then
+        echo "FAIL: Bob (member) was granted admin-only permissions" >&2; exit 1
+    fi
+}
+
 # ── driver ────────────────────────────────────────────────────────────────────
 
 run=0

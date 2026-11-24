@@ -1,0 +1,13 @@
+# Back out of an open chat to the conversation list.
+appId: net.jami.iosapp
+---
+- launchApp:
+    stopApp: false
+- runFlow:
+    when:
+      visible: "Write message|Conversation ended\\."
+    commands:
+      - tapOn: "Back"
+- extendedWaitUntil:
+    visible: "Search conversations"
+    timeout: 15000

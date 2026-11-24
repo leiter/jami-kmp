@@ -24,6 +24,7 @@ Phases, in order — each stops the run on the first failure:
 | `react` | Bob reacts 👍; Alice sees it as a chip under the message, not as a quoting reply |
 | `delete` | Alice deletes a message Bob already has; it disappears for Bob |
 | `offline` | Bob's app is killed, Alice sends, Bob relaunches and receives it |
+| `group` | Alice creates a group with Bob, Bob accepts and gets a composer (not "Conversation ended."); the daemon grants `banUnbanMember`/`updateProfile` to Alice (admin) and not to Bob (member) |
 
 Artefacts go to `build/ios-two-sim/`: one Maestro log per flow and, on failure, a screenshot of
 both simulators (`FAIL-<flow>-A.png` / `-B.png`).

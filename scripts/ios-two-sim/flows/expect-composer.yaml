@@ -1,0 +1,8 @@
+# Inside a chat whose peer is still a member: the composer is offered, not "Conversation ended."
+# (a non-admin who had just accepted a group got the latter until a restart, 2026-11-24).
+appId: net.jami.iosapp
+---
+- extendedWaitUntil:
+    visible: "Write message"
+    timeout: 30000
+- assertNotVisible: "Conversation ended\\."

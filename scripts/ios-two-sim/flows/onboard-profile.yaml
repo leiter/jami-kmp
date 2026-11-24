@@ -8,10 +8,13 @@ appId: net.jami.iosapp
 - tapOn:
     point: "50%,38%"
 - inputText: "${NAME}"
-# Top bar and button share the label; take the button.
+# The app's Continue button, by position. On a freshly erased simulator with a second keyboard
+# language, iOS shows a one-time keyboard tip ("Type English (US) and German … Continue") over
+# the lower half. Its "Continue" is also below the profile photo and took a text-matched tap,
+# and the tip is drawn by the keyboard process, so Maestro cannot see it to dismiss it
+# (2026-11-24). The button sits at 47% height, above both the keyboard and the tip.
 - tapOn:
-    text: "Continue"
-    below: "Add a profile photo"
+    point: "50%,47%"
 # On a fresh install the notification prompt covers the summary (covered elements are not
 # "visible"), followed by the contacts prompt. The system UI keeps the simulator's original
 # language, so both spellings are matched.
