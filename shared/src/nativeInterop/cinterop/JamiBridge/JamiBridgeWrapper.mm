@@ -1151,7 +1151,7 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
         }));
 
     // Conference info updated
-    handlers.insert(exportable_callback<CallSignal::OnConferenceInfosUpdated>(
+    handlers.insert(exportable_callback<CallSignal::ConferenceInfosUpdated>(
         [weakSelf](const std::string& conferenceId,
                    const std::vector<std::map<std::string, std::string>>& participantInfos) {
             // Copy data before async dispatch to avoid use-after-free
@@ -1291,7 +1291,8 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
     // Swarm loaded (messages loaded)
     handlers.insert(exportable_callback<ConversationSignal::SwarmLoaded>(
         [weakSelf](uint32_t requestId, const std::string& accountId,
-                   const std::string& conversationId, std::vector<SwarmMessage> messages) {
+                   const std::string& conversationId, std::vector<SwarmMessage> messages,
+                   const std::vector<std::string>& permissions) {
             // Copy data before async dispatch to avoid use-after-free
             // Note: messages is passed by value so it's already a copy, but we convert to NS types early
             NSString *accountIdNS = toNSString(accountId);
@@ -1301,13 +1302,17 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
                 [msgArray addObject:toJBSwarmMessage(msg)];
             }
             NSArray *msgArrayCopy = [msgArray copy];
+            // What this account may do in the conversation: the push half of the permission
+            // model (the pull half is getConversationPermissions:conversationId:).
+            NSArray<NSString *> *permissionsNS = toNSArray(permissions);
             dispatch_async(dispatch_get_main_queue(), ^{
                 JamiBridgeWrapper *strongSelf = weakSelf;
-                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onMessagesLoaded:accountId:conversationId:messages:)]) {
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onMessagesLoaded:accountId:conversationId:messages:permissions:)]) {
                     [strongSelf.delegate onMessagesLoaded:(int)requestId
                                                 accountId:accountIdNS
                                            conversationId:conversationIdNS
-                                                 messages:msgArrayCopy];
+                                                 messages:msgArrayCopy
+                                              permissions:permissionsNS];
                 }
             });
         }));
@@ -2535,6 +2540,11 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
                                                        conversationId:(NSString *)conversationId {
     auto prefs = libjami::getConversationPreferences(toCppString(accountId), toCppString(conversationId));
     return toNSDictionary(prefs);
+}
+
+- (NSArray<NSString *> *)getConversationPermissions:(NSString *)accountId
+                                     conversationId:(NSString *)conversationId {
+    return toNSArray(libjami::getConversationPermissions(toCppString(accountId), toCppString(conversationId)));
 }
 
 - (void)setConversationPreferences:(NSString *)accountId

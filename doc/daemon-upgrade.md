@@ -7,8 +7,8 @@ checked out. Arity was compared mechanically, not by eye._
 
 ## STATE: this repo now needs a locally built `.so` (2026-11-21)
 
-**`main` and `feat/conversation-permissions` carry SWIG bindings generated from daemon
-`4117f880c`, but `jniLibs/` is gitignored, so the matching `libjami-core-jni.so` is not in git
+**`feat/conversation-permissions` (and every branch it is merged into) carries SWIG bindings
+generated from daemon `4117f880c` — `main` did not as of 2026-11-24 — but `jniLibs/` is gitignored, so the matching `libjami-core-jni.so` is not in git
 and cannot be.** A fresh clone therefore builds and then fails at *runtime*: the committed
 bindings declare `getConversationPermissions`, `addSharedService` and a five-argument
 `swarmLoaded`, none of which exist in an older library. Symptoms are `UnsatisfiedLinkError` on
@@ -174,6 +174,42 @@ the four renamed service calls. Everything else is additive.
 - **macOS** — already does not compile (~95 errors); a bump neither helps nor worsens it.
 - **Desktop / Web** — no-op and REST stubs; the bridge methods only need the new signatures to
   keep overriding, which for an additive change means nothing at all.
+
+### iOS bump to `4117f880c`, as done (2026-11-24)
+
+What the Android-side findings above did not cover:
+
+- **`yffi` was already there.** `jami-client-ios` pinned daemon `bff4656` (2026-09), which already
+  had the Y-CRDT package, and its contrib had built `libyrs.a` for device and simulator. The
+  recipe has an iOS branch (`aarch64-apple-ios`, `aarch64-apple-ios-sim`, `x86_64-apple-ios`);
+  those Rust targets must be installed.
+- **Daemon branch:** `jami-client-ios/daemon` on local branch `ios-kmp-4117` = `4117f880c` plus
+  the local nettle `install-here` fix (`9b5c99963`). It conflicts with upstream's new
+  `CCPIC="$(PIC)"` configure line, so it is re-applied by hand on every bump. Upstream
+  `jami-client-ios` itself pins `8e1637a66`, an ancestor of `4117f880c` with the same contrib
+  versions and the same permission APIs.
+- **`compile-ios.sh` deletes `DEPS/` and `xcframework/` before it builds**, and jami-kmp's
+  `lib/` and `lib-sim/` links point into them. Clone them first (`cp -cR`, near-free on APFS).
+  It also wipes `DEPS/` on every run, so build all slices in one run (`--platform=all`) rather
+  than one run per platform. The previous build was Debug; this one is too.
+- **Contrib rebuilds only what changed version** (new tarball, so a fresh unpack and rebuild):
+  ffmpeg 6.1.3 → 9.0.2, opendht 4.3.1 → 4.4.99, libgit2 1.8 → 1.9.7, dhtnet, pjproject and
+  webrtc-audio-processing. Recipes that changed without a version bump (gmp URL, gnutls
+  `--enable-dtls-srtp-support`, harfbuzz, nettle) are not rebuilt; none mattered — the existing
+  iOS `libgnutls.a` already exports the `gnutls_srtp_*` functions.
+- **The wrapper compiles against a copy of the libjami headers** in
+  `shared/src/nativeInterop/cinterop/headers/`. Refresh the changed ones from the daemon's
+  `src/jami/` (six files this time; `networkservice_interface.h` stays out, the wrapper does not
+  use it).
+- **The wrapper has its own forced changes:** `CallSignal::OnConferenceInfosUpdated` →
+  `ConferenceInfosUpdated`, and the `SwarmLoaded` handler takes the permission vector (delegate
+  `onMessagesLoaded:…:permissions:`). `getConversationPermissions:conversationId:` was added, so
+  `DaemonBridge.ios.kt` now carries both permission channels. The header is `NS_ASSUME_NONNULL`,
+  so Kotlin sees `permissions` as non-null `List<*>`.
+- **Result:** 48 device / 47 arm64-simulator libraries (no `libvpx`, by design), the same set as
+  before, so `make_device_links.py --check` reported no drift and `OTHER_LDFLAGS` were unchanged.
+  The wrapper archives went from 1223 to 1306 methods; the iOS stages compiled cleanly against the
+  ffmpeg 9 headers, and the macOS stage failed as it always does.
 
 ---
 

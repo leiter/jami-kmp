@@ -51,10 +51,24 @@ struct SwarmMessage
     }
 };
 
+enum class MemberEvent : int { INVALID = -1, ADD = 0, JOIN = 1, REMOVE = 2, BAN = 3, UNBAN = 4 };
+
 // Conversation management
 LIBJAMI_PUBLIC std::string startConversation(const std::string& accountId);
+/** Starts a new FEED conversation for the account. */
+LIBJAMI_PUBLIC std::string startFeedConversation(const std::string& accountId);
+// Optionally invite current and future contacts without enrolling them until they subscribe.
+LIBJAMI_PUBLIC std::string startFeedConversation(const std::string& accountId,
+                                                 const std::map<std::string, std::string>& profile,
+                                                 bool inviteAllContacts);
 LIBJAMI_PUBLIC void acceptConversationRequest(const std::string& accountId, const std::string& conversationId);
 LIBJAMI_PUBLIC void declineConversationRequest(const std::string& accountId, const std::string& conversationId);
+/**
+ * Leave a conversation. A feed follower receives a new local invitation to the
+ * same feed, which can be accepted to subscribe again or declined to dismiss it.
+ * This requires peers supporting feed follower leave commits; admins and
+ * moderator removals retain their existing behavior.
+ */
 LIBJAMI_PUBLIC bool removeConversation(const std::string& accountId, const std::string& conversationId);
 LIBJAMI_PUBLIC std::vector<std::string> getConversations(const std::string& accountId);
 LIBJAMI_PUBLIC std::vector<std::map<std::string, std::string>> getConversationRequests(const std::string& accountId);
@@ -84,6 +98,8 @@ LIBJAMI_PUBLIC void removeConversationMember(const std::string& accountId,
                                              const std::string& contactUri);
 LIBJAMI_PUBLIC std::vector<std::map<std::string, std::string>> getConversationMembers(const std::string& accountId,
                                                                                       const std::string& conversationId);
+LIBJAMI_PUBLIC std::vector<std::string> getConversationPermissions(const std::string& accountId,
+                                                                   const std::string& conversationId);
 
 // Message send/load
 LIBJAMI_PUBLIC void sendMessage(const std::string& accountId,
@@ -125,6 +141,15 @@ LIBJAMI_PUBLIC void reloadConversationsAndRequests(const std::string& accountId)
  * it never interprets what a document contains. A client keeps its own yrs
  * replica, produces updates from it and merges the ones it receives through
  * ConversationSignal::CollaborativeDocumentUpdate.
+ *
+ * Receiving a document announcement automatically downloads its repository and
+ * subscribes this device to subsequent checkpoints, without opening an editor.
+ * This includes announcements received while the device was offline. Explicitly
+ * removing a local copy stops replication until the document is opened again.
+ * A reachable holder is required to download the content;
+ * ConversationSignal::CollaborativeDocumentReplicated reports when it is done.
+ * Unopened documents are replicated on disk without allocating a CRDT session.
+ * Leaving the parent conversation also cancels its pending document downloads.
  *
  * Because nothing here is tied to a document type, a client is free to implement
  * an editor for any type yrs supports -- text, rich text, maps, arrays, XML
@@ -206,7 +231,8 @@ LIBJAMI_PUBLIC void applyCollaborativeUpdate(const std::string& accountId,
                                              const std::string& conversationId,
                                              const std::string& documentId,
                                              const std::vector<uint8_t>& update);
-/// The document's whole current state as a Y-CRDT update.
+/// The in-memory document state as a Y-CRDT update. Empty until an editor opens
+/// the document; use collaborativeDocumentStateAt() to read a stored checkpoint.
 LIBJAMI_PUBLIC std::vector<uint8_t> collaborativeDocumentState(const std::string& accountId,
                                                                const std::string& conversationId,
                                                                const std::string& documentId);
@@ -383,13 +409,25 @@ struct LIBJAMI_PUBLIC ConversationSignal
                              const std::string& /*documentId*/,
                              const std::string& /*attachmentId*/);
     };
+    /// No download of the document is in progress: one completed, or an
+    /// announcement started none. @c stored tells whether the document is on
+    /// this device (possibly still empty). A failed download reports nothing.
+    struct LIBJAMI_PUBLIC CollaborativeDocumentReplicated
+    {
+        constexpr static const char* name = "CollaborativeDocumentReplicated";
+        using cb_type = void(const std::string& /*account_id*/,
+                             const std::string& /*convId*/,
+                             const std::string& /*documentId*/,
+                             bool /*stored*/);
+    };
     struct LIBJAMI_PUBLIC SwarmLoaded
     {
         constexpr static const char* name = "SwarmLoaded";
         using cb_type = void(uint32_t /* id */,
                              const std::string& /*accountId*/,
                              const std::string& /* conversationId */,
-                             std::vector<SwarmMessage> /*messages*/);
+                             std::vector<SwarmMessage> /*messages*/,
+                             const std::vector<std::string>& /*permissions*/);
     };
     struct LIBJAMI_PUBLIC MessagesFound
     {

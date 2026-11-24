@@ -261,7 +261,8 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 - (void)onMessagesLoaded:(int)requestId
                accountId:(NSString *)accountId
           conversationId:(NSString *)conversationId
-                messages:(NSArray<JBSwarmMessage *> *)messages;
+                messages:(NSArray<JBSwarmMessage *> *)messages
+             permissions:(NSArray<NSString *> *)permissions;
 
 - (void)onConversationMemberEvent:(NSString *)accountId
                    conversationId:(NSString *)conversationId
@@ -683,6 +684,10 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
 
 - (NSDictionary<NSString *, NSString *> *)getConversationPreferences:(NSString *)accountId
                                                        conversationId:(NSString *)conversationId;
+
+/// What this account may do in a swarm, as daemon permission keys.
+- (NSArray<NSString *> *)getConversationPermissions:(NSString *)accountId
+                                     conversationId:(NSString *)conversationId;
 
 - (void)setConversationPreferences:(NSString *)accountId
                     conversationId:(NSString *)conversationId

@@ -1024,7 +1024,15 @@ private class JamiBridgeDelegateImpl(
         callbacks.onMessageUpdated(accountId, conversationId, message.toKotlinSwarmMessage())
     }
 
-    override fun onMessagesLoaded(requestId: Int, accountId: String, conversationId: String, messages: List<*>) {
+    // macOS still links the old wrapper archive, so permissions are not forwarded here yet:
+    // null keeps every conversation permissive (see DaemonCallbacks.onSwarmLoaded).
+    override fun onMessagesLoaded(
+        requestId: Int,
+        accountId: String,
+        conversationId: String,
+        messages: List<*>,
+        permissions: List<*>,
+    ) {
         val swarmMessages = messages.mapNotNull { (it as? JBSwarmMessage)?.toKotlinSwarmMessage() }
         callbacks.onSwarmLoaded(requestId.toLong(), accountId, conversationId, swarmMessages)
     }

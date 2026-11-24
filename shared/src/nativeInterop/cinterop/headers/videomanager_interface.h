@@ -198,6 +198,21 @@ LIBJAMI_PUBLIC int64_t getPlayerPosition(const std::string& id);
 LIBJAMI_PUBLIC int64_t getPlayerDuration(const std::string& id);
 LIBJAMI_PUBLIC void setAutoRestart(const std::string& id, const bool& restart);
 
+struct LIBJAMI_PUBLIC MediaPreview
+{
+    // Keys:
+    // "duration": microseconds, 0 if unknown.
+    // "audio_stream", "video_stream": stream index, -1 if absent.
+    std::map<std::string, std::string> info;
+    // First decoded video frame. It may be a hardware frame; clients that need
+    // pixel data in main memory must transfer it.
+    // Rotation is in AV_FRAME_DATA_DISPLAYMATRIX side data.
+    FrameBuffer frame;
+};
+
+// Blocks while opening the file and decoding one frame.
+LIBJAMI_PUBLIC MediaPreview getMediaPreview(const std::string& path);
+
 LIBJAMI_PUBLIC bool registerSinkTarget(const std::string& sinkId, SinkTarget target);
 #ifdef ENABLE_SHM
 LIBJAMI_PUBLIC void startShmSink(const std::string& sinkId, bool value);
@@ -248,6 +263,13 @@ struct LIBJAMI_PUBLIC VideoSignal
     {
         constexpr static const char* name = "DecodingStopped";
         using cb_type = void(const std::string& /*id*/, const std::string& /*shm_path*/, bool /*is_mixer*/);
+    };
+    struct LIBJAMI_PUBLIC MediaQualityChanged
+    {
+        constexpr static const char* name = "MediaQualityChanged";
+        using cb_type = void(const std::string& /*callId*/,
+                             const std::string& /*streamId*/,
+                             const std::map<std::string, std::string>& /*state*/);
     };
 #ifdef __ANDROID__
     struct LIBJAMI_PUBLIC SetParameters

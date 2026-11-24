@@ -784,9 +784,9 @@ interface DaemonCallbacks {
      * conversation-permission model, the pull half being
      * [DaemonBridgeApi.getConversationPermissions]. Null means "not reported", which
      * [net.jami.model.Conversation.setPermissions] reads as permissive; an empty list means the
-     * daemon answered and grants nothing. Platforms whose bridge does not carry it yet (iOS,
-     * macOS) pass null rather than an empty list, so they stay permissive instead of locking
-     * every conversation down.
+     * daemon answered and grants nothing. Platforms whose bridge does not carry it yet (macOS,
+     * desktop, web) pass null rather than an empty list, so they stay permissive instead of
+     * locking every conversation down.
      */
     fun onSwarmLoaded(
         id: Long,
