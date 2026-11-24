@@ -213,6 +213,22 @@ public class JamiService {
     return new StringMap(JamiServiceJNI.getAccountDetails(accountId), true);
   }
 
+  public static boolean getAccountMetadata(String accountId, BlobMap metadata) {
+    return JamiServiceJNI.getAccountMetadata(accountId, BlobMap.getCPtr(metadata), metadata);
+  }
+
+  public static boolean setAccountMetadata(String accountId, BlobMap updates) {
+    return JamiServiceJNI.setAccountMetadata(accountId, BlobMap.getCPtr(updates), updates);
+  }
+
+  public static boolean getContactMetadata(String accountId, String uri, BlobMap metadata) {
+    return JamiServiceJNI.getContactMetadata(accountId, uri, BlobMap.getCPtr(metadata), metadata);
+  }
+
+  public static boolean setContactMetadata(String accountId, String uri, BlobMap updates) {
+    return JamiServiceJNI.setContactMetadata(accountId, uri, BlobMap.getCPtr(updates), updates);
+  }
+
   public static StringMap getVolatileAccountDetails(String accountId) {
     return new StringMap(JamiServiceJNI.getVolatileAccountDetails(accountId), true);
   }
@@ -513,6 +529,14 @@ public class JamiService {
     JamiServiceJNI.setRecordQuality(rec);
   }
 
+  public static String getConferenceResolution() {
+    return JamiServiceJNI.getConferenceResolution();
+  }
+
+  public static void setConferenceResolution(String resolution) {
+    JamiServiceJNI.setConferenceResolution(resolution);
+  }
+
   public static void setHistoryLimit(int days) {
     JamiServiceJNI.setHistoryLimit(days);
   }
@@ -637,12 +661,20 @@ public class JamiService {
     return new VectMap(JamiServiceJNI.getContacts(accountId), true);
   }
 
+  public static VectMap getDeviceList(String accountId) {
+    return new VectMap(JamiServiceJNI.getDeviceList(accountId), true);
+  }
+
   public static StringMap getContactDetails(String accountId, String uri) {
     return new StringMap(JamiServiceJNI.getContactDetails(accountId, uri), true);
   }
 
   public static void connectivityChanged() {
     JamiServiceJNI.connectivityChanged();
+  }
+
+  public static void networkInterfaceChanged() {
+    JamiServiceJNI.networkInterfaceChanged();
   }
 
   public static void setPushNotificationConfig(StringMap pushConfig) {
@@ -921,6 +953,14 @@ public class JamiService {
     return JamiServiceJNI.startConversation(accountId);
   }
 
+  public static String startFeedConversation(String accountId) {
+    return JamiServiceJNI.startFeedConversation__SWIG_0(accountId);
+  }
+
+  public static String startFeedConversation(String accountId, StringMap profile, boolean inviteAllContacts) {
+    return JamiServiceJNI.startFeedConversation__SWIG_1(accountId, StringMap.getCPtr(profile), profile, inviteAllContacts);
+  }
+
   public static void acceptConversationRequest(String accountId, String conversationId) {
     JamiServiceJNI.acceptConversationRequest(accountId, conversationId);
   }
@@ -969,6 +1009,70 @@ public class JamiService {
     return new VectMap(JamiServiceJNI.getConversationMembers(accountId, conversationId), true);
   }
 
+  public static StringVect getConversationPermissions(String accountId, String conversationId) {
+    return new StringVect(JamiServiceJNI.getConversationPermissions(accountId, conversationId), true);
+  }
+
+  public static String createCollaborativeDocument(String accountId, String conversationId, String name, String mimeType) {
+    return JamiServiceJNI.createCollaborativeDocument(accountId, conversationId, name, mimeType);
+  }
+
+  public static Blob openCollaborativeDocument(String accountId, String conversationId, String documentId) {
+    return new Blob(JamiServiceJNI.openCollaborativeDocument(accountId, conversationId, documentId), true);
+  }
+
+  public static boolean removeCollaborativeDocument(String accountId, String conversationId, String documentId) {
+    return JamiServiceJNI.removeCollaborativeDocument(accountId, conversationId, documentId);
+  }
+
+  public static boolean removeCollaborativeDocumentLocally(String accountId, String conversationId, String documentId) {
+    return JamiServiceJNI.removeCollaborativeDocumentLocally(accountId, conversationId, documentId);
+  }
+
+  public static void closeCollaborativeDocument(String accountId, String conversationId, String documentId) {
+    JamiServiceJNI.closeCollaborativeDocument(accountId, conversationId, documentId);
+  }
+
+  public static void applyCollaborativeUpdate(String accountId, String conversationId, String documentId, Blob update) {
+    JamiServiceJNI.applyCollaborativeUpdate(accountId, conversationId, documentId, Blob.getCPtr(update), update);
+  }
+
+  public static void setCollaborativeAwareness(String accountId, String conversationId, String documentId, String state) {
+    JamiServiceJNI.setCollaborativeAwareness(accountId, conversationId, documentId, state);
+  }
+
+  public static Blob collaborativeDocumentState(String accountId, String conversationId, String documentId) {
+    return new Blob(JamiServiceJNI.collaborativeDocumentState(accountId, conversationId, documentId), true);
+  }
+
+  public static void setCollaborativeDocumentName(String accountId, String conversationId, String documentId, String name) {
+    JamiServiceJNI.setCollaborativeDocumentName(accountId, conversationId, documentId, name);
+  }
+
+  public static String collaborativeDocumentName(String accountId, String conversationId, String documentId) {
+    return JamiServiceJNI.collaborativeDocumentName(accountId, conversationId, documentId);
+  }
+
+  public static VectMap getCollaborativeDocuments(String accountId, String conversationId) {
+    return new VectMap(JamiServiceJNI.getCollaborativeDocuments(accountId, conversationId), true);
+  }
+
+  public static VectMap getCollaborativeDocumentHistory(String accountId, String conversationId, String documentId, long max) {
+    return new VectMap(JamiServiceJNI.getCollaborativeDocumentHistory(accountId, conversationId, documentId, max), true);
+  }
+
+  public static Blob collaborativeDocumentStateAt(String accountId, String conversationId, String documentId, String commitId) {
+    return new Blob(JamiServiceJNI.collaborativeDocumentStateAt(accountId, conversationId, documentId, commitId), true);
+  }
+
+  public static String addCollaborativeAttachment(String accountId, String conversationId, String documentId, Blob data) {
+    return JamiServiceJNI.addCollaborativeAttachment(accountId, conversationId, documentId, Blob.getCPtr(data), data);
+  }
+
+  public static Blob collaborativeAttachment(String accountId, String conversationId, String documentId, String attachmentId) {
+    return new Blob(JamiServiceJNI.collaborativeAttachment(accountId, conversationId, documentId, attachmentId), true);
+  }
+
   public static void sendMessage(String accountId, String conversationId, String message, String replyTo, int flag) {
     JamiServiceJNI.sendMessage(accountId, conversationId, message, replyTo, flag);
   }
@@ -993,20 +1097,20 @@ public class JamiService {
     return JamiServiceJNI.searchConversation(accountId, conversationId, author, lastId, regexSearch, type, after, before, maxResult, flag);
   }
 
-  public static String addExposedService(String accountId, StringMap details) {
-    return JamiServiceJNI.addExposedService(accountId, StringMap.getCPtr(details), details);
+  public static String addSharedService(String accountId, StringMap details) {
+    return JamiServiceJNI.addSharedService(accountId, StringMap.getCPtr(details), details);
   }
 
-  public static boolean updateExposedService(String accountId, StringMap details) {
-    return JamiServiceJNI.updateExposedService(accountId, StringMap.getCPtr(details), details);
+  public static boolean updateSharedService(String accountId, StringMap details) {
+    return JamiServiceJNI.updateSharedService(accountId, StringMap.getCPtr(details), details);
   }
 
-  public static boolean removeExposedService(String accountId, String serviceId) {
-    return JamiServiceJNI.removeExposedService(accountId, serviceId);
+  public static boolean removeSharedService(String accountId, String serviceId) {
+    return JamiServiceJNI.removeSharedService(accountId, serviceId);
   }
 
-  public static VectMap getExposedServices(String accountId) {
-    return new VectMap(JamiServiceJNI.getExposedServices(accountId), true);
+  public static VectMap getSharedServices(String accountId) {
+    return new VectMap(JamiServiceJNI.getSharedServices(accountId), true);
   }
 
   public static long queryPeerServices(String accountId, String peerUri) {

@@ -49,8 +49,10 @@ object JamiColors {
     val Green400 = Color(0xFF66BB6A)
     val Green500 = Color(0xFF4CAF50)
     val Green700 = Color(0xFF388E3C)
+    val Red400 = Color(0xFFEF5350)
     val Red500 = Color(0xFFF44336)
     val Red700 = Color(0xFFD32F2F)
+    val Orange400 = Color(0xFFFFA726)
     val Orange500 = Color(0xFFFF9800)
     val Orange700 = Color(0xFFF57C00)
 

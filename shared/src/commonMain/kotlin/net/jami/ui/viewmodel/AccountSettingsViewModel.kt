@@ -83,6 +83,44 @@ data class DeviceItem(
 )
 
 /**
+ * The account's registration state as the switch label reports it.
+ *
+ * Mirrors the ladder in the reference's `JamiAccountSummaryFragment.setSwitchStatus`, in the same
+ * order — the order matters, because several of these overlap (an account can be both disabled
+ * and in error, and "trying" is not yet either).
+ */
+enum class AccountStatus {
+    /** The account is switched off; nothing else about it is worth reporting. */
+    Disabled,
+
+    /** Registration in flight. The reference shows a spinner here rather than a verdict. */
+    Connecting,
+
+    /** The account's archive predates a format change and must be migrated. */
+    NeedsMigration,
+
+    /** Registration failed — distinct from merely being offline. */
+    ConnectionError,
+
+    Online,
+
+    /** Enabled, not trying, not in error, not registered. */
+    Offline,
+    ;
+
+    companion object {
+        fun of(account: Account): AccountStatus = when {
+            !account.isEnabled -> Disabled
+            account.isTrying -> Connecting
+            account.needsMigration -> NeedsMigration
+            account.isInError -> ConnectionError
+            account.isRegistered -> Online
+            else -> Offline
+        }
+    }
+}
+
+/**
  * State for the account settings screen.
  */
 data class AccountSettingsState(
@@ -91,6 +129,13 @@ data class AccountSettingsState(
     val identityHash: String = "",
     val avatarBytes: ByteArray? = null,
     val isOnline: Boolean = false,
+    /**
+     * The fuller registration state behind [isOnline], for the switch's label and colour.
+     *
+     * [isOnline] still drives the toggle's position — it answers "is the account enabled and
+     * registered", which is what the switch acts on — while this says what to *call* the state.
+     */
+    val accountStatus: AccountStatus = AccountStatus.Offline,
     val currentDeviceName: String = "",
     val devices: List<DeviceItem> = emptyList(),
     val isLoading: Boolean = false,
@@ -127,6 +172,7 @@ data class AccountSettingsState(
             identityHash == other.identityHash &&
             (avatarBytes?.contentEquals(other.avatarBytes ?: return false) ?: (other.avatarBytes == null)) &&
             isOnline == other.isOnline &&
+            accountStatus == other.accountStatus &&
             currentDeviceName == other.currentDeviceName &&
             devices == other.devices &&
             isLoading == other.isLoading &&
@@ -155,6 +201,7 @@ data class AccountSettingsState(
         result = 31 * result + identityHash.hashCode()
         result = 31 * result + (avatarBytes?.contentHashCode() ?: 0)
         result = 31 * result + isOnline.hashCode()
+        result = 31 * result + accountStatus.hashCode()
         result = 31 * result + currentDeviceName.hashCode()
         result = 31 * result + devices.hashCode()
         result = 31 * result + isLoading.hashCode()
@@ -251,7 +298,8 @@ class AccountSettingsViewModel(
                         val account = accountService.currentAccount.value ?: return@collect
                         if (account.accountId == event.accountId) {
                             _state.value = _state.value.copy(
-                                isOnline = account.registrationState == net.jami.model.Account.RegistrationState.REGISTERED
+                                isOnline = account.isRegistered,
+                                accountStatus = AccountStatus.of(account),
                             )
                         }
                     }
@@ -424,7 +472,8 @@ class AccountSettingsViewModel(
                     username = username,
                     identityHash = identityHash,
                     avatarBytes = avatarBytes,
-                    isOnline = account.registrationState == net.jami.model.Account.RegistrationState.REGISTERED,
+                    isOnline = account.isRegistered,
+                    accountStatus = AccountStatus.of(account),
                     currentDeviceName = currentDeviceName,
                     devices = deviceItems,
                     isLoading = false,
@@ -465,7 +514,13 @@ class AccountSettingsViewModel(
     fun setOnline(enabled: Boolean) {
         val account = accountService.currentAccount.value ?: return
         accountService.setAccountEnabled(account.accountId, enabled)
-        _state.value = _state.value.copy(isOnline = enabled)
+        // Optimistic: the real status follows from the daemon's RegistrationStateChanged. Turning
+        // off is immediate and certain, so it is named; turning on only starts an attempt, so it
+        // reports Connecting rather than claiming Online.
+        _state.value = _state.value.copy(
+            isOnline = enabled,
+            accountStatus = if (enabled) AccountStatus.Connecting else AccountStatus.Disabled,
+        )
     }
 
     /**

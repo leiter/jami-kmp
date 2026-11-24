@@ -115,7 +115,7 @@ class DaemonCallbacksImpl(
         when (task) {
             is ConversationTask.SwarmLoaded -> {
                 // 1. Populate the UI model (Wait for completion)
-                conversationFacade.onSwarmLoaded(task.id, task.accountId, task.conversationId, task.messages)
+                conversationFacade.onSwarmLoaded(task.id, task.accountId, task.conversationId, task.messages, task.permissions)
                 // 2. Resolve loading tasks and update cursor
                 accountService.resolveSwarmLoaded(task.id, task.accountId, task.conversationId, task.messages)
             }
@@ -137,7 +137,7 @@ class DaemonCallbacksImpl(
     }
 
     sealed class ConversationTask {
-        data class SwarmLoaded(val id: Long, val accountId: String, val conversationId: String, val messages: List<SwarmMessage>) : ConversationTask()
+        data class SwarmLoaded(val id: Long, val accountId: String, val conversationId: String, val messages: List<SwarmMessage>, val permissions: List<String>? = null) : ConversationTask()
         data class MessageReceived(val accountId: String, val conversationId: String, val message: SwarmMessage) : ConversationTask()
         data class MessageUpdated(val accountId: String, val conversationId: String, val message: SwarmMessage) : ConversationTask()
         data class DataTransfer(val accountId: String, val conversationId: String, val interactionId: String, val fileId: String, val eventCode: Int) : ConversationTask()
@@ -311,8 +311,16 @@ class DaemonCallbacksImpl(
         scope.launch { conversationFacade.onMessagesFound(messageId, accountId, conversationId, messages) }
     }
 
-    override fun onSwarmLoaded(id: Long, accountId: String, conversationId: String, messages: List<SwarmMessage>) {
-        enqueueConversationTask(ConversationTask.SwarmLoaded(id, accountId, conversationId, messages))
+    override fun onSwarmLoaded(
+        id: Long,
+        accountId: String,
+        conversationId: String,
+        messages: List<SwarmMessage>,
+        permissions: List<String>?,
+    ) {
+        enqueueConversationTask(
+            ConversationTask.SwarmLoaded(id, accountId, conversationId, messages, permissions)
+        )
     }
 
     override fun onConversationProfileUpdated(accountId: String, conversationId: String, profile: Map<String, String>) {

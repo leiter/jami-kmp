@@ -349,16 +349,16 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
     // ==================== Peer Services & Tunnels ====================
 
     override fun addExposedService(accountId: String, details: Map<String, String>): String =
-        JamiService.addExposedService(accountId, StringMap.toSwig(details))
+        JamiService.addSharedService(accountId, StringMap.toSwig(details))
 
     override fun updateExposedService(accountId: String, details: Map<String, String>): Boolean =
-        JamiService.updateExposedService(accountId, StringMap.toSwig(details))
+        JamiService.updateSharedService(accountId, StringMap.toSwig(details))
 
     override fun removeExposedService(accountId: String, serviceId: String): Boolean =
-        JamiService.removeExposedService(accountId, serviceId)
+        JamiService.removeSharedService(accountId, serviceId)
 
     override fun getExposedServices(accountId: String): List<Map<String, String>> =
-        JamiService.getExposedServices(accountId).toNative()
+        JamiService.getSharedServices(accountId).toNative()
 
     override fun queryPeerServices(accountId: String, peerUri: String): Long =
         JamiService.queryPeerServices(accountId, peerUri)
@@ -495,6 +495,9 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
     override fun updateConversationInfo(accountId: String, conversationId: String, info: Map<String, String>) {
         JamiService.updateConversationInfos(accountId, conversationId, StringMap.toSwig(info))
     }
+
+    override fun getConversationPermissions(accountId: String, conversationId: String): List<String>? =
+        JamiService.getConversationPermissions(accountId, conversationId).toList()
 
     override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
         return JamiService.getConversationPreferences(accountId, conversationId).toNative()
@@ -1072,7 +1075,8 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
             callbacks.onConferenceRemoved(accountId, confId)
         }
 
-        override fun onConferenceInfosUpdated(confId: String, infos: VectMap) {
+        // Renamed from `onConferenceInfosUpdated` by the daemon; same two arguments.
+        override fun conferenceInfosUpdated(confId: String, infos: VectMap) {
             callbacks.onConferenceInfoUpdated(confId, infos.toNative())
         }
     }
@@ -1238,9 +1242,17 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
             callbacks.onMessagesFound(id.toInt(), accountId, conversationId, messages.toNative())
         }
 
-        override fun swarmLoaded(id: Long, accountId: String, conversationId: String, messages: net.jami.daemon.SwarmMessageVect) {
+        override fun swarmLoaded(
+            id: Long,
+            accountId: String,
+            conversationId: String,
+            messages: net.jami.daemon.SwarmMessageVect,
+            permissions: StringVect,
+        ) {
             val swarmMessages = (0 until messages.size.toInt()).map { messages[it].toKotlinSwarmMessage() }
-            callbacks.onSwarmLoaded(id, accountId, conversationId, swarmMessages)
+            // The daemon's fifth argument, added with the conversation-permission model: what
+            // this account may do in the conversation whose history just arrived.
+            callbacks.onSwarmLoaded(id, accountId, conversationId, swarmMessages, permissions.toList())
         }
 
         override fun swarmMessageUpdated(accountId: String, conversationId: String, message: SwigSwarmMessage) {

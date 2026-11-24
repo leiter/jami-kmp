@@ -63,6 +63,20 @@ data class ContactDetailsState(
      */
     val isGroup: Boolean = false,
     val isAdmin: Boolean = false,
+    /**
+     * The daemon's own say on whether this account may add a member, and ban or unban one.
+     *
+     * [isAdmin] is this client's reading of the member roles; these are what the daemon will
+     * actually accept. Both are required for the ban/unban affordances — the role decides
+     * whether the action makes sense, the grant whether it would be honoured — and a grant
+     * defaults to true where the daemon does not report permissions at all.
+     */
+    val canAddMember: Boolean = true,
+    val canBanUnbanMember: Boolean = true,
+    /** The daemon's grant for editing a group's name and picture. */
+    val canUpdateProfile: Boolean = true,
+    /** The daemon's grant for leaving the conversation. */
+    val canLeave: Boolean = true,
     val memberUris: List<String> = emptyList(),
     /** Per-member role (admin/member/invited/…), keyed by member URI. Swarm groups only. */
     val memberRoles: Map<String, MemberRole> = emptyMap(),
@@ -213,6 +227,10 @@ class ContactDetailsViewModel(
                 // 2026-11-18: `removeConversation … conversationId: swarm:e4edc3be…`).
                 val swarmId = if (isSwarm) conversation!!.uri.rawRingId else ""
                 val isAdmin = conversation?.isUserGroupAdmin() == true
+                val canAddMember = conversation?.canAddMember() != false
+                val canBanUnbanMember = conversation?.canBanUnbanMember() != false
+                val canUpdateProfile = conversation?.canUpdateProfile() != false
+                val canLeave = conversation?.canLeave() != false
                 val memberUris = if (isSwarm) {
                     conversation!!.roles.keys.toList()
                 } else emptyList()
@@ -243,6 +261,10 @@ class ContactDetailsViewModel(
                     isSwarm = isSwarm,
                     isGroup = isGroup,
                     isAdmin = isAdmin,
+                    canAddMember = canAddMember,
+                    canBanUnbanMember = canBanUnbanMember,
+                    canUpdateProfile = canUpdateProfile,
+                    canLeave = canLeave,
                     memberUris = memberUris,
                     memberRoles = memberRoles,
                     memberNames = memberNames,

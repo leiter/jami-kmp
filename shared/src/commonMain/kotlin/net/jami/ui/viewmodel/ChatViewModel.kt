@@ -25,10 +25,15 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -44,7 +49,9 @@ import net.jami.model.CallHistory
 import net.jami.model.Contact
 import net.jami.model.ContactEvent
 import net.jami.model.ContactLocation
+import net.jami.model.Account
 import net.jami.model.Conversation
+import net.jami.model.ConversationPermission
 import net.jami.model.DataTransfer
 import net.jami.model.Interaction
 import net.jami.model.Uri
@@ -222,6 +229,52 @@ data class ContactSharingInfo(
 /**
  * State for the chat / conversation detail screen.
  */
+/**
+ * What the daemon lets this account do in the open conversation, as the chat screen needs it.
+ *
+ * Every field defaults to true: a conversation whose permissions the daemon has not reported is
+ * permissive (see [net.jami.model.Conversation.permissionsFlow]), and so is a SIP/legacy one,
+ * which has no permission model at all. Sending a reply is a separate grant from sending a new
+ * message, hence the pairs and the two helpers that pick between them.
+ */
+data class ChatPermissions(
+    val sendText: Boolean = true,
+    val sendTextReply: Boolean = true,
+    val sendFile: Boolean = true,
+    val sendFileReply: Boolean = true,
+    val react: Boolean = true,
+    val edit: Boolean = true,
+    val deleteMessage: Boolean = true,
+    val deleteFile: Boolean = true,
+    val call: Boolean = true,
+) {
+    fun canSendText(replyTo: String?): Boolean =
+        if (replyTo.isNullOrEmpty()) sendText else sendTextReply
+
+    fun canSendFile(replyTo: String?): Boolean =
+        if (replyTo.isNullOrEmpty()) sendFile else sendFileReply
+
+    /** Deleting a file transfer is governed by its own grant; a call entry by neither. */
+    fun canDelete(type: MessageType): Boolean = when (type) {
+        MessageType.Transfer -> deleteFile
+        MessageType.Call -> true
+        else -> deleteMessage
+    }
+}
+
+/** Read this conversation's daemon grants into the shape the chat screen consumes. */
+private fun Conversation.chatPermissions(): ChatPermissions = ChatPermissions(
+    sendText = hasPermission(ConversationPermission.Text),
+    sendTextReply = hasPermission(ConversationPermission.TextReply),
+    sendFile = hasPermission(ConversationPermission.File),
+    sendFileReply = hasPermission(ConversationPermission.FileReply),
+    react = canReact(),
+    edit = canEditMessage(),
+    deleteMessage = hasPermission(ConversationPermission.Delete),
+    deleteFile = hasPermission(ConversationPermission.DeleteFile),
+    call = canPlaceCall(),
+)
+
 data class ChatState(
     val messages: List<MessageItem> = emptyList(),
     val inputText: String = "",
@@ -308,6 +361,20 @@ data class ChatState(
      * daemon had already dropped (seen on a device 2026-11-07). The reference closes the whole
      * conversation.
      */
+    /**
+     * The grants that gate this screen's actions. The composer, the attach menu and the bubble
+     * long-press menu read it rather than offering an action the daemon would refuse.
+     */
+    val permissions: ChatPermissions = ChatPermissions(),
+    /**
+     * Shown as a strip above the message list; null when the conversation can reach its peers.
+     *
+     * The composer is deliberately *not* disabled for either case — a message written offline is
+     * still committed locally and delivered when the swarm comes back (and, for a not-yet-live
+     * 1:1, held by the outbox). The reference does not disable it either; it only takes the call
+     * buttons away when the account itself is off.
+     */
+    val connectivityBanner: ConnectivityBanner? = null,
     val isGone: Boolean = false,
 )
 
@@ -325,6 +392,16 @@ class ChatViewModel(
     private val audioRecorderService: AudioRecorderService,
     private val sendQueue: net.jami.services.SendQueueService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    /**
+     * The source of device connectivity, for the "no network" banner.
+     *
+     * Optional because most tests have no interest in it and it is a platform `expect` class
+     * with no constructor common code can call. When absent, connectivity is read as **up** —
+     * never as down. Claiming "no network" because nothing is reporting one would be a lie, and
+     * it matches the reference's own bias: `isConnected || isRegistered` prefers saying nothing
+     * to crying offline at a working conversation. Production always supplies it through Koin.
+     */
+    private val hardwareService: net.jami.services.expect.HardwareService? = null,
     /**
      * Peer avatars go through [VCardService], never through a raw read of the vcf on disk.
      *
@@ -352,6 +429,8 @@ class ChatViewModel(
     private var presenceJob: kotlinx.coroutines.Job? = null
     private var statusNoteJob: kotlinx.coroutines.Job? = null
     private var profileJob: kotlinx.coroutines.Job? = null
+    private var permissionsJob: kotlinx.coroutines.Job? = null
+    private var connectivityJob: kotlinx.coroutines.Job? = null
     /** Replied-to message ids already requested from the daemon (see [replyPreview]). */
     private val requestedReplyOriginals = mutableSetOf<String>()
 
@@ -528,9 +607,14 @@ class ChatViewModel(
                     isLoadingMore = false,
                     replyingTo = null,
                     peerUri = peerUri,
-                    canCall = conversation?.isSelfConversation != true && !account.isOwn(peerUri),
+                    canCall = conversation?.isSelfConversation != true &&
+                        !account.isOwn(peerUri) &&
+                        conversation?.canPlaceCall() != false,
                     isLegacy = isLegacy,
+                    permissions = conversation?.chatPermissions() ?: ChatPermissions(),
                 )
+                conversation?.let(::subscribeToPermissions)
+                observeConnectivity(account.accountId)
                 // Before the history load below, which suspends until the daemon answers:
                 // the composer notice must be right from the moment the screen appears.
                 refreshMessageHold()
@@ -626,6 +710,39 @@ class ChatViewModel(
         statusNoteJob = scope.launch {
             contact.statusNote.collect { note ->
                 _state.value = _state.value.copy(contactStatusNote = note)
+            }
+        }
+    }
+
+    /**
+     * Watch device connectivity and this account's registration for the error strip.
+     *
+     * Pinned to the conversation's account rather than the current one: the chat stays open on
+     * its own account even if another is switched to. See [connectivityBannerFlow] for why the
+     * account is read through `accountEvents`.
+     */
+    private fun observeConnectivity(accountId: String) {
+        connectivityJob?.cancel()
+        connectivityJob = scope.launch {
+            connectivityBannerFlow(hardwareService, accountService) { accountId }
+                .collect { banner ->
+                    _state.update { it.copy(connectivityBanner = banner) }
+                }
+        }
+    }
+
+    /**
+     * Keep the screen's grants current while it is open.
+     *
+     * A role change — being promoted, banned or unbanned — alters what this account may do
+     * without the conversation being reopened, and `ConversationFacade` re-reads the grants on
+     * every member event, so this screen follows the flow rather than sampling it once.
+     */
+    private fun subscribeToPermissions(conversation: Conversation) {
+        permissionsJob?.cancel()
+        permissionsJob = scope.launch {
+            conversation.permissionsFlow.collect {
+                _state.update { state -> state.copy(permissions = conversation.chatPermissions()) }
             }
         }
     }

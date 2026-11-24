@@ -131,8 +131,8 @@ public class Callback {
     if (getClass() == Callback.class) JamiServiceJNI.Callback_onRtcpReportReceived(swigCPtr, this, callId, IntegerMap.getCPtr(stats), stats); else JamiServiceJNI.Callback_onRtcpReportReceivedSwigExplicitCallback(swigCPtr, this, callId, IntegerMap.getCPtr(stats), stats);
   }
 
-  public void onConferenceInfosUpdated(String confId, VectMap infos) {
-    if (getClass() == Callback.class) JamiServiceJNI.Callback_onConferenceInfosUpdated(swigCPtr, this, confId, VectMap.getCPtr(infos), infos); else JamiServiceJNI.Callback_onConferenceInfosUpdatedSwigExplicitCallback(swigCPtr, this, confId, VectMap.getCPtr(infos), infos);
+  public void conferenceInfosUpdated(String confId, VectMap infos) {
+    if (getClass() == Callback.class) JamiServiceJNI.Callback_conferenceInfosUpdated(swigCPtr, this, confId, VectMap.getCPtr(infos), infos); else JamiServiceJNI.Callback_conferenceInfosUpdatedSwigExplicitCallback(swigCPtr, this, confId, VectMap.getCPtr(infos), infos);
   }
 
   public void peerHold(String callId, boolean holding) {

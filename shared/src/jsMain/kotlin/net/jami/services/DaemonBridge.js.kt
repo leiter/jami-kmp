@@ -427,6 +427,8 @@ actual class DaemonBridge() : DaemonBridgeApi {
         // TODO: PUT /accounts/{accountId}/conversations/{conversationId}
     }
 
+    override fun getConversationPermissions(accountId: String, conversationId: String): List<String>? = null
+
     override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
         // TODO: GET /accounts/{accountId}/conversations/{conversationId}/preferences
         return emptyMap()

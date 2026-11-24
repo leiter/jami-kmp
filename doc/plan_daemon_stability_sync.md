@@ -15,9 +15,13 @@ and the domain models (`Account`, `Conversation`, `getByUri`/`getByContact`) mat
 — and where the observed instability comes from — is in the **disciplines around the daemon**, not
 the daemon calls themselves:
 
+> **Reading note (2026-11-20):** rows marked "closed" below have since been implemented; the
+> original text is kept struck through so the reasoning survives. Everything else was re-checked
+> only where stated — treat an unmarked row as dating from 2026-09-06.
+
 | Area | jami-android-client | jami-kmp | Impact |
 |---|---|---|---|
-| Network-change → daemon | calls `JamiService.connectivityChanged()` on every change | **no such call exists** anywhere; only toggles `setAccountsActive` | daemon never re-bootstraps DHT/ICE/swarm on Wi-Fi↔cellular; stale connections, "messages stop arriving" |
+| Network-change → daemon | calls `JamiService.connectivityChanged()` on every change | ~~no such call exists~~ **closed 2026-11-20**: declared on `DaemonBridgeApi`, real on Android (`ConnectivityManager` default-network callback) and iOS (`NWPathMonitor`), serialised off the main thread, issued on every change — see §2.1 | was: daemon never re-bootstraps DHT/ICE/swarm on Wi-Fi↔cellular. The user-facing half closed too — §2.1a |
 | Account conversation load | `loadAccount` gated on leaving `INITIALIZING`, runs **once** per account via `firstElement()` | `loadSmartlist` fired from 4 loose collectors + synchronously on the send path, no gate, no single-flight | reads `getConversations()` before repos are on disk → F1; concurrent re-entrant runs race `conversationStarted()` |
 | Conversation callback ordering | per-`(account,conversation)` serialized queue with generation invalidation (`ConversationCallbackDispatcher`) | **one global channel** for all conversations; ~15 other callbacks use bare `scope.launch{}` (unordered) | `onContactAdded` races `onConversationReady`; member/message events can be processed against a half-built conversation |
 | Registration state transition | on `INITIALIZING→ready` re-hydrates details/credentials/devices/volatile | only writes the 3 volatile registration fields | account model can carry stale details/devices after first registration |
@@ -34,7 +38,30 @@ FAILED watchdog + `retryMessage` (`ChatViewModel.kt:396-430`), and the `info["sy
 
 ## 2. Detailed findings
 
-### 2.1 Network changes are never signalled to the daemon  — **highest-impact gap**
+### 2.1 Network changes are never signalled to the daemon — ~~**highest-impact gap**~~ **CLOSED**
+
+> **Closed since this plan was written (re-verified 2026-11-20).** The finding below described
+> jami-kmp as having *no* `connectivityChanged` at all. That is no longer true, and the text is
+> kept only so the reasoning is not lost.
+>
+> What exists now:
+> - `DaemonBridgeApi.connectivityChanged()` is declared in `DaemonBridge.kt` and implemented for
+>   real on Android (`DaemonBridge.android.kt` → `JamiService.connectivityChanged()`) and iOS
+>   (`DaemonBridge.ios.kt` → `bridge.connectivityChanged()`). Desktop/macOS/Web log a stub.
+> - `HardwareService.android.kt` registers a `ConnectivityManager.registerDefaultNetworkCallback`
+>   and drives `connectivityChanged(...)` from `onAvailable` / `onLost` / `onUnavailable`,
+>   resolving `onLost` against `activeNetwork` so a Wi-Fi drop with cellular still up is not
+>   reported as offline.
+> - The JNI call is serialised onto a dedicated single-thread executor, mirroring the reference's
+>   daemon executor, and is issued on **every** change rather than only on connected↔disconnected
+>   transitions — so interface switches re-evaluate transports too.
+> - iOS drives the same path from an `NWPathMonitor` (`HardwareService.kt`, iosMain).
+>
+> The two reactions called "blunt" below still exist and are still worth revisiting
+> (`AccountService` → `setAccountsActive`, `ConversationFacade` → `refreshAllConversations`), but
+> they are now *in addition to* signalling the daemon, not instead of it.
+>
+> The user-facing half of this landed separately: see §2.1a.
 
 Reference: `HardwareService.kt:119-122`
 ```kotlin
@@ -46,8 +73,8 @@ fun connectivityChanged(isConnected: Boolean) {
 `JamiService.connectivityChanged()` makes the daemon drop and rebuild DHT nodes, ICE, TURN
 allocations and swarm sync sockets against the new interface.
 
-jami-kmp: `DaemonBridge` (expect at `DaemonBridge.kt`, Android impl at `DaemonBridge.android.kt`)
-has **no `connectivityChanged` method at all**. `HardwareService.android.kt:534` only does
+~~jami-kmp: `DaemonBridge` (expect at `DaemonBridge.kt`, Android impl at `DaemonBridge.android.kt`)
+has **no `connectivityChanged` method at all**.~~ `HardwareService.android.kt:534` only does
 `_connectivityState.value = isConnected`. The only reactions are:
 - `AccountService.kt:143-145` → `setAccountsActive(isConnected)` (blunt),
 - `ConversationFacade.kt:127-133` → `refreshAllConversations()` (app-side re-read, does nothing for
@@ -56,6 +83,47 @@ has **no `connectivityChanged` method at all**. `HardwareService.android.kt:534`
 Consequence: after a network switch the daemon keeps trying dead sockets until its own slow
 internal timers fire. This is consistent with the stabilization-findings symptom "DHT connects,
 then `sync_module: no sync connection` repeats" and the generally flaky two-device runs.
+
+### 2.1a Connectivity was never surfaced to the user — **CLOSED 2026-11-20**
+
+Signalling the daemon fixed the transport side but left `connectivityState` consumed only by
+`AccountService` and `ConversationFacade`; **no screen read it**, so a device with no network
+showed a composer that silently swallowed messages. The reference's only connectivity-driven UI is
+the conversation error panel, driven by `ConversationPresenter.kt:194-205`:
+
+```kotlin
+combineLatest(hardwareService.connectivityState, accountService.getObservableAccount(account))
+    { isConnected, a -> isConnected || a.isRegistered }
+    .subscribe { isOk ->
+        if (!isOk) v.displayNetworkErrorPanel()            // "No network connectivity"
+        else if (!account.isEnabled) v.displayAccountOfflineErrorPanel()  // + disables the action buttons
+        else v.hideErrorPanel()
+    }
+```
+
+Ported to jami-kmp as `ChatState.connectivityBanner` + the shared `ConnectivityBannerStrip`, with
+the same precedence and the same `isConnected || isRegistered` tolerance. The strip also shows on
+the conversation list, which the reference does **not** do — that screen is where you land, and a
+dead network is worth knowing before picking someone to message. The account-status switch was
+extended from binary online/offline to the reference's five states (see `Account.isTrying` /
+`Account.isInError`, added to match the reference's predicates).
+
+**Verified on a Pixel 7a, 2026-11-20** — offline at launch, Wi-Fi off mid-session, and recovery.
+Getting there took two fixes that no test would have caught, both in Android connectivity
+detection rather than in the UI:
+
+1. `onLost` re-queried `connectivityManager.activeNetwork` and read a non-null answer as "still
+   online". `activeNetwork` is not cleared synchronously with `onLost`, and it reports a network
+   that is neither necessarily the default nor necessarily carrying internet — so switching Wi-Fi
+   off on a device with an idle SIM logged `onLost … (stillConnected=true)` and reported *online*.
+   Airplane mode kills every transport at once and happened to clear it in time, which is why the
+   first device check passed and looked conclusive. Now the default network is tracked and losing
+   it means offline, as `DaemonNetworkMonitor.monitor` does it.
+2. `registerDefaultNetworkCallback` reports *changes* only; with no network it delivers nothing
+   (`onUnavailable` belongs to a timed-out `requestNetwork`). A device already offline at app
+   start therefore kept `_connectivityState`'s optimistic `true`. The service now seeds itself
+   from a snapshot requiring `NET_CAPABILITY_VALIDATED` as well as `NET_CAPABILITY_INTERNET` — a
+   captive portal or a dataless SIM has the capability without the connectivity.
 
 ### 2.2 `loadSmartlist` is ungated and not single-flight
 
