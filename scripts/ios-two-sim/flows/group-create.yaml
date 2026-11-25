@@ -21,9 +21,21 @@ appId: net.jami.iosapp
 - extendedWaitUntil:
     visible: "New Group"
     timeout: 15000
-- tapOn: "New Group"
+# The tap can be lost while the search keyboard slides in (2026-11-25: the sheet never opened,
+# and the wait below then matched the peer's row in the search list behind it). Retry, and wait
+# for the sheet itself before looking for the peer.
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn:
+    text: "New Group"
+    retryTapIfNoChange: true
 - extendedWaitUntil:
-    visible: ".*${PEER_NAME}.*"
+    visible: "Select contacts"
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      text: ".*${PEER_NAME}.*"
+      below: "Select contacts"
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 5000
