@@ -105,4 +105,64 @@ class GroupInConversationListTest {
             services.conversationFacade.getConversation(account.accountId, oneToOne.uri)?.uri,
         )
     }
+
+    /**
+     * A group created with one invitee has the same members as a 1:1 with that invitee. It must
+     * still read as a group: in the "Groups" filter, without the peer's contact on the row, and
+     * never returned by [net.jami.model.Account.getByContact] in place of the real 1:1
+     * (two simulators, 2026-11-24).
+     */
+    @Test
+    fun aTwoMemberGroupIsStillAGroup() = runTest {
+        val stub = StubDaemonBridge()
+        val services = makeTestServiceStack(stub, this)
+        val account = prepareAccountInService(stub, services.accountService)
+        advanceUntilIdle()
+        val group = net.jami.model.Conversation(
+            account.accountId,
+            Uri(Uri.SWARM_SCHEME, "group2"),
+            mutableListOf(
+                net.jami.model.Contact(Uri.fromString("me"), isUser = true),
+                net.jami.model.Contact(Uri.fromString("bbbb")),
+            ),
+            net.jami.model.Conversation.Mode.InvitesOnly,
+        )
+        account.conversationStarted(group)
+        val oneToOne = oneToOneConversation(account.accountId, "oneToOne1", "bbbb")
+        account.conversationStarted(oneToOne)
+
+        assertTrue(group.isGroup)
+        assertNull(group.contactOrNull)
+        assertEquals(oneToOne.uri, account.getByContact(Uri.fromString("bbbb"))?.uri)
+
+        val vm = ConversationsViewModel(
+            services.accountService, services.conversationFacade, StubDeviceRuntimeService(),
+            services.contactService, services.vCardService, services.settingsRepository,
+            viewModelScope(),
+        )
+        vm.loadConversations()
+        advanceUntilIdle()
+        vm.setFilter(net.jami.ui.viewmodel.ConversationFilter.GROUPS)
+        advanceUntilIdle()
+
+        assertEquals(listOf("group2"), vm.state.value.conversations.map { it.id })
+        assertNull(vm.state.value.conversations.single().contactId)
+    }
+
+    /** A 1:1 still cloning may claim InvitesOnly; only the stated mode makes a group. */
+    @Test
+    fun aSyncingOneToOneIsNotAGroup() {
+        val syncing = net.jami.model.Conversation(
+            TEST_ACCOUNT_ID,
+            Uri(Uri.SWARM_SCHEME, "syncing1"),
+            mutableListOf(
+                net.jami.model.Contact(Uri.fromString("me"), isUser = true),
+                net.jami.model.Contact(Uri.fromString("bbbb")),
+            ),
+            net.jami.model.Conversation.Mode.Syncing,
+        )
+        syncing.requestMode = net.jami.model.Conversation.Mode.InvitesOnly
+        assertTrue(!syncing.isGroup)
+        assertEquals("bbbb", syncing.contactOrNull?.uri?.rawRingId)
+    }
 }

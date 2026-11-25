@@ -282,8 +282,20 @@ class Conversation(
     val contactOrNull: Contact?
         get() = if (isGroup) null else contact
 
+    /**
+     * A group by size (more than the user and one peer), or by the mode its repository states.
+     *
+     * Size alone, the reference Android rule, read a group created with a single invitee as a
+     * 1:1 with that peer: it was missing from the "Groups" filter, showed as a second chat with
+     * the peer's name and avatar, opened contact details instead of group details, and
+     * [Account.getByContact] could return it in place of the real 1:1 (two simulators,
+     * 2026-11-24). jami-client-ios's `isCoredialog()` checks the type for the same reason.
+     *
+     * Only an explicit group [mode] counts. A 1:1 still cloning is [Mode.Syncing] and may claim
+     * InvitesOnly in [requestMode] (see [isSwarmGroup]); neither is read here.
+     */
     val isGroup: Boolean
-        get() = isSwarm && contacts.size > 2
+        get() = isSwarm && (contacts.size > 2 || mode.isGroup)
 
     /**
      * A 1:1 swarm whose only member is this account — a conversation with oneself. Seen on a

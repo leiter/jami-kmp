@@ -284,14 +284,18 @@ class ConversationTest {
 
     @Test
     fun testIsGroup() {
+        // A stated group mode makes a group even before members arrive (a group created with
+        // one invitee has as many members as a 1:1).
         val conversation = Conversation(
             "account1",
             Uri(Uri.SWARM_SCHEME, "conv123"),
             mode = Conversation.Mode.InvitesOnly
         )
+        assertTrue(conversation.isGroup)
 
-        // Less than 3 contacts, not a group
-        assertFalse(conversation.isGroup)
+        // A 1:1 is not, and neither is a swarm still syncing, whatever mode it was offered as.
+        assertFalse(Conversation("account1", Uri(Uri.SWARM_SCHEME, "c2"), mode = Conversation.Mode.OneToOne).isGroup)
+        assertFalse(Conversation("account1", Uri(Uri.SWARM_SCHEME, "c3"), mode = Conversation.Mode.Syncing).isGroup)
 
         // Add 3 contacts
         conversation.addContact(Contact(Uri.fromString("jami:user1"), isUser = true))
