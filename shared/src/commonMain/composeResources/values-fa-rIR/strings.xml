@@ -385,4 +385,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_weeks_short">%1$d هفته</string>
     <string name="permission_dialog_open_settings">باز‌کردن تنظیمات</string>
     <string name="permission_dialog_later">بعدش</string>
+    <string name="audio_output_dialog_title">خروجی صدا</string>
+    <string name="audio_output_content_description">خروجی صدا: %1$s</string>
+    <string name="audio_output_speaker">بلندگو</string>
+    <string name="audio_output_earpiece">گوشی</string>
+    <string name="audio_output_headset">هدست</string>
+    <string name="audio_output_bluetooth">بلوتوث</string>
 </resources>

@@ -500,4 +500,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_title">مجوز مخاطبان</string>
     <string name="permission_dialog_contacts_rationale">Jami مخاطبان شما را می‌خواند تا نام‌ها و عکس‌هایی را که برای مخاطبان Jami ذخیره کرده‌اید نشان دهد. چیزی بارگذاری نمی‌شود.</string>
     <string name="permission_dialog_read_contacts_message">Jami به مجوز «خواندن مخاطبان» نیاز دارد. برای استفاده از این ویژگی آن را در تنظیمات دستگاه فعال کنید.</string>
+    <string name="audio_output_dialog_title">خروجی صدا</string>
+    <string name="audio_output_content_description">خروجی صدا: %1$s</string>
+    <string name="audio_output_speaker">بلندگو</string>
+    <string name="audio_output_earpiece">گوشی</string>
+    <string name="audio_output_headset">هدست</string>
+    <string name="audio_output_bluetooth">بلوتوث</string>
 </resources>

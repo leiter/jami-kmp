@@ -480,4 +480,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Το Jami διαβάζει τις επαφές σας για να εμφανίζει τα ονόματα και τις φωτογραφίες που αποθηκεύσατε για τις επαφές σας στο Jami. Τίποτα δεν μεταφορτώνεται.</string>
     <string name="permission_dialog_camera_message">Οι βιντεοσυνομιλίες απαιτούν την άδεια κάμερας. Η άδεια κάμερας είναι απενεργοποιημένη. Ενεργοποιήστε την στις ρυθμίσεις της συσκευής για να χρησιμοποιήσετε αυτή τη λειτουργία.</string>
     <string name="permission_dialog_read_contacts_message">Το Jami απαιτεί την άδεια «Ανάγνωση επαφών». Ενεργοποιήστε την στις ρυθμίσεις της συσκευής για να χρησιμοποιήσετε αυτή τη λειτουργία.</string>
+    <string name="audio_output_dialog_title">Έξοδος ήχου</string>
+    <string name="audio_output_content_description">Έξοδος ήχου: %1$s</string>
+    <string name="audio_output_speaker">Ηχείο</string>
+    <string name="audio_output_earpiece">Ακουστικό</string>
+    <string name="audio_output_headset">Ακουστικά</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

@@ -326,4 +326,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_camera_title">Доступ да камеры</string>
     <string name="permission_dialog_camera_message">Для відэаразмоў патрэбны доступ да камеры. Доступ да камеры адключаны. Уключыце яго ў наладах прылады, каб карыстацца гэтай функцыяй.</string>
     <string name="permission_dialog_read_contacts_message">Jami патрабуе дазволу «Чытанне кантактаў». Уключыце яго ў наладах прылады, каб карыстацца гэтай функцыяй.</string>
+    <string name="audio_output_dialog_title">Вывад гуку</string>
+    <string name="audio_output_content_description">Вывад гуку: %1$s</string>
+    <string name="audio_output_speaker">Дынамік</string>
+    <string name="audio_output_earpiece">Слыхавы дынамік</string>
+    <string name="audio_output_headset">Гарнітура</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

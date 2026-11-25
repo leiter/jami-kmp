@@ -465,4 +465,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">আপনার Jami পরিচিতিদের জন্য সংরক্ষিত নাম ও ছবি দেখাতে Jami আপনার পরিচিতি পড়ে। কিছুই আপলোড হয় না।</string>
     <string name="permission_dialog_camera_message">ভিডিও কথোপকথনের জন্য ক্যামেরার অনুমতি দরকার। ক্যামেরার অনুমতি বন্ধ আছে। এই বৈশিষ্ট্য ব্যবহার করতে ডিভাইসের সেটিংসে এটি চালু করুন।</string>
     <string name="permission_dialog_read_contacts_message">Jami-এর “পরিচিতি পড়ুন” অনুমতি দরকার। এই বৈশিষ্ট্য ব্যবহার করতে ডিভাইসের সেটিংসে এটি চালু করুন।</string>
+    <string name="audio_output_dialog_title">অডিও আউটপুট</string>
+    <string name="audio_output_content_description">অডিও আউটপুট: %1$s</string>
+    <string name="audio_output_speaker">স্পিকার</string>
+    <string name="audio_output_earpiece">ইয়ারপিস</string>
+    <string name="audio_output_headset">হেডসেট</string>
+    <string name="audio_output_bluetooth">ব্লুটুথ</string>
 </resources>

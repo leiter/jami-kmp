@@ -645,4 +645,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Dovoljenje za lokacijo je izklopljeno. Za uporabo te funkcije ga vklopite v nastavitvah naprave.</string>
     <string name="permission_dialog_contacts_title">Dovoljenje za stike</string>
     <string name="permission_dialog_contacts_rationale">Jami bere vaše stike, da prikaže imena in fotografije, ki ste jih shranili za svoje stike v Jami. Nič se ne naloži.</string>
+    <string name="audio_output_dialog_title">Zvočni izhod</string>
+    <string name="audio_output_content_description">Zvočni izhod: %1$s</string>
+    <string name="audio_output_speaker">Zvočnik</string>
+    <string name="audio_output_earpiece">Slušalka</string>
+    <string name="audio_output_headset">Slušalke</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

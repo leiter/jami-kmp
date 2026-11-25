@@ -464,4 +464,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami-ն կարդում է ձեր կոնտակտները՝ ցույց տալու այն անուններն ու լուսանկարները, որոնք պահել եք ձեր Jami կոնտակտների համար։ Ոչինչ չի վերբեռնվում։</string>
     <string name="permission_dialog_camera_message">Տեսազրույցների համար անհրաժեշտ է տեսախցիկի թույլտվություն։ Տեսախցիկի թույլտվությունն անջատված է։ Միացրեք այն սարքի կարգավորումներում՝ այս գործառույթն օգտագործելու համար։</string>
     <string name="permission_dialog_read_contacts_message">Jami-ին անհրաժեշտ է «Կոնտակտների ընթերցում» թույլտվությունը։ Միացրեք այն սարքի կարգավորումներում՝ այս գործառույթն օգտագործելու համար։</string>
+    <string name="audio_output_dialog_title">Ձայնի ելք</string>
+    <string name="audio_output_content_description">Ձայնի ելք՝ %1$s</string>
+    <string name="audio_output_speaker">Բարձրախոս</string>
+    <string name="audio_output_earpiece">Ականջակալ</string>
+    <string name="audio_output_headset">Գլխադիր ականջակալ</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

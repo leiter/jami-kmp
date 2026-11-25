@@ -576,4 +576,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Dozvola za lokaciju je isključena. Uključite je u podešavanjima uređaja da biste koristili ovu funkciju.</string>
     <string name="permission_dialog_contacts_title">Dozvola za kontakte</string>
     <string name="permission_dialog_contacts_rationale">Jami čita vaše kontakte da bi prikazao imena i fotografije koje ste sačuvali za svoje Jami kontakte. Ništa se ne otprema.</string>
+    <string name="audio_output_dialog_title">Аудио излаз</string>
+    <string name="audio_output_content_description">Аудио излаз: %1$s</string>
+    <string name="audio_output_speaker">Звучник</string>
+    <string name="audio_output_earpiece">Слушалица</string>
+    <string name="audio_output_headset">Слушалице</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

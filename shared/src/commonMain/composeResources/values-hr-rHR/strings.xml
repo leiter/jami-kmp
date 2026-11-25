@@ -213,4 +213,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_weeks_short">%1$d tj.</string>
     <string name="permission_dialog_open_settings">Otvoreni postavki</string>
     <string name="permission_dialog_later">Kasnije</string>
+    <string name="audio_output_dialog_title">Audioizlaz</string>
+    <string name="audio_output_content_description">Audioizlaz: %1$s</string>
+    <string name="audio_output_speaker">Zvučnik</string>
+    <string name="audio_output_earpiece">Slušalica</string>
+    <string name="audio_output_headset">Slušalice</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

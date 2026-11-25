@@ -534,4 +534,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Povolenie polohy je vypnuté. Ak chcete túto funkciu používať, zapnite ho v nastaveniach zariadenia.</string>
     <string name="permission_dialog_contacts_title">Povolenie kontaktov</string>
     <string name="permission_dialog_contacts_rationale">Jami číta vaše kontakty, aby zobrazil mená a fotky, ktoré ste uložili pre svoje kontakty v Jami. Nič sa nenahráva.</string>
+    <string name="audio_output_dialog_title">Zvukový výstup</string>
+    <string name="audio_output_content_description">Zvukový výstup: %1$s</string>
+    <string name="audio_output_speaker">Reproduktor</string>
+    <string name="audio_output_earpiece">Slúchadlo</string>
+    <string name="audio_output_headset">Náhlavná súprava</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

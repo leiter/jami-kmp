@@ -633,4 +633,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">A permissão de localização está desativada. Ative-a nas definições do dispositivo para usar esta funcionalidade.</string>
     <string name="permission_dialog_contacts_title">Permissão de contactos</string>
     <string name="permission_dialog_contacts_rationale">O Jami lê os seus contactos para mostrar os nomes e fotografias que guardou para os seus contactos Jami. Nada é enviado.</string>
+    <string name="audio_output_dialog_title">Saída de áudio</string>
+    <string name="audio_output_content_description">Saída de áudio: %1$s</string>
+    <string name="audio_output_speaker">Altifalante</string>
+    <string name="audio_output_earpiece">Auscultador</string>
+    <string name="audio_output_headset">Auscultadores</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

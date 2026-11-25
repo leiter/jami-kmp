@@ -647,4 +647,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Permisiunea pentru locație este dezactivată. Activeaz-o în setările dispozitivului pentru a folosi această funcție.</string>
     <string name="permission_dialog_contacts_title">Permisiune pentru contacte</string>
     <string name="permission_dialog_contacts_rationale">Jami citește contactele tale pentru a afișa numele și fotografiile pe care le-ai salvat pentru contactele tale Jami. Nu se încarcă nimic.</string>
+    <string name="audio_output_dialog_title">Ieșire audio</string>
+    <string name="audio_output_content_description">Ieșire audio: %1$s</string>
+    <string name="audio_output_speaker">Difuzor</string>
+    <string name="audio_output_earpiece">Auricular</string>
+    <string name="audio_output_headset">Căști</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

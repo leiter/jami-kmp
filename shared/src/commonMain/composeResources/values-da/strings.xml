@@ -526,4 +526,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Placeringstilladelsen er slået fra. Slå den til i enhedens indstillinger for at bruge denne funktion.</string>
     <string name="permission_dialog_contacts_title">Kontakttilladelse</string>
     <string name="permission_dialog_contacts_rationale">Jami læser dine kontakter for at vise de navne og billeder, du har gemt for dine Jami-kontakter. Intet uploades.</string>
+    <string name="audio_output_dialog_title">Lydudgang</string>
+    <string name="audio_output_content_description">Lydudgang: %1$s</string>
+    <string name="audio_output_speaker">Højttaler</string>
+    <string name="audio_output_earpiece">Øresnegl</string>
+    <string name="audio_output_headset">Headset</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

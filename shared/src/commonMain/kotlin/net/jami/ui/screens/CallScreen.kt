@@ -72,7 +72,18 @@ import androidx.compose.material.icons.filled.ScreenShare
 import androidx.compose.material.icons.filled.StopScreenShare
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.VideocamOff
-import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.BluetoothAudio
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Headset
+import androidx.compose.material.icons.filled.PhoneInTalk
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import net.jami.services.AudioOutputs
+import net.jami.services.expect.AudioOutput
+import net.jami.services.expect.AudioOutputType
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Button
@@ -239,6 +250,8 @@ fun CallScreen(
         },
         onToggleMute = { viewModel.toggleMute() },
         onToggleSpeaker = { viewModel.toggleSpeaker() },
+        onSelectAudioOutput = { viewModel.selectAudioOutput(it) },
+        onDismissAudioOutputPicker = { viewModel.dismissAudioOutputPicker() },
         onToggleVideo = { viewModel.toggleVideo() },
         onToggleHold = { viewModel.toggleHold() },
         onSwitchCamera = { viewModel.switchCamera() },
@@ -368,6 +381,8 @@ fun IncomingCallScreen(
         },
         onToggleMute = { viewModel.toggleMute() },
         onToggleSpeaker = { viewModel.toggleSpeaker() },
+        onSelectAudioOutput = { viewModel.selectAudioOutput(it) },
+        onDismissAudioOutputPicker = { viewModel.dismissAudioOutputPicker() },
         onToggleVideo = { viewModel.toggleVideo() },
         onToggleHold = { viewModel.toggleHold() },
         onSwitchCamera = { viewModel.switchCamera() },
@@ -412,6 +427,8 @@ private fun CallScreenContent(
     onEnd: () -> Unit,
     onToggleMute: () -> Unit,
     onToggleSpeaker: () -> Unit,
+    onSelectAudioOutput: (AudioOutput) -> Unit = {},
+    onDismissAudioOutputPicker: () -> Unit = {},
     onToggleVideo: () -> Unit,
     onToggleHold: () -> Unit,
     onSwitchCamera: () -> Unit,
@@ -652,6 +669,22 @@ private fun CallScreenContent(
             }
         }
 
+    }
+
+    // Audio route picker — only offered once a headset makes a plain toggle ambiguous.
+    if (state.isAudioOutputPickerVisible) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = onDismissAudioOutputPicker,
+            sheetState = sheetState,
+        ) {
+            AudioOutputPicker(
+                outputs = state.audioOutputs,
+                current = state.audioOutput,
+                onSelect = onSelectAudioOutput,
+            )
+            Spacer(Modifier.height(JamiTheme.spacing.xl))
+        }
     }
 
     // DTMF dialpad bottom sheet
@@ -1307,10 +1340,11 @@ private fun OnGoingControls(
                 level = micLevel.takeUnless { state.isAudioMuted },
             ),
             CallAction(
-                icon = if (state.isSpeakerOn) Icons.Default.VolumeUp else Icons.Default.VolumeOff,
-                label = stringResource(Res.string.bottomSheet_sound_output_btn),
+                icon = audioOutputIcon(state.audioOutput),
+                label = audioOutputLabel(state.audioOutput),
                 contentDescription = stringResource(
-                    if (state.isSpeakerOn) Res.string.content_desc_speaker_off else Res.string.content_desc_speaker_on
+                    Res.string.audio_output_content_description,
+                    audioOutputLabel(state.audioOutput),
                 ),
                 isActive = state.isSpeakerOn,
                 onClick = onToggleSpeaker,
@@ -1368,6 +1402,54 @@ private fun OnGoingControls(
 private const val CALL_ACTION_COLUMNS = 5
 
 /** One labelled call control. */
+/** A headset is shown by its own name; the built-in routes by ours. */
+@Composable
+private fun audioOutputLabel(output: AudioOutput): String =
+    output.outputName?.takeIf { it.isNotBlank() } ?: stringResource(
+        when (output.type) {
+            AudioOutputType.INTERNAL -> Res.string.audio_output_earpiece
+            AudioOutputType.SPEAKERS -> Res.string.audio_output_speaker
+            AudioOutputType.WIRED -> Res.string.audio_output_headset
+            AudioOutputType.BLUETOOTH -> Res.string.audio_output_bluetooth
+        }
+    )
+
+private fun audioOutputIcon(output: AudioOutput): ImageVector = when (output.type) {
+    AudioOutputType.INTERNAL -> Icons.Default.PhoneInTalk
+    AudioOutputType.SPEAKERS -> Icons.Default.VolumeUp
+    AudioOutputType.WIRED -> Icons.Default.Headset
+    AudioOutputType.BLUETOOTH -> Icons.Default.BluetoothAudio
+}
+
+/** jami-client-android's `bottom_sheet_audio_output`: a title, one row per route, a tick on the current one. */
+@Composable
+private fun AudioOutputPicker(
+    outputs: List<AudioOutput>,
+    current: AudioOutput,
+    onSelect: (AudioOutput) -> Unit,
+) {
+    Column(Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(Res.string.audio_output_dialog_title),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp).semantics { heading() },
+        )
+        outputs.forEach { output ->
+            val selected = AudioOutputs.isSame(current, output)
+            ListItem(
+                headlineContent = { Text(audioOutputLabel(output)) },
+                leadingContent = { Icon(audioOutputIcon(output), contentDescription = null) },
+                trailingContent = if (selected) {
+                    { Icon(Icons.Default.Done, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+                } else null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(output) }),
+            )
+        }
+    }
+}
+
 private class CallAction(
     val icon: ImageVector,
     val label: String,

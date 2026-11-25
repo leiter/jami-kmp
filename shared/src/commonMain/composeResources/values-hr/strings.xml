@@ -467,4 +467,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami čita vaše kontakte kako bi prikazao imena i fotografije koje ste spremili za svoje Jami kontakte. Ništa se ne prenosi.</string>
     <string name="permission_dialog_camera_message">Za videorazgovore potrebno je dopuštenje za kameru. Dopuštenje za kameru je isključeno. Uključite ga u postavkama uređaja da biste koristili ovu značajku.</string>
     <string name="permission_dialog_read_contacts_message">Jami zahtijeva dopuštenje „Čitanje kontakata”. Uključite ga u postavkama uređaja da biste koristili ovu značajku.</string>
+    <string name="audio_output_dialog_title">Audioizlaz</string>
+    <string name="audio_output_content_description">Audioizlaz: %1$s</string>
+    <string name="audio_output_speaker">Zvučnik</string>
+    <string name="audio_output_earpiece">Slušalica</string>
+    <string name="audio_output_headset">Slušalice</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

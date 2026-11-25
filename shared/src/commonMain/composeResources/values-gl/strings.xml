@@ -537,4 +537,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">O permiso de localización está desactivado. Actívao na configuración do dispositivo para usar esta función.</string>
     <string name="permission_dialog_contacts_title">Permiso de contactos</string>
     <string name="permission_dialog_contacts_rationale">Jami le os teus contactos para amosar os nomes e as fotos que gardaches para os teus contactos de Jami. Non se envía nada.</string>
+    <string name="audio_output_dialog_title">Saída de audio</string>
+    <string name="audio_output_content_description">Saída de audio: %1$s</string>
+    <string name="audio_output_speaker">Altofalante</string>
+    <string name="audio_output_earpiece">Auricular</string>
+    <string name="audio_output_headset">Auriculares</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

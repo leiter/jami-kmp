@@ -525,4 +525,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_weeks_short">%1$d н.</string>
     <string name="permission_dialog_open_settings">Открыть настройки</string>
     <string name="permission_dialog_later">Позже</string>
+    <string name="audio_output_dialog_title">Аудиовыход</string>
+    <string name="audio_output_content_description">Аудиовыход: %1$s</string>
+    <string name="audio_output_speaker">Динамик</string>
+    <string name="audio_output_earpiece">Разговорный динамик</string>
+    <string name="audio_output_headset">Гарнитура</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

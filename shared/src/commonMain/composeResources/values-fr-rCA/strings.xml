@@ -536,4 +536,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_weeks_short">%1$dsem</string>
     <string name="permission_dialog_open_settings">Ouvrir les paramètres</string>
     <string name="permission_dialog_later">Plus tard</string>
+    <string name="audio_output_dialog_title">Sortie audio</string>
+    <string name="audio_output_content_description">Sortie audio : %1$s</string>
+    <string name="audio_output_speaker">Haut-parleur</string>
+    <string name="audio_output_earpiece">Écouteur</string>
+    <string name="audio_output_headset">Casque d'écoute</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

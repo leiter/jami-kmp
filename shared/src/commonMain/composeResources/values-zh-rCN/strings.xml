@@ -536,4 +536,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_weeks_short">%1$d周</string>
     <string name="permission_dialog_open_settings">打开设置</string>
     <string name="permission_dialog_later">稍后</string>
+    <string name="audio_output_dialog_title">音频输出</string>
+    <string name="audio_output_content_description">音频输出：%1$s</string>
+    <string name="audio_output_speaker">演讲者</string>
+    <string name="audio_output_earpiece">听筒</string>
+    <string name="audio_output_headset">耳机</string>
+    <string name="audio_output_bluetooth">蓝牙</string>
 </resources>

@@ -647,4 +647,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">位置权限已关闭。要使用此功能，请在设备设置中开启。</string>
     <string name="permission_dialog_contacts_title">通讯录权限</string>
     <string name="permission_dialog_contacts_rationale">Jami 读取你的通讯录，以显示你为 Jami 联系人保存的名称和照片。不会上传任何内容。</string>
+    <string name="audio_output_dialog_title">音频输出</string>
+    <string name="audio_output_content_description">音频输出：%1$s</string>
+    <string name="audio_output_speaker">演讲者</string>
+    <string name="audio_output_earpiece">耳机</string>
+    <string name="audio_output_headset">耳机</string>
+    <string name="audio_output_bluetooth">蓝牙</string>
 </resources>

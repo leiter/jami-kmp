@@ -464,4 +464,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jamik zure kontaktuak irakurtzen ditu zure Jami kontaktuentzat gordetako izenak eta argazkiak erakusteko. Ez da ezer igotzen.</string>
     <string name="permission_dialog_camera_message">Bideo-elkarrizketek kameraren baimena behar dute. Kameraren baimena desaktibatuta dago. Gaitu gailuaren ezarpenetan eginbide hau erabiltzeko.</string>
     <string name="permission_dialog_read_contacts_message">Jamik «Irakurri kontaktuak» baimena behar du. Gaitu gailuaren ezarpenetan eginbide hau erabiltzeko.</string>
+    <string name="audio_output_dialog_title">Audio-irteera</string>
+    <string name="audio_output_content_description">Audio-irteera: %1$s</string>
+    <string name="audio_output_speaker">Bozgorailua</string>
+    <string name="audio_output_earpiece">Entzungailua</string>
+    <string name="audio_output_headset">Aurikularrak</string>
+    <string name="audio_output_bluetooth">Bluetootha</string>
 </resources>

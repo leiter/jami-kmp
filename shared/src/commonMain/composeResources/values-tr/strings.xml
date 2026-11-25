@@ -545,4 +545,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Konum izni devre dışı. Bu özelliği kullanmak için cihaz ayarlarından etkinleştirin.</string>
     <string name="permission_dialog_contacts_title">Kişiler izni</string>
     <string name="permission_dialog_contacts_rationale">Jami, Jami kişileriniz için kaydettiğiniz adları ve fotoğrafları göstermek için kişilerinizi okur. Hiçbir şey yüklenmez.</string>
+    <string name="audio_output_dialog_title">Ses çıkışı</string>
+    <string name="audio_output_content_description">Ses çıkışı: %1$s</string>
+    <string name="audio_output_speaker">Hoparlör</string>
+    <string name="audio_output_earpiece">Ahize</string>
+    <string name="audio_output_headset">Kulaklık</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

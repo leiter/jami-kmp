@@ -471,4 +471,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami llee los tos contactos p'amosar los nomes y semeyes que guardesti pa los tos contactos de Jami. Nun se xube nada.</string>
     <string name="permission_dialog_camera_message">Les conversaciones de videu riquen el permisu de la cámara. El permisu de la cámara ta desactiváu. Actívalu na configuración del preséu pa usar esta función.</string>
     <string name="permission_dialog_read_contacts_message">Jami rique'l permisu «Lleer contactos». Actívalu na configuración del preséu pa usar esta función.</string>
+    <string name="audio_output_dialog_title">Salida d'audiu</string>
+    <string name="audio_output_content_description">Salida d'audiu: %1$s</string>
+    <string name="audio_output_speaker">Altavoz</string>
+    <string name="audio_output_earpiece">Auricular</string>
+    <string name="audio_output_headset">Cascos</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

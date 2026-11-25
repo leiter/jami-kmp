@@ -636,4 +636,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Доступ к местоположению отключён. Включите его в настройках устройства, чтобы использовать эту функцию.</string>
     <string name="permission_dialog_contacts_title">Доступ к контактам</string>
     <string name="permission_dialog_contacts_rationale">Jami читает ваши контакты, чтобы показывать имена и фото, сохранённые вами для контактов Jami. Ничего не загружается.</string>
+    <string name="audio_output_dialog_title">Аудиовыход</string>
+    <string name="audio_output_content_description">Аудиовыход: %1$s</string>
+    <string name="audio_output_speaker">Динамик</string>
+    <string name="audio_output_earpiece">Разговорный динамик</string>
+    <string name="audio_output_headset">Гарнитура</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

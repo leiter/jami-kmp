@@ -380,4 +380,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami membaca kenalan anda untuk memaparkan nama dan foto yang anda simpan untuk kenalan Jami anda. Tiada apa-apa dimuat naik.</string>
     <string name="permission_dialog_camera_message">Perbualan video memerlukan kebenaran kamera. Kebenaran kamera dimatikan. Hidupkannya dalam tetapan peranti untuk menggunakan ciri ini.</string>
     <string name="permission_dialog_read_contacts_message">Jami memerlukan kebenaran “Baca kenalan”. Hidupkannya dalam tetapan peranti untuk menggunakan ciri ini.</string>
+    <string name="audio_output_dialog_title">Output audio</string>
+    <string name="audio_output_content_description">Output audio: %1$s</string>
+    <string name="audio_output_speaker">Pembesar suara</string>
+    <string name="audio_output_earpiece">Fon telinga</string>
+    <string name="audio_output_headset">Set kepala</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

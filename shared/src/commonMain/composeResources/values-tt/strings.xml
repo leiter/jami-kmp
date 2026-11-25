@@ -235,4 +235,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_camera_title">Камера рөхсәте</string>
     <string name="permission_dialog_camera_message">Видеоәңгәмәләр өчен камера рөхсәте кирәк. Камера рөхсәте сүнгән. Бу функцияне куллану өчен аны җайланма көйләүләрендә кабызыгыз.</string>
     <string name="permission_dialog_read_contacts_message">Jami-га “Контактларны уку” рөхсәте кирәк. Бу функцияне куллану өчен аны җайланма көйләүләрендә кабызыгыз.</string>
+    <string name="audio_output_dialog_title">Тавыш чыгышы</string>
+    <string name="audio_output_content_description">Тавыш чыгышы: %1$s</string>
+    <string name="audio_output_speaker">Динамик</string>
+    <string name="audio_output_earpiece">Колак динамигы</string>
+    <string name="audio_output_headset">Гарнитура</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

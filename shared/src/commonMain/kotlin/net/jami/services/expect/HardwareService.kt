@@ -49,6 +49,12 @@ expect class HardwareService {
     fun closeAudioState()
     fun isSpeakerphoneOn(): Boolean
     fun toggleSpeakerphone(conf: Conference, enabled: Boolean)
+
+    /**
+     * Routes call audio to [output], one of [AudioState.availableOutputs]. The new route is
+     * published on [audioState] once the platform has applied it.
+     */
+    fun selectAudioOutput(conf: Conference, output: AudioOutput)
     fun abandonAudioFocus()
     fun hasMicrophone(): Boolean
     fun shouldPlaySpeaker(): Boolean

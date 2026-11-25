@@ -919,4 +919,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Syncing conversations in the background</string>
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d bytes</string>
 
+    <string name="audio_output_dialog_title">Audio output</string>
+    <string name="audio_output_content_description">Audio output: %1$s</string>
+    <string name="audio_output_speaker">Speaker</string>
+    <string name="audio_output_earpiece">Earpiece</string>
+    <string name="audio_output_headset">Headset</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

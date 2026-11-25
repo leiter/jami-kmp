@@ -474,4 +474,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">இருப்பிட அனுமதி முடக்கப்பட்டுள்ளது. இந்த அம்சத்தைப் பயன்படுத்த சாதன அமைப்புகளில் அதை இயக்கவும்.</string>
     <string name="permission_dialog_contacts_title">தொடர்புகள் அனுமதி</string>
     <string name="permission_dialog_contacts_rationale">உங்கள் Jami தொடர்புகளுக்காகச் சேமித்த பெயர்களையும் படங்களையும் காட்ட Jami உங்கள் தொடர்புகளைப் படிக்கிறது. எதுவும் பதிவேற்றப்படாது.</string>
+    <string name="audio_output_dialog_title">ஆடியோ வெளியீடு</string>
+    <string name="audio_output_content_description">ஆடியோ வெளியீடு: %1$s</string>
+    <string name="audio_output_speaker">ஸ்பீக்கர்</string>
+    <string name="audio_output_earpiece">இயர்பீஸ்</string>
+    <string name="audio_output_headset">ஹெட்செட்</string>
+    <string name="audio_output_bluetooth">புளூடூத்</string>
 </resources>

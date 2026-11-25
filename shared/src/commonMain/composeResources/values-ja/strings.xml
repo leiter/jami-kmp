@@ -517,4 +517,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami は、Jami の連絡先に保存した名前と写真を表示するために連絡先を読み取ります。何もアップロードされません。</string>
     <string name="permission_dialog_camera_message">ビデオ会話にはカメラの許可が必要です。カメラの許可がオフになっています。この機能を使うには、デバイスの設定でオンにしてください。</string>
     <string name="permission_dialog_read_contacts_message">Jami には「連絡先の読み取り」の許可が必要です。この機能を使うには、デバイスの設定でオンにしてください。</string>
+    <string name="audio_output_dialog_title">音声出力</string>
+    <string name="audio_output_content_description">音声出力: %1$s</string>
+    <string name="audio_output_speaker">スピーカー</string>
+    <string name="audio_output_earpiece">受話口</string>
+    <string name="audio_output_headset">ヘッドセット</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

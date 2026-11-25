@@ -251,4 +251,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_camera_title">Ikike igwefoto</string>
     <string name="permission_dialog_camera_message">Mkparịta ụka vidiyo chọrọ ikike igwefoto. Agbanyụrụ ikike igwefoto. Gbanye ya na ntọala ngwaọrụ iji jiri atụmatụ a.</string>
     <string name="permission_dialog_read_contacts_message">Jami chọrọ ikike “Gụọ kọntaktị”. Gbanye ya na ntọala ngwaọrụ iji jiri atụmatụ a.</string>
+    <string name="audio_output_dialog_title">Mmepụta ụda</string>
+    <string name="audio_output_content_description">Mmepụta ụda: %1$s</string>
+    <string name="audio_output_speaker">Igwe okwu</string>
+    <string name="audio_output_earpiece">Ihe ntị ekwentị</string>
+    <string name="audio_output_headset">Ihe ntị</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

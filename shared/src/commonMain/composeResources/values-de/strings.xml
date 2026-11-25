@@ -675,4 +675,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Die Standort-Berechtigung ist deaktiviert. Aktivieren Sie diese in den Geräteeinstellungen, um diese Funktion zu nutzen.</string>
     <string name="permission_dialog_contacts_title">Kontakte-Berechtigung</string>
     <string name="permission_dialog_contacts_rationale">Jami liest Ihre Kontakte, um die Namen und Fotos anzuzeigen, die Sie für Ihre Jami-Kontakte gespeichert haben. Es wird nichts hochgeladen.</string>
+    <string name="audio_output_dialog_title">Audioausgabe</string>
+    <string name="audio_output_content_description">Audioausgabe: %1$s</string>
+    <string name="audio_output_speaker">Lautsprecher</string>
+    <string name="audio_output_earpiece">Ohrlautsprecher</string>
+    <string name="audio_output_headset">Headset</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

@@ -101,4 +101,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_camera_message">වීඩියෝ සංවාද සඳහා කැමරා අවසරය අවශ්‍යයි. කැමරා අවසරය අක්‍රියයි. මෙම විශේෂාංගය භාවිත කිරීමට උපාංග සැකසීම් තුළ එය සක්‍රිය කරන්න.</string>
     <string name="permission_dialog_read_contacts_message">Jami ට “සම්බන්ධතා කියවන්න” අවසරය අවශ්‍යයි. මෙම විශේෂාංගය භාවිත කිරීමට උපාංග සැකසීම් තුළ එය සක්‍රිය කරන්න.</string>
     <string name="permission_dialog_later">පසුව</string>
+    <string name="audio_output_dialog_title">ශ්‍රව්‍ය ප්‍රතිදානය</string>
+    <string name="audio_output_content_description">ශ්‍රව්‍ය ප්‍රතිදානය: %1$s</string>
+    <string name="audio_output_speaker">ස්පීකරය</string>
+    <string name="audio_output_earpiece">කන් ස්පීකරය</string>
+    <string name="audio_output_headset">හෙඩ්සෙට්</string>
+    <string name="audio_output_bluetooth">බ්ලූටූත්</string>
 </resources>

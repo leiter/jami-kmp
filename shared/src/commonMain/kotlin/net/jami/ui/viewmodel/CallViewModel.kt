@@ -46,6 +46,9 @@ import net.jami.repository.SettingsRepository
 import net.jami.services.CallService
 import net.jami.services.ContactService
 import net.jami.services.DeviceRuntimeService
+import net.jami.services.AudioOutputs
+import net.jami.services.expect.AudioOutput
+import net.jami.services.expect.AudioOutputType
 import net.jami.services.expect.HardwareService
 import net.jami.services.expect.VideoEvent
 import net.jami.utils.Log
@@ -153,6 +156,12 @@ data class CallState(
     val isVideoMuted: Boolean = false,
     val isRecording: Boolean = false,
     val isSpeakerOn: Boolean = false,
+    /** The route the call's audio is on. */
+    val audioOutput: AudioOutput = AudioOutput(AudioOutputType.INTERNAL),
+    /** Routes the user can pick; the audio button is disabled when there is only one. */
+    val audioOutputs: List<AudioOutput> = emptyList(),
+    /** The route picker, shown when a headset makes a plain speaker toggle ambiguous. */
+    val isAudioOutputPickerVisible: Boolean = false,
     val hasMicPermission: Boolean = true,
     val hasCamPermission: Boolean = true,
     val isIncoming: Boolean = false,
@@ -579,10 +588,61 @@ class CallViewModel(
             Log.w(TAG, "toggleSpeaker: no conference for call $currentCallId — ignoring the tap")
             return
         }
+        // The reference's speakerClicked: earpiece ⇄ speaker while those are the only routes,
+        // a picker as soon as a headset or Bluetooth device is attached.
+        val audio = hardwareService.audioState.value
+        val outputs = AudioOutputs.pickable(audio, _state.value.hasVideo)
+        if (AudioOutputs.hasExternalDevice(outputs)) {
+            Log.d(TAG, "toggleSpeaker: ${outputs.size} routes — showing the picker")
+            _state.value = _state.value.copy(audioOutputs = outputs, isAudioOutputPickerVisible = true)
+            return
+        }
+        val next = if (outputs.size > 1) AudioOutputs.nextSimple(audio.output, outputs) else null
+        if (next != null) {
+            selectAudioOutput(next)
+            return
+        }
+        // A platform that reports no route list (desktop): the plain flag, as before.
         val newState = !hardwareService.isSpeakerphoneOn()
         Log.d(TAG, "toggleSpeaker: $newState (conf=${conf.id})")
         hardwareService.toggleSpeakerphone(conf, newState)
         _state.value = _state.value.copy(isSpeakerOn = newState)
+    }
+
+    fun selectAudioOutput(output: AudioOutput) {
+        val conf = currentConference
+        _state.value = _state.value.copy(isAudioOutputPickerVisible = false)
+        if (conf == null) {
+            Log.w(TAG, "selectAudioOutput: no conference for call $currentCallId — ignoring")
+            return
+        }
+        Log.d(TAG, "selectAudioOutput: ${output.type} (conf=${conf.id})")
+        hardwareService.selectAudioOutput(conf, output)
+        _state.value = _state.value.copy(isSpeakerOn = output.type == AudioOutputType.SPEAKERS, audioOutput = output)
+    }
+
+    fun dismissAudioOutputPicker() {
+        _state.value = _state.value.copy(isAudioOutputPickerVisible = false)
+    }
+
+    private var audioStateJob: Job? = null
+
+    /** Keeps the audio button on the real route: a headset plugged in mid-call takes the audio away from the speaker. */
+    private fun subscribeToAudioState() {
+        audioStateJob?.cancel()
+        audioStateJob = scope.launch {
+            hardwareService.audioState.collect { audio ->
+                val outputs = AudioOutputs.pickable(audio, _state.value.hasVideo)
+                _state.value = _state.value.copy(
+                    audioOutput = audio.output,
+                    audioOutputs = outputs,
+                    isSpeakerOn = audio.output.type == AudioOutputType.SPEAKERS,
+                    // A headset unplugged under an open picker leaves nothing to choose between.
+                    isAudioOutputPickerVisible = _state.value.isAudioOutputPickerVisible &&
+                        AudioOutputs.hasExternalDevice(outputs),
+                )
+            }
+        }
     }
 
     fun toggleHold() {
@@ -959,6 +1019,7 @@ class CallViewModel(
         }
         // Subscribe to video events
         subscribeToVideoEvents()
+        subscribeToAudioState()
         subscribeToInCallMessages()
     }
 
@@ -1004,6 +1065,7 @@ class CallViewModel(
             }
         }
         subscribeToVideoEvents()
+        subscribeToAudioState()
         subscribeToInCallMessages()
     }
 
@@ -1344,6 +1406,7 @@ class CallViewModel(
         confUpdatesJob?.cancel()
         callUpdatesJob?.cancel()
         videoEventsJob?.cancel()
+        audioStateJob?.cancel()
         videoLossJob?.cancel()
         inCallMessagesJob?.cancel()
         callStatsJob?.cancel()

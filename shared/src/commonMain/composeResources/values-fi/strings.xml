@@ -647,4 +647,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Sijainnin käyttöoikeus on poistettu käytöstä. Ota se käyttöön laitteen asetuksissa käyttääksesi tätä toimintoa.</string>
     <string name="permission_dialog_contacts_title">Yhteystietojen käyttöoikeus</string>
     <string name="permission_dialog_contacts_rationale">Jami lukee yhteystietosi näyttääkseen nimet ja kuvat, jotka olet tallentanut Jami-yhteystiedoillesi. Mitään ei lähetetä.</string>
+    <string name="audio_output_dialog_title">Äänilähtö</string>
+    <string name="audio_output_content_description">Äänilähtö: %1$s</string>
+    <string name="audio_output_speaker">Kaiutin</string>
+    <string name="audio_output_earpiece">Kuuloke</string>
+    <string name="audio_output_headset">Kuulokkeet</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

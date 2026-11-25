@@ -647,4 +647,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">A helymeghatározási engedély ki van kapcsolva. Kapcsold be az eszköz beállításaiban a funkció használatához.</string>
     <string name="permission_dialog_contacts_title">Névjegyek engedélye</string>
     <string name="permission_dialog_contacts_rationale">A Jami beolvassa a névjegyeidet, hogy megjelenítse a Jami-névjegyeidhez mentett neveket és fényképeket. Semmi sem kerül feltöltésre.</string>
+    <string name="audio_output_dialog_title">Hangkimenet</string>
+    <string name="audio_output_content_description">Hangkimenet: %1$s</string>
+    <string name="audio_output_speaker">Hangszóró</string>
+    <string name="audio_output_earpiece">Fülhallgató</string>
+    <string name="audio_output_headset">Headset</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

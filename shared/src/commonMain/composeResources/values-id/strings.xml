@@ -465,4 +465,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami membaca kontak Anda untuk menampilkan nama dan foto yang Anda simpan untuk kontak Jami. Tidak ada yang diunggah.</string>
     <string name="permission_dialog_camera_message">Percakapan video memerlukan izin kamera. Izin kamera dinonaktifkan. Aktifkan di pengaturan perangkat untuk menggunakan fitur ini.</string>
     <string name="permission_dialog_read_contacts_message">Jami memerlukan izin “Baca kontak”. Aktifkan di pengaturan perangkat untuk menggunakan fitur ini.</string>
+    <string name="audio_output_dialog_title">Output audio</string>
+    <string name="audio_output_content_description">Output audio: %1$s</string>
+    <string name="audio_output_speaker">Pengeras suara</string>
+    <string name="audio_output_earpiece">Speaker telepon</string>
+    <string name="audio_output_headset">Headset</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

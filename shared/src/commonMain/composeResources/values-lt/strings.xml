@@ -502,4 +502,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami skaito jūsų kontaktus, kad parodytų vardus ir nuotraukas, kuriuos išsaugojote savo Jami kontaktams. Niekas neįkeliama.</string>
     <string name="permission_dialog_camera_message">Vaizdo pokalbiams reikia kameros leidimo. Kameros leidimas išjungtas. Įjunkite jį įrenginio nustatymuose, kad galėtumėte naudoti šią funkciją.</string>
     <string name="permission_dialog_read_contacts_message">Jami reikia leidimo „Skaityti kontaktus“. Įjunkite jį įrenginio nustatymuose, kad galėtumėte naudoti šią funkciją.</string>
+    <string name="audio_output_dialog_title">Garso išvestis</string>
+    <string name="audio_output_content_description">Garso išvestis: %1$s</string>
+    <string name="audio_output_speaker">Garsiakalbis</string>
+    <string name="audio_output_earpiece">Ausinė</string>
+    <string name="audio_output_headset">Ausinės</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

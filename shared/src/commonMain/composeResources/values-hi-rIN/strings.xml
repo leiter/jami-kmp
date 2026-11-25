@@ -396,4 +396,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_weeks_short">%1$d सप्ताह</string>
     <string name="permission_dialog_open_settings">खुली सेटिंग्स</string>
     <string name="permission_dialog_later">बाद में</string>
+    <string name="audio_output_dialog_title">ऑडियो आउटपुट</string>
+    <string name="audio_output_content_description">ऑडियो आउटपुट: %1$s</string>
+    <string name="audio_output_speaker">स्पीकर</string>
+    <string name="audio_output_earpiece">ईयरपीस</string>
+    <string name="audio_output_headset">हेडसेट</string>
+    <string name="audio_output_bluetooth">ब्लूटूथ</string>
 </resources>

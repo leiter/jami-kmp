@@ -634,4 +634,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Доступ до місцезнаходження вимкнено. Увімкніть його в налаштуваннях пристрою, щоб скористатися цією функцією.</string>
     <string name="permission_dialog_contacts_title">Доступ до контактів</string>
     <string name="permission_dialog_contacts_rationale">Jami читає ваші контакти, щоб показувати імена та фото, збережені вами для контактів Jami. Нічого не завантажується.</string>
+    <string name="audio_output_dialog_title">Аудіовихід</string>
+    <string name="audio_output_content_description">Аудіовихід: %1$s</string>
+    <string name="audio_output_speaker">Динамік</string>
+    <string name="audio_output_earpiece">Розмовний динамік</string>
+    <string name="audio_output_headset">Гарнітура</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

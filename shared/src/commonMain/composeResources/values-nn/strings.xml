@@ -549,4 +549,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Posisjonsløyvet er slått av. Slå det på i innstillingane for eininga for å bruke denne funksjonen.</string>
     <string name="permission_dialog_contacts_title">Kontaktløyve</string>
     <string name="permission_dialog_contacts_rationale">Jami les kontaktane dine for å vise namna og bileta du har lagra for Jami-kontaktane dine. Ingenting vert lasta opp.</string>
+    <string name="audio_output_dialog_title">Lydutgang</string>
+    <string name="audio_output_content_description">Lydutgang: %1$s</string>
+    <string name="audio_output_speaker">Høgtalar</string>
+    <string name="audio_output_earpiece">Øyrehøgtalar</string>
+    <string name="audio_output_headset">Hovudsett</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

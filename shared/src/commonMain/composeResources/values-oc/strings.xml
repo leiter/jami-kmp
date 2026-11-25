@@ -453,4 +453,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami legís vòstres contactes per afichar los noms e las fòtos qu'avètz enregistrats per vòstres contactes Jami. Res es pas mandat.</string>
     <string name="permission_dialog_camera_message">Las conversacions vidèo necessitan l'autorizacion de la camèra. L'autorizacion de la camèra es desactivada. Activatz-la dins los paramètres de l'aparelh per utilizar aquesta foncionalitat.</string>
     <string name="permission_dialog_read_contacts_message">Jami requerís l'autorizacion « Legir los contactes ». Activatz-la dins los paramètres de l'aparelh per utilizar aquesta foncionalitat.</string>
+    <string name="audio_output_dialog_title">Sortida àudio</string>
+    <string name="audio_output_content_description">Sortida àudio : %1$s</string>
+    <string name="audio_output_speaker">Nautparlaire</string>
+    <string name="audio_output_earpiece">Escotador</string>
+    <string name="audio_output_headset">Casc</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

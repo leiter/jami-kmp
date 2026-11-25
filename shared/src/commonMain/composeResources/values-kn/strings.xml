@@ -463,4 +463,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">ನಿಮ್ಮ Jami ಸಂಪರ್ಕಗಳಿಗಾಗಿ ಉಳಿಸಿದ ಹೆಸರುಗಳು ಮತ್ತು ಫೋಟೋಗಳನ್ನು ತೋರಿಸಲು Jami ನಿಮ್ಮ ಸಂಪರ್ಕಗಳನ್ನು ಓದುತ್ತದೆ. ಏನನ್ನೂ ಅಪ್‌ಲೋಡ್ ಮಾಡುವುದಿಲ್ಲ.</string>
     <string name="permission_dialog_camera_message">ವೀಡಿಯೊ ಸಂಭಾಷಣೆಗಳಿಗೆ ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ಅಗತ್ಯ. ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ಆಫ್ ಆಗಿದೆ. ಈ ವೈಶಿಷ್ಟ್ಯ ಬಳಸಲು ಸಾಧನದ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಅದನ್ನು ಆನ್ ಮಾಡಿ.</string>
     <string name="permission_dialog_read_contacts_message">Jami ಗೆ “ಸಂಪರ್ಕಗಳನ್ನು ಓದಿ” ಅನುಮತಿ ಅಗತ್ಯ. ಈ ವೈಶಿಷ್ಟ್ಯ ಬಳಸಲು ಸಾಧನದ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಅದನ್ನು ಆನ್ ಮಾಡಿ.</string>
+    <string name="audio_output_dialog_title">ಆಡಿಯೊ ಔಟ್‌ಪುಟ್</string>
+    <string name="audio_output_content_description">ಆಡಿಯೊ ಔಟ್‌ಪುಟ್: %1$s</string>
+    <string name="audio_output_speaker">ಸ್ಪೀಕರ್</string>
+    <string name="audio_output_earpiece">ಇಯರ್‌ಪೀಸ್</string>
+    <string name="audio_output_headset">ಹೆಡ್‌ಸೆಟ್</string>
+    <string name="audio_output_bluetooth">ಬ್ಲೂಟೂತ್</string>
 </resources>

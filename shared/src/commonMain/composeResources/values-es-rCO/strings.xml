@@ -536,4 +536,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_weeks_short">%1$d sems.</string>
     <string name="permission_dialog_open_settings">Abrir configuración</string>
     <string name="permission_dialog_later">Más tarde</string>
+    <string name="audio_output_dialog_title">Salida de audio</string>
+    <string name="audio_output_content_description">Salida de audio: %1$s</string>
+    <string name="audio_output_speaker">altavoz</string>
+    <string name="audio_output_earpiece">Auricular</string>
+    <string name="audio_output_headset">Cascos</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

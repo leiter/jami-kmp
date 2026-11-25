@@ -423,4 +423,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_read_contacts_message">Jami vyžaduje povolenie „Čítať kontakty“. Povoľte ho v nastaveniach zariadenia, aby ste mohli použiť túto funkciu.</string>
     <string name="permission_dialog_open_settings">Otvoriť nastavenia</string>
     <string name="permission_dialog_later">Neskôr</string>
+    <string name="audio_output_dialog_title">Zvukový výstup</string>
+    <string name="audio_output_content_description">Zvukový výstup: %1$s</string>
+    <string name="audio_output_speaker">Reproduktor</string>
+    <string name="audio_output_earpiece">Slúchadlo</string>
+    <string name="audio_output_headset">Náhlavná súprava</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

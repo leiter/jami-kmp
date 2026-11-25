@@ -512,4 +512,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami आपके संपर्क पढ़ता है ताकि आपके Jami संपर्कों के लिए सहेजे गए नाम और फ़ोटो दिखा सके। कुछ भी अपलोड नहीं होता।</string>
     <string name="permission_dialog_camera_message">वीडियो बातचीत के लिए कैमरे की अनुमति ज़रूरी है। कैमरे की अनुमति बंद है। इस सुविधा का उपयोग करने के लिए इसे डिवाइस सेटिंग में चालू करें।</string>
     <string name="permission_dialog_read_contacts_message">Jami को “संपर्क पढ़ें” अनुमति चाहिए। इस सुविधा का उपयोग करने के लिए इसे डिवाइस सेटिंग में चालू करें।</string>
+    <string name="audio_output_dialog_title">ऑडियो आउटपुट</string>
+    <string name="audio_output_content_description">ऑडियो आउटपुट: %1$s</string>
+    <string name="audio_output_speaker">स्पीकर</string>
+    <string name="audio_output_earpiece">ईयरपीस</string>
+    <string name="audio_output_headset">हेडसेट</string>
+    <string name="audio_output_bluetooth">ब्लूटूथ</string>
 </resources>

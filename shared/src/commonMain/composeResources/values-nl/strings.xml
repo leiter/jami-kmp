@@ -543,4 +543,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">De locatietoestemming is uitgeschakeld. Schakel ze in via de apparaatinstellingen om deze functie te gebruiken.</string>
     <string name="permission_dialog_contacts_title">Contactentoestemming</string>
     <string name="permission_dialog_contacts_rationale">Jami leest je contacten om de namen en foto's te tonen die je voor je Jami-contacten hebt opgeslagen. Er wordt niets geüpload.</string>
+    <string name="audio_output_dialog_title">Audio-uitvoer</string>
+    <string name="audio_output_content_description">Audio-uitvoer: %1$s</string>
+    <string name="audio_output_speaker">Luidspreker</string>
+    <string name="audio_output_earpiece">Oortelefoon</string>
+    <string name="audio_output_headset">Headset</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

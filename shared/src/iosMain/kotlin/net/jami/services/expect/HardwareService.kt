@@ -33,7 +33,9 @@ import platform.AVFAudio.AVAudioSessionCategoryPlayAndRecord
 import platform.AVFAudio.AVAudioSessionPortBluetoothA2DP
 import platform.AVFAudio.AVAudioSessionPortBluetoothHFP
 import platform.AVFAudio.AVAudioSessionPortBluetoothLE
+import platform.AVFAudio.AVAudioSessionPortBuiltInMic
 import platform.AVFAudio.AVAudioSessionPortBuiltInSpeaker
+import platform.AVFAudio.AVAudioSessionPortUSBAudio
 import platform.AVFAudio.AVAudioSessionPortDescription
 import platform.AVFAudio.AVAudioSessionRouteDescription
 import platform.AVFAudio.availableInputs
@@ -60,6 +62,7 @@ import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSOperationQueue
 import platform.Foundation.NSUserDefaults
 import platform.UIKit.UIDevice
+import platform.UIKit.UIUserInterfaceIdiomPhone
 import platform.AVFoundation.AVSampleBufferDisplayLayer
 import platform.AVFoundation.flushAndRemoveImage
 import platform.UIKit.UIView
@@ -79,6 +82,7 @@ private val BLUETOOTH_PORTS = setOf(
 private val WIRED_PORTS = setOf(
     AVAudioSessionPortHeadphones,
     AVAudioSessionPortHeadsetMic,
+    AVAudioSessionPortUSBAudio,
 )
 
 @OptIn(ExperimentalForeignApi::class)
@@ -145,20 +149,10 @@ actual class HardwareService : KoinComponent {
 
     init {
         logging = userDefaults.boolForKey(LOGGING_ENABLED_KEY)
-        observeAudioRouteChanges()
-    }
-
-    private fun observeAudioRouteChanges() {
-        NSNotificationCenter.defaultCenter.addObserverForName(
-            name = AVAudioSessionRouteChangeNotification,
-            `object` = null,
-            queue = NSOperationQueue.mainQueue,
-        ) { _ -> updateAudioStateFromSession() }
-    }
-
-    private fun updateAudioStateFromSession() {
-        val current = if (speakerphoneOn) OUTPUT_SPEAKERS else OUTPUT_INTERNAL
-        _audioState.value = AudioState(current, listOf(OUTPUT_INTERNAL, OUTPUT_SPEAKERS))
+        // One route observer for the service's lifetime. There used to be a second one here
+        // that published a hardcoded [earpiece, speaker] pair on every route change; whichever
+        // of the two ran last won, so a connected headset could vanish from the call screen.
+        observeRouteChanges()
     }
 
     actual fun getAudioState(conf: Conference): Flow<AudioState> = audioState
@@ -247,6 +241,40 @@ actual class HardwareService : KoinComponent {
         )
     }
 
+    /**
+     * Routes the call to [output]. The speaker is an override on top of the route; every
+     * other choice clears the override and picks the route through its microphone, which is
+     * how iOS chooses between the receiver, a wired headset and a Bluetooth HFP headset — the
+     * output follows the preferred input.
+     */
+    actual fun selectAudioOutput(conf: Conference, output: AudioOutput) {
+        Log.d(tag, "selectAudioOutput: ${output.type} ${output.outputName.orEmpty()}")
+        val session = AVAudioSession.sharedInstance()
+        speakerphoneOn = output.type == AudioOutputType.SPEAKERS
+        try {
+            if (!speakerphoneOn) {
+                val inputs = session.availableInputs.orEmpty().mapNotNull { it as? AVAudioSessionPortDescription }
+                val input = when (output.type) {
+                    AudioOutputType.INTERNAL -> inputs.firstOrNull { it.portType == AVAudioSessionPortBuiltInMic }
+                    else -> inputs.firstOrNull { it.UID == output.outputId }
+                        ?: inputs.firstOrNull { it.portName == output.outputName }
+                }
+                session.setPreferredInput(input, error = null)
+            }
+            session.overrideOutputAudioPort(
+                if (speakerphoneOn) AVAudioSessionPortOverrideSpeaker else AVAudioSessionPortOverrideNone,
+                error = null,
+            )
+        } catch (e: Exception) {
+            Log.e(tag, "selectAudioOutput failed: ${e.message}")
+        }
+        publishAudioState()
+        // Only the earpiece is held to the ear.
+        updateProximityMonitoring(
+            isAudioOnly = output.type == AudioOutputType.INTERNAL && conf.participants.none { it.hasActiveVideo() },
+        )
+    }
+
     private fun updateAudioOutput() {
         try {
             val session = AVAudioSession.sharedInstance()
@@ -267,9 +295,17 @@ actual class HardwareService : KoinComponent {
      * wired headset never appeared in the UI even when it was carrying the call.
      */
     private fun publishAudioState() {
+        // Outside a call the session reports the playback route (the loudspeaker), which would
+        // show the next call as starting on speaker.
+        if (!audioSessionActive) {
+            _audioState.value = STATE_INTERNAL
+            return
+        }
         val session = AVAudioSession.sharedInstance()
         val current = currentOutput(session)
-        val available = mutableListOf(OUTPUT_INTERNAL, OUTPUT_SPEAKERS)
+        // An iPad has no receiver: offering "Earpiece" there would route to the speaker anyway.
+        val hasEarpiece = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone
+        val available = if (hasEarpiece) mutableListOf(OUTPUT_INTERNAL, OUTPUT_SPEAKERS) else mutableListOf(OUTPUT_SPEAKERS)
 
         // availableInputs lists attachable routes; the matching output is what we can offer.
         session.availableInputs?.forEach { entry ->
@@ -279,10 +315,13 @@ actual class HardwareService : KoinComponent {
                 in WIRED_PORTS -> AudioOutputType.WIRED
                 else -> null
             } ?: return@forEach
-            val output = AudioOutput(type, outputName = port.portName, outputId = port.UID)
-            if (available.none { it.type == type }) available.add(output)
+            // The output port of a headset can carry another UID than its microphone; the
+            // current route is the one to show so the picker can tick it.
+            val output = if (current.type == type && current.outputName == port.portName) current
+                else AudioOutput(type, outputName = port.portName, outputId = port.UID)
+            if (available.none { it.outputId != null && it.outputId == output.outputId }) available.add(output)
         }
-        if (available.none { it.type == current.type }) available.add(current)
+        if (available.none { net.jami.services.AudioOutputs.isSame(current, it) }) available.add(current)
 
         _audioState.value = AudioState(current, available)
     }
@@ -294,8 +333,10 @@ actual class HardwareService : KoinComponent {
         val type = when (port.portType) {
             in BLUETOOTH_PORTS -> AudioOutputType.BLUETOOTH
             in WIRED_PORTS -> AudioOutputType.WIRED
-            AVAudioSessionPortBuiltInSpeaker -> AudioOutputType.SPEAKERS
-            else -> AudioOutputType.INTERNAL
+            // The built-in ports keep our own labels ("Earpiece", "Speaker") rather than the
+            // system's port names.
+            AVAudioSessionPortBuiltInSpeaker -> return OUTPUT_SPEAKERS
+            else -> return OUTPUT_INTERNAL
         }
         return AudioOutput(type, outputName = port.portName, outputId = port.UID)
     }

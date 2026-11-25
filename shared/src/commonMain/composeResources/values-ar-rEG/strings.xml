@@ -363,4 +363,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_weeks_short">%1$dأسبوع</string>
     <string name="permission_dialog_open_settings">افتح الإعدادات</string>
     <string name="permission_dialog_later">لاحقاً</string>
+    <string name="audio_output_dialog_title">مخرج الصوت</string>
+    <string name="audio_output_content_description">مخرج الصوت: %1$s</string>
+    <string name="audio_output_speaker">مكبّر الصوت</string>
+    <string name="audio_output_earpiece">سماعة الأذن</string>
+    <string name="audio_output_headset">سماعة رأس</string>
+    <string name="audio_output_bluetooth">بلوتوث</string>
 </resources>

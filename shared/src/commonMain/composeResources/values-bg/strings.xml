@@ -464,4 +464,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami чете контактите ви, за да показва имената и снимките, които сте запазили за контактите си в Jami. Нищо не се качва.</string>
     <string name="permission_dialog_camera_message">Видеоразговорите изискват разрешение за камерата. Разрешението за камерата е изключено. Включете го в настройките на устройството, за да използвате тази функция.</string>
     <string name="permission_dialog_read_contacts_message">Jami изисква разрешението „Четене на контакти“. Включете го в настройките на устройството, за да използвате тази функция.</string>
+    <string name="audio_output_dialog_title">Аудио изход</string>
+    <string name="audio_output_content_description">Аудио изход: %1$s</string>
+    <string name="audio_output_speaker">Високоговорител</string>
+    <string name="audio_output_earpiece">Слушалка</string>
+    <string name="audio_output_headset">Слушалки</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

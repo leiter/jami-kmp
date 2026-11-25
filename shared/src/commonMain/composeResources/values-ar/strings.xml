@@ -479,4 +479,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">يقرأ Jami جهات اتصالك لعرض الأسماء والصور التي حفظتها لجهات اتصالك في Jami. لا يُرفع أي شيء.</string>
     <string name="permission_dialog_camera_message">تتطلب محادثات الفيديو إذن الكاميرا. إذن الكاميرا معطّل. فعّله في إعدادات الجهاز لاستخدام هذه الميزة.</string>
     <string name="permission_dialog_read_contacts_message">يتطلب Jami إذن «قراءة جهات الاتصال». فعّله في إعدادات الجهاز لاستخدام هذه الميزة.</string>
+    <string name="audio_output_dialog_title">مخرج الصوت</string>
+    <string name="audio_output_content_description">مخرج الصوت: %1$s</string>
+    <string name="audio_output_speaker">مكبّر الصوت</string>
+    <string name="audio_output_earpiece">سماعة الأذن</string>
+    <string name="audio_output_headset">سماعة رأس</string>
+    <string name="audio_output_bluetooth">بلوتوث</string>
 </resources>

@@ -572,4 +572,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Tasiregt n wadig tensa. Rmed-itt deg yiɣewwaren n yibenk akken ad tesqedceḍ tamahilt-a.</string>
     <string name="permission_dialog_contacts_title">Tasiregt n yinermisen</string>
     <string name="permission_dialog_contacts_rationale">Jami yeqqar inermisen-ik akken ad d-yesken ismawen d tewlafin i teskelseḍ i yinermisen-ik n Jami. Ulac ayen ara d-yettwasulin.</string>
+    <string name="audio_output_dialog_title">Tuffɣa n umeslaw</string>
+    <string name="audio_output_content_description">Tuffɣa n umeslaw: %1$s</string>
+    <string name="audio_output_speaker">Amesmaɣ</string>
+    <string name="audio_output_earpiece">Tamesmuɣt</string>
+    <string name="audio_output_headset">Kask</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

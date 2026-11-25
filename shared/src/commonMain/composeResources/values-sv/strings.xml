@@ -528,4 +528,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Platsbehörigheten är avstängd. Aktivera den i enhetens inställningar för att använda den här funktionen.</string>
     <string name="permission_dialog_contacts_title">Kontaktbehörighet</string>
     <string name="permission_dialog_contacts_rationale">Jami läser dina kontakter för att visa de namn och bilder du har sparat för dina Jami-kontakter. Inget laddas upp.</string>
+    <string name="audio_output_dialog_title">Ljudutgång</string>
+    <string name="audio_output_content_description">Ljudutgång: %1$s</string>
+    <string name="audio_output_speaker">Högtalare</string>
+    <string name="audio_output_earpiece">Lur</string>
+    <string name="audio_output_headset">Headset</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

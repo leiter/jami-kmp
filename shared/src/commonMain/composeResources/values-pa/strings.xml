@@ -398,4 +398,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_read_contacts_message">Jami ਨੂੰ “ਸੰਪਰਕ ਪੜ੍ਹੋ” ਇਜਾਜ਼ਤ ਦੀ ਲੋੜ ਹੈ। ਇਹ ਵਿਸ਼ੇਸ਼ਤਾ ਵਰਤਣ ਲਈ ਡੀਵਾਈਸ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਇਸਨੂੰ ਚਾਲੂ ਕਰੋ।</string>
     <string name="permission_dialog_later">ਬਾਅਦ ਵਿੱਚ</string>
     <string name="permission_dialog_open_settings">ਸੈਟਿੰਗਾਂ ਖੋਲ੍ਹੋ</string>
+    <string name="audio_output_dialog_title">ਆਡੀਓ ਆਊਟਪੁੱਟ</string>
+    <string name="audio_output_content_description">ਆਡੀਓ ਆਊਟਪੁੱਟ: %1$s</string>
+    <string name="audio_output_speaker">ਸਪੀਕਰ</string>
+    <string name="audio_output_earpiece">ਈਅਰਪੀਸ</string>
+    <string name="audio_output_headset">ਹੈੱਡਸੈੱਟ</string>
+    <string name="audio_output_bluetooth">ਬਲੂਟੁੱਥ</string>
 </resources>

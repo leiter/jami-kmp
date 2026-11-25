@@ -464,4 +464,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami อ่านรายชื่อติดต่อของคุณเพื่อแสดงชื่อและรูปภาพที่คุณบันทึกไว้สำหรับผู้ติดต่อ Jami ไม่มีการอัปโหลดสิ่งใด</string>
     <string name="permission_dialog_camera_message">การสนทนาทางวิดีโอต้องใช้สิทธิ์กล้อง สิทธิ์กล้องถูกปิดอยู่ โปรดเปิดในการตั้งค่าอุปกรณ์เพื่อใช้ฟีเจอร์นี้</string>
     <string name="permission_dialog_read_contacts_message">Jami ต้องใช้สิทธิ์ “อ่านรายชื่อติดต่อ” โปรดเปิดในการตั้งค่าอุปกรณ์เพื่อใช้ฟีเจอร์นี้</string>
+    <string name="audio_output_dialog_title">เอาต์พุตเสียง</string>
+    <string name="audio_output_content_description">เอาต์พุตเสียง: %1$s</string>
+    <string name="audio_output_speaker">ลำโพง</string>
+    <string name="audio_output_earpiece">ลำโพงหูฟัง</string>
+    <string name="audio_output_headset">ชุดหูฟัง</string>
+    <string name="audio_output_bluetooth">บลูทูธ</string>
 </resources>

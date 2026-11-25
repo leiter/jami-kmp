@@ -339,4 +339,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_camera_title">הרשאת מצלמה</string>
     <string name="permission_dialog_camera_message">שיחות וידאו דורשות הרשאת מצלמה. הרשאת המצלמה כבויה. יש להפעיל אותה בהגדרות המכשיר כדי להשתמש בתכונה זו.</string>
     <string name="permission_dialog_read_contacts_message">Jami דורש את ההרשאה „קריאת אנשי קשר”. יש להפעיל אותה בהגדרות המכשיר כדי להשתמש בתכונה זו.</string>
+    <string name="audio_output_dialog_title">פלט שמע</string>
+    <string name="audio_output_content_description">פלט שמע: %1$s</string>
+    <string name="audio_output_speaker">רמקול</string>
+    <string name="audio_output_earpiece">אפרכסת</string>
+    <string name="audio_output_headset">אוזניות</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

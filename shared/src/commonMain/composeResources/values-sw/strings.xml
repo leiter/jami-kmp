@@ -462,4 +462,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami husoma anwani zako ili kuonyesha majina na picha ulizohifadhi kwa anwani zako za Jami. Hakuna kinachopakiwa.</string>
     <string name="permission_dialog_camera_message">Mazungumzo ya video yanahitaji ruhusa ya kamera. Ruhusa ya kamera imezimwa. Iwashe katika mipangilio ya kifaa ili kutumia kipengele hiki.</string>
     <string name="permission_dialog_read_contacts_message">Jami inahitaji ruhusa ya “Soma anwani”. Iwashe katika mipangilio ya kifaa ili kutumia kipengele hiki.</string>
+    <string name="audio_output_dialog_title">Utoaji wa sauti</string>
+    <string name="audio_output_content_description">Utoaji wa sauti: %1$s</string>
+    <string name="audio_output_speaker">Spika</string>
+    <string name="audio_output_earpiece">Spika ya sikio</string>
+    <string name="audio_output_headset">Vifaa vya sauti</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

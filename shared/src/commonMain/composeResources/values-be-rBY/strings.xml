@@ -208,4 +208,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_weeks_short">%1$d тыдз</string>
     <string name="permission_dialog_open_settings">Адкрытыя налады</string>
     <string name="permission_dialog_later">Пазней</string>
+    <string name="audio_output_dialog_title">Вывад гуку</string>
+    <string name="audio_output_content_description">Вывад гуку: %1$s</string>
+    <string name="audio_output_speaker">Дынамік</string>
+    <string name="audio_output_earpiece">Слыхавы дынамік</string>
+    <string name="audio_output_headset">Гарнітура</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

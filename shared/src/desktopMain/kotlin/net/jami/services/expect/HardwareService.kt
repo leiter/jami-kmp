@@ -58,6 +58,11 @@ actual class HardwareService {
     actual fun isSpeakerphoneOn(): Boolean = speakerphoneOn
     actual fun toggleSpeakerphone(conf: Conference, enabled: Boolean) { speakerphoneOn = enabled; updateAudioOutput() }
 
+    /** A desktop has no earpiece to switch away from; only the speaker flag is tracked. */
+    actual fun selectAudioOutput(conf: Conference, output: AudioOutput) {
+        toggleSpeakerphone(conf, output.type == AudioOutputType.SPEAKERS)
+    }
+
     private fun updateAudioOutput() {
         _audioState.value = AudioState(if (speakerphoneOn) OUTPUT_SPEAKERS else OUTPUT_INTERNAL, getAvailableOutputs())
     }

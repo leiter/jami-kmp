@@ -454,4 +454,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami таны Jami харилцагчдад хадгалсан нэр, зургийг харуулахын тулд таны харилцагчдыг уншина. Юу ч байршуулахгүй.</string>
     <string name="permission_dialog_camera_message">Видео яриа хийхэд камерын зөвшөөрөл шаардлагатай. Камерын зөвшөөрөл идэвхгүй байна. Энэ функцийг ашиглахын тулд төхөөрөмжийн тохиргоонд идэвхжүүлнэ үү.</string>
     <string name="permission_dialog_read_contacts_message">Jami-д “Харилцагчдыг унших” зөвшөөрөл шаардлагатай. Энэ функцийг ашиглахын тулд төхөөрөмжийн тохиргоонд идэвхжүүлнэ үү.</string>
+    <string name="audio_output_dialog_title">Дууны гаралт</string>
+    <string name="audio_output_content_description">Дууны гаралт: %1$s</string>
+    <string name="audio_output_speaker">Чанга яригч</string>
+    <string name="audio_output_earpiece">Чихэвч</string>
+    <string name="audio_output_headset">Чихэвч микрофонтой</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

@@ -451,4 +451,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami legas viajn kontaktojn por montri la nomojn kaj fotojn, kiujn vi konservis por viaj Jami-kontaktoj. Nenio estas alŝutata.</string>
     <string name="permission_dialog_camera_message">Videokonversacioj bezonas la permeson pri fotilo. La permeso pri fotilo estas malŝaltita. Ŝaltu ĝin en la agordoj de la aparato por uzi ĉi tiun funkcion.</string>
     <string name="permission_dialog_read_contacts_message">Jami bezonas la permeson «Legi kontaktojn». Ŝaltu ĝin en la agordoj de la aparato por uzi ĉi tiun funkcion.</string>
+    <string name="audio_output_dialog_title">Sona eligo</string>
+    <string name="audio_output_content_description">Sona eligo: %1$s</string>
+    <string name="audio_output_speaker">Laŭtparolilo</string>
+    <string name="audio_output_earpiece">Aŭdilo</string>
+    <string name="audio_output_headset">Kapaŭdilo</string>
+    <string name="audio_output_bluetooth">Bludento</string>
 </resources>

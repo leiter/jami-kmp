@@ -325,4 +325,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_camera_title">Cead ceamara</string>
     <string name="permission_dialog_camera_message">Teastaíonn cead ceamara le haghaidh comhráite físe. Tá cead ceamara díchumasaithe. Cumasaigh é i socruithe an ghléis chun an ghné seo a úsáid.</string>
     <string name="permission_dialog_read_contacts_message">Teastaíonn an cead “Léigh teagmhálacha” ó Jami. Cumasaigh é i socruithe an ghléis chun an ghné seo a úsáid.</string>
+    <string name="audio_output_dialog_title">Aschur fuaime</string>
+    <string name="audio_output_content_description">Aschur fuaime: %1$s</string>
+    <string name="audio_output_speaker">Callaire</string>
+    <string name="audio_output_earpiece">Cluasán</string>
+    <string name="audio_output_headset">Cluasáin</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

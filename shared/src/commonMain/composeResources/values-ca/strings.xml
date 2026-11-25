@@ -552,4 +552,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">El permís d'ubicació està desactivat. Activeu-lo a la configuració del dispositiu per utilitzar aquesta funció.</string>
     <string name="permission_dialog_contacts_title">Permís dels contactes</string>
     <string name="permission_dialog_contacts_rationale">Jami llegeix els vostres contactes per mostrar els noms i les fotos que heu desat per als vostres contactes de Jami. No es puja res.</string>
+    <string name="audio_output_dialog_title">Sortida d'àudio</string>
+    <string name="audio_output_content_description">Sortida d'àudio: %1$s</string>
+    <string name="audio_output_speaker">Altaveu</string>
+    <string name="audio_output_earpiece">Auricular</string>
+    <string name="audio_output_headset">Auriculars</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

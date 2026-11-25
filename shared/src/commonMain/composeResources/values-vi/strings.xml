@@ -438,4 +438,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_camera_title">Quyền camera</string>
     <string name="permission_dialog_camera_message">Cuộc trò chuyện video cần quyền camera. Quyền camera đang tắt. Hãy bật trong cài đặt thiết bị để dùng tính năng này.</string>
     <string name="permission_dialog_read_contacts_message">Jami cần quyền “Đọc danh bạ”. Hãy bật trong cài đặt thiết bị để dùng tính năng này.</string>
+    <string name="audio_output_dialog_title">Đầu ra âm thanh</string>
+    <string name="audio_output_content_description">Đầu ra âm thanh: %1$s</string>
+    <string name="audio_output_speaker">Loa ngoài</string>
+    <string name="audio_output_earpiece">Loa trong</string>
+    <string name="audio_output_headset">Tai nghe</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

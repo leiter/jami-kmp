@@ -647,4 +647,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">L'autorisation de localisation est désactivée. Activez-la dans les paramètres de l'appareil pour utiliser cette fonctionnalité.</string>
     <string name="permission_dialog_contacts_title">Autorisation des contacts</string>
     <string name="permission_dialog_contacts_rationale">Jami lit vos contacts pour afficher les noms et photos que vous avez enregistrés pour vos contacts Jami. Rien n'est envoyé.</string>
+    <string name="audio_output_dialog_title">Sortie audio</string>
+    <string name="audio_output_content_description">Sortie audio : %1$s</string>
+    <string name="audio_output_speaker">Haut-parleur</string>
+    <string name="audio_output_earpiece">Écouteur</string>
+    <string name="audio_output_headset">Casque</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

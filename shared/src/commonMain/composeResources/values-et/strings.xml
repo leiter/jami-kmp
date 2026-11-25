@@ -647,4 +647,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">Asukoha luba on keelatud. Selle funktsiooni kasutamiseks luba see seadme seadetes.</string>
     <string name="permission_dialog_contacts_title">Kontaktide luba</string>
     <string name="permission_dialog_contacts_rationale">Jami loeb sinu kontakte, et näidata nimesid ja pilte, mille oled oma Jami kontaktidele salvestanud. Midagi ei laadita üles.</string>
+    <string name="audio_output_dialog_title">Heliväljund</string>
+    <string name="audio_output_content_description">Heliväljund: %1$s</string>
+    <string name="audio_output_speaker">Kõlar</string>
+    <string name="audio_output_earpiece">Kõrvakuular</string>
+    <string name="audio_output_headset">Kõrvaklapid</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

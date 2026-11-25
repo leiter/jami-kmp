@@ -532,4 +532,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_location_message">위치 권한이 꺼져 있습니다. 이 기능을 사용하려면 기기 설정에서 켜세요.</string>
     <string name="permission_dialog_contacts_title">연락처 권한</string>
     <string name="permission_dialog_contacts_rationale">Jami는 Jami 연락처에 저장한 이름과 사진을 표시하기 위해 연락처를 읽습니다. 아무것도 업로드되지 않습니다.</string>
+    <string name="audio_output_dialog_title">오디오 출력</string>
+    <string name="audio_output_content_description">오디오 출력: %1$s</string>
+    <string name="audio_output_speaker">스피커</string>
+    <string name="audio_output_earpiece">수화기</string>
+    <string name="audio_output_headset">헤드셋</string>
+    <string name="audio_output_bluetooth">블루투스</string>
 </resources>

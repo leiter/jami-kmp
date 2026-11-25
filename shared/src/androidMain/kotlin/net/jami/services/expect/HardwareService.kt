@@ -2,6 +2,7 @@ package net.jami.services.expect
 
 import android.content.Context
 import android.media.AudioAttributes
+import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioFocusRequest
 import android.media.AudioManager
@@ -131,13 +132,103 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     }
 
     private fun routeToSpeaker() {
-        audioManager.isSpeakerphoneOn = true
-        _audioState.value = AudioState(AudioOutput(AudioOutputType.SPEAKERS))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            audioManager.availableCommunicationDevices
+                .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+                ?.let { audioManager.setCommunicationDevice(it) }
+        } else {
+            stopBluetoothSco()
+            audioManager.isSpeakerphoneOn = true
+        }
+        publishAudioState()
     }
 
+    /** Back to the system's own choice: a headset when one is attached, else the earpiece. */
     private fun resetAudio() {
-        audioManager.isSpeakerphoneOn = false
-        _audioState.value = AudioState(AudioOutput(AudioOutputType.INTERNAL))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            audioManager.clearCommunicationDevice()
+        } else {
+            audioManager.isSpeakerphoneOn = false
+        }
+        publishAudioState()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun stopBluetoothSco() {
+        if (audioManager.isBluetoothScoOn) {
+            audioManager.isBluetoothScoOn = false
+            audioManager.stopBluetoothSco()
+        }
+    }
+
+    private fun outputType(device: AudioDeviceInfo): AudioOutputType? = when (device.type) {
+        AudioDeviceInfo.TYPE_BUILTIN_EARPIECE -> AudioOutputType.INTERNAL
+        AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> AudioOutputType.SPEAKERS
+        AudioDeviceInfo.TYPE_WIRED_HEADSET,
+        AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
+        AudioDeviceInfo.TYPE_USB_HEADSET -> AudioOutputType.WIRED
+        AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
+        AudioDeviceInfo.TYPE_BLE_HEADSET -> AudioOutputType.BLUETOOTH
+        else -> null
+    }
+
+    /** Built-in routes keep the app's own labels; a headset is shown by its product name. */
+    private fun toOutput(device: AudioDeviceInfo): AudioOutput? {
+        val type = outputType(device) ?: return null
+        val external = type == AudioOutputType.WIRED || type == AudioOutputType.BLUETOOTH
+        return AudioOutput(
+            type,
+            outputName = if (external) device.productName?.toString() else null,
+            outputId = device.id.toString(),
+        )
+    }
+
+    /**
+     * Publishes the route the call is really on and the ones it could move to, so the call
+     * screen can offer a headset. It used to publish only "speaker" or "internal", with no
+     * list at all.
+     */
+    @Suppress("DEPRECATION")
+    private fun publishAudioState() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val available = audioManager.availableCommunicationDevices.mapNotNull(::toOutput)
+                    .distinctBy { it.outputId }
+                val current = audioManager.communicationDevice?.let(::toOutput)
+                    ?: available.firstOrNull { it.type == AudioOutputType.INTERNAL }
+                    ?: AudioOutput(AudioOutputType.INTERNAL)
+                _audioState.value = AudioState(current, available)
+            } else {
+                // Before API 31 there is no way to pick one headset among several: one entry per type.
+                val available = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                    .mapNotNull(::toOutput).distinctBy { it.type }
+                val currentType = when {
+                    audioManager.isBluetoothScoOn -> AudioOutputType.BLUETOOTH
+                    audioManager.isSpeakerphoneOn -> AudioOutputType.SPEAKERS
+                    audioManager.isWiredHeadsetOn -> AudioOutputType.WIRED
+                    else -> AudioOutputType.INTERNAL
+                }
+                val current = available.firstOrNull { it.type == currentType } ?: AudioOutput(currentType)
+                _audioState.value = AudioState(current, available)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "publishAudioState failed", e)
+        }
+    }
+
+    private var routeCallbacksRegistered = false
+
+    /** Republishes when a headset comes or goes, or the system moves the call itself. */
+    private fun registerRouteCallbacks() {
+        if (routeCallbacksRegistered) return
+        routeCallbacksRegistered = true
+        audioManager.registerAudioDeviceCallback(object : AudioDeviceCallback() {
+            override fun onAudioDevicesAdded(addedDevices: Array<out AudioDeviceInfo>?) = publishAudioState()
+            override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>?) = publishAudioState()
+        }, uiHandler)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            audioManager.addOnCommunicationDeviceChangedListener(context.mainExecutor) { publishAudioState() }
+        }
     }
 
     private fun setAudioRouting(requestSpeakerOn: Boolean) {
@@ -210,6 +301,7 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
                     }
                 }
                 state == CallStatus.CURRENT -> {
+                    registerRouteCallbacks()
                     daemonBridge.muteRingtone(true)
                     getFocus(CALL_REQUEST)
                     audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
@@ -304,6 +396,50 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
         )
     }
 
+    /**
+     * Routes the call to [output]. jami-client-android does this through the Telecom
+     * connection's call endpoints; this client routes through [AudioManager], which is what
+     * the speaker toggle already uses (verified on a device, see doc/TODO.md).
+     */
+    @Synchronized
+    @Suppress("DEPRECATION")
+    actual fun selectAudioOutput(conf: Conference, output: AudioOutput) {
+        Log.d(TAG, "selectAudioOutput: ${output.type} ${output.outputName.orEmpty()}")
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val devices = audioManager.availableCommunicationDevices
+                val device = devices.firstOrNull { it.id.toString() == output.outputId }
+                    ?: devices.firstOrNull { outputType(it) == output.type }
+                if (device != null) audioManager.setCommunicationDevice(device)
+                else Log.w(TAG, "selectAudioOutput: ${output.type} is no longer available")
+            } else {
+                when (output.type) {
+                    AudioOutputType.SPEAKERS -> {
+                        stopBluetoothSco()
+                        audioManager.isSpeakerphoneOn = true
+                    }
+                    AudioOutputType.BLUETOOTH -> {
+                        audioManager.isSpeakerphoneOn = false
+                        audioManager.startBluetoothSco()
+                        audioManager.isBluetoothScoOn = true
+                    }
+                    else -> {
+                        stopBluetoothSco()
+                        audioManager.isSpeakerphoneOn = false
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "selectAudioOutput failed", e)
+        }
+        mShouldSpeakerphone = output.type == AudioOutputType.SPEAKERS
+        publishAudioState()
+        // Only the earpiece is held to the ear.
+        updateProximityLock(
+            isAudioOnly = output.type == AudioOutputType.INTERNAL && conf.participants.none { it.hasActiveVideo() },
+        )
+    }
+
     @Synchronized
     actual fun abandonAudioFocus() {
         currentFocusRequest?.let {
@@ -311,7 +447,10 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
             currentFocusRequest = null
         }
         if (audioManager.isSpeakerphoneOn) audioManager.isSpeakerphoneOn = false
+        stopBluetoothSco()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) audioManager.clearCommunicationDevice()
         audioManager.mode = AudioManager.MODE_NORMAL
+        _audioState.value = AudioState(AudioOutput(AudioOutputType.INTERNAL))
     }
 
     actual fun hasMicrophone(): Boolean = true

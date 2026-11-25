@@ -463,4 +463,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami сіздің Jami контактілеріңізге сақтаған аттар мен суреттерді көрсету үшін контактілеріңізді оқиды. Ештеңе жүктелмейді.</string>
     <string name="permission_dialog_camera_message">Бейнесөйлесулер үшін камера рұқсаты қажет. Камера рұқсаты өшірулі. Бұл мүмкіндікті пайдалану үшін оны құрылғы параметрлерінде қосыңыз.</string>
     <string name="permission_dialog_read_contacts_message">Jami «Контактілерді оқу» рұқсатын қажет етеді. Бұл мүмкіндікті пайдалану үшін оны құрылғы параметрлерінде қосыңыз.</string>
+    <string name="audio_output_dialog_title">Дыбыс шығысы</string>
+    <string name="audio_output_content_description">Дыбыс шығысы: %1$s</string>
+    <string name="audio_output_speaker">Динамик</string>
+    <string name="audio_output_earpiece">Құлақ динамигі</string>
+    <string name="audio_output_headset">Гарнитура</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>

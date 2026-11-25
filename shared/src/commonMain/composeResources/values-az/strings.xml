@@ -377,4 +377,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_contacts_rationale">Jami Jami kontaktlarınız üçün saxladığınız adları və şəkilləri göstərmək üçün kontaktlarınızı oxuyur. Heç nə yüklənmir.</string>
     <string name="permission_dialog_camera_message">Video söhbətlər üçün kamera icazəsi tələb olunur. Kamera icazəsi söndürülüb. Bu funksiyadan istifadə etmək üçün onu cihaz ayarlarında aktivləşdirin.</string>
     <string name="permission_dialog_read_contacts_message">Jami “Kontaktları oxu” icazəsini tələb edir. Bu funksiyadan istifadə etmək üçün onu cihaz ayarlarında aktivləşdirin.</string>
+    <string name="audio_output_dialog_title">Səs çıxışı</string>
+    <string name="audio_output_content_description">Səs çıxışı: %1$s</string>
+    <string name="audio_output_speaker">Dinamik</string>
+    <string name="audio_output_earpiece">Qulaqlıq dinamiki</string>
+    <string name="audio_output_headset">Qulaqlıq</string>
+    <string name="audio_output_bluetooth">Bluetooth</string>
 </resources>
