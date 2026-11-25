@@ -177,7 +177,7 @@ typedef NS_ENUM(NSInteger, JBMemberEventType) {
                 callId:(NSString *)callId
                 peerId:(NSString *)peerId
        peerDisplayName:(NSString *)peerDisplayName
-              hasVideo:(BOOL)hasVideo;
+             mediaList:(NSArray<NSDictionary<NSString *, NSString *> *> *)mediaList;
 
 - (void)onCallStateChanged:(NSString *)accountId
                     callId:(NSString *)callId

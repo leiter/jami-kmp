@@ -1207,16 +1207,13 @@ private class JamiBridgeDelegateImpl(
         callId: String,
         peerId: String,
         peerDisplayName: String,
-        hasVideo: Boolean
+        mediaList: List<*>
     ) {
-        // Labels as the daemon names an incoming call's streams (audio_0 / video_0, by
-        // position in the offer). Without them, turning video on later sent an unlabelled
-        // audio entry the daemon could not match, so it added a second audio stream and
-        // aborted on the misaligned SDP slot (TestFlight build 38, 2026-11-11).
-        val audio = mapOf("MEDIA_TYPE" to "MEDIA_TYPE_AUDIO", "LABEL" to "audio_0", "ENABLED" to "true", "MUTED" to "false")
-        val video = mapOf("MEDIA_TYPE" to "MEDIA_TYPE_VIDEO", "LABEL" to "video_0", "ENABLED" to "true", "MUTED" to "false")
-        val mediaList = if (hasVideo) listOf(audio, video) else listOf(audio)
-        callbacks.onIncomingCallWithMedia(accountId, callId, peerId, mediaList)
+        // The daemon's own list, labels and MUTED included (I2): a caller with the camera off
+        // offers video muted, which hasActiveVideo() then reads as an audio call.
+        @Suppress("UNCHECKED_CAST")
+        val media = (mediaList as? List<Map<String, String>>).orEmpty()
+        callbacks.onIncomingCallWithMedia(accountId, callId, peerId, media.ifEmpty { listOf(FALLBACK_INCOMING_AUDIO) })
     }
 
     override fun onCallStateChanged(
@@ -1565,3 +1562,12 @@ private fun JBSwarmMessage.toKotlinSwarmMessage(): SwarmMessage {
         status = statusMap
     )
 }
+
+/**
+ * The one stream every call has, used should the daemon ever announce an incoming call with no
+ * media list. Labelled as the daemon labels an offer's first audio stream (audio_0): an
+ * unlabelled entry made the daemon add a second audio stream when video was turned on later,
+ * and abort on the misaligned SDP slot (TestFlight build 38, 2026-11-11).
+ */
+private val FALLBACK_INCOMING_AUDIO =
+    mapOf("MEDIA_TYPE" to "MEDIA_TYPE_AUDIO", "LABEL" to "audio_0", "ENABLED" to "true", "MUTED" to "false")

@@ -1000,22 +1000,18 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
             NSString *accountIdNS = toNSString(accountId);
             NSString *callIdNS = toNSString(callId);
             NSString *peerIdNS = toNSString(peerId);
-            // Check if video is in media list
-            bool hasVideo = false;
-            for (const auto& media : mediaList) {
-                if (media.count("MEDIA_TYPE") && media.at("MEDIA_TYPE") == "MEDIA_TYPE_VIDEO") {
-                    hasVideo = true;
-                    break;
-                }
-            }
+            // The offer's media as the daemon gives it (labels, MUTED, ENABLED), as SWIG hands it
+            // to Android. Reducing it to a hasVideo flag made a caller with the camera off look
+            // like a video call (I2 / R3).
+            NSArray<NSDictionary<NSString*, NSString*>*> *mediaListNS = toNSArrayOfDictionaries(mediaList);
             dispatch_async(dispatch_get_main_queue(), ^{
                 JamiBridgeWrapper *strongSelf = weakSelf;
-                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onIncomingCall:callId:peerId:peerDisplayName:hasVideo:)]) {
+                if (strongSelf && [strongSelf.delegate respondsToSelector:@selector(onIncomingCall:callId:peerId:peerDisplayName:mediaList:)]) {
                     [strongSelf.delegate onIncomingCall:accountIdNS
                                                  callId:callIdNS
                                                  peerId:peerIdNS
                                         peerDisplayName:peerIdNS
-                                               hasVideo:hasVideo];
+                                              mediaList:mediaListNS];
                 }
             });
         }));
