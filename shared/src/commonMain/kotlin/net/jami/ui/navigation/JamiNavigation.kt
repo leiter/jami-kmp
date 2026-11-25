@@ -64,6 +64,20 @@ private fun androidx.navigation.NavBackStackEntry.extractArg(key: String): Strin
 }
 
 /**
+ * Shows the screen of call [callId]. Another call's screen on top is replaced, not reused: a
+ * reused entry keeps its CallViewModel, still bound to the other call. That happens with call
+ * waiting (I10), when a second call is answered while the first one's screen is open.
+ */
+private fun androidx.navigation.NavHostController.showCall(callId: String) {
+    val top = currentBackStackEntry
+    val onOtherCall = top?.destination?.route == Screen.ViewCall.ROUTE && top.extractArg("callId") != callId
+    navigate(Screen.ViewCall.createRoute(callId)) {
+        if (onOtherCall) popUpTo(Screen.ViewCall.ROUTE) { inclusive = true }
+        launchSingleTop = true
+    }
+}
+
+/**
  * Main navigation host for the Jami application.
  *
  * Uses a reactive state machine to gate the app on account existence:
@@ -289,9 +303,7 @@ private fun MainNavigation(needsMigration: Boolean) {
     LaunchedEffect(pendingCallNavId) {
         val callId = pendingCallNavId ?: return@LaunchedEffect
         callService.consumePendingCallNavId()
-        navController.navigate(Screen.ViewCall.createRoute(callId)) {
-            launchSingleTop = true
-        }
+        navController.showCall(callId)
     }
 
     // Navigate to SharePicker when an ACTION_SEND / ACTION_SEND_MULTIPLE intent arrives.
@@ -560,7 +572,14 @@ private fun MainNavigation(needsMigration: Boolean) {
             if (callId.isEmpty()) return@composable
             IncomingCallScreen(
                 callId = callId,
-                onEnd = { navController.popBackStack() },
+                onEnd = {
+                    navController.popBackStack()
+                    // Call waiting (I10): a call put on hold for this one is still there.
+                    callService.currentCalls.value
+                        .firstOrNull { it.daemonId != callId && (it.callStatus == Call.CallStatus.CURRENT || it.callStatus == Call.CallStatus.HOLD) }
+                        ?.daemonId
+                        ?.let { navController.showCall(it) }
+                },
             )
         }
 

@@ -181,6 +181,10 @@ class CallKitManager(
     private fun providerConfiguration(c: Configured) =
         CXProviderConfiguration(localizedName = APP_NAME).apply {
             supportsVideo = true
+            // Call waiting (I10): a second call may ring while one is up, and CallKit offers
+            // "Hold & Accept" / "End & Accept", which arrive here as a held or end action plus an
+            // answer action. One call per group: calls are not merged into a CallKit conference.
+            maximumCallGroups = 2u
             maximumCallsPerCallGroup = 1u
             supportedHandleTypes = setOf(CXHandleTypeGeneric)
             // CallKit rings, not the daemon (IOSCallRinging): the file must be in the main
@@ -219,6 +223,9 @@ class CallKitManager(
         remoteHandle = CXHandle(type = CXHandleTypeGeneric, value = shown)
         localizedCallerName = shown
         this.hasVideo = hasVideo
+        supportsHolding = true
+        supportsGrouping = false
+        supportsUngrouping = false
     }
 
     init {
@@ -561,6 +568,9 @@ class CallKitManager(
         }
         Log.d(TAG, "Answer via CallKit: $callId")
         scope.launch { callService.accept(accountId, callId, hasVideo = systemAnswerHasVideo(callService, callId)) }
+        // Answered from the system UI, so the app shows this call: after "Hold & Accept" or
+        // "End & Accept" the screen on display belongs to the other call.
+        callService.setPendingCallNavId(callId)
         performAnswerCallAction.fulfill()
     }
 
