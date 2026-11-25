@@ -1,5 +1,8 @@
 # iOS — what to address next (2026-11-11)
 
+> **Superseded 2026-11-24** by `doc/open-tasks-2026-11-24.md`. Items 1–4 and 6 are done; item 5
+> (video) shipped and has its own remainder; item 7 is in the new list's §5.
+
 Assembled on a Mac at `a0c1cb7` (branch `ios-catch-up-2026-11`, 15 commits ahead of `main`,
 pushed, not merged) from the git history since 2026-10-31, `doc/ios-task-queue-2026-11-09.md`,
 `doc/apple-bridge-rebuild.md`, `doc/TODO.md` ("Open iOS tasks — consolidated 2026-10-31") and

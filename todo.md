@@ -1,5 +1,8 @@
 # jami-kmp — Open Work Items
 
+> **2026-11-24:** the current open-task list is `doc/open-tasks-2026-11-24.md`; still open here:
+> P3 import guard, P4 Koin cleanup, the 45 en+de-only strings, plugins, OsmMapView.
+>
 > Reconciled against the code on 2026-10-26. This file dates from June 2026 and overlaps
 > `doc/TODO.md`, which is the live list; keep it for the P1–P4 framing and the "already
 > implemented" evidence table.
@@ -106,9 +109,8 @@ actually changes. Invoked before showing call notifications with the current
 - First run `scripts/sync_android_strings.py` against a jami-client-android checkout (and map KMP-only keys whose English matches an Android string in `scripts/android_string_aliases.txt`, e.g. the month names); translate the rest as in `856ad36` / `aa02131` (a translations file per locale, inserted without overwriting existing keys).
 - `date_full_format` is a per-language pattern (`%1$s` month, `%2$d` day, `%3$d` year) — word order matters, not just the words. Same for the `time_*_short` abbreviations.
 
-### strings_kmp.xml locale cleanup
-- Legacy locale folders (`values-de/`, `values-fr/`, etc.) still contain a `strings_kmp.xml` file.
-- Migrate any unique keys into the 5 canonical files; delete the `strings_kmp.xml` files.
+### ~~strings_kmp.xml locale cleanup~~ — done
+- No `strings_kmp.xml` remains in any locale folder (checked 2026-11-24).
 
 ### Chat plugins
 - Plugin system not ported to KMP.

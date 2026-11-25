@@ -270,7 +270,9 @@ The Android APK must be rebuilt from this branch for the Android items (shared f
 - Harness run 7 failed at `accept` on network flakiness (Alice's DHT proxy connection dropped
   and reconnected every few seconds; the invitation went out during a reconnect); run 8 on the
   same build passed every phase.
-- Still open: the call buttons remain in an ended chat; the leave has no confirmation dialog.
+- ~~Still open: the call buttons remain in an ended chat; the leave has no confirmation dialog.~~
+  Both fixed 2026-11-24: no call buttons once the conversation has ended, and leaving from
+  conversation details asks first (the reference's strings).
 
 ## Video call test session (build 48, iPhone ↔ Pixel, 2026-11-18)
 Plan: `~/.claude/plans/ios-video-receive-end.md` (R1–R6, E1–E4). Results reported by the user:

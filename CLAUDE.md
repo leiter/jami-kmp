@@ -141,6 +141,7 @@ All user-visible strings live in `shared/src/commonMain/composeResources/`. The 
 ## Known Gaps
 
 Current gaps and their status (push delivery, macOS compile, iOS video verification, desktop/web bridges, …) are tracked in **`STATUS.md` → "Known Gaps"**. Read it before starting work on any of those areas.
+The whole open-task list, checked against the code, is **`doc/open-tasks-2026-11-24.md`**.
 
 ## Daemon Bridge
 

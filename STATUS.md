@@ -1,8 +1,7 @@
 # Jami KMP - Implementation Status
 
-**Last Updated:** 2026-11-19 (docs reconciled against the code: nine TODO items that had
-shipped were still unchecked, and the iOS video gap below was rewritten — it *has* been
-exercised in a call now)
+**Last Updated:** 2026-11-24 (iOS on daemon `4117f880c` with conversation permissions; docs
+reconciled against the code again — the current open-task list is `doc/open-tasks-2026-11-24.md`)
 **Version:** In Development
 **Primary Platforms:** Android, iOS
 
@@ -159,7 +158,9 @@ See `doc/apple-bridge-rebuild.md`.
 ### Testing
 - 97 test files (70 in commonTest; the rest in desktopTest 9, iosTest 5, macosTest 4, jsTest 4,
   androidUnitTest 4, androidInstrumentedTest 1)
-- `:shared:desktopTest` — **871 tests, 0 failures** (last run 2026-11-05)
+- `:shared:iosSimulatorArm64Test` — **0 failures** (last run 2026-11-25, 1133 tests). This is
+  the suite run on the Mac; `:shared:desktopTest` last passed with 871 tests on 2026-11-05 and on
+  2026-11-24 did not compile here because of stale generated Compose resources (not a code error)
 - ViewModel tests, model tests, service integration tests, utility tests
 - `runTest` + `advanceUntilIdle` pattern throughout
 - `TestFixtures.kt` with stub `DaemonBridgeApi` for isolated ViewModel testing
@@ -186,11 +187,11 @@ Flagged by reading the code on 2026-10-26. These are hypotheses from
 static evidence still holds for the three below; B13, B15 and B16 were implemented on 2026-10-31
 and have moved to the list after them.
 
-- **Notification sound / vibration toggles** (B10, B11) — `AndroidNotificationService` sets them on
-  the `Notification.Builder`, which Android ignores from API 26 on; the channels hardcode
-  `enableVibration(...)` and the default sound, and only `CHANNEL_CALLS` is ever recreated (for the
-  ringtone). `NotificationGuard.getSoundUri()` also returns `null` both for "sound off" and "no
-  custom sound", and `null` means *use the default*.
+- ~~**Notification sound / vibration toggles** (B10, B11)~~ — **closed in `11ada3b`** (found
+  during the 2026-11-24 reconciliation): the settings now pick a notification channel that carries
+  the chosen sound and vibration, since Android fixes both when a channel is created. A device
+  verdict is still owed.
+
 **Closed 2026-11-06** (code written; a device verdict is still owed):
 
 - **Block unknown contacts** (B14) — enforced on the two surfaces a stranger can reach:
@@ -244,8 +245,9 @@ and have moved to the list after them.
 ### Incoming call screen
 - Incoming video calls now show the correct "incoming video call" string, and notification-driven
   accept resolves `hasVideo` from the call's media list
-- Still missing against the Android reference: the live camera preview while a video call is
-  ringing, and a separate "accept audio only" button — see `docs/refine-video-call.md`
+- The live camera preview while a video call is ringing and the separate "accept audio only"
+  button are both present (`a79e345`; `CallViewModel.startIncomingPreview`, `onAcceptAudio` in
+  `CallScreen.kt`). This line said they were missing until 2026-11-24.
 
 ## ❌ Not Yet Implemented
 
@@ -287,9 +289,11 @@ Built on a Mac and run in the simulator; the Obj-C++ wrapper `.a` files were reb
 (1096 methods, all 153 header-declared ones present) and the Xcode simulator link is green.
 
 - C interop bridge to libjami — working
-- Core messaging, audio calling (1:1 and conference), profile management. **Video is not
-  functional**: remote frames are never rendered and outgoing camera frames are captured, copied
-  and dropped (`captureVideoFrame` is an empty stub) — see `ios_implementation_gap.md` §5
+- Core messaging, audio calling (1:1 and conference), profile management. Video in calls is
+  implemented and was exercised on a device (see "iOS video in calls" under Known Gaps); R3–R5 and
+  E1 plus PiP remain (`doc/open-tasks-2026-11-24.md` §2)
+- On daemon `4117f880c` since 2026-11-24, the same as Android; conversation permissions reach the
+  app through the wrapper (pull and push), checked on two simulators
 - Notification system with settings enforcement
 - QR camera scanning (AVFoundation)
 - Location sharing (MapKit)
@@ -298,7 +302,6 @@ Built on a Mac and run in the simulator; the Obj-C++ wrapper `.a` files were reb
 - APNs + PushKit VoIP push client integration
 - Certificate management screen (list / pin / unpin / trust), exercised on the simulator — five
   bugs found and fixed there (2026-10-14, `89d1443`)
-- Missing: remote video rendering (Metal/CALayer sink target — architectural, multi-week; audio-only calls work fine)
 - Wired 2026-11-11 (wrapper batch, `doc/apple-bridge-rebuild.md`): `connectivityChanged`, call
   recording, presence status note send/receive, file sends via `libjami::sendFile` with reply-to
   (previously no file was transferred at all), microphone level ring, conference from a contact

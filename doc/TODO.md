@@ -1,5 +1,8 @@
 # TODO
 
+> **Start from `doc/open-tasks-2026-11-24.md`** — the open items of this file and every other
+> doc, cross-checked against the code on 2026-11-24. This file keeps the history and the detail.
+
 ## Invitations iPhone ↔ Pixel — investigation of 2026-11-17
 
 Reported: iOS can neither send nor receive invitations successfully, and Android, which used to
@@ -454,22 +457,22 @@ UI, the model read the logs).**
   symmetric case.
 
   **This had blocked end-to-end verification of incoming calls on A.**
-- [ ] **A refused incoming call still drives the Telecom outgoing path.** With "Block unknown
+- [x] **A refused incoming call still drives the Telecom outgoing path.** *Fixed in `1c66e38` (F14 in `doc/findings-protocol-2026-11.md`); this box was left open until 2026-11-24.* With "Block unknown
   contacts" on, `onIncomingCall` refuses and returns before registering the call — but
   `JamiTelecomManager: placeCall` still fired 16 ms later, ending in
   `JamiConnectionService: onCreateOutgoingConnection: missing callId or accountId`. Refusing
   should tell the Telecom layer to stand down.
-- [ ] **Re-adding a contact leaves the adder waiting forever.** A re-added B; A's UI stayed on
+- [ ] **Re-adding a contact leaves the adder waiting forever.** *(F11: not reproduced on the simulators 2026-11-18; Pixel retest owed.)* A re-added B; A's UI stayed on
   "waiting for confirmation" and B was shown nothing to accept, because B had never removed A.
   This is the blocker already recorded at the top of this file, reached from the other
   direction — and it has a sharper consequence than "no invitation appears": with **Block
   unknown contacts** on, A then refuses calls from a peer it is actively syncing swarms with
   (`onIncomingCall: refusing call from a non-contact`). A device that is git-syncing with a
   peer should not treat that peer as a stranger.
-- [ ] **A holds a conversation with itself.** `231af38e…` on A has A's own fingerprint in both
+- [x] **A holds a conversation with itself.** *Guarded in `6dde67e` (F13): no conversation, invitation or call with your own account; `Conversation.isSelfConversation`. Closed 2026-11-24.* `231af38e…` on A has A's own fingerprint in both
   `admins/` and `invited/`, no members, and never syncs; messages into it log `Message sent:
   failure`. Origin unknown — it predates this run.
-- [ ] **Nothing stops a call to your own account.** Calling from that self-conversation placed
+- [x] **Nothing stops a call to your own account.** *Guarded in `6dde67e` (F13). Closed 2026-11-24.* Calling from that self-conversation placed
   a real call to A's own id: `account_manager: Found 1 device(s) for 66d57f55…` → `Ask
   a08f24eb… for a new SIP channel` (its own device) → `No channeled socket with this peer` →
   `FAILURE code=500` in 300 ms, with nothing said in the UI.
@@ -537,11 +540,15 @@ Pixel pair.**
   moment, so the two disagree.
 - A peer's profile **name** is not re-read from disk at startup; only the avatar is
   (`VCardUtils.loadPeerProfileFromDisk`). After a reinstall or restart a peer whose name was
-  known shows its hex id again until a new vCard arrives.
+  known shows its hex id again until a new vCard arrives. *Fixed in `698c86d`:
+  `ContactService.restoreProfileFromDisk` restores the name as well (verified in code 2026-11-24).* *Fixed in `698c86d` (`ContactService.restoreProfileFromDisk` reads the name too).*
 - The details screen of a **1:1** swarm shows the group UI — a "Members" list with an
   Administrator badge and "Gruppe verlassen" — because that section is gated on
   `state.isSwarm` rather than on the conversation being a group. Same confusion between "is a
   swarm" and "is a swarm *group*" as the `Mode.Syncing` bug fixed on 2026-11-06.
+  *Partly fixed in `1b10c76` (2026-11-18): a 1:1 says "Leave conversation" and names its
+  members; the member list itself is still shown for a 1:1. Since 2026-11-24 a group created
+  with one invitee is recognised as a group, and leaving asks for confirmation.*
 - B's account switcher lists the current account as "Jami" with a green "J" avatar while the
   home screen's top-left avatar for the same account is a magenta "M".
 
@@ -960,7 +967,7 @@ bubble layout fail by looking wrong, which no test in this repo can see.
   against the code 2026-11-19). `ui/platform/AppLanguage.kt` + `AppSettingsScreen.kt:215-218`,
   with the picker at `:747`. It offers only the translations this build actually ships, and names
   each language in itself ("polski", not "Polish"); system default is the empty value.
-- [ ] **Display name in notifications setting** — Reference lets users hide contact names from notifications for privacy. Not in `AppSettingsScreen`.
+- [x] **Display name in notifications setting** — Done in `b59976c` (`NotificationSettings.showNamesInNotifications`); this box was left open until 2026-11-24.
 - [x] **Log export / debug mode** — `DebugLogsScreen` + `DebugLogsViewModel` (AppSettings → Advanced
   → Debug logs): scrollable monospace view, refresh, share. `LogCapture` expect/actual reads logcat
   on Android and is a no-op elsewhere. (This item was left unchecked long after the screen landed.)
@@ -1301,7 +1308,7 @@ verdict — the plan entries were rewritten to test the fix rather than confirm 
 
 ## Defect found while adding the jump-to-latest button (2026-11-19) — fixed
 
-- [ ] **`AccountService.explicitlyDeactivatedAccounts` can be read before it is initialised.**
+- [x] **`AccountService.explicitlyDeactivatedAccounts` can be read before it is initialised.** *Fixed in `1cfbc80`.*
   Surfaced as four `CallServiceTest` failures in one full-suite run and not in three reruns, so
   it looks like a flake; it is an ordering hazard that happens to be timing-dependent.
   - `init` at `AccountService.kt:154` launches a collector on `hardwareService.connectivityState`,
@@ -1511,6 +1518,8 @@ be impossible to bypass by accident.
   MediaProjection) and are excluded from the Android unit-test task only — they run on desktop.
 - [ ] **Robolectric for the Android unit tests** — would let the four excluded classes run against the
   Android actuals too.
+
+> *2026-11-24: the five boxes below are a checklist from the `viewModelScope()` migration and are obsolete — that migration is long done, and on the Mac the suite that runs is `:shared:iosSimulatorArm64Test` (green, 1133 tests on 2026-11-25).*
 
 - [ ] Run ViewModel tests: `./gradlew :shared:desktopTest --tests "net.jami.viewmodel.*"`
 - [ ] Run integration tests: `./gradlew :shared:desktopTest --tests "net.jami.services.*IntegrationTest"`

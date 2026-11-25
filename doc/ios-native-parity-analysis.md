@@ -1,5 +1,9 @@
 # jami-kmp iOS vs. jami-client-ios — Feature-Parity & Implementation Gap Analysis
 
+> **2026-11-24:** several items below are done (video pipeline, `aps-environment` as
+> `$(APS_ENVIRONMENT)`, the duplicate `UIBackgroundModes`, signal forwarding with tests). What is
+> still open is in `doc/open-tasks-2026-11-24.md` §2.
+
 **Date:** 2026-09-10
 **Compared:**
 - `jami-kmp` — `shared/src/iosMain/` + `ios-app/` (Kotlin/Native + Compose Multiplatform, C-interop bridge to libjami)
