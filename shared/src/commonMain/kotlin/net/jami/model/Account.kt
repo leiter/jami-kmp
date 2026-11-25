@@ -316,6 +316,12 @@ class Account(
         synchronized(contactsLock) { contacts.containsKey(uri.uri) }
 
     /**
+     * The cached contact for [uri], or null if the app has not asked about this peer yet.
+     */
+    fun findContactInCache(uri: Uri): Contact? =
+        synchronized(contactsLock) { contacts[uri.uri] }
+
+    /**
      * Get or create contact
      */
     fun getContact(uri: Uri): Contact =

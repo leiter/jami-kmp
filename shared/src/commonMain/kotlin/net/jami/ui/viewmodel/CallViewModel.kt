@@ -1292,16 +1292,11 @@ class CallViewModel(
     /**
      * Retitle the peer when the name service answers, for as long as this screen is open.
      *
-     * [requestPeerNameLookup] asks the question but the answer does not come back through the
-     * `Contact` this screen holds. `AccountService.onRegisteredNameFound` writes the name onto
-     * `Account.getContactFromCache(...)`, while `ContactService.findContact(...)` hands out a
-     * `Contact` from its *own* cache — two maps, two objects per peer, so the username that
-     * arrives is set on one of them while this screen collects the `usernameFlow` of the other
-     * and never sees it. Listening to the event instead is what `ChatViewModel` does, and for
-     * the same reason.
-     *
-     * Merging the two caches would be the real fix and is not one to make from the call screen;
-     * see doc/TODO.md.
+     * Written when `ContactService` kept a second contact cache, so the name that
+     * `AccountService.onRegisteredNameFound` wrote onto the account's `Contact` never reached the
+     * one this screen collected. The caches are merged since 2026-11-25 (one `Contact` per peer),
+     * but the event stays: it is also how `ChatViewModel` retitles, and it does not depend on which
+     * `Contact` instance a screen happened to resolve.
      */
     private fun observePeerNameLookups() {
         if (peerNameEventsJob != null) return

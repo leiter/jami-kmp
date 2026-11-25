@@ -1449,9 +1449,10 @@ class ConversationFacade(
         }
     }
 
-    private fun getContactFromCache(account: Account, uri: Uri): Contact {
-        return Contact(uri)
-    }
+    // The account's own contact, not a fresh object: a detached Contact never receives the
+    // name, profile or presence the rest of the app writes to the account's.
+    private fun getContactFromCache(account: Account, uri: Uri): Contact =
+        account.getContactFromCache(uri)
 
     private fun getConversationsForAccount(account: Account, withBlocked: Boolean = false): List<Conversation> {
         val allConversations = account.getConversations()

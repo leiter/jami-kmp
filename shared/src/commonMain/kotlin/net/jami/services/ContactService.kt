@@ -58,9 +58,6 @@ class ContactService(
     private val daemonBridge: DaemonBridgeApi,
     private val vCardService: VCardService
 ) {
-    // Contact cache: accountId -> (contactUri -> Contact)
-    private val contactCache = mutableMapOf<String, MutableMap<String, Contact>>()
-
     // Profile cache: accountId:contactUri -> Profile
     private val profileCache = mutableMapOf<String, Profile>()
 
@@ -91,38 +88,58 @@ class ContactService(
     val contactEvents: SharedFlow<ContactEvent> = _contactEvents.asSharedFlow()
 
     // ==================== Contact Cache ====================
+    //
+    // The Contact objects live in the account's cache (Account.getContactFromCache), the same
+    // instances Conversation.contact, the conversation list, the call screen and the notification
+    // code hold. This service used to keep a second map of its own, so a peer had two Contact
+    // objects and a name or profile written to one never reached a screen following the other
+    // (doc/TODO.md, "The call screen showed a peer's Jami ID…", 2026-11-19). It now only keeps
+    // *which* peers are on the daemon's contact list: the account's cache also holds every peer the
+    // app has merely asked about (call peers, group members, request senders), and those are not
+    // contacts.
 
-    /**
-     * Get or create a contact from the cache.
-     */
-    fun getContactFromCache(accountId: String, uri: Uri): Contact {
-        val accountCache = contactCache.getOrPut(accountId) { mutableMapOf() }
-        return accountCache.getOrPut(uri.uri) {
-            Contact(uri).also {
-                Log.d(TAG, "Created new contact in cache: ${uri.uri}")
-            }
-        }
+    // accountId -> (contactUri.uri -> Uri) of the daemon's contact list, banned contacts included.
+    private val contactLists = mutableMapOf<String, MutableMap<String, Uri>>()
+    private val contactListsLock = SynchronizedObject()
+
+    private fun markListed(accountId: String, uri: Uri) = synchronized(contactListsLock) {
+        contactLists.getOrPut(accountId) { mutableMapOf() }[uri.uri] = uri
+    }
+
+    private fun unmarkListed(accountId: String, uri: Uri) = synchronized(contactListsLock) {
+        contactLists[accountId]?.remove(uri.uri)
     }
 
     /**
-     * Get a contact from the cache if it exists.
+     * The account's contact for [uri], created if needed. For an account [AccountService] does
+     * not hold (none in production; some tests) the contact is a detached, uncached object.
      */
-    fun findContactInCache(accountId: String, uri: Uri): Contact? {
-        return contactCache[accountId]?.get(uri.uri)
-    }
+    fun getContactFromCache(accountId: String, uri: Uri): Contact =
+        accountService.getAccount(accountId)?.getContactFromCache(uri)
+            ?: Contact(uri).also { Log.w(TAG, "getContactFromCache: unknown account $accountId, detached contact") }
 
     /**
-     * Get all cached contacts for an account.
+     * The account's contact for [uri] if the app already has one.
+     */
+    fun findContactInCache(accountId: String, uri: Uri): Contact? =
+        accountService.getAccount(accountId)?.findContactInCache(uri)
+
+    /**
+     * The account's contacts on the daemon's contact list (as loaded by [loadContacts] and kept
+     * current by the daemon's contact signals), blocked ones included.
      */
     fun getCachedContacts(accountId: String): List<Contact> {
-        return contactCache[accountId]?.values?.toList() ?: emptyList()
+        val account = accountService.getAccount(accountId) ?: return emptyList()
+        val uris = synchronized(contactListsLock) { contactLists[accountId]?.values?.toList() } ?: return emptyList()
+        return uris.map { account.getContactFromCache(it) }
     }
 
     /**
-     * Clear the contact cache for an account.
+     * Forget the contact list and profiles held for an account. The contacts themselves belong
+     * to the account.
      */
     fun clearCache(accountId: String) {
-        contactCache.remove(accountId)
+        synchronized(contactListsLock) { contactLists.remove(accountId) }
         // Remove profile cache entries for this account
         profileCache.keys.filter { it.startsWith("$accountId:") }.forEach {
             profileCache.remove(it)
@@ -136,12 +153,13 @@ class ContactService(
      */
     fun loadContacts(accountId: String) {
         val contactsList = daemonBridge.getContacts(accountId)
-        val accountCache = contactCache.getOrPut(accountId) { mutableMapOf() }
 
         for (contactMap in contactsList) {
             val uriString = contactMap["uri"] ?: continue
             val uri = Uri.fromString(uriString)
-            val contact = accountCache.getOrPut(uri.uri) { Contact(uri) }
+            markListed(accountId, uri)
+            val contact = getContactFromCache(accountId, uri)
+
 
             // Update contact properties from daemon data
             contactMap["added"]?.toLongOrNull()?.let { contact.addedDate = it }
@@ -174,6 +192,7 @@ class ContactService(
      */
     fun addContact(accountId: String, uri: Uri) {
         accountService.addContact(accountId, uri.uri)
+        markListed(accountId, uri)
         val contact = getContactFromCache(accountId, uri)
         contact.status = Contact.Status.CONFIRMED
         scope.launch {
@@ -187,7 +206,11 @@ class ContactService(
     fun removeContact(accountId: String, uri: Uri, ban: Boolean = false) {
         daemonBridge.removeContact(accountId, uri.uri, ban)
         val contact = findContactInCache(accountId, uri)
-        contactCache[accountId]?.remove(uri.uri)
+        // A ban keeps the peer on the daemon's list as blocked; onContactRemoved marks it.
+        if (!ban) {
+            unmarkListed(accountId, uri)
+            contact?.status = Contact.Status.NO_REQUEST
+        }
         if (contact != null) {
             scope.launch {
                 _contactEvents.emit(ContactEvent.ContactRemoved(accountId, contact, ban))
@@ -205,7 +228,9 @@ class ContactService(
      * through this signal (`ContactList::setContacts`).
      */
     fun onContactAdded(accountId: String, uri: String, confirmed: Boolean) {
-        val contact = getContactFromCache(accountId, Uri.fromString(uri))
+        val parsed = Uri.fromString(uri)
+        markListed(accountId, parsed)
+        val contact = getContactFromCache(accountId, parsed)
         contact.status = if (confirmed) Contact.Status.CONFIRMED else Contact.Status.REQUEST_SENT
         scope.launch {
             _contactEvents.emit(ContactEvent.ContactAdded(accountId, contact))
@@ -220,9 +245,12 @@ class ContactService(
         val parsed = Uri.fromString(uri)
         val contact = findContactInCache(accountId, parsed) ?: return
         if (banned) {
+            markListed(accountId, parsed)
             contact.status = Contact.Status.BLOCKED
         } else {
-            contactCache[accountId]?.remove(parsed.uri)
+            unmarkListed(accountId, parsed)
+            // The object stays: conversations and screens may still hold it.
+            contact.status = Contact.Status.NO_REQUEST
         }
         scope.launch {
             _contactEvents.emit(ContactEvent.ContactRemoved(accountId, contact, banned))
@@ -411,10 +439,8 @@ class ContactService(
                     )
                     val cacheKey = "$accountId:${uri.uri}"
                     profileCache[cacheKey] = profile
-                    findContactInCache(accountId, uri)?.loadedProfile = profile
-                    // Also the Account's contact — the object Conversation.contact and the list
-                    // actually hold (libjamiclient profileReceived uses account.getContactFromCache).
-                    // Updating only this service's cache left the UI stale until restart.
+                    // The account's contact — the one object every screen holds for this peer
+                    // (libjamiclient profileReceived uses account.getContactFromCache too).
                     accountService.getAccount(accountId)?.getContactFromCache(uri)?.let { contact ->
                         if (!contact.isUser) contact.loadedProfile = profile
                     }

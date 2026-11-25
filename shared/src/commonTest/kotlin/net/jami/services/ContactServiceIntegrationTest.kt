@@ -94,14 +94,75 @@ class ContactServiceIntegrationTest {
         assertNull(result)
     }
 
+    private fun stubWithTwoContacts() = StubDaemonBridge().apply {
+        accountIds = listOf("acc1")
+        accountDetails["acc1"] = mapOf(ConfigKey.ACCOUNT_TYPE.key to AccountConfig.ACCOUNT_TYPE_JAMI)
+        contacts["acc1"] = listOf(
+            mapOf("uri" to "abc123", "confirmed" to "true"),
+            mapOf("uri" to "def456", "confirmed" to "true", "banned" to "true"),
+        )
+    }
+
+    // One Contact per peer (2026-11-25): ContactService hands out the account's objects, so a name
+    // or profile written through either path reaches every screen.
+    @Test
+    fun contactServiceAndAccountShareOneContactPerPeer() = runTest {
+        val stub = stubWithTwoContacts()
+        val (accountService, contactService) = makeServices(stub, this)
+        accountService.loadAccounts()
+        contactService.loadContacts("acc1")
+        val account = accountService.getAccount("acc1")!!
+        val uri = Uri.fromId("abc123")
+
+        assertTrue(contactService.findContact("acc1", uri) === account.getContactFromCache(uri))
+        assertTrue(contactService.findContactInCache("acc1", uri) === account.getContactFromCache(uri))
+        // A peer first seen by the account (a call, a group member) is the same object too.
+        val stranger = Uri.fromId("0badc0de")
+        assertTrue(account.getContactFromCache(stranger) === contactService.getContactFromCache("acc1", stranger))
+        // The daemon's blocked state reaches the object conversations hold.
+        assertTrue(account.getContactFromCache(Uri.fromId("def456")).isBlocked)
+    }
+
+    @Test
+    fun peersTheAppOnlyAskedAboutAreNotContacts() = runTest {
+        val stub = stubWithTwoContacts()
+        val (accountService, contactService) = makeServices(stub, this)
+        accountService.loadAccounts()
+        contactService.loadContacts("acc1")
+        // A call peer or group member gets a Contact in the account's cache, but is not on the
+        // daemon's contact list, so it must not show in Contacts or Blocked.
+        contactService.findContact("acc1", Uri.fromId("0badc0de"))
+        accountService.getAccount("acc1")!!.getContactFromCache(Uri.fromId("feedface"))
+
+        val listed = contactService.getCachedContacts("acc1").map { it.uri.rawRingId }.toSet()
+        assertEquals(setOf("abc123", "def456"), listed)
+    }
+
+    @Test
+    fun contactSignalsKeepTheListCurrent() = runTest {
+        val stub = stubWithTwoContacts()
+        val (accountService, contactService) = makeServices(stub, this)
+        accountService.loadAccounts()
+        contactService.loadContacts("acc1")
+        val account = accountService.getAccount("acc1")!!
+
+        contactService.onContactAdded("acc1", "cafe0001", confirmed = true)
+        contactService.onContactRemoved("acc1", "abc123", banned = false)
+        contactService.onContactRemoved("acc1", "cafe0001", banned = true)
+
+        val byId = contactService.getCachedContacts("acc1").associateBy { it.uri.rawRingId }
+        assertEquals(setOf("def456", "cafe0001"), byId.keys)
+        assertEquals(Contact.Status.BLOCKED, byId.getValue("cafe0001").status)
+        // The removed peer's object survives for whoever holds it, no longer a contact.
+        assertEquals(Contact.Status.NO_REQUEST, account.getContactFromCache(Uri.fromId("abc123")).status)
+    }
+
     @Test
     fun clearCacheRemovesAllContacts() = runTest {
-        val stub = StubDaemonBridge()
+        val stub = stubWithTwoContacts()
         val (accountService, contactService) = makeServices(stub, this)
-
-        // Pre-populate cache
-        contactService.getContactFromCache("acc1", Uri.fromId("abc123"))
-        contactService.getContactFromCache("acc1", Uri.fromId("def456"))
+        accountService.loadAccounts()
+        contactService.loadContacts("acc1")
         assertEquals(2, contactService.getCachedContacts("acc1").size)
 
         contactService.clearCache("acc1")

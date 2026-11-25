@@ -274,12 +274,10 @@ class AndroidNotificationService(
      * whether that is a hash or a privacy placeholder.
      */
     private fun callerPerson(accountId: String, uri: Uri, fallbackName: String): Person {
-        // The *account's* contact store first, not ContactService's. They are different
-        // caches: Account.contacts is filled from the daemon's contact list, names, usernames
-        // and profiles included, while ContactService.getContactFromCache creates a bare
-        // placeholder for any URI it is merely asked about — which is what a call does. Asking
-        // the latter returned an empty Contact, so a call from "peace4us" announced itself as
-        // "d9f8c7f0bf76" even though every other screen had the name.
+        // The account's contact store. ContactService used to keep a second cache of bare
+        // placeholders, and asking it made a call from "peace4us" announce itself as
+        // "d9f8c7f0bf76"; since 2026-11-25 it hands out the account's objects, so the fallback
+        // below finds the same contact.
         val contact = runCatching { accountService.getAccount(accountId)?.getContactFromCache(uri) }
             .getOrNull()
             ?: runCatching { contactService.findContactInCache(accountId, uri) }.getOrNull()
