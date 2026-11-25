@@ -130,6 +130,10 @@ private fun OnboardingNavigation(appViewModel: AppViewModel) {
     NavHost(
         navController = navController,
         startDestination = Screen.Welcome.route,
+        enterTransition = { navEnter() },
+        exitTransition = { navExit() },
+        popEnterTransition = { navPopEnter() },
+        popExitTransition = { navPopExit() },
     ) {
         composable(Screen.Welcome.route) {
             WelcomeScreen(
@@ -331,6 +335,10 @@ private fun MainNavigation(needsMigration: Boolean) {
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route,
+        enterTransition = { navEnter() },
+        exitTransition = { navExit() },
+        popEnterTransition = { navPopEnter() },
+        popExitTransition = { navPopExit() },
     ) {
         // ==================== Main Screens ====================
 
