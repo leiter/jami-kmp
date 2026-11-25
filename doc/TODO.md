@@ -821,7 +821,10 @@ four were walked on the Pixel pair the same evening and are confirmed** (section
 `doc/manual-test-plan-2026-11-19.md`), which matters more than the green suite here — motion and
 bubble layout fail by looking wrong, which no test in this repo can see.
 
-- [ ] **No per-route navigation transitions.** `JamiNavigation.kt`'s 35 `composable(...)` entries
+- [x] **No per-route navigation transitions.** — **done 2026-11-25** (`ui/navigation/NavTransitions.kt`):
+  the reference's slide (in from the trailing edge, Back reverses, 220 ms) on both graphs; overlays
+  (media viewer, video player, calls) keep the 700 ms fade the media shared element was checked with.
+  The conversation row → chat container transform is not done. Original note: `JamiNavigation.kt`'s 35 `composable(...)` entries
   still carry no `enterTransition`/`exitTransition`, so every screen change is Compose
   Navigation's default. Partly addressed 2026-11-19: the graph is now wrapped in a
   `SharedTransitionLayout` (below), which is the piece the media transition needed. Giving the
@@ -869,9 +872,9 @@ bubble layout fail by looking wrong, which no test in this repo can see.
   so the gesture reads as reversible before it commits, and it commits at half the travel.
   **Verified on the Pixel pair 2026-11-19**, including the case that mattered most: a zoomed
   image pans under a vertical drag instead of dismissing.
-- [ ] **`MediaViewerScreen` still has no pager** — it shows the one file it was opened with, so
-  there is no swiping left and right through a conversation's images. The gallery already has
-  the list this would page over.
+- [x] **`MediaViewerScreen` still has no pager** — **done 2026-11-25**: a `HorizontalPager` over the
+  conversation's images (`pagedImagePaths`), opened on the tapped one from the chat or the gallery.
+  Each page zooms on its own; paging only while unzoomed. The reference viewer has no pager.
 - [x] **Message sequencing and group sender avatars** (2026-11-19) — done; what follows is the
   gap as it was found, kept because it explains the shape of the fix. `applySequencingTo` marks
   each message as the first and/or last of a run, following the reference's `isSeqBreak` /

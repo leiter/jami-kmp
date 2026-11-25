@@ -48,8 +48,8 @@ Android is built and tested on another machine, so a shared change is compiled o
 | S1 | ~~**45 strings exist only in English and German.**~~ **Done 2026-11-25** — see the closed list. Left: Acehnese and Kabardian have no translations for the hand-made strings and no CLDR date data. | M | |
 | S2 | ~~**Guard against importing an account that is already on the device.**~~ **Done 2026-11-25** — see the closed list. | S–M | |
 | S3 | ~~**Two contact caches per peer.**~~ **Done 2026-11-25** — see the closed list. | L | |
-| S4 | **No per-route navigation transitions** — 0 `enterTransition` in `JamiNavigation.kt`. | M | `doc/TODO.md` → UI Refinement |
-| S5 | **`MediaViewerScreen` has no pager** (no swiping through a conversation's images). | M | same |
+| S4 | ~~**No per-route navigation transitions.**~~ **Done 2026-11-25**, see the closed list. Left: a row → chat container transform. | M | |
+| S5 | ~~**`MediaViewerScreen` has no pager.**~~ **Done 2026-11-25**, see the closed list. | M | |
 | S6 | **Haptics only in the call flow** — none on long-press menus, swipe-to-reply, swipe-to-delete, reaction picker. | S | same |
 | S7 | **Video tiles in the media gallery have no thumbnail.** | M | `MediaGalleryScreen.kt` |
 | S8 | **Audio route picker** (earpiece / speaker / Bluetooth) — the call screen has one binary speaker toggle. Backend partly there on Android. | M | `doc/TODO.md` → Calls |
@@ -174,3 +174,18 @@ Found already done, docs corrected:
   uses the account's now. One visible change follows the reference: a contact the daemon
   lists as banned is now `BLOCKED` on the object conversations hold, so its 1:1 conversation
   leaves the list, as `getConversationsForAccount` always intended.
+- **S4 — navigation transitions.** `ui/navigation/NavTransitions.kt` gives both NavHosts the
+  reference's motion (`BaseSupportFragment.replaceFragmentWithSlide`): the new screen slides in
+  from the trailing edge, the old one out to the leading edge, and Back reverses it. It runs for
+  220 ms (`config_activityDefaultDur`) with a decelerate curve, and Start/End flip in RTL. The
+  media viewer, video player and call screens fade instead, at Navigation's previous 700 ms, so
+  the image shared element runs exactly as it did when checked on the Pixel pair. Not done: a
+  container transform from the conversation row into the chat. Not walked on a device yet:
+  motion looks wrong long before a test can tell.
+- **S5 — media viewer pager.** `MediaViewerScreen` is a `HorizontalPager` over the
+  conversation's images (`pagedImagePaths`: picture transfers on disk, in message order). It
+  opens on the image tapped in the chat or the gallery. Each page has its own zoom; the pager
+  only moves while the current page is unzoomed, and a page only pans while zoomed. Share, Save
+  and swipe-to-dismiss act on the page on screen, and the shared element flies back to that
+  page's bubble. An image missing from the list is shown alone. The reference viewer has no
+  pager.
