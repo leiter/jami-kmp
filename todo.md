@@ -1,7 +1,7 @@
 # jami-kmp — Open Work Items
 
 > **2026-11-24:** the current open-task list is `doc/open-tasks-2026-11-24.md`; still open here:
-> P3 import guard, P4 Koin cleanup, the 45 en+de-only strings, plugins, OsmMapView.
+> P4 Koin cleanup, plugins, OsmMapView (the P3 import guard and the en+de-only strings were done 2026-11-25).
 >
 > Reconciled against the code on 2026-10-26. This file dates from June 2026 and overlaps
 > `doc/TODO.md`, which is the live list; keep it for the P1–P4 framing and the "already
@@ -60,7 +60,8 @@ Already implemented in `AccountMediaSettingsScreen` with enable/disable toggles 
 `JamiTelecomManager` registers a self-managed `PhoneAccount` at startup and observes `callUpdates` to call `TelecomManager.addNewIncomingCall()` for each incoming RINGING call. `JamiConnectionService` (manifest-declared with `BIND_TELECOM_CONNECTION_SERVICE`) creates a `JamiConnection` per call, forwarding `onAnswer`/`onReject`/`onHold`/`onUnhold`/`onCallAudioStateChanged` to `CallService`; daemon state changes (CURRENT/HOLD/OVER) drive `setActive`/`setOnHold`/`setDisconnected`+`destroy`. `MANAGE_OWN_CALLS` permission declared.
 - **Reference**: `JamiConnectionService.kt` in `jami-client-android`
 
-### Guard against re-importing an account that is already present (settings import)
+### ~~Guard against re-importing an account that is already present (settings import)~~ ✓ DONE (2026-11-25)
+- Done in `ImportAccountViewModel.completeImport()`: the identity is compared once the daemon has decrypted the archive, and a duplicate is removed again with `import_account_already_on_device`. Details: `doc/open-tasks-2026-11-24.md`, "Closed 2026-11-25".
 - On a settings-screen account import, compare the jamiId (RingID fingerprint) of the archive being loaded against the jamiId of every account already present on the device. If any match, **abort the import** before adding the account and inform the user that this account is already set up on this device (rather than silently creating a duplicate / letting the daemon add a second row for the same identity).
 - Where: `ImportAccountViewModel.importAccount()` — resolve the incoming archive's jamiId and check it against the existing accounts' jamiIds prior to `createJamiAccount(archivePath = …)`; surface a clear "account already exists on this device" message in `ImportAccountState.error`.
 - Edge case only — the onboarding import path can't reach it (it runs with zero accounts loaded), so it needs handling but not an automated test. Identified while building the E2E harness import scenarios (2026-07-01).
@@ -103,7 +104,8 @@ actually changes. Invoked before showing call notifications with the current
 - Before trying: bump Koin 4.1.0 → 4.1.1 (`koinViewModel()` fails to link on iOS with 4.1.0, Koin #2175; 4.2.x needs Kotlin ≥ 2.3.20 on Native), then validate the KClass lookup on a real iOS **release** build.
 - Not a bugfix — the bugs it once was tied to (NoDefinitionFoundException in release, input reset, scope leak) are fixed.
 
-### Translate the 45 strings that exist only in English and German (added 2026-11-16)
+### ~~Translate the 45 strings that exist only in English and German (added 2026-11-16)~~ ✓ DONE (2026-11-25)
+- Done: Android sync, CLDR (`scripts/cldr_date_strings.swift`), hand translations via `scripts/insert_translations.py`. Only `ace` and `kbd` keep the English fallback. Details: `doc/open-tasks-2026-11-24.md`, "Closed 2026-11-25".
 - The last hardcoded UI strings were moved into the catalogue with **en + de only**; the other ~70 locale folders fall back to English for them.
 - Keys: `action_ok`, `date_full_format`, `date_month_1`…`date_month_12`, `time_now_short`, `time_{minutes,hours,days,weeks}_short`, `conversation_type_group_{admin_invites,invite_only,public}`, `conversation_type_legacy`, `import_select_archive`, `import_failed`, `import_failed_reason`, `migration_failed_reason`, `profile_save_failed`, `location_my_location`, `notif_sync_text`, `notif_file_transfer_progress_bytes` (strings.xml); `error_no_account`, `biometric_{authenticating,unlock,unlock_title,enroll_description,enroll_failed,disable_failed,error_no_credential}` (strings_account.xml); `pref_option_auto`, `pref_history_forever`, `pref_days_short`, `pref_seconds_short` (strings_preferences.xml); `content_desc_selected`, `content_desc_not_selected` (strings_content_description.xml).
 - First run `scripts/sync_android_strings.py` against a jami-client-android checkout (and map KMP-only keys whose English matches an Android string in `scripts/android_string_aliases.txt`, e.g. the month names); translate the rest as in `856ad36` / `aa02131` (a translations file per locale, inserted without overwriting existing keys).

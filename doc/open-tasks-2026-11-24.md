@@ -45,9 +45,9 @@ Android is built and tested on another machine, so a shared change is compiled o
 
 | # | Task | Size | Notes |
 |---|---|---|---|
-| S1 | **45 strings exist only in English and German** (added 2026-11-16: month names, `time_*_short`, import/biometric errors, `conversation_type_*`, …). Confirmed: e.g. `date_month_1`, `biometric_unlock_title`, `content_desc_selected` have one locale folder each. Run `scripts/sync_android_strings.py` against a jami-client-android checkout first, then translate the rest. | M | `todo.md` P4 |
-| S2 | **Guard against importing an account that is already on the device.** `ImportAccountViewModel.importAccount()` still calls `createJamiAccount(archivePath = …)` without comparing the archive's identity with the existing accounts. | S–M | `todo.md` P3 |
-| S3 | **Two contact caches per peer** (`Account.contacts` and `ContactService`'s own). Has cost two bugs; merge with `ContactService` as the single owner. | L | `doc/TODO.md` → call-screen name entry |
+| S1 | ~~**45 strings exist only in English and German.**~~ **Done 2026-11-25** — see the closed list. Left: Acehnese and Kabardian have no translations for the hand-made strings and no CLDR date data. | M | |
+| S2 | ~~**Guard against importing an account that is already on the device.**~~ **Done 2026-11-25** — see the closed list. | S–M | |
+| S3 | ~~**Two contact caches per peer.**~~ **Done 2026-11-25** — see the closed list. | L | |
 | S4 | **No per-route navigation transitions** — 0 `enterTransition` in `JamiNavigation.kt`. | M | `doc/TODO.md` → UI Refinement |
 | S5 | **`MediaViewerScreen` has no pager** (no swiping through a conversation's images). | M | same |
 | S6 | **Haptics only in the call flow** — none on long-press menus, swipe-to-reply, swipe-to-delete, reaction picker. | S | same |
@@ -143,3 +143,34 @@ Found already done, docs corrected:
   (`a79e345`; `CallScreen.kt` `startIncomingPreview`, `onAcceptAudio`).
 - `aps-environment` hardcoded to development — now `$(APS_ENVIRONMENT)`.
 - Duplicate `UIBackgroundModes` — collapsed 2026-10-31.
+
+## Closed 2026-11-25
+
+- **S1 — strings only in English and German.** First `scripts/sync_android_strings.py` against
+  jami-client-android `91b7759` (586 translations, `date_today`/`date_yesterday` newly aliased
+  to Android's `today`/`yesterday`). Then month names, the full-date pattern,
+  "Today"/"Yesterday"/"Now" and the short time units came from the CLDR data macOS ships
+  (`scripts/cldr_date_strings.swift`, 1826 strings, region folders included, German left
+  hand-made). The remaining 30 strings were translated by hand for 69 folders
+  (`scripts/insert_translations.py`, add-only). The German translations of the four
+  `account_biometric_error_*` strings and `conversation_read_only` were missing too, and were
+  added. Machine-made, like `856ad36`; review welcome. Not translated: Acehnese (`ace`) and
+  Kabardian (`kbd`). Both use a script or orthography that could not be checked here, and
+  macOS has no CLDR data for either. They keep the English fallback for these keys. Every used
+  translatable key now has a translation in every other folder.
+- **S2 — importing an account already on the device.** Neither the daemon nor the reference
+  clients refuse it. The archive's identity is only known after the daemon has decrypted it,
+  so `ImportAccountViewModel` waits for that (the account leaves INITIALIZING) when other Jami
+  accounts exist. If the identity matches one of them, it removes the new copy (its own
+  account directory only) and shows `import_account_already_on_device`. Onboarding, with no
+  accounts, completes as before. The removed copy will have announced a new device
+  certificate for that identity in the meantime, which is harmless but visible in the device
+  list of the account's other devices.
+- **S3 — two contact caches.** `ContactService` no longer keeps Contact objects of its own: it
+  hands out the account's (`Account.getContactFromCache` / new `findContactInCache`) and only
+  remembers which peers are on the daemon's contact list. This also fixes a latent leak: a
+  call peer or a contact-details lookup used to put a stranger into the Contacts/Blocked
+  lists. `ConversationFacade.getLoadedContact` gave out detached `Contact(uri)` objects and
+  uses the account's now. One visible change follows the reference: a contact the daemon
+  lists as banned is now `BLOCKED` on the object conversations hold, so its 1:1 conversation
+  leaves the list, as `getConversationsForAccount` always intended.

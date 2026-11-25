@@ -1366,7 +1366,9 @@ Reported from a device: the call screen titled the peer with their 40-hex id.
   call screen collected the `usernameFlow` of the other. `CallViewModel` now listens for
   `AccountEvent.RegisteredNameFound` and retitles, which is what `ChatViewModel` does and for
   exactly this reason. Covered by `aRegisteredNameThatArrivesMidCallRetitlesThePeer`.
-- [ ] **The underlying duplication is untouched.** Two contact caches for the same peer is a
+- [x] **The underlying duplication is untouched.** — **merged 2026-11-25**: `ContactService` hands out the
+  account's `Contact` objects and only tracks list membership (`doc/open-tasks-2026-11-24.md`, "Closed 2026-11-25").
+  Original note: two contact caches for the same peer is a
   trap that has now cost two bugs' worth of time, and every screen that follows a `Contact`'s
   flows rather than listening for events is exposed to it. Merging them — most plausibly by
   making `ContactService` the single owner and having `Account` delegate — is a real piece of
