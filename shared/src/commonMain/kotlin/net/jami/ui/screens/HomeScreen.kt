@@ -437,6 +437,16 @@ fun HomeScreen(
                                 false
                             }
                         )
+                        // One light tick as the swipe crosses the point where releasing asks to
+                        // delete, as the reference ticks for its list swipes (ActionHelper).
+                        val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+                        LaunchedEffect(dismissState.targetValue) {
+                            if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
+                                haptics.performHapticFeedback(
+                                    androidx.compose.ui.hapticfeedback.HapticFeedbackType.GestureThresholdActivate
+                                )
+                            }
+                        }
 
                         SwipeToDismissBox(
                             // The list re-sorts whenever a message arrives, and a pinned or

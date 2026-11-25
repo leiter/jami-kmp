@@ -1322,6 +1322,13 @@ private fun ChatBubble(
 
     var showMenu by remember { mutableStateOf(false) }
     var showEmojiPicker by remember { mutableStateOf(false) }
+    // A light tick when a reaction is picked: the menu closes at once, so the tap otherwise
+    // leaves no trace until the chip appears under the bubble.
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val reactWithFeedback: (String) -> Unit = { emoji ->
+        haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.VirtualKey)
+        onReact(emoji)
+    }
     var showFullEmojiPicker by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
     val timeText = formatMessageTime(message.timestamp)
@@ -1588,7 +1595,7 @@ private fun ChatBubble(
                 EmojiPickerDialog(
                     onSelect = { emoji ->
                         showFullEmojiPicker = false
-                        onReact(emoji)
+                        reactWithFeedback(emoji)
                     },
                     onDismiss = { showFullEmojiPicker = false },
                 )
@@ -1610,7 +1617,7 @@ private fun ChatBubble(
                             modifier = Modifier
                                 .clickable {
                                     RecentEmoji.record(emoji)
-                                    onReact(emoji)
+                                    reactWithFeedback(emoji)
                                     showEmojiPicker = false
                                 }
                                 .padding(6.dp),
@@ -2799,6 +2806,7 @@ private fun ReactionChip(
     }
     var expanded by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(5.dp)
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
 
     Box(
         modifier = modifier
@@ -2838,6 +2846,7 @@ private fun ReactionChip(
                         expanded = false
                         // Like jami-android-client's reaction visualizer: your own reaction is
                         // removed; someone else's is added as yours.
+                        haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.VirtualKey)
                         if (reaction.isMine) onRemoveReaction(reaction.emoji) else onReact(reaction.emoji)
                     },
                 )
@@ -2901,6 +2910,9 @@ private fun ReplyQuote(
  * Swipe a message towards the end to reply to it (jami-android-client MessageSwipeController).
  * The row follows the finger up to [maxOffset] and springs back; releasing past [threshold]
  * triggers [onReply]. Vertical drags stay with the list.
+ *
+ * One light tick as the drag crosses [threshold] (and again if it is crossed anew), the
+ * reference's HapticFeedbackConstants.KEYBOARD_TAP in ActionHelper: the release will reply.
  */
 private fun Modifier.swipeToReply(
     enabled: Boolean,
@@ -2914,17 +2926,31 @@ private fun Modifier.swipeToReply(
     val thresholdPx = with(density) { threshold.toPx() }
     val maxPx = with(density) { maxOffset.toPx() }
     val currentOnReply by rememberUpdatedState(onReply)
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+    var armed by remember { mutableStateOf(false) }
     this
         .pointerInput(Unit) {
             detectHorizontalDragGestures(
                 onDragEnd = {
                     if (offset.value >= thresholdPx) currentOnReply()
+                    armed = false
                     scope.launch { offset.animateTo(0f) }
                 },
-                onDragCancel = { scope.launch { offset.animateTo(0f) } },
+                onDragCancel = {
+                    armed = false
+                    scope.launch { offset.animateTo(0f) }
+                },
             ) { change, dragAmount ->
                 change.consume()
-                scope.launch { offset.snapTo((offset.value + dragAmount).coerceIn(0f, maxPx)) }
+                val next = (offset.value + dragAmount).coerceIn(0f, maxPx)
+                val pastThreshold = next >= thresholdPx
+                if (pastThreshold && !armed) {
+                    haptics.performHapticFeedback(
+                        androidx.compose.ui.hapticfeedback.HapticFeedbackType.GestureThresholdActivate
+                    )
+                }
+                armed = pastThreshold
+                scope.launch { offset.snapTo(next) }
             }
         }
         .offset { IntOffset(offset.value.roundToInt(), 0) }
