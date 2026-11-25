@@ -18,7 +18,11 @@ package net.jami.services
 
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import net.jami.model.*
 import org.jetbrains.compose.resources.getString
 import net.jami.repository.SettingsRepository
@@ -87,20 +91,44 @@ class IOSNotificationService(
     private var pendingScreenshareCallback: (() -> Unit)? = null
     private var pendingScreenshareConfId: String? = null
 
-    init {
-        setupNotificationCategories()
+    /**
+     * Notification work in the order it was asked for, one item at a time on the main thread.
+     *
+     * Titles come from Compose resources, whose getString suspends. Each call used to wrap it in
+     * runBlocking, which held whichever thread posted the notification — the main thread
+     * included — while the resource was read (I11). A queue rather than a launch per call keeps
+     * a cancel from overtaking the notification it cancels.
+     */
+    private val work = Channel<suspend () -> Unit>(Channel.UNLIMITED)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    private fun post(block: suspend () -> Unit) {
+        work.trySend(block)
     }
 
-    private fun setupNotificationCategories() {
+    init {
+        scope.launch {
+            for (block in work) {
+                try {
+                    block()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Notification work failed: ${e.message}")
+                }
+            }
+        }
+        post { setupNotificationCategories() }
+    }
+
+    private suspend fun setupNotificationCategories() {
         // Call category with answer/decline actions
         val answerAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_ANSWER_CALL,
-            title = runBlocking { getString(Res.string.action_call_accept) },
+            title = getString(Res.string.action_call_accept),
             options = UNNotificationActionOptionForeground
         )
         val declineAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_DECLINE_CALL,
-            title = runBlocking { getString(Res.string.action_call_decline) },
+            title = getString(Res.string.action_call_decline),
             options = UNNotificationActionOptionDestructive
         )
         val callCategory = UNNotificationCategory.categoryWithIdentifier(
@@ -113,14 +141,14 @@ class IOSNotificationService(
         // Message category with reply and mark as read actions
         val replyAction = UNTextInputNotificationAction.actionWithIdentifier(
             identifier = ACTION_REPLY_MESSAGE,
-            title = runBlocking { getString(Res.string.notif_reply) },
+            title = getString(Res.string.notif_reply),
             options = UNNotificationActionOptionNone,
-            textInputButtonTitle = runBlocking { getString(Res.string.notif_send_reply) },
-            textInputPlaceholder = runBlocking { getString(Res.string.write_a_message) }
+            textInputButtonTitle = getString(Res.string.notif_send_reply),
+            textInputPlaceholder = getString(Res.string.write_a_message)
         )
         val markReadAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_MARK_READ,
-            title = runBlocking { getString(Res.string.notif_mark_as_read) },
+            title = getString(Res.string.notif_mark_as_read),
             options = 0u
         )
         val messageCategory = UNNotificationCategory.categoryWithIdentifier(
@@ -133,12 +161,12 @@ class IOSNotificationService(
         // Request category with accept/decline actions
         val acceptAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_ACCEPT,
-            title = runBlocking { getString(Res.string.accept) },
+            title = getString(Res.string.accept),
             options = UNNotificationActionOptionNone
         )
         val requestDeclineAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_REQUEST_DECLINE,
-            title = runBlocking { getString(Res.string.decline) },
+            title = getString(Res.string.decline),
             options = UNNotificationActionOptionDestructive
         )
         val requestCategory = UNNotificationCategory.categoryWithIdentifier(
@@ -189,10 +217,15 @@ class IOSNotificationService(
         }
 
         val identifier = "call_$notifId"
+        post { postCallNotification(identifier) }
+        return identifier
+    }
+
+    private suspend fun postCallNotification(identifier: String) {
         currentCallNotificationId = identifier
 
         val content = UNMutableNotificationContent().apply {
-            setTitle(runBlocking { getString(Res.string.notif_current_call) })
+            setTitle(getString(Res.string.notif_current_call))
             setCategoryIdentifier(CATEGORY_CALL)
             // Apply sound based on settings. Silent during quiet hours — the notification
             // is still delivered, so the call can be seen and answered. The sound setting
@@ -216,11 +249,13 @@ class IOSNotificationService(
                 Log.d(TAG, "Showing call notification: $identifier")
             }
         }
-
-        return identifier
     }
 
     override fun cancelCallNotification() {
+        post { dropCallNotification() }
+    }
+
+    private fun dropCallNotification() {
         currentCallNotificationId?.let { id ->
             notificationCenter.removeDeliveredNotificationsWithIdentifiers(listOf(id))
             notificationCenter.removePendingNotificationRequestsWithIdentifiers(listOf(id))
@@ -238,8 +273,12 @@ class IOSNotificationService(
         remove: Boolean,
         startScreenshare: Boolean
     ) {
+        post { updateCallNotification(conference, remove, startScreenshare) }
+    }
+
+    private suspend fun updateCallNotification(conference: Conference, remove: Boolean, startScreenshare: Boolean) {
         if (remove) {
-            cancelCallNotification()
+            dropCallNotification()
             return
         }
 
@@ -261,7 +300,7 @@ class IOSNotificationService(
         // For RINGING calls, CallKit already shows the native incoming-call UI.
         // Skip the UNNotification to avoid a duplicate banner.
         if (state == Call.CallStatus.RINGING) return
-        val title = runBlocking {
+        val title = run {
             when (state) {
                 Call.CallStatus.CURRENT, Call.CallStatus.HOLD ->
                     getString(Res.string.notif_current_call_title, conference.getDisplayName())
@@ -270,7 +309,7 @@ class IOSNotificationService(
         }
 
         val content = UNMutableNotificationContent().apply {
-            setTitle(if (hiddenNames()) runBlocking { getString(Res.string.notif_incoming_call) } else title)
+            setTitle(if (hiddenNames()) getString(Res.string.notif_incoming_call) else title)
             if (!hiddenNames()) setBody(conference.getDisplayName())
             setCategoryIdentifier(CATEGORY_CALL)
             // Apply sound based on settings. Silent during quiet hours — the notification
@@ -318,10 +357,14 @@ class IOSNotificationService(
     }
 
     override fun showMissedCallNotification(call: Call) {
+        post { postMissedCallNotification(call) }
+    }
+
+    private suspend fun postMissedCallNotification(call: Call) {
         val identifier = "missed_${call.getDaemonIdString()}"
 
         val content = UNMutableNotificationContent().apply {
-            setTitle(runBlocking { getString(Res.string.notif_missed_incoming_call) })
+            setTitle(getString(Res.string.notif_missed_incoming_call))
             if (!hiddenNames()) setBody(call.getDisplayName())
             applySound(this)
         }
@@ -352,6 +395,10 @@ class IOSNotificationService(
     }
 
     override fun showGroupCallNotification(conversation: Conversation, remove: Boolean) {
+        post { postGroupCallNotification(conversation, remove) }
+    }
+
+    private suspend fun postGroupCallNotification(conversation: Conversation, remove: Boolean) {
         val identifier = "group_call_${conversation.uri.uri}"
 
         if (remove) {
@@ -361,7 +408,7 @@ class IOSNotificationService(
         }
 
         val content = UNMutableNotificationContent().apply {
-            setTitle(runBlocking { getString(Res.string.notif_inprogress_group_call) })
+            setTitle(getString(Res.string.notif_inprogress_group_call))
             setBody(conversation.getDisplayName())
             setCategoryIdentifier(CATEGORY_CALL)
             applySound(this)
@@ -385,6 +432,10 @@ class IOSNotificationService(
     // ==================== Text Notifications ====================
 
     override fun showTextNotification(conversation: Conversation) {
+        post { postTextNotification(conversation) }
+    }
+
+    private suspend fun postTextNotification(conversation: Conversation) {
         // Check settings before showing
         if (!notificationGuard.shouldShowMessageNotification()) {
             Log.d(TAG, "Message notifications disabled in settings")
@@ -400,7 +451,7 @@ class IOSNotificationService(
 
         val content = UNMutableNotificationContent().apply {
             if (hiddenNames()) {
-                setTitle(runBlocking { getString(Res.string.notif_hidden_message_title) })
+                setTitle(getString(Res.string.notif_hidden_message_title))
             } else {
                 setTitle(senderName)
                 setBody(lastMessage)
@@ -440,6 +491,10 @@ class IOSNotificationService(
     }
 
     override fun cancelTextNotification(accountId: String, contact: Uri) {
+        post { dropTextNotification(accountId, contact) }
+    }
+
+    private fun dropTextNotification(accountId: String, contact: Uri) {
         val conversationKey = "${accountId}_${contact.uri}"
         activeNotifications.remove(conversationKey)?.let { identifier ->
             notificationCenter.removeDeliveredNotificationsWithIdentifiers(listOf(identifier))
@@ -455,6 +510,10 @@ class IOSNotificationService(
     }
 
     override fun cancelAll() {
+        post { dropAll() }
+    }
+
+    private fun dropAll() {
         notificationCenter.removeAllDeliveredNotifications()
         notificationCenter.removeAllPendingNotificationRequests()
         activeNotifications.clear()
@@ -466,13 +525,17 @@ class IOSNotificationService(
     // ==================== Trust Request Notifications ====================
 
     override fun showIncomingTrustRequestNotification(account: Account) {
+        post { postTrustRequestNotification(account) }
+    }
+
+    private suspend fun postTrustRequestNotification(account: Account) {
         val identifier = "request_${account.accountId}"
         val pending = account.getPending().toList()
         // Before the settings check: a notification posted while requests were still notified
         // must go once the last request is answered, even if the setting has been switched off
         // since.
         if (pending.isEmpty()) {
-            cancelTrustRequestNotification(account.accountId)
+            dropTrustRequestNotification(account.accountId)
             Log.d(TAG, "No pending requests left; cancelled notification for ${account.accountId}")
             return
         }
@@ -484,11 +547,11 @@ class IOSNotificationService(
         val single = pending.singleOrNull()
 
         val content = UNMutableNotificationContent().apply {
-            setTitle(runBlocking { getString(Res.string.new_invitation_request_title) })
+            setTitle(getString(Res.string.new_invitation_request_title))
             // The sender, or a count when there is more than one. This was
             // account.displayUsername — the *local* account's own name, which told the user
             // nothing about who was asking.
-            setBody(runBlocking {
+            setBody(run {
                 when {
                     // Names hidden: the count is not a name, so it still goes out.
                     hiddenNames() && single != null ->
@@ -527,6 +590,10 @@ class IOSNotificationService(
     }
 
     override fun cancelTrustRequestNotification(accountId: String) {
+        post { dropTrustRequestNotification(accountId) }
+    }
+
+    private fun dropTrustRequestNotification(accountId: String) {
         val identifier = "request_$accountId"
         notificationCenter.removeDeliveredNotificationsWithIdentifiers(listOf(identifier))
         Log.d(TAG, "Cancelled trust request notification for account: $accountId")
@@ -606,10 +673,14 @@ class IOSNotificationService(
         contact: Contact,
         conversation: Conversation
     ) {
+        post { postLocationNotification(account, contact, conversation) }
+    }
+
+    private suspend fun postLocationNotification(account: Account, contact: Contact, conversation: Conversation) {
         val identifier = "location_${contact.uri.uri}"
 
         val content = UNMutableNotificationContent().apply {
-            setTitle(runBlocking { getString(Res.string.notif_location_title, contact.displayName.orEmpty()) })
+            setTitle(getString(Res.string.notif_location_title, contact.displayName.orEmpty()))
             setSound(null)
         }
 
@@ -629,6 +700,10 @@ class IOSNotificationService(
     }
 
     override fun cancelLocationNotification(account: Account, contact: Contact) {
+        post { dropLocationNotification(account, contact) }
+    }
+
+    private fun dropLocationNotification(account: Account, contact: Contact) {
         val identifier = "location_${contact.uri.uri}"
         notificationCenter.removeDeliveredNotificationsWithIdentifiers(listOf(identifier))
         Log.d(TAG, "Cancelled location notification for contact: ${contact.uri.uri}")
