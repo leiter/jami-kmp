@@ -454,8 +454,9 @@ private fun MainNavigation(needsMigration: Boolean) {
                         Screen.LocationSharing.createRoute(conversationId)
                     )
                 },
-                onImageClick = { filePath ->
+                onImageClick = { filePath, imagePaths ->
                     MediaNavigationState.filePath = filePath
+                    MediaNavigationState.imagePaths = imagePaths
                     MediaNavigationState.fileName = ""
                     navController.navigate(Screen.MediaViewer.route)
                 },
@@ -483,8 +484,9 @@ private fun MainNavigation(needsMigration: Boolean) {
                 MediaGalleryScreen(
                     conversationId = conversationId,
                     onBack = { navController.popBackStack() },
-                    onImageClick = { filePath ->
+                    onImageClick = { filePath, imagePaths ->
                         MediaNavigationState.filePath = filePath
+                        MediaNavigationState.imagePaths = imagePaths
                         MediaNavigationState.fileName = ""
                         navController.navigate(Screen.MediaViewer.route)
                     },
@@ -682,6 +684,7 @@ private fun MainNavigation(needsMigration: Boolean) {
             CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
                 MediaViewerScreen(
                     filePath = MediaNavigationState.filePath,
+                    imagePaths = MediaNavigationState.imagePaths,
                     onBack = { navController.popBackStack() },
                 )
             }

@@ -230,6 +230,7 @@ import net.jami.ui.components.inputs.RecentEmoji
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.components.notification.ConnectivityBannerStrip
 import net.jami.ui.viewmodel.ConnectivityBanner
+import net.jami.ui.navigation.pagedImagePaths
 import net.jami.ui.viewmodel.ChatViewModel
 import net.jami.ui.viewmodel.MessageItem
 import net.jami.ui.viewmodel.MessageType
@@ -331,7 +332,7 @@ fun ChatScreen(
     onCallClick: (String, Boolean) -> Unit,
     onDetailsClick: () -> Unit,
     onShareLocation: () -> Unit = {},
-    onImageClick: (filePath: String) -> Unit = {},
+    onImageClick: (filePath: String, imagePaths: List<String>) -> Unit = { _, _ -> },
     onVideoClick: (filePath: String, fileName: String) -> Unit = { _, _ -> },
     onGalleryClick: () -> Unit = {},
 ) {
@@ -790,7 +791,7 @@ fun ChatScreen(
                                 message = message,
                                 onAccept = { viewModel.acceptTransfer(message.id, message.fileId ?: "") },
                                 onCancel = { viewModel.cancelTransfer(message.id, message.fileId ?: "") },
-                                onImageClick = onImageClick,
+                                onImageClick = { path -> onImageClick(path, pagedImagePaths(state.messages)) },
                                 onVideoClick = onVideoClick,
                                 onOpen = openConversationFile,
                                 onSave = { path -> pendingSaveFile = path },

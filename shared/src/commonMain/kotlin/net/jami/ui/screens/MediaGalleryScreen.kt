@@ -60,6 +60,7 @@ import net.jami.ui.components.sharedMediaElement
 import net.jami.di.getViewModel
 import net.jami.ui.theme.JamiTheme
 import net.jami.ui.utils.toImageBitmap
+import net.jami.ui.navigation.pagedImagePaths
 import net.jami.ui.viewmodel.ChatViewModel
 import net.jami.ui.viewmodel.MessageItem
 import net.jami.ui.viewmodel.MessageType
@@ -74,7 +75,8 @@ import net.jami.utils.FileUtils
  *
  * @param conversationId The conversation whose shared media to display.
  * @param onBack Called when the user navigates back.
- * @param onImageClick Called with the local file path when an image tile is tapped.
+ * @param onImageClick Called with the tapped image's local file path and every image of the
+ *   conversation, for the viewer to page through.
  * @param onVideoClick Called with the local file path and display name when a video tile is tapped.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,7 +84,7 @@ import net.jami.utils.FileUtils
 fun MediaGalleryScreen(
     conversationId: String,
     onBack: () -> Unit,
-    onImageClick: (filePath: String) -> Unit = {},
+    onImageClick: (filePath: String, imagePaths: List<String>) -> Unit = { _, _ -> },
     onVideoClick: (filePath: String, fileName: String) -> Unit = { _, _ -> },
 ) {
     val viewModel = getViewModel<ChatViewModel>()
@@ -137,7 +139,7 @@ fun MediaGalleryScreen(
                         item = item,
                         onClick = {
                             val path = item.destinationPath ?: return@MediaGalleryTile
-                            if (item.isVideo) onVideoClick(path, item.text) else onImageClick(path)
+                            if (item.isVideo) onVideoClick(path, item.text) else onImageClick(path, pagedImagePaths(state.messages))
                         },
                     )
                 }
