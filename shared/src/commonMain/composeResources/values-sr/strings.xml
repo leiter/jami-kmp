@@ -564,4 +564,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">Ovaj nalog je već na ovom uređaju.</string>
     <string name="custom_profile_message_warning">Prilagođeni profil je vidljiv samo nalogu na ovom uređaju</string>
     <string name="dialog_title_contact">Uredi prikazano ime</string>
+    <string name="permission_dialog_camera_message">Video-konverzacije zahtevaju dozvolu za kameru. Dozvola za kameru je onemogućena. Omogućite je u podešavanjima uređaja da biste koristili ovu funkciju.</string>
+    <string name="permission_dialog_open_settings">Отворени накладови</string>
+    <string name="permission_dialog_later">Касније</string>
+    <string name="permission_dialog_camera_rationale">Jami treba kameru za video pozive i fotografisanje. Bez nje vas drugi neće videti.</string>
+    <string name="permission_dialog_microphone_title">Dozvola za mikrofon</string>
+    <string name="permission_dialog_microphone_rationale">Jami treba mikrofon za pozive i glasovne poruke. Bez njega vas drugi neće čuti.</string>
+    <string name="permission_dialog_microphone_message">Dozvola za mikrofon je isključena. Uključite je u podešavanjima uređaja da biste koristili ovu funkciju.</string>
+    <string name="permission_dialog_location_title">Dozvola za lokaciju</string>
+    <string name="permission_dialog_location_rationale">Jami treba vašu lokaciju da bi je delio u razgovoru. Šalje se samo dok je delite.</string>
+    <string name="permission_dialog_location_message">Dozvola za lokaciju je isključena. Uključite je u podešavanjima uređaja da biste koristili ovu funkciju.</string>
+    <string name="permission_dialog_contacts_title">Dozvola za kontakte</string>
+    <string name="permission_dialog_contacts_rationale">Jami čita vaše kontakte da bi prikazao imena i fotografije koje ste sačuvali za svoje Jami kontakte. Ništa se ne otprema.</string>
 </resources>

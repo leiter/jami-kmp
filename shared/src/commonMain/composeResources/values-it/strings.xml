@@ -636,4 +636,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Sincronizzazione delle conversazioni in background</string>
     <string name="profile_save_failed">Impossibile salvare il profilo</string>
     <string name="import_account_already_on_device">Questo account è già presente su questo dispositivo.</string>
+    <string name="permission_dialog_open_settings">Apri le impostazioni</string>
+    <string name="permission_dialog_later">Più tardi</string>
+    <string name="permission_dialog_camera_rationale">Jami ha bisogno della fotocamera per le videochiamate e per scattare foto. Senza, gli altri non ti vedranno.</string>
+    <string name="permission_dialog_microphone_title">Autorizzazione microfono</string>
+    <string name="permission_dialog_microphone_rationale">Jami ha bisogno del microfono per le chiamate e i messaggi vocali. Senza, gli altri non ti sentiranno.</string>
+    <string name="permission_dialog_microphone_message">L'autorizzazione al microfono è disattivata. Attivala nelle impostazioni del dispositivo per usare questa funzione.</string>
+    <string name="permission_dialog_location_title">Autorizzazione posizione</string>
+    <string name="permission_dialog_location_rationale">Jami ha bisogno della tua posizione per condividerla in una conversazione. Viene inviata solo mentre la condividi.</string>
+    <string name="permission_dialog_location_message">L'autorizzazione alla posizione è disattivata. Attivala nelle impostazioni del dispositivo per usare questa funzione.</string>
+    <string name="permission_dialog_contacts_title">Autorizzazione contatti</string>
+    <string name="permission_dialog_contacts_rationale">Jami legge i tuoi contatti per mostrare i nomi e le foto che hai salvato per i tuoi contatti Jami. Non viene caricato nulla.</string>
 </resources>

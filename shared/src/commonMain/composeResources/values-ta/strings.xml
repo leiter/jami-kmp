@@ -463,4 +463,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">காட்சிப் பெயரைத் திருத்து</string>
     <string name="custom_profile_message_warning">தனிப்பயன் சுயவிவரம் இந்தச் சாதனத்தில் உள்ள கணக்கிற்கு மட்டுமே தெரியும்</string>
     <string name="remove_photo">படத்தை அகற்று</string>
+    <string name="permission_dialog_open_settings">அமைப்புகளைத் திற</string>
+    <string name="permission_dialog_later">பின்னர்</string>
+    <string name="permission_dialog_camera_rationale">வீடியோ அழைப்புகளுக்கும் படம் எடுக்கவும் Jami-க்கு கேமரா தேவை. அது இல்லாமல் மற்றவர்கள் உங்களைப் பார்க்க முடியாது.</string>
+    <string name="permission_dialog_microphone_title">மைக்ரோஃபோன் அனுமதி</string>
+    <string name="permission_dialog_microphone_rationale">அழைப்புகளுக்கும் குரல் செய்திகளுக்கும் Jami-க்கு மைக்ரோஃபோன் தேவை. அது இல்லாமல் மற்றவர்கள் உங்களைக் கேட்க முடியாது.</string>
+    <string name="permission_dialog_microphone_message">மைக்ரோஃபோன் அனுமதி முடக்கப்பட்டுள்ளது. இந்த அம்சத்தைப் பயன்படுத்த சாதன அமைப்புகளில் அதை இயக்கவும்.</string>
+    <string name="permission_dialog_location_title">இருப்பிட அனுமதி</string>
+    <string name="permission_dialog_location_rationale">உரையாடலில் பகிர Jami-க்கு உங்கள் இருப்பிடம் தேவை. நீங்கள் பகிரும்போது மட்டுமே அது அனுப்பப்படும்.</string>
+    <string name="permission_dialog_location_message">இருப்பிட அனுமதி முடக்கப்பட்டுள்ளது. இந்த அம்சத்தைப் பயன்படுத்த சாதன அமைப்புகளில் அதை இயக்கவும்.</string>
+    <string name="permission_dialog_contacts_title">தொடர்புகள் அனுமதி</string>
+    <string name="permission_dialog_contacts_rationale">உங்கள் Jami தொடர்புகளுக்காகச் சேமித்த பெயர்களையும் படங்களையும் காட்ட Jami உங்கள் தொடர்புகளைப் படிக்கிறது. எதுவும் பதிவேற்றப்படாது.</string>
 </resources>

@@ -489,4 +489,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">Ši paskyra jau yra šiame įrenginyje.</string>
     <string name="dialog_title_contact">Taisyti rodomą vardą</string>
     <string name="custom_profile_message_warning">Tinkintas profilis matomas tik šio įrenginio paskyrai</string>
+    <string name="permission_dialog_open_settings">Atverti nustatymus</string>
+    <string name="permission_dialog_later">Vėliau</string>
+    <string name="permission_dialog_camera_rationale">Jami reikia kameros vaizdo skambučiams ir nuotraukoms daryti. Be jos kiti jūsų nematys.</string>
+    <string name="permission_dialog_microphone_title">Mikrofono leidimas</string>
+    <string name="permission_dialog_microphone_rationale">Jami reikia mikrofono skambučiams ir balso žinutėms. Be jo kiti jūsų negirdės.</string>
+    <string name="permission_dialog_microphone_message">Mikrofono leidimas išjungtas. Įjunkite jį įrenginio nustatymuose, kad galėtumėte naudoti šią funkciją.</string>
+    <string name="permission_dialog_location_title">Vietovės leidimas</string>
+    <string name="permission_dialog_location_rationale">Jami reikia jūsų vietovės, kad galėtų ja pasidalinti pokalbyje. Ji siunčiama tik kol dalinatės.</string>
+    <string name="permission_dialog_location_message">Vietovės leidimas išjungtas. Įjunkite jį įrenginio nustatymuose, kad galėtumėte naudoti šią funkciją.</string>
+    <string name="permission_dialog_contacts_title">Kontaktų leidimas</string>
+    <string name="permission_dialog_contacts_rationale">Jami skaito jūsų kontaktus, kad parodytų vardus ir nuotraukas, kuriuos išsaugojote savo Jami kontaktams. Niekas neįkeliama.</string>
+    <string name="permission_dialog_camera_message">Vaizdo pokalbiams reikia kameros leidimo. Kameros leidimas išjungtas. Įjunkite jį įrenginio nustatymuose, kad galėtumėte naudoti šią funkciją.</string>
+    <string name="permission_dialog_read_contacts_message">Jami reikia leidimo „Skaityti kontaktus“. Įjunkite jį įrenginio nustatymuose, kad galėtumėte naudoti šią funkciją.</string>
 </resources>

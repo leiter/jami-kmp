@@ -539,4 +539,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">Aquest compte ja és en aquest dispositiu.</string>
     <string name="custom_profile_message_warning">El perfil personalitzat només és visible per al compte d'aquest dispositiu</string>
     <string name="dialog_title_contact">Edita el nom visible</string>
+    <string name="permission_dialog_camera_message">Les converses de vídeo requereixen el permís de la càmera. El permís de la càmera està desactivat. Activeu-lo a la configuració del dispositiu per utilitzar aquesta funció.</string>
+    <string name="permission_dialog_read_contacts_message">El Jami requereix el permís «Llegir els contactes». Activeu-lo a la configuració del dispositiu per utilitzar aquesta funció.</string>
+    <string name="permission_dialog_open_settings">Configuracions obertes</string>
+    <string name="permission_dialog_later">Més tard</string>
+    <string name="permission_dialog_camera_rationale">Jami necessita la càmera per a les videotrucades i per fer fotos. Sense ella, els altres no us veuran.</string>
+    <string name="permission_dialog_microphone_title">Permís del micròfon</string>
+    <string name="permission_dialog_microphone_rationale">Jami necessita el micròfon per a les trucades i els missatges de veu. Sense ell, els altres no us sentiran.</string>
+    <string name="permission_dialog_microphone_message">El permís del micròfon està desactivat. Activeu-lo a la configuració del dispositiu per utilitzar aquesta funció.</string>
+    <string name="permission_dialog_location_title">Permís d'ubicació</string>
+    <string name="permission_dialog_location_rationale">Jami necessita la vostra ubicació per compartir-la en una conversa. Només s'envia mentre la compartiu.</string>
+    <string name="permission_dialog_location_message">El permís d'ubicació està desactivat. Activeu-lo a la configuració del dispositiu per utilitzar aquesta funció.</string>
+    <string name="permission_dialog_contacts_title">Permís dels contactes</string>
+    <string name="permission_dialog_contacts_rationale">Jami llegeix els vostres contactes per mostrar els noms i les fotos que heu desat per als vostres contactes de Jami. No es puja res.</string>
 </resources>

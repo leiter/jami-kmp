@@ -450,4 +450,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">Көрсетілетін атауды өңдеу</string>
     <string name="custom_profile_message_warning">Жеке профиль тек осы құрылғыдағы тіркелгіге көрінеді</string>
     <string name="remove_photo">Фотоны өшіру</string>
+    <string name="permission_dialog_open_settings">Ашық параметрлер</string>
+    <string name="permission_dialog_later">Кейінірек</string>
+    <string name="permission_dialog_camera_rationale">Jami-ге бейнеқоңыраулар мен суретке түсіру үшін камера қажет. Онсыз басқалар сізді көрмейді.</string>
+    <string name="permission_dialog_microphone_title">Микрофон рұқсаты</string>
+    <string name="permission_dialog_microphone_rationale">Jami-ге қоңыраулар мен дауыстық хабарламалар үшін микрофон қажет. Онсыз басқалар сізді естімейді.</string>
+    <string name="permission_dialog_microphone_message">Микрофон рұқсаты өшірулі. Бұл мүмкіндікті пайдалану үшін оны құрылғы параметрлерінде қосыңыз.</string>
+    <string name="permission_dialog_location_title">Орналасу рұқсаты</string>
+    <string name="permission_dialog_location_rationale">Jami-ге орналасқан жеріңізді сөйлесуде бөлісу үшін қажет. Ол тек бөлісіп жатқанда жіберіледі.</string>
+    <string name="permission_dialog_location_message">Орналасу рұқсаты өшірулі. Бұл мүмкіндікті пайдалану үшін оны құрылғы параметрлерінде қосыңыз.</string>
+    <string name="permission_dialog_contacts_title">Контактілер рұқсаты</string>
+    <string name="permission_dialog_contacts_rationale">Jami сіздің Jami контактілеріңізге сақтаған аттар мен суреттерді көрсету үшін контактілеріңізді оқиды. Ештеңе жүктелмейді.</string>
+    <string name="permission_dialog_camera_message">Бейнесөйлесулер үшін камера рұқсаты қажет. Камера рұқсаты өшірулі. Бұл мүмкіндікті пайдалану үшін оны құрылғы параметрлерінде қосыңыз.</string>
+    <string name="permission_dialog_read_contacts_message">Jami «Контактілерді оқу» рұқсатын қажет етеді. Бұл мүмкіндікті пайдалану үшін оны құрылғы параметрлерінде қосыңыз.</string>
 </resources>

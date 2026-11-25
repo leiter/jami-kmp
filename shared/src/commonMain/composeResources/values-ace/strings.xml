@@ -181,4 +181,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="emoji_category_symbols">سيمبول</string>
     <string name="date_today">هاري اين</string>
     <string name="date_yesterday">ديري</string>
+    <string name="permission_dialog_open_settings">سيٽنگون باز</string>
+    <string name="permission_dialog_later">ڤد ماس</string>
 </resources>

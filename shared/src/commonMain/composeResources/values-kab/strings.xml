@@ -561,4 +561,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="profile_save_failed">Ur yezmir ara ad yettwasekles umaɣnu</string>
     <string name="time_now_short">Tura</string>
     <string name="import_account_already_on_device">Amiḍan-a yella yakan deg yibenk-a.</string>
+    <string name="permission_dialog_open_settings">Ldi iɣewwaṛen</string>
+    <string name="permission_dialog_later">Ticki</string>
+    <string name="permission_dialog_camera_rationale">Jami yesra takamiṛat i yisawalen s tvidyut d tukksa n tewlafin. Mebla-s, wiyaḍ ur k-ttwalin ara.</string>
+    <string name="permission_dialog_microphone_title">Tasiregt n usawaḍ</string>
+    <string name="permission_dialog_microphone_rationale">Jami yesra asawaḍ i yisawalen d yiznan n taɣect. Mebla-s, wiyaḍ ur k-sellen ara.</string>
+    <string name="permission_dialog_microphone_message">Tasiregt n usawaḍ tensa. Rmed-itt deg yiɣewwaren n yibenk akken ad tesqedceḍ tamahilt-a.</string>
+    <string name="permission_dialog_location_title">Tasiregt n wadig</string>
+    <string name="permission_dialog_location_rationale">Jami yesra adig-ik akken ad t-yebḍu deg udiwenni. Ittwazen kan mi ara t-tebḍuḍ.</string>
+    <string name="permission_dialog_location_message">Tasiregt n wadig tensa. Rmed-itt deg yiɣewwaren n yibenk akken ad tesqedceḍ tamahilt-a.</string>
+    <string name="permission_dialog_contacts_title">Tasiregt n yinermisen</string>
+    <string name="permission_dialog_contacts_rationale">Jami yeqqar inermisen-ik akken ad d-yesken ismawen d tewlafin i teskelseḍ i yinermisen-ik n Jami. Ulac ayen ara d-yettwasulin.</string>
 </resources>

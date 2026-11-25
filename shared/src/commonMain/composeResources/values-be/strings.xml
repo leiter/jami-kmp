@@ -312,4 +312,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="custom_profile_message_warning">Уласны профіль бачны толькі ўліковаму запісу на гэтай прыладзе</string>
     <string name="remove_photo">Выдаліць фота</string>
     <string name="open_the_gallery">Адкрыць галерэю</string>
+    <string name="permission_dialog_open_settings">Адкрытыя налады</string>
+    <string name="permission_dialog_later">Пазней</string>
+    <string name="permission_dialog_camera_rationale">Jami патрэбна камера для відэазванкоў і фатаграфавання. Без яе іншыя вас не ўбачаць.</string>
+    <string name="permission_dialog_microphone_title">Доступ да мікрафона</string>
+    <string name="permission_dialog_microphone_rationale">Jami патрэбны мікрафон для званкоў і галасавых паведамленняў. Без яго іншыя вас не пачуюць.</string>
+    <string name="permission_dialog_microphone_message">Доступ да мікрафона адключаны. Уключыце яго ў наладах прылады, каб карыстацца гэтай функцыяй.</string>
+    <string name="permission_dialog_location_title">Доступ да месцазнаходжання</string>
+    <string name="permission_dialog_location_rationale">Jami патрэбна ваша месцазнаходжанне, каб падзяліцца ім у размове. Яно адпраўляецца, толькі пакуль вы ім дзеліцеся.</string>
+    <string name="permission_dialog_location_message">Доступ да месцазнаходжання адключаны. Уключыце яго ў наладах прылады, каб карыстацца гэтай функцыяй.</string>
+    <string name="permission_dialog_contacts_title">Доступ да кантактаў</string>
+    <string name="permission_dialog_contacts_rationale">Jami чытае вашы кантакты, каб паказваць імёны і фота, захаваныя вамі для кантактаў Jami. Нічога не запампоўваецца.</string>
+    <string name="permission_dialog_camera_title">Доступ да камеры</string>
+    <string name="permission_dialog_camera_message">Для відэаразмоў патрэбны доступ да камеры. Доступ да камеры адключаны. Уключыце яго ў наладах прылады, каб карыстацца гэтай функцыяй.</string>
+    <string name="permission_dialog_read_contacts_message">Jami патрабуе дазволу «Чытанне кантактаў». Уключыце яго ў наладах прылады, каб карыстацца гэтай функцыяй.</string>
 </resources>

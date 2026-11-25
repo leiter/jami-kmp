@@ -625,4 +625,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Синхронизация бесед в фоновом режиме</string>
     <string name="profile_save_failed">Не удалось сохранить профиль</string>
     <string name="import_account_already_on_device">Эта учётная запись уже есть на этом устройстве.</string>
+    <string name="permission_dialog_open_settings">Открыть настройки</string>
+    <string name="permission_dialog_later">Позже</string>
+    <string name="permission_dialog_camera_rationale">Jami нужна камера для видеозвонков и фотосъёмки. Без неё другие вас не увидят.</string>
+    <string name="permission_dialog_microphone_title">Доступ к микрофону</string>
+    <string name="permission_dialog_microphone_rationale">Jami нужен микрофон для звонков и голосовых сообщений. Без него другие вас не услышат.</string>
+    <string name="permission_dialog_microphone_message">Доступ к микрофону отключён. Включите его в настройках устройства, чтобы использовать эту функцию.</string>
+    <string name="permission_dialog_location_title">Доступ к местоположению</string>
+    <string name="permission_dialog_location_rationale">Jami нужно ваше местоположение, чтобы поделиться им в беседе. Оно отправляется, только пока вы им делитесь.</string>
+    <string name="permission_dialog_location_message">Доступ к местоположению отключён. Включите его в настройках устройства, чтобы использовать эту функцию.</string>
+    <string name="permission_dialog_contacts_title">Доступ к контактам</string>
+    <string name="permission_dialog_contacts_rationale">Jami читает ваши контакты, чтобы показывать имена и фото, сохранённые вами для контактов Jami. Ничего не загружается.</string>
 </resources>

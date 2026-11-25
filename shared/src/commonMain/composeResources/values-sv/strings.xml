@@ -515,4 +515,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">Det här kontot finns redan på den här enheten.</string>
     <string name="custom_profile_message_warning">Den anpassade profilen är endast synlig för kontot på den här enheten</string>
     <string name="dialog_title_contact">Redigera visningsnamn</string>
+    <string name="permission_dialog_camera_message">Videokonversationer kräver kameratillståndet. Kameratillståndet är inaktiverat. Aktivera det i enhetsinställningarna för att använda den här funktionen.</string>
+    <string name="permission_dialog_read_contacts_message">Jami kräver tillståndet ”Läs kontakter”. Aktivera det i enhetsinställningarna för att använda den här funktionen.</string>
+    <string name="permission_dialog_open_settings">Öppna inställningar</string>
+    <string name="permission_dialog_later">Senare</string>
+    <string name="permission_dialog_camera_rationale">Jami behöver kameran för videosamtal och för att ta bilder. Utan den kan andra inte se dig.</string>
+    <string name="permission_dialog_microphone_title">Mikrofonbehörighet</string>
+    <string name="permission_dialog_microphone_rationale">Jami behöver mikrofonen för samtal och röstmeddelanden. Utan den kan andra inte höra dig.</string>
+    <string name="permission_dialog_microphone_message">Mikrofonbehörigheten är avstängd. Aktivera den i enhetens inställningar för att använda den här funktionen.</string>
+    <string name="permission_dialog_location_title">Platsbehörighet</string>
+    <string name="permission_dialog_location_rationale">Jami behöver din plats för att dela den i en konversation. Den skickas bara medan du delar den.</string>
+    <string name="permission_dialog_location_message">Platsbehörigheten är avstängd. Aktivera den i enhetens inställningar för att använda den här funktionen.</string>
+    <string name="permission_dialog_contacts_title">Kontaktbehörighet</string>
+    <string name="permission_dialog_contacts_rationale">Jami läser dina kontakter för att visa de namn och bilder du har sparat för dina Jami-kontakter. Inget laddas upp.</string>
 </resources>

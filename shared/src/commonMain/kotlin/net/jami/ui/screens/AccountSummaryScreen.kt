@@ -43,6 +43,7 @@ import net.jami.ui.components.actions.JamiButton
 import net.jami.ui.components.notification.JamiAlertDialog
 import net.jami.ui.platform.AppPermission
 import net.jami.ui.platform.PermissionRequesterEffect
+import net.jami.ui.platform.PermissionSettingsDialog
 import net.jami.ui.platform.rememberBatteryOptimizationState
 import net.jami.ui.theme.JamiTheme
 
@@ -80,13 +81,12 @@ fun AccountSummaryScreen(
     }
 
     if (showNotifDeniedDialog) {
-        JamiAlertDialog(
+        // The message asks the user to enable notifications in the settings, so it offers the way
+        // there (jami-client-android: permission_dialog_open_settings / permission_dialog_later).
+        PermissionSettingsDialog(
             title = stringResource(Res.string.permission_dialog_post_notifications_title),
             body = stringResource(Res.string.permission_dialog_post_notifications_blocked_message),
-            confirmText = "OK",
-            dismissText = null,
-            onConfirm = { showNotifDeniedDialog = false },
-            onDismiss = { showNotifDeniedDialog = false },
+            onDone = { showNotifDeniedDialog = false },
         )
     }
 

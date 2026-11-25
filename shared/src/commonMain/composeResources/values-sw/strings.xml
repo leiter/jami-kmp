@@ -449,4 +449,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">Hariri jina la kuonyeshwa</string>
     <string name="custom_profile_message_warning">Wasifu maalum unaonekana tu kwa akaunti iliyo kwenye kifaa hiki</string>
     <string name="remove_photo">Ondoa picha</string>
+    <string name="permission_dialog_open_settings">Mipangilio ya wazi</string>
+    <string name="permission_dialog_later">Baadaye</string>
+    <string name="permission_dialog_camera_rationale">Jami inahitaji kamera kwa simu za video na kupiga picha. Bila hiyo, wengine hawatakuona.</string>
+    <string name="permission_dialog_microphone_title">Ruhusa ya maikrofoni</string>
+    <string name="permission_dialog_microphone_rationale">Jami inahitaji maikrofoni kwa simu na ujumbe wa sauti. Bila hiyo, wengine hawatakusikia.</string>
+    <string name="permission_dialog_microphone_message">Ruhusa ya maikrofoni imezimwa. Iwashe katika mipangilio ya kifaa ili kutumia kipengele hiki.</string>
+    <string name="permission_dialog_location_title">Ruhusa ya mahali</string>
+    <string name="permission_dialog_location_rationale">Jami inahitaji mahali ulipo ili kuushiriki katika mazungumzo. Hutumwa tu wakati unaushiriki.</string>
+    <string name="permission_dialog_location_message">Ruhusa ya mahali imezimwa. Iwashe katika mipangilio ya kifaa ili kutumia kipengele hiki.</string>
+    <string name="permission_dialog_contacts_title">Ruhusa ya anwani</string>
+    <string name="permission_dialog_contacts_rationale">Jami husoma anwani zako ili kuonyesha majina na picha ulizohifadhi kwa anwani zako za Jami. Hakuna kinachopakiwa.</string>
+    <string name="permission_dialog_camera_message">Mazungumzo ya video yanahitaji ruhusa ya kamera. Ruhusa ya kamera imezimwa. Iwashe katika mipangilio ya kifaa ili kutumia kipengele hiki.</string>
+    <string name="permission_dialog_read_contacts_message">Jami inahitaji ruhusa ya “Soma anwani”. Iwashe katika mipangilio ya kifaa ili kutumia kipengele hiki.</string>
 </resources>

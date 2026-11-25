@@ -424,4 +424,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">Sửa tên hiển thị</string>
     <string name="remove_photo">Xóa ảnh</string>
     <string name="open_the_gallery">Mở thư viện ảnh</string>
+    <string name="permission_dialog_open_settings">Mở cài đặt</string>
+    <string name="permission_dialog_later">Sau đó</string>
+    <string name="permission_dialog_camera_rationale">Jami cần camera cho cuộc gọi video và chụp ảnh. Không có camera, người khác sẽ không nhìn thấy bạn.</string>
+    <string name="permission_dialog_microphone_title">Quyền micrô</string>
+    <string name="permission_dialog_microphone_rationale">Jami cần micrô cho cuộc gọi và tin nhắn thoại. Không có micrô, người khác sẽ không nghe thấy bạn.</string>
+    <string name="permission_dialog_microphone_message">Quyền micrô đang tắt. Hãy bật trong cài đặt thiết bị để dùng tính năng này.</string>
+    <string name="permission_dialog_location_title">Quyền vị trí</string>
+    <string name="permission_dialog_location_rationale">Jami cần vị trí của bạn để chia sẻ trong cuộc trò chuyện. Vị trí chỉ được gửi khi bạn chia sẻ.</string>
+    <string name="permission_dialog_location_message">Quyền vị trí đang tắt. Hãy bật trong cài đặt thiết bị để dùng tính năng này.</string>
+    <string name="permission_dialog_contacts_title">Quyền danh bạ</string>
+    <string name="permission_dialog_contacts_rationale">Jami đọc danh bạ của bạn để hiển thị tên và ảnh bạn đã lưu cho các liên hệ Jami. Không có gì được tải lên.</string>
+    <string name="permission_dialog_camera_title">Quyền camera</string>
+    <string name="permission_dialog_camera_message">Cuộc trò chuyện video cần quyền camera. Quyền camera đang tắt. Hãy bật trong cài đặt thiết bị để dùng tính năng này.</string>
+    <string name="permission_dialog_read_contacts_message">Jami cần quyền “Đọc danh bạ”. Hãy bật trong cài đặt thiết bị để dùng tính năng này.</string>
 </resources>

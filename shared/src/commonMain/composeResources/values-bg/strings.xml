@@ -451,4 +451,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">Редактиране на показваното име</string>
     <string name="custom_profile_message_warning">Персонализираният профил се вижда само от профила на това устройство</string>
     <string name="remove_photo">Премахване на снимката</string>
+    <string name="permission_dialog_open_settings">Отваряне на настройки</string>
+    <string name="permission_dialog_later">По-късно.</string>
+    <string name="permission_dialog_camera_rationale">Jami се нуждае от камерата за видеоразговори и за снимки. Без нея другите няма да ви виждат.</string>
+    <string name="permission_dialog_microphone_title">Разрешение за микрофона</string>
+    <string name="permission_dialog_microphone_rationale">Jami се нуждае от микрофона за разговори и гласови съобщения. Без него другите няма да ви чуват.</string>
+    <string name="permission_dialog_microphone_message">Разрешението за микрофона е изключено. Включете го в настройките на устройството, за да използвате тази функция.</string>
+    <string name="permission_dialog_location_title">Разрешение за местоположение</string>
+    <string name="permission_dialog_location_rationale">Jami се нуждае от местоположението ви, за да го споделя в разговор. Изпраща се само докато го споделяте.</string>
+    <string name="permission_dialog_location_message">Разрешението за местоположение е изключено. Включете го в настройките на устройството, за да използвате тази функция.</string>
+    <string name="permission_dialog_contacts_title">Разрешение за контакти</string>
+    <string name="permission_dialog_contacts_rationale">Jami чете контактите ви, за да показва имената и снимките, които сте запазили за контактите си в Jami. Нищо не се качва.</string>
+    <string name="permission_dialog_camera_message">Видеоразговорите изискват разрешение за камерата. Разрешението за камерата е изключено. Включете го в настройките на устройството, за да използвате тази функция.</string>
+    <string name="permission_dialog_read_contacts_message">Jami изисква разрешението „Четене на контакти“. Включете го в настройките на устройството, за да използвате тази функция.</string>
 </resources>

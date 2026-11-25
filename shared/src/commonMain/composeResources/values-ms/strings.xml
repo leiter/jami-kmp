@@ -367,4 +367,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">Sunting nama paparan</string>
     <string name="custom_profile_message_warning">Profil tersuai hanya kelihatan kepada akaun pada peranti ini</string>
     <string name="remove_photo">Buang foto</string>
+    <string name="permission_dialog_open_settings">തുറന്ന ക്രമീകരണങ്ങൾ</string>
+    <string name="permission_dialog_later">പിന്നീട്</string>
+    <string name="permission_dialog_camera_rationale">Jami memerlukan kamera untuk panggilan video dan mengambil foto. Tanpanya, orang lain tidak dapat melihat anda.</string>
+    <string name="permission_dialog_microphone_title">Kebenaran mikrofon</string>
+    <string name="permission_dialog_microphone_rationale">Jami memerlukan mikrofon untuk panggilan dan mesej suara. Tanpanya, orang lain tidak dapat mendengar anda.</string>
+    <string name="permission_dialog_microphone_message">Kebenaran mikrofon dimatikan. Hidupkannya dalam tetapan peranti untuk menggunakan ciri ini.</string>
+    <string name="permission_dialog_location_title">Kebenaran lokasi</string>
+    <string name="permission_dialog_location_rationale">Jami memerlukan lokasi anda untuk berkongsi dalam perbualan. Ia hanya dihantar semasa anda berkongsi.</string>
+    <string name="permission_dialog_location_message">Kebenaran lokasi dimatikan. Hidupkannya dalam tetapan peranti untuk menggunakan ciri ini.</string>
+    <string name="permission_dialog_contacts_title">Kebenaran kenalan</string>
+    <string name="permission_dialog_contacts_rationale">Jami membaca kenalan anda untuk memaparkan nama dan foto yang anda simpan untuk kenalan Jami anda. Tiada apa-apa dimuat naik.</string>
+    <string name="permission_dialog_camera_message">Perbualan video memerlukan kebenaran kamera. Kebenaran kamera dimatikan. Hidupkannya dalam tetapan peranti untuk menggunakan ciri ini.</string>
+    <string name="permission_dialog_read_contacts_message">Jami memerlukan kebenaran “Baca kenalan”. Hidupkannya dalam tetapan peranti untuk menggunakan ciri ini.</string>
 </resources>

@@ -664,4 +664,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="date_today">Heute</string>
     <string name="date_yesterday">Gestern</string>
     <string name="conversation_read_only">In dieser Unterhaltung kann nicht geschrieben werden.</string>
+    <string name="permission_dialog_open_settings">Einstellungen öffnen</string>
+    <string name="permission_dialog_later">Später</string>
+    <string name="permission_dialog_camera_rationale">Jami benötigt die Kamera für Videoanrufe und zum Fotografieren. Ohne sie können andere Sie nicht sehen.</string>
+    <string name="permission_dialog_microphone_title">Mikrofon-Berechtigung</string>
+    <string name="permission_dialog_microphone_rationale">Jami benötigt das Mikrofon für Anrufe und Sprachnachrichten. Ohne es können andere Sie nicht hören.</string>
+    <string name="permission_dialog_microphone_message">Die Mikrofon-Berechtigung ist deaktiviert. Aktivieren Sie diese in den Geräteeinstellungen, um diese Funktion zu nutzen.</string>
+    <string name="permission_dialog_location_title">Standort-Berechtigung</string>
+    <string name="permission_dialog_location_rationale">Jami benötigt Ihren Standort, um ihn in einer Unterhaltung zu teilen. Er wird nur gesendet, solange Sie ihn teilen.</string>
+    <string name="permission_dialog_location_message">Die Standort-Berechtigung ist deaktiviert. Aktivieren Sie diese in den Geräteeinstellungen, um diese Funktion zu nutzen.</string>
+    <string name="permission_dialog_contacts_title">Kontakte-Berechtigung</string>
+    <string name="permission_dialog_contacts_rationale">Jami liest Ihre Kontakte, um die Namen und Fotos anzuzeigen, die Sie für Ihre Jami-Kontakte gespeichert haben. Es wird nichts hochgeladen.</string>
 </resources>

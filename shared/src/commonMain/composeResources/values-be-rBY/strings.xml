@@ -206,4 +206,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_hours_short">%1$d гадз</string>
     <string name="time_days_short">%1$d сут</string>
     <string name="time_weeks_short">%1$d тыдз</string>
+    <string name="permission_dialog_open_settings">Адкрытыя налады</string>
+    <string name="permission_dialog_later">Пазней</string>
 </resources>

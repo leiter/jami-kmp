@@ -42,3 +42,13 @@ expect fun shareFile(path: String)
  * @return false when no app can open it (the caller shows `conversation_open_file_error`).
  */
 expect fun openFile(path: String): Boolean
+
+/**
+ * Open this app's page in the system settings, where a permission the user refused can be granted
+ * after all (jami-client-android: permission_dialog_open_settings →
+ * ACTION_APPLICATION_DETAILS_SETTINGS). On iOS this is the only way back: once a permission is
+ * denied, the system never asks again.
+ *
+ * @return false when the platform has no such page or it could not be opened.
+ */
+expect fun openAppSettings(): Boolean

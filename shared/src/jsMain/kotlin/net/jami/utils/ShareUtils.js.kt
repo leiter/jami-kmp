@@ -25,3 +25,6 @@ actual fun shareFile(path: String) {
 }
 
 actual fun openFile(path: String): Boolean = false
+
+/** No per-app permission page to open on this platform. */
+actual fun openAppSettings(): Boolean = false

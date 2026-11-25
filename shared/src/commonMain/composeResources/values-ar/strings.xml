@@ -466,4 +466,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">تعديل الاسم المعروض</string>
     <string name="custom_profile_message_warning">الملف الشخصي المخصص مرئي فقط للحساب على هذا الجهاز</string>
     <string name="remove_photo">إزالة الصورة</string>
+    <string name="permission_dialog_open_settings">افتح الإعدادات</string>
+    <string name="permission_dialog_later">لاحقاً</string>
+    <string name="permission_dialog_camera_rationale">يحتاج Jami إلى الكاميرا لمكالمات الفيديو والتقاط الصور. بدونها لن يراك الآخرون.</string>
+    <string name="permission_dialog_microphone_title">إذن الميكروفون</string>
+    <string name="permission_dialog_microphone_rationale">يحتاج Jami إلى الميكروفون للمكالمات والرسائل الصوتية. بدونه لن يسمعك الآخرون.</string>
+    <string name="permission_dialog_microphone_message">إذن الميكروفون معطّل. فعّله في إعدادات الجهاز لاستخدام هذه الميزة.</string>
+    <string name="permission_dialog_location_title">إذن الموقع</string>
+    <string name="permission_dialog_location_rationale">يحتاج Jami إلى موقعك لمشاركته في محادثة. لا يُرسل إلا أثناء المشاركة.</string>
+    <string name="permission_dialog_location_message">إذن الموقع معطّل. فعّله في إعدادات الجهاز لاستخدام هذه الميزة.</string>
+    <string name="permission_dialog_contacts_title">إذن جهات الاتصال</string>
+    <string name="permission_dialog_contacts_rationale">يقرأ Jami جهات اتصالك لعرض الأسماء والصور التي حفظتها لجهات اتصالك في Jami. لا يُرفع أي شيء.</string>
+    <string name="permission_dialog_camera_message">تتطلب محادثات الفيديو إذن الكاميرا. إذن الكاميرا معطّل. فعّله في إعدادات الجهاز لاستخدام هذه الميزة.</string>
+    <string name="permission_dialog_read_contacts_message">يتطلب Jami إذن «قراءة جهات الاتصال». فعّله في إعدادات الجهاز لاستخدام هذه الميزة.</string>
 </resources>

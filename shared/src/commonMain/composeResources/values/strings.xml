@@ -848,6 +848,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="about_license">Licensed under the GNU General Public License v3.0</string>
     <string name="about_modification">Jami KMP is an unofficial client: a modified version of the official Jami Android client, modified in 2025–2026. It is not produced, endorsed or supported by Savoir-faire Linux Inc. or the Jami project.</string>
     <string name="permission_dialog_open_settings">Open settings</string>
+    <string name="permission_dialog_later">Later</string>
+    <string name="permission_dialog_camera_rationale">Jami needs the camera for video calls and to take photos. Without it, others will not see you.</string>
+    <string name="permission_dialog_microphone_title">Microphone permission</string>
+    <string name="permission_dialog_microphone_rationale">Jami needs the microphone for calls and voice messages. Without it, others will not hear you.</string>
+    <string name="permission_dialog_microphone_message">Microphone permission is disabled. Enable it in device settings in order to use this feature.</string>
+    <string name="permission_dialog_location_title">Location permission</string>
+    <string name="permission_dialog_location_rationale">Jami needs your location to share it in a conversation. It is only sent while you share it.</string>
+    <string name="permission_dialog_location_message">Location permission is disabled. Enable it in device settings in order to use this feature.</string>
+    <string name="permission_dialog_contacts_title">Contacts permission</string>
+    <string name="permission_dialog_contacts_rationale">Jami reads your contacts to show the names and photos you saved for your Jami contacts. Nothing is uploaded.</string>
     <string name="edited_message_label">edited</string>
 
     <!-- Notifications permission -->

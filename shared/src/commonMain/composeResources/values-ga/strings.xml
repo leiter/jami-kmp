@@ -311,4 +311,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="custom_profile_message_warning">Níl an phróifíl shaincheaptha le feiceáil ach ag an gcuntas ar an ngléas seo</string>
     <string name="remove_photo">Bain an grianghraf</string>
     <string name="open_the_gallery">Oscail an gailearaí</string>
+    <string name="permission_dialog_open_settings">Cinntí oscailte</string>
+    <string name="permission_dialog_later">Tar éis an lae</string>
+    <string name="permission_dialog_camera_rationale">Teastaíonn an ceamara ó Jami le haghaidh glaonna físe agus chun grianghraif a ghlacadh. Gan é, ní fheicfidh daoine eile thú.</string>
+    <string name="permission_dialog_microphone_title">Cead micreafóin</string>
+    <string name="permission_dialog_microphone_rationale">Teastaíonn an micreafón ó Jami le haghaidh glaonna agus teachtaireachtaí gutha. Gan é, ní chloisfidh daoine eile thú.</string>
+    <string name="permission_dialog_microphone_message">Tá cead an mhicreafóin díchumasaithe. Cumasaigh é i socruithe an ghléis chun an ghné seo a úsáid.</string>
+    <string name="permission_dialog_location_title">Cead suímh</string>
+    <string name="permission_dialog_location_rationale">Teastaíonn do shuíomh ó Jami chun é a roinnt i gcomhrá. Ní sheoltar é ach fad a bhíonn tú á roinnt.</string>
+    <string name="permission_dialog_location_message">Tá cead suímh díchumasaithe. Cumasaigh é i socruithe an ghléis chun an ghné seo a úsáid.</string>
+    <string name="permission_dialog_contacts_title">Cead teagmhálacha</string>
+    <string name="permission_dialog_contacts_rationale">Léann Jami do theagmhálacha chun na hainmneacha agus na grianghraif a shábháil tú do do theagmhálacha Jami a thaispeáint. Ní uaslódáiltear aon rud.</string>
+    <string name="permission_dialog_camera_title">Cead ceamara</string>
+    <string name="permission_dialog_camera_message">Teastaíonn cead ceamara le haghaidh comhráite físe. Tá cead ceamara díchumasaithe. Cumasaigh é i socruithe an ghléis chun an ghné seo a úsáid.</string>
+    <string name="permission_dialog_read_contacts_message">Teastaíonn an cead “Léigh teagmhálacha” ó Jami. Cumasaigh é i socruithe an ghléis chun an ghné seo a úsáid.</string>
 </resources>

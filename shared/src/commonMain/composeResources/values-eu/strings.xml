@@ -451,4 +451,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">Editatu bistaratzeko izena</string>
     <string name="custom_profile_message_warning">Profil pertsonalizatua gailu honetako kontuak soilik ikus dezake</string>
     <string name="remove_photo">Kendu argazkia</string>
+    <string name="permission_dialog_open_settings">Ireki jarduerak</string>
+    <string name="permission_dialog_later">Geroago.</string>
+    <string name="permission_dialog_camera_rationale">Jamik kamera behar du bideo-deietarako eta argazkiak ateratzeko. Hura gabe, besteek ez zaituzte ikusiko.</string>
+    <string name="permission_dialog_microphone_title">Mikrofonoaren baimena</string>
+    <string name="permission_dialog_microphone_rationale">Jamik mikrofonoa behar du deietarako eta ahots-mezuetarako. Hura gabe, besteek ez zaituzte entzungo.</string>
+    <string name="permission_dialog_microphone_message">Mikrofonoaren baimena desaktibatuta dago. Gaitu gailuaren ezarpenetan eginbide hau erabiltzeko.</string>
+    <string name="permission_dialog_location_title">Kokapenaren baimena</string>
+    <string name="permission_dialog_location_rationale">Jamik zure kokapena behar du elkarrizketa batean partekatzeko. Partekatzen duzun bitartean soilik bidaltzen da.</string>
+    <string name="permission_dialog_location_message">Kokapenaren baimena desaktibatuta dago. Gaitu gailuaren ezarpenetan eginbide hau erabiltzeko.</string>
+    <string name="permission_dialog_contacts_title">Kontaktuen baimena</string>
+    <string name="permission_dialog_contacts_rationale">Jamik zure kontaktuak irakurtzen ditu zure Jami kontaktuentzat gordetako izenak eta argazkiak erakusteko. Ez da ezer igotzen.</string>
+    <string name="permission_dialog_camera_message">Bideo-elkarrizketek kameraren baimena behar dute. Kameraren baimena desaktibatuta dago. Gaitu gailuaren ezarpenetan eginbide hau erabiltzeko.</string>
+    <string name="permission_dialog_read_contacts_message">Jamik «Irakurri kontaktuak» baimena behar du. Gaitu gailuaren ezarpenetan eginbide hau erabiltzeko.</string>
 </resources>

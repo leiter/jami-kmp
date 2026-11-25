@@ -634,4 +634,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Sinhronizacija pogovorov v ozadju</string>
     <string name="profile_save_failed">Profila ni bilo mogoče shraniti</string>
     <string name="import_account_already_on_device">Ta račun je že v tej napravi.</string>
+    <string name="permission_dialog_open_settings">Odpri nastavitve</string>
+    <string name="permission_dialog_later">Kasneje</string>
+    <string name="permission_dialog_camera_rationale">Jami potrebuje kamero za videoklice in fotografiranje. Brez nje vas drugi ne bodo videli.</string>
+    <string name="permission_dialog_microphone_title">Dovoljenje za mikrofon</string>
+    <string name="permission_dialog_microphone_rationale">Jami potrebuje mikrofon za klice in glasovna sporočila. Brez njega vas drugi ne bodo slišali.</string>
+    <string name="permission_dialog_microphone_message">Dovoljenje za mikrofon je izklopljeno. Za uporabo te funkcije ga vklopite v nastavitvah naprave.</string>
+    <string name="permission_dialog_location_title">Dovoljenje za lokacijo</string>
+    <string name="permission_dialog_location_rationale">Jami potrebuje vašo lokacijo, da jo deli v pogovoru. Pošilja se le, dokler jo delite.</string>
+    <string name="permission_dialog_location_message">Dovoljenje za lokacijo je izklopljeno. Za uporabo te funkcije ga vklopite v nastavitvah naprave.</string>
+    <string name="permission_dialog_contacts_title">Dovoljenje za stike</string>
+    <string name="permission_dialog_contacts_rationale">Jami bere vaše stike, da prikaže imena in fotografije, ki ste jih shranili za svoje stike v Jami. Nič se ne naloži.</string>
 </resources>

@@ -394,4 +394,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_hours_short">%1$d घं॰</string>
     <string name="time_days_short">%1$d दिन</string>
     <string name="time_weeks_short">%1$d सप्ताह</string>
+    <string name="permission_dialog_open_settings">खुली सेटिंग्स</string>
+    <string name="permission_dialog_later">बाद में</string>
 </resources>

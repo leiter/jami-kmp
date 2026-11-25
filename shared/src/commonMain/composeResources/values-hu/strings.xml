@@ -636,4 +636,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Beszélgetések szinkronizálása a háttérben</string>
     <string name="profile_save_failed">A profil mentése sikertelen</string>
     <string name="import_account_already_on_device">Ez a fiók már megtalálható ezen az eszközön.</string>
+    <string name="permission_dialog_open_settings">Beállítások megnyitása</string>
+    <string name="permission_dialog_later">Később</string>
+    <string name="permission_dialog_camera_rationale">A Jaminak szüksége van a kamerára a videohívásokhoz és a fényképezéshez. Nélküle mások nem látnak téged.</string>
+    <string name="permission_dialog_microphone_title">Mikrofon-engedély</string>
+    <string name="permission_dialog_microphone_rationale">A Jaminak szüksége van a mikrofonra a hívásokhoz és a hangüzenetekhez. Nélküle mások nem hallanak téged.</string>
+    <string name="permission_dialog_microphone_message">A mikrofon-engedély ki van kapcsolva. Kapcsold be az eszköz beállításaiban a funkció használatához.</string>
+    <string name="permission_dialog_location_title">Helymeghatározási engedély</string>
+    <string name="permission_dialog_location_rationale">A Jaminak szüksége van a helyzetedre, hogy megoszthassa egy beszélgetésben. Csak a megosztás ideje alatt kerül elküldésre.</string>
+    <string name="permission_dialog_location_message">A helymeghatározási engedély ki van kapcsolva. Kapcsold be az eszköz beállításaiban a funkció használatához.</string>
+    <string name="permission_dialog_contacts_title">Névjegyek engedélye</string>
+    <string name="permission_dialog_contacts_rationale">A Jami beolvassa a névjegyeidet, hogy megjelenítse a Jami-névjegyeidhez mentett neveket és fényképeket. Semmi sem kerül feltöltésre.</string>
 </resources>

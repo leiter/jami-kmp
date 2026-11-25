@@ -488,4 +488,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">ویرایش نام نمایشی</string>
     <string name="custom_profile_message_warning">نمایهٔ سفارشی فقط برای حساب روی این دستگاه قابل مشاهده است</string>
     <string name="remove_photo">حذف عکس</string>
+    <string name="permission_dialog_open_settings">باز‌کردن تنظیمات</string>
+    <string name="permission_dialog_later">بعدش</string>
+    <string name="permission_dialog_camera_rationale">Jami برای تماس‌های تصویری و عکس گرفتن به دوربین نیاز دارد. بدون آن دیگران شما را نمی‌بینند.</string>
+    <string name="permission_dialog_microphone_title">مجوز میکروفون</string>
+    <string name="permission_dialog_microphone_rationale">Jami برای تماس‌ها و پیام‌های صوتی به میکروفون نیاز دارد. بدون آن دیگران صدای شما را نمی‌شنوند.</string>
+    <string name="permission_dialog_microphone_message">مجوز میکروفون غیرفعال است. برای استفاده از این ویژگی آن را در تنظیمات دستگاه فعال کنید.</string>
+    <string name="permission_dialog_location_title">مجوز مکان</string>
+    <string name="permission_dialog_location_rationale">Jami برای هم‌رسانی مکان شما در یک گفتگو به آن نیاز دارد. فقط تا زمانی که هم‌رسانی می‌کنید ارسال می‌شود.</string>
+    <string name="permission_dialog_location_message">مجوز مکان غیرفعال است. برای استفاده از این ویژگی آن را در تنظیمات دستگاه فعال کنید.</string>
+    <string name="permission_dialog_contacts_title">مجوز مخاطبان</string>
+    <string name="permission_dialog_contacts_rationale">Jami مخاطبان شما را می‌خواند تا نام‌ها و عکس‌هایی را که برای مخاطبان Jami ذخیره کرده‌اید نشان دهد. چیزی بارگذاری نمی‌شود.</string>
+    <string name="permission_dialog_read_contacts_message">Jami به مجوز «خواندن مخاطبان» نیاز دارد. برای استفاده از این ویژگی آن را در تنظیمات دستگاه فعال کنید.</string>
 </resources>

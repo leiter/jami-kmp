@@ -36,3 +36,6 @@ actual fun openFile(path: String): Boolean = try {
 } catch (e: Exception) {
     false
 }
+
+/** No per-app permission page to open on this platform. */
+actual fun openAppSettings(): Boolean = false

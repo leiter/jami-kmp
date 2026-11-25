@@ -450,4 +450,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">ಪ್ರದರ್ಶನ ಹೆಸರನ್ನು ಸಂಪಾದಿಸಿ</string>
     <string name="custom_profile_message_warning">ಕಸ್ಟಮ್ ಪ್ರೊಫೈಲ್ ಈ ಸಾಧನದಲ್ಲಿನ ಖಾತೆಗೆ ಮಾತ್ರ ಗೋಚರಿಸುತ್ತದೆ</string>
     <string name="remove_photo">ಫೋಟೋ ತೆಗೆದುಹಾಕಿ</string>
+    <string name="permission_dialog_open_settings">ತೆರೆದ ಸೆಟ್ಟಿಂಗ್ಗಳು</string>
+    <string name="permission_dialog_later">ನಂತರ</string>
+    <string name="permission_dialog_camera_rationale">ವೀಡಿಯೊ ಕರೆಗಳು ಮತ್ತು ಫೋಟೋ ತೆಗೆಯಲು Jami ಗೆ ಕ್ಯಾಮೆರಾ ಬೇಕು. ಅದಿಲ್ಲದೆ ಇತರರು ನಿಮ್ಮನ್ನು ನೋಡಲಾರರು.</string>
+    <string name="permission_dialog_microphone_title">ಮೈಕ್ರೊಫೋನ್ ಅನುಮತಿ</string>
+    <string name="permission_dialog_microphone_rationale">ಕರೆಗಳು ಮತ್ತು ಧ್ವನಿ ಸಂದೇಶಗಳಿಗೆ Jami ಗೆ ಮೈಕ್ರೊಫೋನ್ ಬೇಕು. ಅದಿಲ್ಲದೆ ಇತರರು ನಿಮ್ಮನ್ನು ಕೇಳಲಾರರು.</string>
+    <string name="permission_dialog_microphone_message">ಮೈಕ್ರೊಫೋನ್ ಅನುಮತಿ ಆಫ್ ಆಗಿದೆ. ಈ ವೈಶಿಷ್ಟ್ಯ ಬಳಸಲು ಸಾಧನದ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಅದನ್ನು ಆನ್ ಮಾಡಿ.</string>
+    <string name="permission_dialog_location_title">ಸ್ಥಳ ಅನುಮತಿ</string>
+    <string name="permission_dialog_location_rationale">ಸಂಭಾಷಣೆಯಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಲು Jami ಗೆ ನಿಮ್ಮ ಸ್ಥಳ ಬೇಕು. ಹಂಚಿಕೊಳ್ಳುತ್ತಿರುವಾಗ ಮಾತ್ರ ಅದನ್ನು ಕಳುಹಿಸಲಾಗುತ್ತದೆ.</string>
+    <string name="permission_dialog_location_message">ಸ್ಥಳ ಅನುಮತಿ ಆಫ್ ಆಗಿದೆ. ಈ ವೈಶಿಷ್ಟ್ಯ ಬಳಸಲು ಸಾಧನದ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಅದನ್ನು ಆನ್ ಮಾಡಿ.</string>
+    <string name="permission_dialog_contacts_title">ಸಂಪರ್ಕಗಳ ಅನುಮತಿ</string>
+    <string name="permission_dialog_contacts_rationale">ನಿಮ್ಮ Jami ಸಂಪರ್ಕಗಳಿಗಾಗಿ ಉಳಿಸಿದ ಹೆಸರುಗಳು ಮತ್ತು ಫೋಟೋಗಳನ್ನು ತೋರಿಸಲು Jami ನಿಮ್ಮ ಸಂಪರ್ಕಗಳನ್ನು ಓದುತ್ತದೆ. ಏನನ್ನೂ ಅಪ್‌ಲೋಡ್ ಮಾಡುವುದಿಲ್ಲ.</string>
+    <string name="permission_dialog_camera_message">ವೀಡಿಯೊ ಸಂಭಾಷಣೆಗಳಿಗೆ ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ಅಗತ್ಯ. ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ಆಫ್ ಆಗಿದೆ. ಈ ವೈಶಿಷ್ಟ್ಯ ಬಳಸಲು ಸಾಧನದ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಅದನ್ನು ಆನ್ ಮಾಡಿ.</string>
+    <string name="permission_dialog_read_contacts_message">Jami ಗೆ “ಸಂಪರ್ಕಗಳನ್ನು ಓದಿ” ಅನುಮತಿ ಅಗತ್ಯ. ಈ ವೈಶಿಷ್ಟ್ಯ ಬಳಸಲು ಸಾಧನದ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಅದನ್ನು ಆನ್ ಮಾಡಿ.</string>
 </resources>

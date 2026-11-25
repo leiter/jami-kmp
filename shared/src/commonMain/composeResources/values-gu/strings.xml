@@ -439,4 +439,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">પ્રદર્શિત નામ સંપાદિત કરો</string>
     <string name="custom_profile_message_warning">કસ્ટમ પ્રોફાઇલ ફક્ત આ ઉપકરણ પરના એકાઉન્ટને જ દેખાય છે</string>
     <string name="remove_photo">ફોટો દૂર કરો</string>
+    <string name="permission_dialog_open_settings">ઓપન સેટિંગ્સ</string>
+    <string name="permission_dialog_later">પાછળથી</string>
+    <string name="permission_dialog_camera_rationale">Jami ને વીડિયો કૉલ અને ફોટો લેવા માટે કૅમેરાની જરૂર છે. તેના વિના બીજા તમને જોઈ શકશે નહીં.</string>
+    <string name="permission_dialog_microphone_title">માઇક્રોફોન પરવાનગી</string>
+    <string name="permission_dialog_microphone_rationale">Jami ને કૉલ અને વૉઇસ સંદેશા માટે માઇક્રોફોનની જરૂર છે. તેના વિના બીજા તમને સાંભળી શકશે નહીં.</string>
+    <string name="permission_dialog_microphone_message">માઇક્રોફોન પરવાનગી બંધ છે. આ સુવિધાનો ઉપયોગ કરવા ઉપકરણ સેટિંગ્સમાં તેને ચાલુ કરો.</string>
+    <string name="permission_dialog_location_title">સ્થાન પરવાનગી</string>
+    <string name="permission_dialog_location_rationale">વાતચીતમાં શેર કરવા Jami ને તમારા સ્થાનની જરૂર છે. તે ફક્ત શેર કરતી વખતે જ મોકલાય છે.</string>
+    <string name="permission_dialog_location_message">સ્થાન પરવાનગી બંધ છે. આ સુવિધાનો ઉપયોગ કરવા ઉપકરણ સેટિંગ્સમાં તેને ચાલુ કરો.</string>
+    <string name="permission_dialog_contacts_title">સંપર્કો પરવાનગી</string>
+    <string name="permission_dialog_contacts_rationale">તમારા Jami સંપર્કો માટે સાચવેલા નામ અને ફોટા બતાવવા Jami તમારા સંપર્કો વાંચે છે. કંઈ અપલોડ થતું નથી.</string>
+    <string name="permission_dialog_camera_message">વીડિયો વાતચીત માટે કૅમેરા પરવાનગી જરૂરી છે. કૅમેરા પરવાનગી બંધ છે. આ સુવિધાનો ઉપયોગ કરવા ઉપકરણ સેટિંગ્સમાં તેને ચાલુ કરો.</string>
+    <string name="permission_dialog_read_contacts_message">Jami ને “સંપર્કો વાંચો” પરવાનગી જરૂરી છે. આ સુવિધાનો ઉપયોગ કરવા ઉપકરણ સેટિંગ્સમાં તેને ચાલુ કરો.</string>
 </resources>

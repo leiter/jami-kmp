@@ -636,4 +636,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">正在后台同步对话</string>
     <string name="profile_save_failed">无法保存个人资料</string>
     <string name="import_account_already_on_device">此账户已在此设备上。</string>
+    <string name="permission_dialog_open_settings">打开设置</string>
+    <string name="permission_dialog_later">稍后</string>
+    <string name="permission_dialog_camera_rationale">Jami 需要使用相机进行视频通话和拍照。没有相机，其他人将看不到你。</string>
+    <string name="permission_dialog_microphone_title">麦克风权限</string>
+    <string name="permission_dialog_microphone_rationale">Jami 需要使用麦克风进行通话和发送语音消息。没有麦克风，其他人将听不到你。</string>
+    <string name="permission_dialog_microphone_message">麦克风权限已关闭。要使用此功能，请在设备设置中开启。</string>
+    <string name="permission_dialog_location_title">位置权限</string>
+    <string name="permission_dialog_location_rationale">Jami 需要你的位置才能在对话中分享。仅在你分享期间发送。</string>
+    <string name="permission_dialog_location_message">位置权限已关闭。要使用此功能，请在设备设置中开启。</string>
+    <string name="permission_dialog_contacts_title">通讯录权限</string>
+    <string name="permission_dialog_contacts_rationale">Jami 读取你的通讯录，以显示你为 Jami 联系人保存的名称和照片。不会上传任何内容。</string>
 </resources>

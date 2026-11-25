@@ -221,4 +221,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="custom_profile_message_warning">Шәхси профиль бу җайланмадагы хисап язмасына гына күренә</string>
     <string name="remove_photo">Фотоны бетерү</string>
     <string name="open_the_gallery">Галереяне ачу</string>
+    <string name="permission_dialog_open_settings">Параметрларны ачу</string>
+    <string name="permission_dialog_later">Соңрак</string>
+    <string name="permission_dialog_camera_rationale">Jami-га видеошалтыратулар һәм фотога төшерү өчен камера кирәк. Аннан башка башкалар сезне күрмәячәк.</string>
+    <string name="permission_dialog_microphone_title">Микрофон рөхсәте</string>
+    <string name="permission_dialog_microphone_rationale">Jami-га шалтыратулар һәм тавышлы хәбәрләр өчен микрофон кирәк. Аннан башка башкалар сезне ишетмәячәк.</string>
+    <string name="permission_dialog_microphone_message">Микрофон рөхсәте сүнгән. Бу функцияне куллану өчен аны җайланма көйләүләрендә кабызыгыз.</string>
+    <string name="permission_dialog_location_title">Урын рөхсәте</string>
+    <string name="permission_dialog_location_rationale">Jami-га урыныгызны әңгәмәдә уртаклашу өчен ул кирәк. Ул сез уртаклашканда гына җибәрелә.</string>
+    <string name="permission_dialog_location_message">Урын рөхсәте сүнгән. Бу функцияне куллану өчен аны җайланма көйләүләрендә кабызыгыз.</string>
+    <string name="permission_dialog_contacts_title">Контактлар рөхсәте</string>
+    <string name="permission_dialog_contacts_rationale">Jami сез Jami контактларыгыз өчен саклаган исемнәрне һәм фотоларны күрсәтү өчен контактларыгызны укый. Бернәрсә дә йөкләнми.</string>
+    <string name="permission_dialog_camera_title">Камера рөхсәте</string>
+    <string name="permission_dialog_camera_message">Видеоәңгәмәләр өчен камера рөхсәте кирәк. Камера рөхсәте сүнгән. Бу функцияне куллану өчен аны җайланма көйләүләрендә кабызыгыз.</string>
+    <string name="permission_dialog_read_contacts_message">Jami-га “Контактларны уку” рөхсәте кирәк. Бу функцияне куллану өчен аны җайланма көйләүләрендә кабызыгыз.</string>
 </resources>

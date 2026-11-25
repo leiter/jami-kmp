@@ -451,4 +451,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">แก้ไขชื่อที่แสดง</string>
     <string name="custom_profile_message_warning">โปรไฟล์ที่กำหนดเองจะมองเห็นได้เฉพาะบัญชีบนอุปกรณ์นี้</string>
     <string name="remove_photo">ลบรูปภาพ</string>
+    <string name="permission_dialog_open_settings">เปิดการตั้งค่า</string>
+    <string name="permission_dialog_later">ต่อมา</string>
+    <string name="permission_dialog_camera_rationale">Jami ต้องใช้กล้องสำหรับวิดีโอคอลและการถ่ายภาพ หากไม่มีกล้อง ผู้อื่นจะมองไม่เห็นคุณ</string>
+    <string name="permission_dialog_microphone_title">สิทธิ์ไมโครโฟน</string>
+    <string name="permission_dialog_microphone_rationale">Jami ต้องใช้ไมโครโฟนสำหรับการโทรและข้อความเสียง หากไม่มีไมโครโฟน ผู้อื่นจะไม่ได้ยินคุณ</string>
+    <string name="permission_dialog_microphone_message">สิทธิ์ไมโครโฟนถูกปิดอยู่ โปรดเปิดในการตั้งค่าอุปกรณ์เพื่อใช้ฟีเจอร์นี้</string>
+    <string name="permission_dialog_location_title">สิทธิ์ตำแหน่ง</string>
+    <string name="permission_dialog_location_rationale">Jami ต้องใช้ตำแหน่งของคุณเพื่อแชร์ในการสนทนา จะส่งเฉพาะขณะที่คุณแชร์เท่านั้น</string>
+    <string name="permission_dialog_location_message">สิทธิ์ตำแหน่งถูกปิดอยู่ โปรดเปิดในการตั้งค่าอุปกรณ์เพื่อใช้ฟีเจอร์นี้</string>
+    <string name="permission_dialog_contacts_title">สิทธิ์รายชื่อติดต่อ</string>
+    <string name="permission_dialog_contacts_rationale">Jami อ่านรายชื่อติดต่อของคุณเพื่อแสดงชื่อและรูปภาพที่คุณบันทึกไว้สำหรับผู้ติดต่อ Jami ไม่มีการอัปโหลดสิ่งใด</string>
+    <string name="permission_dialog_camera_message">การสนทนาทางวิดีโอต้องใช้สิทธิ์กล้อง สิทธิ์กล้องถูกปิดอยู่ โปรดเปิดในการตั้งค่าอุปกรณ์เพื่อใช้ฟีเจอร์นี้</string>
+    <string name="permission_dialog_read_contacts_message">Jami ต้องใช้สิทธิ์ “อ่านรายชื่อติดต่อ” โปรดเปิดในการตั้งค่าอุปกรณ์เพื่อใช้ฟีเจอร์นี้</string>
 </resources>

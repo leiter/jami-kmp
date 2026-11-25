@@ -439,4 +439,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">प्रदर्शित नाव संपादित करा</string>
     <string name="custom_profile_message_warning">सानुकूल प्रोफाइल फक्त या डिव्हाइसवरील खात्याला दिसते</string>
     <string name="remove_photo">फोटो काढा</string>
+    <string name="permission_dialog_open_settings">उघडलेली सेटिंग्ज</string>
+    <string name="permission_dialog_later">नंतर</string>
+    <string name="permission_dialog_camera_rationale">व्हिडिओ कॉल आणि फोटो काढण्यासाठी Jami ला कॅमेरा हवा आहे. त्याशिवाय इतर तुम्हाला पाहू शकणार नाहीत.</string>
+    <string name="permission_dialog_microphone_title">मायक्रोफोन परवानगी</string>
+    <string name="permission_dialog_microphone_rationale">कॉल आणि व्हॉइस संदेशांसाठी Jami ला मायक्रोफोन हवा आहे. त्याशिवाय इतर तुम्हाला ऐकू शकणार नाहीत.</string>
+    <string name="permission_dialog_microphone_message">मायक्रोफोन परवानगी बंद आहे. हे वैशिष्ट्य वापरण्यासाठी डिव्हाइस सेटिंग्जमध्ये ती सुरू करा.</string>
+    <string name="permission_dialog_location_title">स्थान परवानगी</string>
+    <string name="permission_dialog_location_rationale">संभाषणात शेअर करण्यासाठी Jami ला तुमचे स्थान हवे आहे. ते फक्त शेअर करताना पाठवले जाते.</string>
+    <string name="permission_dialog_location_message">स्थान परवानगी बंद आहे. हे वैशिष्ट्य वापरण्यासाठी डिव्हाइस सेटिंग्जमध्ये ती सुरू करा.</string>
+    <string name="permission_dialog_contacts_title">संपर्क परवानगी</string>
+    <string name="permission_dialog_contacts_rationale">तुमच्या Jami संपर्कांसाठी जतन केलेली नावे आणि फोटो दाखवण्यासाठी Jami तुमचे संपर्क वाचते. काहीही अपलोड होत नाही.</string>
+    <string name="permission_dialog_camera_message">व्हिडिओ संभाषणांसाठी कॅमेरा परवानगी आवश्यक आहे. कॅमेरा परवानगी बंद आहे. हे वैशिष्ट्य वापरण्यासाठी डिव्हाइस सेटिंग्जमध्ये ती सुरू करा.</string>
+    <string name="permission_dialog_read_contacts_message">Jami ला “संपर्क वाचा” परवानगी आवश्यक आहे. हे वैशिष्ट्य वापरण्यासाठी डिव्हाइस सेटिंग्जमध्ये ती सुरू करा.</string>
 </resources>

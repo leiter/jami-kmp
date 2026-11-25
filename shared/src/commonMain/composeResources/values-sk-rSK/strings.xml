@@ -419,4 +419,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_weeks_short">%1$d t.</string>
     <string name="custom_profile_message_warning">Vlastný profil je viditeľný iba pre účet na tomto zariadení</string>
     <string name="dialog_title_contact">Upraviť zobrazované meno</string>
+    <string name="permission_dialog_camera_message">Videokonverzácie vyžadujú povolenie kamery. Povolenie kamery je zakázané. Povoľte ho v nastaveniach zariadenia, aby ste mohli použiť túto funkciu.</string>
+    <string name="permission_dialog_read_contacts_message">Jami vyžaduje povolenie „Čítať kontakty“. Povoľte ho v nastaveniach zariadenia, aby ste mohli použiť túto funkciu.</string>
+    <string name="permission_dialog_open_settings">Otvoriť nastavenia</string>
+    <string name="permission_dialog_later">Neskôr</string>
 </resources>

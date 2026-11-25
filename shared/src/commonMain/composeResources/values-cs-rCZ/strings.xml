@@ -563,4 +563,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">Tento účet už v tomto zařízení je.</string>
     <string name="custom_profile_message_warning">Vlastní profil je viditelný pouze pro účet v tomto zařízení</string>
     <string name="dialog_title_contact">Upravit zobrazované jméno</string>
+    <string name="permission_dialog_read_contacts_message">Jami vyžaduje oprávnění „Číst kontakty“. Povolte ho v nastavení zařízení, abyste mohli tuto funkci používat.</string>
+    <string name="permission_dialog_open_settings">Otevřít nastavení</string>
+    <string name="permission_dialog_later">Později</string>
+    <string name="permission_dialog_camera_rationale">Jami potřebuje fotoaparát pro videohovory a focení. Bez něj vás ostatní neuvidí.</string>
+    <string name="permission_dialog_microphone_title">Oprávnění k mikrofonu</string>
+    <string name="permission_dialog_microphone_rationale">Jami potřebuje mikrofon pro hovory a hlasové zprávy. Bez něj vás ostatní neuslyší.</string>
+    <string name="permission_dialog_microphone_message">Oprávnění k mikrofonu je vypnuté. Chcete-li tuto funkci používat, zapněte ho v nastavení zařízení.</string>
+    <string name="permission_dialog_location_title">Oprávnění k poloze</string>
+    <string name="permission_dialog_location_rationale">Jami potřebuje vaši polohu, aby ji mohl sdílet v konverzaci. Odesílá se jen po dobu sdílení.</string>
+    <string name="permission_dialog_location_message">Oprávnění k poloze je vypnuté. Chcete-li tuto funkci používat, zapněte ho v nastavení zařízení.</string>
+    <string name="permission_dialog_contacts_title">Oprávnění ke kontaktům</string>
+    <string name="permission_dialog_contacts_rationale">Jami čte vaše kontakty, aby zobrazil jména a fotky, které jste uložili pro své kontakty v Jami. Nic se nenahrává.</string>
 </resources>

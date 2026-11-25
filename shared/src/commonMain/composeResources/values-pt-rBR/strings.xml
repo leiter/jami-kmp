@@ -622,4 +622,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Sincronizando conversas em segundo plano</string>
     <string name="profile_save_failed">Não foi possível salvar o perfil</string>
     <string name="import_account_already_on_device">Esta conta já está neste dispositivo.</string>
+    <string name="permission_dialog_open_settings">Abrir configurações</string>
+    <string name="permission_dialog_later">Mais tarde</string>
+    <string name="permission_dialog_camera_rationale">O Jami precisa da câmera para chamadas de vídeo e para tirar fotos. Sem ela, os outros não verão você.</string>
+    <string name="permission_dialog_microphone_title">Permissão do microfone</string>
+    <string name="permission_dialog_microphone_rationale">O Jami precisa do microfone para chamadas e mensagens de voz. Sem ele, os outros não ouvirão você.</string>
+    <string name="permission_dialog_microphone_message">A permissão do microfone está desativada. Ative-a nas configurações do dispositivo para usar este recurso.</string>
+    <string name="permission_dialog_location_title">Permissão de localização</string>
+    <string name="permission_dialog_location_rationale">O Jami precisa da sua localização para compartilhá-la em uma conversa. Ela só é enviada enquanto você compartilha.</string>
+    <string name="permission_dialog_location_message">A permissão de localização está desativada. Ative-a nas configurações do dispositivo para usar este recurso.</string>
+    <string name="permission_dialog_contacts_title">Permissão de contatos</string>
+    <string name="permission_dialog_contacts_rationale">O Jami lê seus contatos para mostrar os nomes e fotos que você salvou para seus contatos do Jami. Nada é enviado.</string>
 </resources>

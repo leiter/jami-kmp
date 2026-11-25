@@ -519,4 +519,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">이 계정은 이미 이 기기에 있습니다.</string>
     <string name="custom_profile_message_warning">사용자 지정 프로필은 이 기기의 계정에만 표시됩니다</string>
     <string name="dialog_title_contact">표시 이름 수정</string>
+    <string name="permission_dialog_camera_message">영상 대화에는 카메라 권한이 필요합니다. 카메라 권한이 비활성화되어 있습니다. 이 기능을 사용하려면 기기 설정에서 활성화하십시오.</string>
+    <string name="permission_dialog_read_contacts_message">Jami에는 “연락처 읽기” 권한이 필요합니다. 이 기능을 사용하려면 기기 설정에서 활성화하십시오.</string>
+    <string name="permission_dialog_open_settings">열기 설정</string>
+    <string name="permission_dialog_later">나중에</string>
+    <string name="permission_dialog_camera_rationale">Jami는 영상 통화와 사진 촬영에 카메라가 필요합니다. 카메라가 없으면 상대방이 나를 볼 수 없습니다.</string>
+    <string name="permission_dialog_microphone_title">마이크 권한</string>
+    <string name="permission_dialog_microphone_rationale">Jami는 통화와 음성 메시지에 마이크가 필요합니다. 마이크가 없으면 상대방이 내 목소리를 들을 수 없습니다.</string>
+    <string name="permission_dialog_microphone_message">마이크 권한이 꺼져 있습니다. 이 기능을 사용하려면 기기 설정에서 켜세요.</string>
+    <string name="permission_dialog_location_title">위치 권한</string>
+    <string name="permission_dialog_location_rationale">Jami는 대화에서 위치를 공유하려면 내 위치가 필요합니다. 공유하는 동안에만 전송됩니다.</string>
+    <string name="permission_dialog_location_message">위치 권한이 꺼져 있습니다. 이 기능을 사용하려면 기기 설정에서 켜세요.</string>
+    <string name="permission_dialog_contacts_title">연락처 권한</string>
+    <string name="permission_dialog_contacts_rationale">Jami는 Jami 연락처에 저장한 이름과 사진을 표시하기 위해 연락처를 읽습니다. 아무것도 업로드되지 않습니다.</string>
 </resources>

@@ -636,4 +636,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Vestluste sünkroonimine taustal</string>
     <string name="profile_save_failed">Profiili salvestamine nurjus</string>
     <string name="import_account_already_on_device">See konto on juba selles seadmes.</string>
+    <string name="permission_dialog_open_settings">Ava seadistused</string>
+    <string name="permission_dialog_later">Hiljem</string>
+    <string name="permission_dialog_camera_rationale">Jami vajab kaamerat videokõnede ja pildistamise jaoks. Ilma selleta ei näe teised sind.</string>
+    <string name="permission_dialog_microphone_title">Mikrofoni luba</string>
+    <string name="permission_dialog_microphone_rationale">Jami vajab mikrofoni kõnede ja häälsõnumite jaoks. Ilma selleta ei kuule teised sind.</string>
+    <string name="permission_dialog_microphone_message">Mikrofoni luba on keelatud. Selle funktsiooni kasutamiseks luba see seadme seadetes.</string>
+    <string name="permission_dialog_location_title">Asukoha luba</string>
+    <string name="permission_dialog_location_rationale">Jami vajab sinu asukohta, et seda vestluses jagada. Seda saadetakse ainult jagamise ajal.</string>
+    <string name="permission_dialog_location_message">Asukoha luba on keelatud. Selle funktsiooni kasutamiseks luba see seadme seadetes.</string>
+    <string name="permission_dialog_contacts_title">Kontaktide luba</string>
+    <string name="permission_dialog_contacts_rationale">Jami loeb sinu kontakte, et näidata nimesid ja pilte, mille oled oma Jami kontaktidele salvestanud. Midagi ei laadita üles.</string>
 </resources>

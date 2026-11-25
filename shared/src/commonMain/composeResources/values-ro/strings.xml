@@ -636,4 +636,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Se sincronizează conversațiile în fundal</string>
     <string name="profile_save_failed">Profilul nu a putut fi salvat</string>
     <string name="import_account_already_on_device">Acest cont este deja pe acest dispozitiv.</string>
+    <string name="permission_dialog_open_settings">Deschide reglările</string>
+    <string name="permission_dialog_later">Mai tîrziu</string>
+    <string name="permission_dialog_camera_rationale">Jami are nevoie de cameră pentru apeluri video și pentru a face fotografii. Fără ea, ceilalți nu te vor vedea.</string>
+    <string name="permission_dialog_microphone_title">Permisiune pentru microfon</string>
+    <string name="permission_dialog_microphone_rationale">Jami are nevoie de microfon pentru apeluri și mesaje vocale. Fără el, ceilalți nu te vor auzi.</string>
+    <string name="permission_dialog_microphone_message">Permisiunea pentru microfon este dezactivată. Activeaz-o în setările dispozitivului pentru a folosi această funcție.</string>
+    <string name="permission_dialog_location_title">Permisiune pentru locație</string>
+    <string name="permission_dialog_location_rationale">Jami are nevoie de locația ta pentru a o partaja într-o conversație. Este trimisă doar cât timp o partajezi.</string>
+    <string name="permission_dialog_location_message">Permisiunea pentru locație este dezactivată. Activeaz-o în setările dispozitivului pentru a folosi această funcție.</string>
+    <string name="permission_dialog_contacts_title">Permisiune pentru contacte</string>
+    <string name="permission_dialog_contacts_rationale">Jami citește contactele tale pentru a afișa numele și fotografiile pe care le-ai salvat pentru contactele tale Jami. Nu se încarcă nimic.</string>
 </resources>

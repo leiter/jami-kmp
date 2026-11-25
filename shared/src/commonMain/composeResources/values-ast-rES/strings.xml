@@ -458,4 +458,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">Esta cuenta yá ta nesti preséu.</string>
     <string name="dialog_title_contact">Editar el nome visible</string>
     <string name="custom_profile_message_warning">El perfil personalizáu namás ye visible pa la cuenta d'esti preséu</string>
+    <string name="permission_dialog_open_settings">Abrir axustes</string>
+    <string name="permission_dialog_later">Más tarde</string>
+    <string name="permission_dialog_camera_rationale">Jami precisa la cámara pa les videollamaes y pa facer semeyes. Ensin ella, los demás nun te van ver.</string>
+    <string name="permission_dialog_microphone_title">Permisu del micrófonu</string>
+    <string name="permission_dialog_microphone_rationale">Jami precisa'l micrófonu pa les llamaes y los mensaxes de voz. Ensin él, los demás nun te van oyer.</string>
+    <string name="permission_dialog_microphone_message">El permisu del micrófonu ta desactiváu. Actívalu na configuración del preséu pa usar esta función.</string>
+    <string name="permission_dialog_location_title">Permisu d'allugamientu</string>
+    <string name="permission_dialog_location_rationale">Jami precisa'l to allugamientu pa compartilu nuna conversación. Namás s'unvia mentanto lu compartes.</string>
+    <string name="permission_dialog_location_message">El permisu d'allugamientu ta desactiváu. Actívalu na configuración del preséu pa usar esta función.</string>
+    <string name="permission_dialog_contacts_title">Permisu de contactos</string>
+    <string name="permission_dialog_contacts_rationale">Jami llee los tos contactos p'amosar los nomes y semeyes que guardesti pa los tos contactos de Jami. Nun se xube nada.</string>
+    <string name="permission_dialog_camera_message">Les conversaciones de videu riquen el permisu de la cámara. El permisu de la cámara ta desactiváu. Actívalu na configuración del preséu pa usar esta función.</string>
+    <string name="permission_dialog_read_contacts_message">Jami rique'l permisu «Lleer contactos». Actívalu na configuración del preséu pa usar esta función.</string>
 </resources>

@@ -636,4 +636,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">正在背景同步對話</string>
     <string name="profile_save_failed">無法儲存個人資料</string>
     <string name="import_account_already_on_device">此帳號已在此裝置上。</string>
+    <string name="permission_dialog_open_settings">開啟設定</string>
+    <string name="permission_dialog_later">稍後</string>
+    <string name="permission_dialog_camera_rationale">Jami 需要使用相機進行視訊通話和拍照。沒有相機，其他人將看不到你。</string>
+    <string name="permission_dialog_microphone_title">麥克風權限</string>
+    <string name="permission_dialog_microphone_rationale">Jami 需要使用麥克風進行通話和傳送語音訊息。沒有麥克風，其他人將聽不到你。</string>
+    <string name="permission_dialog_microphone_message">麥克風權限已關閉。若要使用此功能，請在裝置設定中開啟。</string>
+    <string name="permission_dialog_location_title">位置權限</string>
+    <string name="permission_dialog_location_rationale">Jami 需要你的位置才能在對話中分享。僅在你分享期間傳送。</string>
+    <string name="permission_dialog_location_message">位置權限已關閉。若要使用此功能，請在裝置設定中開啟。</string>
+    <string name="permission_dialog_contacts_title">聯絡人權限</string>
+    <string name="permission_dialog_contacts_rationale">Jami 讀取你的聯絡人，以顯示你為 Jami 聯絡人儲存的名稱和相片。不會上傳任何內容。</string>
 </resources>

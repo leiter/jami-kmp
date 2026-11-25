@@ -385,4 +385,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="remove_photo">ਫ਼ੋਟੋ ਹਟਾਓ</string>
     <string name="reset">ਰੀਸੈੱਟ ਕਰੋ</string>
     <string name="rename_btn">ਪੁਸ਼ਟੀ ਕਰੋ</string>
+    <string name="permission_dialog_camera_rationale">ਵੀਡੀਓ ਕਾਲਾਂ ਅਤੇ ਫ਼ੋਟੋਆਂ ਖਿੱਚਣ ਲਈ Jami ਨੂੰ ਕੈਮਰੇ ਦੀ ਲੋੜ ਹੈ। ਇਸ ਤੋਂ ਬਿਨਾਂ ਦੂਜੇ ਤੁਹਾਨੂੰ ਨਹੀਂ ਦੇਖ ਸਕਣਗੇ।</string>
+    <string name="permission_dialog_microphone_title">ਮਾਈਕ੍ਰੋਫ਼ੋਨ ਇਜਾਜ਼ਤ</string>
+    <string name="permission_dialog_microphone_rationale">ਕਾਲਾਂ ਅਤੇ ਅਵਾਜ਼ੀ ਸੁਨੇਹਿਆਂ ਲਈ Jami ਨੂੰ ਮਾਈਕ੍ਰੋਫ਼ੋਨ ਦੀ ਲੋੜ ਹੈ। ਇਸ ਤੋਂ ਬਿਨਾਂ ਦੂਜੇ ਤੁਹਾਨੂੰ ਨਹੀਂ ਸੁਣ ਸਕਣਗੇ।</string>
+    <string name="permission_dialog_microphone_message">ਮਾਈਕ੍ਰੋਫ਼ੋਨ ਇਜਾਜ਼ਤ ਬੰਦ ਹੈ। ਇਹ ਵਿਸ਼ੇਸ਼ਤਾ ਵਰਤਣ ਲਈ ਡੀਵਾਈਸ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਇਸਨੂੰ ਚਾਲੂ ਕਰੋ।</string>
+    <string name="permission_dialog_location_title">ਟਿਕਾਣਾ ਇਜਾਜ਼ਤ</string>
+    <string name="permission_dialog_location_rationale">ਗੱਲਬਾਤ ਵਿੱਚ ਸਾਂਝਾ ਕਰਨ ਲਈ Jami ਨੂੰ ਤੁਹਾਡੇ ਟਿਕਾਣੇ ਦੀ ਲੋੜ ਹੈ। ਇਹ ਸਿਰਫ਼ ਸਾਂਝਾ ਕਰਦੇ ਸਮੇਂ ਭੇਜਿਆ ਜਾਂਦਾ ਹੈ।</string>
+    <string name="permission_dialog_location_message">ਟਿਕਾਣਾ ਇਜਾਜ਼ਤ ਬੰਦ ਹੈ। ਇਹ ਵਿਸ਼ੇਸ਼ਤਾ ਵਰਤਣ ਲਈ ਡੀਵਾਈਸ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਇਸਨੂੰ ਚਾਲੂ ਕਰੋ।</string>
+    <string name="permission_dialog_contacts_title">ਸੰਪਰਕ ਇਜਾਜ਼ਤ</string>
+    <string name="permission_dialog_contacts_rationale">ਤੁਹਾਡੇ Jami ਸੰਪਰਕਾਂ ਲਈ ਰੱਖਿਅਤ ਕੀਤੇ ਨਾਮ ਅਤੇ ਫ਼ੋਟੋਆਂ ਦਿਖਾਉਣ ਲਈ Jami ਤੁਹਾਡੇ ਸੰਪਰਕ ਪੜ੍ਹਦਾ ਹੈ। ਕੁਝ ਵੀ ਅੱਪਲੋਡ ਨਹੀਂ ਹੁੰਦਾ।</string>
+    <string name="permission_dialog_camera_message">ਵੀਡੀਓ ਗੱਲਬਾਤ ਲਈ ਕੈਮਰਾ ਇਜਾਜ਼ਤ ਲੋੜੀਂਦੀ ਹੈ। ਕੈਮਰਾ ਇਜਾਜ਼ਤ ਬੰਦ ਹੈ। ਇਹ ਵਿਸ਼ੇਸ਼ਤਾ ਵਰਤਣ ਲਈ ਡੀਵਾਈਸ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਇਸਨੂੰ ਚਾਲੂ ਕਰੋ।</string>
+    <string name="permission_dialog_read_contacts_message">Jami ਨੂੰ “ਸੰਪਰਕ ਪੜ੍ਹੋ” ਇਜਾਜ਼ਤ ਦੀ ਲੋੜ ਹੈ। ਇਹ ਵਿਸ਼ੇਸ਼ਤਾ ਵਰਤਣ ਲਈ ਡੀਵਾਈਸ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਇਸਨੂੰ ਚਾਲੂ ਕਰੋ।</string>
+    <string name="permission_dialog_later">ਬਾਅਦ ਵਿੱਚ</string>
+    <string name="permission_dialog_open_settings">ਸੈਟਿੰਗਾਂ ਖੋਲ੍ਹੋ</string>
 </resources>

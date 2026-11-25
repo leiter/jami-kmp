@@ -325,4 +325,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="custom_profile_message_warning">הפרופיל המותאם גלוי רק לחשבון במכשיר זה</string>
     <string name="remove_photo">הסרת התמונה</string>
     <string name="open_the_gallery">פתיחת הגלריה</string>
+    <string name="permission_dialog_open_settings">הגדרות פתוחות</string>
+    <string name="permission_dialog_later">מאוחר יותר.</string>
+    <string name="permission_dialog_camera_rationale">Jami צריך את המצלמה לשיחות וידאו ולצילום תמונות. בלעדיה אחרים לא יראו אותך.</string>
+    <string name="permission_dialog_microphone_title">הרשאת מיקרופון</string>
+    <string name="permission_dialog_microphone_rationale">Jami צריך את המיקרופון לשיחות ולהודעות קוליות. בלעדיו אחרים לא ישמעו אותך.</string>
+    <string name="permission_dialog_microphone_message">הרשאת המיקרופון כבויה. יש להפעיל אותה בהגדרות המכשיר כדי להשתמש בתכונה זו.</string>
+    <string name="permission_dialog_location_title">הרשאת מיקום</string>
+    <string name="permission_dialog_location_rationale">Jami צריך את המיקום שלך כדי לשתף אותו בשיחה. הוא נשלח רק בזמן השיתוף.</string>
+    <string name="permission_dialog_location_message">הרשאת המיקום כבויה. יש להפעיל אותה בהגדרות המכשיר כדי להשתמש בתכונה זו.</string>
+    <string name="permission_dialog_contacts_title">הרשאת אנשי קשר</string>
+    <string name="permission_dialog_contacts_rationale">Jami קורא את אנשי הקשר שלך כדי להציג את השמות והתמונות ששמרת עבור אנשי הקשר שלך ב-Jami. שום דבר לא מועלה.</string>
+    <string name="permission_dialog_camera_title">הרשאת מצלמה</string>
+    <string name="permission_dialog_camera_message">שיחות וידאו דורשות הרשאת מצלמה. הרשאת המצלמה כבויה. יש להפעיל אותה בהגדרות המכשיר כדי להשתמש בתכונה זו.</string>
+    <string name="permission_dialog_read_contacts_message">Jami דורש את ההרשאה „קריאת אנשי קשר”. יש להפעיל אותה בהגדרות המכשיר כדי להשתמש בתכונה זו.</string>
 </resources>

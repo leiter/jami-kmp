@@ -49,3 +49,9 @@ actual fun openFile(path: String): Boolean {
     documentController = controller
     return controller.presentOptionsMenuFromRect(presenter.view.bounds, inView = presenter.view, animated = true)
 }
+
+actual fun openAppSettings(): Boolean {
+    val url = NSURL.URLWithString(platform.UIKit.UIApplicationOpenSettingsURLString) ?: return false
+    UIApplication.sharedApplication.openURL(url, options = emptyMap<Any?, Any?>(), completionHandler = null)
+    return true
+}

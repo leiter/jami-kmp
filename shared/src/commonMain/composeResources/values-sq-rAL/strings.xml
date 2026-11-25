@@ -635,4 +635,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Po sinkronizohen bisedat në sfond</string>
     <string name="profile_save_failed">Profili nuk mund të ruhej</string>
     <string name="import_account_already_on_device">Kjo llogari gjendet tashmë në këtë pajisje.</string>
+    <string name="permission_dialog_open_settings">Hap rregullimet</string>
+    <string name="permission_dialog_later">Më vonë</string>
+    <string name="permission_dialog_camera_rationale">Jami ka nevojë për kamerën për thirrjet me video dhe për të bërë foto. Pa të, të tjerët nuk ju shohin.</string>
+    <string name="permission_dialog_microphone_title">Leje mikrofoni</string>
+    <string name="permission_dialog_microphone_rationale">Jami ka nevojë për mikrofonin për thirrjet dhe mesazhet zanore. Pa të, të tjerët nuk ju dëgjojnë.</string>
+    <string name="permission_dialog_microphone_message">Leja e mikrofonit është çaktivizuar. Aktivizojeni te rregullimet e pajisjes për të përdorur këtë veçori.</string>
+    <string name="permission_dialog_location_title">Leje vendndodhjeje</string>
+    <string name="permission_dialog_location_rationale">Jami ka nevojë për vendndodhjen tuaj për ta ndarë në një bisedë. Dërgohet vetëm sa kohë e ndani.</string>
+    <string name="permission_dialog_location_message">Leja e vendndodhjes është çaktivizuar. Aktivizojeni te rregullimet e pajisjes për të përdorur këtë veçori.</string>
+    <string name="permission_dialog_contacts_title">Leje kontaktesh</string>
+    <string name="permission_dialog_contacts_rationale">Jami lexon kontaktet tuaja për të shfaqur emrat dhe fotot që keni ruajtur për kontaktet tuaja Jami. Nuk ngarkohet asgjë.</string>
 </resources>

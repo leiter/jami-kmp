@@ -95,3 +95,12 @@ private fun shareableFile(context: Context, source: File): File? {
         }
     }
 }
+
+actual fun openAppSettings(): Boolean {
+    val context: Context = KoinPlatform.getKoin().get()
+    val intent = Intent(
+        android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        android.net.Uri.fromParts("package", context.packageName, null),
+    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    return runCatching { context.startActivity(intent) }.isSuccess
+}

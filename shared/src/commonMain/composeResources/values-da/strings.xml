@@ -513,4 +513,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">Denne konto findes allerede på denne enhed.</string>
     <string name="custom_profile_message_warning">Den tilpassede profil er kun synlig for kontoen på denne enhed</string>
     <string name="dialog_title_contact">Rediger kaldenavn</string>
+    <string name="permission_dialog_camera_message">Videosamtaler kræver adgang til kameraet. Aktiver det i enhedens indstillinger for at bruge denne funktion.</string>
+    <string name="permission_dialog_read_contacts_message">Jami skal bruge tilladelsen "Læs kontakter". Slå det til i enhedens indstillinger for at bruge denne funktion.</string>
+    <string name="permission_dialog_open_settings">Åbne indstillinger</string>
+    <string name="permission_dialog_later">Senere</string>
+    <string name="permission_dialog_camera_rationale">Jami skal bruge kameraet til videoopkald og til at tage billeder. Uden det kan andre ikke se dig.</string>
+    <string name="permission_dialog_microphone_title">Mikrofontilladelse</string>
+    <string name="permission_dialog_microphone_rationale">Jami skal bruge mikrofonen til opkald og talebeskeder. Uden den kan andre ikke høre dig.</string>
+    <string name="permission_dialog_microphone_message">Mikrofontilladelsen er slået fra. Slå den til i enhedens indstillinger for at bruge denne funktion.</string>
+    <string name="permission_dialog_location_title">Placeringstilladelse</string>
+    <string name="permission_dialog_location_rationale">Jami skal bruge din placering for at dele den i en samtale. Den sendes kun, mens du deler den.</string>
+    <string name="permission_dialog_location_message">Placeringstilladelsen er slået fra. Slå den til i enhedens indstillinger for at bruge denne funktion.</string>
+    <string name="permission_dialog_contacts_title">Kontakttilladelse</string>
+    <string name="permission_dialog_contacts_rationale">Jami læser dine kontakter for at vise de navne og billeder, du har gemt for dine Jami-kontakter. Intet uploades.</string>
 </resources>

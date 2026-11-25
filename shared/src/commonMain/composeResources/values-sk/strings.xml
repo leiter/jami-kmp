@@ -521,4 +521,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">Tento účet už v tomto zariadení je.</string>
     <string name="custom_profile_message_warning">Vlastný profil je viditeľný iba pre účet na tomto zariadení</string>
     <string name="dialog_title_contact">Upraviť zobrazované meno</string>
+    <string name="permission_dialog_camera_message">Videokonverzácie vyžadujú povolenie kamery. Povolenie kamery je zakázané. Povoľte ho v nastaveniach zariadenia, aby ste mohli použiť túto funkciu.</string>
+    <string name="permission_dialog_read_contacts_message">Jami vyžaduje povolenie „Čítať kontakty“. Povoľte ho v nastaveniach zariadenia, aby ste mohli použiť túto funkciu.</string>
+    <string name="permission_dialog_open_settings">Otvoriť nastavenia</string>
+    <string name="permission_dialog_later">Neskôr</string>
+    <string name="permission_dialog_camera_rationale">Jami potrebuje fotoaparát na videohovory a fotografovanie. Bez neho vás ostatní neuvidia.</string>
+    <string name="permission_dialog_microphone_title">Povolenie mikrofónu</string>
+    <string name="permission_dialog_microphone_rationale">Jami potrebuje mikrofón na hovory a hlasové správy. Bez neho vás ostatní nebudú počuť.</string>
+    <string name="permission_dialog_microphone_message">Povolenie mikrofónu je vypnuté. Ak chcete túto funkciu používať, zapnite ho v nastaveniach zariadenia.</string>
+    <string name="permission_dialog_location_title">Povolenie polohy</string>
+    <string name="permission_dialog_location_rationale">Jami potrebuje vašu polohu, aby ju mohol zdieľať v konverzácii. Odosiela sa len počas zdieľania.</string>
+    <string name="permission_dialog_location_message">Povolenie polohy je vypnuté. Ak chcete túto funkciu používať, zapnite ho v nastaveniach zariadenia.</string>
+    <string name="permission_dialog_contacts_title">Povolenie kontaktov</string>
+    <string name="permission_dialog_contacts_rationale">Jami číta vaše kontakty, aby zobrazil mená a fotky, ktoré ste uložili pre svoje kontakty v Jami. Nič sa nenahráva.</string>
 </resources>

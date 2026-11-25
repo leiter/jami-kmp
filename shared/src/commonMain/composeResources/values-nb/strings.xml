@@ -514,4 +514,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">Denne kontoen finnes allerede på denne enheten.</string>
     <string name="custom_profile_message_warning">Den tilpassede profilen er bare synlig for kontoen på denne enheten</string>
     <string name="dialog_title_contact">Rediger visningsnavn</string>
+    <string name="permission_dialog_camera_message">Videosamtaler krever kameratillatelsen. Kameratillatelsen er deaktivert. Aktiver den i enhetsinnstillingene for å bruke denne funksjonen.</string>
+    <string name="permission_dialog_read_contacts_message">Jami krever tillatelsen «Les kontakter». Aktiver den i enhetsinnstillingene for å bruke denne funksjonen.</string>
+    <string name="permission_dialog_open_settings">Åpne innstillinger</string>
+    <string name="permission_dialog_later">Senere</string>
+    <string name="permission_dialog_camera_rationale">Jami trenger kameraet til videosamtaler og til å ta bilder. Uten det kan andre ikke se deg.</string>
+    <string name="permission_dialog_microphone_title">Mikrofontillatelse</string>
+    <string name="permission_dialog_microphone_rationale">Jami trenger mikrofonen til samtaler og talemeldinger. Uten den kan andre ikke høre deg.</string>
+    <string name="permission_dialog_microphone_message">Mikrofontillatelsen er slått av. Slå den på i enhetsinnstillingene for å bruke denne funksjonen.</string>
+    <string name="permission_dialog_location_title">Posisjonstillatelse</string>
+    <string name="permission_dialog_location_rationale">Jami trenger posisjonen din for å dele den i en samtale. Den sendes bare mens du deler den.</string>
+    <string name="permission_dialog_location_message">Posisjonstillatelsen er slått av. Slå den på i enhetsinnstillingene for å bruke denne funksjonen.</string>
+    <string name="permission_dialog_contacts_title">Kontakttillatelse</string>
+    <string name="permission_dialog_contacts_rationale">Jami leser kontaktene dine for å vise navnene og bildene du har lagret for Jami-kontaktene dine. Ingenting lastes opp.</string>
 </resources>

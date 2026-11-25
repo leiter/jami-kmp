@@ -536,4 +536,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">Denne kontoen finst allereie på denne eininga.</string>
     <string name="custom_profile_message_warning">Den tilpassa profilen er berre synleg for kontoen på denne eininga</string>
     <string name="dialog_title_contact">Rediger visingsnamn</string>
+    <string name="permission_dialog_camera_message">Videosamtalar krev kameraløyvet. Kameraløyvet er deaktivert. Aktiver det i einingsinnstillingane for å bruka denne funksjonen.</string>
+    <string name="permission_dialog_read_contacts_message">Jami krev løyvet «Les kontaktar». Aktiver det i einingsinnstillingane for å bruka denne funksjonen.</string>
+    <string name="permission_dialog_open_settings">Åpne innstillingar</string>
+    <string name="permission_dialog_later">Seinare</string>
+    <string name="permission_dialog_camera_rationale">Jami treng kameraet til videosamtalar og til å ta bilete. Utan det kan ikkje andre sjå deg.</string>
+    <string name="permission_dialog_microphone_title">Mikrofonløyve</string>
+    <string name="permission_dialog_microphone_rationale">Jami treng mikrofonen til samtalar og talemeldingar. Utan han kan ikkje andre høyre deg.</string>
+    <string name="permission_dialog_microphone_message">Mikrofonløyvet er slått av. Slå det på i innstillingane for eininga for å bruke denne funksjonen.</string>
+    <string name="permission_dialog_location_title">Posisjonsløyve</string>
+    <string name="permission_dialog_location_rationale">Jami treng posisjonen din for å dele han i ein samtale. Han vert berre send medan du deler han.</string>
+    <string name="permission_dialog_location_message">Posisjonsløyvet er slått av. Slå det på i innstillingane for eininga for å bruke denne funksjonen.</string>
+    <string name="permission_dialog_contacts_title">Kontaktløyve</string>
+    <string name="permission_dialog_contacts_rationale">Jami les kontaktane dine for å vise namna og bileta du har lagra for Jami-kontaktane dine. Ingenting vert lasta opp.</string>
 </resources>

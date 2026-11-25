@@ -237,4 +237,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="custom_profile_message_warning">Profaịlụ ahaziri ahazi na-ahụ naanị akaụntụ dị na ngwaọrụ a</string>
     <string name="remove_photo">Wepụ foto</string>
     <string name="open_the_gallery">Mepee gallery</string>
+    <string name="permission_dialog_open_settings">Mbido oghere</string>
+    <string name="permission_dialog_later">Mgbe e mesịrị</string>
+    <string name="permission_dialog_camera_rationale">Jami chọrọ igwefoto maka oku vidiyo na iji see foto. Na-enweghị ya, ndị ọzọ agaghị ahụ gị.</string>
+    <string name="permission_dialog_microphone_title">Ikike igwe okwu</string>
+    <string name="permission_dialog_microphone_rationale">Jami chọrọ igwe okwu maka oku na ozi olu. Na-enweghị ya, ndị ọzọ agaghị anụ gị.</string>
+    <string name="permission_dialog_microphone_message">Agbanyụrụ ikike igwe okwu. Gbanye ya na ntọala ngwaọrụ iji jiri atụmatụ a.</string>
+    <string name="permission_dialog_location_title">Ikike ọnọdụ</string>
+    <string name="permission_dialog_location_rationale">Jami chọrọ ebe ị nọ iji kesaa ya na mkparịta ụka. A na-eziga ya naanị mgbe ị na-ekesa ya.</string>
+    <string name="permission_dialog_location_message">Agbanyụrụ ikike ọnọdụ. Gbanye ya na ntọala ngwaọrụ iji jiri atụmatụ a.</string>
+    <string name="permission_dialog_contacts_title">Ikike kọntaktị</string>
+    <string name="permission_dialog_contacts_rationale">Jami na-agụ kọntaktị gị iji gosi aha na foto ị chekwara maka kọntaktị Jami gị. Ọ dịghị ihe a na-ebugo.</string>
+    <string name="permission_dialog_camera_title">Ikike igwefoto</string>
+    <string name="permission_dialog_camera_message">Mkparịta ụka vidiyo chọrọ ikike igwefoto. Agbanyụrụ ikike igwefoto. Gbanye ya na ntọala ngwaọrụ iji jiri atụmatụ a.</string>
+    <string name="permission_dialog_read_contacts_message">Jami chọrọ ikike “Gụọ kọntaktị”. Gbanye ya na ntọala ngwaọrụ iji jiri atụmatụ a.</string>
 </resources>

@@ -530,4 +530,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">Dit account staat al op dit apparaat.</string>
     <string name="custom_profile_message_warning">Het aangepaste profiel is alleen zichtbaar voor de account op dit apparaat</string>
     <string name="dialog_title_contact">Weergavenaam bewerken</string>
+    <string name="permission_dialog_camera_message">Voor videogesprekken is toestemming voor de camera vereist. De toestemming voor de camera is uitgeschakeld. Schakel deze in de apparaatinstellingen in om deze functie te kunnen gebruiken.</string>
+    <string name="permission_dialog_read_contacts_message">Jami vereist de toestemming “Contacten lezen”. Schakel deze in bij de apparaatinstellingen om deze functie te gebruiken.</string>
+    <string name="permission_dialog_open_settings">Open instellingen</string>
+    <string name="permission_dialog_later">Later.</string>
+    <string name="permission_dialog_camera_rationale">Jami heeft de camera nodig voor videogesprekken en om foto's te maken. Zonder camera zien anderen je niet.</string>
+    <string name="permission_dialog_microphone_title">Microfoontoestemming</string>
+    <string name="permission_dialog_microphone_rationale">Jami heeft de microfoon nodig voor gesprekken en spraakberichten. Zonder microfoon horen anderen je niet.</string>
+    <string name="permission_dialog_microphone_message">De microfoontoestemming is uitgeschakeld. Schakel ze in via de apparaatinstellingen om deze functie te gebruiken.</string>
+    <string name="permission_dialog_location_title">Locatietoestemming</string>
+    <string name="permission_dialog_location_rationale">Jami heeft je locatie nodig om die in een gesprek te delen. Ze wordt alleen verzonden zolang je deelt.</string>
+    <string name="permission_dialog_location_message">De locatietoestemming is uitgeschakeld. Schakel ze in via de apparaatinstellingen om deze functie te gebruiken.</string>
+    <string name="permission_dialog_contacts_title">Contactentoestemming</string>
+    <string name="permission_dialog_contacts_rationale">Jami leest je contacten om de namen en foto's te tonen die je voor je Jami-contacten hebt opgeslagen. Er wordt niets geüpload.</string>
 </resources>

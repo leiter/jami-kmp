@@ -467,4 +467,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">Επεξεργασία εμφανιζόμενου ονόματος</string>
     <string name="custom_profile_message_warning">Το προσαρμοσμένο προφίλ είναι ορατό μόνο στον λογαριασμό αυτής της συσκευής</string>
     <string name="remove_photo">Αφαίρεση φωτογραφίας</string>
+    <string name="permission_dialog_open_settings">Άνοιγμα ρυθμίσεων</string>
+    <string name="permission_dialog_later">Αργότερα</string>
+    <string name="permission_dialog_camera_rationale">Το Jami χρειάζεται την κάμερα για βιντεοκλήσεις και για λήψη φωτογραφιών. Χωρίς αυτήν οι άλλοι δεν θα σας βλέπουν.</string>
+    <string name="permission_dialog_microphone_title">Άδεια μικροφώνου</string>
+    <string name="permission_dialog_microphone_rationale">Το Jami χρειάζεται το μικρόφωνο για κλήσεις και φωνητικά μηνύματα. Χωρίς αυτό οι άλλοι δεν θα σας ακούν.</string>
+    <string name="permission_dialog_microphone_message">Η άδεια μικροφώνου είναι απενεργοποιημένη. Ενεργοποιήστε την στις ρυθμίσεις της συσκευής για να χρησιμοποιήσετε αυτή τη λειτουργία.</string>
+    <string name="permission_dialog_location_title">Άδεια τοποθεσίας</string>
+    <string name="permission_dialog_location_rationale">Το Jami χρειάζεται την τοποθεσία σας για να την κοινοποιήσει σε μια συνομιλία. Αποστέλλεται μόνο όσο την κοινοποιείτε.</string>
+    <string name="permission_dialog_location_message">Η άδεια τοποθεσίας είναι απενεργοποιημένη. Ενεργοποιήστε την στις ρυθμίσεις της συσκευής για να χρησιμοποιήσετε αυτή τη λειτουργία.</string>
+    <string name="permission_dialog_contacts_title">Άδεια επαφών</string>
+    <string name="permission_dialog_contacts_rationale">Το Jami διαβάζει τις επαφές σας για να εμφανίζει τα ονόματα και τις φωτογραφίες που αποθηκεύσατε για τις επαφές σας στο Jami. Τίποτα δεν μεταφορτώνεται.</string>
+    <string name="permission_dialog_camera_message">Οι βιντεοσυνομιλίες απαιτούν την άδεια κάμερας. Η άδεια κάμερας είναι απενεργοποιημένη. Ενεργοποιήστε την στις ρυθμίσεις της συσκευής για να χρησιμοποιήσετε αυτή τη λειτουργία.</string>
+    <string name="permission_dialog_read_contacts_message">Το Jami απαιτεί την άδεια «Ανάγνωση επαφών». Ενεργοποιήστε την στις ρυθμίσεις της συσκευής για να χρησιμοποιήσετε αυτή τη λειτουργία.</string>
 </resources>

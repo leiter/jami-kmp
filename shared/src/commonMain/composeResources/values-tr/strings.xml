@@ -532,4 +532,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">Bu hesap bu cihazda zaten var.</string>
     <string name="custom_profile_message_warning">Özel profil yalnızca bu cihazdaki hesap tarafından görülebilir</string>
     <string name="dialog_title_contact">Görünen adı düzenle</string>
+    <string name="permission_dialog_camera_message">Video görüşmeleri için kamera izni gerekli. Kamera izni devre dışı bırakılmış. Bu özelliği kullanabilmek için cihaz ayarlarından etkinleştirilmeli.</string>
+    <string name="permission_dialog_read_contacts_message">Jami'nin "Kişileri oku" iznine ihtiyacı var. Bu özelliği kullanabilmek için cihaz ayarlarından etkinleştirilmeli.</string>
+    <string name="permission_dialog_open_settings">Ayarları aç</string>
+    <string name="permission_dialog_later">Sonra</string>
+    <string name="permission_dialog_camera_rationale">Jami'nin görüntülü aramalar ve fotoğraf çekmek için kameraya ihtiyacı var. Kamera olmadan diğerleri sizi göremez.</string>
+    <string name="permission_dialog_microphone_title">Mikrofon izni</string>
+    <string name="permission_dialog_microphone_rationale">Jami'nin aramalar ve sesli mesajlar için mikrofona ihtiyacı var. Mikrofon olmadan diğerleri sizi duyamaz.</string>
+    <string name="permission_dialog_microphone_message">Mikrofon izni devre dışı. Bu özelliği kullanmak için cihaz ayarlarından etkinleştirin.</string>
+    <string name="permission_dialog_location_title">Konum izni</string>
+    <string name="permission_dialog_location_rationale">Jami'nin konumunuzu bir sohbette paylaşmak için konumunuza ihtiyacı var. Yalnızca paylaştığınız sürece gönderilir.</string>
+    <string name="permission_dialog_location_message">Konum izni devre dışı. Bu özelliği kullanmak için cihaz ayarlarından etkinleştirin.</string>
+    <string name="permission_dialog_contacts_title">Kişiler izni</string>
+    <string name="permission_dialog_contacts_rationale">Jami, Jami kişileriniz için kaydettiğiniz adları ve fotoğrafları göstermek için kişilerinizi okur. Hiçbir şey yüklenmez.</string>
 </resources>

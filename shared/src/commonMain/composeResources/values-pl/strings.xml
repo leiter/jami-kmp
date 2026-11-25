@@ -624,4 +624,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Synchronizowanie rozmów w tle</string>
     <string name="profile_save_failed">Nie udało się zapisać profilu</string>
     <string name="import_account_already_on_device">To konto jest już na tym urządzeniu.</string>
+    <string name="permission_dialog_open_settings">Otwórz ustawienia</string>
+    <string name="permission_dialog_later">Później</string>
+    <string name="permission_dialog_camera_rationale">Jami potrzebuje aparatu do rozmów wideo i robienia zdjęć. Bez niego inni Cię nie zobaczą.</string>
+    <string name="permission_dialog_microphone_title">Uprawnienie do mikrofonu</string>
+    <string name="permission_dialog_microphone_rationale">Jami potrzebuje mikrofonu do rozmów i wiadomości głosowych. Bez niego inni Cię nie usłyszą.</string>
+    <string name="permission_dialog_microphone_message">Uprawnienie do mikrofonu jest wyłączone. Włącz je w ustawieniach urządzenia, aby korzystać z tej funkcji.</string>
+    <string name="permission_dialog_location_title">Uprawnienie do lokalizacji</string>
+    <string name="permission_dialog_location_rationale">Jami potrzebuje Twojej lokalizacji, aby udostępnić ją w rozmowie. Jest wysyłana tylko podczas udostępniania.</string>
+    <string name="permission_dialog_location_message">Uprawnienie do lokalizacji jest wyłączone. Włącz je w ustawieniach urządzenia, aby korzystać z tej funkcji.</string>
+    <string name="permission_dialog_contacts_title">Uprawnienie do kontaktów</string>
+    <string name="permission_dialog_contacts_rationale">Jami odczytuje Twoje kontakty, aby pokazać nazwy i zdjęcia zapisane dla Twoich kontaktów Jami. Nic nie jest przesyłane.</string>
 </resources>

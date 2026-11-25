@@ -441,4 +441,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">Харагдах нэрийг засах</string>
     <string name="custom_profile_message_warning">Тусгай профайл зөвхөн энэ төхөөрөмж дээрх бүртгэлд харагдана</string>
     <string name="remove_photo">Зургийг устгах</string>
+    <string name="permission_dialog_open_settings">Нээлттэй тохируулалт</string>
+    <string name="permission_dialog_later">Дараа нь</string>
+    <string name="permission_dialog_camera_rationale">Jami видео дуудлага болон зураг авахад камер шаардлагатай. Үүнгүйгээр бусад таныг харахгүй.</string>
+    <string name="permission_dialog_microphone_title">Микрофоны зөвшөөрөл</string>
+    <string name="permission_dialog_microphone_rationale">Jami дуудлага болон дуут зурвасад микрофон шаардлагатай. Үүнгүйгээр бусад таныг сонсохгүй.</string>
+    <string name="permission_dialog_microphone_message">Микрофоны зөвшөөрөл идэвхгүй байна. Энэ функцийг ашиглахын тулд төхөөрөмжийн тохиргоонд идэвхжүүлнэ үү.</string>
+    <string name="permission_dialog_location_title">Байршлын зөвшөөрөл</string>
+    <string name="permission_dialog_location_rationale">Jami таны байршлыг ярианд хуваалцахын тулд шаардлагатай. Зөвхөн хуваалцаж байх хугацаанд илгээгдэнэ.</string>
+    <string name="permission_dialog_location_message">Байршлын зөвшөөрөл идэвхгүй байна. Энэ функцийг ашиглахын тулд төхөөрөмжийн тохиргоонд идэвхжүүлнэ үү.</string>
+    <string name="permission_dialog_contacts_title">Харилцагчдын зөвшөөрөл</string>
+    <string name="permission_dialog_contacts_rationale">Jami таны Jami харилцагчдад хадгалсан нэр, зургийг харуулахын тулд таны харилцагчдыг уншина. Юу ч байршуулахгүй.</string>
+    <string name="permission_dialog_camera_message">Видео яриа хийхэд камерын зөвшөөрөл шаардлагатай. Камерын зөвшөөрөл идэвхгүй байна. Энэ функцийг ашиглахын тулд төхөөрөмжийн тохиргоонд идэвхжүүлнэ үү.</string>
+    <string name="permission_dialog_read_contacts_message">Jami-д “Харилцагчдыг унших” зөвшөөрөл шаардлагатай. Энэ функцийг ашиглахын тулд төхөөрөмжийн тохиргоонд идэвхжүүлнэ үү.</string>
 </resources>

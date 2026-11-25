@@ -440,4 +440,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">Modificar lo nom afichat</string>
     <string name="custom_profile_message_warning">Lo perfil personalizat es visible sonque pel compte d'aqueste aparelh</string>
     <string name="remove_photo">Suprimir la fòto</string>
+    <string name="permission_dialog_open_settings">Configuracions dobèrtas</string>
+    <string name="permission_dialog_later">Mai tard</string>
+    <string name="permission_dialog_camera_rationale">Jami a besonh de la camèra per las sonadas vidèo e per prendre de fòtos. Sens ela, los autres vos veiràn pas.</string>
+    <string name="permission_dialog_microphone_title">Autorizacion del microfòn</string>
+    <string name="permission_dialog_microphone_rationale">Jami a besonh del microfòn per las sonadas e los messatges vocals. Sens el, los autres vos ausiràn pas.</string>
+    <string name="permission_dialog_microphone_message">L'autorizacion del microfòn es desactivada. Activatz-la dins los paramètres de l'aparelh per utilizar aquesta foncionalitat.</string>
+    <string name="permission_dialog_location_title">Autorizacion de localizacion</string>
+    <string name="permission_dialog_location_rationale">Jami a besonh de vòstra posicion per la partejar dins una conversacion. Es pas mandada que pendent lo partiment.</string>
+    <string name="permission_dialog_location_message">L'autorizacion de localizacion es desactivada. Activatz-la dins los paramètres de l'aparelh per utilizar aquesta foncionalitat.</string>
+    <string name="permission_dialog_contacts_title">Autorizacion dels contactes</string>
+    <string name="permission_dialog_contacts_rationale">Jami legís vòstres contactes per afichar los noms e las fòtos qu'avètz enregistrats per vòstres contactes Jami. Res es pas mandat.</string>
+    <string name="permission_dialog_camera_message">Las conversacions vidèo necessitan l'autorizacion de la camèra. L'autorizacion de la camèra es desactivada. Activatz-la dins los paramètres de l'aparelh per utilizar aquesta foncionalitat.</string>
+    <string name="permission_dialog_read_contacts_message">Jami requerís l'autorizacion « Legir los contactes ». Activatz-la dins los paramètres de l'aparelh per utilizar aquesta foncionalitat.</string>
 </resources>

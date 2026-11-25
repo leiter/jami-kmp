@@ -361,4 +361,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_hours_short">%1$dس</string>
     <string name="time_days_short">%1$dيوم</string>
     <string name="time_weeks_short">%1$dأسبوع</string>
+    <string name="permission_dialog_open_settings">افتح الإعدادات</string>
+    <string name="permission_dialog_later">لاحقاً</string>
 </resources>

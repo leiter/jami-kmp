@@ -36,3 +36,6 @@ actual fun shareFile(path: String) {
 
 actual fun openFile(path: String): Boolean =
     platform.AppKit.NSWorkspace.sharedWorkspace.openURL(platform.Foundation.NSURL.fileURLWithPath(path))
+
+/** No per-app permission page to open on this platform. */
+actual fun openAppSettings(): Boolean = false

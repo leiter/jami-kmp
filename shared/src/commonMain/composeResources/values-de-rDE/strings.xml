@@ -328,4 +328,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="bottomSheet_dialpad_btn">Wähltastatur</string>
     <string name="date_today">Heute</string>
     <string name="date_yesterday">Gestern</string>
+    <string name="permission_dialog_camera_title">Kameraberechtigung</string>
+    <string name="permission_dialog_open_settings">Einstellungen öffnen</string>
+    <string name="permission_dialog_later">Später</string>
 </resources>

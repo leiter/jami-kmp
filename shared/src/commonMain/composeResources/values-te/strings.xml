@@ -439,4 +439,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">ప్రదర్శన పేరును సవరించండి</string>
     <string name="custom_profile_message_warning">అనుకూల ప్రొఫైల్ ఈ పరికరంలోని ఖాతాకు మాత్రమే కనిపిస్తుంది</string>
     <string name="remove_photo">ఫోటోను తీసివేయండి</string>
+    <string name="permission_dialog_open_settings">సెట్టింగ్‌లను తెరువు</string>
+    <string name="permission_dialog_later">తరువాత</string>
+    <string name="permission_dialog_camera_rationale">వీడియో కాల్‌లు మరియు ఫోటోలు తీయడానికి Jami కి కెమెరా అవసరం. అది లేకుండా ఇతరులు మిమ్మల్ని చూడలేరు.</string>
+    <string name="permission_dialog_microphone_title">మైక్రోఫోన్ అనుమతి</string>
+    <string name="permission_dialog_microphone_rationale">కాల్‌లు మరియు వాయిస్ సందేశాల కోసం Jami కి మైక్రోఫోన్ అవసరం. అది లేకుండా ఇతరులు మీ మాట వినలేరు.</string>
+    <string name="permission_dialog_microphone_message">మైక్రోఫోన్ అనుమతి ఆఫ్‌లో ఉంది. ఈ ఫీచర్‌ను ఉపయోగించడానికి పరికర సెట్టింగ్‌లలో దాన్ని ఆన్ చేయండి.</string>
+    <string name="permission_dialog_location_title">లొకేషన్ అనుమతి</string>
+    <string name="permission_dialog_location_rationale">సంభాషణలో షేర్ చేయడానికి Jami కి మీ లొకేషన్ అవసరం. మీరు షేర్ చేస్తున్నప్పుడు మాత్రమే అది పంపబడుతుంది.</string>
+    <string name="permission_dialog_location_message">లొకేషన్ అనుమతి ఆఫ్‌లో ఉంది. ఈ ఫీచర్‌ను ఉపయోగించడానికి పరికర సెట్టింగ్‌లలో దాన్ని ఆన్ చేయండి.</string>
+    <string name="permission_dialog_contacts_title">పరిచయాల అనుమతి</string>
+    <string name="permission_dialog_contacts_rationale">మీ Jami పరిచయాల కోసం సేవ్ చేసిన పేర్లు మరియు ఫోటోలను చూపడానికి Jami మీ పరిచయాలను చదువుతుంది. ఏదీ అప్‌లోడ్ చేయబడదు.</string>
+    <string name="permission_dialog_camera_message">వీడియో సంభాషణలకు కెమెరా అనుమతి అవసరం. కెమెరా అనుమతి ఆఫ్‌లో ఉంది. ఈ ఫీచర్‌ను ఉపయోగించడానికి పరికర సెట్టింగ్‌లలో దాన్ని ఆన్ చేయండి.</string>
+    <string name="permission_dialog_read_contacts_message">Jami కి “పరిచయాలను చదవండి” అనుమతి అవసరం. ఈ ఫీచర్‌ను ఉపయోగించడానికి పరికర సెట్టింగ్‌లలో దాన్ని ఆన్ చేయండి.</string>
 </resources>

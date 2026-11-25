@@ -454,4 +454,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">Uredi prikazano ime</string>
     <string name="custom_profile_message_warning">Prilagođeni profil vidljiv je samo računu na ovom uređaju</string>
     <string name="remove_photo">Ukloni fotografiju</string>
+    <string name="permission_dialog_open_settings">Otvori postavke</string>
+    <string name="permission_dialog_later">Kasnije</string>
+    <string name="permission_dialog_camera_rationale">Jami treba kameru za videopozive i fotografiranje. Bez nje vas drugi neće vidjeti.</string>
+    <string name="permission_dialog_microphone_title">Dopuštenje za mikrofon</string>
+    <string name="permission_dialog_microphone_rationale">Jami treba mikrofon za pozive i glasovne poruke. Bez njega vas drugi neće čuti.</string>
+    <string name="permission_dialog_microphone_message">Dopuštenje za mikrofon je isključeno. Uključite ga u postavkama uređaja da biste koristili ovu značajku.</string>
+    <string name="permission_dialog_location_title">Dopuštenje za lokaciju</string>
+    <string name="permission_dialog_location_rationale">Jami treba vašu lokaciju da bi je podijelio u razgovoru. Šalje se samo dok je dijelite.</string>
+    <string name="permission_dialog_location_message">Dopuštenje za lokaciju je isključeno. Uključite ga u postavkama uređaja da biste koristili ovu značajku.</string>
+    <string name="permission_dialog_contacts_title">Dopuštenje za kontakte</string>
+    <string name="permission_dialog_contacts_rationale">Jami čita vaše kontakte kako bi prikazao imena i fotografije koje ste spremili za svoje Jami kontakte. Ništa se ne prenosi.</string>
+    <string name="permission_dialog_camera_message">Za videorazgovore potrebno je dopuštenje za kameru. Dopuštenje za kameru je isključeno. Uključite ga u postavkama uređaja da biste koristili ovu značajku.</string>
+    <string name="permission_dialog_read_contacts_message">Jami zahtijeva dopuštenje „Čitanje kontakata”. Uključite ga u postavkama uređaja da biste koristili ovu značajku.</string>
 </resources>

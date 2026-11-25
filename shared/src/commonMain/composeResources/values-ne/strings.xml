@@ -439,4 +439,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">प्रदर्शन नाम सम्पादन गर्नुहोस्</string>
     <string name="custom_profile_message_warning">अनुकूल प्रोफाइल यस यन्त्रको खातालाई मात्र देखिन्छ</string>
     <string name="remove_photo">फोटो हटाउनुहोस्</string>
+    <string name="permission_dialog_open_settings">खुला सेटिंग्स</string>
+    <string name="permission_dialog_later">पछि</string>
+    <string name="permission_dialog_camera_rationale">भिडियो कल र फोटो खिच्न Jami लाई क्यामेरा चाहिन्छ। यसविना अरूले तपाईंलाई देख्न सक्दैनन्।</string>
+    <string name="permission_dialog_microphone_title">माइक्रोफोन अनुमति</string>
+    <string name="permission_dialog_microphone_rationale">कल र भ्वाइस सन्देशका लागि Jami लाई माइक्रोफोन चाहिन्छ। यसविना अरूले तपाईंलाई सुन्न सक्दैनन्।</string>
+    <string name="permission_dialog_microphone_message">माइक्रोफोन अनुमति बन्द छ। यो सुविधा प्रयोग गर्न यन्त्रको सेटिङमा यसलाई सक्रिय गर्नुहोस्।</string>
+    <string name="permission_dialog_location_title">स्थान अनुमति</string>
+    <string name="permission_dialog_location_rationale">कुराकानीमा साझा गर्न Jami लाई तपाईंको स्थान चाहिन्छ। साझा गर्दा मात्र पठाइन्छ।</string>
+    <string name="permission_dialog_location_message">स्थान अनुमति बन्द छ। यो सुविधा प्रयोग गर्न यन्त्रको सेटिङमा यसलाई सक्रिय गर्नुहोस्।</string>
+    <string name="permission_dialog_contacts_title">सम्पर्क अनुमति</string>
+    <string name="permission_dialog_contacts_rationale">तपाईंका Jami सम्पर्कहरूका लागि सुरक्षित गरिएका नाम र फोटो देखाउन Jami ले तपाईंका सम्पर्कहरू पढ्छ। केही पनि अपलोड हुँदैन।</string>
+    <string name="permission_dialog_camera_message">भिडियो कुराकानीका लागि क्यामेरा अनुमति चाहिन्छ। क्यामेरा अनुमति बन्द छ। यो सुविधा प्रयोग गर्न यन्त्रको सेटिङमा यसलाई सक्रिय गर्नुहोस्।</string>
+    <string name="permission_dialog_read_contacts_message">Jami लाई “सम्पर्कहरू पढ्नुहोस्” अनुमति चाहिन्छ। यो सुविधा प्रयोग गर्न यन्त्रको सेटिङमा यसलाई सक्रिय गर्नुहोस्।</string>
 </resources>

@@ -87,4 +87,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="take_a_photo">ඡායාරූපයක් ගන්න</string>
     <string name="reset">යළි සකසන්න</string>
     <string name="rename_btn">තහවුරු කරන්න</string>
+    <string name="permission_dialog_open_settings">පසුතල විවෘත කරන්න</string>
+    <string name="permission_dialog_camera_rationale">වීඩියෝ ඇමතුම් සහ ඡායාරූප ගැනීමට Jami ට කැමරාව අවශ්‍යයි. එය නොමැතිව අනෙක් අයට ඔබව නොපෙනේ.</string>
+    <string name="permission_dialog_microphone_title">මයික්‍රෆෝන අවසරය</string>
+    <string name="permission_dialog_microphone_rationale">ඇමතුම් සහ හඬ පණිවිඩ සඳහා Jami ට මයික්‍රෆෝනය අවශ්‍යයි. එය නොමැතිව අනෙක් අයට ඔබව නොඇසේ.</string>
+    <string name="permission_dialog_microphone_message">මයික්‍රෆෝන අවසරය අක්‍රියයි. මෙම විශේෂාංගය භාවිත කිරීමට උපාංග සැකසීම් තුළ එය සක්‍රිය කරන්න.</string>
+    <string name="permission_dialog_location_title">ස්ථාන අවසරය</string>
+    <string name="permission_dialog_location_rationale">සංවාදයක බෙදා ගැනීමට Jami ට ඔබගේ ස්ථානය අවශ්‍යයි. එය යවනු ලබන්නේ ඔබ බෙදා ගන්නා අතරතුර පමණි.</string>
+    <string name="permission_dialog_location_message">ස්ථාන අවසරය අක්‍රියයි. මෙම විශේෂාංගය භාවිත කිරීමට උපාංග සැකසීම් තුළ එය සක්‍රිය කරන්න.</string>
+    <string name="permission_dialog_contacts_title">සම්බන්ධතා අවසරය</string>
+    <string name="permission_dialog_contacts_rationale">ඔබගේ Jami සම්බන්ධතා සඳහා සුරැකූ නම් සහ ඡායාරූප පෙන්වීමට Jami ඔබගේ සම්බන්ධතා කියවයි. කිසිවක් උඩුගත නොකෙරේ.</string>
+    <string name="permission_dialog_camera_title">කැමරා අවසරය</string>
+    <string name="permission_dialog_camera_message">වීඩියෝ සංවාද සඳහා කැමරා අවසරය අවශ්‍යයි. කැමරා අවසරය අක්‍රියයි. මෙම විශේෂාංගය භාවිත කිරීමට උපාංග සැකසීම් තුළ එය සක්‍රිය කරන්න.</string>
+    <string name="permission_dialog_read_contacts_message">Jami ට “සම්බන්ධතා කියවන්න” අවසරය අවශ්‍යයි. මෙම විශේෂාංගය භාවිත කිරීමට උපාංග සැකසීම් තුළ එය සක්‍රිය කරන්න.</string>
+    <string name="permission_dialog_later">පසුව</string>
 </resources>

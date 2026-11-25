@@ -636,4 +636,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Keskusteluja synkronoidaan taustalla</string>
     <string name="profile_save_failed">Profiilin tallennus epäonnistui</string>
     <string name="import_account_already_on_device">Tämä tili on jo tällä laitteella.</string>
+    <string name="permission_dialog_open_settings">Avaa asetukset</string>
+    <string name="permission_dialog_later">Myöhemmin</string>
+    <string name="permission_dialog_camera_rationale">Jami tarvitsee kameraa videopuheluihin ja valokuvien ottamiseen. Ilman sitä muut eivät näe sinua.</string>
+    <string name="permission_dialog_microphone_title">Mikrofonin käyttöoikeus</string>
+    <string name="permission_dialog_microphone_rationale">Jami tarvitsee mikrofonia puheluihin ja ääniviesteihin. Ilman sitä muut eivät kuule sinua.</string>
+    <string name="permission_dialog_microphone_message">Mikrofonin käyttöoikeus on poistettu käytöstä. Ota se käyttöön laitteen asetuksissa käyttääksesi tätä toimintoa.</string>
+    <string name="permission_dialog_location_title">Sijainnin käyttöoikeus</string>
+    <string name="permission_dialog_location_rationale">Jami tarvitsee sijaintisi jakaakseen sen keskustelussa. Se lähetetään vain jakamisen ajan.</string>
+    <string name="permission_dialog_location_message">Sijainnin käyttöoikeus on poistettu käytöstä. Ota se käyttöön laitteen asetuksissa käyttääksesi tätä toimintoa.</string>
+    <string name="permission_dialog_contacts_title">Yhteystietojen käyttöoikeus</string>
+    <string name="permission_dialog_contacts_rationale">Jami lukee yhteystietosi näyttääkseen nimet ja kuvat, jotka olet tallentanut Jami-yhteystiedoillesi. Mitään ei lähetetä.</string>
 </resources>

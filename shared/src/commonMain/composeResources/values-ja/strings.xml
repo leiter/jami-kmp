@@ -504,4 +504,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">このアカウントはすでにこのデバイスにあります。</string>
     <string name="dialog_title_contact">表示名を編集</string>
     <string name="custom_profile_message_warning">カスタムプロフィールはこのデバイスのアカウントにのみ表示されます</string>
+    <string name="permission_dialog_open_settings">設定を開く</string>
+    <string name="permission_dialog_later">後で</string>
+    <string name="permission_dialog_camera_rationale">Jami はビデオ通話と写真撮影にカメラを使用します。カメラがないと、相手にあなたが見えません。</string>
+    <string name="permission_dialog_microphone_title">マイクの許可</string>
+    <string name="permission_dialog_microphone_rationale">Jami は通話と音声メッセージにマイクを使用します。マイクがないと、相手にあなたの声が聞こえません。</string>
+    <string name="permission_dialog_microphone_message">マイクの許可がオフになっています。この機能を使うには、デバイスの設定でオンにしてください。</string>
+    <string name="permission_dialog_location_title">位置情報の許可</string>
+    <string name="permission_dialog_location_rationale">Jami は会話で共有するためにあなたの位置情報を使用します。共有している間だけ送信されます。</string>
+    <string name="permission_dialog_location_message">位置情報の許可がオフになっています。この機能を使うには、デバイスの設定でオンにしてください。</string>
+    <string name="permission_dialog_contacts_title">連絡先の許可</string>
+    <string name="permission_dialog_contacts_rationale">Jami は、Jami の連絡先に保存した名前と写真を表示するために連絡先を読み取ります。何もアップロードされません。</string>
+    <string name="permission_dialog_camera_message">ビデオ会話にはカメラの許可が必要です。カメラの許可がオフになっています。この機能を使うには、デバイスの設定でオンにしてください。</string>
+    <string name="permission_dialog_read_contacts_message">Jami には「連絡先の読み取り」の許可が必要です。この機能を使うには、デバイスの設定でオンにしてください。</string>
 </resources>

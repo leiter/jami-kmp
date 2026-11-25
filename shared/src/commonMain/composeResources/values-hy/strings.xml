@@ -451,4 +451,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">Խմբագրել ցուցադրվող անունը</string>
     <string name="custom_profile_message_warning">Անհատական պրոֆիլը տեսանելի է միայն այս սարքի հաշվին</string>
     <string name="remove_photo">Հեռացնել լուսանկարը</string>
+    <string name="permission_dialog_open_settings">Բաց կարգավորումներ</string>
+    <string name="permission_dialog_later">Ավելի ուշ</string>
+    <string name="permission_dialog_camera_rationale">Jami-ին տեսազանգերի և լուսանկարելու համար անհրաժեշտ է տեսախցիկը։ Առանց դրա ուրիշները ձեզ չեն տեսնի։</string>
+    <string name="permission_dialog_microphone_title">Խոսափողի թույլտվություն</string>
+    <string name="permission_dialog_microphone_rationale">Jami-ին զանգերի և ձայնային հաղորդագրությունների համար անհրաժեշտ է խոսափողը։ Առանց դրա ուրիշները ձեզ չեն լսի։</string>
+    <string name="permission_dialog_microphone_message">Խոսափողի թույլտվությունն անջատված է։ Միացրեք այն սարքի կարգավորումներում՝ այս գործառույթն օգտագործելու համար։</string>
+    <string name="permission_dialog_location_title">Տեղորոշման թույլտվություն</string>
+    <string name="permission_dialog_location_rationale">Jami-ին անհրաժեշտ է ձեր տեղադրությունը՝ այն զրույցում կիսվելու համար։ Այն ուղարկվում է միայն կիսվելու ընթացքում։</string>
+    <string name="permission_dialog_location_message">Տեղորոշման թույլտվությունն անջատված է։ Միացրեք այն սարքի կարգավորումներում՝ այս գործառույթն օգտագործելու համար։</string>
+    <string name="permission_dialog_contacts_title">Կոնտակտների թույլտվություն</string>
+    <string name="permission_dialog_contacts_rationale">Jami-ն կարդում է ձեր կոնտակտները՝ ցույց տալու այն անուններն ու լուսանկարները, որոնք պահել եք ձեր Jami կոնտակտների համար։ Ոչինչ չի վերբեռնվում։</string>
+    <string name="permission_dialog_camera_message">Տեսազրույցների համար անհրաժեշտ է տեսախցիկի թույլտվություն։ Տեսախցիկի թույլտվությունն անջատված է։ Միացրեք այն սարքի կարգավորումներում՝ այս գործառույթն օգտագործելու համար։</string>
+    <string name="permission_dialog_read_contacts_message">Jami-ին անհրաժեշտ է «Կոնտակտների ընթերցում» թույլտվությունը։ Միացրեք այն սարքի կարգավորումներում՝ այս գործառույթն օգտագործելու համար։</string>
 </resources>

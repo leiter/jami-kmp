@@ -524,4 +524,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="import_account_already_on_device">Esta conta xa está neste dispositivo.</string>
     <string name="custom_profile_message_warning">O perfil personalizado só é visible para a conta deste dispositivo</string>
     <string name="dialog_title_contact">Editar o nome visible</string>
+    <string name="permission_dialog_camera_message">As conversas de vídeo requiren o permiso da cámara. O permiso da cámara está desactivado. Actívao na configuración do dispositivo para usar esta función.</string>
+    <string name="permission_dialog_read_contacts_message">Jami require o permiso «Ler os contactos». Actívao na configuración do dispositivo para usar esta función.</string>
+    <string name="permission_dialog_open_settings">Abrir os axustes</string>
+    <string name="permission_dialog_later">Máis tarde</string>
+    <string name="permission_dialog_camera_rationale">Jami necesita a cámara para as videochamadas e para facer fotos. Sen ela, os demais non te verán.</string>
+    <string name="permission_dialog_microphone_title">Permiso do micrófono</string>
+    <string name="permission_dialog_microphone_rationale">Jami necesita o micrófono para as chamadas e as mensaxes de voz. Sen el, os demais non te oirán.</string>
+    <string name="permission_dialog_microphone_message">O permiso do micrófono está desactivado. Actívao na configuración do dispositivo para usar esta función.</string>
+    <string name="permission_dialog_location_title">Permiso de localización</string>
+    <string name="permission_dialog_location_rationale">Jami necesita a túa localización para compartila nunha conversa. Só se envía mentres a compartes.</string>
+    <string name="permission_dialog_location_message">O permiso de localización está desactivado. Actívao na configuración do dispositivo para usar esta función.</string>
+    <string name="permission_dialog_contacts_title">Permiso de contactos</string>
+    <string name="permission_dialog_contacts_rationale">Jami le os teus contactos para amosar os nomes e as fotos que gardaches para os teus contactos de Jami. Non se envía nada.</string>
 </resources>

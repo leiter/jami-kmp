@@ -438,4 +438,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">Redakti montratan nomon</string>
     <string name="custom_profile_message_warning">La propra profilo estas videbla nur por la konto en ĉi tiu aparato</string>
     <string name="remove_photo">Forigi foton</string>
+    <string name="permission_dialog_open_settings">Malfermu la agordojn</string>
+    <string name="permission_dialog_later">Poste</string>
+    <string name="permission_dialog_camera_rationale">Jami bezonas la fotilon por videovokoj kaj por foti. Sen ĝi, aliaj ne vidos vin.</string>
+    <string name="permission_dialog_microphone_title">Permeso pri mikrofono</string>
+    <string name="permission_dialog_microphone_rationale">Jami bezonas la mikrofonon por vokoj kaj voĉmesaĝoj. Sen ĝi, aliaj ne aŭdos vin.</string>
+    <string name="permission_dialog_microphone_message">La permeso pri mikrofono estas malŝaltita. Ŝaltu ĝin en la agordoj de la aparato por uzi ĉi tiun funkcion.</string>
+    <string name="permission_dialog_location_title">Permeso pri loko</string>
+    <string name="permission_dialog_location_rationale">Jami bezonas vian lokon por kunhavigi ĝin en konversacio. Ĝi estas sendata nur dum vi kunhavigas ĝin.</string>
+    <string name="permission_dialog_location_message">La permeso pri loko estas malŝaltita. Ŝaltu ĝin en la agordoj de la aparato por uzi ĉi tiun funkcion.</string>
+    <string name="permission_dialog_contacts_title">Permeso pri kontaktoj</string>
+    <string name="permission_dialog_contacts_rationale">Jami legas viajn kontaktojn por montri la nomojn kaj fotojn, kiujn vi konservis por viaj Jami-kontaktoj. Nenio estas alŝutata.</string>
+    <string name="permission_dialog_camera_message">Videokonversacioj bezonas la permeson pri fotilo. La permeso pri fotilo estas malŝaltita. Ŝaltu ĝin en la agordoj de la aparato por uzi ĉi tiun funkcion.</string>
+    <string name="permission_dialog_read_contacts_message">Jami bezonas la permeson «Legi kontaktojn». Ŝaltu ĝin en la agordoj de la aparato por uzi ĉi tiun funkcion.</string>
 </resources>

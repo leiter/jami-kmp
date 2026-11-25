@@ -364,4 +364,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_title_contact">Görünən adı redaktə et</string>
     <string name="custom_profile_message_warning">Fərdi profil yalnız bu cihazdakı hesaba görünür</string>
     <string name="remove_photo">Şəkli sil</string>
+    <string name="permission_dialog_open_settings">آچیق قورولوشلار</string>
+    <string name="permission_dialog_later">سونرا</string>
+    <string name="permission_dialog_camera_rationale">Jami-yə görüntülü zənglər və şəkil çəkmək üçün kamera lazımdır. Onsuz başqaları sizi görməz.</string>
+    <string name="permission_dialog_microphone_title">Mikrofon icazəsi</string>
+    <string name="permission_dialog_microphone_rationale">Jami-yə zənglər və səsli mesajlar üçün mikrofon lazımdır. Onsuz başqaları sizi eşitməz.</string>
+    <string name="permission_dialog_microphone_message">Mikrofon icazəsi söndürülüb. Bu funksiyadan istifadə etmək üçün onu cihaz ayarlarında aktivləşdirin.</string>
+    <string name="permission_dialog_location_title">Məkan icazəsi</string>
+    <string name="permission_dialog_location_rationale">Jami-yə məkanınızı söhbətdə paylaşmaq üçün o lazımdır. Yalnız paylaşdığınız müddətdə göndərilir.</string>
+    <string name="permission_dialog_location_message">Məkan icazəsi söndürülüb. Bu funksiyadan istifadə etmək üçün onu cihaz ayarlarında aktivləşdirin.</string>
+    <string name="permission_dialog_contacts_title">Kontaktlar icazəsi</string>
+    <string name="permission_dialog_contacts_rationale">Jami Jami kontaktlarınız üçün saxladığınız adları və şəkilləri göstərmək üçün kontaktlarınızı oxuyur. Heç nə yüklənmir.</string>
+    <string name="permission_dialog_camera_message">Video söhbətlər üçün kamera icazəsi tələb olunur. Kamera icazəsi söndürülüb. Bu funksiyadan istifadə etmək üçün onu cihaz ayarlarında aktivləşdirin.</string>
+    <string name="permission_dialog_read_contacts_message">Jami “Kontaktları oxu” icazəsini tələb edir. Bu funksiyadan istifadə etmək üçün onu cihaz ayarlarında aktivləşdirin.</string>
 </resources>
