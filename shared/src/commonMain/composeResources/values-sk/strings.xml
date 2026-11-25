@@ -519,4 +519,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Synchronizácia konverzácií na pozadí</string>
     <string name="profile_save_failed">Profil sa nepodarilo uložiť</string>
     <string name="import_account_already_on_device">Tento účet už v tomto zariadení je.</string>
+    <string name="custom_profile_message_warning">Vlastný profil je viditeľný iba pre účet na tomto zariadení</string>
+    <string name="dialog_title_contact">Upraviť zobrazované meno</string>
 </resources>

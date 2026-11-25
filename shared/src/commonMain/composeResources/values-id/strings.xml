@@ -449,4 +449,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Menyinkronkan percakapan di latar belakang</string>
     <string name="profile_save_failed">Gagal menyimpan profil</string>
     <string name="import_account_already_on_device">Akun ini sudah ada di perangkat ini.</string>
+    <string name="dialog_title_contact">Edit nama tampilan</string>
+    <string name="custom_profile_message_warning">Profil khusus hanya terlihat oleh akun di perangkat ini</string>
+    <string name="remove_photo">Hapus foto</string>
 </resources>

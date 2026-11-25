@@ -460,4 +460,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">பின்னணியில் உரையாடல்கள் ஒத்திசைக்கப்படுகின்றன</string>
     <string name="profile_save_failed">சுயவிவரத்தைச் சேமிக்க முடியவில்லை</string>
     <string name="import_account_already_on_device">இந்தக் கணக்கு ஏற்கனவே இந்தச் சாதனத்தில் உள்ளது.</string>
+    <string name="dialog_title_contact">காட்சிப் பெயரைத் திருத்து</string>
+    <string name="custom_profile_message_warning">தனிப்பயன் சுயவிவரம் இந்தச் சாதனத்தில் உள்ள கணக்கிற்கு மட்டுமே தெரியும்</string>
+    <string name="remove_photo">படத்தை அகற்று</string>
 </resources>

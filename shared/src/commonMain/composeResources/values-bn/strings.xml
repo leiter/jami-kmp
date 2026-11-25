@@ -449,4 +449,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">ব্যাকগ্রাউন্ডে কথোপকথন সিঙ্ক হচ্ছে</string>
     <string name="profile_save_failed">প্রোফাইল সংরক্ষণ করা যায়নি</string>
     <string name="import_account_already_on_device">এই অ্যাকাউন্টটি ইতিমধ্যে এই ডিভাইসে আছে।</string>
+    <string name="dialog_title_contact">প্রদর্শিত নাম সম্পাদনা করুন</string>
+    <string name="custom_profile_message_warning">কাস্টম প্রোফাইলটি শুধু এই ডিভাইসের অ্যাকাউন্টে দেখা যায়</string>
+    <string name="remove_photo">ছবি সরান</string>
 </resources>

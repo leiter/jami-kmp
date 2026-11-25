@@ -487,4 +487,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Pokalbiai sinchronizuojami fone</string>
     <string name="profile_save_failed">Nepavyko išsaugoti profilio</string>
     <string name="import_account_already_on_device">Ši paskyra jau yra šiame įrenginyje.</string>
+    <string name="dialog_title_contact">Taisyti rodomą vardą</string>
+    <string name="custom_profile_message_warning">Tinkintas profilis matomas tik šio įrenginio paskyrai</string>
 </resources>

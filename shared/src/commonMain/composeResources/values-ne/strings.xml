@@ -436,4 +436,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">पृष्ठभूमिमा कुराकानीहरू सिंक हुँदैछन्</string>
     <string name="profile_save_failed">प्रोफाइल सुरक्षित गर्न सकिएन</string>
     <string name="import_account_already_on_device">यो खाता पहिले नै यस यन्त्रमा छ।</string>
+    <string name="dialog_title_contact">प्रदर्शन नाम सम्पादन गर्नुहोस्</string>
+    <string name="custom_profile_message_warning">अनुकूल प्रोफाइल यस यन्त्रको खातालाई मात्र देखिन्छ</string>
+    <string name="remove_photo">फोटो हटाउनुहोस्</string>
 </resources>

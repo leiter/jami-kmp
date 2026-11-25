@@ -435,4 +435,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Sinkronigado de konversacioj fone</string>
     <string name="profile_save_failed">Ne eblis konservi la profilon</string>
     <string name="import_account_already_on_device">Ĉi tiu konto jam estas en ĉi tiu aparato.</string>
+    <string name="dialog_title_contact">Redakti montratan nomon</string>
+    <string name="custom_profile_message_warning">La propra profilo estas videbla nur por la konto en ĉi tiu aparato</string>
+    <string name="remove_photo">Forigi foton</string>
 </resources>

@@ -502,4 +502,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="profile_save_failed">プロフィールを保存できませんでした</string>
     <string name="time_weeks_short">%1$d週</string>
     <string name="import_account_already_on_device">このアカウントはすでにこのデバイスにあります。</string>
+    <string name="dialog_title_contact">表示名を編集</string>
+    <string name="custom_profile_message_warning">カスタムプロフィールはこのデバイスのアカウントにのみ表示されます</string>
 </resources>

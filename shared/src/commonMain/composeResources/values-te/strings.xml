@@ -436,4 +436,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">నేపథ్యంలో సంభాషణలు సింక్ అవుతున్నాయి</string>
     <string name="profile_save_failed">ప్రొఫైల్‌ను సేవ్ చేయడం సాధ్యపడలేదు</string>
     <string name="import_account_already_on_device">ఈ ఖాతా ఇప్పటికే ఈ పరికరంలో ఉంది.</string>
+    <string name="dialog_title_contact">ప్రదర్శన పేరును సవరించండి</string>
+    <string name="custom_profile_message_warning">అనుకూల ప్రొఫైల్ ఈ పరికరంలోని ఖాతాకు మాత్రమే కనిపిస్తుంది</string>
+    <string name="remove_photo">ఫోటోను తీసివేయండి</string>
 </resources>

@@ -321,4 +321,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">מסנכרן שיחות ברקע</string>
     <string name="profile_save_failed">לא ניתן לשמור את הפרופיל</string>
     <string name="import_account_already_on_device">חשבון זה כבר נמצא במכשיר זה.</string>
+    <string name="dialog_title_contact">עריכת שם התצוגה</string>
+    <string name="custom_profile_message_warning">הפרופיל המותאם גלוי רק לחשבון במכשיר זה</string>
+    <string name="remove_photo">הסרת התמונה</string>
+    <string name="open_the_gallery">פתיחת הגלריה</string>
 </resources>

@@ -361,4 +361,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Söhbətlər arxa planda sinxronlaşdırılır</string>
     <string name="profile_save_failed">Profil saxlanılmadı</string>
     <string name="import_account_already_on_device">Bu hesab artıq bu cihazdadır.</string>
+    <string name="dialog_title_contact">Görünən adı redaktə et</string>
+    <string name="custom_profile_message_warning">Fərdi profil yalnız bu cihazdakı hesaba görünür</string>
+    <string name="remove_photo">Şəkli sil</string>
 </resources>

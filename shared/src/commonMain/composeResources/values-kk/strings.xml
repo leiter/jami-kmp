@@ -447,4 +447,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Сөйлесулер фондық режимде синхрондалуда</string>
     <string name="profile_save_failed">Профильді сақтау мүмкін болмады</string>
     <string name="import_account_already_on_device">Бұл тіркелгі осы құрылғыда бұрыннан бар.</string>
+    <string name="dialog_title_contact">Көрсетілетін атауды өңдеу</string>
+    <string name="custom_profile_message_warning">Жеке профиль тек осы құрылғыдағы тіркелгіге көрінеді</string>
+    <string name="remove_photo">Фотоны өшіру</string>
 </resources>

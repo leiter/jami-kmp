@@ -80,4 +80,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">පසුබිමේ සංවාද සමමුහුර්ත කරමින්</string>
     <string name="profile_save_failed">පැතිකඩ සුරැකිය නොහැකි විය</string>
     <string name="import_account_already_on_device">මෙම ගිණුම දැනටමත් මෙම උපාංගයේ ඇත.</string>
+    <string name="dialog_title_contact">පෙන්වන නම සංස්කරණය කරන්න</string>
+    <string name="custom_profile_message_warning">අභිරුචි පැතිකඩ මෙම උපාංගයේ ගිණුමට පමණක් පෙනේ</string>
+    <string name="remove_photo">ඡායාරූපය ඉවත් කරන්න</string>
+    <string name="open_the_gallery">ගැලරිය විවෘත කරන්න</string>
+    <string name="take_a_photo">ඡායාරූපයක් ගන්න</string>
+    <string name="reset">යළි සකසන්න</string>
+    <string name="rename_btn">තහවුරු කරන්න</string>
 </resources>

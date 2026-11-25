@@ -436,4 +436,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">पार्श्वभूमीत संभाषणे समक्रमित होत आहेत</string>
     <string name="profile_save_failed">प्रोफाइल जतन करता आली नाही</string>
     <string name="import_account_already_on_device">हे खाते आधीच या डिव्हाइसवर आहे.</string>
+    <string name="dialog_title_contact">प्रदर्शित नाव संपादित करा</string>
+    <string name="custom_profile_message_warning">सानुकूल प्रोफाइल फक्त या डिव्हाइसवरील खात्याला दिसते</string>
+    <string name="remove_photo">फोटो काढा</string>
 </resources>

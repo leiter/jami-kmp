@@ -437,4 +437,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="profile_save_failed">Impossible d'enregistrar lo perfil</string>
     <string name="time_now_short">Ara</string>
     <string name="import_account_already_on_device">Aqueste compte es ja sus aqueste aparelh.</string>
+    <string name="dialog_title_contact">Modificar lo nom afichat</string>
+    <string name="custom_profile_message_warning">Lo perfil personalizat es visible sonque pel compte d'aqueste aparelh</string>
+    <string name="remove_photo">Suprimir la fòto</string>
 </resources>

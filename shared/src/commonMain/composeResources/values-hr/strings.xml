@@ -451,4 +451,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Sinkronizacija razgovora u pozadini</string>
     <string name="profile_save_failed">Profil nije moguće spremiti</string>
     <string name="import_account_already_on_device">Ovaj je račun već na ovom uređaju.</string>
+    <string name="dialog_title_contact">Uredi prikazano ime</string>
+    <string name="custom_profile_message_warning">Prilagođeni profil vidljiv je samo računu na ovom uređaju</string>
+    <string name="remove_photo">Ukloni fotografiju</string>
 </resources>

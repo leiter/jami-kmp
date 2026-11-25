@@ -18,6 +18,7 @@ package net.jami.services
 
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import net.jami.model.Profile
 import net.jami.ui.utils.scaleImageBytes
 import net.jami.utils.FileUtils
 import net.jami.utils.VCardUtils
@@ -70,6 +71,11 @@ class VCardService(
     fun loadPeerAvatar(accountId: String, peerUri: String): ByteArray? {
         val key = "$accountId:$peerUri"
         if (memoryCache.containsKey(key)) return memoryCache[key]
+        // A photo the user chose for this peer on this device wins over the one the peer sent.
+        loadCustomProfile(accountId, peerUri).avatar?.let {
+            memoryCache[key] = it
+            return it
+        }
         val dataPath = deviceRuntimeService.getDataPath()
         val cachePath = deviceRuntimeService.getCachePath()
         val encodedUri = Base64.UrlSafe.encode(peerUri.encodeToByteArray())
@@ -132,6 +138,53 @@ class VCardService(
         if (FileUtils.exists(cacheFilePath)) {
             FileUtils.deleteFile(cacheFilePath)
         }
+    }
+
+    // ── Custom peer profiles ──────────────────────────────────────────────────────────
+    //
+    // A name and/or photo the user gave a 1:1 peer on this device (conversation details), as in
+    // jami-client-android (VCardUtils.saveToCustomProfiles). Stored apart from the daemon's
+    // {accountId}/profiles/, so a profile the peer sends never overwrites it, and never sent
+    // anywhere: it is what *you* call them.
+
+    private val customCache = mutableMapOf<String, Profile>()
+
+    @OptIn(ExperimentalEncodingApi::class)
+    private fun customVcfPath(accountId: String, peerUri: String): String {
+        val encodedUri = Base64.UrlSafe.encode(peerUri.encodeToByteArray())
+        return "${deviceRuntimeService.getDataPath()}/$accountId/custom_profiles/$encodedUri.vcf"
+    }
+
+    /** The name and photo the user set for [peerUri], or [Profile.EMPTY_PROFILE]. */
+    fun loadCustomProfile(accountId: String, peerUri: String): Profile {
+        val key = "$accountId:$peerUri"
+        customCache[key]?.let { return it }
+        val vcard = FileUtils.readText(customVcfPath(accountId, peerUri))
+            ?.takeIf { it.isNotBlank() }
+            ?.let { VCardUtils.parseVCard(it) }
+        val profile = if (vcard == null) Profile.EMPTY_PROFILE
+        else Profile(vcard.formattedName?.trim()?.takeIf { it.isNotEmpty() }, vcard.photo)
+        customCache[key] = profile
+        return profile
+    }
+
+    /**
+     * Store the name and photo the user set for [peerUri]; null clears that part, and clearing
+     * both deletes the file. [avatar] should already be scaled (see scaleImageBytes).
+     */
+    fun saveCustomProfile(accountId: String, peerUri: String, name: String?, avatar: ByteArray?): Boolean {
+        val path = customVcfPath(accountId, peerUri)
+        val cleanName = name?.trim()?.takeIf { it.isNotEmpty() }
+        val ok = if (cleanName == null && avatar == null) {
+            !FileUtils.exists(path) || FileUtils.deleteFile(path)
+        } else {
+            val text = VCardUtils.vcardToString(VCardUtils.writeData(peerUri, cleanName, avatar)) ?: return false
+            FileUtils.mkdirs(path.substringBeforeLast("/")) // false when it already exists
+            FileUtils.writeText(path, text)
+        }
+        customCache.remove("$accountId:$peerUri")
+        memoryCache.remove("$accountId:$peerUri")
+        return ok
     }
 
     // ── Internal helpers ──────────────────────────────────────────────────────

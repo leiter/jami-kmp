@@ -436,4 +436,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">પૃષ્ઠભૂમિમાં વાતચીતો સિંક થઈ રહી છે</string>
     <string name="profile_save_failed">પ્રોફાઇલ સાચવી શકાઈ નથી</string>
     <string name="import_account_already_on_device">આ એકાઉન્ટ પહેલેથી આ ઉપકરણ પર છે.</string>
+    <string name="dialog_title_contact">પ્રદર્શિત નામ સંપાદિત કરો</string>
+    <string name="custom_profile_message_warning">કસ્ટમ પ્રોફાઇલ ફક્ત આ ઉપકરણ પરના એકાઉન્ટને જ દેખાય છે</string>
+    <string name="remove_photo">ફોટો દૂર કરો</string>
 </resources>

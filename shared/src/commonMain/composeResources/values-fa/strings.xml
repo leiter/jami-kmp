@@ -485,4 +485,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">همگام‌سازی گفتگوها در پس‌زمینه</string>
     <string name="profile_save_failed">ذخیره نمایه ناموفق بود</string>
     <string name="import_account_already_on_device">این حساب از قبل در این دستگاه وجود دارد.</string>
+    <string name="dialog_title_contact">ویرایش نام نمایشی</string>
+    <string name="custom_profile_message_warning">نمایهٔ سفارشی فقط برای حساب روی این دستگاه قابل مشاهده است</string>
+    <string name="remove_photo">حذف عکس</string>
 </resources>

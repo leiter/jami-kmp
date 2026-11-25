@@ -205,10 +205,13 @@ class Contact(
      * A blank name is no name. A peer whose vCard carries an empty `FN` used to give this a
      * non-null `""`, which won every `?:` fallback below it and left screens that read it
      * directly with an empty title (the details screen then printed "Unknown").
+     *
+     * A name the user gave this peer (customProfile) comes first, as in [profileFlow] and the
+     * reference: it is what they chose to call them, whatever the peer calls themselves.
      */
     val displayName: String?
-        get() = _loadedProfile.value.displayName?.takeIf { it.isNotBlank() }
-            ?: _customProfile.value.displayName?.takeIf { it.isNotBlank() }
+        get() = _customProfile.value.displayName?.takeIf { it.isNotBlank() }
+            ?: _loadedProfile.value.displayName?.takeIf { it.isNotBlank() }
 
     val displayUri: String
         get() = uri.toString()

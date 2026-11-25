@@ -448,4 +448,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Զրույցների համաժամացում ֆոնային ռեժիմում</string>
     <string name="profile_save_failed">Չհաջողվեց պահել պրոֆիլը</string>
     <string name="import_account_already_on_device">Այս հաշիվն արդեն առկա է այս սարքում։</string>
+    <string name="dialog_title_contact">Խմբագրել ցուցադրվող անունը</string>
+    <string name="custom_profile_message_warning">Անհատական պրոֆիլը տեսանելի է միայն այս սարքի հաշվին</string>
+    <string name="remove_photo">Հեռացնել լուսանկարը</string>
 </resources>

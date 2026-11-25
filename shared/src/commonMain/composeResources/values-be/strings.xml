@@ -308,4 +308,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Сінхранізацыя размоў у фонавым рэжыме</string>
     <string name="profile_save_failed">Не ўдалося захаваць профіль</string>
     <string name="import_account_already_on_device">Гэты ўліковы запіс ужо ёсць на гэтай прыладзе.</string>
+    <string name="dialog_title_contact">Змяніць бачнае імя</string>
+    <string name="custom_profile_message_warning">Уласны профіль бачны толькі ўліковаму запісу на гэтай прыладзе</string>
+    <string name="remove_photo">Выдаліць фота</string>
+    <string name="open_the_gallery">Адкрыць галерэю</string>
 </resources>

@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Share
@@ -103,7 +104,10 @@ import net.jami.ui.components.actions.JamiIconButton
 import net.jami.ui.components.content.AvatarSize
 import net.jami.ui.components.content.JamiAvatar
 import net.jami.ui.components.notification.JamiAlertDialog
+import net.jami.ui.platform.AppPermission
 import net.jami.ui.platform.FilePickerEffect
+import net.jami.ui.platform.ImageCaptureEffect
+import net.jami.ui.platform.PermissionRequesterEffect
 import net.jami.ui.theme.JamiTheme
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -214,6 +218,139 @@ fun ConversationDetailsScreen(
         )
     }
 
+    // ── A 1:1 peer's own name and photo, on this device only ───────────────────────────────
+    // jami-client-android ConversationDetailsActivity: tapping a 1:1 peer's name renames them,
+    // tapping their avatar sets a photo of your own (gallery or camera) or removes it. Both are
+    // local: the custom_profile_message_warning in each dialog says the peer never sees them.
+    var showContactNameDialog by remember { mutableStateOf(false) }
+    var showContactPhotoDialog by remember { mutableStateOf(false) }
+    var showContactPhotoPicker by remember { mutableStateOf(false) }
+    var requestContactCamera by remember { mutableStateOf(false) }
+    var showContactCamera by remember { mutableStateOf(false) }
+
+    fun useContactPhoto(path: String?) {
+        if (path == null) return
+        coroutineScope.launch(Dispatchers.Default) {
+            val bytes = FileUtils.readBytes(path)
+            net.jami.utils.ScratchFiles.deleteIfScratch(path)
+            // Scaling and the vcf write stay off the main thread; the state flow is thread-safe.
+            if (bytes != null) viewModel.setContactAvatar(bytes)
+        }
+    }
+
+    FilePickerEffect(show = showContactPhotoPicker, mimeTypes = listOf("image/*")) { path ->
+        showContactPhotoPicker = false
+        useContactPhoto(path)
+    }
+    PermissionRequesterEffect(
+        permission = AppPermission.Camera,
+        request = requestContactCamera,
+        onResult = { granted ->
+            requestContactCamera = false
+            if (granted) showContactCamera = true
+        },
+    )
+    ImageCaptureEffect(show = showContactCamera) { path ->
+        showContactCamera = false
+        useContactPhoto(path)
+    }
+
+    if (showContactNameDialog) {
+        var nameInput by remember(state.customName, state.displayName) {
+            mutableStateOf(state.customName.ifEmpty { state.displayName })
+        }
+        fun confirmName() {
+            viewModel.setContactName(nameInput)
+            showContactNameDialog = false
+        }
+        AlertDialog(
+            onDismissRequest = { showContactNameDialog = false },
+            title = { Text(stringResource(Res.string.dialog_title_contact)) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = nameInput,
+                        onValueChange = { nameInput = it },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { confirmName() }),
+                    )
+                    Spacer(Modifier.height(JamiTheme.spacing.s))
+                    Text(
+                        text = stringResource(Res.string.custom_profile_message_warning),
+                        style = JamiTheme.typography.bodySmall,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = { confirmName() }) { Text(stringResource(Res.string.rename_btn)) }
+            },
+            dismissButton = {
+                Row {
+                    // Back to the name the peer gave themselves; only offered once one is set.
+                    if (state.customName.isNotEmpty()) {
+                        TextButton(onClick = {
+                            viewModel.setContactName(null)
+                            showContactNameDialog = false
+                        }) { Text(stringResource(Res.string.reset)) }
+                    }
+                    TextButton(onClick = { showContactNameDialog = false }) {
+                        Text(stringResource(Res.string.action_cancel))
+                    }
+                }
+            },
+        )
+    }
+
+    if (showContactPhotoDialog) {
+        AlertDialog(
+            onDismissRequest = { showContactPhotoDialog = false },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(Res.string.custom_profile_message_warning),
+                        style = JamiTheme.typography.bodyMedium,
+                        color = JamiTheme.colors.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(JamiTheme.spacing.m))
+                    TextButton(onClick = {
+                        showContactPhotoDialog = false
+                        showContactPhotoPicker = true
+                    }) {
+                        Icon(Icons.Default.Image, contentDescription = null)
+                        Spacer(Modifier.width(JamiTheme.spacing.s))
+                        Text(stringResource(Res.string.open_the_gallery))
+                    }
+                    TextButton(onClick = {
+                        showContactPhotoDialog = false
+                        requestContactCamera = true
+                    }) {
+                        Icon(Icons.Default.CameraAlt, contentDescription = null)
+                        Spacer(Modifier.width(JamiTheme.spacing.s))
+                        Text(stringResource(Res.string.take_a_photo))
+                    }
+                    if (state.hasCustomAvatar) {
+                        TextButton(onClick = {
+                            showContactPhotoDialog = false
+                            coroutineScope.launch(Dispatchers.Default) { viewModel.setContactAvatar(null) }
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = null)
+                            Spacer(Modifier.width(JamiTheme.spacing.s))
+                            Text(stringResource(Res.string.remove_photo))
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showContactPhotoDialog = false }) {
+                    Text(stringResource(Res.string.action_cancel))
+                }
+            },
+        )
+    }
+
     // Generate QR code bitmap in background when sheet opens
     LaunchedEffect(showQrSheet, state.contactUri) {
         if (showQrSheet && state.contactUri.isNotEmpty() && qrBitmap == null) {
@@ -304,9 +441,14 @@ fun ConversationDetailsScreen(
                     displayName = headerName,
                     avatarBytes = headerAvatarBytes,
                     size = AvatarSize.XLarge,
-                    modifier = if (canEditGroup) {
-                        Modifier.clickable { showGroupAvatarPicker = true }
-                    } else Modifier,
+                    modifier = when {
+                        canEditGroup -> Modifier.clickable { showGroupAvatarPicker = true }
+                        // A 1:1 peer: a photo of your own for them (local only).
+                        state.canEditContactProfile -> Modifier.clickable(
+                            onClickLabel = stringResource(Res.string.content_desc_profile_photo),
+                        ) { showContactPhotoDialog = true }
+                        else -> Modifier
+                    },
                 )
                 if (canEditGroup) {
                     Box(
@@ -337,7 +479,16 @@ fun ConversationDetailsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .padding(horizontal = JamiTheme.spacing.xl)
-                    .let { if (canEditGroup) it.clickable { showGroupTitleDialog = true } else it },
+                    .let {
+                        when {
+                            canEditGroup -> it.clickable { showGroupTitleDialog = true }
+                            // A 1:1 peer: a name of your own for them (local only).
+                            state.canEditContactProfile -> it.clickable(
+                                onClickLabel = stringResource(Res.string.dialog_title_contact),
+                            ) { showContactNameDialog = true }
+                            else -> it
+                        }
+                    },
             ) {
                 Text(
                     text = headerName,
@@ -346,11 +497,13 @@ fun ConversationDetailsScreen(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (canEditGroup) {
+                if (canEditGroup || state.canEditContactProfile) {
                     Spacer(Modifier.width(JamiTheme.spacing.xs))
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(Res.string.dialogtitle_title),
+                        contentDescription = stringResource(
+                            if (canEditGroup) Res.string.dialogtitle_title else Res.string.dialog_title_contact
+                        ),
                         tint = JamiTheme.colors.onSurfaceVariant,
                         modifier = Modifier.size(16.dp),
                     )

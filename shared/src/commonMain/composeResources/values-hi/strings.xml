@@ -496,4 +496,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">पृष्ठभूमि में बातचीत सिंक हो रही है</string>
     <string name="profile_save_failed">प्रोफ़ाइल सहेजी नहीं जा सकी</string>
     <string name="import_account_already_on_device">यह खाता पहले से इस डिवाइस पर है।</string>
+    <string name="dialog_title_contact">प्रदर्शित नाम संपादित करें</string>
+    <string name="custom_profile_message_warning">कस्टम प्रोफ़ाइल केवल इस डिवाइस पर खाते को दिखाई देती है</string>
+    <string name="remove_photo">फ़ोटो हटाएँ</string>
 </resources>

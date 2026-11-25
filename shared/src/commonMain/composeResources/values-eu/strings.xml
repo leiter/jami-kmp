@@ -448,4 +448,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Elkarrizketak atzeko planoan sinkronizatzen</string>
     <string name="profile_save_failed">Ezin izan da profila gorde</string>
     <string name="import_account_already_on_device">Kontu hau gailu honetan dago jada.</string>
+    <string name="dialog_title_contact">Editatu bistaratzeko izena</string>
+    <string name="custom_profile_message_warning">Profil pertsonalizatua gailu honetako kontuak soilik ikus dezake</string>
+    <string name="remove_photo">Kendu argazkia</string>
 </resources>

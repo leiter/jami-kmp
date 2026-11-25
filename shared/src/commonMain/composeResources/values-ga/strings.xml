@@ -307,4 +307,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Comhráite á sioncrónú sa chúlra</string>
     <string name="profile_save_failed">Níorbh fhéidir an phróifíl a shábháil</string>
     <string name="import_account_already_on_device">Tá an cuntas seo ar an ngléas seo cheana.</string>
+    <string name="dialog_title_contact">Cuir an t-ainm taispeána in eagar</string>
+    <string name="custom_profile_message_warning">Níl an phróifíl shaincheaptha le feiceáil ach ag an gcuntas ar an ngléas seo</string>
+    <string name="remove_photo">Bain an grianghraf</string>
+    <string name="open_the_gallery">Oscail an gailearaí</string>
 </resources>

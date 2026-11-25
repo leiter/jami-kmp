@@ -562,4 +562,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Sinhronizacija razgovora u pozadini</string>
     <string name="profile_save_failed">Profil nije moguće sačuvati</string>
     <string name="import_account_already_on_device">Ovaj nalog je već na ovom uređaju.</string>
+    <string name="custom_profile_message_warning">Prilagođeni profil je vidljiv samo nalogu na ovom uređaju</string>
+    <string name="dialog_title_contact">Uredi prikazano ime</string>
 </resources>

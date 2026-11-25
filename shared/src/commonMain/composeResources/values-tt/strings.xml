@@ -217,4 +217,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Әңгәмәләр фон режимында синхронлана</string>
     <string name="profile_save_failed">Профильне саклап булмады</string>
     <string name="import_account_already_on_device">Бу хисап язмасы инде бу җайланмада бар.</string>
+    <string name="dialog_title_contact">Күрсәтелә торган исемне үзгәртү</string>
+    <string name="custom_profile_message_warning">Шәхси профиль бу җайланмадагы хисап язмасына гына күренә</string>
+    <string name="remove_photo">Фотоны бетерү</string>
+    <string name="open_the_gallery">Галереяне ачу</string>
 </resources>

@@ -448,4 +448,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">กำลังซิงค์การสนทนาในเบื้องหลัง</string>
     <string name="profile_save_failed">ไม่สามารถบันทึกโปรไฟล์ได้</string>
     <string name="import_account_already_on_device">บัญชีนี้มีอยู่ในอุปกรณ์นี้แล้ว</string>
+    <string name="dialog_title_contact">แก้ไขชื่อที่แสดง</string>
+    <string name="custom_profile_message_warning">โปรไฟล์ที่กำหนดเองจะมองเห็นได้เฉพาะบัญชีบนอุปกรณ์นี้</string>
+    <string name="remove_photo">ลบรูปภาพ</string>
 </resources>

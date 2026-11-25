@@ -448,4 +448,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Синхронизиране на разговорите във фонов режим</string>
     <string name="profile_save_failed">Профилът не можа да бъде запазен</string>
     <string name="import_account_already_on_device">Този профил вече е на това устройство.</string>
+    <string name="dialog_title_contact">Редактиране на показваното име</string>
+    <string name="custom_profile_message_warning">Персонализираният профил се вижда само от профила на това устройство</string>
+    <string name="remove_photo">Премахване на снимката</string>
 </resources>

@@ -233,4 +233,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Na-emekọrịta mkparịta ụka n'azụ</string>
     <string name="profile_save_failed">Enweghị ike ịchekwa profaịlụ</string>
     <string name="import_account_already_on_device">Akaụntụ a adịlarị na ngwaọrụ a.</string>
+    <string name="dialog_title_contact">Dezie aha ngosi</string>
+    <string name="custom_profile_message_warning">Profaịlụ ahaziri ahazi na-ahụ naanị akaụntụ dị na ngwaọrụ a</string>
+    <string name="remove_photo">Wepụ foto</string>
+    <string name="open_the_gallery">Mepee gallery</string>
 </resources>

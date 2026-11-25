@@ -530,4 +530,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Sohbetler arka planda eşitleniyor</string>
     <string name="profile_save_failed">Profil kaydedilemedi</string>
     <string name="import_account_already_on_device">Bu hesap bu cihazda zaten var.</string>
+    <string name="custom_profile_message_warning">Özel profil yalnızca bu cihazdaki hesap tarafından görülebilir</string>
+    <string name="dialog_title_contact">Görünen adı düzenle</string>
 </resources>

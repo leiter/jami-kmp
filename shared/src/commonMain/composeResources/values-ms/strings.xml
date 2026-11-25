@@ -364,4 +364,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Menyegerakkan perbualan di latar belakang</string>
     <string name="profile_save_failed">Gagal menyimpan profil</string>
     <string name="import_account_already_on_device">Akaun ini sudah ada pada peranti ini.</string>
+    <string name="dialog_title_contact">Sunting nama paparan</string>
+    <string name="custom_profile_message_warning">Profil tersuai hanya kelihatan kepada akaun pada peranti ini</string>
+    <string name="remove_photo">Buang foto</string>
 </resources>

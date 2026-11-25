@@ -463,4 +463,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">جارٍ مزامنة المحادثات في الخلفية</string>
     <string name="profile_save_failed">تعذّر حفظ الملف الشخصي</string>
     <string name="import_account_already_on_device">هذا الحساب موجود بالفعل على هذا الجهاز.</string>
+    <string name="dialog_title_contact">تعديل الاسم المعروض</string>
+    <string name="custom_profile_message_warning">الملف الشخصي المخصص مرئي فقط للحساب على هذا الجهاز</string>
+    <string name="remove_photo">إزالة الصورة</string>
 </resources>

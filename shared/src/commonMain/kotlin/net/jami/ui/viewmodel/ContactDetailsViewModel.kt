@@ -95,6 +95,15 @@ data class ContactDetailsState(
     /** Group avatar, editable by admins. Falls back to [avatarBytes] when unset. */
     val groupAvatarBytes: ByteArray? = null,
     /**
+     * A 1:1 peer this user may give a name and photo of their own (jami-client-android: a
+     * OneToOne conversation whose peer is not blocked). Local only; the peer never sees it.
+     */
+    val canEditContactProfile: Boolean = false,
+    /** The name the user gave this peer, empty when none: prefills the rename dialog. */
+    val customName: String = "",
+    /** Whether the user gave this peer a photo of their own, so it can be removed again. */
+    val hasCustomAvatar: Boolean = false,
+    /**
      * The contact or conversation this screen was opened on no longer exists — it was deleted,
      * blocked, left, or removed from another device. The host navigates back when this turns
      * true; it is a state flag rather than an event so that acting on it twice is harmless.
@@ -145,6 +154,10 @@ class ContactDetailsViewModel(
      * contact alone used to demote a named peer to its 40-hex id.
      */
     private var currentProfile: Profile? = null
+
+    /** The contact [loadContact] resolved: the conversation's own object, so a custom name set
+     *  here reaches the list and the chat header without a reload. */
+    private var currentContact: Contact? = null
 
     init {
         // Observe contact updates for real-time changes
@@ -211,6 +224,9 @@ class ContactDetailsViewModel(
                 // "Delete contact" and "Block contact" were silently dead whenever this screen
                 // was reached from a conversation. Keep the resolved peer from here on.
                 currentContactUri = contact.uri
+                currentContact = contact
+                // Brings in the name and photo the user gave this peer, if any.
+                contactService.restoreProfileFromDisk(accountId, contact)
                 val profile = contactService.loadContactData(contact, accountId)
                 currentProfile = profile
 
@@ -278,6 +294,10 @@ class ContactDetailsViewModel(
                     groupTitle = groupProfile.displayName ?: "",
                     conversationTitle = conversation?.title ?: "",
                     groupAvatarBytes = groupProfile.avatar,
+                    canEditContactProfile = conversation?.mode == Conversation.Mode.OneToOne &&
+                        contact.status != Contact.Status.BLOCKED,
+                    customName = contact.customProfile.displayName.orEmpty(),
+                    hasCustomAvatar = contact.customProfile.avatar != null,
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false)
@@ -415,6 +435,38 @@ class ContactDetailsViewModel(
         val swarmId = _state.value.swarmId.takeIf { it.isNotEmpty() } ?: return
         conversationFacade.updateConversationAvatar(accountId, swarmId, avatarBytes)
         _state.value = _state.value.copy(groupAvatarBytes = avatarBytes)
+    }
+
+    /**
+     * Call this 1:1 peer [name] on this device, or go back to their own name with null or blank
+     * (jami-client-android: rename / reset in the conversation details). Their photo stays.
+     */
+    fun setContactName(name: String?) {
+        val contact = currentContact ?: return
+        saveContactProfile(contact, name?.trim()?.takeIf { it.isNotEmpty() }, contact.customProfile.avatar)
+    }
+
+    /**
+     * Give this 1:1 peer a photo of your own ([imageBytes], any size: scaled here like every
+     * avatar), or go back to theirs with null. Their name stays.
+     */
+    fun setContactAvatar(imageBytes: ByteArray?) {
+        val contact = currentContact ?: return
+        val scaled = imageBytes?.let { net.jami.ui.utils.scaleImageBytes(it, 512) }
+        saveContactProfile(contact, contact.customProfile.displayName, scaled)
+    }
+
+    private fun saveContactProfile(contact: Contact, name: String?, avatar: ByteArray?) {
+        val accountId = currentAccountId ?: return
+        val effective = contactService.saveCustomProfile(accountId, contact, name, avatar)
+        currentProfile = effective
+        _state.value = _state.value.copy(
+            displayName = effective.displayName?.takeIf { it.isNotBlank() } ?: contact.displayUsername,
+            // Set, not merged: removing your own photo of a peer who has none must clear it.
+            avatarBytes = effective.avatar,
+            customName = contact.customProfile.displayName.orEmpty(),
+            hasCustomAvatar = contact.customProfile.avatar != null,
+        )
     }
 
     /**

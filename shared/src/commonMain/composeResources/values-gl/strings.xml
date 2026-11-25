@@ -522,4 +522,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Sincronizando as conversas en segundo plano</string>
     <string name="profile_save_failed">Non se puido gardar o perfil</string>
     <string name="import_account_already_on_device">Esta conta xa está neste dispositivo.</string>
+    <string name="custom_profile_message_warning">O perfil personalizado só é visible para a conta deste dispositivo</string>
+    <string name="dialog_title_contact">Editar o nome visible</string>
 </resources>

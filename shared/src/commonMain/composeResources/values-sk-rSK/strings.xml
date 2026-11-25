@@ -417,4 +417,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="time_hours_short">%1$d h</string>
     <string name="time_days_short">%1$d d.</string>
     <string name="time_weeks_short">%1$d t.</string>
+    <string name="custom_profile_message_warning">Vlastný profil je viditeľný iba pre účet na tomto zariadení</string>
+    <string name="dialog_title_contact">Upraviť zobrazované meno</string>
 </resources>

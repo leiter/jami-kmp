@@ -380,4 +380,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">ਬੈਕਗ੍ਰਾਊਂਡ ਵਿੱਚ ਗੱਲਬਾਤਾਂ ਸਿੰਕ ਹੋ ਰਹੀਆਂ ਹਨ</string>
     <string name="profile_save_failed">ਪ੍ਰੋਫਾਈਲ ਰੱਖਿਅਤ ਨਹੀਂ ਕੀਤੀ ਜਾ ਸਕੀ</string>
     <string name="import_account_already_on_device">ਇਹ ਖਾਤਾ ਪਹਿਲਾਂ ਹੀ ਇਸ ਡੀਵਾਈਸ 'ਤੇ ਹੈ।</string>
+    <string name="dialog_title_contact">ਦਿਖਾਇਆ ਜਾਣ ਵਾਲਾ ਨਾਮ ਸੋਧੋ</string>
+    <string name="custom_profile_message_warning">ਕਸਟਮ ਪ੍ਰੋਫਾਈਲ ਸਿਰਫ਼ ਇਸ ਡੀਵਾਈਸ ਦੇ ਖਾਤੇ ਨੂੰ ਦਿਖਾਈ ਦਿੰਦੀ ਹੈ</string>
+    <string name="remove_photo">ਫ਼ੋਟੋ ਹਟਾਓ</string>
+    <string name="reset">ਰੀਸੈੱਟ ਕਰੋ</string>
+    <string name="rename_btn">ਪੁਸ਼ਟੀ ਕਰੋ</string>
 </resources>

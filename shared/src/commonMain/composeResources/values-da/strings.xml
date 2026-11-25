@@ -511,4 +511,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Synkroniserer samtaler i baggrunden</string>
     <string name="profile_save_failed">Profilen kunne ikke gemmes</string>
     <string name="import_account_already_on_device">Denne konto findes allerede på denne enhed.</string>
+    <string name="custom_profile_message_warning">Den tilpassede profil er kun synlig for kontoen på denne enhed</string>
+    <string name="dialog_title_contact">Rediger kaldenavn</string>
 </resources>

@@ -469,9 +469,37 @@ class ContactService(
      * which every avatar path already consults. A profile received later replaces it as usual.
      */
     fun restoreProfileFromDisk(accountId: String, contact: Contact) {
-        if (contact.isUser || contact.loadedProfile.displayName != null) return
+        if (contact.isUser) return
+        // The name and photo the user gave this peer here, if any (see [saveCustomProfile]).
+        if (contact.customProfile === Profile.EMPTY_PROFILE) {
+            contact.customProfile = vCardService.loadCustomProfile(accountId, contact.uri.rawRingId)
+        }
+        if (contact.loadedProfile.displayName != null) return
         val name = vCardService.loadPeerName(accountId, contact.uri.rawRingId) ?: return
         contact.loadedProfile = Profile(displayName = name, avatar = contact.loadedProfile.avatar)
+    }
+
+    /**
+     * Give [contact] the name and/or photo the user chose for them on this device, or clear either
+     * with null (jami-client-android ConversationDetailsActivity: rename / profile photo of a
+     * 1:1 peer). Persisted by [VCardService.saveCustomProfile] and restored at startup by
+     * [restoreProfileFromDisk]; local only, the peer is never told.
+     *
+     * Emits [ContactEvent.ProfileUpdated] with the profile now in effect, so the list, the chat
+     * header and the details screen redraw.
+     *
+     * @return the profile now in effect: the custom parts over the peer's own.
+     */
+    fun saveCustomProfile(accountId: String, contact: Contact, name: String?, avatar: ByteArray?): Profile {
+        val rawId = contact.uri.rawRingId
+        if (!vCardService.saveCustomProfile(accountId, rawId, name, avatar)) {
+            Log.w(TAG, "saveCustomProfile: could not write the custom profile of $rawId")
+        }
+        contact.customProfile = vCardService.loadCustomProfile(accountId, rawId)
+        profileCache.remove("$accountId:${contact.uri.uri}")
+        val effective = Profile(contact.displayName, vCardService.loadPeerAvatar(accountId, rawId))
+        scope.launch { _contactEvents.emit(ContactEvent.ProfileUpdated(accountId, contact.uri, effective)) }
+        return effective
     }
 
     /**

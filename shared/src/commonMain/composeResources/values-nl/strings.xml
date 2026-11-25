@@ -528,4 +528,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Gesprekken worden op de achtergrond gesynchroniseerd</string>
     <string name="profile_save_failed">Profiel opslaan mislukt</string>
     <string name="import_account_already_on_device">Dit account staat al op dit apparaat.</string>
+    <string name="custom_profile_message_warning">Het aangepaste profiel is alleen zichtbaar voor de account op dit apparaat</string>
+    <string name="dialog_title_contact">Weergavenaam bewerken</string>
 </resources>

@@ -464,4 +464,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Συγχρονισμός συνομιλιών στο παρασκήνιο</string>
     <string name="profile_save_failed">Δεν ήταν δυνατή η αποθήκευση του προφίλ</string>
     <string name="import_account_already_on_device">Αυτός ο λογαριασμός υπάρχει ήδη σε αυτή τη συσκευή.</string>
+    <string name="dialog_title_contact">Επεξεργασία εμφανιζόμενου ονόματος</string>
+    <string name="custom_profile_message_warning">Το προσαρμοσμένο προφίλ είναι ορατό μόνο στον λογαριασμό αυτής της συσκευής</string>
+    <string name="remove_photo">Αφαίρεση φωτογραφίας</string>
 </resources>

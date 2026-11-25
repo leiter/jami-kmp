@@ -421,4 +421,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Đang đồng bộ cuộc trò chuyện trong nền</string>
     <string name="profile_save_failed">Không thể lưu hồ sơ</string>
     <string name="import_account_already_on_device">Tài khoản này đã có trên thiết bị này.</string>
+    <string name="dialog_title_contact">Sửa tên hiển thị</string>
+    <string name="remove_photo">Xóa ảnh</string>
+    <string name="open_the_gallery">Mở thư viện ảnh</string>
 </resources>

@@ -512,4 +512,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Synkroniserer samtaler i bakgrunnen</string>
     <string name="profile_save_failed">Kunne ikke lagre profilen</string>
     <string name="import_account_already_on_device">Denne kontoen finnes allerede på denne enheten.</string>
+    <string name="custom_profile_message_warning">Den tilpassede profilen er bare synlig for kontoen på denne enheten</string>
+    <string name="dialog_title_contact">Rediger visningsnavn</string>
 </resources>

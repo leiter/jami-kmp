@@ -438,4 +438,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Яриануудыг арын горимд синк хийж байна</string>
     <string name="profile_save_failed">Профайлыг хадгалж чадсангүй</string>
     <string name="import_account_already_on_device">Энэ бүртгэл энэ төхөөрөмж дээр аль хэдийн байна.</string>
+    <string name="dialog_title_contact">Харагдах нэрийг засах</string>
+    <string name="custom_profile_message_warning">Тусгай профайл зөвхөн энэ төхөөрөмж дээрх бүртгэлд харагдана</string>
+    <string name="remove_photo">Зургийг устгах</string>
 </resources>

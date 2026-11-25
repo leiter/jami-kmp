@@ -131,6 +131,21 @@ class ContactTest {
         assertTrue(mergedProfile.avatar?.contentEquals(byteArrayOf(1, 2, 3)) == true)
     }
 
+    // A name the user gave the peer (conversation details) wins over the peer's own, here as in
+    // profileFlow: displayName is what the list, the chat header and notifications read.
+    @Test
+    fun aCustomNameWinsOverThePeersOwn() {
+        val contact = Contact(Uri.fromString("jami:peer123"))
+        contact.loadedProfile = Profile("Margaret", null)
+        assertEquals("Margaret", contact.displayName)
+        contact.customProfile = Profile("Granny", null)
+        assertEquals("Granny", contact.displayName)
+        assertEquals("Granny", contact.displayUsername)
+        // A photo alone does not hide the peer's name.
+        contact.customProfile = Profile(null, byteArrayOf(1))
+        assertEquals("Margaret", contact.displayName)
+    }
+
     @Test
     fun testProfileMerging() = runTest {
         val contact = Contact(Uri.fromString("jami:peer123"))
