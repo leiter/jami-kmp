@@ -466,6 +466,10 @@ class ContactDetailsViewModel(
             avatarBytes = effective.avatar,
             customName = contact.customProfile.displayName.orEmpty(),
             hasCustomAvatar = contact.customProfile.avatar != null,
+            // The member list names this peer too (its keys are member URIs, any form).
+            memberNames = _state.value.memberNames + _state.value.memberUris
+                .filter { net.jami.model.Uri.fromString(it).rawRingId == contact.uri.rawRingId }
+                .associateWith { contact.displayUsername },
         )
     }
 
