@@ -111,7 +111,7 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
     private val serviceActions = object : NotificationActions {
         override suspend fun answerCall(accountId: String, callId: String) {
             Log.d(TAG, "Answering call: $callId")
-            callService.accept(accountId, callId, hasVideo = false)
+            callService.accept(accountId, callId, hasVideo = systemAnswerHasVideo(callService, callId))
         }
 
         override suspend fun declineCall(accountId: String, callId: String) {

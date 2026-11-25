@@ -27,6 +27,10 @@ import net.jami.model.Account
 import net.jami.model.Call
 import net.jami.utils.Log
 import kotlinx.cinterop.ExperimentalForeignApi
+import platform.AVFoundation.AVAuthorizationStatusAuthorized
+import platform.AVFoundation.AVCaptureDevice
+import platform.AVFoundation.AVMediaTypeVideo
+import platform.AVFoundation.authorizationStatusForMediaType
 import platform.CallKit.CXAnswerCallAction
 import platform.CallKit.CXCallController
 import platform.CallKit.CXCallEndedReasonFailed
@@ -383,7 +387,7 @@ class CallKitManager(
             pending.answered -> {
                 Log.d(TAG, "Applying deferred answer to $callId")
                 answerKnownToCallKit += callId
-                scope.launch { callService.accept(accountId, callId, hasVideo = false) }
+                scope.launch { callService.accept(accountId, callId, hasVideo = systemAnswerHasVideo(callService, callId)) }
             }
             pending.rejected -> {
                 Log.d(TAG, "Applying deferred decline to $callId")
@@ -522,7 +526,7 @@ class CallKitManager(
             return
         }
         Log.d(TAG, "Answer via CallKit: $callId")
-        scope.launch { callService.accept(accountId, callId, hasVideo = false) }
+        scope.launch { callService.accept(accountId, callId, hasVideo = systemAnswerHasVideo(callService, callId)) }
         performAnswerCallAction.fulfill()
     }
 
@@ -679,3 +683,23 @@ internal fun resolveCallerName(account: Account?, contactService: ContactService
             contact.displayName?.takeIf { it.isNotBlank() }
                 ?: contact.username?.takeIf { it.isNotBlank() }
         }
+
+/**
+ * Whether an answer given through the system UI (CallKit's answer, the lock-screen banner, the
+ * notification action, or a deferred answer to a push placeholder) should send our video.
+ *
+ * These paths have no "accept video / audio only" choice, and they answered with video off
+ * every time: a video call answered from the lock screen went out with our camera muted
+ * (R1, 2026-11-18). The native client answers `withVideo: true`, and Android's
+ * `JamiConnection.onAnswer` follows the call's video state. So: video when the call offers
+ * video, provided the camera is authorised — without that the capture can only fail.
+ */
+internal fun systemAnswerHasVideo(call: Call?, cameraAuthorized: Boolean): Boolean =
+    cameraAuthorized && call?.hasVideo() == true
+
+/** [systemAnswerHasVideo] for [callId], with the camera permission as it stands now. */
+internal fun systemAnswerHasVideo(callService: CallService, callId: String): Boolean =
+    systemAnswerHasVideo(
+        callService.getCall(callId),
+        AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeVideo) == AVAuthorizationStatusAuthorized,
+    )
