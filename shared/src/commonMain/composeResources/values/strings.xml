@@ -901,6 +901,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_type_legacy">Legacy</string>
     <string name="import_select_archive">Please select an archive file</string>
     <string name="import_failed">Import failed</string>
+    <string name="import_account_already_on_device">This account is already on this device.</string>
     <string name="import_failed_reason">Import failed: %1$s</string>
     <string name="migration_failed_reason">Migration failed: %1$s</string>
     <string name="profile_save_failed">Failed to save profile</string>

@@ -635,4 +635,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d byte</string>
     <string name="notif_sync_text">Sincronizzazione delle conversazioni in background</string>
     <string name="profile_save_failed">Impossibile salvare il profilo</string>
+    <string name="import_account_already_on_device">Questo account è già presente su questo dispositivo.</string>
 </resources>

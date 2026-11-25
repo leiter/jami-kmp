@@ -635,4 +635,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d octeți</string>
     <string name="notif_sync_text">Se sincronizează conversațiile în fundal</string>
     <string name="profile_save_failed">Profilul nu a putut fi salvat</string>
+    <string name="import_account_already_on_device">Acest cont este deja pe acest dispozitiv.</string>
 </resources>

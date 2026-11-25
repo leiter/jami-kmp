@@ -26,8 +26,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import net.jami.model.Account
+import net.jami.model.ConfigKey
 import net.jami.services.AccountEvent
 import net.jami.services.AccountService
+import net.jami.utils.Log
 import net.jami.utils.ScratchFiles
 import jami_kmp.shared.generated.resources.Res
 import jami_kmp.shared.generated.resources.*
@@ -61,6 +64,11 @@ class ImportAccountViewModel(
 
     // Id of the account created by importAccount(), used to correlate daemon events.
     private var importedAccountId: String? = null
+
+    // Jami accounts already on the device when the import started. Importing the archive of one
+    // of them again would add a second account with the same identity (neither the daemon nor
+    // the reference clients refuse it), so such an import is undone; see completeImport().
+    private var accountsBeforeImport: List<Account> = emptyList()
 
     init {
         // Observe account events to detect successful import
@@ -122,6 +130,7 @@ class ImportAccountViewModel(
 
         scope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
+            accountsBeforeImport = accountService.accounts.value.filter { it.isJami && it.username.isNotEmpty() }
             try {
                 val accountId = accountService.createJamiAccount(
                     displayName = "",
@@ -155,12 +164,41 @@ class ImportAccountViewModel(
      * created but never reported as registered until an app restart re-evaluates state).
      * Account presence is the same criterion the app uses to show Home after a restart.
      */
-    private fun handleAccountsChanged() {
+    private suspend fun handleAccountsChanged() {
+        completeImport()
+    }
+
+    /**
+     * Declare the import done once the imported account is present — unless it turns out to be a
+     * second copy of an account that is already on the device.
+     *
+     * The archive's identity is only known after the daemon has decrypted it (the account leaves
+     * INITIALIZING and AccountService re-reads its details), so while other Jami accounts exist the
+     * decision waits for that. With none (onboarding) there is nothing to compare and the import
+     * completes as soon as the account appears, as before. A duplicate is removed again — its own
+     * account directory only; the existing account is untouched — and the user is told.
+     */
+    private suspend fun completeImport() {
         val id = importedAccountId ?: return
         if (_state.value.isImported) return
-        if (accountService.accounts.value.any { it.accountId == id }) {
-            _state.value = _state.value.copy(isLoading = false, isImported = true)
+        val account = accountService.getAccount(id) ?: return
+        if (accountsBeforeImport.isNotEmpty()) {
+            val identity = account.username
+            if (identity.isEmpty()) {
+                val status = account.volatileDetails[ConfigKey.ACCOUNT_REGISTRATION_STATUS.key]
+                // Archive not decrypted yet: wait for the next event.
+                if (status == null || status == "INITIALIZING") return
+            } else if (accountsBeforeImport.any { it.accountId != id && it.isOwn(identity) }) {
+                Log.i(TAG, "Import of an account already on this device; removing the copy $id")
+                accountService.removeAccount(id)
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = getString(Res.string.import_account_already_on_device),
+                )
+                return
+            }
         }
+        _state.value = _state.value.copy(isLoading = false, isImported = true)
     }
 
     /**
@@ -171,10 +209,14 @@ class ImportAccountViewModel(
         if (importedAccountId != null && event.accountId != importedAccountId) return
         when (event.state) {
             "REGISTERED" -> {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    isImported = true
-                )
+                if (importedAccountId != null) {
+                    completeImport()
+                } else {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isImported = true
+                    )
+                }
             }
             "ERROR_GENERIC", "ERROR_AUTH", "ERROR_NETWORK",
             "ERROR_HOST", "ERROR_SERVICE_UNAVAILABLE" -> {
@@ -186,7 +228,8 @@ class ImportAccountViewModel(
             "ERROR_NEED_MIGRATION" -> {
                 // Migration will be handled by MigrationEnded event
             }
-            else -> { /* Still in progress */ }
+            // Left INITIALIZING offline (UNREGISTERED / TRYING): the identity is known now.
+            else -> completeImport()
         }
     }
 
@@ -218,5 +261,9 @@ class ImportAccountViewModel(
         // (After an import, AccountService deletes it once the daemon has loaded it.)
         if (importedAccountId == null) ScratchFiles.deleteIfScratch(_state.value.archivePath)
         scope.cancel()
+    }
+
+    private companion object {
+        const val TAG = "ImportAccountViewModel"
     }
 }

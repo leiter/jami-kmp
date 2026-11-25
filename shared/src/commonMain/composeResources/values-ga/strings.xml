@@ -306,4 +306,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d beart</string>
     <string name="notif_sync_text">Comhráite á sioncrónú sa chúlra</string>
     <string name="profile_save_failed">Níorbh fhéidir an phróifíl a shábháil</string>
+    <string name="import_account_already_on_device">Tá an cuntas seo ar an ngléas seo cheana.</string>
 </resources>

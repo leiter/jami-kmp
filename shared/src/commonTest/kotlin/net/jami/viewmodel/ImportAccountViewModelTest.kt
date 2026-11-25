@@ -151,6 +151,69 @@ class ImportAccountViewModelTest {
         assertFalse(vm.state.value.isImported)
     }
 
+    // Duplicate guard: the archive of an account already on the device is refused once its
+    // identity is known, and the copy is removed again.
+
+    private val existingId = "acc_existing"
+    private val importedId = "acc_imported"
+    private val identity = "ring:0123456789abcdef0123456789abcdef01234567"
+
+    private fun stubWithImportInFlight(): StubDaemonBridge = StubDaemonBridge().apply {
+        accountIds = listOf(existingId, importedId)
+        accountDetails[existingId] = mapOf("Account.type" to "RING", "Account.username" to identity)
+        // The daemon has added the imported account but not decrypted its archive yet.
+        accountDetails[importedId] = mapOf("Account.type" to "RING")
+        volatileAccountDetails[importedId] = mapOf("Account.registrationStatus" to "INITIALIZING")
+        addAccountResult = importedId
+    }
+
+    @Test
+    fun importingAnAccountAlreadyOnTheDeviceIsRefused() = runTest {
+        val stub = stubWithImportInFlight()
+        val accountService = makeAccountService(stub, this)
+        accountService.loadAccounts()
+        val vm = ImportAccountViewModel(accountService, viewModelScope())
+        vm.setArchivePath("/tmp/backup.gz")
+        vm.importAccount()
+        advanceUntilIdle()
+        // Still decrypting: no verdict yet.
+        assertTrue(vm.state.value.isLoading)
+        assertFalse(vm.state.value.isImported)
+
+        // Archive loaded: same identity as the existing account (bare-hex form this time).
+        stub.accountDetails[importedId] = mapOf("Account.type" to "RING", "Account.username" to identity.removePrefix("ring:"))
+        accountService.onRegistrationStateChanged(importedId, "TRYING", 0, "")
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.isImported)
+        assertFalse(vm.state.value.isLoading)
+        assertNotNull(vm.state.value.error)
+        assertNull(accountService.getAccount(importedId), "the duplicate is removed")
+        assertNotNull(accountService.getAccount(existingId), "the existing account stays")
+    }
+
+    @Test
+    fun importingAnotherAccountNextToAnExistingOneSucceeds() = runTest {
+        val stub = stubWithImportInFlight()
+        val accountService = makeAccountService(stub, this)
+        accountService.loadAccounts()
+        val vm = ImportAccountViewModel(accountService, viewModelScope())
+        vm.setArchivePath("/tmp/backup.gz")
+        vm.importAccount()
+        advanceUntilIdle()
+
+        stub.accountDetails[importedId] = mapOf(
+            "Account.type" to "RING",
+            "Account.username" to "ring:fedcba9876543210fedcba9876543210fedcba98",
+        )
+        accountService.onRegistrationStateChanged(importedId, "UNREGISTERED", 0, "")
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.isImported)
+        assertNull(vm.state.value.error)
+        assertNotNull(accountService.getAccount(importedId))
+    }
+
     @Test
     fun onClearedDoesNotThrow() = runTest {
         val stub = StubDaemonBridge()

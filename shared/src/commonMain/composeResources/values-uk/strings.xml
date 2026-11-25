@@ -622,4 +622,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d байт</string>
     <string name="notif_sync_text">Синхронізація розмов у фоновому режимі</string>
     <string name="profile_save_failed">Не вдалося зберегти профіль</string>
+    <string name="import_account_already_on_device">Цей обліковий запис уже є на цьому пристрої.</string>
 </resources>

@@ -446,4 +446,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d ಬೈಟ್‌ಗಳು</string>
     <string name="notif_sync_text">ಹಿನ್ನೆಲೆಯಲ್ಲಿ ಸಂಭಾಷಣೆಗಳನ್ನು ಸಿಂಕ್ ಮಾಡಲಾಗುತ್ತಿದೆ</string>
     <string name="profile_save_failed">ಪ್ರೊಫೈಲ್ ಉಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ</string>
+    <string name="import_account_already_on_device">ಈ ಖಾತೆ ಈಗಾಗಲೇ ಈ ಸಾಧನದಲ್ಲಿದೆ.</string>
 </resources>

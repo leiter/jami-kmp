@@ -462,4 +462,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d بايت</string>
     <string name="notif_sync_text">جارٍ مزامنة المحادثات في الخلفية</string>
     <string name="profile_save_failed">تعذّر حفظ الملف الشخصي</string>
+    <string name="import_account_already_on_device">هذا الحساب موجود بالفعل على هذا الجهاز.</string>
 </resources>

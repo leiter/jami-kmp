@@ -435,4 +435,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d बाइट</string>
     <string name="notif_sync_text">पृष्ठभूमिमा कुराकानीहरू सिंक हुँदैछन्</string>
     <string name="profile_save_failed">प्रोफाइल सुरक्षित गर्न सकिएन</string>
+    <string name="import_account_already_on_device">यो खाता पहिले नै यस यन्त्रमा छ।</string>
 </resources>

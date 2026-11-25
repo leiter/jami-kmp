@@ -232,4 +232,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">baịtị %1$d / %2$d</string>
     <string name="notif_sync_text">Na-emekọrịta mkparịta ụka n'azụ</string>
     <string name="profile_save_failed">Enweghị ike ịchekwa profaịlụ</string>
+    <string name="import_account_already_on_device">Akaụntụ a adịlarị na ngwaọrụ a.</string>
 </resources>

@@ -436,4 +436,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Sincronizacion de las conversacions en rèireplan</string>
     <string name="profile_save_failed">Impossible d'enregistrar lo perfil</string>
     <string name="time_now_short">Ara</string>
+    <string name="import_account_already_on_device">Aqueste compte es ja sus aqueste aparelh.</string>
 </resources>

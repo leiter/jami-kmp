@@ -512,4 +512,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d byte</string>
     <string name="notif_sync_text">Synkroniserar konversationer i bakgrunden</string>
     <string name="profile_save_failed">Det gick inte att spara profilen</string>
+    <string name="import_account_already_on_device">Det här kontot finns redan på den här enheten.</string>
 </resources>

@@ -560,4 +560,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_sync_text">Amtawi n yidiwenniyen deg ugilal</string>
     <string name="profile_save_failed">Ur yezmir ara ad yettwasekles umaɣnu</string>
     <string name="time_now_short">Tura</string>
+    <string name="import_account_already_on_device">Amiḍan-a yella yakan deg yibenk-a.</string>
 </resources>

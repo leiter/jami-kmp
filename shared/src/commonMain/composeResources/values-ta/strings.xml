@@ -459,4 +459,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d பைட்டுகள்</string>
     <string name="notif_sync_text">பின்னணியில் உரையாடல்கள் ஒத்திசைக்கப்படுகின்றன</string>
     <string name="profile_save_failed">சுயவிவரத்தைச் சேமிக்க முடியவில்லை</string>
+    <string name="import_account_already_on_device">இந்தக் கணக்கு ஏற்கனவே இந்தச் சாதனத்தில் உள்ளது.</string>
 </resources>

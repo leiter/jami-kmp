@@ -652,6 +652,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="conversation_type_legacy">Veraltet</string>
     <string name="import_select_archive">Bitte eine Archivdatei auswählen</string>
     <string name="import_failed">Import fehlgeschlagen</string>
+    <string name="import_account_already_on_device">Dieses Konto ist bereits auf diesem Gerät eingerichtet.</string>
     <string name="import_failed_reason">Import fehlgeschlagen: %1$s</string>
     <string name="migration_failed_reason">Migration fehlgeschlagen: %1$s</string>
     <string name="profile_save_failed">Profil konnte nicht gespeichert werden</string>

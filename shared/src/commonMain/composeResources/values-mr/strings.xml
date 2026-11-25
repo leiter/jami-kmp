@@ -435,4 +435,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d बाइट</string>
     <string name="notif_sync_text">पार्श्वभूमीत संभाषणे समक्रमित होत आहेत</string>
     <string name="profile_save_failed">प्रोफाइल जतन करता आली नाही</string>
+    <string name="import_account_already_on_device">हे खाते आधीच या डिव्हाइसवर आहे.</string>
 </resources>

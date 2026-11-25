@@ -420,4 +420,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d byte</string>
     <string name="notif_sync_text">Đang đồng bộ cuộc trò chuyện trong nền</string>
     <string name="profile_save_failed">Không thể lưu hồ sơ</string>
+    <string name="import_account_already_on_device">Tài khoản này đã có trên thiết bị này.</string>
 </resources>

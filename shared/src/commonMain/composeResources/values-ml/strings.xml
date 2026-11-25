@@ -568,4 +568,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d ബൈറ്റുകൾ</string>
     <string name="notif_sync_text">പശ്ചാത്തലത്തിൽ സംഭാഷണങ്ങൾ സമന്വയിപ്പിക്കുന്നു</string>
     <string name="profile_save_failed">പ്രൊഫൈൽ സംരക്ഷിക്കാനായില്ല</string>
+    <string name="import_account_already_on_device">ഈ അക്കൗണ്ട് ഇതിനകം ഈ ഉപകരണത്തിലുണ്ട്.</string>
 </resources>

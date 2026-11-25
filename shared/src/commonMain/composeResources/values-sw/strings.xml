@@ -445,4 +445,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">Baiti %1$d / %2$d</string>
     <string name="notif_sync_text">Inasawazisha mazungumzo chinichini</string>
     <string name="profile_save_failed">Imeshindwa kuhifadhi wasifu</string>
+    <string name="import_account_already_on_device">Akaunti hii tayari iko kwenye kifaa hiki.</string>
 </resources>

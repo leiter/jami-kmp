@@ -360,4 +360,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d bayt</string>
     <string name="notif_sync_text">Söhbətlər arxa planda sinxronlaşdırılır</string>
     <string name="profile_save_failed">Profil saxlanılmadı</string>
+    <string name="import_account_already_on_device">Bu hesab artıq bu cihazdadır.</string>
 </resources>

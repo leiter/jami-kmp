@@ -435,4 +435,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d బైట్‌లు</string>
     <string name="notif_sync_text">నేపథ్యంలో సంభాషణలు సింక్ అవుతున్నాయి</string>
     <string name="profile_save_failed">ప్రొఫైల్‌ను సేవ్ చేయడం సాధ్యపడలేదు</string>
+    <string name="import_account_already_on_device">ఈ ఖాతా ఇప్పటికే ఈ పరికరంలో ఉంది.</string>
 </resources>
