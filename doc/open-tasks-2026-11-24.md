@@ -52,9 +52,9 @@ Android is built and tested on another machine, so a shared change is compiled o
 | S5 | ~~**`MediaViewerScreen` has no pager.**~~ **Done 2026-11-25**, see the closed list. | M | |
 | S6 | ~~**Haptics only in the call flow.**~~ **Done 2026-11-25** (`3a3788e`). | S | |
 | S7 | ~~**Video tiles in the media gallery have no thumbnail.**~~ **Done 2026-11-25** (`9dd1ca4`). | M | |
-| S8 | **Audio route picker** (earpiece / speaker / Bluetooth) — the call screen has one binary speaker toggle. Backend partly there on Android. | M | `doc/TODO.md` → Calls |
+| S8 | ~~**Audio route picker** (earpiece / speaker / Bluetooth).~~ **Done 2026-11-25** (`1f653e8`) — see the closed list; Bluetooth/headset untested without hardware. | M | |
 | S9 | ~~**Tapping a 1:1 peer's avatar in details does nothing.**~~ **Done 2026-11-25** (`c99aeb1`): a real gap, the reference sets a custom photo and name. | M | |
-| S10 | **Video recording in chat** — menu shows "coming soon". | L | |
+| S10 | ~~**Video recording in chat.**~~ **Done 2026-11-25** (`16c718fb`) — see the closed list; needs a device camera to try. | L | |
 | S11 | **Robolectric for the four shared test classes excluded from the Android unit-test task.** | M | Android machine |
 | S12 | ~~**Calling F9: call/stream introspection.**~~ **Done 2026-11-25**, except `currentMediaList` (see the closed list). | S | |
 | S13 | ~~`Permissions.md` leftovers.~~ **Done 2026-11-25** (`deb1f39`); the Android half is unbuilt here. | S | |
@@ -221,3 +221,17 @@ Found already done, docs corrected:
   - **Not here:** a pre-request rationale on iOS. The system prompt carries the Info.plist
     purpose string, and the reference has none for camera or microphone either.
   - **Unbuilt:** the Android half is compiled on the Android machine only.
+- **S8 — audio route picker** (`1f653e8`). The audio button follows the reference's
+  `CallFragment`: earpiece ⇄ speaker while those are the only routes, a bottom sheet of every
+  route (current one ticked) once a headset or Bluetooth device is attached; the button shows
+  the route's icon and name. `HardwareService.selectAudioOutput` on every platform; rules in
+  `AudioOutputs` (tested). iOS picks receiver/headset through `setPreferredInput` and the
+  speaker as an override; a duplicate route observer that hid headsets was removed. Android
+  routes through `AudioManager` (`setCommunicationDevice` on API 31+), not the reference's
+  Telecom endpoints, and is unbuilt here. **Untested:** any real headset — the simulator has
+  none.
+- **S10 — video recording in chat** (`16c718fb`). "Record video" opens the system camera in
+  video mode, front-facing (`VideoCaptureEffect`; iOS `UIImagePickerController` in Kotlin,
+  Android `CaptureVideo` with the reference's extras) and sends the file. Same camera
+  permission flow as photos; no recorder → `video_recorder_error`. **Untested:** recording
+  itself, which needs a device camera.
