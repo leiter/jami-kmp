@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -48,6 +49,8 @@ fun VideoPlayerScreen(
             onClick = onBack,
             modifier = Modifier
                 .align(Alignment.TopStart)
+                // Below the status bar, where a tap reaches the button rather than the system.
+                .safeDrawingPadding()
                 .padding(8.dp),
         ) {
             Icon(

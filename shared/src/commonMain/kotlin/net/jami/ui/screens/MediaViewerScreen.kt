@@ -20,6 +20,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -150,6 +151,9 @@ fun MediaViewerScreen(
             onClick = onBack,
             modifier = Modifier
                 .align(Alignment.TopStart)
+                // Below the status bar: drawn under it, the buttons' taps went to the system (the
+                // clock and battery sit exactly there on an iPhone).
+                .safeDrawingPadding()
                 .padding(8.dp),
         ) {
             Icon(
@@ -163,6 +167,7 @@ fun MediaViewerScreen(
         Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
+                .safeDrawingPadding()
                 .padding(8.dp),
         ) {
             IconButton(onClick = { shareFile(currentPath) }) {
@@ -185,7 +190,7 @@ fun MediaViewerScreen(
 
         SnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter),
+            modifier = Modifier.align(Alignment.BottomCenter).safeDrawingPadding(),
         )
     }
 }
