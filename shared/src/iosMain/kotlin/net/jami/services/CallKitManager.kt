@@ -32,6 +32,9 @@ import platform.AVFoundation.AVCaptureDevice
 import platform.AVFoundation.AVMediaTypeVideo
 import platform.AVFoundation.authorizationStatusForMediaType
 import platform.CallKit.CXAnswerCallAction
+import kotlinx.cinterop.ObjCSignatureOverride
+import net.jami.services.expect.HardwareService
+import objcnames.classes.AVAudioSession
 import platform.CallKit.CXCallController
 import platform.CallKit.CXCallEndedReasonFailed
 import platform.CallKit.CXCallEndedReasonRemoteEnded
@@ -109,6 +112,7 @@ class CallKitManager(
     private val callService: CallService,
     private val accountService: AccountService,
     private val contactService: ContactService,
+    private val hardwareService: HardwareService,
 ) : NSObject(), CXProviderDelegateProtocol {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -220,6 +224,7 @@ class CallKitManager(
     init {
         provider = CXProvider(configuration = providerConfiguration(configured))
         provider.setDelegate(this, queue = null)
+        hardwareService.callKitHoldsCall = { callToUuid.isNotEmpty() || pendingPush != null }
         observeCallUpdates()
     }
 
@@ -651,7 +656,23 @@ class CallKitManager(
         performSetHeldCallAction.fulfill()
     }
 
+    /**
+     * CallKit activates the call's audio session itself, with a call's priority, after an answer
+     * or a start action — also on the lock screen, where the app cannot activate one (I4 / R5).
+     * The native client routes its audio from here as well (`CallsManager.audioSessionActivated`).
+     */
+    @ObjCSignatureOverride
+    override fun provider(provider: CXProvider, didActivateAudioSession: AVAudioSession) {
+        hardwareService.onCallKitAudioActivated()
+    }
+
+    @ObjCSignatureOverride
+    override fun provider(provider: CXProvider, didDeactivateAudioSession: AVAudioSession) {
+        hardwareService.onCallKitAudioDeactivated()
+    }
+
     fun onCleared() {
+        hardwareService.callKitHoldsCall = { false }
         pendingPush?.timeoutJob?.cancel()
         pendingPush = null
         scope.cancel()

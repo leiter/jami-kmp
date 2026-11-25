@@ -115,7 +115,7 @@ actual val platformModule: Module get() = try {
 
     single<CallKitManagerApi> {
         CallKitManagerWrapper(
-            CallKitManager(callService = get(), accountService = get(), contactService = get())
+            CallKitManager(callService = get(), accountService = get(), contactService = get(), hardwareService = get())
         )
     }
 

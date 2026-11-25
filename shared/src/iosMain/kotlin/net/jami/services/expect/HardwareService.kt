@@ -42,6 +42,7 @@ import platform.AVFAudio.availableInputs
 import platform.AVFAudio.currentRoute
 import platform.AVFAudio.AVAudioSessionPortHeadphones
 import platform.AVFAudio.AVAudioSessionPortHeadsetMic
+import platform.AVFAudio.AVAudioSessionModeVideoChat
 import platform.AVFAudio.AVAudioSessionModeVoiceChat
 import platform.AVFAudio.AVAudioSessionPortOverride
 import platform.AVFAudio.AVAudioSessionPortOverrideNone
@@ -128,6 +129,18 @@ actual class HardwareService : KoinComponent {
     /** Last value reported by the path monitor; see [isMeteredNetwork]. */
     private var isExpensivePath = false
     private var audioSessionActive = false
+
+    /**
+     * Whether CallKit holds a call right now, set by CallKitManager. While it does, the call's
+     * audio session is CallKit's to activate (I4 / R5): it does so with a call's priority, which
+     * an app in the background or behind the lock screen cannot claim for itself.
+     */
+    var callKitHoldsCall: () -> Boolean = { false }
+
+    /** True while the active session was activated by CallKit rather than by us. */
+    private var activatedByCallKit = false
+    private var activationFallback: kotlinx.coroutines.Job? = null
+    private var videoMode = false
     private var logging = false
     private var screenShareSession: Any? = null
     private var isScreenSharing = false
@@ -163,14 +176,85 @@ actual class HardwareService : KoinComponent {
         if (ended) { closeAudioState(); return }
         when (state) {
             Call.CallStatus.CURRENT -> {
-                activateAudioSession()
                 speakerphoneOn = isOngoingVideo
+                requestAudioSession(isOngoingVideo, connected = true)
                 updateAudioOutput()
                 updateProximityMonitoring(isAudioOnly = !isOngoingVideo)
             }
-            Call.CallStatus.RINGING, Call.CallStatus.CONNECTING -> activateAudioSession()
+            Call.CallStatus.RINGING, Call.CallStatus.CONNECTING -> requestAudioSession(isOngoingVideo, connected = false)
             else -> {}
         }
+    }
+
+    /**
+     * Configures the session for the call and makes sure it gets activated.
+     *
+     * Not on CallKit: activated here, as before. On CallKit: only configured, and CallKit
+     * activates it once the call is answered or started (`didActivate`, [onCallKitAudioActivated]).
+     * Should that never come for a connected call, it is activated here after
+     * [CALLKIT_ACTIVATION_GRACE_MS], so a missed callback cannot leave the call without audio.
+     */
+    private fun requestAudioSession(video: Boolean, connected: Boolean) {
+        configureAudioSession(video)
+        if (audioSessionActive) return
+        if (!callKitHoldsCall()) {
+            activateAudioSession()
+            return
+        }
+        if (!connected || activationFallback?.isActive == true) return
+        activationFallback = scope.launch {
+            kotlinx.coroutines.delay(CALLKIT_ACTIVATION_GRACE_MS)
+            if (!audioSessionActive) {
+                Log.w(tag, "CallKit did not activate the audio session; activating it ourselves")
+                activateAudioSession()
+            }
+        }
+    }
+
+    /**
+     * PlayAndRecord with VoiceChat, or VideoChat for a video call, which also starts on the
+     * speaker and tunes echo cancellation for a phone held away. Without AllowBluetooth /
+     * AllowBluetoothA2DP iOS refuses to route call audio to a Bluetooth headset at all.
+     */
+    private fun configureAudioSession(video: Boolean) {
+        val session = AVAudioSession.sharedInstance()
+        if (session.category == AVAudioSessionCategoryPlayAndRecord && videoMode == video &&
+            session.mode == (if (video) AVAudioSessionModeVideoChat else AVAudioSessionModeVoiceChat)
+        ) return
+        try {
+            session.setCategory(
+                AVAudioSessionCategoryPlayAndRecord,
+                mode = if (video) AVAudioSessionModeVideoChat else AVAudioSessionModeVoiceChat,
+                options = AVAudioSessionCategoryOptionAllowBluetooth or
+                    AVAudioSessionCategoryOptionAllowBluetoothA2DP,
+                error = null,
+            )
+            videoMode = video
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to configure audio session: ${e.message}")
+        }
+    }
+
+    /** CallKit's `didActivate`: the session is live, so the route chosen for the call applies now. */
+    fun onCallKitAudioActivated() {
+        Log.d(tag, "Audio session activated by CallKit")
+        activationFallback?.cancel()
+        activatedByCallKit = true
+        if (!audioSessionActive) {
+            audioSessionActive = true
+            observeRouteChanges()
+        }
+        updateAudioOutput()
+    }
+
+    /** CallKit's `didDeactivate`: the session is no longer ours to use. */
+    fun onCallKitAudioDeactivated() {
+        Log.d(tag, "Audio session deactivated by CallKit")
+        activationFallback?.cancel()
+        activatedByCallKit = false
+        audioSessionActive = false
+        speakerphoneOn = false
+        _audioState.value = STATE_INTERNAL
     }
 
     /**
@@ -207,15 +291,6 @@ actual class HardwareService : KoinComponent {
         if (audioSessionActive) return
         try {
             val session = AVAudioSession.sharedInstance()
-            // Without AllowBluetooth / AllowBluetoothA2DP iOS refuses to route call audio
-            // to a Bluetooth headset at all — this was previously `options = 0u`.
-            session.setCategory(
-                AVAudioSessionCategoryPlayAndRecord,
-                mode = AVAudioSessionModeVoiceChat,
-                options = AVAudioSessionCategoryOptionAllowBluetooth or
-                    AVAudioSessionCategoryOptionAllowBluetoothA2DP,
-                error = null,
-            )
             session.setActive(true, error = null)
             audioSessionActive = true
             observeRouteChanges()
@@ -367,10 +442,16 @@ actual class HardwareService : KoinComponent {
     }
 
     actual fun abandonAudioFocus() {
+        activationFallback?.cancel()
         if (!audioSessionActive) return
         try {
-            val session = AVAudioSession.sharedInstance()
-            session.setActive(false, withOptions = AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation, error = null)
+            // A session CallKit activated is CallKit's to deactivate, once the call has ended
+            // on its side (didDeactivate). Deactivating it here as well raced with that.
+            if (!activatedByCallKit) {
+                val session = AVAudioSession.sharedInstance()
+                session.setActive(false, withOptions = AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation, error = null)
+            }
+            activatedByCallKit = false
             audioSessionActive = false
             speakerphoneOn = false
             _audioState.value = STATE_INTERNAL
@@ -679,3 +760,6 @@ actual class HardwareService : KoinComponent {
         private const val LOGGING_ENABLED_KEY = "hardware_logging_enabled"
     }
 }
+
+/** How long a connected CallKit call waits for `didActivate` before activating the session itself. */
+private const val CALLKIT_ACTIVATION_GRACE_MS = 1_500L
