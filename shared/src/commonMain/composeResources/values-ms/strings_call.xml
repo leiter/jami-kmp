@@ -40,4 +40,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="video_loss_retry">Cuba lagi</string>
     <string name="video_loss_audio_only">Audio sahaja</string>
     <string name="conference_waiting_participants">Menunggu peserta…</string>
+    <string name="call_lower_hand">താഴത്തെ കൈ</string>
 </resources>

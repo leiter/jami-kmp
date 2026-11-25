@@ -339,4 +339,26 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_share">مشاركة</string>
     <string name="filter_requests">طلبات</string>
     <string name="permission_dialog_battery_dismiss">ليس الآن</string>
+    <string name="conversation_message_deleted">حذف %1$s رسالة</string>
+    <string name="file_transfer_status_unjoinable_peer">نظير غير قابل للوصول</string>
+    <string name="date_today">اليوم</string>
+    <string name="date_yesterday">البارحة</string>
+    <string name="date_full_format">%2$d %1$s، %3$d</string>
+    <string name="date_month_1">يناير</string>
+    <string name="date_month_2">فبراير</string>
+    <string name="date_month_3">مارس</string>
+    <string name="date_month_4">أبريل</string>
+    <string name="date_month_5">مايو</string>
+    <string name="date_month_6">يونيو</string>
+    <string name="date_month_7">يوليو</string>
+    <string name="date_month_8">أغسطس</string>
+    <string name="date_month_9">سبتمبر</string>
+    <string name="date_month_10">أكتوبر</string>
+    <string name="date_month_11">نوفمبر</string>
+    <string name="date_month_12">ديسمبر</string>
+    <string name="time_now_short">الآن</string>
+    <string name="time_minutes_short">%1$dد</string>
+    <string name="time_hours_short">%1$dس</string>
+    <string name="time_days_short">%1$dيوم</string>
+    <string name="time_weeks_short">%1$dأسبوع</string>
 </resources>

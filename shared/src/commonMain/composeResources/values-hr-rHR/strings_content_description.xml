@@ -29,4 +29,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_presence_online">Online</string>
     <string name="content_desc_presence_offline">Neprijavljeni</string>
     <string name="content_desc_state_muted">Umireni</string>
+    <string name="content_desc_lower_hand">Dolnja ruka</string>
 </resources>

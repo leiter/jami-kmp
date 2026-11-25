@@ -388,4 +388,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_export">Exportă</string>
     <string name="snackbar_export_success">Contul a fost exportat</string>
     <string name="snackbar_export_error">Exportul a eșuat. Verifică parola și încearcă din nou.</string>
+    <string name="account_biometric_error_failed">Autentificarea biometrică a eșuat. Încearcă din nou.</string>
+    <string name="account_biometric_error_no_hardware">Autentificarea biometrică nu este disponibilă pe acest dispozitiv.</string>
+    <string name="account_biometric_error_not_enrolled">Nu există date biometrice înregistrate pe acest dispozitiv. Adaugă o amprentă sau o față în setările dispozitivului.</string>
+    <string name="account_biometric_error_unavailable">Autentificarea biometrică nu este disponibilă momentan.</string>
+    <string name="biometric_authenticating">Se autentifică…</string>
+    <string name="biometric_disable_failed">Autentificarea biometrică nu a putut fi dezactivată.</string>
+    <string name="biometric_enroll_description">Autentifică-te pentru a proteja parola contului</string>
+    <string name="biometric_enroll_failed">Autentificarea biometrică nu a putut fi activată.</string>
+    <string name="biometric_error_no_credential">Nu există nicio autentificare biometrică validă salvată pentru acest cont. Deblochează cu parola și activează din nou biometria.</string>
+    <string name="biometric_unlock">Deblochează</string>
+    <string name="biometric_unlock_title">Deblochează Jami</string>
+    <string name="error_no_account">Niciun cont selectat</string>
 </resources>

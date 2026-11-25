@@ -184,4 +184,26 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="screen_title_app_settings">Налады</string>
     <string name="action_share">Падзяліцца</string>
     <string name="permission_dialog_battery_dismiss">Не зараз</string>
+    <string name="file_transfer_status_unjoinable_peer">Недасягальны абанент</string>
+    <string name="tv_action_more">Больш</string>
+    <string name="date_today">Сёння</string>
+    <string name="date_yesterday">Учора</string>
+    <string name="date_full_format">%2$d %1$s %3$d г.</string>
+    <string name="date_month_1">студзеня</string>
+    <string name="date_month_2">лютага</string>
+    <string name="date_month_3">сакавіка</string>
+    <string name="date_month_4">красавіка</string>
+    <string name="date_month_5">мая</string>
+    <string name="date_month_6">чэрвеня</string>
+    <string name="date_month_7">ліпеня</string>
+    <string name="date_month_8">жніўня</string>
+    <string name="date_month_9">верасня</string>
+    <string name="date_month_10">кастрычніка</string>
+    <string name="date_month_11">лістапада</string>
+    <string name="date_month_12">снежня</string>
+    <string name="time_now_short">Цяпер</string>
+    <string name="time_minutes_short">%1$d хв</string>
+    <string name="time_hours_short">%1$d гадз</string>
+    <string name="time_days_short">%1$d сут</string>
+    <string name="time_weeks_short">%1$d тыдз</string>
 </resources>

@@ -32,4 +32,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_raise_hand">Welie aka gị</string>
     <string name="content_desc_send_call_message">Zie ozi</string>
     <string name="content_desc_state_muted">N'enweghị isi</string>
+    <string name="content_desc_lower_hand">Aka ala</string>
+    <string name="content_desc_selected">Ahọrọla</string>
+    <string name="content_desc_not_selected">Ahọrọghị</string>
 </resources>

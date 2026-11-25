@@ -388,4 +388,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_export">Ekspordi</string>
     <string name="snackbar_export_success">Konto on eksporditud</string>
     <string name="snackbar_export_error">Eksport ebaõnnestus. Kontrolli parooli ja proovi uuesti.</string>
+    <string name="account_biometric_error_failed">Biomeetriline autentimine nurjus. Proovi uuesti.</string>
+    <string name="account_biometric_error_no_hardware">Biomeetriline autentimine pole selles seadmes saadaval.</string>
+    <string name="account_biometric_error_not_enrolled">Selles seadmes pole biomeetriat registreeritud. Lisa seadme seadetes sõrmejälg või nägu.</string>
+    <string name="account_biometric_error_unavailable">Biomeetriline autentimine pole praegu saadaval.</string>
+    <string name="biometric_authenticating">Autentimine…</string>
+    <string name="biometric_disable_failed">Biomeetrilist autentimist ei õnnestunud välja lülitada.</string>
+    <string name="biometric_enroll_description">Autendi, et kaitsta oma konto parooli</string>
+    <string name="biometric_enroll_failed">Biomeetrilist autentimist ei õnnestunud sisse lülitada.</string>
+    <string name="biometric_error_no_credential">Selle konto jaoks pole kehtivat biomeetrilist sisselogimist salvestatud. Ava parooliga ja lülita biomeetria uuesti sisse.</string>
+    <string name="biometric_unlock">Ava</string>
+    <string name="biometric_unlock_title">Ava Jami</string>
+    <string name="error_no_account">Ühtegi kontot pole valitud</string>
 </resources>

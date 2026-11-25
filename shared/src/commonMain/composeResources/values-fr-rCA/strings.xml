@@ -512,4 +512,26 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_post_notifications_title">Autoriser les notifications</string>
     <string name="permission_dialog_post_notifications_blocked_message">Les notifications sont désactivées pour Jami. Sans elles, vous manquerez les appels et messages entrants. Veuillez activer les notifications pour Jami dans les paramètres de l'appareil.</string>
     <string name="permission_dialog_battery_dismiss">Pas maintenant</string>
+    <string name="notif_channel_reconnect">Synchronisation en arrière plan</string>
+    <string name="action_call_resume">Reprendre l'appel</string>
+    <string name="date_today">Aujourd'hui</string>
+    <string name="date_yesterday">Hier</string>
+    <string name="date_full_format">%2$d %1$s %3$d</string>
+    <string name="date_month_1">janvier</string>
+    <string name="date_month_2">février</string>
+    <string name="date_month_3">mars</string>
+    <string name="date_month_4">avril</string>
+    <string name="date_month_5">mai</string>
+    <string name="date_month_6">juin</string>
+    <string name="date_month_7">juillet</string>
+    <string name="date_month_8">août</string>
+    <string name="date_month_9">septembre</string>
+    <string name="date_month_10">octobre</string>
+    <string name="date_month_11">novembre</string>
+    <string name="date_month_12">décembre</string>
+    <string name="time_now_short">Maintenant</string>
+    <string name="time_minutes_short">%1$dm</string>
+    <string name="time_hours_short">%1$dh</string>
+    <string name="time_days_short">%1$dj</string>
+    <string name="time_weeks_short">%1$dsem</string>
 </resources>

@@ -94,4 +94,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">स्पिकर खुला</string>
     <string name="content_desc_speaker_off">स्पिकर बन्द</string>
     <string name="content_desc_hold">होल्ड गर्नुहोस्</string>
+    <string name="content_desc_selected">छानिएको</string>
+    <string name="content_desc_not_selected">छानिएको छैन</string>
 </resources>

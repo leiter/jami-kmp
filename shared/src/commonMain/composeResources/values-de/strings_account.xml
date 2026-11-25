@@ -376,4 +376,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="biometric_enroll_failed">Biometrische Authentifizierung konnte nicht aktiviert werden.</string>
     <string name="biometric_disable_failed">Biometrische Authentifizierung konnte nicht deaktiviert werden.</string>
     <string name="biometric_error_no_credential">Für dieses Konto ist keine gültige biometrische Anmeldung gespeichert. Mit dem Passwort entsperren und die Biometrie erneut aktivieren.</string>
+    <string name="account_biometric_error_failed">Biometrische Authentifizierung fehlgeschlagen. Bitte erneut versuchen.</string>
+    <string name="account_biometric_error_no_hardware">Biometrische Authentifizierung ist auf diesem Gerät nicht verfügbar.</string>
+    <string name="account_biometric_error_not_enrolled">Auf diesem Gerät sind keine biometrischen Daten eingerichtet. Bitte in den Geräteeinstellungen einen Fingerabdruck oder ein Gesicht hinzufügen.</string>
+    <string name="account_biometric_error_unavailable">Biometrische Authentifizierung ist derzeit nicht verfügbar.</string>
 </resources>

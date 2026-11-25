@@ -309,4 +309,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">تم تصدير الحساب بنجاح</string>
     <string name="snackbar_export_error">فشل التصدير. تحقق من كلمة المرور وحاول مرة أخرى.</string>
     <string name="action_rename">إعادة التسمية</string>
+    <string name="account_biometric_error_failed">فشلت المصادقة الحيوية. يُرجى المحاولة مرة أخرى.</string>
+    <string name="account_biometric_error_no_hardware">المصادقة الحيوية غير متاحة على هذا الجهاز.</string>
+    <string name="account_biometric_error_not_enrolled">لا توجد بيانات حيوية مسجلة على هذا الجهاز. أضف بصمة إصبع أو وجهًا في إعدادات الجهاز.</string>
+    <string name="account_biometric_error_unavailable">المصادقة الحيوية غير متاحة حاليًا.</string>
+    <string name="biometric_authenticating">جارٍ المصادقة…</string>
+    <string name="biometric_disable_failed">تعذّر تعطيل المصادقة الحيوية.</string>
+    <string name="biometric_enroll_description">صادِق لحماية كلمة مرور حسابك</string>
+    <string name="biometric_enroll_failed">تعذّر تفعيل المصادقة الحيوية.</string>
+    <string name="biometric_error_no_credential">لا يوجد تسجيل دخول حيوي صالح محفوظ لهذا الحساب. افتح القفل بكلمة المرور ثم فعّل القياسات الحيوية من جديد.</string>
+    <string name="biometric_unlock">فتح القفل</string>
+    <string name="biometric_unlock_title">فتح قفل Jami</string>
+    <string name="error_no_account">لم يتم اختيار أي حساب</string>
 </resources>

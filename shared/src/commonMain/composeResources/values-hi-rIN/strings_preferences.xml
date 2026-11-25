@@ -68,4 +68,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_max_file_size_value">%1$d एमबी</string>
     <string name="pref_category_messages">संदेश</string>
     <string name="pref_category_advanced">उन्नत</string>
+    <string name="pref_days_short">%1$d दिन</string>
+    <string name="pref_seconds_short">%1$d से॰</string>
 </resources>

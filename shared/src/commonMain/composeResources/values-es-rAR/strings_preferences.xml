@@ -107,4 +107,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_max_file_size_value">%1$dMB</string>
     <string name="pref_category_messages">Mensajes</string>
     <string name="pref_category_advanced">Avanzadas</string>
+    <string name="pref_days_short">%1$ddd.</string>
+    <string name="pref_seconds_short">%1$dseg.</string>
 </resources>

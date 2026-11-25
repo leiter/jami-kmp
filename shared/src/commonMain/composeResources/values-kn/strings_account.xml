@@ -302,4 +302,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">ಖಾತೆ ರಫ್ತಾಗಿದೆ</string>
     <string name="snackbar_export_error">ರಫ್ತು ವಿಫಲವಾಗಿದೆ. ಪಾಸ್‌ವರ್ಡ್ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.</string>
     <string name="action_rename">ಮರುಹೆಸರಿಸಿ</string>
+    <string name="account_biometric_error_failed">ಬಯೋಮೆಟ್ರಿಕ್ ದೃಢೀಕರಣ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.</string>
+    <string name="account_biometric_error_no_hardware">ಈ ಸಾಧನದಲ್ಲಿ ಬಯೋಮೆಟ್ರಿಕ್ ದೃಢೀಕರಣ ಲಭ್ಯವಿಲ್ಲ.</string>
+    <string name="account_biometric_error_not_enrolled">ಈ ಸಾಧನದಲ್ಲಿ ಯಾವುದೇ ಬಯೋಮೆಟ್ರಿಕ್ ನೋಂದಾಯಿಸಲಾಗಿಲ್ಲ. ಸಾಧನದ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಬೆರಳಚ್ಚು ಅಥವಾ ಮುಖವನ್ನು ಸೇರಿಸಿ.</string>
+    <string name="account_biometric_error_unavailable">ಬಯೋಮೆಟ್ರಿಕ್ ದೃಢೀಕರಣ ಸದ್ಯಕ್ಕೆ ಲಭ್ಯವಿಲ್ಲ.</string>
+    <string name="biometric_authenticating">ದೃಢೀಕರಿಸಲಾಗುತ್ತಿದೆ…</string>
+    <string name="biometric_disable_failed">ಬಯೋಮೆಟ್ರಿಕ್ ದೃಢೀಕರಣವನ್ನು ಆಫ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
+    <string name="biometric_enroll_description">ನಿಮ್ಮ ಖಾತೆಯ ಪಾಸ್‌ವರ್ಡ್ ಸುರಕ್ಷಿತಗೊಳಿಸಲು ದೃಢೀಕರಿಸಿ</string>
+    <string name="biometric_enroll_failed">ಬಯೋಮೆಟ್ರಿಕ್ ದೃಢೀಕರಣವನ್ನು ಆನ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
+    <string name="biometric_error_no_credential">ಈ ಖಾತೆಗೆ ಮಾನ್ಯವಾದ ಬಯೋಮೆಟ್ರಿಕ್ ಲಾಗಿನ್ ಉಳಿಸಲಾಗಿಲ್ಲ. ಪಾಸ್‌ವರ್ಡ್‌ನೊಂದಿಗೆ ಅನ್‌ಲಾಕ್ ಮಾಡಿ ಮತ್ತು ಬಯೋಮೆಟ್ರಿಕ್ ಅನ್ನು ಮತ್ತೆ ಆನ್ ಮಾಡಿ.</string>
+    <string name="biometric_unlock">ಅನ್‌ಲಾಕ್</string>
+    <string name="biometric_unlock_title">Jami ಅನ್‌ಲಾಕ್ ಮಾಡಿ</string>
+    <string name="error_no_account">ಯಾವುದೇ ಖಾತೆ ಆಯ್ಕೆಯಾಗಿಲ್ಲ</string>
 </resources>

@@ -157,4 +157,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">Nedavno</string>
     <string name="pref_sortAlphabetical">A–Ž</string>
     <string name="pref_sortUnreadFirst">Najprej neprebrano</string>
+    <string name="pref_days_short">%1$d d</string>
+    <string name="pref_seconds_short">%1$d s</string>
+    <string name="pref_history_forever">Za vedno</string>
+    <string name="pref_option_auto">Samodejno</string>
 </resources>

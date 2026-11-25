@@ -19,4 +19,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_settings">සැකසුම්</string>
     <string name="default_value">පෙරනිමිය</string>
     <string name="tv_about_version">අනුවාදය</string>
+    <string name="account_biometric_error_failed">ජෛවමිතික සත්‍යාපනය අසාර්ථකයි. නැවත උත්සාහ කරන්න.</string>
+    <string name="account_biometric_error_no_hardware">මෙම උපාංගයේ ජෛවමිතික සත්‍යාපනය නොමැත.</string>
+    <string name="account_biometric_error_not_enrolled">මෙම උපාංගයේ ජෛවමිතික කිසිවක් ලියාපදිංචි කර නැත. උපාංග සැකසීම් තුළ ඇඟිලි සලකුණක් හෝ මුහුණක් එක් කරන්න.</string>
+    <string name="account_biometric_error_unavailable">ජෛවමිතික සත්‍යාපනය දැනට නොමැත.</string>
+    <string name="biometric_authenticating">සත්‍යාපනය කරමින්…</string>
+    <string name="biometric_disable_failed">ජෛවමිතික සත්‍යාපනය අක්‍රිය කළ නොහැකි විය.</string>
+    <string name="biometric_enroll_description">ඔබගේ ගිණුමේ මුරපදය සුරක්ෂිත කිරීමට සත්‍යාපනය කරන්න</string>
+    <string name="biometric_enroll_failed">ජෛවමිතික සත්‍යාපනය සක්‍රිය කළ නොහැකි විය.</string>
+    <string name="biometric_error_no_credential">මෙම ගිණුම සඳහා වලංගු ජෛවමිතික පිවිසුමක් සුරැකී නැත. මුරපදයෙන් අගුළු හැර ජෛවමිතික නැවත සක්‍රිය කරන්න.</string>
+    <string name="biometric_unlock">අගුළු හරින්න</string>
+    <string name="biometric_unlock_title">Jami අගුළු හරින්න</string>
+    <string name="error_no_account">ගිණුමක් තෝරා නැත</string>
 </resources>

@@ -285,4 +285,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">ਖਾਤਾ ਨਿਰਯਾਤ ਹੋ ਗਿਆ</string>
     <string name="snackbar_export_error">ਨਿਰਯਾਤ ਅਸਫਲ। ਪਾਸਵਰਡ ਜਾਂਚੋ ਅਤੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
     <string name="action_rename">ਨਾਮ ਬਦਲੋ</string>
+    <string name="account_biometric_error_failed">ਬਾਇਓਮੈਟ੍ਰਿਕ ਪ੍ਰਮਾਣੀਕਰਨ ਅਸਫਲ ਰਿਹਾ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
+    <string name="account_biometric_error_no_hardware">ਇਸ ਡੀਵਾਈਸ 'ਤੇ ਬਾਇਓਮੈਟ੍ਰਿਕ ਪ੍ਰਮਾਣੀਕਰਨ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।</string>
+    <string name="account_biometric_error_not_enrolled">ਇਸ ਡੀਵਾਈਸ 'ਤੇ ਕੋਈ ਬਾਇਓਮੈਟ੍ਰਿਕ ਦਰਜ ਨਹੀਂ ਹੈ। ਡੀਵਾਈਸ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਫਿੰਗਰਪ੍ਰਿੰਟ ਜਾਂ ਚਿਹਰਾ ਸ਼ਾਮਲ ਕਰੋ।</string>
+    <string name="account_biometric_error_unavailable">ਬਾਇਓਮੈਟ੍ਰਿਕ ਪ੍ਰਮਾਣੀਕਰਨ ਇਸ ਵੇਲੇ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।</string>
+    <string name="biometric_authenticating">ਪ੍ਰਮਾਣਿਤ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ…</string>
+    <string name="biometric_disable_failed">ਬਾਇਓਮੈਟ੍ਰਿਕ ਪ੍ਰਮਾਣੀਕਰਨ ਬੰਦ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ।</string>
+    <string name="biometric_enroll_description">ਆਪਣੇ ਖਾਤੇ ਦਾ ਪਾਸਵਰਡ ਸੁਰੱਖਿਅਤ ਕਰਨ ਲਈ ਪ੍ਰਮਾਣਿਤ ਕਰੋ</string>
+    <string name="biometric_enroll_failed">ਬਾਇਓਮੈਟ੍ਰਿਕ ਪ੍ਰਮਾਣੀਕਰਨ ਚਾਲੂ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ।</string>
+    <string name="biometric_error_no_credential">ਇਸ ਖਾਤੇ ਲਈ ਕੋਈ ਵੈਧ ਬਾਇਓਮੈਟ੍ਰਿਕ ਲੌਗਇਨ ਰੱਖਿਅਤ ਨਹੀਂ ਹੈ। ਪਾਸਵਰਡ ਨਾਲ ਅਨਲੌਕ ਕਰੋ ਅਤੇ ਬਾਇਓਮੈਟ੍ਰਿਕ ਮੁੜ ਚਾਲੂ ਕਰੋ।</string>
+    <string name="biometric_unlock">ਅਨਲੌਕ ਕਰੋ</string>
+    <string name="biometric_unlock_title">Jami ਅਨਲੌਕ ਕਰੋ</string>
+    <string name="error_no_account">ਕੋਈ ਖਾਤਾ ਨਹੀਂ ਚੁਣਿਆ ਗਿਆ</string>
 </resources>

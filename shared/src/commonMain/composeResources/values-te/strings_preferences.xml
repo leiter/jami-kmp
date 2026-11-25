@@ -119,4 +119,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">ఇటీవలివి</string>
     <string name="pref_sortAlphabetical">అ–హ</string>
     <string name="pref_sortUnreadFirst">చదవనివి ముందు</string>
+    <string name="pref_days_short">%1$dరో</string>
+    <string name="pref_seconds_short">%1$dసె</string>
+    <string name="pref_history_forever">ఎల్లప్పుడూ</string>
+    <string name="pref_option_auto">ఆటోమేటిక్</string>
 </resources>

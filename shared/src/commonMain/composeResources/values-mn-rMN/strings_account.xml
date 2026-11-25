@@ -299,4 +299,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Бүртгэл экспортлогдлоо</string>
     <string name="snackbar_export_error">Экспорт амжилтгүй боллоо. Нууц үгээ шалгаад дахин оролдоно уу.</string>
     <string name="action_rename">Нэр өөрчлөх</string>
+    <string name="account_biometric_error_failed">Биометрик баталгаажуулалт амжилтгүй боллоо. Дахин оролдоно уу.</string>
+    <string name="account_biometric_error_no_hardware">Энэ төхөөрөмж дээр биометрик баталгаажуулалт боломжгүй.</string>
+    <string name="account_biometric_error_not_enrolled">Энэ төхөөрөмж дээр биометрик бүртгэгдээгүй байна. Төхөөрөмжийн тохиргоонд хурууны хээ эсвэл царай нэмнэ үү.</string>
+    <string name="account_biometric_error_unavailable">Биометрик баталгаажуулалт одоогоор боломжгүй байна.</string>
+    <string name="biometric_authenticating">Баталгаажуулж байна…</string>
+    <string name="biometric_disable_failed">Биометрик баталгаажуулалтыг унтрааж чадсангүй.</string>
+    <string name="biometric_enroll_description">Бүртгэлийн нууц үгээ хамгаалахын тулд баталгаажуулна уу</string>
+    <string name="biometric_enroll_failed">Биометрик баталгаажуулалтыг асааж чадсангүй.</string>
+    <string name="biometric_error_no_credential">Энэ бүртгэлд хүчинтэй биометрик нэвтрэлт хадгалагдаагүй байна. Нууц үгээрээ түгжээг тайлаад биометрикийг дахин идэвхжүүлнэ үү.</string>
+    <string name="biometric_unlock">Түгжээ тайлах</string>
+    <string name="biometric_unlock_title">Jami-н түгжээг тайлах</string>
+    <string name="error_no_account">Бүртгэл сонгогдоогүй</string>
 </resources>

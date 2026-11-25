@@ -99,4 +99,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Högtalare på</string>
     <string name="content_desc_speaker_off">Högtalare av</string>
     <string name="content_desc_hold">Parkera</string>
+    <string name="content_desc_selected">Vald</string>
+    <string name="content_desc_not_selected">Inte vald</string>
 </resources>

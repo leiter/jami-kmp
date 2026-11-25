@@ -119,4 +119,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">ล่าสุด</string>
     <string name="pref_sortAlphabetical">ก–ฮ</string>
     <string name="pref_sortUnreadFirst">ยังไม่อ่านก่อน</string>
+    <string name="pref_days_short">%1$dวัน</string>
+    <string name="pref_seconds_short">%1$dวิ</string>
+    <string name="pref_history_forever">ตลอดไป</string>
+    <string name="pref_option_auto">อัตโนมัติ</string>
 </resources>

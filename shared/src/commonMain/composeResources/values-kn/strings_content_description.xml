@@ -94,4 +94,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">ಸ್ಪೀಕರ್ ಆನ್</string>
     <string name="content_desc_speaker_off">ಸ್ಪೀಕರ್ ಆಫ್</string>
     <string name="content_desc_hold">ಹೋಲ್ಡ್ ಮಾಡಿ</string>
+    <string name="content_desc_selected">ಆಯ್ಕೆಮಾಡಲಾಗಿದೆ</string>
+    <string name="content_desc_not_selected">ಆಯ್ಕೆಮಾಡಲಾಗಿಲ್ಲ</string>
 </resources>

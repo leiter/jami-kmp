@@ -204,4 +204,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="screen_title_account_settings">Ntọala akaụntụ</string>
     <string name="screen_title_blocked_contacts">Ndị a na-egbochi</string>
     <string name="certificates_status_banned">Ihe mgbochi</string>
+    <string name="account_biometric_error_failed">Nyocha biometric dara. Biko nwaa ọzọ.</string>
+    <string name="account_biometric_error_no_hardware">Nyocha biometric adịghị na ngwaọrụ a.</string>
+    <string name="account_biometric_error_not_enrolled">Ọ nweghị biometric edebanyere na ngwaọrụ a. Tinye mkpịsị aka ma ọ bụ ihu na ntọala ngwaọrụ.</string>
+    <string name="account_biometric_error_unavailable">Nyocha biometric adịghị ugbu a.</string>
+    <string name="biometric_authenticating">Na-enyocha…</string>
+    <string name="biometric_disable_failed">Enweghị ike ịgbanyụ nyocha biometric.</string>
+    <string name="biometric_enroll_description">Nyochaa iji chekwaa paswọọdụ akaụntụ gị</string>
+    <string name="biometric_enroll_failed">Enweghị ike ịgbanye nyocha biometric.</string>
+    <string name="biometric_error_no_credential">Enweghị nbanye biometric ziri ezi echekwara maka akaụntụ a. Jiri paswọọdụ gị meghee ma gbanye biometric ọzọ.</string>
+    <string name="biometric_unlock">Meghee</string>
+    <string name="biometric_unlock_title">Meghee Jami</string>
+    <string name="error_no_account">Ahọrọghị akaụntụ ọ bụla</string>
 </resources>

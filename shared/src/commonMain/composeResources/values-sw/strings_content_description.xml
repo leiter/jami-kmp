@@ -94,4 +94,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Spika imewashwa</string>
     <string name="content_desc_speaker_off">Spika imezimwa</string>
     <string name="content_desc_hold">Sitisha</string>
+    <string name="content_desc_selected">Imechaguliwa</string>
+    <string name="content_desc_not_selected">Haijachaguliwa</string>
 </resources>

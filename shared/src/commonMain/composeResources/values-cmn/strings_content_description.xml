@@ -99,4 +99,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">扬声器已开启</string>
     <string name="content_desc_speaker_off">扬声器已关闭</string>
     <string name="content_desc_hold">保持通话</string>
+    <string name="content_desc_selected">已選取</string>
+    <string name="content_desc_not_selected">未選取</string>
 </resources>

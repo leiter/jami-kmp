@@ -388,4 +388,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Compte exporté avec succès</string>
     <string name="snackbar_export_error">L'export a échoué. Vérifiez le mot de passe et réessayez.</string>
     <string name="action_rename">Renommer</string>
+    <string name="account_biometric_error_failed">L'authentification biométrique a échoué. Veuillez réessayer.</string>
+    <string name="account_biometric_error_no_hardware">L'authentification biométrique n'est pas disponible sur cet appareil.</string>
+    <string name="account_biometric_error_not_enrolled">Aucune donnée biométrique enregistrée sur cet appareil. Ajoutez une empreinte ou un visage dans les réglages de l'appareil.</string>
+    <string name="account_biometric_error_unavailable">L'authentification biométrique est actuellement indisponible.</string>
+    <string name="biometric_authenticating">Authentification…</string>
+    <string name="biometric_disable_failed">Impossible de désactiver l'authentification biométrique.</string>
+    <string name="biometric_enroll_description">Authentifiez-vous pour protéger le mot de passe de votre compte</string>
+    <string name="biometric_enroll_failed">Impossible d'activer l'authentification biométrique.</string>
+    <string name="biometric_error_no_credential">Aucune connexion biométrique valide n'est enregistrée pour ce compte. Déverrouillez avec votre mot de passe et réactivez la biométrie.</string>
+    <string name="biometric_unlock">Déverrouiller</string>
+    <string name="biometric_unlock_title">Déverrouiller Jami</string>
+    <string name="error_no_account">Aucun compte sélectionné</string>
 </resources>

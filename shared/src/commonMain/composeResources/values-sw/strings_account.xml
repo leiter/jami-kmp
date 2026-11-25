@@ -302,4 +302,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Akaunti imehamishwa nje</string>
     <string name="snackbar_export_error">Kuhamisha nje kumeshindikana. Kagua nenosiri na ujaribu tena.</string>
     <string name="action_rename">Badilisha jina</string>
+    <string name="account_biometric_error_failed">Uthibitishaji wa kibayometriki umeshindwa. Tafadhali jaribu tena.</string>
+    <string name="account_biometric_error_no_hardware">Uthibitishaji wa kibayometriki haupatikani kwenye kifaa hiki.</string>
+    <string name="account_biometric_error_not_enrolled">Hakuna bayometriki iliyosajiliwa kwenye kifaa hiki. Ongeza alama ya kidole au uso katika mipangilio ya kifaa.</string>
+    <string name="account_biometric_error_unavailable">Uthibitishaji wa kibayometriki haupatikani kwa sasa.</string>
+    <string name="biometric_authenticating">Inathibitisha…</string>
+    <string name="biometric_disable_failed">Imeshindwa kuzima uthibitishaji wa kibayometriki.</string>
+    <string name="biometric_enroll_description">Thibitisha ili kulinda nenosiri la akaunti yako</string>
+    <string name="biometric_enroll_failed">Imeshindwa kuwasha uthibitishaji wa kibayometriki.</string>
+    <string name="biometric_error_no_credential">Hakuna kuingia kwa kibayometriki kulikohifadhiwa kwa akaunti hii. Fungua kwa nenosiri lako kisha uwashe bayometriki tena.</string>
+    <string name="biometric_unlock">Fungua</string>
+    <string name="biometric_unlock_title">Fungua Jami</string>
+    <string name="error_no_account">Hakuna akaunti iliyochaguliwa</string>
 </resources>

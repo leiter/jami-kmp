@@ -95,4 +95,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Callaire ar siúl</string>
     <string name="content_desc_speaker_off">Callaire múchta</string>
     <string name="content_desc_hold">Cuir ar feitheamh</string>
+    <string name="content_desc_selected">Roghnaithe</string>
+    <string name="content_desc_not_selected">Gan roghnú</string>
 </resources>

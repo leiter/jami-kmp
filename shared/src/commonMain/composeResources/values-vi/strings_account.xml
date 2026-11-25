@@ -387,4 +387,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Đã xuất tài khoản</string>
     <string name="snackbar_export_error">Xuất thất bại. Kiểm tra mật khẩu và thử lại.</string>
     <string name="action_rename">Đổi tên</string>
+    <string name="account_biometric_error_failed">Xác thực sinh trắc học không thành công. Vui lòng thử lại.</string>
+    <string name="account_biometric_error_no_hardware">Xác thực sinh trắc học không khả dụng trên thiết bị này.</string>
+    <string name="account_biometric_error_not_enrolled">Chưa đăng ký sinh trắc học trên thiết bị này. Hãy thêm vân tay hoặc khuôn mặt trong cài đặt thiết bị.</string>
+    <string name="account_biometric_error_unavailable">Xác thực sinh trắc học hiện không khả dụng.</string>
+    <string name="biometric_authenticating">Đang xác thực…</string>
+    <string name="biometric_disable_failed">Không thể tắt xác thực sinh trắc học.</string>
+    <string name="biometric_enroll_description">Xác thực để bảo vệ mật khẩu tài khoản của bạn</string>
+    <string name="biometric_enroll_failed">Không thể bật xác thực sinh trắc học.</string>
+    <string name="biometric_error_no_credential">Không có đăng nhập sinh trắc học hợp lệ nào được lưu cho tài khoản này. Mở khóa bằng mật khẩu và bật lại sinh trắc học.</string>
+    <string name="biometric_unlock">Mở khóa</string>
+    <string name="biometric_unlock_title">Mở khóa Jami</string>
+    <string name="error_no_account">Chưa chọn tài khoản</string>
 </resources>

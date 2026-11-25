@@ -333,4 +333,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Compte exportat correctament</string>
     <string name="snackbar_export_error">L’exportació ha fallat. Comprova la contrasenya i torna-ho a provar.</string>
     <string name="action_rename">Canvia el nom</string>
+    <string name="account_biometric_error_failed">Ha fallat l'autenticació biomètrica. Torneu-ho a provar.</string>
+    <string name="account_biometric_error_no_hardware">L'autenticació biomètrica no està disponible en aquest dispositiu.</string>
+    <string name="account_biometric_error_not_enrolled">No hi ha dades biomètriques registrades en aquest dispositiu. Afegiu una empremta o una cara a la configuració del dispositiu.</string>
+    <string name="account_biometric_error_unavailable">L'autenticació biomètrica no està disponible ara mateix.</string>
+    <string name="biometric_authenticating">S'està autenticant…</string>
+    <string name="biometric_disable_failed">No s'ha pogut desactivar l'autenticació biomètrica.</string>
+    <string name="biometric_enroll_description">Autentiqueu-vos per protegir la contrasenya del compte</string>
+    <string name="biometric_enroll_failed">No s'ha pogut activar l'autenticació biomètrica.</string>
+    <string name="biometric_error_no_credential">No hi ha cap inici de sessió biomètric vàlid desat per a aquest compte. Desbloquegeu amb la contrasenya i torneu a activar la biometria.</string>
+    <string name="biometric_unlock">Desbloqueja</string>
+    <string name="biometric_unlock_title">Desbloqueja Jami</string>
+    <string name="error_no_account">Cap compte seleccionat</string>
 </resources>

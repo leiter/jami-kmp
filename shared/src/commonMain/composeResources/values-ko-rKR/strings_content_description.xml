@@ -39,4 +39,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_raise_hand">손 들기</string>
     <string name="content_desc_send_call_message">메시지 보내기</string>
     <string name="content_desc_state_muted">음소거됨</string>
+    <string name="content_desc_lower_hand">하위 손</string>
 </resources>

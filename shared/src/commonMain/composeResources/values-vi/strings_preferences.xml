@@ -127,4 +127,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">Gần đây</string>
     <string name="pref_sortAlphabetical">A–Z</string>
     <string name="pref_sortUnreadFirst">Chưa đọc trước</string>
+    <string name="pref_days_short">%1$dngày</string>
+    <string name="pref_seconds_short">%1$dgi</string>
+    <string name="pref_history_forever">Vĩnh viễn</string>
+    <string name="pref_option_auto">Tự động</string>
 </resources>

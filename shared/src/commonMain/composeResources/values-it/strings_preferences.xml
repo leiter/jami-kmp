@@ -159,4 +159,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">Recenti</string>
     <string name="pref_sortAlphabetical">A–Z</string>
     <string name="pref_sortUnreadFirst">Prima le non lette</string>
+    <string name="pref_days_short">%1$d g</string>
+    <string name="pref_seconds_short">%1$d s</string>
+    <string name="pref_history_forever">Per sempre</string>
+    <string name="pref_option_auto">Automatico</string>
 </resources>

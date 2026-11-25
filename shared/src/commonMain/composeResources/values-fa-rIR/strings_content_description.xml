@@ -36,4 +36,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_raise_hand">بالا بردن دست</string>
     <string name="content_desc_send_call_message">ارسال پیام</string>
     <string name="content_desc_state_muted">بی‌صدا</string>
+    <string name="content_desc_lower_hand">دست پایین</string>
 </resources>

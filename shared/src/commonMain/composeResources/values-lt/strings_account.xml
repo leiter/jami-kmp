@@ -341,4 +341,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Paskyra eksportuota</string>
     <string name="snackbar_export_error">Eksportuoti nepavyko. Patikrinkite slaptažodį ir bandykite dar kartą.</string>
     <string name="action_rename">Pervadinti</string>
+    <string name="account_biometric_error_failed">Biometrinis autentifikavimas nepavyko. Bandykite dar kartą.</string>
+    <string name="account_biometric_error_no_hardware">Biometrinis autentifikavimas šiame įrenginyje nepasiekiamas.</string>
+    <string name="account_biometric_error_not_enrolled">Šiame įrenginyje neužregistruota biometrinių duomenų. Įrenginio nustatymuose pridėkite piršto atspaudą arba veidą.</string>
+    <string name="account_biometric_error_unavailable">Biometrinis autentifikavimas šiuo metu nepasiekiamas.</string>
+    <string name="biometric_authenticating">Autentifikuojama…</string>
+    <string name="biometric_disable_failed">Nepavyko išjungti biometrinio autentifikavimo.</string>
+    <string name="biometric_enroll_description">Autentifikuokitės, kad apsaugotumėte paskyros slaptažodį</string>
+    <string name="biometric_enroll_failed">Nepavyko įjungti biometrinio autentifikavimo.</string>
+    <string name="biometric_error_no_credential">Šiai paskyrai neišsaugotas galiojantis biometrinis prisijungimas. Atrakinkite slaptažodžiu ir vėl įjunkite biometriją.</string>
+    <string name="biometric_unlock">Atrakinti</string>
+    <string name="biometric_unlock_title">Atrakinti Jami</string>
+    <string name="error_no_account">Nepasirinkta jokia paskyra</string>
 </resources>

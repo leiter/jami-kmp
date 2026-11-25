@@ -30,4 +30,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_presence_offline">Недаступная</string>
     <string name="content_desc_raise_hand">Падыміце руку</string>
     <string name="content_desc_state_muted">Зацішыўся</string>
+    <string name="content_desc_lower_hand">Ніжняя рука</string>
 </resources>

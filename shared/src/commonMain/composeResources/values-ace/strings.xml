@@ -179,4 +179,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="emoji_category_travel_places">جاک ڠون تمڤت</string>
     <string name="emoji_category_objects">بارڠ</string>
     <string name="emoji_category_symbols">سيمبول</string>
+    <string name="date_today">هاري اين</string>
+    <string name="date_yesterday">ديري</string>
 </resources>

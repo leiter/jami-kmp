@@ -325,4 +325,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_share">Споделяне</string>
     <string name="filter_requests">Заявки</string>
     <string name="permission_dialog_battery_dismiss">Не сега</string>
+    <string name="file_transfer_status_unjoinable_peer">Недостъпен абонат</string>
+    <string name="date_today">Днес</string>
+    <string name="date_yesterday">Вчера</string>
+    <string name="date_full_format">%2$d %1$s %3$d г.</string>
+    <string name="date_month_1">януари</string>
+    <string name="date_month_2">февруари</string>
+    <string name="date_month_3">март</string>
+    <string name="date_month_4">април</string>
+    <string name="date_month_5">май</string>
+    <string name="date_month_6">юни</string>
+    <string name="date_month_7">юли</string>
+    <string name="date_month_8">август</string>
+    <string name="date_month_9">септември</string>
+    <string name="date_month_10">октомври</string>
+    <string name="date_month_11">ноември</string>
+    <string name="date_month_12">декември</string>
+    <string name="time_now_short">Сега</string>
+    <string name="time_minutes_short">%1$d мин</string>
+    <string name="time_hours_short">%1$d ч</string>
+    <string name="time_days_short">%1$d д</string>
+    <string name="time_weeks_short">%1$d седм.</string>
 </resources>

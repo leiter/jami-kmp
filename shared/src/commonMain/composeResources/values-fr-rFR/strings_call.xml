@@ -37,4 +37,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_dtmf_dialpad">Clavier numérique</string>
     <string name="call_participant_disable_video">Désactiver la vidéo</string>
     <string name="call_participant_enable_video">Activer la vidéo</string>
+    <string name="call_lower_hand">Baisser la main</string>
 </resources>

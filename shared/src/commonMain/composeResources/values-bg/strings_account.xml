@@ -303,4 +303,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Профилът е експортиран</string>
     <string name="snackbar_export_error">Експортирането не бе успешно. Проверете паролата и опитайте отново.</string>
     <string name="action_rename">Преименуване</string>
+    <string name="account_biometric_error_failed">Биометричното удостоверяване е неуспешно. Опитайте отново.</string>
+    <string name="account_biometric_error_no_hardware">Биометричното удостоверяване не е налично на това устройство.</string>
+    <string name="account_biometric_error_not_enrolled">Няма регистрирани биометрични данни на това устройство. Добавете пръстов отпечатък или лице в настройките на устройството.</string>
+    <string name="account_biometric_error_unavailable">Биометричното удостоверяване в момента не е налично.</string>
+    <string name="biometric_authenticating">Удостоверяване…</string>
+    <string name="biometric_disable_failed">Биометричното удостоверяване не можа да бъде изключено.</string>
+    <string name="biometric_enroll_description">Удостоверете се, за да защитите паролата на профила си</string>
+    <string name="biometric_enroll_failed">Биометричното удостоверяване не можа да бъде включено.</string>
+    <string name="biometric_error_no_credential">За този профил няма запазен валиден биометричен вход. Отключете с паролата си и включете отново биометрията.</string>
+    <string name="biometric_unlock">Отключване</string>
+    <string name="biometric_unlock_title">Отключване на Jami</string>
+    <string name="error_no_account">Няма избран профил</string>
 </resources>

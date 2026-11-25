@@ -388,4 +388,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Llogaria u eksportua</string>
     <string name="snackbar_export_error">Eksportimi dështoi. Kontrolloni fjalëkalimin dhe riprovoni.</string>
     <string name="action_rename">Riemërtoje</string>
+    <string name="account_biometric_error_failed">Mirëfilltësimi biometrik dështoi. Riprovoni.</string>
+    <string name="account_biometric_error_no_hardware">Mirëfilltësimi biometrik nuk ofrohet në këtë pajisje.</string>
+    <string name="account_biometric_error_not_enrolled">Nuk ka të dhëna biometrike të regjistruara në këtë pajisje. Shtoni një shenjë gishti ose një fytyrë te rregullimet e pajisjes.</string>
+    <string name="account_biometric_error_unavailable">Mirëfilltësimi biometrik nuk ofrohet për momentin.</string>
+    <string name="biometric_authenticating">Po bëhet mirëfilltësimi…</string>
+    <string name="biometric_disable_failed">Mirëfilltësimi biometrik nuk mund të çaktivizohej.</string>
+    <string name="biometric_enroll_description">Bëni mirëfilltësimin për të mbrojtur fjalëkalimin e llogarisë</string>
+    <string name="biometric_enroll_failed">Mirëfilltësimi biometrik nuk mund të aktivizohej.</string>
+    <string name="biometric_error_no_credential">Për këtë llogari nuk ka hyrje biometrike të vlefshme të ruajtur. Shkyçeni me fjalëkalimin dhe aktivizoni sërish biometrinë.</string>
+    <string name="biometric_unlock">Shkyçe</string>
+    <string name="biometric_unlock_title">Shkyçe Jami-n</string>
+    <string name="error_no_account">S'është përzgjedhur llogari</string>
 </resources>

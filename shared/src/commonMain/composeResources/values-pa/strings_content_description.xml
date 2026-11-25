@@ -91,4 +91,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">ਸਪੀਕਰ ਚਾਲੂ</string>
     <string name="content_desc_speaker_off">ਸਪੀਕਰ ਬੰਦ</string>
     <string name="content_desc_hold">ਹੋਲਡ ਕਰੋ</string>
+    <string name="content_desc_selected">ਚੁਣਿਆ ਗਿਆ</string>
+    <string name="content_desc_not_selected">ਨਹੀਂ ਚੁਣਿਆ ਗਿਆ</string>
 </resources>

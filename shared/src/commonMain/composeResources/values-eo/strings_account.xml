@@ -299,4 +299,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Konto sukcese elportita</string>
     <string name="snackbar_export_error">Elportado malsukcesis. Kontrolu la pasvorton kaj reprovu.</string>
     <string name="action_rename">Alinomi</string>
+    <string name="account_biometric_error_failed">Biometrika aŭtentigo malsukcesis. Bonvolu reprovi.</string>
+    <string name="account_biometric_error_no_hardware">Biometrika aŭtentigo ne disponeblas en ĉi tiu aparato.</string>
+    <string name="account_biometric_error_not_enrolled">Neniu biometriko registrita en ĉi tiu aparato. Aldonu fingrospuron aŭ vizaĝon en la agordoj de la aparato.</string>
+    <string name="account_biometric_error_unavailable">Biometrika aŭtentigo nun ne disponeblas.</string>
+    <string name="biometric_authenticating">Aŭtentigado…</string>
+    <string name="biometric_disable_failed">Ne eblis malŝalti biometrikan aŭtentigon.</string>
+    <string name="biometric_enroll_description">Aŭtentigu por sekurigi la pasvorton de via konto</string>
+    <string name="biometric_enroll_failed">Ne eblis ŝalti biometrikan aŭtentigon.</string>
+    <string name="biometric_error_no_credential">Neniu valida biometrika ensaluto estas konservita por ĉi tiu konto. Malŝlosu per via pasvorto kaj reŝaltu biometrikon.</string>
+    <string name="biometric_unlock">Malŝlosi</string>
+    <string name="biometric_unlock_title">Malŝlosi Jami</string>
+    <string name="error_no_account">Neniu konto elektita</string>
 </resources>

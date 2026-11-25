@@ -201,4 +201,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="screen_title_account_settings">Хисапны урнаштыру</string>
     <string name="screen_title_blocked_contacts">Тотылган контактлар</string>
     <string name="certificates_status_banned">Блок</string>
+    <string name="account_biometric_error_failed">Биометрик аутентификация уңышсыз. Кабат тырышып карагыз.</string>
+    <string name="account_biometric_error_no_hardware">Бу җайланмада биометрик аутентификация юк.</string>
+    <string name="account_biometric_error_not_enrolled">Бу җайланмада биометрия теркәлмәгән. Җайланма көйләүләрендә бармак эзе яки йөз өстәгез.</string>
+    <string name="account_biometric_error_unavailable">Биометрик аутентификация хәзер мөмкин түгел.</string>
+    <string name="biometric_authenticating">Аутентификация…</string>
+    <string name="biometric_disable_failed">Биометрик аутентификацияне сүндереп булмады.</string>
+    <string name="biometric_enroll_description">Хисап язмасы серсүзен саклау өчен аутентификация узыгыз</string>
+    <string name="biometric_enroll_failed">Биометрик аутентификацияне кабызып булмады.</string>
+    <string name="biometric_error_no_credential">Бу хисап язмасы өчен дөрес биометрик керү сакланмаган. Серсүз белән ачыгыз һәм биометрияне яңадан кабызыгыз.</string>
+    <string name="biometric_unlock">Ачу</string>
+    <string name="biometric_unlock_title">Jami-ны ачу</string>
+    <string name="error_no_account">Хисап язмасы сайланмаган</string>
 </resources>

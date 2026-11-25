@@ -203,4 +203,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="screen_title_account_settings">حسابلارین تنظیماتلاری</string>
     <string name="screen_title_blocked_contacts">قفل اولونموش تماسلار</string>
     <string name="certificates_status_banned">بلوک</string>
+    <string name="account_biometric_error_failed">Biometrik doğrulama alınmadı. Yenidən cəhd edin.</string>
+    <string name="account_biometric_error_no_hardware">Bu cihazda biometrik doğrulama mövcud deyil.</string>
+    <string name="account_biometric_error_not_enrolled">Bu cihazda biometrik məlumat qeydə alınmayıb. Cihaz ayarlarında barmaq izi və ya üz əlavə edin.</string>
+    <string name="account_biometric_error_unavailable">Biometrik doğrulama hazırda əlçatan deyil.</string>
+    <string name="biometric_authenticating">Doğrulanır…</string>
+    <string name="biometric_disable_failed">Biometrik doğrulamanı söndürmək mümkün olmadı.</string>
+    <string name="biometric_enroll_description">Hesab parolunuzu qorumaq üçün doğrulayın</string>
+    <string name="biometric_enroll_failed">Biometrik doğrulamanı yandırmaq mümkün olmadı.</string>
+    <string name="biometric_error_no_credential">Bu hesab üçün etibarlı biometrik giriş saxlanılmayıb. Parolla kilidi açın və biometrikanı yenidən aktivləşdirin.</string>
+    <string name="biometric_unlock">Kilidi aç</string>
+    <string name="biometric_unlock_title">Jami kilidini aç</string>
+    <string name="error_no_account">Hesab seçilməyib</string>
 </resources>

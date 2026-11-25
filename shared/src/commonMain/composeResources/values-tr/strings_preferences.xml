@@ -128,4 +128,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">En son</string>
     <string name="pref_sortAlphabetical">A–Z</string>
     <string name="pref_sortUnreadFirst">Önce okunmamışlar</string>
+    <string name="pref_days_short">%1$dg</string>
+    <string name="pref_seconds_short">%1$dsn</string>
+    <string name="pref_history_forever">Süresiz</string>
+    <string name="pref_option_auto">Otomatik</string>
 </resources>

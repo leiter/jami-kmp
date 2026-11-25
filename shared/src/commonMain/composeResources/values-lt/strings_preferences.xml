@@ -130,4 +130,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">Naujausi</string>
     <string name="pref_sortAlphabetical">A–Ž</string>
     <string name="pref_sortUnreadFirst">Pirma neperskaityti</string>
+    <string name="pref_days_short">%1$d d.</string>
+    <string name="pref_seconds_short">%1$d s</string>
+    <string name="pref_history_forever">Visam laikui</string>
+    <string name="pref_option_auto">Automatiškai</string>
 </resources>

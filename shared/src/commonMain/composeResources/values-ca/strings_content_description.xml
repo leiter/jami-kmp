@@ -101,4 +101,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Altaveu activat</string>
     <string name="content_desc_speaker_off">Altaveu desactivat</string>
     <string name="content_desc_hold">Posa en espera</string>
+    <string name="content_desc_selected">Seleccionat</string>
+    <string name="content_desc_not_selected">No seleccionat</string>
 </resources>

@@ -300,4 +300,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">החשבון יוצא בהצלחה</string>
     <string name="snackbar_export_error">הייצוא נכשל. נא לבדוק את הסיסמה ולנסות שוב.</string>
     <string name="action_rename">שינוי שם</string>
+    <string name="account_biometric_error_failed">האימות הביומטרי נכשל. נא לנסות שוב.</string>
+    <string name="account_biometric_error_no_hardware">אימות ביומטרי אינו זמין במכשיר זה.</string>
+    <string name="account_biometric_error_not_enrolled">לא רשומים נתונים ביומטריים במכשיר זה. יש להוסיף טביעת אצבע או פנים בהגדרות המכשיר.</string>
+    <string name="account_biometric_error_unavailable">אימות ביומטרי אינו זמין כרגע.</string>
+    <string name="biometric_authenticating">מאמת…</string>
+    <string name="biometric_disable_failed">לא ניתן לכבות את האימות הביומטרי.</string>
+    <string name="biometric_enroll_description">יש לאמת כדי לאבטח את סיסמת החשבון</string>
+    <string name="biometric_enroll_failed">לא ניתן להפעיל את האימות הביומטרי.</string>
+    <string name="biometric_error_no_credential">לא שמורה כניסה ביומטרית תקפה לחשבון זה. יש לבטל את הנעילה עם הסיסמה ולהפעיל שוב את הזיהוי הביומטרי.</string>
+    <string name="biometric_unlock">ביטול נעילה</string>
+    <string name="biometric_unlock_title">ביטול נעילת Jami</string>
+    <string name="error_no_account">לא נבחר חשבון</string>
 </resources>

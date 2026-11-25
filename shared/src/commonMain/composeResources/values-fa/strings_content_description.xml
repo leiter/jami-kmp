@@ -95,4 +95,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">بلندگو روشن</string>
     <string name="content_desc_speaker_off">بلندگو خاموش</string>
     <string name="content_desc_hold">نگه داشتن تماس</string>
+    <string name="content_desc_selected">انتخاب‌شده</string>
+    <string name="content_desc_not_selected">انتخاب‌نشده</string>
 </resources>

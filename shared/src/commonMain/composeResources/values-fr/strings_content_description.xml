@@ -105,4 +105,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Haut-parleur activé</string>
     <string name="content_desc_speaker_off">Haut-parleur désactivé</string>
     <string name="content_desc_hold">Mettre en attente</string>
+    <string name="content_desc_selected">Sélectionné</string>
+    <string name="content_desc_not_selected">Non sélectionné</string>
 </resources>

@@ -376,4 +376,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Учётная запись экспортирована</string>
     <string name="snackbar_export_error">Не удалось экспортировать. Проверьте пароль и повторите попытку.</string>
     <string name="action_rename">Переименовать</string>
+    <string name="account_biometric_error_failed">Биометрическая аутентификация не удалась. Попробуйте ещё раз.</string>
+    <string name="account_biometric_error_no_hardware">Биометрическая аутентификация недоступна на этом устройстве.</string>
+    <string name="account_biometric_error_not_enrolled">На этом устройстве не зарегистрированы биометрические данные. Добавьте отпечаток пальца или лицо в настройках устройства.</string>
+    <string name="account_biometric_error_unavailable">Биометрическая аутентификация сейчас недоступна.</string>
+    <string name="biometric_authenticating">Аутентификация…</string>
+    <string name="biometric_disable_failed">Не удалось отключить биометрическую аутентификацию.</string>
+    <string name="biometric_enroll_description">Пройдите аутентификацию, чтобы защитить пароль учётной записи</string>
+    <string name="biometric_enroll_failed">Не удалось включить биометрическую аутентификацию.</string>
+    <string name="biometric_error_no_credential">Для этой учётной записи не сохранён действительный биометрический вход. Разблокируйте паролем и снова включите биометрию.</string>
+    <string name="biometric_unlock">Разблокировать</string>
+    <string name="biometric_unlock_title">Разблокировать Jami</string>
+    <string name="error_no_account">Учётная запись не выбрана</string>
 </resources>

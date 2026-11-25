@@ -36,4 +36,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_raise_hand">കൈ ഉയര് ത്തുക</string>
     <string name="content_desc_send_call_message">Hantar pesan</string>
     <string name="content_desc_state_muted">നിശബ്ദത</string>
+    <string name="content_desc_lower_hand">താഴത്തെ കൈ</string>
+    <string name="content_desc_selected">Dipilih</string>
+    <string name="content_desc_not_selected">Tidak dipilih</string>
 </resources>

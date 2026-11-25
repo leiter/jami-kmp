@@ -388,4 +388,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">A fiók exportálva</string>
     <string name="snackbar_export_error">Az exportálás sikertelen. Ellenőrizd a jelszót, és próbáld újra.</string>
     <string name="action_rename">Átnevezés</string>
+    <string name="account_biometric_error_failed">A biometrikus hitelesítés sikertelen. Próbáld újra.</string>
+    <string name="account_biometric_error_no_hardware">A biometrikus hitelesítés nem érhető el ezen az eszközön.</string>
+    <string name="account_biometric_error_not_enrolled">Ezen az eszközön nincs regisztrált biometrikus adat. Adj hozzá ujjlenyomatot vagy arcot az eszköz beállításaiban.</string>
+    <string name="account_biometric_error_unavailable">A biometrikus hitelesítés jelenleg nem érhető el.</string>
+    <string name="biometric_authenticating">Hitelesítés…</string>
+    <string name="biometric_disable_failed">Nem sikerült kikapcsolni a biometrikus hitelesítést.</string>
+    <string name="biometric_enroll_description">Hitelesítsd magad a fiókjelszó védelméhez</string>
+    <string name="biometric_enroll_failed">Nem sikerült bekapcsolni a biometrikus hitelesítést.</string>
+    <string name="biometric_error_no_credential">Ehhez a fiókhoz nincs érvényes biometrikus bejelentkezés mentve. Oldd fel a jelszóval, és kapcsold be újra a biometrikus azonosítást.</string>
+    <string name="biometric_unlock">Feloldás</string>
+    <string name="biometric_unlock_title">Jami feloldása</string>
+    <string name="error_no_account">Nincs kiválasztott fiók</string>
 </resources>

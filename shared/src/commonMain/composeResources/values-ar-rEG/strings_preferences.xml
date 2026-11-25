@@ -68,4 +68,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_max_file_size_value">%1$d ميجابايت</string>
     <string name="pref_category_messages">رسائل</string>
     <string name="pref_category_advanced">إعدادات متقدمة</string>
+    <string name="pref_days_short">%1$dيوم</string>
+    <string name="pref_seconds_short">%1$dث</string>
 </resources>

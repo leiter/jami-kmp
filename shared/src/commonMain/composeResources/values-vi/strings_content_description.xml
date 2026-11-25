@@ -89,4 +89,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Loa ngoài bật</string>
     <string name="content_desc_speaker_off">Loa ngoài tắt</string>
     <string name="content_desc_hold">Giữ máy</string>
+    <string name="content_desc_selected">Đã chọn</string>
+    <string name="content_desc_not_selected">Chưa chọn</string>
 </resources>

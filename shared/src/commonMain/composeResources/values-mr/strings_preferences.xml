@@ -119,4 +119,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">अलीकडील</string>
     <string name="pref_sortAlphabetical">अ–ज्ञ</string>
     <string name="pref_sortUnreadFirst">न वाचलेले आधी</string>
+    <string name="pref_days_short">%1$dदि</string>
+    <string name="pref_seconds_short">%1$dसे.</string>
+    <string name="pref_history_forever">कायमचे</string>
+    <string name="pref_option_auto">स्वयंचलित</string>
 </resources>

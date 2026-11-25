@@ -94,4 +94,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Bozgorailua aktibatuta</string>
     <string name="content_desc_speaker_off">Bozgorailua desaktibatuta</string>
     <string name="content_desc_hold">Jarri zain</string>
+    <string name="content_desc_selected">Hautatuta</string>
+    <string name="content_desc_not_selected">Hautatu gabe</string>
 </resources>

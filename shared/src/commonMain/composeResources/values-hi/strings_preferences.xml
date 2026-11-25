@@ -120,4 +120,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">हाल की</string>
     <string name="pref_sortAlphabetical">अ–ज्ञ</string>
     <string name="pref_sortUnreadFirst">पहले अपठित</string>
+    <string name="pref_days_short">%1$d दिन</string>
+    <string name="pref_seconds_short">%1$d से॰</string>
+    <string name="pref_history_forever">हमेशा के लिए</string>
+    <string name="pref_option_auto">स्वचालित</string>
 </resources>

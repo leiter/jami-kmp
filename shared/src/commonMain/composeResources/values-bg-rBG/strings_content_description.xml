@@ -36,4 +36,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_raise_hand">Вдигнете ръка</string>
     <string name="content_desc_send_call_message">Изпращане на съобщение</string>
     <string name="content_desc_state_muted">Умряло</string>
+    <string name="content_desc_lower_hand">Ниска ръка</string>
 </resources>

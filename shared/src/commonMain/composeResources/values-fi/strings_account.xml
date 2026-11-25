@@ -388,4 +388,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_export">Vie</string>
     <string name="snackbar_export_success">Tili viety</string>
     <string name="snackbar_export_error">Vienti epäonnistui. Tarkista salasana ja yritä uudelleen.</string>
+    <string name="account_biometric_error_failed">Biometrinen tunnistus epäonnistui. Yritä uudelleen.</string>
+    <string name="account_biometric_error_no_hardware">Biometrinen tunnistus ei ole käytettävissä tällä laitteella.</string>
+    <string name="account_biometric_error_not_enrolled">Laitteeseen ei ole rekisteröity biometriikkaa. Lisää sormenjälki tai kasvot laitteen asetuksissa.</string>
+    <string name="account_biometric_error_unavailable">Biometrinen tunnistus ei ole tällä hetkellä käytettävissä.</string>
+    <string name="biometric_authenticating">Tunnistetaan…</string>
+    <string name="biometric_disable_failed">Biometrisen tunnistuksen poistaminen käytöstä epäonnistui.</string>
+    <string name="biometric_enroll_description">Tunnistaudu suojataksesi tilisi salasanan</string>
+    <string name="biometric_enroll_failed">Biometrisen tunnistuksen ottaminen käyttöön epäonnistui.</string>
+    <string name="biometric_error_no_credential">Tälle tilille ei ole tallennettu kelvollista biometristä kirjautumista. Avaa lukitus salasanalla ja ota biometriikka uudelleen käyttöön.</string>
+    <string name="biometric_unlock">Avaa lukitus</string>
+    <string name="biometric_unlock_title">Avaa Jamin lukitus</string>
+    <string name="error_no_account">Tiliä ei ole valittu</string>
 </resources>

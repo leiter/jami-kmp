@@ -159,4 +159,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">Recente</string>
     <string name="pref_sortAlphabetical">A–Z</string>
     <string name="pref_sortUnreadFirst">Necitite mai întâi</string>
+    <string name="pref_days_short">%1$d z</string>
+    <string name="pref_seconds_short">%1$d s</string>
+    <string name="pref_history_forever">Pentru totdeauna</string>
+    <string name="pref_option_auto">Automat</string>
 </resources>

@@ -119,4 +119,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">Za hivi karibuni</string>
     <string name="pref_sortAlphabetical">A–Z</string>
     <string name="pref_sortUnreadFirst">Ambazo hazijasomwa kwanza</string>
+    <string name="pref_days_short">siku %1$d</string>
+    <string name="pref_seconds_short">sek %1$d</string>
+    <string name="pref_history_forever">Milele</string>
+    <string name="pref_option_auto">Otomatiki</string>
 </resources>

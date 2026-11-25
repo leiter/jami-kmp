@@ -302,4 +302,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">ส่งออกบัญชีแล้ว</string>
     <string name="snackbar_export_error">ส่งออกไม่สำเร็จ ตรวจสอบรหัสผ่านแล้วลองอีกครั้ง</string>
     <string name="action_rename">เปลี่ยนชื่อ</string>
+    <string name="account_biometric_error_failed">การยืนยันตัวตนด้วยไบโอเมตริกล้มเหลว โปรดลองอีกครั้ง</string>
+    <string name="account_biometric_error_no_hardware">การยืนยันตัวตนด้วยไบโอเมตริกไม่พร้อมใช้งานบนอุปกรณ์นี้</string>
+    <string name="account_biometric_error_not_enrolled">ไม่มีข้อมูลไบโอเมตริกที่ลงทะเบียนไว้ในอุปกรณ์นี้ โปรดเพิ่มลายนิ้วมือหรือใบหน้าในการตั้งค่าอุปกรณ์</string>
+    <string name="account_biometric_error_unavailable">การยืนยันตัวตนด้วยไบโอเมตริกไม่พร้อมใช้งานในขณะนี้</string>
+    <string name="biometric_authenticating">กำลังยืนยันตัวตน…</string>
+    <string name="biometric_disable_failed">ไม่สามารถปิดการยืนยันตัวตนด้วยไบโอเมตริกได้</string>
+    <string name="biometric_enroll_description">ยืนยันตัวตนเพื่อปกป้องรหัสผ่านบัญชีของคุณ</string>
+    <string name="biometric_enroll_failed">ไม่สามารถเปิดการยืนยันตัวตนด้วยไบโอเมตริกได้</string>
+    <string name="biometric_error_no_credential">ไม่มีการเข้าสู่ระบบด้วยไบโอเมตริกที่ถูกต้องสำหรับบัญชีนี้ ปลดล็อกด้วยรหัสผ่านแล้วเปิดไบโอเมตริกอีกครั้ง</string>
+    <string name="biometric_unlock">ปลดล็อก</string>
+    <string name="biometric_unlock_title">ปลดล็อก Jami</string>
+    <string name="error_no_account">ไม่ได้เลือกบัญชี</string>
 </resources>

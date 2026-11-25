@@ -292,4 +292,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="screen_title_account_settings">Iɣewwaṛen n umiḍan</string>
     <string name="screen_title_blocked_contacts">Inermisen iwaḥlen</string>
     <string name="certificates_status_banned">Sewḥel</string>
+    <string name="account_biometric_error_failed">Yecceḍ usesteb abayumetri. Ɛreḍ tikkelt-nniḍen.</string>
+    <string name="account_biometric_error_no_hardware">Asesteb abayumetri ulac-it deg yibenk-a.</string>
+    <string name="account_biometric_error_not_enrolled">Ulac isefka ibayumetriyen deg yibenk-a. Rnu adsil n uḍad neɣ udem deg yiɣewwaren n yibenk.</string>
+    <string name="account_biometric_error_unavailable">Asesteb abayumetri ulac-it akka tura.</string>
+    <string name="biometric_authenticating">Asesteb…</string>
+    <string name="biometric_disable_failed">Ur yezmir ara ad yensa usesteb abayumetri.</string>
+    <string name="biometric_enroll_description">Sesteb akken ad temmestneḍ awal uffir n umiḍan-ik</string>
+    <string name="biometric_enroll_failed">Ur yezmir ara ad yermed usesteb abayumetri.</string>
+    <string name="biometric_error_no_credential">Ulac tuqqna tabayumetrit tameɣtut i yettwaskelsen i umiḍan-a. Serreḥ s wawal uffir syen rmed tikkelt-nniḍen abayumetri.</string>
+    <string name="biometric_unlock">Serreḥ</string>
+    <string name="biometric_unlock_title">Serreḥ Jami</string>
+    <string name="error_no_account">Ulac amiḍan yettwafernen</string>
 </resources>

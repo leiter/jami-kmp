@@ -26,4 +26,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_handRaised">Ruke podignute</string>
     <string name="call_dtmf_dialpad">Ugrađivanje</string>
     <string name="call_participant_enable_video">Omogući video</string>
+    <string name="call_lower_hand">Dolnja ruka</string>
 </resources>

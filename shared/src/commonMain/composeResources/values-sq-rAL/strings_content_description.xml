@@ -103,4 +103,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Altoparlanti i ndezur</string>
     <string name="content_desc_speaker_off">Altoparlanti i fikur</string>
     <string name="content_desc_hold">Vëre në pritje</string>
+    <string name="content_desc_selected">I përzgjedhur</string>
+    <string name="content_desc_not_selected">I papërzgjedhur</string>
 </resources>

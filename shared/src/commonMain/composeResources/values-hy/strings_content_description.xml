@@ -94,4 +94,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Բարձրախոսը միացված է</string>
     <string name="content_desc_speaker_off">Բարձրախոսն անջատված է</string>
     <string name="content_desc_hold">Պահել սպասման մեջ</string>
+    <string name="content_desc_selected">Ընտրված է</string>
+    <string name="content_desc_not_selected">Ընտրված չէ</string>
 </resources>

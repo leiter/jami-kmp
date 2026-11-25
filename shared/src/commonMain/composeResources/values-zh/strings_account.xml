@@ -388,4 +388,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_export">导出</string>
     <string name="snackbar_export_success">账户导出成功</string>
     <string name="snackbar_export_error">导出失败。请检查密码后重试。</string>
+    <string name="account_biometric_error_failed">生物识别验证失败。请重试。</string>
+    <string name="account_biometric_error_no_hardware">此设备不支持生物识别验证。</string>
+    <string name="account_biometric_error_not_enrolled">此设备未录入生物识别信息。请在设备设置中添加指纹或面容。</string>
+    <string name="account_biometric_error_unavailable">生物识别验证当前不可用。</string>
+    <string name="biometric_authenticating">正在验证…</string>
+    <string name="biometric_disable_failed">无法关闭生物识别验证。</string>
+    <string name="biometric_enroll_description">验证身份以保护你的账户密码</string>
+    <string name="biometric_enroll_failed">无法开启生物识别验证。</string>
+    <string name="biometric_error_no_credential">此账户没有保存有效的生物识别登录。请用密码解锁后重新开启生物识别。</string>
+    <string name="biometric_unlock">解锁</string>
+    <string name="biometric_unlock_title">解锁 Jami</string>
+    <string name="error_no_account">未选择账户</string>
 </resources>

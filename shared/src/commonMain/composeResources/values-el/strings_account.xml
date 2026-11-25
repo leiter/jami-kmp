@@ -308,4 +308,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Ο λογαριασμός εξήχθη</string>
     <string name="snackbar_export_error">Η εξαγωγή απέτυχε. Ελέγξτε τον κωδικό και δοκιμάστε ξανά.</string>
     <string name="action_rename">Μετονομασία</string>
+    <string name="account_biometric_error_failed">Ο βιομετρικός έλεγχος ταυτότητας απέτυχε. Δοκιμάστε ξανά.</string>
+    <string name="account_biometric_error_no_hardware">Ο βιομετρικός έλεγχος ταυτότητας δεν είναι διαθέσιμος σε αυτή τη συσκευή.</string>
+    <string name="account_biometric_error_not_enrolled">Δεν υπάρχουν καταχωρισμένα βιομετρικά στοιχεία σε αυτή τη συσκευή. Προσθέστε δακτυλικό αποτύπωμα ή πρόσωπο στις ρυθμίσεις της συσκευής.</string>
+    <string name="account_biometric_error_unavailable">Ο βιομετρικός έλεγχος ταυτότητας δεν είναι διαθέσιμος αυτή τη στιγμή.</string>
+    <string name="biometric_authenticating">Έλεγχος ταυτότητας…</string>
+    <string name="biometric_disable_failed">Δεν ήταν δυνατή η απενεργοποίηση του βιομετρικού ελέγχου ταυτότητας.</string>
+    <string name="biometric_enroll_description">Πραγματοποιήστε έλεγχο ταυτότητας για να προστατέψετε τον κωδικό του λογαριασμού σας</string>
+    <string name="biometric_enroll_failed">Δεν ήταν δυνατή η ενεργοποίηση του βιομετρικού ελέγχου ταυτότητας.</string>
+    <string name="biometric_error_no_credential">Δεν υπάρχει αποθηκευμένη έγκυρη βιομετρική σύνδεση για αυτόν τον λογαριασμό. Ξεκλειδώστε με τον κωδικό σας και ενεργοποιήστε ξανά τα βιομετρικά.</string>
+    <string name="biometric_unlock">Ξεκλείδωμα</string>
+    <string name="biometric_unlock_title">Ξεκλείδωμα του Jami</string>
+    <string name="error_no_account">Δεν έχει επιλεγεί λογαριασμός</string>
 </resources>

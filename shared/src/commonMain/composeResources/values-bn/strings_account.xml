@@ -302,4 +302,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">অ্যাকাউন্ট সফলভাবে রপ্তানি হয়েছে</string>
     <string name="snackbar_export_error">রপ্তানি ব্যর্থ হয়েছে। পাসওয়ার্ড যাচাই করে আবার চেষ্টা করুন।</string>
     <string name="action_rename">নাম পরিবর্তন করুন</string>
+    <string name="account_biometric_error_failed">বায়োমেট্রিক যাচাইকরণ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।</string>
+    <string name="account_biometric_error_no_hardware">এই ডিভাইসে বায়োমেট্রিক যাচাইকরণ উপলব্ধ নেই।</string>
+    <string name="account_biometric_error_not_enrolled">এই ডিভাইসে কোনো বায়োমেট্রিক নিবন্ধিত নেই। ডিভাইসের সেটিংসে একটি আঙুলের ছাপ বা মুখ যোগ করুন।</string>
+    <string name="account_biometric_error_unavailable">বায়োমেট্রিক যাচাইকরণ এখন উপলব্ধ নেই।</string>
+    <string name="biometric_authenticating">যাচাই করা হচ্ছে…</string>
+    <string name="biometric_disable_failed">বায়োমেট্রিক যাচাইকরণ বন্ধ করা যায়নি।</string>
+    <string name="biometric_enroll_description">আপনার অ্যাকাউন্টের পাসওয়ার্ড সুরক্ষিত করতে যাচাই করুন</string>
+    <string name="biometric_enroll_failed">বায়োমেট্রিক যাচাইকরণ চালু করা যায়নি।</string>
+    <string name="biometric_error_no_credential">এই অ্যাকাউন্টের জন্য কোনো বৈধ বায়োমেট্রিক লগইন সংরক্ষিত নেই। পাসওয়ার্ড দিয়ে আনলক করে আবার বায়োমেট্রিক চালু করুন।</string>
+    <string name="biometric_unlock">আনলক</string>
+    <string name="biometric_unlock_title">Jami আনলক করুন</string>
+    <string name="error_no_account">কোনো অ্যাকাউন্ট নির্বাচিত নয়</string>
 </resources>

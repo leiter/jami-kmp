@@ -101,4 +101,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">擴音已開啟</string>
     <string name="content_desc_speaker_off">擴音已關閉</string>
     <string name="content_desc_hold">保留通話</string>
+    <string name="content_desc_selected">已選取</string>
+    <string name="content_desc_not_selected">未選取</string>
 </resources>

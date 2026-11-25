@@ -39,4 +39,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="video_loss_retry">Кабатлау</string>
     <string name="video_loss_audio_only">Аудио гына</string>
     <string name="conference_waiting_participants">Катнашучыларны көтү…</string>
+    <string name="call_lower_hand">Түбән кул</string>
 </resources>

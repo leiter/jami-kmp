@@ -94,4 +94,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">ஒலிபெருக்கி இயக்கத்தில்</string>
     <string name="content_desc_speaker_off">ஒலிபெருக்கி அணைப்பில்</string>
     <string name="content_desc_hold">நிறுத்தி வை</string>
+    <string name="content_desc_selected">தேர்ந்தெடுக்கப்பட்டது</string>
+    <string name="content_desc_not_selected">தேர்ந்தெடுக்கப்படவில்லை</string>
 </resources>

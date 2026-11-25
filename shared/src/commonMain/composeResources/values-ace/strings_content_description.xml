@@ -30,4 +30,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_presence_offline">اونلاين</string>
     <string name="content_desc_raise_hand">كرانڽ</string>
     <string name="content_desc_state_muted">ساكيت</string>
+    <string name="content_desc_lower_hand">يڠ دالم لالو</string>
 </resources>

@@ -299,4 +299,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">खाते निर्यात झाले</string>
     <string name="snackbar_export_error">निर्यात अयशस्वी. पासवर्ड तपासा आणि पुन्हा प्रयत्न करा.</string>
     <string name="action_rename">नाव बदला</string>
+    <string name="account_biometric_error_failed">बायोमेट्रिक प्रमाणीकरण अयशस्वी. कृपया पुन्हा प्रयत्न करा.</string>
+    <string name="account_biometric_error_no_hardware">या डिव्हाइसवर बायोमेट्रिक प्रमाणीकरण उपलब्ध नाही.</string>
+    <string name="account_biometric_error_not_enrolled">या डिव्हाइसवर कोणतेही बायोमेट्रिक नोंदवलेले नाही. डिव्हाइस सेटिंग्जमध्ये फिंगरप्रिंट किंवा चेहरा जोडा.</string>
+    <string name="account_biometric_error_unavailable">बायोमेट्रिक प्रमाणीकरण सध्या उपलब्ध नाही.</string>
+    <string name="biometric_authenticating">प्रमाणीकरण करत आहे…</string>
+    <string name="biometric_disable_failed">बायोमेट्रिक प्रमाणीकरण बंद करता आले नाही.</string>
+    <string name="biometric_enroll_description">तुमच्या खात्याचा पासवर्ड सुरक्षित करण्यासाठी प्रमाणीकरण करा</string>
+    <string name="biometric_enroll_failed">बायोमेट्रिक प्रमाणीकरण सुरू करता आले नाही.</string>
+    <string name="biometric_error_no_credential">या खात्यासाठी कोणतेही वैध बायोमेट्रिक लॉगिन जतन केलेले नाही. पासवर्डने अनलॉक करा आणि बायोमेट्रिक पुन्हा सुरू करा.</string>
+    <string name="biometric_unlock">अनलॉक करा</string>
+    <string name="biometric_unlock_title">Jami अनलॉक करा</string>
+    <string name="error_no_account">कोणतेही खाते निवडलेले नाही</string>
 </resources>

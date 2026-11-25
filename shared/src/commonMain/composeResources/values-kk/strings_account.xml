@@ -302,4 +302,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Тіркелгі экспортталды</string>
     <string name="snackbar_export_error">Экспорттау сәтсіз аяқталды. Құпиясөзді тексеріп, қайталап көріңіз.</string>
     <string name="action_rename">Атын өзгерту</string>
+    <string name="account_biometric_error_failed">Биометриялық аутентификация сәтсіз аяқталды. Қайталап көріңіз.</string>
+    <string name="account_biometric_error_no_hardware">Бұл құрылғыда биометриялық аутентификация қолжетімсіз.</string>
+    <string name="account_biometric_error_not_enrolled">Бұл құрылғыда биометриялық деректер тіркелмеген. Құрылғы параметрлерінде саусақ ізін немесе бетті қосыңыз.</string>
+    <string name="account_biometric_error_unavailable">Биометриялық аутентификация қазір қолжетімсіз.</string>
+    <string name="biometric_authenticating">Аутентификация…</string>
+    <string name="biometric_disable_failed">Биометриялық аутентификацияны өшіру мүмкін болмады.</string>
+    <string name="biometric_enroll_description">Тіркелгі құпиясөзін қорғау үшін аутентификациядан өтіңіз</string>
+    <string name="biometric_enroll_failed">Биометриялық аутентификацияны қосу мүмкін болмады.</string>
+    <string name="biometric_error_no_credential">Бұл тіркелгі үшін жарамды биометриялық кіру сақталмаған. Құпиясөзбен құлпын ашып, биометрияны қайта қосыңыз.</string>
+    <string name="biometric_unlock">Құлпын ашу</string>
+    <string name="biometric_unlock_title">Jami құлпын ашу</string>
+    <string name="error_no_account">Тіркелгі таңдалмаған</string>
 </resources>

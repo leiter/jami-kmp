@@ -92,4 +92,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">เปิดลำโพง</string>
     <string name="content_desc_speaker_off">ปิดลำโพง</string>
     <string name="content_desc_hold">พักสาย</string>
+    <string name="content_desc_selected">เลือกแล้ว</string>
+    <string name="content_desc_not_selected">ไม่ได้เลือก</string>
 </resources>

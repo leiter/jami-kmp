@@ -299,4 +299,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">கணக்கு ஏற்றுமதி செய்யப்பட்டது</string>
     <string name="snackbar_export_error">ஏற்றுமதி தோல்வியடைந்தது. கடவுச்சொல்லைச் சரிபார்த்து மீண்டும் முயலவும்.</string>
     <string name="action_rename">மறுபெயரிடு</string>
+    <string name="account_biometric_error_failed">பயோமெட்ரிக் அங்கீகாரம் தோல்வியடைந்தது. மீண்டும் முயலவும்.</string>
+    <string name="account_biometric_error_no_hardware">இந்தச் சாதனத்தில் பயோமெட்ரிக் அங்கீகாரம் கிடைக்கவில்லை.</string>
+    <string name="account_biometric_error_not_enrolled">இந்தச் சாதனத்தில் பயோமெட்ரிக் எதுவும் பதிவு செய்யப்படவில்லை. சாதன அமைப்புகளில் கைரேகை அல்லது முகத்தைச் சேர்க்கவும்.</string>
+    <string name="account_biometric_error_unavailable">பயோமெட்ரிக் அங்கீகாரம் தற்போது கிடைக்கவில்லை.</string>
+    <string name="biometric_authenticating">அங்கீகரிக்கிறது…</string>
+    <string name="biometric_disable_failed">பயோமெட்ரிக் அங்கீகாரத்தை முடக்க முடியவில்லை.</string>
+    <string name="biometric_enroll_description">உங்கள் கணக்கின் கடவுச்சொல்லைப் பாதுகாக்க அங்கீகரிக்கவும்</string>
+    <string name="biometric_enroll_failed">பயோமெட்ரிக் அங்கீகாரத்தை இயக்க முடியவில்லை.</string>
+    <string name="biometric_error_no_credential">இந்தக் கணக்கிற்குச் செல்லுபடியான பயோமெட்ரிக் உள்நுழைவு சேமிக்கப்படவில்லை. கடவுச்சொல்லுடன் திறந்து பயோமெட்ரிக்கை மீண்டும் இயக்கவும்.</string>
+    <string name="biometric_unlock">திற</string>
+    <string name="biometric_unlock_title">Jami-ஐத் திற</string>
+    <string name="error_no_account">கணக்கு எதுவும் தேர்ந்தெடுக்கப்படவில்லை</string>
 </resources>

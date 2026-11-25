@@ -35,4 +35,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_raise_hand">ال قالديريب</string>
     <string name="content_desc_send_call_message">پيام ارسال کن</string>
     <string name="content_desc_state_muted">ساکئت</string>
+    <string name="content_desc_lower_hand">آلتی ال</string>
 </resources>

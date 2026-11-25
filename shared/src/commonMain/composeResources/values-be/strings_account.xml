@@ -300,4 +300,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Уліковы запіс экспартаваны</string>
     <string name="snackbar_export_error">Экспарт не ўдаўся. Праверце пароль і паспрабуйце яшчэ раз.</string>
     <string name="action_rename">Перайменаваць</string>
+    <string name="account_biometric_error_failed">Біяметрычная аўтэнтыфікацыя не ўдалася. Паспрабуйце яшчэ раз.</string>
+    <string name="account_biometric_error_no_hardware">Біяметрычная аўтэнтыфікацыя недаступная на гэтай прыладзе.</string>
+    <string name="account_biometric_error_not_enrolled">На гэтай прыладзе не зарэгістраваны біяметрычныя даныя. Дадайце адбітак пальца або твар у наладах прылады.</string>
+    <string name="account_biometric_error_unavailable">Біяметрычная аўтэнтыфікацыя зараз недаступная.</string>
+    <string name="biometric_authenticating">Аўтэнтыфікацыя…</string>
+    <string name="biometric_disable_failed">Не ўдалося адключыць біяметрычную аўтэнтыфікацыю.</string>
+    <string name="biometric_enroll_description">Прайдзіце аўтэнтыфікацыю, каб абараніць пароль уліковага запісу</string>
+    <string name="biometric_enroll_failed">Не ўдалося ўключыць біяметрычную аўтэнтыфікацыю.</string>
+    <string name="biometric_error_no_credential">Для гэтага ўліковага запісу не захаваны сапраўдны біяметрычны ўваход. Разблакіруйце паролем і зноў уключыце біяметрыю.</string>
+    <string name="biometric_unlock">Разблакіраваць</string>
+    <string name="biometric_unlock_title">Разблакіраваць Jami</string>
+    <string name="error_no_account">Уліковы запіс не выбраны</string>
 </resources>

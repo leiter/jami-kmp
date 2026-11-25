@@ -333,4 +333,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="no_registered_name_for_account">登録済みのユーザー名はありません</string>
     <string name="account_biometric_setup_title">生体認証を有効にする</string>
     <string name="account_biometric_disable_title">生体認証を無効にする</string>
+    <string name="account_biometric_error_failed">生体認証に失敗しました。もう一度お試しください。</string>
+    <string name="account_biometric_error_no_hardware">このデバイスでは生体認証を利用できません。</string>
+    <string name="account_biometric_error_not_enrolled">このデバイスには生体情報が登録されていません。デバイスの設定で指紋または顔を追加してください。</string>
+    <string name="account_biometric_error_unavailable">生体認証は現在利用できません。</string>
+    <string name="biometric_authenticating">認証中…</string>
+    <string name="biometric_disable_failed">生体認証を無効にできませんでした。</string>
+    <string name="biometric_enroll_description">アカウントのパスワードを保護するために認証してください</string>
+    <string name="biometric_enroll_failed">生体認証を有効にできませんでした。</string>
+    <string name="biometric_error_no_credential">このアカウントには有効な生体認証ログインが保存されていません。パスワードでロックを解除し、生体認証をもう一度有効にしてください。</string>
+    <string name="biometric_unlock">ロック解除</string>
+    <string name="biometric_unlock_title">Jami のロックを解除</string>
+    <string name="error_no_account">アカウントが選択されていません</string>
 </resources>

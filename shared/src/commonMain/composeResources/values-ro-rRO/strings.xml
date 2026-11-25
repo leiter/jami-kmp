@@ -512,4 +512,26 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_post_notifications_title">Permite notificările</string>
     <string name="permission_dialog_post_notifications_blocked_message">Notificările sunt dezactivate pentru Jami. Fără ele vei pierde apelurile și mesajele primite. Activează notificările pentru Jami în setările dispozitivului.</string>
     <string name="permission_dialog_battery_dismiss">Nu acum</string>
+    <string name="notif_channel_reconnect">Se sincronizează</string>
+    <string name="action_call_resume">Reia apelul</string>
+    <string name="date_today">Azi</string>
+    <string name="date_yesterday">Ieri</string>
+    <string name="date_full_format">%2$d %1$s %3$d</string>
+    <string name="date_month_1">ianuarie</string>
+    <string name="date_month_2">februarie</string>
+    <string name="date_month_3">martie</string>
+    <string name="date_month_4">aprilie</string>
+    <string name="date_month_5">mai</string>
+    <string name="date_month_6">iunie</string>
+    <string name="date_month_7">iulie</string>
+    <string name="date_month_8">august</string>
+    <string name="date_month_9">septembrie</string>
+    <string name="date_month_10">octombrie</string>
+    <string name="date_month_11">noiembrie</string>
+    <string name="date_month_12">decembrie</string>
+    <string name="time_now_short">Acum</string>
+    <string name="time_minutes_short">%1$d m</string>
+    <string name="time_hours_short">%1$d h</string>
+    <string name="time_days_short">%1$d z</string>
+    <string name="time_weeks_short">%1$dsăpt</string>
 </resources>

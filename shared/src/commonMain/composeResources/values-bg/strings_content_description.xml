@@ -95,4 +95,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Високоговорителят е включен</string>
     <string name="content_desc_speaker_off">Високоговорителят е изключен</string>
     <string name="content_desc_hold">Задържане</string>
+    <string name="content_desc_selected">Избрано</string>
+    <string name="content_desc_not_selected">Не е избрано</string>
 </resources>

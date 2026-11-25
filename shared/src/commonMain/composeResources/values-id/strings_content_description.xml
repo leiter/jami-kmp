@@ -92,4 +92,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Pengeras suara aktif</string>
     <string name="content_desc_speaker_off">Pengeras suara mati</string>
     <string name="content_desc_hold">Tahan panggilan</string>
+    <string name="content_desc_selected">Dipilih</string>
+    <string name="content_desc_not_selected">Tidak dipilih</string>
 </resources>

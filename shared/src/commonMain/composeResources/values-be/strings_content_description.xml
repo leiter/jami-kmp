@@ -93,4 +93,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Гучнагаварыцель уключаны</string>
     <string name="content_desc_speaker_off">Гучнагаварыцель выключаны</string>
     <string name="content_desc_hold">Утрымліваць</string>
+    <string name="content_desc_selected">Выбрана</string>
+    <string name="content_desc_not_selected">Не выбрана</string>
 </resources>

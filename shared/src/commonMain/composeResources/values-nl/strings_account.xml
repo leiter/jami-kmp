@@ -333,4 +333,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Account geëxporteerd</string>
     <string name="snackbar_export_error">Exporteren mislukt. Controleer het wachtwoord en probeer het opnieuw.</string>
     <string name="action_rename">Naam wijzigen</string>
+    <string name="account_biometric_error_failed">Biometrische verificatie mislukt. Probeer het opnieuw.</string>
+    <string name="account_biometric_error_no_hardware">Biometrische verificatie is niet beschikbaar op dit apparaat.</string>
+    <string name="account_biometric_error_not_enrolled">Er zijn geen biometrische gegevens ingesteld op dit apparaat. Voeg een vingerafdruk of gezicht toe in de apparaatinstellingen.</string>
+    <string name="account_biometric_error_unavailable">Biometrische verificatie is momenteel niet beschikbaar.</string>
+    <string name="biometric_authenticating">Verifiëren…</string>
+    <string name="biometric_disable_failed">Kan biometrische verificatie niet uitschakelen.</string>
+    <string name="biometric_enroll_description">Verifieer om het wachtwoord van je account te beveiligen</string>
+    <string name="biometric_enroll_failed">Kan biometrische verificatie niet inschakelen.</string>
+    <string name="biometric_error_no_credential">Er is geen geldige biometrische aanmelding opgeslagen voor dit account. Ontgrendel met je wachtwoord en schakel biometrie opnieuw in.</string>
+    <string name="biometric_unlock">Ontgrendelen</string>
+    <string name="biometric_unlock_title">Jami ontgrendelen</string>
+    <string name="error_no_account">Geen account geselecteerd</string>
 </resources>

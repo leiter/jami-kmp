@@ -17,7 +17,8 @@
 #
 #   ! <values-folder> <kmp_key>   # reason
 #
-# Reviewed 2026-11-11 against jami-client-android f36fae6 (2026-10-27).
+# Reviewed 2026-11-11 against jami-client-android f36fae6 (2026-10-27); date_today/date_yesterday
+# added 2026-11-25 against 91b7759 (a day label in both; de/fr/ru checked).
 
 # --- Account ---------------------------------------------------------------------------------
 account_audio_rtp_min_label = account_rtp_min_port
@@ -94,6 +95,8 @@ group_members = conversation_members
 group_remove_member = block
 group_unblock_member = contact_unblock
 filter_requests = notif_channel_requests
+date_today = today
+date_yesterday = yesterday
 
 # --- Preferences -----------------------------------------------------------------------------
 pref_category_advanced = account_preferences_advanced_tab

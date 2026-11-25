@@ -302,4 +302,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Հաշիվն արտահանված է</string>
     <string name="snackbar_export_error">Արտահանումը ձախողվեց։ Ստուգեք գաղտնաբառը և կրկին փորձեք։</string>
     <string name="action_rename">Վերանվանել</string>
+    <string name="account_biometric_error_failed">Կենսաչափական նույնականացումը ձախողվեց։ Փորձեք կրկին։</string>
+    <string name="account_biometric_error_no_hardware">Կենսաչափական նույնականացումը հասանելի չէ այս սարքում։</string>
+    <string name="account_biometric_error_not_enrolled">Այս սարքում կենսաչափական տվյալներ գրանցված չեն։ Ավելացրեք մատնահետք կամ դեմք սարքի կարգավորումներում։</string>
+    <string name="account_biometric_error_unavailable">Կենսաչափական նույնականացումը այս պահին հասանելի չէ։</string>
+    <string name="biometric_authenticating">Նույնականացում…</string>
+    <string name="biometric_disable_failed">Չհաջողվեց անջատել կենսաչափական նույնականացումը։</string>
+    <string name="biometric_enroll_description">Նույնականացվեք՝ հաշվի գաղտնաբառը պաշտպանելու համար</string>
+    <string name="biometric_enroll_failed">Չհաջողվեց միացնել կենսաչափական նույնականացումը։</string>
+    <string name="biometric_error_no_credential">Այս հաշվի համար վավեր կենսաչափական մուտք պահված չէ։ Ապակողպեք գաղտնաբառով և կրկին միացրեք կենսաչափությունը։</string>
+    <string name="biometric_unlock">Ապակողպել</string>
+    <string name="biometric_unlock_title">Ապակողպել Jami-ն</string>
+    <string name="error_no_account">Հաշիվ ընտրված չէ</string>
 </resources>

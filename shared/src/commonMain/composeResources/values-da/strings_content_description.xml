@@ -98,4 +98,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Højttaler til</string>
     <string name="content_desc_speaker_off">Højttaler fra</string>
     <string name="content_desc_hold">Parkér</string>
+    <string name="content_desc_selected">Valgt</string>
+    <string name="content_desc_not_selected">Ikke valgt</string>
 </resources>

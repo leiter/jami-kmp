@@ -96,4 +96,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">스피커 켜짐</string>
     <string name="content_desc_speaker_off">스피커 꺼짐</string>
     <string name="content_desc_hold">대기</string>
+    <string name="content_desc_selected">선택됨</string>
+    <string name="content_desc_not_selected">선택 안 됨</string>
 </resources>

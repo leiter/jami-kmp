@@ -94,4 +94,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">স্পিকার চালু</string>
     <string name="content_desc_speaker_off">স্পিকার বন্ধ</string>
     <string name="content_desc_hold">হোল্ড করুন</string>
+    <string name="content_desc_selected">নির্বাচিত</string>
+    <string name="content_desc_not_selected">নির্বাচিত নয়</string>
 </resources>

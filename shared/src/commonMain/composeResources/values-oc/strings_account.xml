@@ -300,4 +300,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Compte exportat</string>
     <string name="snackbar_export_error">L’exportacion a fracassat. Verificatz lo senhal e ensajatz tornamai.</string>
     <string name="action_rename">Renomenar</string>
+    <string name="account_biometric_error_failed">L'autentificacion biometrica a fracassat. Ensajatz tornamai.</string>
+    <string name="account_biometric_error_no_hardware">L'autentificacion biometrica es pas disponibla sus aqueste aparelh.</string>
+    <string name="account_biometric_error_not_enrolled">Cap de donada biometrica pas enregistrada sus aqueste aparelh. Apondètz una emprenta o un visatge dins los paramètres de l'aparelh.</string>
+    <string name="account_biometric_error_unavailable">L'autentificacion biometrica es indisponibla pel moment.</string>
+    <string name="biometric_authenticating">Autentificacion…</string>
+    <string name="biometric_disable_failed">Impossible de desactivar l'autentificacion biometrica.</string>
+    <string name="biometric_enroll_description">Autentificatz-vos per protegir lo senhal del compte</string>
+    <string name="biometric_enroll_failed">Impossible d'activar l'autentificacion biometrica.</string>
+    <string name="biometric_error_no_credential">Cap de connexion biometrica valida es pas enregistrada per aqueste compte. Desverrolhatz amb lo senhal e tornatz activar la biometria.</string>
+    <string name="biometric_unlock">Desverrolhar</string>
+    <string name="biometric_unlock_title">Desverrolhar Jami</string>
+    <string name="error_no_account">Cap de compte pas seleccionat</string>
 </resources>

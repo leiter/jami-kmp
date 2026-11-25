@@ -34,4 +34,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_handRaised">Ръката вдигната</string>
     <string name="call_dtmf_dialpad">Диапад</string>
     <string name="call_participant_enable_video">Активиране на видео</string>
+    <string name="call_lower_hand">Ниска ръка</string>
 </resources>

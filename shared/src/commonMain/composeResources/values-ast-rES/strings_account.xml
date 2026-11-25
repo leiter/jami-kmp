@@ -300,4 +300,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Esportóse la cuenta</string>
     <string name="snackbar_export_error">Falló la esportación. Comprueba la contraseña y volvi tentalo.</string>
     <string name="action_rename">Renomar</string>
+    <string name="account_biometric_error_failed">Falló l'autenticación biométrica. Volvi tentalo.</string>
+    <string name="account_biometric_error_no_hardware">L'autenticación biométrica nun ta disponible nesti preséu.</string>
+    <string name="account_biometric_error_not_enrolled">Nun hai datos biométricos rexistraos nesti preséu. Amiesta una buelga o una cara na configuración del preséu.</string>
+    <string name="account_biometric_error_unavailable">L'autenticación biométrica nun ta disponible nesti momentu.</string>
+    <string name="biometric_authenticating">Autenticando…</string>
+    <string name="biometric_disable_failed">Nun se pudo desactivar l'autenticación biométrica.</string>
+    <string name="biometric_enroll_description">Autenticate pa protexer la contraseña de la cuenta</string>
+    <string name="biometric_enroll_failed">Nun se pudo activar l'autenticación biométrica.</string>
+    <string name="biometric_error_no_credential">Nun hai nengún aniciu de sesión biométricu válidu guardáu pa esta cuenta. Desbloquia cola contraseña y vuelvi activar la biometría.</string>
+    <string name="biometric_unlock">Desbloquiar</string>
+    <string name="biometric_unlock_title">Desbloquiar Jami</string>
+    <string name="error_no_account">Nun hai nenguna cuenta esbillada</string>
 </resources>

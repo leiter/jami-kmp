@@ -94,4 +94,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Чанга яригч асаалттай</string>
     <string name="content_desc_speaker_off">Чанга яригч унтраалттай</string>
     <string name="content_desc_hold">Хүлээлгэх</string>
+    <string name="content_desc_selected">Сонгосон</string>
+    <string name="content_desc_not_selected">Сонгоогүй</string>
 </resources>

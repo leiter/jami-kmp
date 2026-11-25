@@ -120,4 +120,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">الأحدث</string>
     <string name="pref_sortAlphabetical">أ–ي</string>
     <string name="pref_sortUnreadFirst">غير المقروءة أولًا</string>
+    <string name="pref_days_short">%1$dيوم</string>
+    <string name="pref_seconds_short">%1$dث</string>
+    <string name="pref_history_forever">إلى الأبد</string>
+    <string name="pref_option_auto">تلقائي</string>
 </resources>

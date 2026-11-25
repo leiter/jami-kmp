@@ -126,4 +126,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_persistNotification_summary">通話やメッセージを受け取るため、バックグラウンドでの実行を許可します。</string>
     <string name="connectivity_google_services_title">Google サービス</string>
     <string name="connectivity_local_node_title">ローカル DHT ノード</string>
+    <string name="pref_days_short">%1$d日</string>
+    <string name="pref_seconds_short">%1$d秒</string>
+    <string name="pref_history_forever">無期限</string>
+    <string name="pref_option_auto">自動</string>
 </resources>

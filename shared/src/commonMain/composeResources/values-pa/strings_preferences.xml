@@ -98,4 +98,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">ਹਾਲੀਆ</string>
     <string name="pref_sortAlphabetical">ੳ–ੜ</string>
     <string name="pref_sortUnreadFirst">ਅਣਪੜ੍ਹੇ ਪਹਿਲਾਂ</string>
+    <string name="pref_days_short">%1$d ਦਿਨ</string>
+    <string name="pref_seconds_short">%1$d ਸਕਿੰਟ</string>
+    <string name="pref_history_forever">ਹਮੇਸ਼ਾ ਲਈ</string>
+    <string name="pref_option_auto">ਸਵੈਚਲਿਤ</string>
 </resources>

@@ -299,4 +299,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">ఖాతా ఎగుమతి అయింది</string>
     <string name="snackbar_export_error">ఎగుమతి విఫలమైంది. పాస్‌వర్డ్‌ను తనిఖీ చేసి మళ్లీ ప్రయత్నించండి.</string>
     <string name="action_rename">పేరు మార్చండి</string>
+    <string name="account_biometric_error_failed">బయోమెట్రిక్ ప్రమాణీకరణ విఫలమైంది. దయచేసి మళ్లీ ప్రయత్నించండి.</string>
+    <string name="account_biometric_error_no_hardware">ఈ పరికరంలో బయోమెట్రిక్ ప్రమాణీకరణ అందుబాటులో లేదు.</string>
+    <string name="account_biometric_error_not_enrolled">ఈ పరికరంలో బయోమెట్రిక్స్ ఏవీ నమోదు కాలేదు. పరికర సెట్టింగ్‌లలో వేలిముద్ర లేదా ముఖాన్ని జోడించండి.</string>
+    <string name="account_biometric_error_unavailable">బయోమెట్రిక్ ప్రమాణీకరణ ప్రస్తుతం అందుబాటులో లేదు.</string>
+    <string name="biometric_authenticating">ప్రమాణీకరిస్తోంది…</string>
+    <string name="biometric_disable_failed">బయోమెట్రిక్ ప్రమాణీకరణను ఆఫ్ చేయడం సాధ్యపడలేదు.</string>
+    <string name="biometric_enroll_description">మీ ఖాతా పాస్‌వర్డ్‌ను సురక్షితం చేయడానికి ప్రమాణీకరించండి</string>
+    <string name="biometric_enroll_failed">బయోమెట్రిక్ ప్రమాణీకరణను ఆన్ చేయడం సాధ్యపడలేదు.</string>
+    <string name="biometric_error_no_credential">ఈ ఖాతాకు చెల్లుబాటు అయ్యే బయోమెట్రిక్ లాగిన్ ఏదీ సేవ్ కాలేదు. పాస్‌వర్డ్‌తో అన్‌లాక్ చేసి బయోమెట్రిక్స్‌ను మళ్లీ ఆన్ చేయండి.</string>
+    <string name="biometric_unlock">అన్‌లాక్ చేయండి</string>
+    <string name="biometric_unlock_title">Jamiని అన్‌లాక్ చేయండి</string>
+    <string name="error_no_account">ఖాతా ఏదీ ఎంచుకోలేదు</string>
 </resources>

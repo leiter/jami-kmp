@@ -376,4 +376,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Konto zostało wyeksportowane</string>
     <string name="snackbar_export_error">Eksport nie powiódł się. Sprawdź hasło i spróbuj ponownie.</string>
     <string name="action_rename">Zmień nazwę</string>
+    <string name="account_biometric_error_failed">Uwierzytelnianie biometryczne nie powiodło się. Spróbuj ponownie.</string>
+    <string name="account_biometric_error_no_hardware">Uwierzytelnianie biometryczne nie jest dostępne na tym urządzeniu.</string>
+    <string name="account_biometric_error_not_enrolled">Na tym urządzeniu nie zarejestrowano danych biometrycznych. Dodaj odcisk palca lub twarz w ustawieniach urządzenia.</string>
+    <string name="account_biometric_error_unavailable">Uwierzytelnianie biometryczne jest obecnie niedostępne.</string>
+    <string name="biometric_authenticating">Uwierzytelnianie…</string>
+    <string name="biometric_disable_failed">Nie udało się wyłączyć uwierzytelniania biometrycznego.</string>
+    <string name="biometric_enroll_description">Uwierzytelnij się, aby zabezpieczyć hasło konta</string>
+    <string name="biometric_enroll_failed">Nie udało się włączyć uwierzytelniania biometrycznego.</string>
+    <string name="biometric_error_no_credential">Dla tego konta nie zapisano prawidłowego logowania biometrycznego. Odblokuj hasłem i ponownie włącz biometrię.</string>
+    <string name="biometric_unlock">Odblokuj</string>
+    <string name="biometric_unlock_title">Odblokuj Jami</string>
+    <string name="error_no_account">Nie wybrano konta</string>
 </resources>

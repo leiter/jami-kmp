@@ -119,4 +119,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">Нядаўнія</string>
     <string name="pref_sortAlphabetical">А–Я</string>
     <string name="pref_sortUnreadFirst">Спачатку непрачытаныя</string>
+    <string name="pref_days_short">%1$d сут</string>
+    <string name="pref_seconds_short">%1$d с</string>
+    <string name="pref_history_forever">Назаўсёды</string>
+    <string name="pref_option_auto">Аўта</string>
 </resources>

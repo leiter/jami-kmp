@@ -44,4 +44,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_raise_hand">Levantar a mão</string>
     <string name="content_desc_send_call_message">Enviar mensagem</string>
     <string name="content_desc_state_muted">Sem som</string>
+    <string name="content_desc_lower_hand">Baixar mão</string>
 </resources>

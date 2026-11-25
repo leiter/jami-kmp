@@ -103,4 +103,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Kaiutin päällä</string>
     <string name="content_desc_speaker_off">Kaiutin pois</string>
     <string name="content_desc_hold">Aseta pitoon</string>
+    <string name="content_desc_selected">Valittu</string>
+    <string name="content_desc_not_selected">Ei valittu</string>
 </resources>

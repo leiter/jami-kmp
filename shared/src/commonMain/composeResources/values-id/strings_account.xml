@@ -304,4 +304,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Akun berhasil diekspor</string>
     <string name="snackbar_export_error">Ekspor gagal. Periksa sandi lalu coba lagi.</string>
     <string name="action_rename">Ganti nama</string>
+    <string name="account_biometric_error_failed">Autentikasi biometrik gagal. Silakan coba lagi.</string>
+    <string name="account_biometric_error_no_hardware">Autentikasi biometrik tidak tersedia di perangkat ini.</string>
+    <string name="account_biometric_error_not_enrolled">Tidak ada biometrik yang terdaftar di perangkat ini. Tambahkan sidik jari atau wajah di pengaturan perangkat.</string>
+    <string name="account_biometric_error_unavailable">Autentikasi biometrik sedang tidak tersedia.</string>
+    <string name="biometric_authenticating">Mengautentikasi…</string>
+    <string name="biometric_disable_failed">Tidak dapat menonaktifkan autentikasi biometrik.</string>
+    <string name="biometric_enroll_description">Autentikasi untuk mengamankan kata sandi akun Anda</string>
+    <string name="biometric_enroll_failed">Tidak dapat mengaktifkan autentikasi biometrik.</string>
+    <string name="biometric_error_no_credential">Tidak ada login biometrik yang valid tersimpan untuk akun ini. Buka kunci dengan kata sandi lalu aktifkan biometrik lagi.</string>
+    <string name="biometric_unlock">Buka kunci</string>
+    <string name="biometric_unlock_title">Buka kunci Jami</string>
+    <string name="error_no_account">Tidak ada akun yang dipilih</string>
 </resources>

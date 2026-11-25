@@ -96,4 +96,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Altavoz activáu</string>
     <string name="content_desc_speaker_off">Altavoz desactiváu</string>
     <string name="content_desc_hold">Poner n’espera</string>
+    <string name="content_desc_selected">Esbilláu</string>
+    <string name="content_desc_not_selected">Non esbilláu</string>
 </resources>

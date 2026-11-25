@@ -375,4 +375,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Conta exportada com sucesso</string>
     <string name="snackbar_export_error">A exportação falhou. Verifique a palavra-passe e tente novamente.</string>
     <string name="action_rename">Renomear</string>
+    <string name="account_biometric_error_failed">A autenticação biométrica falhou. Tente novamente.</string>
+    <string name="account_biometric_error_no_hardware">A autenticação biométrica não está disponível neste dispositivo.</string>
+    <string name="account_biometric_error_not_enrolled">Não há dados biométricos registados neste dispositivo. Adicione uma impressão digital ou um rosto nas definições do dispositivo.</string>
+    <string name="account_biometric_error_unavailable">A autenticação biométrica está indisponível neste momento.</string>
+    <string name="biometric_authenticating">A autenticar…</string>
+    <string name="biometric_disable_failed">Não foi possível desativar a autenticação biométrica.</string>
+    <string name="biometric_enroll_description">Autentique-se para proteger a palavra-passe da conta</string>
+    <string name="biometric_enroll_failed">Não foi possível ativar a autenticação biométrica.</string>
+    <string name="biometric_error_no_credential">Não existe um início de sessão biométrico válido para esta conta. Desbloqueie com a palavra-passe e ative novamente a biometria.</string>
+    <string name="biometric_unlock">Desbloquear</string>
+    <string name="biometric_unlock_title">Desbloquear o Jami</string>
+    <string name="error_no_account">Nenhuma conta selecionada</string>
 </resources>

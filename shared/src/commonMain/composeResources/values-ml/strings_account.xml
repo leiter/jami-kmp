@@ -305,4 +305,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">അക്കൗണ്ട് എക്സ്പോർട്ട് ചെയ്തു</string>
     <string name="snackbar_export_error">എക്സ്പോർട്ട് പരാജയപ്പെട്ടു. പാസ്‌വേഡ് പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക.</string>
     <string name="action_rename">പേര് മാറ്റുക</string>
+    <string name="account_biometric_error_failed">ബയോമെട്രിക് പ്രാമാണീകരണം പരാജയപ്പെട്ടു. വീണ്ടും ശ്രമിക്കുക.</string>
+    <string name="account_biometric_error_no_hardware">ഈ ഉപകരണത്തിൽ ബയോമെട്രിക് പ്രാമാണീകരണം ലഭ്യമല്ല.</string>
+    <string name="account_biometric_error_not_enrolled">ഈ ഉപകരണത്തിൽ ബയോമെട്രിക്സ് ഒന്നും രജിസ്റ്റർ ചെയ്തിട്ടില്ല. ഉപകരണ ക്രമീകരണങ്ങളിൽ ഒരു വിരലടയാളമോ മുഖമോ ചേർക്കുക.</string>
+    <string name="account_biometric_error_unavailable">ബയോമെട്രിക് പ്രാമാണീകരണം ഇപ്പോൾ ലഭ്യമല്ല.</string>
+    <string name="biometric_authenticating">പ്രാമാണീകരിക്കുന്നു…</string>
+    <string name="biometric_disable_failed">ബയോമെട്രിക് പ്രാമാണീകരണം ഓഫാക്കാനായില്ല.</string>
+    <string name="biometric_enroll_description">നിങ്ങളുടെ അക്കൗണ്ട് പാസ്‌വേഡ് സുരക്ഷിതമാക്കാൻ പ്രാമാണീകരിക്കുക</string>
+    <string name="biometric_enroll_failed">ബയോമെട്രിക് പ്രാമാണീകരണം ഓണാക്കാനായില്ല.</string>
+    <string name="biometric_error_no_credential">ഈ അക്കൗണ്ടിനായി സാധുവായ ബയോമെട്രിക് ലോഗിൻ സംരക്ഷിച്ചിട്ടില്ല. പാസ്‌വേഡ് ഉപയോഗിച്ച് അൺലോക്ക് ചെയ്ത് ബയോമെട്രിക്സ് വീണ്ടും ഓണാക്കുക.</string>
+    <string name="biometric_unlock">അൺലോക്ക് ചെയ്യുക</string>
+    <string name="biometric_unlock_title">Jami അൺലോക്ക് ചെയ്യുക</string>
+    <string name="error_no_account">അക്കൗണ്ട് ഒന്നും തിരഞ്ഞെടുത്തിട്ടില്ല</string>
 </resources>

@@ -388,4 +388,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="action_export">匯出</string>
     <string name="snackbar_export_success">帳號匯出成功</string>
     <string name="snackbar_export_error">匯出失敗。請檢查密碼後再試一次。</string>
+    <string name="account_biometric_error_failed">生物認證失敗。請再試一次。</string>
+    <string name="account_biometric_error_no_hardware">此裝置不支援生物認證。</string>
+    <string name="account_biometric_error_not_enrolled">此裝置尚未登記生物認證資料。請在裝置設定中加入指紋或面孔。</string>
+    <string name="account_biometric_error_unavailable">生物認證目前無法使用。</string>
+    <string name="biometric_authenticating">正在驗證…</string>
+    <string name="biometric_disable_failed">無法關閉生物認證。</string>
+    <string name="biometric_enroll_description">驗證身分以保護你的帳戶密碼</string>
+    <string name="biometric_enroll_failed">無法開啟生物認證。</string>
+    <string name="biometric_error_no_credential">此帳戶沒有儲存有效的生物認證登入。請用密碼解鎖後重新開啟生物認證。</string>
+    <string name="biometric_unlock">解鎖</string>
+    <string name="biometric_unlock_title">解鎖 Jami</string>
+    <string name="error_no_account">未選擇帳戶</string>
 </resources>

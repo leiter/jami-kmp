@@ -120,4 +120,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">Πρόσφατες</string>
     <string name="pref_sortAlphabetical">Α–Ω</string>
     <string name="pref_sortUnreadFirst">Πρώτα οι μη αναγνωσμένες</string>
+    <string name="pref_days_short">%1$d η</string>
+    <string name="pref_seconds_short">%1$d δ</string>
+    <string name="pref_history_forever">Για πάντα</string>
+    <string name="pref_option_auto">Αυτόματα</string>
 </resources>

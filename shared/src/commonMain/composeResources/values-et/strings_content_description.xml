@@ -103,4 +103,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Valjuhääldi sees</string>
     <string name="content_desc_speaker_off">Valjuhääldi väljas</string>
     <string name="content_desc_hold">Pane ootele</string>
+    <string name="content_desc_selected">Valitud</string>
+    <string name="content_desc_not_selected">Pole valitud</string>
 </resources>

@@ -99,4 +99,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Luidspreker aan</string>
     <string name="content_desc_speaker_off">Luidspreker uit</string>
     <string name="content_desc_hold">In de wacht zetten</string>
+    <string name="content_desc_selected">Geselecteerd</string>
+    <string name="content_desc_not_selected">Niet geselecteerd</string>
 </resources>

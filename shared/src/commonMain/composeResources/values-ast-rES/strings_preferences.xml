@@ -118,4 +118,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">Recientes</string>
     <string name="pref_sortAlphabetical">A–Z</string>
     <string name="pref_sortUnreadFirst">Ensin lleer primero</string>
+    <string name="pref_days_short">%1$ddíes</string>
+    <string name="pref_seconds_short">%1$dsegs</string>
+    <string name="pref_history_forever">Pa siempre</string>
+    <string name="pref_option_auto">Automáticu</string>
 </resources>

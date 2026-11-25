@@ -300,4 +300,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Easpórtáladh an cuntas</string>
     <string name="snackbar_export_error">Theip ar an easpórtáil. Seiceáil an pasfhocal agus bain triail eile as.</string>
     <string name="action_rename">Athainmnigh</string>
+    <string name="account_biometric_error_failed">Theip ar an bhfíordheimhniú bithmhéadrach. Bain triail eile as.</string>
+    <string name="account_biometric_error_no_hardware">Níl fíordheimhniú bithmhéadrach ar fáil ar an ngléas seo.</string>
+    <string name="account_biometric_error_not_enrolled">Níl aon sonraí bithmhéadracha cláraithe ar an ngléas seo. Cuir méarlorg nó aghaidh leis i socruithe an ghléis.</string>
+    <string name="account_biometric_error_unavailable">Níl fíordheimhniú bithmhéadrach ar fáil faoi láthair.</string>
+    <string name="biometric_authenticating">Á fhíordheimhniú…</string>
+    <string name="biometric_disable_failed">Níorbh fhéidir fíordheimhniú bithmhéadrach a dhíchumasú.</string>
+    <string name="biometric_enroll_description">Fíordheimhnigh chun pasfhocal do chuntais a chosaint</string>
+    <string name="biometric_enroll_failed">Níorbh fhéidir fíordheimhniú bithmhéadrach a chumasú.</string>
+    <string name="biometric_error_no_credential">Níl aon logáil isteach bhithmhéadrach bhailí sábháilte don chuntas seo. Díghlasáil le do phasfhocal agus cumasaigh bithmhéadracht arís.</string>
+    <string name="biometric_unlock">Díghlasáil</string>
+    <string name="biometric_unlock_title">Díghlasáil Jami</string>
+    <string name="error_no_account">Níl aon chuntas roghnaithe</string>
 </resources>

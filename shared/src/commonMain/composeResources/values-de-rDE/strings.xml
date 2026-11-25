@@ -320,4 +320,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="filter_requests">Anfragen</string>
     <string name="permission_dialog_post_notifications_title">Benachrichtigungen zulassen</string>
     <string name="permission_dialog_post_notifications_blocked_message">Benachrichtigungen sind für Jami deaktiviert. Ohne sie werden Sie eingehende Anrufe und Nachrichten verpassen. Bitte aktivieren Sie Benachrichtigungen für Jami in den Geräteeinstellungen.</string>
+    <string name="notif_channel_reconnect">Hintergrundsynchronisierung</string>
+    <string name="action_call_resume">Weiter</string>
+    <string name="conversation_action_latest">Zum neuesten springen</string>
+    <string name="tv_audio_recording">Aufnahme läuft…</string>
+    <string name="bottomSheet_share_btn">Teilen</string>
+    <string name="bottomSheet_dialpad_btn">Wähltastatur</string>
+    <string name="date_today">Heute</string>
+    <string name="date_yesterday">Gestern</string>
 </resources>

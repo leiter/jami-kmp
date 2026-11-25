@@ -107,4 +107,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Głośnik włączony</string>
     <string name="content_desc_speaker_off">Głośnik wyłączony</string>
     <string name="content_desc_hold">Wstrzymaj</string>
+    <string name="content_desc_selected">Zaznaczone</string>
+    <string name="content_desc_not_selected">Niezaznaczone</string>
 </resources>

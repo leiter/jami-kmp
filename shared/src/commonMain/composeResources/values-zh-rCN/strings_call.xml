@@ -37,4 +37,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="call_dtmf_dialpad">拨号盘</string>
     <string name="call_participant_disable_video">关闭视频</string>
     <string name="call_participant_enable_video">启用视频</string>
+    <string name="call_lower_hand">放下手</string>
 </resources>

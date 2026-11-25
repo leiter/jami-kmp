@@ -203,4 +203,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="screen_title_account_settings">അക്കൌണ്ട് ക്രമീകരണങ്ങൾ</string>
     <string name="screen_title_blocked_contacts">തടഞ്ഞ കോൺടാക്റ്റുകൾ</string>
     <string name="certificates_status_banned">തടയൽ</string>
+    <string name="account_biometric_error_failed">Pengesahan biometrik gagal. Sila cuba lagi.</string>
+    <string name="account_biometric_error_no_hardware">Pengesahan biometrik tidak tersedia pada peranti ini.</string>
+    <string name="account_biometric_error_not_enrolled">Tiada biometrik didaftarkan pada peranti ini. Tambah cap jari atau wajah dalam tetapan peranti.</string>
+    <string name="account_biometric_error_unavailable">Pengesahan biometrik tidak tersedia buat masa ini.</string>
+    <string name="biometric_authenticating">Mengesahkan…</string>
+    <string name="biometric_disable_failed">Tidak dapat mematikan pengesahan biometrik.</string>
+    <string name="biometric_enroll_description">Sahkan untuk melindungi kata laluan akaun anda</string>
+    <string name="biometric_enroll_failed">Tidak dapat menghidupkan pengesahan biometrik.</string>
+    <string name="biometric_error_no_credential">Tiada log masuk biometrik yang sah disimpan untuk akaun ini. Buka kunci dengan kata laluan anda dan hidupkan biometrik semula.</string>
+    <string name="biometric_unlock">Buka kunci</string>
+    <string name="biometric_unlock_title">Buka kunci Jami</string>
+    <string name="error_no_account">Tiada akaun dipilih</string>
 </resources>

@@ -134,4 +134,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="dialog_export_title">Konto exportieren</string>
     <string name="section_linked_devices">Verknüpfte Geräte</string>
     <string name="screen_title_account_settings">Konto-Einstellungen</string>
+    <string name="account_update_needed">Aktualisierung erforderlich</string>
+    <string name="account_status_connecting">Verbindet…</string>
 </resources>

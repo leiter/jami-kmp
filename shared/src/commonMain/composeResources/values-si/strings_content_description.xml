@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="content_desc_end_call">ඇමතුම අවසන් කරන්න</string>
+    <string name="content_desc_selected">තෝරා ඇත</string>
+    <string name="content_desc_not_selected">තෝරා නැත</string>
 </resources>

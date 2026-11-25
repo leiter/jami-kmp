@@ -299,4 +299,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">એકાઉન્ટ નિકાસ થયું</string>
     <string name="snackbar_export_error">નિકાસ નિષ્ફળ. પાસવર્ડ તપાસો અને ફરી પ્રયાસ કરો.</string>
     <string name="action_rename">નામ બદલો</string>
+    <string name="account_biometric_error_failed">બાયોમેટ્રિક પ્રમાણીકરણ નિષ્ફળ. ફરી પ્રયાસ કરો.</string>
+    <string name="account_biometric_error_no_hardware">આ ઉપકરણ પર બાયોમેટ્રિક પ્રમાણીકરણ ઉપલબ્ધ નથી.</string>
+    <string name="account_biometric_error_not_enrolled">આ ઉપકરણ પર કોઈ બાયોમેટ્રિક નોંધાયેલ નથી. ઉપકરણ સેટિંગ્સમાં ફિંગરપ્રિન્ટ અથવા ચહેરો ઉમેરો.</string>
+    <string name="account_biometric_error_unavailable">બાયોમેટ્રિક પ્રમાણીકરણ હાલમાં ઉપલબ્ધ નથી.</string>
+    <string name="biometric_authenticating">પ્રમાણિત કરી રહ્યાં છીએ…</string>
+    <string name="biometric_disable_failed">બાયોમેટ્રિક પ્રમાણીકરણ બંધ કરી શકાયું નથી.</string>
+    <string name="biometric_enroll_description">તમારા એકાઉન્ટનો પાસવર્ડ સુરક્ષિત કરવા પ્રમાણિત કરો</string>
+    <string name="biometric_enroll_failed">બાયોમેટ્રિક પ્રમાણીકરણ ચાલુ કરી શકાયું નથી.</string>
+    <string name="biometric_error_no_credential">આ એકાઉન્ટ માટે કોઈ માન્ય બાયોમેટ્રિક લોગિન સાચવેલ નથી. પાસવર્ડથી અનલૉક કરો અને બાયોમેટ્રિક ફરી ચાલુ કરો.</string>
+    <string name="biometric_unlock">અનલૉક કરો</string>
+    <string name="biometric_unlock_title">Jami અનલૉક કરો</string>
+    <string name="error_no_account">કોઈ એકાઉન્ટ પસંદ કરેલ નથી</string>
 </resources>

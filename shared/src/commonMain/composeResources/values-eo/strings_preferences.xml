@@ -118,4 +118,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">Lastatempaj</string>
     <string name="pref_sortAlphabetical">A–Z</string>
     <string name="pref_sortUnreadFirst">Unue nelegitaj</string>
+    <string name="pref_days_short">%1$d d</string>
+    <string name="pref_seconds_short">%1$d s</string>
+    <string name="pref_history_forever">Por ĉiam</string>
+    <string name="pref_option_auto">Aŭtomata</string>
 </resources>

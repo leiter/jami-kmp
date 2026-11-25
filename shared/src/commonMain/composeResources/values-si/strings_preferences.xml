@@ -17,4 +17,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 -->
 <resources>
     <string name="pref_category_system">පද්ධතිය</string>
+    <string name="pref_days_short">දි %1$d</string>
+    <string name="pref_seconds_short">ත %1$d</string>
+    <string name="pref_history_forever">සදහටම</string>
+    <string name="pref_option_auto">ස්වයංක්‍රීය</string>
 </resources>

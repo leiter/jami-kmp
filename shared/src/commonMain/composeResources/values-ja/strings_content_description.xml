@@ -97,4 +97,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="qrcode_to_scan">スキャンする QR コード</string>
     <string name="content_desc_disable_video">ビデオをオフにする</string>
     <string name="content_desc_resume">再開</string>
+    <string name="content_desc_selected">選択済み</string>
+    <string name="content_desc_not_selected">未選択</string>
 </resources>

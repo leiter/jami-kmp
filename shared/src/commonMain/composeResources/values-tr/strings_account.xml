@@ -336,4 +336,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Hesap dışa aktarıldı</string>
     <string name="snackbar_export_error">Dışa aktarma başarısız oldu. Parolayı kontrol edip yeniden deneyin.</string>
     <string name="action_rename">Yeniden adlandır</string>
+    <string name="account_biometric_error_failed">Biyometrik kimlik doğrulama başarısız oldu. Lütfen tekrar deneyin.</string>
+    <string name="account_biometric_error_no_hardware">Bu cihazda biyometrik kimlik doğrulama kullanılamıyor.</string>
+    <string name="account_biometric_error_not_enrolled">Bu cihazda kayıtlı biyometrik veri yok. Cihaz ayarlarından bir parmak izi veya yüz ekleyin.</string>
+    <string name="account_biometric_error_unavailable">Biyometrik kimlik doğrulama şu anda kullanılamıyor.</string>
+    <string name="biometric_authenticating">Kimlik doğrulanıyor…</string>
+    <string name="biometric_disable_failed">Biyometrik kimlik doğrulama kapatılamadı.</string>
+    <string name="biometric_enroll_description">Hesap parolanızı korumak için kimliğinizi doğrulayın</string>
+    <string name="biometric_enroll_failed">Biyometrik kimlik doğrulama açılamadı.</string>
+    <string name="biometric_error_no_credential">Bu hesap için kayıtlı geçerli bir biyometrik giriş yok. Parolanızla kilidi açın ve biyometriyi yeniden etkinleştirin.</string>
+    <string name="biometric_unlock">Kilidi aç</string>
+    <string name="biometric_unlock_title">Jami kilidini aç</string>
+    <string name="error_no_account">Hesap seçilmedi</string>
 </resources>

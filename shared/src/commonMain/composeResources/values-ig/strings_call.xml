@@ -39,4 +39,5 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="video_loss_retry">Nwaa ọzọ</string>
     <string name="video_loss_audio_only">Naanị ụda</string>
     <string name="conference_waiting_participants">Na-eche ndị so…</string>
+    <string name="call_lower_hand">Aka ala</string>
 </resources>

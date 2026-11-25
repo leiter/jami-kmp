@@ -303,4 +303,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Kontua esportatu da</string>
     <string name="snackbar_export_error">Esportazioak huts egin du. Egiaztatu pasahitza eta saiatu berriro.</string>
     <string name="action_rename">Aldatu izena</string>
+    <string name="account_biometric_error_failed">Autentifikazio biometrikoak huts egin du. Saiatu berriro.</string>
+    <string name="account_biometric_error_no_hardware">Autentifikazio biometrikoa ez dago erabilgarri gailu honetan.</string>
+    <string name="account_biometric_error_not_enrolled">Ez dago datu biometrikorik erregistratuta gailu honetan. Gehitu hatz-marka edo aurpegi bat gailuaren ezarpenetan.</string>
+    <string name="account_biometric_error_unavailable">Autentifikazio biometrikoa ez dago erabilgarri une honetan.</string>
+    <string name="biometric_authenticating">Autentifikatzen…</string>
+    <string name="biometric_disable_failed">Ezin izan da autentifikazio biometrikoa desaktibatu.</string>
+    <string name="biometric_enroll_description">Autentifikatu kontuaren pasahitza babesteko</string>
+    <string name="biometric_enroll_failed">Ezin izan da autentifikazio biometrikoa aktibatu.</string>
+    <string name="biometric_error_no_credential">Ez dago baliozko saio-hasiera biometrikorik gordeta kontu honetarako. Desblokeatu pasahitzarekin eta aktibatu berriro biometria.</string>
+    <string name="biometric_unlock">Desblokeatu</string>
+    <string name="biometric_unlock_title">Desblokeatu Jami</string>
+    <string name="error_no_account">Ez da konturik hautatu</string>
 </resources>

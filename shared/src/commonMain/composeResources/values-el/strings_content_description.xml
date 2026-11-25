@@ -96,4 +96,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Ηχείο ενεργό</string>
     <string name="content_desc_speaker_off">Ηχείο ανενεργό</string>
     <string name="content_desc_hold">Θέση σε αναμονή</string>
+    <string name="content_desc_selected">Επιλεγμένο</string>
+    <string name="content_desc_not_selected">Μη επιλεγμένο</string>
 </resources>

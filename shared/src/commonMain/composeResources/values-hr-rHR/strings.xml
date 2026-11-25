@@ -190,4 +190,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="placeholder_search">Pretraži ili dodaj</string>
     <string name="action_qr_code">QR kod</string>
     <string name="permission_dialog_battery_dismiss">Ne sada</string>
+    <string name="file_transfer_status_unjoinable_peer">Nedostupan sugovornik</string>
+    <string name="date_today">Danas</string>
+    <string name="date_yesterday">Jučer</string>
+    <string name="date_full_format">%2$d. %1$s %3$d.</string>
+    <string name="date_month_1">siječnja</string>
+    <string name="date_month_2">veljače</string>
+    <string name="date_month_3">ožujka</string>
+    <string name="date_month_4">travnja</string>
+    <string name="date_month_5">svibnja</string>
+    <string name="date_month_6">lipnja</string>
+    <string name="date_month_7">srpnja</string>
+    <string name="date_month_8">kolovoza</string>
+    <string name="date_month_9">rujna</string>
+    <string name="date_month_10">listopada</string>
+    <string name="date_month_11">studenoga</string>
+    <string name="date_month_12">prosinca</string>
+    <string name="time_now_short">Sad</string>
+    <string name="time_minutes_short">%1$d m</string>
+    <string name="time_hours_short">%1$d h</string>
+    <string name="time_days_short">%1$d d.</string>
+    <string name="time_weeks_short">%1$d tj.</string>
 </resources>

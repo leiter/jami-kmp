@@ -107,4 +107,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Громкая связь включена</string>
     <string name="content_desc_speaker_off">Громкая связь выключена</string>
     <string name="content_desc_hold">Поставить на удержание</string>
+    <string name="content_desc_selected">Выбрано</string>
+    <string name="content_desc_not_selected">Не выбрано</string>
 </resources>

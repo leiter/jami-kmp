@@ -658,4 +658,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="location_my_location">Mein Standort</string>
     <string name="notif_sync_text">Unterhaltungen werden im Hintergrund synchronisiert</string>
     <string name="notif_file_transfer_progress_bytes">%1$d / %2$d Bytes</string>
+    <string name="notif_channel_reconnect">Hintergrundsynchronisierung</string>
+    <string name="action_call_resume">Fortsetzen</string>
+    <string name="date_today">Heute</string>
+    <string name="date_yesterday">Gestern</string>
+    <string name="conversation_read_only">In dieser Unterhaltung kann nicht geschrieben werden.</string>
 </resources>

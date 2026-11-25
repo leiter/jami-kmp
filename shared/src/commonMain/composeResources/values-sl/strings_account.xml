@@ -388,4 +388,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Račun je izvožen</string>
     <string name="snackbar_export_error">Izvoz ni uspel. Preverite geslo in poskusite znova.</string>
     <string name="action_rename">Preimenuj</string>
+    <string name="account_biometric_error_failed">Biometrično preverjanje ni uspelo. Poskusite znova.</string>
+    <string name="account_biometric_error_no_hardware">Biometrično preverjanje v tej napravi ni na voljo.</string>
+    <string name="account_biometric_error_not_enrolled">V tej napravi ni registriranih biometričnih podatkov. Dodajte prstni odtis ali obraz v nastavitvah naprave.</string>
+    <string name="account_biometric_error_unavailable">Biometrično preverjanje trenutno ni na voljo.</string>
+    <string name="biometric_authenticating">Preverjanje…</string>
+    <string name="biometric_disable_failed">Biometričnega preverjanja ni bilo mogoče izklopiti.</string>
+    <string name="biometric_enroll_description">Preverite se, da zaščitite geslo računa</string>
+    <string name="biometric_enroll_failed">Biometričnega preverjanja ni bilo mogoče vklopiti.</string>
+    <string name="biometric_error_no_credential">Za ta račun ni shranjena veljavna biometrična prijava. Odklenite z geslom in znova vklopite biometrijo.</string>
+    <string name="biometric_unlock">Odkleni</string>
+    <string name="biometric_unlock_title">Odkleni Jami</string>
+    <string name="error_no_account">Noben račun ni izbran</string>
 </resources>

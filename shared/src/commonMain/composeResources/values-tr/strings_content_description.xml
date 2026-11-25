@@ -99,4 +99,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_speaker_on">Hoparlör açık</string>
     <string name="content_desc_speaker_off">Hoparlör kapalı</string>
     <string name="content_desc_hold">Beklemeye al</string>
+    <string name="content_desc_selected">Seçili</string>
+    <string name="content_desc_not_selected">Seçili değil</string>
 </resources>

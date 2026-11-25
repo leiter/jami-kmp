@@ -306,4 +306,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">حساب با موفقیت برون‌بُرد شد</string>
     <string name="snackbar_export_error">برون‌بُرد ناموفق بود. گذرواژه را بررسی کرده و دوباره تلاش کنید.</string>
     <string name="action_rename">تغییر نام</string>
+    <string name="account_biometric_error_failed">احراز هویت زیستی ناموفق بود. لطفاً دوباره تلاش کنید.</string>
+    <string name="account_biometric_error_no_hardware">احراز هویت زیستی در این دستگاه در دسترس نیست.</string>
+    <string name="account_biometric_error_not_enrolled">هیچ داده زیستی در این دستگاه ثبت نشده است. در تنظیمات دستگاه یک اثر انگشت یا چهره اضافه کنید.</string>
+    <string name="account_biometric_error_unavailable">احراز هویت زیستی در حال حاضر در دسترس نیست.</string>
+    <string name="biometric_authenticating">در حال احراز هویت…</string>
+    <string name="biometric_disable_failed">غیرفعال کردن احراز هویت زیستی ممکن نشد.</string>
+    <string name="biometric_enroll_description">برای ایمن‌سازی گذرواژه حسابتان احراز هویت کنید</string>
+    <string name="biometric_enroll_failed">فعال کردن احراز هویت زیستی ممکن نشد.</string>
+    <string name="biometric_error_no_credential">هیچ ورود زیستی معتبری برای این حساب ذخیره نشده است. با گذرواژه قفل را باز کنید و دوباره احراز هویت زیستی را فعال کنید.</string>
+    <string name="biometric_unlock">باز کردن قفل</string>
+    <string name="biometric_unlock_title">باز کردن قفل Jami</string>
+    <string name="error_no_account">هیچ حسابی انتخاب نشده</string>
 </resources>

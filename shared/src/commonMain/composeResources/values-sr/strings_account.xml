@@ -376,4 +376,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Nalog je izvezen</string>
     <string name="snackbar_export_error">Izvoz nije uspeo. Proverite lozinku i pokušajte ponovo.</string>
     <string name="action_rename">Preimenuj</string>
+    <string name="account_biometric_error_failed">Biometrijska potvrda identiteta nije uspela. Pokušajte ponovo.</string>
+    <string name="account_biometric_error_no_hardware">Biometrijska potvrda identiteta nije dostupna na ovom uređaju.</string>
+    <string name="account_biometric_error_not_enrolled">Na ovom uređaju nisu registrovani biometrijski podaci. Dodajte otisak prsta ili lice u podešavanjima uređaja.</string>
+    <string name="account_biometric_error_unavailable">Biometrijska potvrda identiteta trenutno nije dostupna.</string>
+    <string name="biometric_authenticating">Potvrda identiteta…</string>
+    <string name="biometric_disable_failed">Biometrijsku potvrdu identiteta nije moguće isključiti.</string>
+    <string name="biometric_enroll_description">Potvrdite identitet da biste zaštitili lozinku naloga</string>
+    <string name="biometric_enroll_failed">Biometrijsku potvrdu identiteta nije moguće uključiti.</string>
+    <string name="biometric_error_no_credential">Za ovaj nalog nije sačuvana važeća biometrijska prijava. Otključajte lozinkom i ponovo uključite biometriju.</string>
+    <string name="biometric_unlock">Otključaj</string>
+    <string name="biometric_unlock_title">Otključaj Jami</string>
+    <string name="error_no_account">Nijedan nalog nije izabran</string>
 </resources>

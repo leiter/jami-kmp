@@ -333,4 +333,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Kontoen er eksportert</string>
     <string name="snackbar_export_error">Eksporten mislyktes. Kontroller passordet og prøv igjen.</string>
     <string name="action_rename">Gi nytt navn</string>
+    <string name="account_biometric_error_failed">Biometrisk autentisering mislyktes. Prøv igjen.</string>
+    <string name="account_biometric_error_no_hardware">Biometrisk autentisering er ikke tilgjengelig på denne enheten.</string>
+    <string name="account_biometric_error_not_enrolled">Ingen biometri er registrert på denne enheten. Legg til et fingeravtrykk eller ansikt i enhetsinnstillingene.</string>
+    <string name="account_biometric_error_unavailable">Biometrisk autentisering er utilgjengelig for øyeblikket.</string>
+    <string name="biometric_authenticating">Autentiserer…</string>
+    <string name="biometric_disable_failed">Kunne ikke slå av biometrisk autentisering.</string>
+    <string name="biometric_enroll_description">Autentiser for å sikre kontopassordet ditt</string>
+    <string name="biometric_enroll_failed">Kunne ikke slå på biometrisk autentisering.</string>
+    <string name="biometric_error_no_credential">Ingen gyldig biometrisk pålogging er lagret for denne kontoen. Lås opp med passordet ditt og slå på biometri igjen.</string>
+    <string name="biometric_unlock">Lås opp</string>
+    <string name="biometric_unlock_title">Lås opp Jami</string>
+    <string name="error_no_account">Ingen konto valgt</string>
 </resources>

@@ -159,4 +159,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">Më të rejat</string>
     <string name="pref_sortAlphabetical">A–Zh</string>
     <string name="pref_sortUnreadFirst">Të palexuarat së pari</string>
+    <string name="pref_days_short">%1$d ditë</string>
+    <string name="pref_seconds_short">%1$d sek.</string>
+    <string name="pref_history_forever">Përgjithmonë</string>
+    <string name="pref_option_auto">Automatik</string>
 </resources>

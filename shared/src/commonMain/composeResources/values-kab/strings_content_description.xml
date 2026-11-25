@@ -44,4 +44,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="content_desc_raise_hand">Rfed afus-ik-im</string>
     <string name="content_desc_send_call_message">Azen izen</string>
     <string name="content_desc_state_muted">Yettwasgugem</string>
+    <string name="content_desc_selected">Yettwafren</string>
+    <string name="content_desc_not_selected">Ur yettwafren ara</string>
 </resources>

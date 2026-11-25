@@ -120,4 +120,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="pref_sortLastActivity">സമീപകാലം</string>
     <string name="pref_sortAlphabetical">അ–ഹ</string>
     <string name="pref_sortUnreadFirst">വായിക്കാത്തവ ആദ്യം</string>
+    <string name="pref_days_short">%1$d ദി</string>
+    <string name="pref_seconds_short">%1$d സെ.</string>
+    <string name="pref_history_forever">എന്നേക്കും</string>
+    <string name="pref_option_auto">സ്വയമേവ</string>
 </resources>

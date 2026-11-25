@@ -333,4 +333,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="snackbar_export_success">Účet bol exportovaný</string>
     <string name="snackbar_export_error">Export zlyhal. Skontrolujte heslo a skúste to znova.</string>
     <string name="action_rename">Premenovať</string>
+    <string name="account_biometric_error_failed">Biometrické overenie zlyhalo. Skúste to znova.</string>
+    <string name="account_biometric_error_no_hardware">Biometrické overenie nie je na tomto zariadení k dispozícii.</string>
+    <string name="account_biometric_error_not_enrolled">Na tomto zariadení nie sú zaregistrované žiadne biometrické údaje. Pridajte odtlačok prsta alebo tvár v nastaveniach zariadenia.</string>
+    <string name="account_biometric_error_unavailable">Biometrické overenie momentálne nie je k dispozícii.</string>
+    <string name="biometric_authenticating">Overuje sa…</string>
+    <string name="biometric_disable_failed">Biometrické overenie sa nepodarilo vypnúť.</string>
+    <string name="biometric_enroll_description">Overte sa na zabezpečenie hesla k účtu</string>
+    <string name="biometric_enroll_failed">Biometrické overenie sa nepodarilo zapnúť.</string>
+    <string name="biometric_error_no_credential">Pre tento účet nie je uložené platné biometrické prihlásenie. Odomknite heslom a znova zapnite biometriu.</string>
+    <string name="biometric_unlock">Odomknúť</string>
+    <string name="biometric_unlock_title">Odomknúť Jami</string>
+    <string name="error_no_account">Nie je vybraný žiadny účet</string>
 </resources>
