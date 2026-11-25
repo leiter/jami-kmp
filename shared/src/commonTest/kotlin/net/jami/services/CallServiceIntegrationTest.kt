@@ -296,4 +296,39 @@ class CallServiceIntegrationTest {
         assertNotNull(call)
         assertTrue(call.isAudioMuted)
     }
+
+    /** I5: CallKit sends a CXEndCallAction only for a call that ended here. */
+    @Test
+    fun aCallHungUpHereEndsWithTheLocalReason() = runTest {
+        val stub = StubDaemonBridge()
+        val (_, callService) = makeServices(stub, this)
+        callService.onCallStateChanged("acc1", "mine", "CURRENT", 0)
+        callService.onCallStateChanged("acc1", "theirs", "CURRENT", 0)
+        advanceUntilIdle()
+        val mine = callService.getCall("mine")!!
+        val theirs = callService.getCall("theirs")!!
+
+        callService.hangUp("acc1", "mine")
+        callService.onCallStateChanged("acc1", "mine", "OVER", 0)
+        callService.onCallStateChanged("acc1", "theirs", "OVER", 0)
+        advanceUntilIdle()
+
+        assertEquals(Call.HangupReason.LOCAL, mine.hangupReason)
+        assertEquals(Call.HangupReason.NONE, theirs.hangupReason)
+    }
+
+    @Test
+    fun aRefusedCallEndsWithTheLocalReason() = runTest {
+        val stub = StubDaemonBridge()
+        val (_, callService) = makeServices(stub, this)
+        callService.onCallStateChanged("acc1", "ringing", "INCOMING", 0)
+        advanceUntilIdle()
+        val call = callService.getCall("ringing")!!
+
+        callService.refuse("acc1", "ringing")
+        callService.onCallStateChanged("acc1", "ringing", "OVER", 0)
+        advanceUntilIdle()
+
+        assertEquals(Call.HangupReason.LOCAL, call.hangupReason)
+    }
 }

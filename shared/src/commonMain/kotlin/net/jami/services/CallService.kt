@@ -268,6 +268,7 @@ class CallService(
      * Refuse an incoming call.
      */
     fun refuse(accountId: String, callId: String) {
+        markEndedHere(callId)
         scope.launch {
             // Mirror jami-android-client: refuse() for ringing calls, hangUp() as fallback.
             // refuse() sends a SIP 486 Busy / Decline to the caller for calls not yet accepted.
@@ -281,6 +282,7 @@ class CallService(
      * Hang up an active call.
      */
     fun hangUp(accountId: String, callId: String) {
+        markEndedHere(callId)
         scope.launch {
             daemonBridge.hangUp(accountId, callId)
         }
@@ -404,11 +406,21 @@ class CallService(
         scope.launch { daemonBridge.attendedTransfer(accountId, transferId, targetId) }
     }
 
+    /**
+     * Marks [callId] as ended by this user, before the daemon reports it over. Its OVER state then
+     * carries [Call.HangupReason.LOCAL] (setCallState keeps a reason it is not given), which is
+     * how CallKit learns to record the call as ended by us rather than by the peer (I5).
+     */
+    private fun markEndedHere(callId: String) {
+        calls[callId]?.takeIf { !it.callStatus.isOver }?.hangupReason = Call.HangupReason.LOCAL
+    }
+
     fun hangUpParticipant(accountId: String, callId: String) {
         scope.launch { daemonBridge.detachParticipant(accountId, callId) }
     }
 
     fun hangUpConference(accountId: String, confId: String) {
+        calls.values.filter { it.confId == confId }.forEach { markEndedHere(it.daemonId ?: return@forEach) }
         scope.launch { daemonBridge.hangUpConference(accountId, confId) }
     }
 

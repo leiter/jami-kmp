@@ -65,7 +65,8 @@ import platform.darwin.NSObject
  *   outgoing call → [registerOutgoingCall] → [reportOutgoingCallStarted] requests a
  *   CXStartCallAction → performStartCallAction reports it connecting (it is not dialled again).
  * - Outgoing call connects → callUpdates(CURRENT) → reportOutgoingCallWithUUID(connectedAt).
- * - Call ends → callUpdates(OVER) → CXProvider.reportCallWithUUID(ended).
+ * - Call ends → callUpdates(OVER) → CXProvider.reportCallWithUUID(ended), or a CXEndCallAction
+ *   when the user ended it in the app ([endFromApp]).
  *
  * ## Audio session
  * When the user answers, [provider:didActivateAudioSession:] is called and we configure
@@ -130,6 +131,9 @@ class CallKitManager(
 
     /** Incoming calls answered in the app whose CXAnswerCallAction is still on its way. */
     private val answeredInApp = mutableSetOf<String>()
+
+    /** Calls ended in the app whose CXEndCallAction is still on its way; see [endFromApp]. */
+    private val endedFromApp = mutableSetOf<String>()
 
     /**
      * A CallKit call reported straight off a VoIP push, before the daemon knows about it.
@@ -268,6 +272,10 @@ class CallKitManager(
                 }
             }
             Call.CallStatus.OVER -> {
+                if (call.hangupReason == Call.HangupReason.LOCAL) {
+                    endFromApp(callId)
+                    return
+                }
                 val reason = when (call.hangupReason) {
                     Call.HangupReason.BUSY -> CXCallEndedReasonFailed
                     Call.HangupReason.TIMEOUT -> CXCallEndedReasonUnanswered
@@ -477,6 +485,26 @@ class CallKitManager(
         }
     }
 
+    /**
+     * The user hung up or declined in Jami's own screen. CallKit hears that as a
+     * CXEndCallAction, as the native client sends one (`CallsProviderService.stopCall`): a
+     * `reportCall(endedAt:reason:)` can only say the call ended elsewhere, so it showed as
+     * "remote ended" (I5). The daemon has already been told, so [endedFromApp] keeps
+     * performEndCallAction from hanging up a second time.
+     */
+    private fun endFromApp(callId: String) {
+        val uuid = callToUuid[callId] ?: return
+        if (!endedFromApp.add(callId)) return
+        Log.d(TAG, "Ended in the app, telling CallKit: $callId")
+        callController.requestTransaction(CXTransaction(action = CXEndCallAction(callUUID = uuid))) { error ->
+            if (error != null) {
+                Log.e(TAG, "End transaction failed for $callId: ${error.localizedDescription}")
+                endedFromApp -= callId
+                endTrackedCall(callId, CXCallEndedReasonRemoteEnded)
+            }
+        }
+    }
+
     private fun endTrackedCall(callId: String, reason: Long) {
         answerKnownToCallKit -= callId
         answeredInApp -= callId
@@ -493,6 +521,7 @@ class CallKitManager(
         Log.d(TAG, "providerDidReset — clearing all tracked calls")
         answerKnownToCallKit.clear()
         answeredInApp.clear()
+        endedFromApp.clear()
         callToUuid.clear()
         uuidToCall.clear()
         callToAccount.clear()
@@ -550,13 +579,17 @@ class CallKitManager(
             performEndCallAction.fail()
             return
         }
-        Log.d(TAG, "End/Decline via CallKit: $callId")
-        scope.launch {
-            val call = callService.getCall(callId)
-            if (call?.isRinging == true && call.isIncoming) {
-                callService.refuse(accountId, callId)
-            } else {
-                callService.hangUp(accountId, callId)
+        if (endedFromApp.remove(callId)) {
+            Log.d(TAG, "CallKit confirms the end given in the app: $callId")
+        } else {
+            Log.d(TAG, "End/Decline via CallKit: $callId")
+            scope.launch {
+                val call = callService.getCall(callId)
+                if (call?.isRinging == true && call.isIncoming) {
+                    callService.refuse(accountId, callId)
+                } else {
+                    callService.hangUp(accountId, callId)
+                }
             }
         }
         // Remove eagerly — the callUpdates OVER event will also fire but find nothing to remove
