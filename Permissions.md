@@ -197,10 +197,10 @@ of it, and the service only uses `specialUse` on API 34+.
 ## Remaining Gaps (out of scope for this pass)
 
 - `READ_PROFILE` not declared (low priority — profile sync via daemon bridge)
-- `shouldShowRequestPermissionRationale()` pre-request rationale for camera/microphone (Accompanist or expect/actual required)
+- ~~`shouldShowRequestPermissionRationale()` pre-request rationale for camera/microphone~~ — done 2026-11-25 (`deb1f39`) in the Android `PermissionRequesterEffect`, for camera, microphone, location and contacts; iOS shows the blocked dialog instead (no rationale step there)
 - `FOREGROUND_SERVICE_MEDIA_PROJECTION` — **this is no longer hypothetical: screen sharing is
   implemented.** See the manifest re-check below.
-- Persistent "open device settings" deep-link button in denial dialog (requires expect/actual `openAppSettings()`)
+- ~~Persistent "open device settings" deep-link button in denial dialog~~ — done 2026-11-25 (`deb1f39`): `openAppSettings()` and `PermissionSettingsDialog`, used by the blocked dialog and onboarding's notifications dialog
 
 ---
 

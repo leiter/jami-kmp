@@ -50,14 +50,14 @@ Android is built and tested on another machine, so a shared change is compiled o
 | S3 | ~~**Two contact caches per peer.**~~ **Done 2026-11-25** — see the closed list. | L | |
 | S4 | ~~**No per-route navigation transitions.**~~ **Done 2026-11-25**, see the closed list. Left: a row → chat container transform. | M | |
 | S5 | ~~**`MediaViewerScreen` has no pager.**~~ **Done 2026-11-25**, see the closed list. | M | |
-| S6 | **Haptics only in the call flow** — none on long-press menus, swipe-to-reply, swipe-to-delete, reaction picker. | S | same |
-| S7 | **Video tiles in the media gallery have no thumbnail.** | M | `MediaGalleryScreen.kt` |
+| S6 | ~~**Haptics only in the call flow.**~~ **Done 2026-11-25** (`3a3788e`). | S | |
+| S7 | ~~**Video tiles in the media gallery have no thumbnail.**~~ **Done 2026-11-25** (`9dd1ca4`). | M | |
 | S8 | **Audio route picker** (earpiece / speaker / Bluetooth) — the call screen has one binary speaker toggle. Backend partly there on Android. | M | `doc/TODO.md` → Calls |
-| S9 | **Tapping a 1:1 peer's avatar in details does nothing.** Check the reference before treating it as a gap. | S | unverified parity |
+| S9 | ~~**Tapping a 1:1 peer's avatar in details does nothing.**~~ **Done 2026-11-25** (`c99aeb1`): a real gap, the reference sets a custom photo and name. | M | |
 | S10 | **Video recording in chat** — menu shows "coming soon". | L | |
 | S11 | **Robolectric for the four shared test classes excluded from the Android unit-test task.** | M | Android machine |
-| S12 | **Calling F9: call/stream introspection** (`getCallList`, `getConferenceList`, `currentMediaList`, `getConferenceInfos`) — diagnostics only. | S | mini-plans README |
-| S13 | `Permissions.md` leftovers: pre-request rationale for camera/microphone, an "open settings" button in the denial dialog. | S | `Permissions.md` |
+| S12 | ~~**Calling F9: call/stream introspection.**~~ **Done 2026-11-25**, except `currentMediaList` (see the closed list). | S | |
+| S13 | ~~`Permissions.md` leftovers.~~ **Done 2026-11-25** (`deb1f39`); the Android half is unbuilt here. | S | |
 
 ## 4. Seen once, cause unknown or unverified
 
@@ -189,3 +189,35 @@ Found already done, docs corrected:
   and swipe-to-dismiss act on the page on screen, and the shared element flies back to that
   page's bubble. An image missing from the list is shown alone. The reference viewer has no
   pager.
+- **S6 — haptics** (`3a3788e`). Swipe-to-reply ticks once as it crosses the reply threshold
+  (the reference's `KEYBOARD_TAP`), swipe-to-delete ticks when the row arms the delete, and
+  picking or toggling a reaction gives a light tick. Long-press menus already had their haptic
+  from `combinedClickable`. All of it goes through Compose's `HapticFeedback`, so it obeys the
+  system setting. Not felt on a device: the simulator has no haptics.
+- **S7 — video thumbnails in the gallery** (`9dd1ca4`). Each tile shows the frame the chat bubble
+  shows, under a play icon. On iOS the frame is now capped at 840 px and a leaked `CGImage` is
+  released.
+- **S9 — the 1:1 avatar and name in details** (`c99aeb1`). A real gap. The reference sets a
+  *custom profile* there: a name and/or photo only this device shows for that peer. It now works
+  the same way: rename / reset, gallery / camera / remove. The custom profile is stored in
+  `{data}/{account}/custom_profiles/`, preferred by `loadPeerAvatar` and `Contact.displayName`,
+  and restored at startup.
+- **S12 — call introspection** (this commit). `getCallList`, `getConferenceList` and
+  `getConferenceInfos` are in `DaemonBridgeApi`, with defaults for the secondary platforms.
+  `CallService.introspect` feeds a "calls" section in Debug logs (state, peer, mute flags,
+  codecs, conference streams). On iOS the conference list comes from each call's `CONF_ID`,
+  because the wrapper lacks `getConferenceList` and rebuilding the committed `.a` for a
+  diagnostic was not worth it. **`currentMediaList` was not added.** The Android SWIG binding
+  returns an opaque pointer (no typemap for `std::vector<MediaMap>`), and the iOS wrapper does
+  not export it. It needs a typemap or a wrapper method when someone needs it.
+- **S13 — permissions** (`deb1f39`). `PermissionRequesterEffect` explains a refused camera,
+  microphone, location or contacts permission and offers **Open settings**
+  (`openAppSettings()`).
+  - **iOS:** the blocked dialog appears whenever the permission is already denied, since the
+    system will not ask twice.
+  - **Android:** the reference's notification flow — a rationale when one is due, the blocked
+    dialog once "don't ask again" applies.
+  - **Notifications:** onboarding's own denied dialog now has the button too.
+  - **Not here:** a pre-request rationale on iOS. The system prompt carries the Info.plist
+    purpose string, and the reference has none for camera or microphone either.
+  - **Unbuilt:** the Android half is compiled on the Android machine only.

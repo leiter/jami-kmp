@@ -900,11 +900,14 @@ bubble layout fail by looking wrong, which no test in this repo can see.
     (`ChatScreen.kt:1209`, `if (!isOutgoing && message.author.isNotEmpty())`), so in a 1:1 chat
     the peer's name repeats above every single bubble. The reference shows it in groups only.
   - One task covers grouping, per-position corner radii, group avatars and the name rule.
-- [ ] **Haptics exist only in the call flow** — see the call item above; the message long-press
-  menu, swipe-to-reply, swipe-to-delete and the reaction picker have none.
-- [ ] **Video tiles in the media gallery have no thumbnail** — `MediaGalleryScreen.kt:180` draws
-  a play-icon placeholder; frame extraction is not implemented.
-- [ ] **The 1:1 peer avatar in conversation details is inert.** `ConversationDetailsScreen.kt:301`
+- [x] **Haptics exist only in the call flow** — **done 2026-11-25** (`3a3788e`): ticks on
+  swipe-to-reply, swipe-to-delete and reactions; long-press menus already had one from
+  `combinedClickable`.
+- [x] **Video tiles in the media gallery have no thumbnail** — **done 2026-11-25** (`9dd1ca4`): the
+  tile shows the first frame (`extractVideoThumbnail`, now size-capped on iOS) under a play icon.
+- [x] **The 1:1 peer avatar in conversation details is inert.** — **done 2026-11-25** (`c99aeb1`):
+  checked against the reference, where it sets a custom photo for the peer (local only), and the
+  name sets a custom name; both now do that here. Original note: `ConversationDetailsScreen.kt:301`
   makes the XL avatar clickable only when `canEditGroup` (to change a group photo), which is
   deliberate and documented. Tapping a 1:1 peer's avatar to see the photo full-size would reuse
   the shared-element plumbing above. **Not verified against the reference** — check
@@ -935,7 +938,7 @@ bubble layout fail by looking wrong, which no test in this repo can see.
   `HapticFeedbackType.Confirm` on answer and `Reject` on decline/hang-up (`:218-236`, `:350-355`)
   — Compose's multiplatform haptics rather than Android's `Vibrator`, which is why a grep for the
   Android API found nothing.
-  - **Still open, and the broader half of this:** haptics exist *only* in the call flow. Nothing
+  - **Done 2026-11-25 (`3a3788e`), was the broader half of this:** haptics existed *only* in the call flow. Nothing
     else in the app has any — not the message long-press menu, not swipe-to-reply, not
     swipe-to-delete on a conversation row, not the reaction picker. Those are the gestures where
     a reference Android app would give feedback.
