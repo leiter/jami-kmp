@@ -753,7 +753,8 @@ internal fun ConversationListItem(
             displayName = name,
             avatarBytes = conversation.avatarBytes,
             size = AvatarSize.Small,
-            showPresence = true,
+            // A group has no single presence; its row always showed "offline" (2026-11-24).
+            showPresence = !conversation.isGroup,
             presenceStatus = if (conversation.isOnline) PresenceStatus.Online
             else PresenceStatus.Offline,
         )

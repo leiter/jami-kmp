@@ -294,7 +294,7 @@ fun ConversationDetailsScreen(
             // id, the same chain Contact.displayUsername and the chat header use. The literals
             // "Unknown" and "?" that used to stand in here were untranslated and said nothing
             // about who was being looked at (seen on a device 2026-11-07).
-            val headerName = (if (state.isGroup) state.groupTitle.ifEmpty { state.displayName } else state.displayName)
+            val headerName = (if (state.isGroup) state.groupTitle.ifEmpty { state.conversationTitle }.ifEmpty { state.displayName } else state.displayName)
                 .ifBlank { state.username }
                 .ifBlank { state.identityHash }
 
@@ -734,6 +734,9 @@ private fun GroupMemberSection(
     var showAddDialog by remember { mutableStateOf(false) }
     var showRemoveUri by remember { mutableStateOf<String?>(null) }
     var showUnbanUri by remember { mutableStateOf<String?>(null) }
+    // Leaving is not undoable from here (a group needs a new invitation), so it asks first, as
+    // the reference does and as this screen's own delete already did.
+    var showLeaveConfirm by remember { mutableStateOf(false) }
     var newMemberInput by remember { mutableStateOf("") }
 
     Card(
@@ -782,7 +785,8 @@ private fun GroupMemberSection(
                     // (the daemon reports banned members too) and must not look like an ordinary
                     // one, or an admin cannot tell a ban took effect.
                     MemberRoleBadge(role)
-                    if (isAdmin && canBanUnbanMember) {
+                    // Never on your own row: blocking yourself from your own group is not an action.
+                    if (isAdmin && canBanUnbanMember && uri != selfMemberUri) {
                         if (role == MemberRole.BLOCKED) {
                             TextButton(onClick = { showUnbanUri = uri }) {
                                 Text(text = stringResource(Res.string.group_unblock_member))
@@ -802,7 +806,7 @@ private fun GroupMemberSection(
             // The daemon has a `leave` grant of its own; without it, leaving is refused.
             if (canLeave) {
                 TextButton(
-                    onClick = onLeave,
+                    onClick = { showLeaveConfirm = true },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = JamiTheme.spacing.s),
@@ -817,6 +821,26 @@ private fun GroupMemberSection(
                 }
             }
         }
+    }
+
+    if (showLeaveConfirm) {
+        JamiAlertDialog(
+            title = stringResource(
+                if (isGroup) Res.string.swarm_group_action_leave_title else Res.string.conversation_action_remove_title
+            ),
+            body = stringResource(
+                if (isGroup) Res.string.swarm_group_action_leave_message else Res.string.conversation_action_remove_message
+            ),
+            confirmText = stringResource(
+                if (isGroup) Res.string.swarm_group_action_leave else Res.string.leave_conversation
+            ),
+            isDestructive = true,
+            onConfirm = {
+                showLeaveConfirm = false
+                onLeave()
+            },
+            onDismiss = { showLeaveConfirm = false },
+        )
     }
 
     if (showAddDialog) {

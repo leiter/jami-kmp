@@ -639,7 +639,9 @@ fun ChatScreen(
                         // Normal mode: call buttons + overflow. No call buttons when the only
                         // party would be this account itself, and none while the account is
                         // switched off — the reference disables them with the offline panel.
-                        if (state.canCall &&
+                        // None in an ended conversation either: nobody is left to call, and the
+                        // composer is already replaced by "Conversation ended."
+                        if (state.canCall && !state.isEnded &&
                             state.connectivityBanner != ConnectivityBanner.AccountOffline) {
                         IconButton(onClick = { onCallClick(state.peerUri.ifEmpty { conversationId }, false) }) {
                             Icon(

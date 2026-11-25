@@ -132,4 +132,18 @@ class GroupMemberBanTest {
 
         assertTrue(vm.state.value.memberUris.isEmpty())
     }
+
+    /**
+     * A group with one invitee is still a group in details (group header, group actions), and an
+     * unnamed one is titled by its members, as in the list — not by its swarm id
+     * (simulators, 2026-11-24).
+     */
+    @Test
+    fun aTwoMemberGroupShowsAsAGroupTitledByItsMember() = runTest {
+        val (vm, _) = viewModel()
+
+        assertTrue(vm.state.value.isGroup)
+        assertEquals("", vm.state.value.groupTitle)
+        assertEquals(BOB, vm.state.value.conversationTitle)
+    }
 }

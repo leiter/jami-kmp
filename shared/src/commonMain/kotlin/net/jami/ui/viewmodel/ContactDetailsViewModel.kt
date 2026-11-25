@@ -86,6 +86,12 @@ data class ContactDetailsState(
     val selfMemberUri: String? = null,
     /** Group title, editable by admins. Empty for 1:1 conversations. */
     val groupTitle: String = "",
+    /**
+     * What the list and the chat header call this conversation ([net.jami.model.Conversation.title]):
+     * for a group without a name, its members. The header falls back to it, so an unnamed group
+     * is not shown by its swarm id here alone (simulators, 2026-11-24).
+     */
+    val conversationTitle: String = "",
     /** Group avatar, editable by admins. Falls back to [avatarBytes] when unset. */
     val groupAvatarBytes: ByteArray? = null,
     /**
@@ -270,6 +276,7 @@ class ContactDetailsViewModel(
                     memberNames = memberNames,
                     selfMemberUri = selfMemberUri,
                     groupTitle = groupProfile.displayName ?: "",
+                    conversationTitle = conversation?.title ?: "",
                     groupAvatarBytes = groupProfile.avatar,
                 )
             } catch (e: Exception) {
