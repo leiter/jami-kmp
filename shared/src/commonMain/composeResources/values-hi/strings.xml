@@ -451,7 +451,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">फ़ाइल हटाई गई</string>
     <string name="location_share_duration_10_min">10 मिनट</string>
     <string name="location_share_duration_1_hour">1 घंटा</string>
-    <string name="conversation_video_recording_unsupported">वीडियो रिकॉर्डिंग जल्द आ रही है</string>
     <string name="chat_extensions_unsupported">प्लगइन अभी समर्थित नहीं हैं</string>
     <string name="emoji_category_smileys">स्माइली</string>
     <string name="emoji_category_animals_nature">पशु और प्रकृति</string>

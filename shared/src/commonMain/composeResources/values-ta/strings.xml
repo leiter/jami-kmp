@@ -416,7 +416,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">கோப்பு நீக்கப்பட்டது</string>
     <string name="location_share_duration_10_min">10 நிமி</string>
     <string name="location_share_duration_1_hour">1 மணிநேரம்</string>
-    <string name="conversation_video_recording_unsupported">வீடியோ பதிவு விரைவில்</string>
     <string name="chat_extensions_unsupported">செருகுநிரல்கள் இன்னும் ஆதரிக்கப்படவில்லை</string>
     <string name="emoji_category_smileys">ஸ்மைலிகள்</string>
     <string name="emoji_category_animals_nature">விலங்குகள் &amp; இயற்கை</string>

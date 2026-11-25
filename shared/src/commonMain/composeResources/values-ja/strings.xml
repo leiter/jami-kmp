@@ -456,7 +456,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">ファイルは削除されました</string>
     <string name="location_share_duration_10_min">10 分</string>
     <string name="location_share_duration_1_hour">1 時間</string>
-    <string name="conversation_video_recording_unsupported">ビデオ録画は近日対応予定</string>
     <string name="chat_extensions_unsupported">プラグインはまだサポートされていません</string>
     <string name="emoji_category_smileys">スマイリー</string>
     <string name="emoji_category_animals_nature">動物と自然</string>

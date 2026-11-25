@@ -28,3 +28,13 @@ actual fun ImageCaptureEffect(
         onImageCaptured(null)
     }
 }
+
+@Composable
+actual fun VideoCaptureEffect(
+    show: Boolean,
+    onVideoCaptured: (path: String?) -> Unit,
+    onUnavailable: () -> Unit,
+) {
+    // No camera recording on this platform.
+    if (show) onUnavailable()
+}

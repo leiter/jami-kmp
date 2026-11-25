@@ -336,7 +336,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">ਫ਼ਾਈਲ ਮਿਟਾਈ ਗਈ</string>
     <string name="location_share_duration_10_min">10 ਮਿੰਟ</string>
     <string name="location_share_duration_1_hour">1 ਘੰਟਾ</string>
-    <string name="conversation_video_recording_unsupported">ਵੀਡੀਓ ਰਿਕਾਰਡਿੰਗ ਜਲਦੀ ਆ ਰਹੀ ਹੈ</string>
     <string name="chat_extensions_unsupported">ਪਲੱਗਇਨ ਅਜੇ ਸਮਰਥਿਤ ਨਹੀਂ ਹਨ</string>
     <string name="emoji_category_smileys">ਸਮਾਈਲੀ</string>
     <string name="emoji_category_animals_nature">ਜਾਨਵਰ ਅਤੇ ਕੁਦਰਤ</string>

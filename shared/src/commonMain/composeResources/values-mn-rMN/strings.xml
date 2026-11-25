@@ -394,7 +394,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Файл устгагдсан</string>
     <string name="location_share_duration_10_min">10 мин</string>
     <string name="location_share_duration_1_hour">1 цаг</string>
-    <string name="conversation_video_recording_unsupported">Видео бичлэг удахгүй</string>
     <string name="chat_extensions_unsupported">Залгаасууд одоогоор дэмжигдээгүй</string>
     <string name="emoji_category_smileys">Инээмсэглэл</string>
     <string name="emoji_category_animals_nature">Амьтан ба байгаль</string>

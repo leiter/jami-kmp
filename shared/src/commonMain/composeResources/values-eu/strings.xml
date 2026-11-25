@@ -403,7 +403,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Fitxategia ezabatu da</string>
     <string name="location_share_duration_10_min">10 min</string>
     <string name="location_share_duration_1_hour">Ordu 1</string>
-    <string name="conversation_video_recording_unsupported">Bideo-grabazioa laster</string>
     <string name="chat_extensions_unsupported">Pluginak oraindik ez dira onartzen</string>
     <string name="emoji_category_smileys">Aurpegierak</string>
     <string name="emoji_category_animals_nature">Animaliak eta natura</string>

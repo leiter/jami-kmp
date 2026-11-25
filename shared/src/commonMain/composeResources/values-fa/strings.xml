@@ -440,7 +440,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">پرونده حذف شد</string>
     <string name="location_share_duration_10_min">۱۰ دقیقه</string>
     <string name="location_share_duration_1_hour">۱ ساعت</string>
-    <string name="conversation_video_recording_unsupported">ضبط ویدیو به‌زودی</string>
     <string name="chat_extensions_unsupported">افزونه‌ها هنوز پشتیبانی نمی‌شوند</string>
     <string name="emoji_category_smileys">شکلک‌ها</string>
     <string name="emoji_category_animals_nature">حیوانات و طبیعت</string>

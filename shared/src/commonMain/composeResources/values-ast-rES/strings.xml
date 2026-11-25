@@ -409,7 +409,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Ficheru desaniciáu</string>
     <string name="location_share_duration_10_min">10 min</string>
     <string name="location_share_duration_1_hour">1 hora</string>
-    <string name="conversation_video_recording_unsupported">La grabación de videu va llegar ceo</string>
     <string name="chat_extensions_unsupported">Los complementos entá nun tán sofitaos</string>
     <string name="emoji_category_smileys">Emoticonos</string>
     <string name="emoji_category_animals_nature">Animales y natura</string>

@@ -188,7 +188,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">E hichapụla faịlụ</string>
     <string name="location_share_duration_10_min">Nkeji 10</string>
     <string name="location_share_duration_1_hour">Awa 1</string>
-    <string name="conversation_video_recording_unsupported">Ndekọ vidiyo na-abịa n'oge na-adịghị anya</string>
     <string name="chat_extensions_unsupported">A naghị akwado ngwa mgbakwunye ugbu a</string>
     <string name="emoji_category_smileys">Ihu ọchị</string>
     <string name="emoji_category_animals_nature">Anụmanụ na okike</string>

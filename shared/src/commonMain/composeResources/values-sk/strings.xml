@@ -463,7 +463,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Súbor odstránený</string>
     <string name="location_share_duration_10_min">10 min</string>
     <string name="location_share_duration_1_hour">1 hodina</string>
-    <string name="conversation_video_recording_unsupported">Nahrávanie videa už čoskoro</string>
     <string name="chat_extensions_unsupported">Doplnky zatiaľ nie sú podporované</string>
     <string name="emoji_category_smileys">Smajlíky</string>
     <string name="emoji_category_animals_nature">Zvieratá a príroda</string>

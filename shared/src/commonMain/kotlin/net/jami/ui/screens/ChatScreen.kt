@@ -223,6 +223,7 @@ import net.jami.ui.platform.FilePickerEffect
 import net.jami.ui.platform.FileSaveResult
 import net.jami.ui.platform.FileSaverEffect
 import net.jami.ui.platform.ImageCaptureEffect
+import net.jami.ui.platform.VideoCaptureEffect
 import net.jami.ui.platform.PermissionRequesterEffect
 import net.jami.ui.components.inputs.EmojiCatalog
 import net.jami.ui.components.inputs.EmojiPickerDialog
@@ -402,6 +403,8 @@ fun ChatScreen(
     // Camera permission and capture state
     var requestCameraPermission by remember { mutableStateOf(false) }
     var showImageCapture by remember { mutableStateOf(false) }
+    var requestVideoCameraPermission by remember { mutableStateOf(false) }
+    var showVideoCapture by remember { mutableStateOf(false) }
 
     // File picker state
     var showFilePicker by remember { mutableStateOf(false) }
@@ -521,6 +524,30 @@ fun ChatScreen(
                 viewModel.sendImage(path)
             }
         }
+    )
+
+    // "Record video": the same camera permission, then the system recorder.
+    PermissionRequesterEffect(
+        permission = AppPermission.Camera,
+        request = requestVideoCameraPermission,
+        onResult = { granted ->
+            requestVideoCameraPermission = false
+            if (granted) showVideoCapture = true
+        }
+    )
+
+    VideoCaptureEffect(
+        show = showVideoCapture,
+        onVideoCaptured = { path ->
+            showVideoCapture = false
+            if (path != null) viewModel.sendFile(path)
+        },
+        onUnavailable = {
+            showVideoCapture = false
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(getString(Res.string.video_recorder_error))
+            }
+        },
     )
 
     // Handle file picker
@@ -1119,10 +1146,9 @@ fun ChatScreen(
                     canSendText = state.permissions.canSendText(state.replyingTo?.messageId),
                     canSendFile = state.permissions.canSendFile(state.replyingTo?.messageId),
                     onStartAudioRecording = { viewModel.startAudioRecording() },
-                    onVideoRecordingUnsupported = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(getString(Res.string.conversation_video_recording_unsupported))
-                        }
+                    onRecordVideo = {
+                        if (viewModel.hasCameraPermission()) showVideoCapture = true
+                        else requestVideoCameraPermission = true
                     },
                     onChatExtensionsUnsupported = {
                         coroutineScope.launch {
@@ -2256,7 +2282,7 @@ private fun MessageInputBar(
     onSendFile: () -> Unit = {},
     onShareLocation: () -> Unit = {},
     onStartAudioRecording: () -> Unit = {},
-    onVideoRecordingUnsupported: () -> Unit = {},
+    onRecordVideo: () -> Unit = {},
     onChatExtensionsUnsupported: () -> Unit = {},
     focusRequester: FocusRequester = remember { FocusRequester() },
     /** The daemon's text grant: false leaves the field and send button inert. */
@@ -2355,7 +2381,7 @@ private fun MessageInputBar(
                                 },
                                 onClick = {
                                     showMenu = false
-                                    onVideoRecordingUnsupported()
+                                    onRecordVideo()
                                 },
                             )
 

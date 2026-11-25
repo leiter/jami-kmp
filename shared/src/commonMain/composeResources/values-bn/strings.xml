@@ -404,7 +404,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">ফাইল মুছে ফেলা হয়েছে</string>
     <string name="location_share_duration_10_min">১০ মিনিট</string>
     <string name="location_share_duration_1_hour">১ ঘণ্টা</string>
-    <string name="conversation_video_recording_unsupported">ভিডিও রেকর্ডিং শীঘ্রই আসছে</string>
     <string name="chat_extensions_unsupported">প্লাগইন এখনও সমর্থিত নয়</string>
     <string name="emoji_category_smileys">স্মাইলি</string>
     <string name="emoji_category_animals_nature">প্রাণী ও প্রকৃতি</string>

@@ -525,7 +525,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">ഫയൽ ഇല്ലാതാക്കി</string>
     <string name="location_share_duration_10_min">10 മിനിറ്റ്</string>
     <string name="location_share_duration_1_hour">1 മണിക്കൂർ</string>
-    <string name="conversation_video_recording_unsupported">വീഡിയോ റെക്കോർഡിംഗ് ഉടൻ</string>
     <string name="chat_extensions_unsupported">പ്ലഗിനുകൾ ഇതുവരെ പിന്തുണയ്ക്കുന്നില്ല</string>
     <string name="emoji_category_smileys">സ്മൈലികൾ</string>
     <string name="emoji_category_animals_nature">മൃഗങ്ങളും പ്രകൃതിയും</string>

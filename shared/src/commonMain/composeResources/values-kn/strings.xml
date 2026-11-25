@@ -402,7 +402,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">ಫೈಲ್ ಅಳಿಸಲಾಗಿದೆ</string>
     <string name="location_share_duration_10_min">10 ನಿಮಿ</string>
     <string name="location_share_duration_1_hour">1 ಗಂಟೆ</string>
-    <string name="conversation_video_recording_unsupported">ವೀಡಿಯೊ ರೆಕಾರ್ಡಿಂಗ್ ಶೀಘ್ರದಲ್ಲೇ</string>
     <string name="chat_extensions_unsupported">ಪ್ಲಗಿನ್‌ಗಳು ಇನ್ನೂ ಬೆಂಬಲಿತವಾಗಿಲ್ಲ</string>
     <string name="emoji_category_smileys">ಸ್ಮೈಲಿಗಳು</string>
     <string name="emoji_category_animals_nature">ಪ್ರಾಣಿಗಳು &amp; ಪ್ರಕೃತಿ</string>

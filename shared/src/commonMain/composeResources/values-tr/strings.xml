@@ -474,7 +474,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Dosya silindi</string>
     <string name="location_share_duration_10_min">10 dk</string>
     <string name="location_share_duration_1_hour">1 saat</string>
-    <string name="conversation_video_recording_unsupported">Video kaydı yakında</string>
     <string name="chat_extensions_unsupported">Eklentiler henüz desteklenmiyor</string>
     <string name="emoji_category_smileys">İfadeler</string>
     <string name="emoji_category_animals_nature">Hayvanlar ve doğa</string>

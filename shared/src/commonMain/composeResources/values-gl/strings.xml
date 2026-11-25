@@ -465,7 +465,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Ficheiro eliminado</string>
     <string name="location_share_duration_10_min">10 min</string>
     <string name="location_share_duration_1_hour">1 hora</string>
-    <string name="conversation_video_recording_unsupported">A gravación de vídeo chegará pronto</string>
     <string name="chat_extensions_unsupported">Os complementos aínda non son compatibles</string>
     <string name="emoji_category_smileys">Emoticonas</string>
     <string name="emoji_category_animals_nature">Animais e natureza</string>

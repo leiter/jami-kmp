@@ -392,7 +392,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">फाइल मेटाइयो</string>
     <string name="location_share_duration_10_min">10 मिनेट</string>
     <string name="location_share_duration_1_hour">1 घण्टा</string>
-    <string name="conversation_video_recording_unsupported">भिडियो रेकर्डिङ छिट्टै</string>
     <string name="chat_extensions_unsupported">प्लगइनहरू अझै समर्थित छैनन्</string>
     <string name="emoji_category_smileys">स्माइली</string>
     <string name="emoji_category_animals_nature">जनावर र प्रकृति</string>

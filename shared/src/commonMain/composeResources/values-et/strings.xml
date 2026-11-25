@@ -590,7 +590,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Fail kustutatud</string>
     <string name="location_share_duration_10_min">10 min</string>
     <string name="location_share_duration_1_hour">1 tund</string>
-    <string name="conversation_video_recording_unsupported">Videosalvestus tuleb peagi</string>
     <string name="chat_extensions_unsupported">Pistikprogramme veel ei toetata</string>
     <string name="emoji_category_smileys">Emotikonid</string>
     <string name="emoji_category_animals_nature">Loomad ja loodus</string>

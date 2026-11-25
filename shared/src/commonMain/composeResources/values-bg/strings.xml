@@ -403,7 +403,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Файлът е изтрит</string>
     <string name="location_share_duration_10_min">10 мин</string>
     <string name="location_share_duration_1_hour">1 час</string>
-    <string name="conversation_video_recording_unsupported">Записът на видео предстои скоро</string>
     <string name="chat_extensions_unsupported">Добавките все още не се поддържат</string>
     <string name="emoji_category_smileys">Емотикони</string>
     <string name="emoji_category_animals_nature">Животни и природа</string>

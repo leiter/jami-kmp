@@ -392,7 +392,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">ఫైల్ తొలగించబడింది</string>
     <string name="location_share_duration_10_min">10 నిమి</string>
     <string name="location_share_duration_1_hour">1 గంట</string>
-    <string name="conversation_video_recording_unsupported">వీడియో రికార్డింగ్ త్వరలో</string>
     <string name="chat_extensions_unsupported">ప్లగిన్‌లకు ఇంకా మద్దతు లేదు</string>
     <string name="emoji_category_smileys">స్మైలీలు</string>
     <string name="emoji_category_animals_nature">జంతువులు &amp; ప్రకృతి</string>

@@ -515,7 +515,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Afaylu yettwakkes</string>
     <string name="location_share_duration_10_min">10 n tesdatin</string>
     <string name="location_share_duration_1_hour">1 n usrag</string>
-    <string name="conversation_video_recording_unsupported">Asekles n tvidyut ad d-yas qrib</string>
     <string name="chat_extensions_unsupported">Izegrar ur ttwasefraken ara yakan</string>
     <string name="emoji_category_smileys">Udmawen</string>
     <string name="emoji_category_animals_nature">Iɣersiwen d ugama</string>

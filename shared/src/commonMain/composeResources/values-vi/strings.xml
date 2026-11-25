@@ -373,7 +373,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Đã xóa tệp</string>
     <string name="location_share_duration_10_min">10 phút</string>
     <string name="location_share_duration_1_hour">1 giờ</string>
-    <string name="conversation_video_recording_unsupported">Sắp có tính năng quay video</string>
     <string name="chat_extensions_unsupported">Chưa hỗ trợ tiện ích bổ sung</string>
     <string name="emoji_category_smileys">Mặt cười</string>
     <string name="emoji_category_animals_nature">Động vật và thiên nhiên</string>

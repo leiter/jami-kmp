@@ -16,7 +16,10 @@
  */
 package net.jami.ui.platform
 
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
+import android.provider.MediaStore
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -83,6 +86,64 @@ actual fun ImageCaptureEffect(
             }
         }
     }
+}
+
+/** The system recorder, asked for the front camera and a small file, as the reference asks. */
+private class CaptureFrontVideo : ActivityResultContracts.CaptureVideo() {
+    override fun createIntent(context: Context, input: Uri): Intent =
+        super.createIntent(context, input).apply {
+            putExtra("android.intent.extras.CAMERA_FACING", 1)
+            putExtra("android.intent.extras.LENS_FACING_FRONT", 1)
+            putExtra("android.intent.extra.USE_FRONT_CAMERA", true)
+            putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0)
+        }
+}
+
+@Composable
+actual fun VideoCaptureEffect(
+    show: Boolean,
+    onVideoCaptured: (path: String?) -> Unit,
+    onUnavailable: () -> Unit,
+) {
+    val context = LocalContext.current
+    val currentVideoPath = remember { mutableStateOf<String?>(null) }
+
+    val launcher = rememberLauncherForActivityResult(contract = CaptureFrontVideo()) { success ->
+        PendingActivityResultTracker.end()
+        val file = currentVideoPath.value?.let(::File)
+        // Some recorders report success without writing a byte; that is not a video to send.
+        onVideoCaptured(if (success && file != null && file.length() > 0) file.absolutePath else null)
+        currentVideoPath.value = null
+    }
+
+    LaunchedEffect(show) {
+        if (!show) return@LaunchedEffect
+        var began = false
+        try {
+            val videoFile = createCacheFile(context, "video_", ".mp4")
+            currentVideoPath.value = videoFile.absolutePath
+            began = true
+            PendingActivityResultTracker.begin()
+            launcher.launch(getUriForFile(context, videoFile))
+        } catch (e: ActivityNotFoundException) {
+            if (began) PendingActivityResultTracker.end()
+            Log.e("VideoCapture", "No video recorder: ${e.message}")
+            currentVideoPath.value = null
+            onUnavailable()
+        } catch (e: Exception) {
+            if (began) PendingActivityResultTracker.end()
+            Log.e("VideoCapture", "Failed to start the video recorder: ${e.message}")
+            currentVideoPath.value = null
+            onVideoCaptured(null)
+        }
+    }
+}
+
+private fun createCacheFile(context: Context, prefix: String, suffix: String): File {
+    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val cacheDir = File(context.cacheDir, "share")
+    if (!cacheDir.exists()) cacheDir.mkdirs()
+    return File.createTempFile("${prefix}${timestamp}_", suffix, cacheDir)
 }
 
 /**

@@ -590,7 +590,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Tiedosto poistettu</string>
     <string name="location_share_duration_10_min">10 min</string>
     <string name="location_share_duration_1_hour">1 tunti</string>
-    <string name="conversation_video_recording_unsupported">Videon tallennus tulossa pian</string>
     <string name="chat_extensions_unsupported">Laajennuksia ei vielä tueta</string>
     <string name="emoji_category_smileys">Hymiöt</string>
     <string name="emoji_category_animals_nature">Eläimet ja luonto</string>

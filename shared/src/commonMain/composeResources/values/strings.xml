@@ -877,7 +877,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="permission_dialog_battery_dismiss">Not now</string>
     <string name="location_share_duration_10_min">10 min</string>
     <string name="location_share_duration_1_hour">1 hour</string>
-    <string name="conversation_video_recording_unsupported">Video recording coming soon</string>
     <string name="chat_extensions_unsupported">Plugins not yet supported</string>
     <string name="emoji_category_smileys">Smileys</string>
     <string name="emoji_category_animals_nature">Animals &amp; nature</string>

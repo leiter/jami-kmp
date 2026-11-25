@@ -590,7 +590,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">文件已删除</string>
     <string name="location_share_duration_10_min">10 分钟</string>
     <string name="location_share_duration_1_hour">1 小时</string>
-    <string name="conversation_video_recording_unsupported">视频录制即将推出</string>
     <string name="chat_extensions_unsupported">尚不支持插件</string>
     <string name="emoji_category_smileys">笑脸</string>
     <string name="emoji_category_animals_nature">动物与自然</string>

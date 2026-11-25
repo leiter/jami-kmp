@@ -477,7 +477,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Fila er sletta</string>
     <string name="location_share_duration_10_min">10 min</string>
     <string name="location_share_duration_1_hour">1 time</string>
-    <string name="conversation_video_recording_unsupported">Videoopptak kjem snart</string>
     <string name="chat_extensions_unsupported">Programtillegg er ikkje støtta enno</string>
     <string name="emoji_category_smileys">Smilefjes</string>
     <string name="emoji_category_animals_nature">Dyr og natur</string>

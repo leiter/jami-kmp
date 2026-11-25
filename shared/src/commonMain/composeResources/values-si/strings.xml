@@ -36,7 +36,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">ගොනුව මකා දමන ලදී</string>
     <string name="location_share_duration_10_min">මිනි. 10</string>
     <string name="location_share_duration_1_hour">පැය 1</string>
-    <string name="conversation_video_recording_unsupported">වීඩියෝ පටිගත කිරීම ඉක්මනින්</string>
     <string name="chat_extensions_unsupported">පේනු තවම සහාය නොදක්වයි</string>
     <string name="emoji_category_smileys">සිනහමුහුණු</string>
     <string name="emoji_category_animals_nature">සතුන් සහ සොබාදහම</string>

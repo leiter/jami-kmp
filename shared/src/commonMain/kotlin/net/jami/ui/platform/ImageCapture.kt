@@ -34,3 +34,18 @@ expect fun ImageCaptureEffect(
     show: Boolean,
     onImageCaptured: (path: String?) -> Unit,
 )
+
+/**
+ * Records a short video with the system camera, front-facing, as jami-client-android's
+ * "Record video" does (`ConversationFragment.sendVideoMessage`, `ACTION_VIDEO_CAPTURE`).
+ *
+ * @param show Whether the camera should be opened.
+ * @param onVideoCaptured Called with the recorded video's absolute path, or null if cancelled.
+ * @param onUnavailable Called instead when this device has no camera that can record video.
+ */
+@Composable
+expect fun VideoCaptureEffect(
+    show: Boolean,
+    onVideoCaptured: (path: String?) -> Unit,
+    onUnavailable: () -> Unit,
+)

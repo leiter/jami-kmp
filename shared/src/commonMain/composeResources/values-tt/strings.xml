@@ -173,7 +173,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Файл бетерелде</string>
     <string name="location_share_duration_10_min">10 мин</string>
     <string name="location_share_duration_1_hour">1 сәгать</string>
-    <string name="conversation_video_recording_unsupported">Видео язу тиздән</string>
     <string name="chat_extensions_unsupported">Плагиннар әлегә хупланмый</string>
     <string name="emoji_category_smileys">Смайликлар</string>
     <string name="emoji_category_animals_nature">Хайваннар һәм табигать</string>

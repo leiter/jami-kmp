@@ -457,7 +457,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Filen har raderats</string>
     <string name="location_share_duration_10_min">10 min</string>
     <string name="location_share_duration_1_hour">1 timme</string>
-    <string name="conversation_video_recording_unsupported">Videoinspelning kommer snart</string>
     <string name="chat_extensions_unsupported">Insticksprogram stöds inte än</string>
     <string name="emoji_category_smileys">Smileys</string>
     <string name="emoji_category_animals_nature">Djur och natur</string>

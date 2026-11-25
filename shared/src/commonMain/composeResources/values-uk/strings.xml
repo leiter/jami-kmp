@@ -575,7 +575,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Файл видалено</string>
     <string name="location_share_duration_10_min">10 хв</string>
     <string name="location_share_duration_1_hour">1 година</string>
-    <string name="conversation_video_recording_unsupported">Запис відео незабаром</string>
     <string name="chat_extensions_unsupported">Плагіни ще не підтримуються</string>
     <string name="emoji_category_smileys">Смайлики</string>
     <string name="emoji_category_animals_nature">Тварини і природа</string>

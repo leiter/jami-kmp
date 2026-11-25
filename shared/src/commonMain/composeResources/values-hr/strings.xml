@@ -406,7 +406,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">Datoteka izbrisana</string>
     <string name="location_share_duration_10_min">10 min</string>
     <string name="location_share_duration_1_hour">1 sat</string>
-    <string name="conversation_video_recording_unsupported">Snimanje videa uskoro</string>
     <string name="chat_extensions_unsupported">Dodaci još nisu podržani</string>
     <string name="emoji_category_smileys">Smajlići</string>
     <string name="emoji_category_animals_nature">Životinje i priroda</string>

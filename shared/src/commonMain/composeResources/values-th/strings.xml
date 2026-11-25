@@ -403,7 +403,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">ลบไฟล์แล้ว</string>
     <string name="location_share_duration_10_min">10 นาที</string>
     <string name="location_share_duration_1_hour">1 ชั่วโมง</string>
-    <string name="conversation_video_recording_unsupported">การบันทึกวิดีโอจะมาเร็วๆ นี้</string>
     <string name="chat_extensions_unsupported">ยังไม่รองรับปลั๊กอิน</string>
     <string name="emoji_category_smileys">หน้ายิ้ม</string>
     <string name="emoji_category_animals_nature">สัตว์และธรรมชาติ</string>

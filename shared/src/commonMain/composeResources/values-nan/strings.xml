@@ -479,7 +479,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
     <string name="file_transfer_status_removed">檔案已刪除</string>
     <string name="location_share_duration_10_min">10 分鐘</string>
     <string name="location_share_duration_1_hour">1 小時</string>
-    <string name="conversation_video_recording_unsupported">視訊錄製即將推出</string>
     <string name="chat_extensions_unsupported">尚不支援外掛程式</string>
     <string name="emoji_category_smileys">笑臉</string>
     <string name="emoji_category_animals_nature">動物與自然</string>
