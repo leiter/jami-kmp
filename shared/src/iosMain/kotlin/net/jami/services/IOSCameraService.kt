@@ -77,7 +77,14 @@ import platform.CoreMedia.CMSampleBufferRef
 import platform.CoreVideo.CVPixelBufferGetHeight
 import platform.CoreVideo.kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
 import platform.CoreVideo.CVPixelBufferGetWidth
+import platform.AVFoundation.AVCaptureSessionErrorKey
+import platform.AVFoundation.AVCaptureSessionInterruptionEndedNotification
+import platform.AVFoundation.AVCaptureSessionInterruptionReasonKey
+import platform.AVFoundation.AVCaptureSessionRuntimeErrorNotification
+import platform.AVFoundation.AVCaptureSessionWasInterruptedNotification
+import platform.Foundation.NSNotification
 import platform.Foundation.NSNotificationCenter
+import platform.UIKit.UIApplicationDidBecomeActiveNotification
 import platform.Foundation.NSOperationQueue
 import platform.QuartzCore.CALayer
 import platform.UIKit.UIDevice
@@ -162,9 +169,25 @@ class IOSCameraService(
     @kotlin.concurrent.Volatile
     private var videoOrientation: platform.AVFoundation.AVCaptureVideoOrientation = AVCaptureVideoOrientationPortrait
 
+    /**
+     * Whether capture should be running: set by [startCapture], cleared by [stopCapture] and
+     * [closeCamera]. An interrupted session is not running, yet still wanted — that difference
+     * is what [resumeCaptureIfWanted] acts on.
+     */
+    @kotlin.concurrent.Volatile
+    private var captureWanted = false
+
+    /** Observer tokens for the open session's notifications; see [observeSession]. */
+    private var sessionObservers: List<platform.darwin.NSObjectProtocol> = emptyList()
+
+    /** A runtime error restarts the session once per open session, so a broken camera cannot loop. */
+    @kotlin.concurrent.Volatile
+    private var restartedAfterError = false
+
     init {
         enumerateCameras()
         observeOrientationChanges()
+        observeAppActivation()
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -359,6 +382,8 @@ class IOSCameraService(
 
             session.commitConfiguration()
             captureSession = session
+            restartedAfterError = false
+            observeSession(session)
 
             // Create params
             currentParams = IOSVideoParams(
@@ -384,6 +409,7 @@ class IOSCameraService(
 
     fun startCapture() {
         val session = captureSession ?: return
+        captureWanted = true
         if (session.isRunning()) {
             Log.w(tag, "Capture already running")
             return
@@ -398,6 +424,7 @@ class IOSCameraService(
 
     fun stopCapture() {
         val session = captureSession ?: return
+        captureWanted = false
         scope.launch(sessionDispatcher) {
             if (!session.isRunning()) return@launch
             session.stopRunning()
@@ -419,6 +446,8 @@ class IOSCameraService(
         val session = captureSession
         val input = currentInput
         val output = videoOutput
+        captureWanted = false
+        removeSessionObservers()
         if (session != null) {
             scope.launch(sessionDispatcher) {
                 if (session.isRunning()) session.stopRunning()
@@ -439,6 +468,79 @@ class IOSCameraService(
         _cameraState.value = CameraState.IDLE
         _currentCameraId.value = null
         Log.d(tag, "Camera closed")
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // Interruptions (I3 / R4)
+    // ══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Keeps our video alive across what iOS does to a capture session. A call answered on the
+     * lock screen asks for capture while the app is in the background, where the camera is
+     * refused (`videoDeviceNotAvailableInBackground`); so does a phone call, Split View or
+     * another app taking the camera. The session reports these as interruptions, and nothing
+     * listened, so our video could stay off after unlocking. The daemon keeps its input meanwhile:
+     * frames simply resume. jami-client-ios has no such handling either.
+     */
+    private fun observeSession(session: AVCaptureSession) {
+        removeSessionObservers()
+        val center = NSNotificationCenter.defaultCenter
+        val queue = NSOperationQueue.mainQueue
+        sessionObservers = listOf(
+            center.addObserverForName(AVCaptureSessionWasInterruptedNotification, session, queue) { note ->
+                Log.w(tag, "Capture interrupted, reason ${note?.userInfo?.get(AVCaptureSessionInterruptionReasonKey)}")
+            },
+            center.addObserverForName(AVCaptureSessionInterruptionEndedNotification, session, queue) { _ ->
+                Log.d(tag, "Capture interruption ended")
+                resumeCaptureIfWanted("interruption ended")
+            },
+            center.addObserverForName(AVCaptureSessionRuntimeErrorNotification, session, queue) { note ->
+                onRuntimeError(note)
+            },
+        )
+    }
+
+    private fun onRuntimeError(note: NSNotification?) {
+        val error = note?.userInfo?.get(AVCaptureSessionErrorKey) as? platform.Foundation.NSError
+        Log.e(tag, "Capture runtime error: ${error?.localizedDescription} (code ${error?.code})")
+        if (restartedAfterError) return
+        restartedAfterError = true
+        resumeCaptureIfWanted("runtime error")
+    }
+
+    private fun removeSessionObservers() {
+        val observers = sessionObservers
+        sessionObservers = emptyList()
+        observers.forEach { NSNotificationCenter.defaultCenter.removeObserver(it) }
+    }
+
+    /**
+     * The other half of a lock-screen answer: depending on the iOS version the session is not
+     * always told that the background denial is over, so becoming active checks as well.
+     */
+    private fun observeAppActivation() {
+        val setup = {
+            NSNotificationCenter.defaultCenter.addObserverForName(
+                name = UIApplicationDidBecomeActiveNotification,
+                `object` = null,
+                queue = NSOperationQueue.mainQueue,
+            ) { _ -> resumeCaptureIfWanted("app became active") }
+            Unit
+        }
+        if (platform.Foundation.NSThread.isMainThread) setup()
+        else platform.darwin.dispatch_async(platform.darwin.dispatch_get_main_queue()) { setup() }
+    }
+
+    /** Starts the session again if capture is wanted and it is not running; on the session queue. */
+    private fun resumeCaptureIfWanted(why: String) {
+        val session = captureSession ?: return
+        if (!captureWanted) return
+        scope.launch(sessionDispatcher) {
+            if (session !== captureSession || !captureWanted || session.isRunning()) return@launch
+            Log.d(tag, "Restarting capture: $why")
+            session.startRunning()
+            if (session.isRunning()) _cameraState.value = CameraState.CAPTURING
+        }
     }
 
     // ══════════════════════════════════════════════════════════════════════════
