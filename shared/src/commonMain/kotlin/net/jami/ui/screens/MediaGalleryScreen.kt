@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -59,6 +61,7 @@ import net.jami.ui.components.mediaSharedKey
 import net.jami.ui.components.sharedMediaElement
 import net.jami.di.getViewModel
 import net.jami.ui.theme.JamiTheme
+import net.jami.ui.utils.extractVideoThumbnail
 import net.jami.ui.utils.toImageBitmap
 import net.jami.ui.navigation.pagedImagePaths
 import net.jami.ui.viewmodel.ChatViewModel
@@ -190,11 +193,29 @@ private fun MediaGalleryTile(
                 CircularProgressIndicator(color = Color.White, modifier = Modifier.padding(24.dp))
             }
         } else {
-            // Video thumbnail extraction is not implemented; show a play-icon placeholder tile.
+            // First frame, as the chat bubble shows it (extractVideoThumbnail), under the play icon
+            // that marks the tile as a video. Black with the icon alone until the frame is ready,
+            // or if the file has none to give.
+            var thumbnail by remember(item.destinationPath) { mutableStateOf<ImageBitmap?>(null) }
+            LaunchedEffect(item.destinationPath) {
+                thumbnail = item.destinationPath?.let { extractVideoThumbnail(it) }
+            }
+            thumbnail?.let {
+                Image(
+                    bitmap = it,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            }
             Icon(
                 imageVector = Icons.Default.PlayArrow,
                 contentDescription = stringResource(Res.string.content_desc_video_thumbnail),
                 tint = Color.White,
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+                    .padding(4.dp),
             )
         }
     }

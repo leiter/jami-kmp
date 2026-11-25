@@ -12,6 +12,7 @@ import net.jami.utils.Log
 import org.jetbrains.skia.Image
 import platform.AVFoundation.AVAsset
 import platform.AVFoundation.AVAssetImageGenerator
+import platform.CoreGraphics.CGImageRelease
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
 import platform.CoreMedia.CMTimeMake
@@ -30,6 +31,10 @@ private const val TAG = "ImageUtils"
 
 /** JPEG quality used when re-encoding a downscaled image. */
 private const val SCALE_JPEG_QUALITY = 0.85
+
+// Longest side of a video thumbnail: the widest place one is drawn is a 280 dp chat bubble, 840 px
+// at 3x, so this stays sharp there and in a gallery tile while a 4K frame shrinks about 20-fold.
+private const val THUMBNAIL_MAX_PX = 840.0
 
 actual fun ByteArray.toImageBitmap(): ImageBitmap? = try {
     Image.makeFromEncoded(this).toComposeImageBitmap()
@@ -85,13 +90,19 @@ actual suspend fun extractVideoThumbnail(filePath: String): ImageBitmap? =
             val url = NSURL.fileURLWithPath(filePath)
             val generator = AVAssetImageGenerator(AVAsset.assetWithURL(url)).apply {
                 appliesPreferredTrackTransform = true
+                // A thumbnail, not the frame: the full-resolution frame of a 4K clip, PNG-encoded,
+                // cost tens of MB per tile once the media gallery showed a grid of them.
+                maximumSize = CGSizeMake(THUMBNAIL_MAX_PX, THUMBNAIL_MAX_PX)
             }
             val cgImage = generator.copyCGImageAtTime(
                 requestedTime = CMTimeMake(value = 1, timescale = 1),
                 actualTime = null,
                 error = null,
             ) ?: return@withContext null
-            val png = UIImagePNGRepresentation(UIImage.imageWithCGImage(cgImage))
+            // copyCGImageAtTime returns a +1 reference (a "copy" rule function).
+            val image = UIImage.imageWithCGImage(cgImage)
+            CGImageRelease(cgImage)
+            val png = UIImagePNGRepresentation(image)
                 ?: return@withContext null
             png.toByteArray().toImageBitmap()
         } catch (e: Exception) {
