@@ -72,7 +72,7 @@ all, one reduces to the Apple batch, and one is real but diagnostics-only. Detai
 | Finding | What is left | Verdict |
 |---|---|---|
 | calling F2 | per-participant **video** mute | **Impossible** — no such call in libjami; the audio half is wired |
-| calling F9 | `getCallList`, `getConferenceList`, `currentMediaList`, proactive `getConferenceInfos` | **Real and buildable** — all four are in the bindings and called from no Kotlin. Diagnostics only |
+| calling F9 | `getCallList`, `getConferenceList`, `currentMediaList`, proactive `getConferenceInfos` | **Done 2026-11-25** except `currentMediaList`: the other three are in `DaemonBridgeApi` and shown in Debug logs (`CallService.introspect`). `currentMediaList` turned out *not* buildable as is — the Android SWIG binding returns an opaque pointer and the iOS wrapper lacks it. Diagnostics only |
 | notifications F2 | iOS/macOS config signals | **Apple batch** — Android is now complete; the certificate signals landed with F6 and `audioMeter` with F9, so that caveat in the heading is stale. None of the 14 exist in `DaemonBridge.ios.kt` or `.macos.kt` |
 | contacts F5 | `getConversationConnectivity`, `getConversationTrackedMembers` | **Impossible** — neither is in `JamiService.java`. `getConnectionList`, the third, *is* now used (`DebugLogsViewModel` plus all three bridges), so this finding is further along than its heading says |
 | daemon F10 | `getNativeVersion`, `getAudioProcessingParams` | **Impossible** — absent from the bindings. `monitor` is wired (`DebugLogsViewModel`) |

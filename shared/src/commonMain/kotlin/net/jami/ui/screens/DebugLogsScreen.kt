@@ -238,6 +238,16 @@ fun DebugLogsScreen(
                             )
                         }
                     }
+                    // The daemon's own calls and conferences, to compare with what the call
+                    // screen shows (mini-plans calling F9).
+                    callIntrospectionLines(state.calls).forEach { line ->
+                        Text(
+                            text = line,
+                            style = mono,
+                            color = JamiTheme.colors.onSurfaceVariant,
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        )
+                    }
                     TextButton(onClick = { viewModel.dumpDaemonState() }) {
                         Text(stringResource(Res.string.debug_dump_daemon_state))
                     }
@@ -323,4 +333,47 @@ private fun conversationSyncLine(i: ConversationSyncInfo): String = buildString 
     append("/").append(i.loadedMessageCount)
     i.lastCommitId?.let { append(" · last ").append(it.take(8)) }
     if (i.bootstrapping) append(" · BOOTSTRAPPING")
+}
+
+/**
+ * The daemon's calls and conferences as debug-screen lines: one per call (id, state, peer,
+ * mute flags, codecs, conference) and one per conference stream (peer, device, flags). Ids are
+ * shortened to 12 characters like the other lines here; nothing at all when there is no call.
+ */
+internal fun callIntrospectionLines(calls: net.jami.services.CallIntrospection): List<String> {
+    if (calls.calls.isEmpty() && calls.conferences.isEmpty()) return emptyList()
+    val out = mutableListOf("  calls: ${calls.calls.size}")
+    calls.calls.forEach { call ->
+        val d = call.details
+        val flags = buildList {
+            if (d["AUDIO_MUTED"] == "true") add("audio muted")
+            if (d["VIDEO_MUTED"] == "true") add("video muted")
+            if (d["PEER_HOLDING"] == "true") add("peer holding")
+        }
+        val codecs = listOfNotNull(d["AUDIO_CODEC"]?.takeIf { it.isNotEmpty() }, d["VIDEO_CODEC"]?.takeIf { it.isNotEmpty() })
+        out += buildString {
+            append("    ${call.callId.take(12)} ${d["CALL_STATE"] ?: "?"}")
+            d["PEER_NUMBER"]?.takeIf { it.isNotEmpty() }?.let { append(" ${it.substringAfter(':').take(12)}") }
+            if (flags.isNotEmpty()) append(" · ${flags.joinToString()}")
+            if (codecs.isNotEmpty()) append(" · ${codecs.joinToString("/")}")
+            d["CONF_ID"]?.takeIf { it.isNotEmpty() }?.let { append(" · conf ${it.take(12)}") }
+        }
+    }
+    if (calls.conferences.isNotEmpty()) out += "  conferences: ${calls.conferences.size}"
+    calls.conferences.forEach { conf ->
+        out += "    ${conf.confId.take(12)}: ${conf.participants.size} stream(s)"
+        conf.participants.forEach { p ->
+            val flags = buildList {
+                if (p["active"] == "true") add("active")
+                if (p["isModerator"] == "true") add("moderator")
+                if (p["videoMuted"] == "true") add("video muted")
+                if (p["audioLocalMuted"] == "true" || p["audioModeratorMuted"] == "true") add("audio muted")
+                if (p["handRaised"] == "true") add("hand raised")
+            }
+            val who = p["uri"]?.takeIf { it.isNotEmpty() }?.substringAfter(':')?.take(12) ?: "local"
+            val device = p["device"]?.takeIf { it.isNotEmpty() }?.let { " /${it.take(8)}" } ?: ""
+            out += "      $who$device" + if (flags.isNotEmpty()) " · ${flags.joinToString()}" else ""
+        }
+    }
+    return out
 }

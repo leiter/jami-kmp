@@ -1239,6 +1239,24 @@ class CallService(
         }
     }
 
+    // ==================== Introspection ====================
+
+    /**
+     * What the daemon itself holds for [accountId]: its calls with their details, and its
+     * conferences with each participant stream (mini-plans calling F9). For the debug screen: it
+     * answers "does the daemon agree with the call screen?" without reading the log, e.g. a call
+     * the UI ended but the daemon still has, or a participant whose video the daemon reports muted.
+     * Read straight from the daemon on every call, not from this service's own maps.
+     */
+    fun introspect(accountId: String): CallIntrospection = CallIntrospection(
+        calls = daemonBridge.getCallList(accountId).map { id ->
+            DaemonCallInfo(id, daemonBridge.getCallDetails(accountId, id))
+        },
+        conferences = daemonBridge.getConferenceList(accountId).map { id ->
+            DaemonConferenceInfo(id, daemonBridge.getConferenceInfos(accountId, id))
+        },
+    )
+
     companion object {
         private const val TAG = "CallService"
 
@@ -1262,3 +1280,16 @@ sealed class CallEvent {
     data class ConferenceChanged(val conference: Conference) : CallEvent()
     data class ConferenceRemoved(val conferenceId: String) : CallEvent()
 }
+
+/** The daemon's view of an account's calls and conferences; see [CallService.introspect]. */
+data class CallIntrospection(
+    val calls: List<DaemonCallInfo> = emptyList(),
+    val conferences: List<DaemonConferenceInfo> = emptyList(),
+)
+
+/** A call as libjami getCallDetails reports it (CALL_STATE, PEER_NUMBER, AUDIO_MUTED, CONF_ID, …). */
+data class DaemonCallInfo(val callId: String, val details: Map<String, String>)
+
+/** A conference and its participant streams as libjami getConferenceInfos reports them
+ *  (uri, device, active, videoMuted, audioLocalMuted, isModerator, handRaised, …). */
+data class DaemonConferenceInfo(val confId: String, val participants: List<Map<String, String>>)

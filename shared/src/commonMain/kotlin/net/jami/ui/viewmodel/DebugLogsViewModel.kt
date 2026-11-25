@@ -41,6 +41,8 @@ data class DebugLogsState(
     /** Whether the app believes the daemon is running, and how many times it has started. */
     val daemonLifecycle: DaemonLifecycleState = DaemonLifecycleState.Stopped,
     val daemonStartCount: Int = 0,
+    /** The daemon's own calls and conferences for the current account (CallService.introspect). */
+    val calls: net.jami.services.CallIntrospection = net.jami.services.CallIntrospection(),
 )
 
 class DebugLogsViewModel(
@@ -48,6 +50,7 @@ class DebugLogsViewModel(
     private val accountService: AccountService,
     private val peerServicesService: PeerServicesService,
     private val daemonLifecycle: DaemonLifecycleService,
+    private val callService: net.jami.services.CallService,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) : ViewModel() {
     private val scope = scope
@@ -88,6 +91,10 @@ class DebugLogsViewModel(
                 } else emptyList(),
                 daemonLifecycle = daemonLifecycle.state.value,
                 daemonStartCount = daemonLifecycle.startCount,
+                calls = if (accountId != null) {
+                    runCatching { callService.introspect(accountId) }
+                        .getOrDefault(net.jami.services.CallIntrospection())
+                } else net.jami.services.CallIntrospection(),
             )
         }
     }

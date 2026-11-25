@@ -542,6 +542,21 @@ actual class DaemonBridge() : DaemonBridgeApi, IOSVideoFrameBridge {
         // Not the wrapper's getActiveCalls:, which is libjami::getCallList under another name.
         bridge.getConversationActiveCalls(accountId, conversationId = conversationId).toKotlinListOfMaps()
 
+    // The wrapper's getActiveCalls: *is* libjami::getCallList (see the header).
+    override fun getCallList(accountId: String): List<String> =
+        bridge.getActiveCalls(accountId)?.toKotlinList() ?: emptyList()
+
+    // The wrapper does not export libjami::getConferenceList, and adding it means rebuilding the
+    // committed .a for a diagnostic. Each call's details name its conference (CONF_ID), which
+    // gives the same list for every conference that still has a call in it.
+    override fun getConferenceList(accountId: String): List<String> =
+        getCallList(accountId)
+            .mapNotNull { getCallDetails(accountId, it)[net.jami.model.Call.KEY_CONF_ID]?.takeIf { id -> id.isNotEmpty() } }
+            .distinct()
+
+    override fun getConferenceInfos(accountId: String, confId: String): List<Map<String, String>> =
+        bridge.getConferenceInfos(accountId, conferenceId = confId).toKotlinListOfMaps()
+
     // ==================== Conversation Requests ====================
 
     override fun getConversationRequests(accountId: String): List<Map<String, String>> {

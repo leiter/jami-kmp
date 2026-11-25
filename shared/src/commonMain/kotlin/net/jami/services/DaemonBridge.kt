@@ -169,6 +169,20 @@ interface DaemonBridgeApi {
     fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int)
     fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>>
 
+    // ---- Call and conference introspection (diagnostics; mini-plans calling F9) ----
+    // Defaults return nothing, so the secondary platforms need no code. libjami's
+    // currentMediaList is not here: the Android binding returns an opaque SWIG pointer (no
+    // typemap for std::vector<MediaMap>) and the iOS wrapper does not export it.
+
+    /** libjami getCallList: ids of every call the daemon holds for the account. */
+    fun getCallList(accountId: String): List<String> = emptyList()
+
+    /** libjami getConferenceList: ids of the account's conferences. */
+    fun getConferenceList(accountId: String): List<String> = emptyList()
+
+    /** libjami getConferenceInfos: one map per participant stream of [confId]. */
+    fun getConferenceInfos(accountId: String, confId: String): List<Map<String, String>> = emptyList()
+
     // ==================== Conversation Requests ====================
     fun getConversationRequests(accountId: String): List<Map<String, String>>
     fun acceptConversationRequest(accountId: String, conversationId: String)
@@ -1220,6 +1234,15 @@ class StubDaemonBridge : DaemonBridgeApi {
     }
     override fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int) {}
     override fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> = emptyList()
+
+    /** What getCallList / getConferenceList / getConferenceInfos return, for tests. */
+    var callList: List<String> = emptyList()
+    var conferenceList: List<String> = emptyList()
+    val conferenceInfos: MutableMap<String, List<Map<String, String>>> = mutableMapOf()
+    override fun getCallList(accountId: String): List<String> = callList
+    override fun getConferenceList(accountId: String): List<String> = conferenceList
+    override fun getConferenceInfos(accountId: String, confId: String): List<Map<String, String>> =
+        conferenceInfos[confId] ?: emptyList()
 
     override fun getConversationRequests(accountId: String): List<Map<String, String>> = conversationRequests.toList()
     /** (accountId, conversationId) for every accepted request, in order, for tests to assert on. */

@@ -290,7 +290,7 @@ val jamiModule = module {
     viewModelFactory { ContactDetailsViewModel(get(), get(), get(), get(), vCardService = get()) }
     viewModelFactory { NewConversationViewModel(get(), get(), get(), get(), get(), vCardService = get()) }
     viewModelFactory { AboutViewModel() }
-    viewModelFactory { DebugLogsViewModel(get(), get(), get(), get()) }
+    viewModelFactory { DebugLogsViewModel(get(), get(), get(), get(), get()) }
     viewModelFactory { RecordingsViewModel(get()) }
     viewModelFactory { CertificatesViewModel(get(), get()) }
     viewModelFactory { AppViewModel(get(), get()) }

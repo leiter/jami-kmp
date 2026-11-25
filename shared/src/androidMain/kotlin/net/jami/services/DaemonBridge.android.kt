@@ -515,6 +515,15 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
         return JamiService.getActiveCalls(accountId, conversationId).toNative()
     }
 
+    override fun getCallList(accountId: String): List<String> =
+        JamiService.getCallList(accountId).toList()
+
+    override fun getConferenceList(accountId: String): List<String> =
+        JamiService.getConferenceList(accountId).toList()
+
+    override fun getConferenceInfos(accountId: String, confId: String): List<Map<String, String>> =
+        JamiService.getConferenceInfos(accountId, confId).toNative()
+
     // ==================== Conversation Requests ====================
 
     override fun getConversationRequests(accountId: String): List<Map<String, String>> {
