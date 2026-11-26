@@ -433,7 +433,7 @@ class AccountSettingsViewModel(
                 // Fall back to the JNI call only when the model cache is empty, and
                 // if that also returns nothing keep whatever the state already has so a
                 // correct list from a prior KnownDevicesChanged event is not overwritten.
-                val currentDeviceId = account.details[ConfigKey.ACCOUNT_DEVICE_ID.key] ?: ""
+                val currentDeviceId = account.deviceId
                 val knownDevices = account.devices.ifEmpty {
                     accountService.getKnownRingDevices(accountId)
                 }
@@ -769,7 +769,7 @@ class AccountSettingsViewModel(
         val account = accountService.currentAccount.value ?: return
         if (account.accountId != accountId) return
 
-        val currentDeviceId = account.details[ConfigKey.ACCOUNT_DEVICE_ID.key] ?: ""
+        val currentDeviceId = account.deviceId
         val deviceItems = devices.map { (id, name) ->
             DeviceItem(
                 deviceId = id,

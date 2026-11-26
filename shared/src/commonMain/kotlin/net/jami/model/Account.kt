@@ -108,9 +108,17 @@ class Account(
     val alias: String
         get() = details[ConfigKey.ACCOUNT_ALIAS.key] ?: ""
 
-    /** This device's ID, as reported by the daemon (used to target conference streams). */
+    /**
+     * This device's ID, as reported by the daemon (used to target conference streams and to tell
+     * this device from the linked ones). Newer daemons (iOS since 4117f880c) report it among the
+     * volatile details only; older ones in the details. Reading only the details left the
+     * device list without a current device, so this device was listed again as a linked one
+     * (two-simulator run, 2026-11-26).
+     */
     val deviceId: String
-        get() = details[ConfigKey.ACCOUNT_DEVICE_ID.key] ?: ""
+        get() = details[ConfigKey.ACCOUNT_DEVICE_ID.key]?.takeIf { it.isNotEmpty() }
+            ?: volatileDetails[ConfigKey.ACCOUNT_DEVICE_ID.key]
+            ?: ""
 
     val displayUsername: String
         get() = alias.ifEmpty { username.ifEmpty { accountId } }

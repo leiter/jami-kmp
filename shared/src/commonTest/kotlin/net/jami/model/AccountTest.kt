@@ -22,6 +22,19 @@ class AccountTest {
         assertFalse(account.isSip)
     }
 
+    /** Daemon 4117f880c reports the device id among the volatile details only. */
+    @Test
+    fun deviceIdFallsBackToTheVolatileDetails() {
+        val account = Account(
+            accountId = "a",
+            volatileDetails = mutableMapOf(ConfigKey.ACCOUNT_DEVICE_ID.key to "dev-volatile"),
+        )
+        assertEquals("dev-volatile", account.deviceId)
+
+        account.details[ConfigKey.ACCOUNT_DEVICE_ID.key] = "dev-details"
+        assertEquals("dev-details", account.deviceId)
+    }
+
     @Test
     fun testSipAccountTypeDetection() {
         val account = Account(
