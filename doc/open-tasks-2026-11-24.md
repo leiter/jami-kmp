@@ -90,12 +90,54 @@ delete-last-account → onboarding (F16); video fixes of build 50 (`1cbbc3b`), a
 teardown checks. Lists: `doc/ios-task-queue-2026-11-09.md` item 5,
 `doc/findings-protocol-2026-11.md` "Device test checklist".
 
+**iPhone, from the I-task run (build 54, none tried on a device):**
+- **I3 camera interruption** — in a video call, lock the phone (or answer from the lock
+  screen), unlock: our camera comes back without toggling it. Same after another app takes the
+  camera for a moment.
+- **I4 audio session** — answer a call from the lock screen: audio flows both ways straight
+  away; a video call uses the speaker, an audio call the earpiece. Hang up: other apps' audio
+  (music) resumes.
+- **I6 picture-in-picture** — in a video call with the peer's camera on, swipe home: a PiP
+  window shows the peer's video and keeps updating; tap it to return. Not offered in an audio
+  call or before the call connects.
+- **I9 screen sharing** — in a call, tap share screen: iOS asks once, the peer sees Jami's
+  screen; stop sharing restores the camera that was on before. (Jami's own screen only, and
+  only while it is in front.)
+- **I10 call waiting** — during a call, a second caller rings: CallKit offers "Hold & Accept"
+  and "End & Accept". Hold & Accept: the new call gets its own screen, the first is on hold;
+  ending the second brings the first back.
+
 **Pixel pair:** F11, F12, link-device import (F15 shared part), F14 Telecom extras, screen
 sharing on Android 14+, proximity lock, B13 cellular branch.
 
-**Simulators (possible here):** read markers, @mentions, Markdown, emoji fonts, SQLDelight
-settings/drafts, presence suspend/resume (`doc/ios-next-tasks-2026-11-11.md` item 7); manual
-test plan 2026-11-19 sections C (jump to latest) and D (call screen name).
+**Simulators — run 2026-11-26** (two-simulator harness through `chat`, then by hand with
+Maestro; `doc/ios-next-tasks-2026-11-11.md` item 7 and manual test plan 2026-11-19 C/D):
+
+| Check | Result |
+|---|---|
+| Read markers | **Pass** live. **Fixed:** after a restart the peers' markers were gone — only our own `lastDisplayed` was restored from the member list. |
+| Markdown | **Pass**: bold, italic, strikethrough, inline code (monospace), autolink + link preview card. |
+| Emoji fonts | **Pass**: colour emoji, skin tone, flag, ZWJ sequence (🧑‍💻), in bubbles and in the list preview. |
+| Drafts | **Pass**: a draft survives killing the app. (The conversation list shows no "Draft:" preview.) |
+| Settings | **Pass**: dark theme, compact mode and sort order survive a restart. **Fixed:** the dark-theme setting was stored but never applied — on any platform. |
+| Presence suspend/resume | **Pass**: background releases the subscriptions, then the account after 15 s; foreground restores both. The peer still shows "online" for minutes — the DHT announcement has to expire. |
+| C1–C5 jump to latest | **Pass** (all five). |
+| @mentions | **Fixed, three bugs:** the member who joined a group had no suggestions (the group loaded as a 1:1 before its clone finished and was never re-read); a mention of yourself was not highlighted; the suggestion chip stayed on screen after sending. |
+| D call screen name | **Not run**: needs a registered name, and registering throwaway names on the public name server is permanent. |
+
+**Found on the way, fixed:**
+- **Crash:** reopening a chat and focusing the composer threw "Place was called on a node which
+  was placed already" (Compose lookahead). The cause was the `SharedTransitionLayout` around
+  the whole `NavHost` (`6db96c30`); it is removed, and the thumbnail → viewer shared element is
+  off until a Compose Multiplatform update fixes the bug.
+- **Device list:** this device was listed a second time as "1 more linked device" — the 4117
+  daemon reports `Account.deviceID` among the volatile details only.
+- **Accessibility:** the home search bar's row was one clickable node, which on iOS hid the
+  account picker and the menu from VoiceOver.
+
+**Found, still open:** avatar labels (the account picker, a contact's presence) do not reach
+iOS accessibility — the avatar's own merged node sits inside another; the screen reader reads
+Markdown source (`**bold**`) rather than the rendered text.
 
 ## 6. Deprioritised platforms (unchanged)
 
