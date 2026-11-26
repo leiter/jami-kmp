@@ -772,6 +772,9 @@ class CallViewModel(
     private var pendingScreenShareCallId: String? = null
     private var screenShareReadyJob: Job? = null
 
+    /** The video source before screen sharing, restored by [stopScreenShare]. */
+    private var sourceBeforeScreenShare: String? = null
+
     /**
      * Start screen sharing. On Android this requests MediaProjection permission first;
      * the actual switchInput is deferred until the permission is granted and
@@ -804,6 +807,9 @@ class CallViewModel(
             val c = pendingScreenShareCallId ?: return@launch
             pendingScreenShareAccountId = null
             pendingScreenShareCallId = null
+            sourceBeforeScreenShare = callService.getCall(c)?.mediaList
+                ?.firstOrNull { it.mediaType == net.jami.model.Media.MediaType.MEDIA_TYPE_VIDEO }
+                ?.source?.takeIf { it.isNotEmpty() && it != "camera://desktop" }
             callService.replaceVideoMedia(a, c, "camera://desktop")
             // Force startCapture in case the daemon does not call it back after renegotiation
             hardwareService.startCapture("camera://desktop")
@@ -818,7 +824,11 @@ class CallViewModel(
     fun stopScreenShare() {
         val accountId = currentAccountId ?: return
         val callId = currentCallId ?: return
-        val cameraUri = if (_state.value.isFrontCamera) "camera://0" else "camera://1"
+        // Back to the camera in use before sharing: camera ids are not "0"/"1" everywhere (iOS
+        // names its cameras by AVCaptureDevice.uniqueID).
+        val cameraUri = sourceBeforeScreenShare
+            ?: if (_state.value.isFrontCamera) "camera://0" else "camera://1"
+        sourceBeforeScreenShare = null
         callService.replaceVideoMedia(accountId, callId, cameraUri)
         _state.value = _state.value.copy(isScreenSharing = false)
     }

@@ -22,6 +22,7 @@ import net.jami.services.DisplayLayerView
 import net.jami.services.DaemonBridgeApi
 import net.jami.repository.SettingsRepository
 import net.jami.services.IOSCameraService
+import net.jami.model.VideoDevices
 import net.jami.services.ProximityPolicy
 import net.jami.utils.Log
 import org.koin.core.component.KoinComponent
@@ -145,6 +146,18 @@ actual class HardwareService : KoinComponent {
     private var logging = false
     private var screenShareSession: Any? = null
     private var isScreenSharing = false
+
+    /**
+     * In-app screen capture for screen sharing (I9). Frames go to the daemon's "desktop" input
+     * once the daemon asks for it ([screenInputId], set by its StartCapture).
+     */
+    private val screenCapture = net.jami.services.IOSScreenCapture { buffer ->
+        screenInputId?.let { (daemonBridge as? net.jami.services.IOSVideoFrameBridge)?.writeOutgoingVideoFrame(buffer, 0, it) }
+    }
+
+    @kotlin.concurrent.Volatile
+    private var screenInputId: String? = null
+    private val _screenShareReady = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     actual val videoEvents: Flow<VideoEvent> = _videoEvents.asSharedFlow()
     actual val cameraEvents: Flow<VideoEvent> = _cameraEvents.asSharedFlow()
@@ -467,6 +480,9 @@ actual class HardwareService : KoinComponent {
     actual suspend fun initVideo() {
         val devices = cameraService.getVideoDevices()
         devices.cameras.forEach { id -> daemonBridge.addVideoDevice(id) }
+        // The screen, as Android registers it (VideoDevices.SCREEN_SHARING); frames come from
+        // IOSScreenCapture while a call shares it.
+        daemonBridge.addVideoDevice(VideoDevices.SCREEN_SHARING)
         if (devices.currentId?.isNotEmpty() == true) daemonBridge.setDefaultDevice(devices.currentId!!)
     }
 
@@ -514,6 +530,7 @@ actual class HardwareService : KoinComponent {
     actual fun cameraCleanup() { cameraService.closeCamera() }
 
     actual fun startCapture(camId: String?) {
+        if (isScreenDevice(camId)) return // frames come from IOSScreenCapture, not a camera
         scope.launch {
             if (cameraService.openCamera(camId)) {
                 cameraService.startCapture()
@@ -523,6 +540,10 @@ actual class HardwareService : KoinComponent {
     }
 
     actual fun stopCapture(camId: String) {
+        if (isScreenDevice(camId)) {
+            stopScreenCapture()
+            return
+        }
         cameraService.stopCapture()
         scope.launch { _cameraEvents.emit(VideoEvent(sinkId = camId)) }
     }
@@ -534,6 +555,12 @@ actual class HardwareService : KoinComponent {
      */
     fun onDaemonStartCapture(device: String) {
         Log.d(tag, "Daemon starts capture: $device")
+        if (isScreenDevice(device)) {
+            screenInputId = SCREEN_INPUT_ID
+            return
+        }
+        // Back to a camera: the screen is no longer what the call sends.
+        if (screenCapture.isCapturing) stopScreenCapture()
         cameraService.setDaemonCaptureInput(device)
         startCapture(device)
     }
@@ -542,6 +569,10 @@ actual class HardwareService : KoinComponent {
     fun onDaemonStopCapture(device: String) {
         Log.d(tag, "Daemon stops capture: $device")
         if (device.isEmpty()) return
+        if (isScreenDevice(device)) {
+            stopScreenCapture()
+            return
+        }
         cameraService.setDaemonCaptureInput(null)
         stopCapture(device)
     }
@@ -689,7 +720,7 @@ actual class HardwareService : KoinComponent {
                 }
             }
             uri.startsWith("camera://") -> {
-                if (isScreenSharing) { isScreenSharing = false; screenShareSession = null }
+                if (isScreenSharing) stopScreenCapture()
                 daemonBridge.switchVideoInput(accountId, callId, uri)
             }
             else -> daemonBridge.switchVideoInput(accountId, callId, uri)
@@ -759,8 +790,34 @@ actual class HardwareService : KoinComponent {
     }
 
     actual val screenShareRequest: SharedFlow<Unit> = MutableSharedFlow()
-    actual val screenShareReady: SharedFlow<Unit> = MutableSharedFlow()
-    actual fun requestScreenSharePermission() {}
+    actual val screenShareReady: SharedFlow<Unit> = _screenShareReady.asSharedFlow()
+
+    /**
+     * Starts in-app screen capture; iOS asks the user first. Ready once frames flow, and the
+     * call then switches its video to "camera://desktop" (CallViewModel.startScreenShare). A
+     * refusal emits nothing, and the view model's timeout clears the pending request.
+     */
+    actual fun requestScreenSharePermission() {
+        if (!screenCapture.isAvailable) {
+            Log.w(tag, "Screen capture is not available")
+            return
+        }
+        screenCapture.start { started ->
+            if (!started) return@start
+            screenShareSession = screenCapture
+            _screenShareReady.tryEmit(Unit)
+        }
+    }
+
+    private fun stopScreenCapture() {
+        screenInputId = null
+        isScreenSharing = false
+        screenShareSession = null
+        screenCapture.stop()
+    }
+
+    private fun isScreenDevice(device: String?): Boolean =
+        device?.removePrefix("camera://") == VideoDevices.SCREEN_SHARING
 
     companion object {
         private const val LOGGING_ENABLED_KEY = "hardware_logging_enabled"
@@ -769,3 +826,6 @@ actual class HardwareService : KoinComponent {
 
 /** How long a connected CallKit call waits for `didActivate` before activating the session itself. */
 private const val CALLKIT_ACTIVATION_GRACE_MS = 1_500L
+
+/** The daemon input screen frames are published under, as IOSCameraService names its inputs. */
+private const val SCREEN_INPUT_ID = "camera://" + VideoDevices.SCREEN_SHARING
