@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -188,17 +189,13 @@ fun HomeScreen(
             ) {
                 val searchDesc = stringResource(Res.string.content_desc_search_conversations)
                 Row(
+                    // Not clickable itself: the search target is the placeholder between the
+                    // avatar and the overflow button. A clickable row merged all three into one
+                    // node, and on iOS an accessibility element cannot expose children, so
+                    // VoiceOver could reach neither the account picker nor the menu
+                    // (two-simulator run, 2026-11-26).
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onSearchClick() }
-                        // The row is itself tappable and contains two more controls. Without a
-                        // role and a label of its own it was an unnamed node that a reader had
-                        // to guess at, sandwiched between the avatar and the overflow button.
-                        .semantics {
-                            role = Role.Button
-                            contentDescription = searchDesc
-                        }
-                        .testTag(TestTags.SEARCH_BAR)
                         .padding(
                             start = JamiTheme.spacing.m,
                         ),
@@ -233,14 +230,28 @@ fun HomeScreen(
 
                     Spacer(Modifier.width(JamiTheme.spacing.m))
 
-                    // Search placeholder
-                    Text(
-                        text = stringResource(Res.string.placeholder_search),
-                        style = JamiTheme.typography.bodyMedium,
-                        color = JamiTheme.colors.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.weight(1f),
-                    )
+                    // Search placeholder: the tap target, as tall as the menu button beside it
+                    // so the bar keeps its height. Labelled, so a reader hears "Search
+                    // conversations" rather than the placeholder text.
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 48.dp)
+                            .clickable { onSearchClick() }
+                            .semantics {
+                                role = Role.Button
+                                contentDescription = searchDesc
+                            }
+                            .testTag(TestTags.SEARCH_BAR),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.placeholder_search),
+                            style = JamiTheme.typography.bodyMedium,
+                            color = JamiTheme.colors.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
 
                     // Overflow menu
                     Box {
