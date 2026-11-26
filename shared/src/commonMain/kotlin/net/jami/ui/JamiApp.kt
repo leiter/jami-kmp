@@ -17,6 +17,7 @@
 package net.jami.ui
 
 import net.jami.ui.platform.clearFocusOnTapOutside
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -46,7 +47,11 @@ fun JamiApp() {
 
     WindowSecureEffect(enabled = appSettingsState.isScreenshotBlocking)
 
-    JamiTheme {
+    // "Dark theme" means always dark; off follows the system, as in the reference
+    // (pref_darkTheme_summary). The setting was stored but never applied until 2026-11-26.
+    val dark = appSettingsState.isDarkTheme || isSystemInDarkTheme()
+
+    JamiTheme(darkTheme = dark) {
         Surface(
             // iOS: a tap on empty space hides the keyboard (see clearFocusOnTapOutside).
             modifier = Modifier.fillMaxSize().clearFocusOnTapOutside(),

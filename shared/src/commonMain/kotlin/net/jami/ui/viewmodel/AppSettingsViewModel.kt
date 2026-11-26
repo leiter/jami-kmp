@@ -214,7 +214,8 @@ class AppSettingsViewModel(
     fun toggleDarkTheme() {
         val new = !_state.value.isDarkTheme
         _state.update { it.copy(isDarkTheme = new) }
-        settingsRepository.updateTheme(if (new) Theme.DARK else Theme.LIGHT)
+        // Off means "follow the system", not "always light": the toggle has only these two states.
+        settingsRepository.updateTheme(if (new) Theme.DARK else Theme.SYSTEM)
     }
 
     /**
