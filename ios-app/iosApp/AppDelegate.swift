@@ -47,6 +47,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             NSLog("JAMI_CA WARNING: cacert.pem not found — TLS name lookups may fail")
         }
 
+        // 0.7 Answer the notification extension's "is Jami running?" probe (I7), so a push
+        // shows nothing while our own daemon is up to post the real notification.
+        NotificationExtensionPing.start()
+
         // 1. Initialize Koin dependency injection.
         // Intentionally NOT wrapped in do/catch: doInitKoin() is no longer @Throws, so any
         // failure propagates as an unhandled Kotlin exception and the crash report carries
@@ -190,6 +194,27 @@ extension AppDelegate: PKPushRegistryDelegate {
 }
 
 // MARK: - Helpers
+
+/// The app's half of the notification extension's Darwin-notification probe
+/// (ios-app/jamiNotificationExtension/NotificationService.swift, AppActivityProbe).
+enum NotificationExtensionPing {
+    private static let query = "net.jami.kmp.nse.isAppRunning" as CFString
+    private static let answer = "net.jami.kmp.nse.appIsRunning" as CFString
+
+    private final class Token {}
+    private static let token = Token()
+
+    static func start() {
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(), Unmanaged.passUnretained(token).toOpaque(),
+            { _, _, _, _, _ in
+                CFNotificationCenterPostNotification(
+                    CFNotificationCenterGetDarwinNotifyCenter(),
+                    CFNotificationName(NotificationExtensionPing.answer), nil, nil, true)
+            },
+            query, nil, .deliverImmediately)
+    }
+}
 
 /// Receives home-screen quick actions — recent conversations published by
 /// IOSConversationShortcuts — and opens the conversation through the shared navigation.
