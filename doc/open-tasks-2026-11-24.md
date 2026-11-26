@@ -28,16 +28,16 @@ Android is built and tested on another machine, so a shared change is compiled o
 | # | Task | Size | Notes |
 |---|---|---|---|
 | I1 | ~~**R1: answering from CallKit turns our video off.**~~ **Done 2026-11-24** — see the closed list. | S | |
-| I2 | **R3: the wrapper reduces the incoming media list to a `hasVideo` bool.** A caller with the camera off still looks like a video call. Needs a wrapper change and an `.a` rebuild. | M | `~/.claude/plans/ios-video-receive-end.md` |
-| I3 | **R4: no camera interruption handling** (`AVCaptureSessionWasInterrupted` / `InterruptionEnded` / `RuntimeError`). Answering on the lock screen can leave our video off after unlocking. | M | `IOSCameraService.kt` |
-| I4 | **R5: the audio session is ours, not CallKit's** — no `didActivate`/`didDeactivate`, mode always VoiceChat. Audio works; low priority. | M | `HardwareService.ios.kt`, `CallKitManager.kt` |
-| I5 | **E1: a hang-up in the app reaches CallKit as "remote ended"**; the native client requests a `CXEndCallAction`. | S | `CallKitManager.kt` |
-| I6 | **Picture-in-picture during a video call.** | L | `doc/ios-video-pipeline.md` §4 |
-| I7 | **Notification Service Extension + App Group**, so message pushes display while suspended. Only useful once a push-capable DHT proxy exists (I12). Scaffold on branch `feat/ios-app-group-and-notification-extension` (`5971f3c`). | L | `doc/ios-native-parity-analysis.md` §2.1 |
-| I8 | **Share Extension** (share into Jami from other apps). No extension target exists. | M | parity analysis §2.2 |
-| I9 | **Screen sharing (ReplayKit)** — nothing exists. | L | |
-| I10 | **Call waiting** — `maximumCallsPerCallGroup = 1u`, a second incoming call is not supported. | M | `CallKitManager.kt:172` |
-| I11 | `IOSNotificationService` builds its action titles with `runBlocking { getString(...) }`. | S | `IOSNotificationService.kt:98` |
+| I2 | ~~**R3: the wrapper reduces the incoming media list to a `hasVideo` bool.**~~ **Done 2026-11-26** (`6f8e0f76`, `ea1c73be`) — see the closed list. | M | |
+| I3 | ~~**R4: no camera interruption handling.**~~ **Done 2026-11-26** (`eb757526`); untested on a device. | M | |
+| I4 | ~~**R5: the audio session is ours, not CallKit's.**~~ **Done 2026-11-26** (`80a2b4dc`); untested on a device. | M | |
+| I5 | ~~**E1: a hang-up in the app reaches CallKit as "remote ended".**~~ **Done 2026-11-26** (`eec8a33e`). | S | |
+| I6 | ~~**Picture-in-picture during a video call.**~~ **Done 2026-11-26** (`b48e2ae3`); untested with a real call. | L | |
+| I7 | **Notification Service Extension** — a lean, Swift-only extension exists (`0d82d984`): generic "New message" while suspended, simulator-only until its App ID exists. **Left:** decrypting needs a slim libjami for the extension; push delivery needs I12. | L | `ios-app/jamiNotificationExtension/README.md` |
+| I8 | ~~**Share Extension.**~~ **Done 2026-11-26** (`288e9a03`), simulator-only until the App Group and App ID exist. | M | `ios-app/jamiShareExtension/README.md` |
+| I9 | **Screen sharing** — in-app sharing is implemented, untested in a call (ReplayKit `RPScreenRecorder`, Jami's own screen while in front; see the closed list). **Left:** whole-device sharing needs a Broadcast Upload Extension. | L | |
+| I10 | ~~**Call waiting.**~~ **Done 2026-11-26** (`83cfa220`); untested with two callers. | M | |
+| I11 | ~~`IOSNotificationService` builds its action titles with `runBlocking`.~~ **Done 2026-11-26** (`2a09b04f`, fixed in `03e1f84c`). | S | |
 | I12 | **Push delivery infrastructure**: App ID Push capability plus a self-hosted `dhtnode --proxyserver` holding APNs credentials. Infrastructure, not code. | — | `doc/push-notifications.md` |
 | I13 | **macOS / shared `appleMain` source set** — macOS does not compile (~95 errors); start from `origin/macos-build-and-apple-source-set` (`f0f66ce`, far behind). Secondary platform. | L | `doc/apple-bridge-rebuild.md` step 8 |
 
@@ -235,3 +235,43 @@ Found already done, docs corrected:
   Android `CaptureVideo` with the reference's extras) and sends the file. Same camera
   permission flow as photos; no recorder → `video_recorder_error`. **Untested:** recording
   itself, which needs a device camera.
+
+## Closed 2026-11-26 (iOS I-tasks, unattended run)
+
+Easiest to hardest. Each was committed after `:shared:iosSimulatorArm64Test` passed, and the
+simulator app builds and starts. Nothing here was tried on a device. I12 is infrastructure and
+I13 (macOS) was skipped, as agreed.
+
+- **I5 — hang-up reaches CallKit as ours** (`eec8a33e`). `CallService` marks a call it ends
+  with `HangupReason.LOCAL`. CallKitManager answers that OVER with a `CXEndCallAction`, as the
+  native client does, and does not hang up twice.
+- **I11 — no runBlocking in notifications** (`2a09b04f`). Posts and cancels go through one
+  serial main-thread queue. **That commit crashed the app at every launch.** A suspending
+  `getString` inside an ObjC call's arguments gave EXC_BAD_ACCESS in `+[UNNotificationAction
+  actionWithIdentifier:…]`. Fixed in `03e1f84c`: strings first, then the UserNotifications
+  objects. The unit tests cannot see this; only a launch can.
+- **I3 — camera interruptions** (`eb757526`). Capture restarts when an interruption ends, when
+  the app becomes active, and once after a runtime error, while capture is wanted.
+- **I2 — the real incoming media list** (`6f8e0f76` and the rebuilt archives in `ea1c73be`). The
+  wrapper delegate is now `onIncomingCall:…:mediaList:`, so labels and MUTED arrive as on
+  Android.
+- **I4 — CallKit owns the audio session** (`80a2b4dc`). While CallKit holds a call, the session
+  is only configured (VoiceChat, or VideoChat for video), and `didActivate` applies the route.
+  If CallKit has not activated it 1.5 s after connect, we activate it ourselves.
+- **I10 — call waiting** (`83cfa220`). Two call groups, so CallKit offers Hold & Accept / End &
+  Accept. The answered call gets its own screen, and a held call comes back when the other ends.
+- **I8 — Share Extension** (`288e9a03`). It copies items into the App Group's share inbox and
+  opens `jamikmp://share`. The app opens its share picker. Simulator-checked with an inbox
+  entry; the extension's own UI was not driven.
+- **I6 — picture-in-picture** (`b48e2ae3`). A sample-buffer content source on the remote
+  video's own display layer. It starts automatically when leaving the app during a video call.
+- **I7 — notification extension** (`0d82d984`). Swift only, no decryption (the reasons are in
+  its README). It registers on the simulator; a `simctl push` did not visibly reach it.
+- **I9 — screen sharing, in-app** (this commit). `IOSScreenCapture` (ReplayKit in-app capture)
+  feeds the daemon's "desktop" input, now registered like Android's. Leaving screen sharing goes
+  back to the camera the call used before; `camera://0`/`1` are Android ids. Jami's own screen
+  only, and only while in front.
+
+**Extensions are simulator-only.** Device and Release builds compile them unsigned and leave
+them out, so archives and TestFlight are unchanged. Each extension's README lists the portal
+steps.
