@@ -92,6 +92,7 @@ actual class HardwareService : KoinComponent {
     private val daemonBridge: DaemonBridgeApi by inject()
     private val cameraService: IOSCameraService by inject()
     private val settingsRepository: SettingsRepository by inject()
+    private val pipManager: net.jami.services.PictureInPictureManager by inject()
 
     private val tag = "HardwareService"
     private val userDefaults = NSUserDefaults.standardUserDefaults
@@ -560,6 +561,8 @@ actual class HardwareService : KoinComponent {
         val layer = existingDisplayLayer(view) ?: DisplayLayerView.install(view, ::layoutVideoLayer)
         displayLayers[id] = layer
         videoBridge?.attachVideoLayer(id, layer)
+        // The newest remote video is what picture-in-picture shows (I6).
+        (pipManager as? net.jami.services.IOSPictureInPictureManager)?.bindDisplayLayer(layer)
     }
 
     private fun existingDisplayLayer(view: UIView): AVSampleBufferDisplayLayer? =
@@ -578,6 +581,9 @@ actual class HardwareService : KoinComponent {
         videoSurfaces.remove(id)
         displayLayers.remove(id)?.let { layer ->
             videoBridge?.attachVideoLayer(id, null)
+            (pipManager as? net.jami.services.IOSPictureInPictureManager)?.let { pip ->
+                pip.bindDisplayLayer(displayLayers.values.lastOrNull())
+            }
             layer.flushAndRemoveImage()
             DisplayLayerView.uninstall(layer)
         }
