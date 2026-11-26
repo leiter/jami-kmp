@@ -34,15 +34,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavType
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import net.jami.ui.components.LocalNavAnimatedVisibilityScope
-import net.jami.ui.components.LocalSharedTransitionScope
 import net.jami.di.getViewModel
 import net.jami.model.Call
 import net.jami.services.AccountService
@@ -231,7 +228,6 @@ private fun OnboardingNavigation(appViewModel: AppViewModel) {
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun MainNavigation(needsMigration: Boolean) {
     val navController = rememberNavController()
@@ -339,11 +335,12 @@ private fun MainNavigation(needsMigration: Boolean) {
         }
     }
 
-    // Owns the overlay a shared element flies through on its way between a thumbnail and the
-    // full-screen viewer. It wraps the whole graph because the two ends live in different
-    // destinations; see net.jami.ui.components.SharedMedia.
-    SharedTransitionLayout {
-    CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+    // No SharedTransitionLayout around the graph (added in 6db96c30 for the thumbnail -> viewer
+    // shared element). Its lookahead pass crashed the app on iOS: open a chat a second time,
+    // focus the composer, and Compose threw "Place was called on a node which was placed
+    // already" from the message list (two-simulator run, 2026-11-26; gone with the layout
+    // removed, reproducible with it). With no LocalSharedTransitionScope, sharedMediaElement is
+    // a no-op and the viewer opens with the ordinary route transition.
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route,
@@ -718,7 +715,5 @@ private fun MainNavigation(needsMigration: Boolean) {
                 onBack = { navController.popBackStack() },
             )
         }
-    }
-    }
     }
 }

@@ -28,6 +28,11 @@ import androidx.compose.ui.composed
 /**
  * The plumbing for a shared-element transition between a thumbnail and the full-screen viewer.
  *
+ * **Switched off since 2026-11-26:** the graph no longer provides [LocalSharedTransitionScope],
+ * because the `SharedTransitionLayout` it needs crashed the iOS app (see the note above the
+ * `NavHost` in JamiNavigation). Everything here stays a no-op until that layout comes back,
+ * once a Compose Multiplatform update no longer crashes on it.
+ *
  * A shared element needs two scopes: the [SharedTransitionScope] that owns the overlay the
  * element flies through, and the [AnimatedVisibilityScope] of the destination being animated in
  * or out. The first belongs to a layout wrapping the whole `NavHost`; the second is the
