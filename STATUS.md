@@ -29,7 +29,7 @@ signals (`VolumeChanged`, `Error`, `StunStatusFailed`, hardware de/encoding, `Me
 paths has been exercised live yet. `setDefaultModerator` was dropped from the batch: default moderators go through
 account details (`ConfigKey.DEFAULT_MODERATORS`) on every platform. macOS keeps stubs (its `.a` is not rebuilt).
 See `doc/apple-bridge-rebuild.md`.
-- **macOS target compiles (2026-11-26, branch `macos-apple-source-set-2026-11`)** — 0 errors on macosArm64 and macosX64, from 98. The UIKit-free Darwin code (DaemonBridge, Settings, FileUtils, QR/Hash utils, biometrics, local prefs, …) now lives once in the `appleMain` source set; macOS got a current `HardwareService` actual. Kotlin compile, test compile and the static framework link pass; there is no macOS host app, so nothing has run. `build-jamibridge.sh`'s macOS stage still fails on UIKit code compiled against the macOS SDK.
+- **macOS target compiles (2026-11-26, `b9cdeba0`)** — 0 errors on macosArm64 and macosX64, from 98. The UIKit-free Darwin code (DaemonBridge, Settings, FileUtils, QR/Hash utils, biometrics, local prefs, …) now lives once in the `appleMain` source set; macOS got a current `HardwareService` actual. Kotlin compile, test compile and the static framework link pass; there is no macOS host app, so nothing has run. `build-jamibridge.sh`'s macOS stage still fails on UIKit code compiled against the macOS SDK.
 - **iOS video in calls** — implemented 2026-11-11 (branch `ios-video-pipeline`); **exercised in
   a real call on 2026-11-18** (build 48, iPhone ↔ Pixel) and found broken in six distinct ways.
   All six were fixed in `1cbbc3b` and shipped as TestFlight build 50, which is **not itself
@@ -313,7 +313,7 @@ Built on a Mac and run in the simulator; the Obj-C++ wrapper `.a` files were reb
   target could never link. Declared Apple targets are iosArm64, iosSimulatorArm64, macosArm64, macosX64
 
 ### macOS
-**Status:** 🟡 Compiles (2026-11-26, branch `macos-apple-source-set-2026-11`); never run.
+**Status:** 🟡 Compiles (2026-11-26, `b9cdeba0`); never run.
 Shared with iOS through the `appleMain` source set: DaemonBridge, Settings, database driver,
 FileUtils/QR/Hash/Time/log utilities, biometrics, local prefs, language, ringtone, battery, lock
 screen. Split per target: HardwareService, PlatformModule, notifications, permissions, pickers,
