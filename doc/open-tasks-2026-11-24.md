@@ -39,7 +39,7 @@ Android is built and tested on another machine, so a shared change is compiled o
 | I10 | ~~**Call waiting.**~~ **Done 2026-11-26** (`83cfa220`); untested with two callers. | M | |
 | I11 | ~~`IOSNotificationService` builds its action titles with `runBlocking`.~~ **Done 2026-11-26** (`2a09b04f`, fixed in `03e1f84c`). | S | |
 | I12 | **Push delivery infrastructure**: App ID Push capability plus a self-hosted `dhtnode --proxyserver` holding APNs credentials. Infrastructure, not code. | — | `doc/push-notifications.md` |
-| I13 | **macOS / shared `appleMain` source set** — macOS does not compile (~95 errors); start from `origin/macos-build-and-apple-source-set` (`f0f66ce`, far behind). Secondary platform. | L | `doc/apple-bridge-rebuild.md` step 8 |
+| I13 | ~~**macOS / shared `appleMain` source set.**~~ **Compiles 2026-11-26** on branch `macos-apple-source-set-2026-11`: 98 → 0 errors, iOS unaffected (1165 tests, app launches). **Left:** no macOS host app, so nothing has run; `build-jamibridge.sh`'s macOS stage fails on UIKit code; no camera/video on macOS. | L | `STATUS.md` → macOS |
 
 ## 3. Shared (all platforms) — code work
 

@@ -20,23 +20,36 @@ package net.jami.services
 
 import kotlinx.cinterop.*
 import net.jami.bridge.*
+import net.jami.model.ConfigKey
 import net.jami.model.MediaAttribute
 import net.jami.model.SwarmMessage
 import net.jami.utils.Log
 import platform.Foundation.*
+import net.jami.services.expect.HardwareService
+import org.koin.mp.KoinPlatformTools
 import platform.darwin.NSObject
+import platform.AVFoundation.AVSampleBufferDisplayLayer
+import platform.CoreVideo.CVImageBufferRef
 
 /**
- * macOS implementation of DaemonBridge using JamiBridge Objective-C++ wrapper via cinterop.
+ * iOS implementation of DaemonBridge using JamiBridge Objective-C++ wrapper via cinterop.
  */
-actual class DaemonBridge() : DaemonBridgeApi {
+actual class DaemonBridge() : DaemonBridgeApi, IOSVideoFrameBridge {
     private var isInitialized = false
     private var callbacks: DaemonCallbacks? = null
     private val bridge: JamiBridgeWrapper = JamiBridgeWrapper.shared()
     private var delegateImpl: JamiBridgeDelegateImpl? = null
 
     companion object {
-        private const val TAG = "DaemonBridge.macOS"
+        private const val TAG = "DaemonBridge.iOS"
+
+        /** Capture preset IOSCameraService opens every camera with (AVCaptureSessionPreset1280x720). */
+        internal const val CAPTURE_WIDTH = 1280
+        internal const val CAPTURE_HEIGHT = 720
+        internal const val CAPTURE_RATE = 30
+
+        /** See [acquireNativeWindow]. */
+        private const val IOS_WINDOW_HANDLE = 1L
     }
 
     // ==================== Lifecycle ====================
@@ -92,16 +105,26 @@ actual class DaemonBridge() : DaemonBridgeApi {
     override fun isRunning(): Boolean = bridge.isDaemonRunning()
 
     override fun connectivityChanged() {
-        // Not exposed by JamiBridge yet (see iOS bridge for the same gap).
-        Log.d(TAG, "connectivityChanged() - not yet exposed via JamiBridge")
+        if (!isInitialized) return
+        Log.d(TAG, "connectivityChanged() -> daemon")
+        bridge.connectivityChanged()
     }
 
     // ==================== Account Operations ====================
 
     override fun addAccount(details: Map<String, String>): String {
-        val displayName = details["Account.displayName"] ?: ""
-        val password = details["Account.archivePassword"] ?: ""
-        return bridge.createAccountWithDisplayName(displayName, password = password) ?: ""
+        // The caller's details reach the daemon unchanged, as on Android. The old path rebuilt a
+        // fresh RING map from the display name and password alone, dropping Account.archivePath
+        // (archive import) and Account.archiveURL = "jami-auth" (device linking) — each such
+        // import silently created a brand-new identity instead.
+        // UPnP stays off on iOS, as the old wrapper path always set it and as jami-client-ios
+        // defaults it: on the simulator every IGD search restarted the DHT, and the account
+        // flapped REGISTERED/UNREGISTERED often enough that an invitation never arrived
+        // (two-simulator run, 2026-11-18). The shared default (on) suits Android.
+        val iosDetails = if (details.containsKey(ConfigKey.ACCOUNT_UPNP_ENABLE.key)) {
+            details + (ConfigKey.ACCOUNT_UPNP_ENABLE.key to "false")
+        } else details
+        return bridge.addAccount(iosDetails.toNSDictionary()) ?: ""
     }
 
     override fun removeAccount(accountId: String) {
@@ -124,57 +147,76 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.setAccountActive(accountId, active = active)
     }
 
-    override fun getAccountTemplate(accountType: String): Map<String, String> {
-        return emptyMap()
+    /**
+     * iOS only: (de)activates an account and, with [shutdownConnections], closes every peer
+     * connection too — what jami-client-ios does when the app leaves the foreground, since a
+     * suspended app's sockets die anyway and the daemon repairs its conversations only on
+     * reactivation (`conversation.cpp`, "A mobile client reaches that state…").
+     */
+    fun setAccountActive(accountId: String, active: Boolean, shutdownConnections: Boolean) {
+        bridge.setAccountActive(accountId, active = active, shutdownConnections = shutdownConnections)
     }
+
+    override fun getAccountTemplate(accountType: String): Map<String, String> =
+        bridge.getAccountTemplate(accountType)?.toKotlinMap() ?: emptyMap()
 
     override fun getVolatileAccountDetails(accountId: String): Map<String, String> {
         return bridge.getVolatileAccountDetails(accountId)?.toKotlinMap() ?: emptyMap()
     }
 
     override fun sendRegister(accountId: String, enable: Boolean) {
-        bridge.setAccountActive(accountId, active = enable)
+        // libjami::sendRegister persists Account.enable; setAccountActive does not.
+        bridge.sendRegister(accountId, enable = enable)
     }
 
     override fun setAccountsOrder(order: String) {
-        // Not exposed in JamiBridge
+        bridge.setAccountsOrder(order)
     }
 
-    override fun changeAccountPassword(accountId: String, oldPassword: String, newPassword: String): Boolean {
-        return false
-    }
+    override fun changeAccountPassword(accountId: String, oldPassword: String, newPassword: String): Boolean =
+        bridge.changeAccountPassword(accountId, oldPassword = oldPassword, newPassword = newPassword)
 
     override fun exportToFile(accountId: String, path: String, scheme: String, password: String): Boolean {
-        return bridge.exportAccount(accountId, toDestinationPath = path, withPassword = password)
+        // The scheme ("password") must reach the daemon: without it a password-protected archive
+        // is never decrypted and the export fails.
+        return bridge.exportAccount(accountId, toDestinationPath = path, scheme = scheme, withPassword = password)
     }
 
     // ==================== Credentials ====================
 
-    override fun getCredentials(accountId: String): List<Map<String, String>> {
-        return emptyList()
-    }
+    override fun getCredentials(accountId: String): List<Map<String, String>> =
+        bridge.getCredentials(accountId)?.toKotlinListOfMaps() ?: emptyList()
 
     override fun setCredentials(accountId: String, credentials: List<Map<String, String>>) {
-        // Not exposed in JamiBridge
+        bridge.setCredentials(accountId, credentials = credentials.toNSArrayOfDictionaries())
     }
 
     // ==================== Device Management ====================
 
-    override fun getKnownRingDevices(accountId: String): Map<String, String> {
-        return emptyMap()
-    }
+    override fun getKnownRingDevices(accountId: String): Map<String, String> =
+        bridge.getKnownRingDevices(accountId)?.toKotlinMap() ?: emptyMap()
 
     override fun revokeDevice(accountId: String, deviceId: String, scheme: String, password: String) {
-        // Not exposed in JamiBridge
+        bridge.revokeDevice(accountId, deviceId = deviceId, scheme = scheme, password = password)
     }
 
-    override fun addDevice(accountId: String, uri: String): Long {
-        // Not exposed in JamiBridge
-        return 0L
-    }
+    override fun addDevice(accountId: String, uri: String): Long =
+        bridge.addDevice(accountId, uri = uri).toLong()
+
+    override fun confirmAddDevice(accountId: String, opId: Long): Boolean =
+        bridge.confirmAddDevice(accountId, opId = opId.toUInt())
+
+    override fun cancelAddDevice(accountId: String, opId: Long): Boolean =
+        bridge.cancelAddDevice(accountId, opId = opId.toUInt())
+
+    override fun provideAccountAuthentication(accountId: String, password: String, scheme: String): Boolean =
+        bridge.provideAccountAuthentication(accountId, password = password, scheme = scheme)
 
     override fun setDeviceName(accountId: String, deviceName: String) {
-        // Not exposed in JamiBridge
+        // setDeviceName is not a direct libjami API; it's updated via setAccountDetails
+        val details = bridge.getAccountDetails(accountId)?.toKotlinMap()?.toMutableMap() ?: return
+        details["Account.deviceName"] = deviceName
+        bridge.setAccountDetails(accountId, details = details.toNSDictionary())
     }
 
     // ==================== Profile ====================
@@ -207,7 +249,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
 
     override fun refuse(accountId: String, callId: String) {
-        bridge.refuse(accountId, callId = callId)
+        bridge.refuseCall(accountId, callId = callId)
     }
 
     override fun hangUp(accountId: String, callId: String) {
@@ -235,18 +277,18 @@ actual class DaemonBridge() : DaemonBridgeApi {
         }
     }
 
-    // Not in JamiBridgeWrapper.h — see doc/apple-bridge-rebuild.md.
+    override fun playDtmf(key: String) { bridge.playDtmf(key) }
+    override fun muteRingtone(mute: Boolean) { bridge.muteRingtone(mute) }
     override fun setAudioMeterState(id: String, enabled: Boolean) {
-        Log.d(TAG, "setAudioMeterState (not exposed via JamiBridge): id=$id enabled=$enabled")
+        if (!isInitialized) return
+        bridge.setAudioMeterState(id, state = enabled)
     }
 
-    // Not in JamiBridgeWrapper.h — see doc/apple-bridge-rebuild.md.
-    override fun createConfFromParticipantList(accountId: String, participants: List<String>) {
-        Log.d(TAG, "createConfFromParticipantList (not exposed via JamiBridge): $participants")
-    }
-
-    override fun restartAudioLayer() {}
-
+    override fun muteCapture(mute: Boolean) { bridge.muteCapture(mute) }
+    override fun isCaptureMuted(): Boolean = bridge.isCaptureMuted()
+    override fun restartAudioLayer() { Log.d(TAG, "restartAudioLayer") }
+    override fun setNoiseSuppression(enabled: Boolean) { bridge.setNoiseSuppression(enabled) }
+    override fun setEchoCancellation(enabled: Boolean) { bridge.setEchoCancellation(enabled) }
     override fun sendCallTextMessage(
         accountId: String,
         callId: String,
@@ -268,7 +310,8 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // Peer services and tunnels are not reachable from the Apple targets: the cinterop header
     // set has no networkservice_interface.h, so JamiBridgeWrapper cannot call libjami's
-    // addExposedService/queryPeerServices/openServiceTunnel family. See the Phase 2 note in
+    // addExposedService/queryPeerServices/openServiceTunnel family. Adding that header (and
+    // wrapper methods for it) is the prerequisite — see the Phase 2 note in
     // doc/mini-plans/daemon-api-surface-audit.md.
     override fun addExposedService(accountId: String, details: Map<String, String>): String {
         Log.w(TAG, "addExposedService: no networkservice interface in the Apple bridge")
@@ -294,11 +337,16 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
     override fun closeServiceTunnel(accountId: String, tunnelId: String): Boolean = false
     override fun getActiveTunnels(accountId: String): List<Map<String, String>> = emptyList()
-
-    // Recording: stub until the native JamiBridgeWrapper exposes the recording API
-    // (see doc/plan_call_recording.md "iOS / macOS follow-up").
-    override fun toggleRecording(accountId: String, callId: String): Boolean = false
-    override fun getIsRecording(accountId: String, callId: String): Boolean = false
+    override fun transfer(accountId: String, callId: String, to: String): Boolean =
+        bridge.transfer(accountId, callId = callId, to = to)
+    override fun attendedTransfer(accountId: String, transferId: String, targetId: String): Boolean =
+        bridge.attendedTransfer(accountId, callId = transferId, targetId = targetId)
+    override fun getCallDetails(accountId: String, callId: String): Map<String, String> =
+        bridge.getCallDetails(accountId, callId = callId)?.toKotlinMap() ?: emptyMap()
+    override fun toggleRecording(accountId: String, callId: String): Boolean =
+        bridge.toggleRecording(accountId, callId = callId)
+    override fun getIsRecording(accountId: String, callId: String): Boolean =
+        bridge.isRecording(accountId, callId = callId)
 
     // ==================== Conference Operations ====================
     override fun holdConference(accountId: String, confId: String): Boolean {
@@ -342,6 +390,62 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.setActiveParticipant(accountId, conferenceId = confId, callId = callId)
     }
 
+    // libjami exposes no per-participant video mute to clients (Conference::muteStream is
+    // audio-only), so these stay no-ops on every platform.
+    override fun disableParticipantVideo(accountId: String, confId: String, participantId: String) {}
+    override fun enableParticipantVideo(accountId: String, confId: String, participantId: String) {}
+
+    override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {
+        val jbLayout = when (layout) {
+            1    -> JBConferenceLayout.JBConferenceLayoutOneBig
+            2    -> JBConferenceLayout.JBConferenceLayoutOneBigSmall
+            else -> JBConferenceLayout.JBConferenceLayoutGrid
+        }
+        bridge.setConferenceLayout(accountId, conferenceId = confId, layout = jbLayout)
+    }
+
+    override fun hangUpConference(accountId: String, confId: String): Boolean {
+        bridge.hangUpConference(accountId, conferenceId = confId)
+        return true
+    }
+    override fun joinParticipant(accountId: String, selCallId: String, account2Id: String, dragCallId: String): Boolean {
+        bridge.joinParticipant(accountId, callId = selCallId, accountId2 = account2Id, callId2 = dragCallId)
+        return true
+    }
+    override fun createConfFromParticipantList(accountId: String, participants: List<String>) {
+        if (!isInitialized) return
+        bridge.createConfFromParticipantList(accountId, participants = participants)
+    }
+
+    override fun addParticipant(accountId: String, callId: String, account2Id: String, confId: String): Boolean {
+        bridge.addParticipantToConference(accountId, callId = callId, conferenceAccountId = account2Id, conferenceId = confId)
+        return true
+    }
+    override fun addMainParticipant(accountId: String, confId: String): Boolean =
+        bridge.addMainParticipant(accountId, conferenceId = confId)
+    override fun detachParticipant(accountId: String, callId: String): Boolean =
+        bridge.detachParticipant(accountId, callId = callId)
+    override fun getParticipantList(accountId: String, confId: String): List<String> =
+        bridge.getConferenceParticipants(accountId, conferenceId = confId)?.toKotlinList() ?: emptyList()
+    override fun getConferenceDetails(accountId: String, confId: String): Map<String, String> =
+        bridge.getConferenceDetails(accountId, conferenceId = confId)?.toKotlinMap() ?: emptyMap()
+
+    override fun muteParticipantAudio(accountId: String, confId: String, participantId: String) {
+        bridge.muteConferenceParticipant(accountId, conferenceId = confId, participantUri = participantId, muted = true)
+    }
+
+    override fun unmuteParticipantAudio(accountId: String, confId: String, participantId: String) {
+        bridge.muteConferenceParticipant(accountId, conferenceId = confId, participantUri = participantId, muted = false)
+    }
+
+    override fun muteAllParticipants(accountId: String, confId: String) {
+        bridge.setConferenceLayout(accountId, conferenceId = confId, layout = JBConferenceLayout.JBConferenceLayoutGrid)
+    }
+
+    override fun setConferenceLocked(accountId: String, confId: String, locked: Boolean) {
+        bridge.setConferenceLayout(accountId, conferenceId = confId, layout = if (locked) JBConferenceLayout.JBConferenceLayoutOneBigSmall else JBConferenceLayout.JBConferenceLayoutGrid)
+    }
+
     override fun muteStream(accountId: String, confId: String, peerUri: String, deviceId: String, streamId: String, state: Boolean) {
         bridge.muteParticipantStream(accountId, conferenceId = confId, participantUri = peerUri, deviceId = deviceId, streamId = streamId, muted = state)
     }
@@ -362,11 +466,6 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.setParticipantModerator(accountId, conferenceId = confId, participantUri = peerUri, moderator = state)
     }
 
-    override fun setConferenceLayout(accountId: String, confId: String, layout: Int) {
-        Log.d(TAG, "setConferenceLayout: $confId layout=$layout")
-        // TODO: bridge.setConferenceLayout(accountId, confId, layout)
-    }
-
     // ==================== Conversation Operations ====================
 
     override fun getConversations(accountId: String): List<String> {
@@ -384,7 +483,9 @@ actual class DaemonBridge() : DaemonBridgeApi {
         replyTo: String,
         flag: Int
     ) {
-        bridge.sendMessage(accountId, conversationId = conversationId, message = message, replyTo = replyTo.takeIf { it.isNotEmpty() })
+        // flag must reach the daemon: 1 = edit and 2 = reaction of `replyTo`. Dropped, an edit
+        // or a reaction went out as a plain reply quoting the original.
+        bridge.sendMessage(accountId, conversationId = conversationId, message = message, replyTo = replyTo.takeIf { it.isNotEmpty() }, flag = flag)
     }
 
     override fun loadConversation(
@@ -397,16 +498,10 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
 
     override fun getConversationMembers(accountId: String, conversationId: String): List<Map<String, String>> {
-        val members = bridge.getConversationMembers(accountId, conversationId = conversationId) ?: return emptyList()
-        @Suppress("UNCHECKED_CAST")
-        val memberList = members as? List<Any> ?: return emptyList()
-        return memberList.mapNotNull { member ->
-            val jbMember = member as? JBConversationMember ?: return@mapNotNull null
-            mapOf(
-                "uri" to (jbMember.uri ?: ""),
-                "role" to jbMember.role.toString()
-            )
-        }
+        // The daemon's maps unchanged, as on Android: role as "admin"/"member"/"invited"/
+        // "banned"/"left" (MemberRole.fromString), plus "lastDisplayed". The JBConversationMember
+        // path turned the role into an enum name that matched nothing, so every role was UNKNOWN.
+        return bridge.getConversationMemberMaps(accountId, conversationId = conversationId).toKotlinMapList()
     }
 
     override fun getConversationInfo(accountId: String, conversationId: String): Map<String, String> {
@@ -429,23 +524,38 @@ actual class DaemonBridge() : DaemonBridgeApi {
         bridge.updateConversationInfo(accountId, conversationId = conversationId, info = info.toNSDictionary())
     }
 
-    override fun getConversationPermissions(accountId: String, conversationId: String): List<String>? = null
+    override fun getConversationPermissions(accountId: String, conversationId: String): List<String>? =
+        bridge.getConversationPermissions(accountId, conversationId = conversationId).filterIsInstance<String>()
 
-    override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> {
-        return emptyMap()
-    }
+    override fun getConversationPreferences(accountId: String, conversationId: String): Map<String, String> =
+        bridge.getConversationPreferences(accountId, conversationId = conversationId)?.toKotlinMap() ?: emptyMap()
 
     override fun setConversationPreferences(accountId: String, conversationId: String, prefs: Map<String, String>) {
-        // Not exposed in JamiBridge
+        bridge.setConversationPreferences(accountId, conversationId = conversationId, prefs = prefs.toNSDictionary())
     }
 
     override fun setMessageDisplayed(accountId: String, conversationUri: String, messageId: String, status: Int) {
         bridge.setMessageDisplayed(accountId, conversationId = conversationUri, messageId = messageId)
     }
 
-    override fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> {
-        return emptyList()
-    }
+    override fun getActiveCalls(accountId: String, conversationId: String): List<Map<String, String>> =
+        // Not the wrapper's getActiveCalls:, which is libjami::getCallList under another name.
+        bridge.getConversationActiveCalls(accountId, conversationId = conversationId).toKotlinListOfMaps()
+
+    // The wrapper's getActiveCalls: *is* libjami::getCallList (see the header).
+    override fun getCallList(accountId: String): List<String> =
+        bridge.getActiveCalls(accountId)?.toKotlinList() ?: emptyList()
+
+    // The wrapper does not export libjami::getConferenceList, and adding it means rebuilding the
+    // committed .a for a diagnostic. Each call's details name its conference (CONF_ID), which
+    // gives the same list for every conference that still has a call in it.
+    override fun getConferenceList(accountId: String): List<String> =
+        getCallList(accountId)
+            .mapNotNull { getCallDetails(accountId, it)[net.jami.model.Call.KEY_CONF_ID]?.takeIf { id -> id.isNotEmpty() } }
+            .distinct()
+
+    override fun getConferenceInfos(accountId: String, confId: String): List<Map<String, String>> =
+        bridge.getConferenceInfos(accountId, conferenceId = confId).toKotlinListOfMaps()
 
     // ==================== Conversation Requests ====================
 
@@ -496,7 +606,12 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
 
     override fun sendTrustRequest(accountId: String, uri: String, payload: ByteArray) {
-        bridge.addContact(accountId, uri = uri)
+        // This used to call addContact, which only records the peer locally: no invitation
+        // ever left the phone.
+        val data = if (payload.isEmpty()) NSData() else payload.usePinned { pinned ->
+            NSData.create(bytes = pinned.addressOf(0), length = payload.size.toULong())
+        }
+        bridge.sendTrustRequest(accountId, uri = uri, payload = data)
     }
 
     // ==================== Contact Operations ====================
@@ -533,8 +648,9 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
 
     override fun publishPresence(accountId: String, status: Boolean, note: String) {
-        // See the iOS actual: not in JamiBridgeWrapper.h, needs a Mac wrapper rebuild.
-        Log.d(TAG, "publishPresence('$note') - not yet exposed via JamiBridge")
+        if (!isInitialized) return
+        Log.d(TAG, "publishPresence: accountId='$accountId' status=$status note='$note'")
+        bridge.publishPresence(accountId, status = status, note = note)
     }
 
     override fun countInteractions(
@@ -558,23 +674,22 @@ actual class DaemonBridge() : DaemonBridgeApi {
     // ==================== Certificate Management ====================
 
     override fun getPinnedCertificates(accountId: String): List<String> =
-        bridge.getPinnedCertificates(accountId)?.toKotlinList() ?: emptyList()
+        bridge.getPinnedCertificates(accountId).toKotlinList()
 
     override fun getCertificatesByStatus(accountId: String, status: String): List<String> =
-        bridge.getCertificatesByStatus(accountId, status = status)?.toKotlinList() ?: emptyList()
+        bridge.getCertificatesByStatus(accountId, status = status).toKotlinList()
 
     override fun getCertificateDetails(accountId: String, certId: String): Map<String, String> =
-        bridge.getCertificateDetails(accountId, certId = certId)?.toKotlinMap() ?: emptyMap()
+        bridge.getCertificateDetails(accountId, certId = certId).toKotlinMap()
 
     override fun validateCertificate(accountId: String, certId: String): Map<String, String> =
-        bridge.validateCertificate(accountId, certId = certId)?.toKotlinMap() ?: emptyMap()
+        bridge.validateCertificate(accountId, certId = certId).toKotlinMap()
 
     override fun pinCertificate(accountId: String, certificate: ByteArray, local: Boolean): List<String> {
         val data = certificate.usePinned { pinned ->
             NSData.create(bytes = pinned.addressOf(0), length = certificate.size.toULong())
         }
-        return bridge.pinCertificate(accountId, certificate = data, local = local)?.toKotlinList()
-            ?: emptyList()
+        return bridge.pinCertificate(accountId, certificate = data, local = local).toKotlinList()
     }
 
     override fun pinCertificatePath(accountId: String, path: String) {
@@ -593,27 +708,30 @@ actual class DaemonBridge() : DaemonBridgeApi {
     // ==================== Name Lookup ====================
 
     override fun lookupName(accountId: String, nameServiceUrl: String, name: String): Boolean {
-        val result = bridge.lookupName(accountId, name = name)
-        return result != null && result.state == JBLookupState.JBLookupStateSuccess
+        // The wrapper returns nil and the answer comes through RegisteredNameFound; report the
+        // request as issued, as Android's libjami bool does, rather than as a failure.
+        bridge.lookupName(accountId, name = name)
+        return true
     }
 
     override fun lookupAddress(accountId: String, nameServiceUrl: String, address: String): Boolean {
-        val result = bridge.lookupAddress(accountId, address = address)
-        return result != null && result.state == JBLookupState.JBLookupStateSuccess
+        bridge.lookupAddress(accountId, address = address)
+        return true
     }
 
     override fun registerName(accountId: String, name: String, scheme: String, password: String): Boolean {
-        return bridge.registerName(accountId, name = name, password = password)
+        return bridge.registerName(accountId, name = name, scheme = scheme, password = password)
     }
 
-    override fun searchUser(accountId: String, query: String): Boolean {
-        return false
-    }
+    override fun searchUser(accountId: String, query: String): Boolean =
+        bridge.searchUser(accountId, query = query)
 
     // ==================== Messaging ====================
 
     override fun sendTextMessage(accountId: String, callIdOrUri: String, message: String) {
-        // Not exposed in JamiBridge
+        bridge.sendTextMessage(accountId, callId = callIdOrUri,
+            messages = mapOf("text/plain" to message).toNSDictionary(),
+            from = "", isMixed = false)
     }
 
     override fun setIsComposing(accountId: String, uri: String, isComposing: Boolean) {
@@ -621,14 +739,7 @@ actual class DaemonBridge() : DaemonBridgeApi {
     }
 
     override fun sendAccountTextMessage(accountId: String, conversationId: String, messages: Map<String, String>, flag: Int) {
-        // TODO: Add to JamiBridgeWrapper.h:
-        // - (void)sendAccountTextMessage:(NSString *)accountId
-        //                 conversationId:(NSString *)conversationId
-        //                       messages:(NSDictionary<NSString *, NSString *> *)messages
-        //                           flag:(int)flag;
-        // This enables sending location updates, reactions, and other MIME-typed messages.
-        // For now, location sharing on macOS will not send updates until this binding is added.
-        Log.w(TAG, "sendAccountTextMessage not implemented on macOS - location sharing disabled")
+        bridge.sendAccountTextMessage(accountId, conversationId = conversationId, messages = messages.toNSDictionary(), flag = flag)
     }
 
     // ==================== File Transfer ====================
@@ -674,72 +785,93 @@ actual class DaemonBridge() : DaemonBridgeApi {
 
     // ==================== Search & History ====================
 
-    override fun searchConversation(accountId: String, conversationId: String, author: String, lastId: String, query: String, type: String, after: Long, before: Long, maxResult: Long, flag: Int): Long {
-        Log.d(TAG, "searchConversation: $conversationId query=$query")
-        return -1L
-    }
+    override fun searchConversation(accountId: String, conversationId: String, author: String, lastId: String, query: String, type: String, after: Long, before: Long, maxResult: Long, flag: Int): Long =
+        bridge.searchConversation(accountId, conversationId = conversationId, author = author,
+            lastId = lastId, regexSearch = query, type = type, after = after, before = before,
+            maxResult = maxResult.toUInt(), flag = flag).toLong()
 
-    override fun loadSwarmUntil(accountId: String, conversationId: String, fromMessage: String, toMessage: String): Long {
-        Log.d(TAG, "loadSwarmUntil: $conversationId")
-        return -1L
-    }
+    override fun loadSwarmUntil(accountId: String, conversationId: String, fromMessage: String, toMessage: String): Long =
+        bridge.loadSwarmUntil(accountId, conversationId = conversationId,
+            fromMessage = fromMessage, toMessage = toMessage).toLong()
 
     // ==================== Codec Operations ====================
 
-    override fun getCodecList(): List<Long> {
-        return emptyList()
-    }
+    override fun getCodecList(): List<Long> =
+        bridge.getCodecList()?.toKotlinLongList() ?: emptyList()
 
-    override fun getActiveCodecList(accountId: String): List<Long> {
-        return emptyList()
-    }
+    override fun getActiveCodecList(accountId: String): List<Long> =
+        bridge.getActiveCodecList(accountId)?.toKotlinLongList() ?: emptyList()
 
     override fun setActiveCodecList(accountId: String, codecList: List<Long>) {
-        // Not exposed
+        bridge.setActiveCodecList(accountId, codecList = codecList.toNSNumberList())
     }
 
-    override fun getCodecDetails(accountId: String, codecId: Long): Map<String, String> {
-        return emptyMap()
-    }
+    override fun getCodecDetails(accountId: String, codecId: Long): Map<String, String> =
+        bridge.getCodecDetails(accountId, codecId = codecId.toUInt())?.toKotlinMap() ?: emptyMap()
 
     // ==================== Push Notifications ====================
 
+    // These hand the token/payload to the daemon. End-to-end push additionally needs
+    // PushKit registration in the app and a push proxy server, neither of which exists yet.
     override fun setPushNotificationToken(token: String) {
-        // Not exposed
+        bridge.setPushNotificationToken(token)
     }
 
     override fun setPushNotificationConfig(config: Map<String, String>) {
-        // Not exposed
+        bridge.setPushNotificationConfig(config.toNSDictionary())
     }
 
     override fun pushNotificationReceived(from: String, data: Map<String, String>) {
-        // Not exposed
+        bridge.pushNotificationReceived(from, data.toNSDictionary())
     }
 
     // ==================== Video Device Management ====================
 
     override fun addVideoDevice(deviceId: String) {
-        // TODO: Implement via JamiBridge cinterop
+        // The daemon drops a device registered without capabilities, so the plain
+        // `addVideoDevice:` never made a camera usable. 1280x720@30 is the capture
+        // preset IOSCameraService opens every camera with.
+        bridge.addVideoDevice(deviceId, width = CAPTURE_WIDTH, height = CAPTURE_HEIGHT, rate = CAPTURE_RATE)
     }
 
     override fun removeVideoDevice(deviceId: String) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.removeVideoDevice(deviceId)
     }
 
     override fun setDefaultDevice(deviceId: String) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.setDefaultVideoDevice(deviceId)
     }
 
     override fun setDeviceOrientation(deviceId: String, rotation: Int) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.setDeviceOrientation(deviceId, angle = rotation)
     }
 
     override fun applySettings(deviceId: String, settings: Map<String, String>) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.applyVideoSettings(deviceId, settings = settings.toNSDictionary())
     }
 
+    // ==================== Video Frame Capture ====================
+
     override fun captureVideoFrame(uri: String, data: ByteArray, rotation: Int) {
-        // TODO: Implement via JamiBridge cinterop
+        // Not used on iOS: frames go in without a copy through [writeOutgoingVideoFrame].
+        // This ByteArray overload is the Android JNI shape.
+    }
+
+    override fun writeOutgoingVideoFrame(pixelBuffer: CVImageBufferRef, angle: Int, videoInputId: String) {
+        bridge.writeOutgoingFrame(pixelBuffer, angle = angle, videoInputId = videoInputId)
+    }
+
+    override fun attachVideoLayer(sinkId: String, layer: AVSampleBufferDisplayLayer?) {
+        bridge.attachDisplayLayer(layer, toSink = sinkId)
+    }
+
+    override fun videoSinkSize(sinkId: String): Pair<Int, Int>? =
+        bridge.renderSizeForSink(sinkId).useContents {
+            if (width > 0 && height > 0) width.toInt() to height.toInt() else null
+        }
+
+    override fun layoutVideoLayer(layer: AVSampleBufferDisplayLayer) {
+        JamiBridgeWrapper.layoutDisplayLayer(layer)
     }
 
     override fun captureVideoPacket(
@@ -754,30 +886,43 @@ actual class DaemonBridge() : DaemonBridgeApi {
         // TODO: Implement via JamiBridge cinterop
     }
 
+    // ==================== Native Window Management ====================
+
     override fun acquireNativeWindow(surface: Any): Long {
-        // TODO: Implement via JamiBridge cinterop
-        return 0L
+        // ANativeWindow is an Android concept. On iOS a sink is tied to its display layer
+        // by sink id ([attachVideoLayer]), so callers only need a non-zero "live" handle.
+        return IOS_WINDOW_HANDLE
     }
 
     override fun releaseNativeWindow(windowId: Long) {
-        // TODO: Implement via JamiBridge cinterop
+        // Nothing to release: see acquireNativeWindow.
     }
 
     override fun setNativeWindowGeometry(windowId: Long, width: Int, height: Int) {
-        // TODO: Implement via JamiBridge cinterop
+        // Layer geometry follows its view's layout pass on iOS.
     }
 
-    override fun registerVideoCallback(id: String, windowId: Long): Boolean {
-        // TODO: Implement via JamiBridge cinterop
-        return false
-    }
+    // ==================== Video Callback Registration ====================
+
+    override fun registerVideoCallback(id: String, windowId: Long): Boolean =
+        bridge.registerSinkTarget(id, width = 0, height = 0)
 
     override fun unregisterVideoCallback(id: String, windowId: Long) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.removeSinkTarget(id)
     }
 
+    // ==================== Video Input Switching ====================
+
     override fun switchVideoInput(accountId: String, callId: String, uri: String) {
-        // TODO: Implement via JamiBridge cinterop
+        bridge.switchVideoInput(accountId, callId = callId, uri = uri)
+    }
+
+    override fun requestMediaChange(accountId: String, callId: String, mediaList: List<Map<String, String>>) {
+        bridge.requestMediaChange(accountId, callId = callId, mediaList = mediaList.toNSArrayOfDictionaries())
+    }
+
+    override fun answerMediaChangeRequest(accountId: String, callId: String, mediaList: List<Map<String, String>>) {
+        bridge.answerMediaChangeRequest(accountId, callId = callId, mediaList = mediaList.toNSArrayOfDictionaries())
     }
 }
 
@@ -812,36 +957,64 @@ private fun Map<String, String>.toNSDictionary(): Map<Any?, *> {
     return this as Map<Any?, *>
 }
 
+@Suppress("UNCHECKED_CAST")
+private fun Any?.toKotlinListOfMaps(): List<Map<String, String>> {
+    val array = this as? List<*> ?: return emptyList()
+    return array.mapNotNull { item ->
+        val map = item as? Map<*, *> ?: return@mapNotNull null
+        map.entries.mapNotNull { (k, v) ->
+            val key = k as? String ?: return@mapNotNull null
+            val value = v as? String ?: return@mapNotNull null
+            key to value
+        }.toMap()
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun List<Map<String, String>>.toNSArrayOfDictionaries(): List<Map<Any?, *>> {
+    return this.map { it as Map<Any?, *> }
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun Any?.toKotlinLongList(): List<Long> {
+    val array = this as? List<*> ?: return emptyList()
+    return array.mapNotNull { (it as? Number)?.toLong() }
+}
+
+private fun List<Long>.toNSNumberList(): List<*> = this
+
 // ==================== Delegate Implementation ====================
 
+/**
+ * Implementation of JamiBridgeDelegate using NSObject.
+ */
 private class JamiBridgeDelegateImpl(
     private val callbacks: DaemonCallbacks
 ) : NSObject(), JamiBridgeDelegateProtocol {
 
+    /**
+     * Resolved lazily rather than injected, because DaemonCallbacks has no decoding
+     * callbacks — Android routes VideoSignal through SWIG's VideoCallback instead, so
+     * there is no common seam to use. Resolving at first signal (not at construction)
+     * keeps this clear of Koin start-up ordering.
+     */
+    private val hardwareService: HardwareService by lazy {
+        KoinPlatformTools.defaultContext().get().get()
+    }
+
+    // Account Events
     override fun onAccountsChanged() {
         callbacks.onAccountsChanged()
     }
 
     override fun onRegistrationStateChanged(
         accountId: String,
-        state: JBRegistrationState,
+        state: String,
         code: Int,
         detail: String
     ) {
-        val stateStr = when (state) {
-            JBRegistrationState.JBRegistrationStateUnregistered -> "UNREGISTERED"
-            JBRegistrationState.JBRegistrationStateTrying -> "TRYING"
-            JBRegistrationState.JBRegistrationStateRegistered -> "REGISTERED"
-            JBRegistrationState.JBRegistrationStateErrorGeneric -> "ERROR_GENERIC"
-            JBRegistrationState.JBRegistrationStateErrorAuth -> "ERROR_AUTH"
-            JBRegistrationState.JBRegistrationStateErrorNetwork -> "ERROR_NETWORK"
-            JBRegistrationState.JBRegistrationStateErrorHost -> "ERROR_HOST"
-            JBRegistrationState.JBRegistrationStateErrorServiceUnavailable -> "ERROR_SERVICE_UNAVAILABLE"
-            JBRegistrationState.JBRegistrationStateErrorNeedMigration -> "ERROR_NEED_MIGRATION"
-            JBRegistrationState.JBRegistrationStateInitializing -> "INITIALIZING"
-            else -> "UNKNOWN"
-        }
-        callbacks.onRegistrationStateChanged(accountId, stateStr, code, detail)
+        // The daemon's string as is, like Android's SWIG callback.
+        callbacks.onRegistrationStateChanged(accountId, state, code, detail)
     }
 
     override fun onAccountDetailsChanged(accountId: String, details: Map<Any?, *>) {
@@ -856,6 +1029,7 @@ private class JamiBridgeDelegateImpl(
         displayName: String,
         avatarPath: String?
     ) {
+        // DaemonCallbacks expects: onProfileReceived(accountId, peerId, vcardPath)
         callbacks.onProfileReceived(accountId, from, avatarPath ?: displayName)
     }
 
@@ -877,7 +1051,9 @@ private class JamiBridgeDelegateImpl(
             JBLookupState.JBLookupStateError -> 3
             else -> 3
         }
-        // requestName is the queried name — forward as the correlation query (see iOS note).
+        // requestName is the queried name — forward it as the correlation query so
+        // findRegistrationByName can match the response (esp. NotFound, where the
+        // daemon's `name` field does not echo the query). See Android parity.
         callbacks.onRegisteredNameFound(accountId, stateInt, address, name, query = requestName)
     }
 
@@ -887,8 +1063,145 @@ private class JamiBridgeDelegateImpl(
         callbacks.onKnownDevicesChanged(accountId, devicesMap)
     }
 
-    // addDevice events not yet exposed in JamiBridgeProtocol — no-op stub
+    override fun onAddDeviceStateChanged(
+        accountId: String,
+        opId: UInt,
+        state: Int,
+        details: Map<Any?, *>,
+    ) {
+        callbacks.onAddDeviceStateChanged(accountId, opId.toLong(), state, details.toKotlinMap())
+    }
 
+    override fun onDeviceAuthStateChanged(accountId: String, state: Int, details: Map<Any?, *>) {
+        callbacks.onDeviceAuthStateChanged(accountId, state, details.toKotlinMap())
+    }
+
+    override fun onVolatileAccountDetailsChanged(accountId: String, details: Map<Any?, *>) {
+        callbacks.onVolatileAccountDetailsChanged(accountId, details.toKotlinMap())
+    }
+
+    override fun onAccountProfileReceived(accountId: String, displayName: String, userPhoto: String) {
+        callbacks.onAccountProfileReceived(accountId, displayName, userPhoto)
+    }
+
+    override fun onDeviceRevocationEnded(accountId: String, deviceId: String, state: Int) {
+        callbacks.onDeviceRevocationEnded(accountId, deviceId, state)
+    }
+
+    override fun onMigrationEnded(accountId: String, state: String) {
+        callbacks.onMigrationEnded(accountId, state)
+    }
+
+    override fun onIncomingAccountMessage(
+        accountId: String,
+        from: String,
+        messageId: String,
+        payloads: Map<Any?, *>,
+    ) {
+        // DaemonCallbacks takes callId for the SIP case, which this signal does not carry.
+        callbacks.onIncomingAccountMessage(
+            accountId = accountId,
+            messageId = messageId.ifEmpty { null },
+            callId = null,
+            from = from,
+            messages = payloads.toKotlinMap(),
+        )
+    }
+
+    override fun onAccountMessageStatusChanged(
+        accountId: String,
+        conversationId: String,
+        peer: String,
+        messageId: String,
+        state: Int,
+    ) {
+        // Note the argument order: the daemon emits (conversationId, peer, messageId) while
+        // DaemonCallbacks declares (conversationId, messageId, contactId).
+        callbacks.onAccountMessageStatusChanged(
+            accountId = accountId,
+            conversationId = conversationId,
+            messageId = messageId,
+            contactId = peer,
+            status = state,
+        )
+    }
+
+    override fun onDataTransferEvent(
+        accountId: String,
+        conversationId: String,
+        interactionId: String,
+        fileId: String,
+        eventCode: Int,
+    ) {
+        callbacks.onDataTransferEvent(accountId, conversationId, interactionId, fileId, eventCode)
+    }
+
+    override fun onUserSearchEnded(
+        accountId: String,
+        state: Int,
+        query: String,
+        results: List<*>,
+    ) {
+        callbacks.onUserSearchEnded(accountId, state, query, results.toKotlinMapList())
+    }
+
+    override fun onMessagesFound(
+        requestId: UInt,
+        accountId: String,
+        conversationId: String,
+        messages: List<*>,
+    ) {
+        callbacks.onMessagesFound(
+            messageId = requestId.toInt(),
+            accountId = accountId,
+            conversationId = conversationId,
+            messages = messages.toKotlinMapList(),
+        )
+    }
+
+    override fun onConversationPreferencesUpdated(
+        accountId: String,
+        conversationId: String,
+        preferences: Map<Any?, *>,
+    ) {
+        callbacks.onConversationPreferencesUpdated(accountId, conversationId, preferences.toKotlinMap())
+    }
+
+    override fun onConversationRequestDeclined(accountId: String, conversationId: String) {
+        callbacks.onConversationRequestDeclined(accountId, conversationId)
+    }
+
+    override fun onActiveCallsChanged(
+        accountId: String,
+        conversationId: String,
+        activeCalls: List<*>,
+    ) {
+        callbacks.onActiveCallsChanged(accountId, conversationId, activeCalls.toKotlinMapList())
+    }
+
+    override fun onDecodingStarted(
+        sinkId: String,
+        shmPath: String,
+        width: Int,
+        height: Int,
+        isMixer: Boolean,
+    ) {
+        hardwareService.decodingStarted(sinkId, shmPath, width, height, isMixer)
+    }
+
+    override fun onDecodingStopped(sinkId: String, shmPath: String, isMixer: Boolean) {
+        hardwareService.decodingStopped(sinkId, shmPath, isMixer)
+    }
+
+    override fun onStartCapture(device: String) {
+        hardwareService.daemonStartedCapture(device)
+    }
+
+    override fun onStopCapture(device: String) {
+        hardwareService.daemonStoppedCapture(device)
+    }
+
+    // Call Events
     override fun onIncomingCall(
         accountId: String,
         callId: String,
@@ -926,7 +1239,11 @@ private class JamiBridgeDelegateImpl(
         callbacks.onCallStateChanged(accountId, callId, stateStr, code)
     }
 
-    override fun onMediaChangeRequested(accountId: String, callId: String, mediaList: List<*>) {
+    override fun onMediaChangeRequested(
+        accountId: String,
+        callId: String,
+        mediaList: List<*>
+    ) {
         @Suppress("UNCHECKED_CAST")
         val media = (mediaList as? List<Map<String, String>>) ?: emptyList()
         callbacks.onMediaChangeRequested(accountId, callId, media)
@@ -964,6 +1281,39 @@ private class JamiBridgeDelegateImpl(
         callbacks.onRemoteRecordingChanged(callId, peerUri, recording)
     }
 
+    override fun onRecordingStateChanged(callId: String, state: Int) {
+        // state: 0 = stopped, non-zero = recording (as on Android)
+        callbacks.onRecordingStateChanged(callId, state != 0)
+    }
+
+    override fun onAudioMeter(audioId: String, level: Float) {
+        callbacks.onAudioMeter(audioId, level)
+    }
+
+    override fun onVolumeChanged(device: String, value: Double) {
+        callbacks.onVolumeChanged(device, value.toInt())
+    }
+
+    override fun onErrorAlert(alert: Int) {
+        callbacks.onErrorAlert(alert)
+    }
+
+    override fun onStunStatusFailed(accountId: String) {
+        callbacks.onStunStatusFailure(accountId)
+    }
+
+    override fun onHardwareDecodingChanged(enabled: Boolean) {
+        callbacks.onHardwareDecodingChanged(enabled)
+    }
+
+    override fun onHardwareEncodingChanged(enabled: Boolean) {
+        callbacks.onHardwareEncodingChanged(enabled)
+    }
+
+    override fun onDaemonMessageSend(message: String) {
+        callbacks.onDaemonLogMessage(message)
+    }
+
     override fun onConversationError(accountId: String, conversationId: String, code: Int, message: String) {
         callbacks.onConversationError(accountId, conversationId, code.toLong(), message)
     }
@@ -984,7 +1334,11 @@ private class JamiBridgeDelegateImpl(
         callbacks.onNearbyPeerNotification(accountId, peerId, state, displayName)
     }
 
-    override fun onConferenceCreated(accountId: String, conversationId: String, conferenceId: String) {
+    override fun onConferenceCreated(
+        accountId: String,
+        conversationId: String,
+        conferenceId: String
+    ) {
         callbacks.onConferenceCreated(accountId, conversationId, conferenceId)
     }
 
@@ -996,8 +1350,13 @@ private class JamiBridgeDelegateImpl(
         callbacks.onConferenceRemoved(accountId, conferenceId)
     }
 
-    override fun onConferenceInfoUpdated(conferenceId: String, participantInfos: List<*>) {}
+    override fun onConferenceInfoUpdated(conferenceId: String, participantInfos: List<*>) {
+        // This signal was already being received here and then dropped, which is why the
+        // conference participant grid and active-speaker indicator never updated.
+        callbacks.onConferenceInfoUpdated(conferenceId, participantInfos.toKotlinMapList())
+    }
 
+    // Conversation Events
     override fun onConversationReady(accountId: String, conversationId: String) {
         callbacks.onConversationReady(accountId, conversationId)
     }
@@ -1006,64 +1365,96 @@ private class JamiBridgeDelegateImpl(
         callbacks.onConversationRemoved(accountId, conversationId)
     }
 
-    override fun onConversationRequestReceived(accountId: String, conversationId: String, metadata: Map<Any?, *>) {
+    override fun onConversationRequestReceived(
+        accountId: String,
+        conversationId: String,
+        metadata: Map<Any?, *>
+    ) {
         @Suppress("UNCHECKED_CAST")
         val metadataMap = (metadata as? Map<String, String>) ?: emptyMap()
         callbacks.onConversationRequestReceived(accountId, conversationId, metadataMap)
     }
 
     override fun onMessageReceived(accountId: String, conversationId: String, message: JBSwarmMessage) {
-        callbacks.onMessageReceived(accountId, conversationId, message.toKotlinSwarmMessage())
+        val swarmMessage = message.toKotlinSwarmMessage()
+        callbacks.onMessageReceived(accountId, conversationId, swarmMessage)
     }
 
     override fun onMessageUpdated(accountId: String, conversationId: String, message: JBSwarmMessage) {
-        callbacks.onMessageUpdated(accountId, conversationId, message.toKotlinSwarmMessage())
+        val swarmMessage = message.toKotlinSwarmMessage()
+        callbacks.onMessageUpdated(accountId, conversationId, swarmMessage)
     }
 
-    // macOS still links the old wrapper archive, so permissions are not forwarded here yet:
-    // null keeps every conversation permissive (see DaemonCallbacks.onSwarmLoaded).
     override fun onMessagesLoaded(
         requestId: Int,
         accountId: String,
         conversationId: String,
         messages: List<*>,
-        permissions: List<*>,
+        permissions: List<*>
     ) {
-        val swarmMessages = messages.mapNotNull { (it as? JBSwarmMessage)?.toKotlinSwarmMessage() }
-        callbacks.onSwarmLoaded(requestId.toLong(), accountId, conversationId, swarmMessages)
-    }
-
-    override fun onConversationMemberEvent(accountId: String, conversationId: String, memberUri: String, event: JBMemberEventType) {
-        val eventInt = when (event) {
-            JBMemberEventType.JBMemberEventTypeJoin -> 0
-            JBMemberEventType.JBMemberEventTypeLeave -> 1
-            JBMemberEventType.JBMemberEventTypeBan -> 2
-            JBMemberEventType.JBMemberEventTypeUnban -> 3
-            else -> 0
+        val swarmMessages = messages.mapNotNull {
+            (it as? JBSwarmMessage)?.toKotlinSwarmMessage()
         }
-        callbacks.onConversationMemberEvent(accountId, conversationId, memberUri, eventInt)
+        callbacks.onSwarmLoaded(
+            requestId.toLong(),
+            accountId,
+            conversationId,
+            swarmMessages,
+            permissions.filterIsInstance<String>(),
+        )
     }
 
-    override fun onComposingStatusChanged(accountId: String, conversationId: String, from: String, isComposing: Boolean) {
+    override fun onConversationMemberEvent(
+        accountId: String,
+        conversationId: String,
+        memberUri: String,
+        event: Int
+    ) {
+        // Raw daemon code (0 add, 1 join, 2 remove, 3 ban, 4 unban), the values
+        // ConversationFacade expects. The old enum round trip turned a leave into a join.
+        callbacks.onConversationMemberEvent(accountId, conversationId, memberUri, event)
+    }
+
+    override fun onComposingStatusChanged(
+        accountId: String,
+        conversationId: String,
+        from: String,
+        isComposing: Boolean
+    ) {
         callbacks.onComposingStatusChanged(accountId, conversationId, from, if (isComposing) 1 else 0)
     }
 
-    override fun onConversationProfileUpdated(accountId: String, conversationId: String, profile: Map<Any?, *>) {
+    override fun onConversationProfileUpdated(
+        accountId: String,
+        conversationId: String,
+        profile: Map<Any?, *>
+    ) {
         @Suppress("UNCHECKED_CAST")
         val profileMap = (profile as? Map<String, String>) ?: emptyMap()
         callbacks.onConversationProfileUpdated(accountId, conversationId, profileMap)
     }
 
-    override fun onReactionAdded(accountId: String, conversationId: String, messageId: String, reaction: Map<Any?, *>) {
+    override fun onReactionAdded(
+        accountId: String,
+        conversationId: String,
+        messageId: String,
+        reaction: Map<Any?, *>
+    ) {
         @Suppress("UNCHECKED_CAST")
         val reactionMap = (reaction as? Map<String, String>) ?: emptyMap()
         callbacks.onReactionAdded(accountId, conversationId, messageId, reactionMap)
     }
 
-    override fun onReactionRemoved(accountId: String, conversationId: String, messageId: String, reactionId: String) {
+    override fun onReactionRemoved(
+        accountId: String,
+        conversationId: String,
+        messageId: String,
+        reactionId: String
+    ) {
         callbacks.onReactionRemoved(accountId, conversationId, messageId, reactionId)
     }
 
+    // Contact Events
     override fun onContactAdded(accountId: String, uri: String, confirmed: Boolean) {
         callbacks.onContactAdded(accountId, uri, confirmed)
     }
@@ -1072,7 +1463,14 @@ private class JamiBridgeDelegateImpl(
         callbacks.onContactRemoved(accountId, uri, banned)
     }
 
-    override fun onIncomingTrustRequest(accountId: String, conversationId: String, from: String, payload: NSData, received: Long) {
+    override fun onIncomingTrustRequest(
+        accountId: String,
+        conversationId: String,
+        from: String,
+        payload: NSData,
+        received: Long
+    ) {
+        // Convert NSData to ByteArray
         val length = payload.length.toInt()
         val bytes = if (length > 0) {
             ByteArray(length).also { arr ->
@@ -1130,13 +1528,37 @@ private fun JBSwarmMessage.toKotlinSwarmMessage(): SwarmMessage {
         }
     }
 
+    // Reactions arrive as an array of daemon reaction maps, each carrying at least
+    // "body" (the emoji) and "author" (the reacting peer's URI). ConversationFacade
+    // consumes this as emoji -> list of author URIs (see the flatMap over
+    // `message.reactions` in ConversationFacade.addReactions), so group it that way.
+    //
+    // NOTE: SwigTypeConverters.toKotlinSwarmMessage on Android builds this map as
+    // reactionId -> list of emoji instead, which does not match that consumer — history
+    // reactions there resolve a contact from the emoji string. That looks like a real
+    // Android bug; it is deliberately not copied here.
+    val reactionsMap = mutableMapOf<String, MutableList<String>>()
+    val reactionEntries = mutableListOf<Map<String, String>>()
+    (this.reactions as? List<*>)?.forEach { entry ->
+        val reaction = entry as? Map<*, *> ?: return@forEach
+        reactionEntries.add(
+            reaction.entries.mapNotNull { (k, v) -> (k as? String)?.let { key -> (v as? String)?.let { key to it } } }.toMap()
+        )
+        val emoji = reaction["body"] as? String ?: return@forEach
+        val author = reaction["author"] as? String ?: return@forEach
+        reactionsMap.getOrPut(emoji) { mutableListOf() }.add(author)
+    }
+
     return SwarmMessage(
         id = this.messageId ?: "",
         type = this.type ?: "",
-        linearizedParent = this.replyTo ?: "",
+        // The previous message in the history, not the reply target: Conversation.addSwarmElement
+        // chains messages by it, and a reply id here mis-ordered history and read state.
+        linearizedParent = this.linearizedParent ?: "",
         body = bodyMap,
-        reactions = emptyMap(),
-        editions = emptyList(),
+        reactions = reactionsMap,
+        reactionEntries = reactionEntries,
+        editions = this.editions.toKotlinMapList(),
         status = statusMap
     )
 }

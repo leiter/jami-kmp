@@ -71,7 +71,8 @@ jami-kmp/
 │       ├── commonTest/       # 75 test files (ViewModel + model + service + utility tests)
 │       ├── androidMain/      # JNI bridge, Android services, SharedPreferences, JNI libs
 │       ├── iosMain/          # C interop bridge, Foundation/AVFoundation services
-│       ├── macosMain/        # C interop bridge, macOS AppKit services
+│       ├── appleMain/        # Darwin code shared by iOS and macOS (DaemonBridge, Settings, utils)
+│       ├── macosMain/        # macOS AppKit services
 │       ├── desktopMain/      # JVM/FFI daemon bridge, AWT/Swing helpers
 │       └── jsMain/           # WebSocket daemon bridge (WIP), Web API services
 ├── android-app/          # Android host — thin shell, wires Koin + renders JamiApp
@@ -151,7 +152,7 @@ The `DaemonBridge` expect class is the gateway to `libjami`. `DaemonBridgeApi` d
 |----------|---------------|--------|
 | Android | JNI via SWIG-generated bindings + `libjami-core-jni.so` | Working |
 | iOS | Kotlin/Native C interop via `JamiBridge.def` / `JamiBridgeWrapper.mm` | Working |
-| macOS | Kotlin/Native C interop (same as iOS) | Does not compile (~95 Kotlin errors) |
+| macOS | Kotlin/Native C interop, shared with iOS via `appleMain` | Compiles (2026-11-26); never run, no host app |
 | Desktop | JVM FFI or socket bridge | No-op stubs (deprioritised) |
 | Web/JS | WebSocket / HTTP | REST stubs (experimental) |
 

@@ -29,7 +29,7 @@ signals (`VolumeChanged`, `Error`, `StunStatusFailed`, hardware de/encoding, `Me
 paths has been exercised live yet. `setDefaultModerator` was dropped from the batch: default moderators go through
 account details (`ConfigKey.DEFAULT_MODERATORS`) on every platform. macOS keeps stubs (its `.a` is not rebuilt).
 See `doc/apple-bridge-rebuild.md`.
-- **macOS target does not compile** — ~95 errors, mostly in `MacOSHardwareService.kt`. Since the iOS and macOS Darwin implementations are now substantively identical, the right fix is a shared `appleMain` source set. A start exists on `origin/macos-build-and-apple-source-set` (`f0f66ce`, 2026-10-01); it predates the nine wrapper commits and is 149 commits behind `ios-catch-up-2026-11` (2026-11-11), so it needs rebasing first. `build-jamibridge.sh`'s macOS stage also fails independently, on UIKit code compiled against the macOS SDK — long-standing, not caused by recent work.
+- **macOS target compiles (2026-11-26, branch `macos-apple-source-set-2026-11`)** — 0 errors on macosArm64 and macosX64, from 98. The UIKit-free Darwin code (DaemonBridge, Settings, FileUtils, QR/Hash utils, biometrics, local prefs, …) now lives once in the `appleMain` source set; macOS got a current `HardwareService` actual. Kotlin compile, test compile and the static framework link pass; there is no macOS host app, so nothing has run. `build-jamibridge.sh`'s macOS stage still fails on UIKit code compiled against the macOS SDK.
 - **iOS video in calls** — implemented 2026-11-11 (branch `ios-video-pipeline`); **exercised in
   a real call on 2026-11-18** (build 48, iPhone ↔ Pixel) and found broken in six distinct ways.
   All six were fixed in `1cbbc3b` and shipped as TestFlight build 50, which is **not itself
@@ -313,12 +313,15 @@ Built on a Mac and run in the simulator; the Obj-C++ wrapper `.a` files were reb
   target could never link. Declared Apple targets are iosArm64, iosSimulatorArm64, macosArm64, macosX64
 
 ### macOS
-**Status:** 🟠 Does not compile — ~95 errors, mostly in `MacOSHardwareService.kt`.
-The fix in progress is a shared `appleMain` source set; see branch
-`origin/macos-build-and-apple-source-set` and `doc/apple-bridge-rebuild.md` step 8.
+**Status:** 🟡 Compiles (2026-11-26, branch `macos-apple-source-set-2026-11`); never run.
+Shared with iOS through the `appleMain` source set: DaemonBridge, Settings, database driver,
+FileUtils/QR/Hash/Time/log utilities, biometrics, local prefs, language, ringtone, battery, lock
+screen. Split per target: HardwareService, PlatformModule, notifications, permissions, pickers,
+video surfaces, CallKit and the rest of the UIKit-bound code.
 
-- Source-complete: C interop bridge, core messaging and calling, biometric auth, notifications,
-  share utilities — all written, **none of it verified, because the target does not build**
+- No camera capture or video rendering (the daemon owns capture on macOS; Compose has no AppKit
+  interop for a video surface) — `VideoRenderer` is a black placeholder
+- No macOS host app: compile, test compile and the static framework link are all that is verified
 - Missing: push notifications, map view
 - `build-jamibridge.sh`'s macOS stage also fails independently, on UIKit code compiled against the
   macOS SDK — long-standing (dates to `93df547a`), not caused by the recent wrapper work
