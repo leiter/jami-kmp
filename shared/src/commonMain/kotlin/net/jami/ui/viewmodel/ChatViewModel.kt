@@ -311,11 +311,16 @@ data class ChatState(
     /** True for SIP/legacy conversations that do not support messaging. */
     val isLegacy: Boolean = false,
     /**
-     * Display names of this conversation's members, for @mentions: what the composer offers
-     * and what the bubbles highlight. Empty outside a group, where a mention has no one to
-     * disambiguate between.
+     * Display names of this conversation's other members, for @mentions: what the composer
+     * offers. Empty outside a group, where a mention has no one to disambiguate between.
      */
     val memberNames: List<String> = emptyList(),
+    /**
+     * What the bubbles highlight as mentions: [memberNames] plus our own name. Without our own,
+     * a message mentioning us — the mention that matters most to the reader — showed as plain
+     * text (two-simulator run, 2026-11-26). Empty outside a group.
+     */
+    val mentionNames: List<String> = emptyList(),
     /**
      * True for a group (swarm with more than two parties), false for a 1:1.
      *
@@ -525,8 +530,15 @@ class ChatViewModel(
                     }
                     // The conversation may have become able to take messages (or stopped being
                     // able to): re-evaluate the composer notice.
+                    // Also when the mode becomes known: a group opened straight after accepting
+                    // its invitation loads before the clone finishes and reads as a 1:1, which
+                    // left the joiner without @mention suggestions (two-simulator run,
+                    // 2026-11-26).
                     is ConversationEvent.ConversationReady -> {
-                        if (event.conversationId == convId) refreshMessageHold()
+                        if (event.conversationId == convId) {
+                            refreshMessageHold()
+                            refreshMemberNames()
+                        }
                     }
                     is ConversationEvent.MemberEvent -> {
                         if (event.conversationId == convId) {
@@ -600,6 +612,7 @@ class ChatViewModel(
                     conversationTitle = title,
                     isTitleSyncing = isTitleSyncing,
                     memberNames = groupMemberNames(conversation),
+                    mentionNames = groupMentionNames(conversation),
                     isGroup = conversation?.mode?.isGroup == true,
                     memberAvatars = groupMemberAvatars(conversation),
                     contactAvatarBytes = avatarBytes,
@@ -779,7 +792,7 @@ class ChatViewModel(
         val textToSend = _state.value.inputText.trim()
         if (textToSend.isEmpty()) return
         val replyTo = _state.value.replyingTo?.messageId
-        _state.update { it.copy(inputText = "", replyingTo = null) }
+        _state.update { it.copy(inputText = "", replyingTo = null, mentionSuggestions = emptyList()) }
 
         // Stop the typing indicator on the recipient side immediately.
         conversationFacade.setIsComposing(accountId, conversationUri, false)
@@ -1116,6 +1129,14 @@ class ChatViewModel(
         return Mentions.suggestions(query, members)
     }
 
+    /** [groupMemberNames] plus our own name, for highlighting; see [ChatState.mentionNames]. */
+    private fun groupMentionNames(conversation: Conversation?): List<String> {
+        val others = groupMemberNames(conversation)
+        if (conversation?.mode?.isGroup != true) return others
+        val own = currentAccountId?.let { ownDisplayName(it) }
+        return if (own.isNullOrBlank() || own in others) others else others + own
+    }
+
     /**
      * Every member of a group, by the name the rest of the UI calls them.
      *
@@ -1159,6 +1180,7 @@ class ChatViewModel(
         _state.update {
             it.copy(
                 memberNames = groupMemberNames(conversation),
+                mentionNames = groupMentionNames(conversation),
                 isGroup = conversation?.mode?.isGroup == true,
                 memberAvatars = groupMemberAvatars(conversation),
             )

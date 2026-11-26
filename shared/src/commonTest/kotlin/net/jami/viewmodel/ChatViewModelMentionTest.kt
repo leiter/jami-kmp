@@ -40,10 +40,11 @@ import kotlin.test.assertTrue
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class ChatViewModelMentionTest {
 
-    private fun TestScope.mentionViewModel(group: Boolean): ChatViewModel {
+    private fun TestScope.mentionViewModel(group: Boolean, ownName: String = ""): ChatViewModel {
         val stub = StubDaemonBridge()
         val accountService = makeAccountService(stub, this)
         val account = prepareAccountInService(stub, accountService)
+        if (ownName.isNotEmpty()) account.details[net.jami.model.ConfigKey.ACCOUNT_DISPLAYNAME.key] = ownName
         val contactService = makeContactService(stub, accountService, this)
         val callService = makeCallService(stub, accountService, scope = this)
         val facade = makeConversationFacade(stub, accountService, callService, contactService, this)
@@ -101,6 +102,30 @@ class ChatViewModelMentionTest {
         assertTrue(vm.state.value.mentionSuggestions.isEmpty())
         // What goes on the wire is the literal text, which is what other clients show.
         assertTrue(Mentions.mentions(vm.state.value.inputText, "anna"))
+    }
+
+    /** The list went with the text it was offered for; it stayed on screen after a send. */
+    @Test
+    fun sendingClosesTheList() = runTest {
+        val vm = mentionViewModel(group = true)
+        advanceUntilIdle()
+        vm.updateInput("hello @an")
+        advanceUntilIdle()
+
+        vm.sendMessage()
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.mentionSuggestions.isEmpty())
+    }
+
+    /** A message mentioning us is highlighted too, though we are never offered to ourselves. */
+    @Test
+    fun ourOwnNameIsHighlightedButNotOffered() = runTest {
+        val vm = mentionViewModel(group = true, ownName = "carol")
+        advanceUntilIdle()
+
+        assertEquals(listOf("anna", "bob"), vm.state.value.memberNames.sorted())
+        assertEquals(listOf("anna", "bob", "carol"), vm.state.value.mentionNames.sorted())
     }
 
     /** One other person needs no disambiguating, so a 1:1 never shows the list. */

@@ -853,7 +853,7 @@ fun ChatScreen(
                                 onRemoveReaction = { emoji -> viewModel.removeReaction(message.id, emoji) },
                                 loadEditHistory = { viewModel.getEditHistory(message.id) },
                                 onRetry = { viewModel.retryMessage(message.id) },
-                                memberNames = state.memberNames,
+                                memberNames = state.mentionNames,
                                 isGroup = state.isGroup,
                                 canReact = state.permissions.react,
                                 canEdit = state.permissions.edit,
