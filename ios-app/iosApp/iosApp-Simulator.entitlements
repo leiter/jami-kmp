@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Required for APNs and PushKit.
+
+	     Resolved from the APS_ENVIRONMENT build setting rather than hardcoded:
+	     Debug builds need "development" (the APNs sandbox) while a Release
+	     archive must be signed with "production" to match a distribution
+	     provisioning profile. Hardcoding either one breaks the other half,
+	     and with CODE_SIGN_STYLE = Manual nothing rewrites it for us — the
+	     archive simply fails entitlement validation at codesign time.
+
+	     The App ID must have Push Notifications enabled in the developer
+	     portal for the profile to carry aps-environment at all.
+	     See doc/push-notifications.md. -->
+	<key>aps-environment</key>
+	<string>$(APS_ENVIRONMENT)</string>
+	<!-- Communication Notifications: messages and missed calls show the sender's
+	     photo and name instead of the app icon (CommunicationNotifications.kt).
+
+	     Like aps-environment, the signing profile must carry it: enable
+	     "Communication Notifications" on the App ID in the developer portal
+	     (Certificates, Identifiers & Profiles -> Identifiers -> the app ->
+	     Capabilities), then regenerate and reinstall the provisioning profile
+	     Jami-KMP-test (the only device profile; it also signs the App Store
+	     export). `fastlane check_signing` verifies it. Until then a
+	     device or Release build fails codesign entitlement validation.
+	     Simulator builds do not check it. Without the entitlement at runtime the
+	     notifications still arrive, just without the photo.
+	     See doc/ios-task-queue-2026-11-09.md, T3. -->
+	<key>com.apple.developer.usernotifications.communication</key>
+	<true/>
+	<!-- Simulator builds only (CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]): the App Group
+	     the Share Extension hands items over in (I8). Device and Release builds keep
+	     iosApp.entitlements until the group exists in the developer portal; see
+	     ios-app/jamiShareExtension/README.md. Keep the rest in step with iosApp.entitlements. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.net.jami.kmp</string>
+	</array>
+</dict>
+</plist>

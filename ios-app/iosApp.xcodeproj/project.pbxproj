@@ -7,7 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2C291C9A973EFA3A1D7BC43E /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = E44748754A7FA4870BFD42E9 /* Localizable.strings */; };
 		511E017B511E017B511E017B /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 511E017A511E017A511E017A /* silence.wav */; };
+		6FEBEF78D7683835FB7D721A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0F7F5DE4A458E185D2FDAB4 /* Foundation.framework */; };
+		8021394CCD9D9C45983078A6 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9718E280BCB7B705037CEBDB /* ShareViewController.swift */; };
 		CACE71F2CACE71F2CACE71F2 /* cacert.pem in Resources */ = {isa = PBXBuildFile; fileRef = CACE71F1CACE71F1CACE71F1 /* cacert.pem */; };
 		D1D2D3D4D5D6D7D8D9D0DDDA /* JamiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCA /* JamiApp.swift */; };
 		D1D2D3D4D5D6D7D8D9D0DDDB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0CCCB /* AppDelegate.swift */; };
@@ -16,8 +19,23 @@
 		DEFA017BDEFA017BDEFA017B /* default.wav in Resources */ = {isa = PBXBuildFile; fileRef = DEFA017ADEFA017ADEFA017A /* default.wav */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		FE3C76DC5BCBE4B5621D0D77 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1A2A3A4A5A6A7A8A9A0AAAC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C5AF51EEC037FCFD4688646D;
+			remoteInfo = jamiShareExtension;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		158A7F585C76BB2F30D0BB3A /* jamiShareExtension.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = jamiShareExtension.entitlements; sourceTree = "<group>"; };
+		33CB0256099759A23D51FF15 /* jamiShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = jamiShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		511E017A511E017A511E017A /* silence.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = silence.wav; sourceTree = "<group>"; };
+		5CFFFF56CE31E9939D4D71E7 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		7D41CF0E108504A17537254A /* de */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
+		9718E280BCB7B705037CEBDB /* ShareViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		B1B2B3B4B5B6B7B8B9B0BBBB /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1C2C3C4C5C6C7C8C9C0CCCA /* JamiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JamiApp.swift; sourceTree = "<group>"; };
 		C1C2C3C4C5C6C7C8C9C0CCCB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -25,10 +43,20 @@
 		C1C2C3C4C5C6C7C8C9C0CCCD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C1C2C3C4C5C6C7C8C9C0CCCE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CACE71F1CACE71F1CACE71F1 /* cacert.pem */ = {isa = PBXFileReference; lastKnownFileType = text; path = cacert.pem; sourceTree = "<group>"; };
+		CE8ED6E9A3CE153E39FA79D1 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D0F7F5DE4A458E185D2FDAB4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		DEFA017ADEFA017ADEFA017A /* default.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = default.wav; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		95E30A501B84BED8658CA6D8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FEBEF78D7683835FB7D721A /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E1E2E3E4E5E6E7E8E9E0EEEB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -39,11 +67,25 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4DF8343D695B86F35C50F06F /* jamiShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				9718E280BCB7B705037CEBDB /* ShareViewController.swift */,
+				CE8ED6E9A3CE153E39FA79D1 /* Info.plist */,
+				158A7F585C76BB2F30D0BB3A /* jamiShareExtension.entitlements */,
+				E44748754A7FA4870BFD42E9 /* Localizable.strings */,
+			);
+			name = jamiShareExtension;
+			path = jamiShareExtension;
+			sourceTree = "<group>";
+		};
 		A1A2A3A4A5A6A7A8A9A0AAAB = {
 			isa = PBXGroup;
 			children = (
 				A1A2A3A4A5A6A7A8A9A0AAAD /* iosApp */,
 				A1A2A3A4A5A6A7A8A9A0AAAE /* Products */,
+				A30F35BDDC144C96DD89F4E5 /* Frameworks */,
+				4DF8343D695B86F35C50F06F /* jamiShareExtension */,
 			);
 			sourceTree = "<group>";
 		};
@@ -66,8 +108,25 @@
 			isa = PBXGroup;
 			children = (
 				B1B2B3B4B5B6B7B8B9B0BBBB /* iosApp.app */,
+				33CB0256099759A23D51FF15 /* jamiShareExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		A30F35BDDC144C96DD89F4E5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				ABA2B9F4D544EBBCA9D4BCD9 /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		ABA2B9F4D544EBBCA9D4BCD9 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				D0F7F5DE4A458E185D2FDAB4 /* Foundation.framework */,
+			);
+			name = iOS;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -81,15 +140,34 @@
 				E1E2E3E4E5E6E7E8E9E0EEEA /* Sources */,
 				E1E2E3E4E5E6E7E8E9E0EEEB /* Frameworks */,
 				E1E2E3E4E5E6E7E8E9E0EEEC /* Resources */,
+				8B53F767A44AD799311BDD71 /* Embed Share Extension (simulator only) */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F776D3B2EAF9BD7DC28980BC /* PBXTargetDependency */,
 			);
 			name = iosApp;
 			productName = iosApp;
 			productReference = B1B2B3B4B5B6B7B8B9B0BBBB /* iosApp.app */;
 			productType = "com.apple.product-type.application";
+		};
+		C5AF51EEC037FCFD4688646D /* jamiShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E3DAD78B968F1261A0FD5F04 /* Build configuration list for PBXNativeTarget "jamiShareExtension" */;
+			buildPhases = (
+				AF588ADDACB33B97DD14441D /* Sources */,
+				95E30A501B84BED8658CA6D8 /* Frameworks */,
+				2F6B08F9CCF47359893A2729 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = jamiShareExtension;
+			productName = jamiShareExtension;
+			productReference = 33CB0256099759A23D51FF15 /* jamiShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -120,11 +198,20 @@
 			projectRoot = "";
 			targets = (
 				B1B2B3B4B5B6B7B8B9B0BBBA /* iosApp */,
+				C5AF51EEC037FCFD4688646D /* jamiShareExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		2F6B08F9CCF47359893A2729 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C291C9A973EFA3A1D7BC43E /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E1E2E3E4E5E6E7E8E9E0EEEC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -139,6 +226,25 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		8B53F767A44AD799311BDD71 /* Embed Share Extension (simulator only) */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Share Extension (simulator only)";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# I8: the Share Extension is embedded in simulator builds only, until its App ID, the App\n# Group and a provisioning profile exist (ios-app/jamiShareExtension/README.md). Device and\n# Release builds compile it unsigned and leave it out, so archives and TestFlight are unchanged.\nif [ \"$PLATFORM_NAME\" = \"iphonesimulator\" ]; then\n  mkdir -p \"$TARGET_BUILD_DIR/$PLUGINS_FOLDER_PATH\"\n  rsync -a --delete \"$BUILT_PRODUCTS_DIR/jamiShareExtension.appex\" \"$TARGET_BUILD_DIR/$PLUGINS_FOLDER_PATH/\"\nfi\n";
+		};
 		E1E2E3E4E5E6E7E8E9E0EEED /* Compile Kotlin Framework */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -160,6 +266,14 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		AF588ADDACB33B97DD14441D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8021394CCD9D9C45983078A6 /* ShareViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E1E2E3E4E5E6E7E8E9E0EEEA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -172,7 +286,85 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		F776D3B2EAF9BD7DC28980BC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = jamiShareExtension;
+			target = C5AF51EEC037FCFD4688646D /* jamiShareExtension */;
+			targetProxy = FE3C76DC5BCBE4B5621D0D77 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		E44748754A7FA4870BFD42E9 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				5CFFFF56CE31E9939D4D71E7 /* en */,
+				7D41CF0E108504A17537254A /* de */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
+		1224342D032593EAF6D594D0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				"CODE_SIGNING_ALLOWED[sdk=iphoneos*]" = NO;
+				CODE_SIGN_ENTITLEMENTS = jamiShareExtension/jamiShareExtension.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 53;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = jamiShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.jami.iosapp.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A7CC2E310A5B9BDC4B02E86C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				"CODE_SIGNING_ALLOWED[sdk=iphoneos*]" = NO;
+				CODE_SIGN_ENTITLEMENTS = jamiShareExtension/jamiShareExtension.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 53;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = jamiShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.jami.iosapp.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		F1F2F3F4F5F6F7F8F9F0FFFA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -296,6 +488,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "iosApp/iosApp-Simulator.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_REQUIRED = NO;
 				CODE_SIGN_STYLE = Manual;
@@ -480,6 +673,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "iosApp/iosApp-Simulator.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
@@ -593,6 +787,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		E3DAD78B968F1261A0FD5F04 /* Build configuration list for PBXNativeTarget "jamiShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A7CC2E310A5B9BDC4B02E86C /* Release */,
+				1224342D032593EAF6D594D0 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		F1F2F3F4F5F6F7F8F9F0FFFE /* Build configuration list for PBXProject "iosApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

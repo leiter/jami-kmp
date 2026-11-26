@@ -204,6 +204,15 @@ final class SceneDelegate: NSObject, UIWindowSceneDelegate {
         if let item = connectionOptions.shortcutItem {
             _ = SceneDelegate.open(item)
         }
+        // Launched by the Share Extension (I8), or a share left while Jami was not running.
+        _ = IOSShareInboxKt.collectSharedItems()
+    }
+
+    /// The Share Extension opens jamikmp://share once it has put the items in the inbox.
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        if URLContexts.contains(where: { $0.url.scheme == "jamikmp" }) {
+            _ = IOSShareInboxKt.collectSharedItems()
+        }
     }
 
     /// The app left the foreground: requests the ~30 s background window and, after a grace
@@ -215,6 +224,8 @@ final class SceneDelegate: NSObject, UIWindowSceneDelegate {
     /// The app is coming back: reactivates the accounts so the daemon reconnects and resyncs.
     func sceneWillEnterForeground(_ scene: UIScene) {
         IOSApplicationHelperKt.jamiWillEnterForeground()
+        // A share whose extension could not open Jami is waiting in the inbox.
+        _ = IOSShareInboxKt.collectSharedItems()
     }
 
     /// Quick action while the app is already running or suspended.
