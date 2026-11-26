@@ -349,16 +349,16 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
     // ==================== Peer Services & Tunnels ====================
 
     override fun addExposedService(accountId: String, details: Map<String, String>): String =
-        JamiService.addSharedService(accountId, StringMap.toSwig(details))
+        JamiService.addExposedService(accountId, StringMap.toSwig(details))
 
     override fun updateExposedService(accountId: String, details: Map<String, String>): Boolean =
-        JamiService.updateSharedService(accountId, StringMap.toSwig(details))
+        JamiService.updateExposedService(accountId, StringMap.toSwig(details))
 
     override fun removeExposedService(accountId: String, serviceId: String): Boolean =
-        JamiService.removeSharedService(accountId, serviceId)
+        JamiService.removeExposedService(accountId, serviceId)
 
     override fun getExposedServices(accountId: String): List<Map<String, String>> =
-        JamiService.getSharedServices(accountId).toNative()
+        JamiService.getExposedServices(accountId).toNative()
 
     override fun queryPeerServices(accountId: String, peerUri: String): Long =
         JamiService.queryPeerServices(accountId, peerUri)
@@ -1084,8 +1084,8 @@ actual class DaemonBridge(private val context: Context) : DaemonBridgeApi, KoinC
             callbacks.onConferenceRemoved(accountId, confId)
         }
 
-        // Renamed from `onConferenceInfosUpdated` by the daemon; same two arguments.
-        override fun conferenceInfosUpdated(confId: String, infos: VectMap) {
+        // Daemon 4.0.0-4995 calls this `onConferenceInfosUpdated`; same two arguments.
+        override fun onConferenceInfosUpdated(confId: String, infos: VectMap) {
             callbacks.onConferenceInfoUpdated(confId, infos.toNative())
         }
     }

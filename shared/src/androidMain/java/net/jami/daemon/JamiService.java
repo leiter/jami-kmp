@@ -213,22 +213,6 @@ public class JamiService {
     return new StringMap(JamiServiceJNI.getAccountDetails(accountId), true);
   }
 
-  public static boolean getAccountMetadata(String accountId, BlobMap metadata) {
-    return JamiServiceJNI.getAccountMetadata(accountId, BlobMap.getCPtr(metadata), metadata);
-  }
-
-  public static boolean setAccountMetadata(String accountId, BlobMap updates) {
-    return JamiServiceJNI.setAccountMetadata(accountId, BlobMap.getCPtr(updates), updates);
-  }
-
-  public static boolean getContactMetadata(String accountId, String uri, BlobMap metadata) {
-    return JamiServiceJNI.getContactMetadata(accountId, uri, BlobMap.getCPtr(metadata), metadata);
-  }
-
-  public static boolean setContactMetadata(String accountId, String uri, BlobMap updates) {
-    return JamiServiceJNI.setContactMetadata(accountId, uri, BlobMap.getCPtr(updates), updates);
-  }
-
   public static StringMap getVolatileAccountDetails(String accountId) {
     return new StringMap(JamiServiceJNI.getVolatileAccountDetails(accountId), true);
   }
@@ -954,11 +938,7 @@ public class JamiService {
   }
 
   public static String startFeedConversation(String accountId) {
-    return JamiServiceJNI.startFeedConversation__SWIG_0(accountId);
-  }
-
-  public static String startFeedConversation(String accountId, StringMap profile, boolean inviteAllContacts) {
-    return JamiServiceJNI.startFeedConversation__SWIG_1(accountId, StringMap.getCPtr(profile), profile, inviteAllContacts);
+    return JamiServiceJNI.startFeedConversation(accountId);
   }
 
   public static void acceptConversationRequest(String accountId, String conversationId) {
@@ -1097,20 +1077,20 @@ public class JamiService {
     return JamiServiceJNI.searchConversation(accountId, conversationId, author, lastId, regexSearch, type, after, before, maxResult, flag);
   }
 
-  public static String addSharedService(String accountId, StringMap details) {
-    return JamiServiceJNI.addSharedService(accountId, StringMap.getCPtr(details), details);
+  public static String addExposedService(String accountId, StringMap details) {
+    return JamiServiceJNI.addExposedService(accountId, StringMap.getCPtr(details), details);
   }
 
-  public static boolean updateSharedService(String accountId, StringMap details) {
-    return JamiServiceJNI.updateSharedService(accountId, StringMap.getCPtr(details), details);
+  public static boolean updateExposedService(String accountId, StringMap details) {
+    return JamiServiceJNI.updateExposedService(accountId, StringMap.getCPtr(details), details);
   }
 
-  public static boolean removeSharedService(String accountId, String serviceId) {
-    return JamiServiceJNI.removeSharedService(accountId, serviceId);
+  public static boolean removeExposedService(String accountId, String serviceId) {
+    return JamiServiceJNI.removeExposedService(accountId, serviceId);
   }
 
-  public static VectMap getSharedServices(String accountId) {
-    return new VectMap(JamiServiceJNI.getSharedServices(accountId), true);
+  public static VectMap getExposedServices(String accountId) {
+    return new VectMap(JamiServiceJNI.getExposedServices(accountId), true);
   }
 
   public static long queryPeerServices(String accountId, String peerUri) {
