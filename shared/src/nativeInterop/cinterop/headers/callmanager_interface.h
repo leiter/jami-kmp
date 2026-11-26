@@ -60,23 +60,6 @@ LIBJAMI_PUBLIC std::vector<std::string> getCallList(const std::string& accountId
 LIBJAMI_PUBLIC bool acceptWithMedia(const std::string& accountId,
                                     const std::string& callId,
                                     const std::vector<libjami::MediaMap>& mediaList);
-
-/* External media endpoint APIs. The SDP session is provided/consumed by the
- * API caller (e.g. a WebRTC browser endpoint): the daemon performs the call
- * signaling but does not run local ICE/RTP for the call media. */
-LIBJAMI_PUBLIC std::string placeCallWithExternalMedia(const std::string& accountId,
-                                                      const std::string& to,
-                                                      const std::string& sdpOffer);
-LIBJAMI_PUBLIC bool acceptWithExternalMedia(const std::string& accountId,
-                                            const std::string& callId,
-                                            const std::string& sdpAnswer);
-LIBJAMI_PUBLIC bool answerMediaChangeRequestWithExternalMedia(const std::string& accountId,
-                                                              const std::string& callId,
-                                                              const std::string& sdpAnswer);
-LIBJAMI_PUBLIC bool setVideoOrientation(const std::string& accountId,
-                                        const std::string& callId,
-                                        int streamIdx,
-                                        int rotation);
 LIBJAMI_PUBLIC bool requestMediaChange(const std::string& accountId,
                                        const std::string& callId,
                                        const std::vector<libjami::MediaMap>& mediaList);
@@ -116,54 +99,12 @@ LIBJAMI_PUBLIC bool joinConference(const std::string& accountId,
                                    const std::string& account2Id,
                                    const std::string& drag_confId);
 LIBJAMI_PUBLIC bool hangUpConference(const std::string& accountId, const std::string& confId);
-/* Returns false for an invalid/duplicate request or a conversation not held by this account.
- * An accepted request reports its SDP answer and media readiness asynchronously. */
-LIBJAMI_PUBLIC bool startExternalMediaConference(const std::string& accountId,
-                                                 const std::string& conversationId,
-                                                 const std::string& requestId,
-                                                 const std::string& sdpOffer);
-LIBJAMI_PUBLIC bool cancelExternalMediaConference(const std::string& accountId, const std::string& requestId);
-/* WAITING until the call is answered and its ICE/DTLS-SRTP send and receive
- * paths are running; READY only for an established native-media call;
- * UNAVAILABLE for absent/ended/external-media calls. A WAITING call can fail:
- * observe StateChange and impose a dialing deadline before hanging it up. */
-LIBJAMI_PUBLIC std::string getNativeCallMediaState(const std::string& accountId, const std::string& callId);
-/* Dial one audio-only native participant for an already Ready external media host.
- * Its sender reads the conference ring buffer, never the daemon microphone;
- * no video/device stream or current-call switch is created. An empty call ID
- * means dialing could not start. Wait for CURRENT and READY before adding. */
-LIBJAMI_PUBLIC std::string placeExternalMediaConferenceCall(const std::string& accountId,
-                                                            const std::string& to,
-                                                            const std::string& requestId);
-/* Adds a READY native-media call to a ready external media host. True means it was
- * bound; false leaves the caller responsible for retrying or hanging up. */
-LIBJAMI_PUBLIC bool addNativeToExternalMediaConference(const std::string& accountId,
-                                                       const std::string& callId,
-                                                       const std::string& requestId);
-/* Read-only eligibility check against the active local and remote SDP.
- * Only one enabled, bidirectional audio m-line is supported. Recheck the
- * result immediately before promotion: dialog state can change meanwhile. */
-LIBJAMI_PUBLIC bool canPromoteExternalMedia(const std::string& accountId, const std::string& callId);
-/* True means the in-dialog re-INVITE was sent. Keep the browser media alive
- * until ExternalMediaPromotionReady; on failure the call is explicitly ended. */
-LIBJAMI_PUBLIC bool requestExternalMediaPromotion(const std::string& accountId,
-                                                  const std::string& callId,
-                                                  const std::string& requestId);
-/* Cancel a pending promotion; the dialog is ended rather than reverting to browser RTP. */
-LIBJAMI_PUBLIC bool cancelExternalMediaPromotion(const std::string& accountId,
-                                                 const std::string& callId,
-                                                 const std::string& requestId);
-/* Called when the account drops an external media conference, even without Node listeners. */
-LIBJAMI_PUBLIC void externalMediaConferenceRemoved(const std::string& accountId, const std::string& confId);
-LIBJAMI_PUBLIC void cancelExternalMediaConferencesForAccount(const std::string& accountId);
-LIBJAMI_PUBLIC void cancelAllExternalMediaConferences();
-LIBJAMI_PUBLIC void allowExternalMediaConferences();
 LIBJAMI_PUBLIC bool holdConference(const std::string& accountId, const std::string& confId);
 LIBJAMI_PUBLIC bool resumeConference(const std::string& accountId, const std::string& confId);
 LIBJAMI_PUBLIC std::vector<std::string> getConferenceList(const std::string& accountId);
 /// NOTE: Despite its name, this returns the list of call IDs (subcalls) in the conference,
 /// not the actual participant URIs. This naming is historical.
-/// However the URIs are accessible from the confInfos structure passed with the ConferenceInfosUpdated signal.
+/// However the URIs are accessible from the confInfos structure passed with the OnConferenceInfosUpdated signal.
 /// It should be noted that as of February 2026, confInfos is primarily generated by the VideoMixer
 /// based on active RTP streams, which means it can be unreliable during state transitions
 /// (e.g., camera activation/deactivation) where streams are temporarily missing.
@@ -251,18 +192,6 @@ struct LIBJAMI_PUBLIC CallSignal
         constexpr static const char* name = "TransferFailed";
         using cb_type = void(void);
     };
-    struct LIBJAMI_PUBLIC RemoteSdpReceived
-    {
-        constexpr static const char* name = "RemoteSdpReceived";
-        // accountId, callId, sdp
-        using cb_type = void(const std::string&, const std::string&, const std::string&);
-    };
-    struct LIBJAMI_PUBLIC VideoOrientationChanged
-    {
-        constexpr static const char* name = "VideoOrientationChanged";
-        // accountId, callId, streamIdx, rotation
-        using cb_type = void(const std::string&, const std::string&, int, int);
-    };
     struct LIBJAMI_PUBLIC TransferSucceeded
     {
         constexpr static const char* name = "TransferSucceeded";
@@ -326,36 +255,6 @@ struct LIBJAMI_PUBLIC CallSignal
         constexpr static const char* name = "ConferenceRemoved";
         using cb_type = void(const std::string&, const std::string&);
     };
-    struct LIBJAMI_PUBLIC ExternalMediaConferenceHostAnswer
-    {
-        constexpr static const char* name = "ExternalMediaConferenceHostAnswer";
-        using cb_type = void(const std::string&, const std::string&, const std::string&, const std::string&);
-    };
-    struct LIBJAMI_PUBLIC ExternalMediaConferenceHostReady
-    {
-        constexpr static const char* name = "ExternalMediaConferenceHostReady";
-        using cb_type = void(const std::string&, const std::string&, const std::string&);
-    };
-    struct LIBJAMI_PUBLIC ExternalMediaConferenceHostFailure
-    {
-        constexpr static const char* name = "ExternalMediaConferenceHostFailure";
-        using cb_type = void(const std::string&, const std::string&, const std::string&);
-    };
-    struct LIBJAMI_PUBLIC ExternalMediaPromotionAccepted
-    {
-        constexpr static const char* name = "ExternalMediaPromotionAccepted";
-        using cb_type = void(const std::string&, const std::string&, const std::string&);
-    };
-    struct LIBJAMI_PUBLIC ExternalMediaPromotionReady
-    {
-        constexpr static const char* name = "ExternalMediaPromotionReady";
-        using cb_type = void(const std::string&, const std::string&, const std::string&);
-    };
-    struct LIBJAMI_PUBLIC ExternalMediaPromotionFailure
-    {
-        constexpr static const char* name = "ExternalMediaPromotionFailure";
-        using cb_type = void(const std::string&, const std::string&, const std::string&, const std::string&);
-    };
     struct LIBJAMI_PUBLIC RecordingStateChanged
     {
         constexpr static const char* name = "RecordingStateChanged";
@@ -386,9 +285,9 @@ struct LIBJAMI_PUBLIC CallSignal
         constexpr static const char* name = "ConnectionUpdate";
         using cb_type = void(const std::string&, int);
     };
-    struct LIBJAMI_PUBLIC ConferenceInfosUpdated
+    struct LIBJAMI_PUBLIC OnConferenceInfosUpdated
     {
-        constexpr static const char* name = "ConferenceInfosUpdated";
+        constexpr static const char* name = "OnConferenceInfosUpdated";
         using cb_type = void(const std::string&, const std::vector<std::map<std::string, std::string>>&);
     };
     struct LIBJAMI_PUBLIC RemoteRecordingChanged

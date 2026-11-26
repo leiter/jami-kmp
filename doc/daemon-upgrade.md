@@ -211,6 +211,29 @@ What the Android-side findings above did not cover:
   The wrapper archives went from 1223 to 1306 methods; the iOS stages compiled cleanly against the
   ffmpeg 9 headers, and the macOS stage failed as it always does.
 
+### iOS back to `8e1637a66`, clean Release build (2026-11-26)
+
+The 4117 build broke calls. On two simulators (CallKit bypassed, since the simulator's CallKit
+ends outgoing calls itself) the caller sent its INVITE over the SIP channel, the callee's daemon
+opened the channel and never processed the INVITE, and the caller got 408 after 32 s. TestFlight
+build 52 (still on the September daemon `bff4656`) calls to and from Android on a device; 53 and
+54 (4117) were never checked. Android saw the same symptom with its locally built library and
+fixed it by taking the official one (`fcace87a`).
+
+- **Revision:** `8e1637a66`, the one upstream `jami-client-ios` pins and ships, and the API
+  level of the official Android library (it lacks the metadata calls and
+  `startFeedConversation` that `fcace87a` removed). Daemon branch `ios-kmp-8e16` = `8e1637a66` +
+  the nettle fix (`f3ad801b2`).
+- **Clean:** `daemon/contrib/native-*-iPhone*`, the contrib prefixes `daemon/contrib/{arm64,
+  x86_64}-iPhone*` and `daemon/build-ios-*` were deleted first, so every contrib package was
+  rebuilt in one session with Xcode 26.4.1. The 4117 build had reused 23 archives from September.
+- **Release:** `./compile-ios.sh --platform=all --release` (`gas-preprocessor.pl` from
+  `daemon/extras/tools/build/bin` on `PATH`).
+- **Wrapper:** headers refreshed from `8e1637a66` (the exact reverse of the 4117 header diff) and
+  `ConferenceInfosUpdated` → `OnConferenceInfosUpdated` again. `SwarmLoaded`'s permission vector
+  and `getConversationPermissions` exist at this revision, so nothing else changes. 1306 methods.
+- Same library set (48 / 47), no drift.
+
 ---
 
 ## Host prerequisites, as actually found (2026-11-21)

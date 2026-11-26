@@ -292,7 +292,7 @@ Built on a Mac and run in the simulator; the Obj-C++ wrapper `.a` files were reb
 - Core messaging, audio calling (1:1 and conference), profile management. Video in calls is
   implemented and was exercised on a device (see "iOS video in calls" under Known Gaps); R3–R5 and
   E1 plus PiP remain (`doc/open-tasks-2026-11-24.md` §2)
-- On daemon `4117f880c` since 2026-11-24, the same as Android; conversation permissions reach the
+- On daemon `8e1637a66` (clean Release build) since 2026-11-26, the revision upstream iOS ships; 4117 broke calls. Conversation permissions reach the
   app through the wrapper (pull and push), checked on two simulators
 - Notification system with settings enforcement
 - QR camera scanning (AVFoundation)

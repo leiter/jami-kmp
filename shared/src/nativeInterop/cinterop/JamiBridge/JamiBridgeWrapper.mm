@@ -1147,7 +1147,7 @@ static std::shared_ptr<Renderer> findRenderer(const std::string& sinkId) {
         }));
 
     // Conference info updated
-    handlers.insert(exportable_callback<CallSignal::ConferenceInfosUpdated>(
+    handlers.insert(exportable_callback<CallSignal::OnConferenceInfosUpdated>(
         [weakSelf](const std::string& conferenceId,
                    const std::vector<std::map<std::string, std::string>>& participantInfos) {
             // Copy data before async dispatch to avoid use-after-free
