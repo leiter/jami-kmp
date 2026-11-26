@@ -1381,7 +1381,7 @@ class ConversationFacade(
      */
     private fun applyDaemonMember(account: Account, conversation: Conversation, member: Map<String, String>) {
         val memberUri = member["uri"] ?: return
-        restoreOwnReadPosition(account, conversation, member)
+        restoreReadPosition(account, conversation, member)
         val uri = Uri.fromString(memberUri)
         val role = MemberRole.fromString(member["role"] ?: "")
         val existing = conversation.findContact(uri)
@@ -1398,12 +1398,16 @@ class ConversationFacade(
      * The daemon keeps each member's last displayed message ("lastDisplayed" in the member
      * map) and syncs it across devices; for our own member it is the read position. Without
      * it a restart forgot what had been read, and the list counted read messages as unread
-     * again (two-simulator run, 2026-11-18). libjamiclient does the same on load.
+     * again (two-simulator run, 2026-11-18). For a peer it is their "read by" marker, lost on
+     * restart until 2026-11-26. libjamiclient restores both on load.
      */
-    private fun restoreOwnReadPosition(account: Account, conversation: Conversation, member: Map<String, String>) {
+    private fun restoreReadPosition(account: Account, conversation: Conversation, member: Map<String, String>) {
         val lastDisplayed = member["lastDisplayed"]?.takeIf { it.isNotEmpty() } ?: return
         val memberUri = member["uri"] ?: return
-        if (!account.isOwn(memberUri)) return
+        if (!account.isOwn(memberUri)) {
+            conversation.restorePeerReadPosition(Uri.fromString(memberUri).host, lastDisplayed)
+            return
+        }
         conversation.setLastMessageRead(lastDisplayed)
         // Already loaded? Mark it now; later loads are matched in addSwarmElement.
         conversation.getMessage(lastDisplayed)?.read()

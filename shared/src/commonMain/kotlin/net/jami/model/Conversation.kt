@@ -129,6 +129,9 @@ class Conversation(
     // ==================== Message Tracking ====================
 
     val lastDisplayedMessages: MutableMap<String, String> = mutableMapOf()
+
+    /** Peers' restored read positions whose message has not been loaded yet (peer -> message). */
+    private val pendingDisplayed: MutableMap<String, String> = mutableMapOf()
     var lastRead: String? = null
         private set
     var lastNotified: String? = null
@@ -659,6 +662,10 @@ class Conversation(
             }
         }
 
+        pendingDisplayed.entries.filter { it.value == id }.forEach { (peer, _) ->
+            pendingDisplayed.remove(peer)
+            setLastMessageDisplayed(peer, id)
+        }
         if (lastRead != null && lastRead == id) interaction.read()
         if (lastNotified != null && lastNotified == id) interaction.isNotified = true
 
@@ -812,6 +819,17 @@ class Conversation(
                 interaction.contact = findContact(Uri.fromString(interaction.author!!))
             }
         }
+    }
+
+    /**
+     * A peer's read position as the daemon's member list stores it ("lastDisplayed"). Live
+     * DISPLAYED statuses only cover what happens while the app runs, so without this a restart
+     * lost every "read by" marker (two-simulator run, 2026-11-26). libjamiclient restores it on
+     * load the same way; unlike there, a position whose message is not loaded yet waits for it.
+     */
+    fun restorePeerReadPosition(contactId: String, messageId: String) {
+        if (messages.containsKey(messageId)) setLastMessageDisplayed(contactId, messageId)
+        else pendingDisplayed[contactId] = messageId
     }
 
     private fun setLastMessageDisplayed(contactId: String, messageId: String) {
