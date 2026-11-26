@@ -119,16 +119,31 @@ class IOSNotificationService(
         post { setupNotificationCategories() }
     }
 
+    /**
+     * The labels are loaded first and the categories built afterwards, in an ordinary
+     * function: UserNotifications objects made between two suspensions of a coroutine crashed
+     * the app at launch (EXC_BAD_ACCESS in +[UNNotificationAction actionWithIdentifier:...]).
+     * The same split is used by every notification below.
+     */
     private suspend fun setupNotificationCategories() {
+        val labels = listOf(
+            Res.string.action_call_accept, Res.string.action_call_decline, Res.string.notif_reply,
+            Res.string.notif_send_reply, Res.string.write_a_message, Res.string.notif_mark_as_read,
+            Res.string.accept, Res.string.decline,
+        ).associateWith { getString(it) }
+        registerCategories { labels.getValue(it) }
+    }
+
+    private fun registerCategories(label: (org.jetbrains.compose.resources.StringResource) -> String) {
         // Call category with answer/decline actions
         val answerAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_ANSWER_CALL,
-            title = getString(Res.string.action_call_accept),
+            title = label(Res.string.action_call_accept),
             options = UNNotificationActionOptionForeground
         )
         val declineAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_DECLINE_CALL,
-            title = getString(Res.string.action_call_decline),
+            title = label(Res.string.action_call_decline),
             options = UNNotificationActionOptionDestructive
         )
         val callCategory = UNNotificationCategory.categoryWithIdentifier(
@@ -141,14 +156,14 @@ class IOSNotificationService(
         // Message category with reply and mark as read actions
         val replyAction = UNTextInputNotificationAction.actionWithIdentifier(
             identifier = ACTION_REPLY_MESSAGE,
-            title = getString(Res.string.notif_reply),
+            title = label(Res.string.notif_reply),
             options = UNNotificationActionOptionNone,
-            textInputButtonTitle = getString(Res.string.notif_send_reply),
-            textInputPlaceholder = getString(Res.string.write_a_message)
+            textInputButtonTitle = label(Res.string.notif_send_reply),
+            textInputPlaceholder = label(Res.string.write_a_message)
         )
         val markReadAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_MARK_READ,
-            title = getString(Res.string.notif_mark_as_read),
+            title = label(Res.string.notif_mark_as_read),
             options = 0u
         )
         val messageCategory = UNNotificationCategory.categoryWithIdentifier(
@@ -161,12 +176,12 @@ class IOSNotificationService(
         // Request category with accept/decline actions
         val acceptAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_ACCEPT,
-            title = getString(Res.string.accept),
+            title = label(Res.string.accept),
             options = UNNotificationActionOptionNone
         )
         val requestDeclineAction = UNNotificationAction.actionWithIdentifier(
             identifier = ACTION_REQUEST_DECLINE,
-            title = getString(Res.string.decline),
+            title = label(Res.string.decline),
             options = UNNotificationActionOptionDestructive
         )
         val requestCategory = UNNotificationCategory.categoryWithIdentifier(
@@ -223,9 +238,11 @@ class IOSNotificationService(
 
     private suspend fun postCallNotification(identifier: String) {
         currentCallNotificationId = identifier
+        // Loaded before any UserNotifications object exists; see setupNotificationCategories.
+        val title = getString(Res.string.notif_current_call)
 
         val content = UNMutableNotificationContent().apply {
-            setTitle(getString(Res.string.notif_current_call))
+            setTitle(title)
             setCategoryIdentifier(CATEGORY_CALL)
             // Apply sound based on settings. Silent during quiet hours — the notification
             // is still delivered, so the call can be seen and answered. The sound setting
@@ -307,9 +324,10 @@ class IOSNotificationService(
                 else -> getString(Res.string.notif_current_call)
             }
         }
+        val hiddenTitle = getString(Res.string.notif_incoming_call)
 
         val content = UNMutableNotificationContent().apply {
-            setTitle(if (hiddenNames()) getString(Res.string.notif_incoming_call) else title)
+            setTitle(if (hiddenNames()) hiddenTitle else title)
             if (!hiddenNames()) setBody(conference.getDisplayName())
             setCategoryIdentifier(CATEGORY_CALL)
             // Apply sound based on settings. Silent during quiet hours — the notification
@@ -362,9 +380,10 @@ class IOSNotificationService(
 
     private suspend fun postMissedCallNotification(call: Call) {
         val identifier = "missed_${call.getDaemonIdString()}"
+        val title = getString(Res.string.notif_missed_incoming_call)
 
         val content = UNMutableNotificationContent().apply {
-            setTitle(getString(Res.string.notif_missed_incoming_call))
+            setTitle(title)
             if (!hiddenNames()) setBody(call.getDisplayName())
             applySound(this)
         }
@@ -407,8 +426,9 @@ class IOSNotificationService(
             return
         }
 
+        val title = getString(Res.string.notif_inprogress_group_call)
         val content = UNMutableNotificationContent().apply {
-            setTitle(getString(Res.string.notif_inprogress_group_call))
+            setTitle(title)
             setBody(conversation.getDisplayName())
             setCategoryIdentifier(CATEGORY_CALL)
             applySound(this)
@@ -448,10 +468,11 @@ class IOSNotificationService(
 
         val lastMessage = conversation.getLastMessage() ?: return
         val senderName = conversation.getDisplayName()
+        val hiddenTitle = getString(Res.string.notif_hidden_message_title)
 
         val content = UNMutableNotificationContent().apply {
             if (hiddenNames()) {
-                setTitle(getString(Res.string.notif_hidden_message_title))
+                setTitle(hiddenTitle)
             } else {
                 setTitle(senderName)
                 setBody(lastMessage)
@@ -545,21 +566,20 @@ class IOSNotificationService(
             return
         }
         val single = pending.singleOrNull()
+        val title = getString(Res.string.new_invitation_request_title)
+        // The sender, or a count when there is more than one. This was
+        // account.displayUsername — the *local* account's own name, which told the user
+        // nothing about who was asking.
+        val body = when {
+            // Names hidden: the count is not a name, so it still goes out.
+            hiddenNames() && single != null -> getString(Res.string.notif_hidden_request_title)
+            single != null -> single.title.ifEmpty { single.uri.rawRingId }
+            else -> getString(Res.string.invitation_message, pending.size)
+        }
 
         val content = UNMutableNotificationContent().apply {
-            setTitle(getString(Res.string.new_invitation_request_title))
-            // The sender, or a count when there is more than one. This was
-            // account.displayUsername — the *local* account's own name, which told the user
-            // nothing about who was asking.
-            setBody(run {
-                when {
-                    // Names hidden: the count is not a name, so it still goes out.
-                    hiddenNames() && single != null ->
-                        getString(Res.string.notif_hidden_request_title)
-                    single != null -> single.title.ifEmpty { single.uri.rawRingId }
-                    else -> getString(Res.string.invitation_message, pending.size)
-                }
-            })
+            setTitle(title)
+            setBody(body)
             // Accept and Decline only when there is exactly one request for them to act on, as
             // on Android. The "N contact requests" summary carries no conversation, so its
             // buttons did nothing — and as background actions they did not even open the app.
@@ -679,8 +699,9 @@ class IOSNotificationService(
     private suspend fun postLocationNotification(account: Account, contact: Contact, conversation: Conversation) {
         val identifier = "location_${contact.uri.uri}"
 
+        val title = getString(Res.string.notif_location_title, contact.displayName.orEmpty())
         val content = UNMutableNotificationContent().apply {
-            setTitle(getString(Res.string.notif_location_title, contact.displayName.orEmpty()))
+            setTitle(title)
             setSound(null)
         }
 
