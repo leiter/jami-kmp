@@ -272,18 +272,23 @@ android {
 }
 
 // Android JVM unit tests run the common tests against the Android actuals, but without an Android
-// runtime: these four classes exercise Android platform services that need Koin-backed
-// SharedPreferences (LocalPrefs), AudioManager, ConnectivityManager or MediaProjection, and so
-// cannot run on the bare task. They are not untested on Android — each is re-run under Robolectric,
-// which supplies the Context, by a subclass in src/androidUnitTest (net.jami.robolectric.*). They
-// also run on the desktop target (`:shared:desktopTest`), where those services are plain
-// implementations. Keep the exclusions: they apply to the base classes, not to the subclasses.
+// runtime: the classes below need a real Context, whether for a platform service (Koin-backed
+// SharedPreferences via LocalPrefs, AudioManager, ConnectivityManager, MediaProjection) or just to
+// let Compose Multiplatform read a string resource, which on Android goes through the module's
+// assets. They are not untested on Android — each is re-run under Robolectric, which supplies the
+// Context, by a subclass in src/androidUnitTest (net.jami.robolectric.*). They also run on the
+// desktop target (`:shared:desktopTest`), where services are plain implementations and resources
+// come off the classpath. Keep the exclusions: they apply to the base classes, not the subclasses,
+// and dropping one puts the class back to failing here rather than to being covered twice.
 tasks.withType<Test>().matching { it.name.endsWith("UnitTest") }.configureEach {
     filter {
         excludeTestsMatching("net.jami.services.HardwareServiceTest")
         excludeTestsMatching("net.jami.viewmodel.AppSettingsViewModelTest")
         excludeTestsMatching("net.jami.viewmodel.AppViewModelTest")
         excludeTestsMatching("net.jami.viewmodel.CallViewModelTest")
+        excludeTestsMatching("net.jami.viewmodel.ContactDetailsViewModelTest")
+        excludeTestsMatching("net.jami.viewmodel.GroupMemberBanTest")
+        excludeTestsMatching("net.jami.viewmodel.ImportAccountViewModelTest")
     }
 }
 

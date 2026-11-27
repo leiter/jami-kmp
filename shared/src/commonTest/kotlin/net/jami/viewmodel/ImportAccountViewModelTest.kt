@@ -27,7 +27,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-class ImportAccountViewModelTest {
+open class ImportAccountViewModelTest {
 
     @Test
     fun initialStateIsEmpty() = runTest {

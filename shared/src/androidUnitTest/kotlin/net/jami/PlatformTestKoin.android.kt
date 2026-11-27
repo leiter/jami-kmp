@@ -84,3 +84,44 @@ internal fun robolectricApplication(): Context? = try {
  */
 private fun platformTestScope(): CoroutineScope =
     CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+
+/**
+ * Hands Compose Multiplatform's resource reader a Context, so `getString(Res.string.x)` works.
+ *
+ * On Android, `DefaultAndroidResourceReader` reads the generated strings out of the module's
+ * assets through one global Context, which the library sets from an `AndroidContextProvider`
+ * ContentProvider auto-registered in the merged manifest. That provider never runs in a library
+ * module's JVM unit tests — and it is written to throw outright if its authority is still the
+ * library's default, which it is without an `applicationId`. So every `getString` call threw
+ * `IllegalStateException: Android context is not initialized`.
+ *
+ * The damage was invisible: these calls sit inside ViewModel `launch` blocks, where the throw
+ * was swallowed and the state update after it simply never happened. Eleven common tests across
+ * `ContactDetailsViewModelTest`, `GroupMemberBanTest` and `ImportAccountViewModelTest` failed on
+ * the Android target with an empty display name, a missing error message or an unloaded member
+ * list, and all eleven passed on desktop, where resources read straight off the classpath.
+ *
+ * Reflective because the field is `internal` to the resources library. Same reasoning as
+ * [robolectricApplication]: there is no public way in, and the alternative — building the
+ * ContentProvider — hits the authority check. A no-op outside Robolectric, where there is no
+ * Context to give it and the tests that need one are excluded anyway.
+ */
+internal fun ensureComposeResourceContext() {
+    val context = robolectricApplication() ?: return
+    try {
+        val provider = Class.forName("org.jetbrains.compose.resources.AndroidContextProvider")
+        provider.getDeclaredField("ANDROID_CONTEXT").apply {
+            isAccessible = true
+            set(null, context)
+        }
+    } catch (e: Throwable) {
+        // A newer resources library may have moved it. Fail loudly rather than leaving the
+        // tests to report a swallowed throw as a wrong value, which is what this fixes.
+        throw IllegalStateException(
+            "Can't initialize the Compose resources Context; getString() will throw inside " +
+                "every ViewModel that reads a string. Check whether " +
+                "AndroidContextProvider.ANDROID_CONTEXT still exists.",
+            e,
+        )
+    }
+}

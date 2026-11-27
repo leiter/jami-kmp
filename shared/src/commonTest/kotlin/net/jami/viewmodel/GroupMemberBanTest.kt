@@ -37,7 +37,7 @@ import kotlin.test.assertTrue
  * call is made, and that the row survives the ban — the unblock action can only be reached from
  * it.
  */
-class GroupMemberBanTest {
+open class GroupMemberBanTest {
 
     private companion object {
         const val ACC = "acc1"

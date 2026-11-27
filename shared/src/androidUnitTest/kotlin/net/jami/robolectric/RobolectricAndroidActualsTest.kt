@@ -21,12 +21,16 @@ import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import net.jami.ensureComposeResourceContext
 import net.jami.ensurePlatformTestKoin
 import net.jami.robolectricApplication
 import net.jami.services.HardwareServiceTest
 import net.jami.viewmodel.AppSettingsViewModelTest
 import net.jami.viewmodel.AppViewModelTest
 import net.jami.viewmodel.CallViewModelTest
+import net.jami.viewmodel.ContactDetailsViewModelTest
+import net.jami.viewmodel.GroupMemberBanTest
+import net.jami.viewmodel.ImportAccountViewModelTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.rules.TestRule
@@ -74,17 +78,20 @@ import org.robolectric.shadows.ShadowNetworkCapabilities
 private const val ROBOLECTRIC_SDK = 34
 
 /**
- * Starts the Android Koin graph around the whole test rather than in a setup method.
+ * Puts the Android runtime's two global prerequisites in place around the whole test rather
+ * than in a setup method: the Koin graph the actuals resolve from, and the Context that Compose
+ * Multiplatform's resource reader needs before any `getString` call.
  *
- * A superclass's setup runs first, and these parents reset `LocalPrefs` in theirs — which on
- * Android is the very thing that needs Koin. A rule wraps the setup methods too, so it is the
- * only place early enough.
+ * A rule, not a `@Before`: a superclass's setup runs first, and these parents reset `LocalPrefs`
+ * in theirs — which on Android is the very thing that needs Koin. A rule wraps the setup methods
+ * too, so it is the only place early enough.
  */
-class AndroidKoinRule : TestRule {
+class AndroidRuntimeRule : TestRule {
     override fun apply(base: Statement, description: Description): Statement =
         object : Statement() {
             override fun evaluate() {
                 ensurePlatformTestKoin()
+                ensureComposeResourceContext()
                 base.evaluate()
             }
         }
@@ -94,14 +101,14 @@ class AndroidKoinRule : TestRule {
 @Config(sdk = [ROBOLECTRIC_SDK])
 class RobolectricAppSettingsViewModelTest : AppSettingsViewModelTest() {
     @get:Rule
-    val koin = AndroidKoinRule()
+    val androidRuntime = AndroidRuntimeRule()
 }
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [ROBOLECTRIC_SDK])
 class RobolectricHardwareServiceTest : HardwareServiceTest() {
     @get:Rule
-    val koin = AndroidKoinRule()
+    val androidRuntime = AndroidRuntimeRule()
 
     /**
      * Gives the simulated device the two things the Android HardwareService reads out of the
@@ -143,12 +150,41 @@ class RobolectricHardwareServiceTest : HardwareServiceTest() {
 @Config(sdk = [ROBOLECTRIC_SDK])
 class RobolectricAppViewModelTest : AppViewModelTest() {
     @get:Rule
-    val koin = AndroidKoinRule()
+    val androidRuntime = AndroidRuntimeRule()
 }
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [ROBOLECTRIC_SDK])
 class RobolectricCallViewModelTest : CallViewModelTest() {
     @get:Rule
-    val koin = AndroidKoinRule()
+    val androidRuntime = AndroidRuntimeRule()
+}
+
+/*
+ * Below: the three classes that were never excluded, and so had been failing in the open on the
+ * Android target — eleven tests, all green on desktop. One cause for all of them: Compose
+ * Multiplatform's resource reader had no Context, so `getString` threw inside the ViewModels'
+ * `launch` blocks and the state update after it never ran. See [ensureComposeResourceContext],
+ * which the rule now calls. They need nothing else from the Android runtime.
+ */
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [ROBOLECTRIC_SDK])
+class RobolectricContactDetailsViewModelTest : ContactDetailsViewModelTest() {
+    @get:Rule
+    val androidRuntime = AndroidRuntimeRule()
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [ROBOLECTRIC_SDK])
+class RobolectricGroupMemberBanTest : GroupMemberBanTest() {
+    @get:Rule
+    val androidRuntime = AndroidRuntimeRule()
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [ROBOLECTRIC_SDK])
+class RobolectricImportAccountViewModelTest : ImportAccountViewModelTest() {
+    @get:Rule
+    val androidRuntime = AndroidRuntimeRule()
 }

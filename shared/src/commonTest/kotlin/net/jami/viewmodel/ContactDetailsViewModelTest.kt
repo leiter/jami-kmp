@@ -27,7 +27,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class ContactDetailsViewModelTest {
+open class ContactDetailsViewModelTest {
 
     @Test
     fun initialStateIsEmpty() = runTest {
