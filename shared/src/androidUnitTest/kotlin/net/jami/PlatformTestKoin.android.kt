@@ -17,7 +17,14 @@
 package net.jami
 
 import android.content.Context
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import net.jami.repository.SettingsRepository
+import net.jami.services.CameraService
 import net.jami.services.DaemonBridgeApi
+import net.jami.services.InMemoryClientSettingsStore
+import net.jami.services.NotificationGuard
 import net.jami.services.Settings
 import net.jami.services.StubDaemonBridge
 import org.koin.core.context.startKoin
@@ -41,7 +48,15 @@ actual fun ensurePlatformTestKoin() {
     startKoin {
         modules(module {
             single { Settings(context, "jami_test_settings") }
+            // The interface, never the JNI `DaemonBridge`: resolving that class in a JVM test
+            // would load libjami-core-jni.so. See the note on HardwareService.daemonBridge.
             single<DaemonBridgeApi> { StubDaemonBridge() }
+            // What the Android HardwareService injects beyond the bridge. CameraService and
+            // the audio paths need the real Context Robolectric supplies; SettingsRepository
+            // gets an in-memory store so nothing reads or writes the daemon's account config.
+            single { CameraService(context) }
+            single { SettingsRepository(get(), InMemoryClientSettingsStore(), platformTestScope()) }
+            single { NotificationGuard(get()) }
         })
     }
 }
@@ -58,3 +73,14 @@ internal fun robolectricApplication(): Context? = try {
 } catch (e: Throwable) {
     null
 }
+
+/**
+ * The scope the test graph's own services run on.
+ *
+ * Deliberately not a `TestScope`: these singletons outlive any single test (Koin is started
+ * once per JVM), so binding them to one test's scheduler would leave later tests publishing
+ * into a cancelled scope. Nothing asserted here depends on their timing — the tests drive
+ * their own `runTest` scope for that.
+ */
+private fun platformTestScope(): CoroutineScope =
+    CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)

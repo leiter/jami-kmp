@@ -272,9 +272,12 @@ android {
 }
 
 // Android JVM unit tests run the common tests against the Android actuals, but without an Android
-// runtime (no Robolectric): these classes exercise Android platform services that need Koin-backed
-// SharedPreferences (LocalPrefs), AudioManager or MediaProjection and cannot run there. They run on
-// the desktop target (`:shared:desktopTest`), where those services are plain implementations.
+// runtime: these four classes exercise Android platform services that need Koin-backed
+// SharedPreferences (LocalPrefs), AudioManager, ConnectivityManager or MediaProjection, and so
+// cannot run on the bare task. They are not untested on Android — each is re-run under Robolectric,
+// which supplies the Context, by a subclass in src/androidUnitTest (net.jami.robolectric.*). They
+// also run on the desktop target (`:shared:desktopTest`), where those services are plain
+// implementations. Keep the exclusions: they apply to the base classes, not to the subclasses.
 tasks.withType<Test>().matching { it.name.endsWith("UnitTest") }.configureEach {
     filter {
         excludeTestsMatching("net.jami.services.HardwareServiceTest")

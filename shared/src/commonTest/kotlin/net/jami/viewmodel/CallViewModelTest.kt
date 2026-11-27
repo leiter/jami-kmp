@@ -37,7 +37,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlin.test.BeforeTest
 import net.jami.ensurePlatformTestKoin
 
-class CallViewModelTest {
+open class CallViewModelTest {
 
     /** iOS's HardwareService resolves its dependencies from Koin; desktop's does not. */
     @BeforeTest

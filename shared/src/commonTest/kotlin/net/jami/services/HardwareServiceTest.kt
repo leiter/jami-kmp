@@ -37,7 +37,7 @@ import kotlin.test.assertTrue
 import kotlin.test.BeforeTest
 import net.jami.ensurePlatformTestKoin
 
-class HardwareServiceTest {
+open class HardwareServiceTest {
 
     /** iOS's HardwareService resolves its dependencies from Koin; desktop's does not. */
     @BeforeTest

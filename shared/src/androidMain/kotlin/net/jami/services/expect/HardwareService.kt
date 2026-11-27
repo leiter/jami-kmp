@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import net.jami.daemon.JamiService
 import net.jami.model.Call
 import net.jami.model.Call.CallStatus
 import net.jami.model.Conference
@@ -34,7 +33,7 @@ import net.jami.model.VideoDevices
 import net.jami.repository.SettingsRepository
 import net.jami.services.NotificationGuard
 import net.jami.services.CameraService
-import net.jami.services.DaemonBridge
+import net.jami.services.DaemonBridgeApi
 import net.jami.utils.Log
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -54,7 +53,16 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     private val audioManager: AudioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
-    private val daemonBridge: DaemonBridge by inject()
+    /**
+     * The interface, not the JNI `DaemonBridge` class this used to ask for.
+     *
+     * Every other service already injects [DaemonBridgeApi]; this was the one place naming the
+     * concrete class, and it is what kept [net.jami.services.HardwareServiceTest] off the
+     * Android unit-test target — binding the real bridge in a JVM test means loading
+     * libjami-core-jni.so. `platformModule` registers both types, so production resolves the
+     * same object as before, while a test can bind `StubDaemonBridge` instead.
+     */
+    private val daemonBridge: DaemonBridgeApi by inject()
     private val cameraService: CameraService by inject()
     private val settingsRepository: SettingsRepository by inject()
     private val notificationGuard: NotificationGuard by inject()
@@ -386,7 +394,10 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     @Synchronized
     actual fun toggleSpeakerphone(conf: Conference, enabled: Boolean) {
         Log.d(TAG, "toggleSpeakerphone: $enabled")
-        JamiService.setAudioPlugin(JamiService.getCurrentAudioOutputPlugin())
+        // Through the bridge, which wraps exactly this JamiService pair. Calling the SWIG class
+        // here reached the JNI directly, so the method could not run without libjami-core-jni.so
+        // loaded — the last thing keeping HardwareServiceTest off the Android unit-test target.
+        daemonBridge.restartAudioLayer()
         mShouldSpeakerphone = enabled
         if (mHasSpeakerPhone && enabled) routeToSpeaker() else resetAudio()
         // On speaker the phone is away from the ear: give the screen back (and take it again
@@ -768,7 +779,14 @@ actual class HardwareService(private val context: Context) : KoinComponent, OnAu
     actual fun stopMediaHandler() {}
 
     actual fun setPendingScreenShareProjection(screenCaptureSession: Any?) {
-        pendingScreenShareProjection = screenCaptureSession as MediaProjection?
+        // `as?`, not `as`: the shared signature is `Any?` because no other platform has a
+        // MediaProjection, so a hard cast turned a wrong-typed argument into a crash inside the
+        // service rather than a rejected call. Real callers pass the projection Android handed
+        // them; anything else is logged and treated as "no projection".
+        if (screenCaptureSession != null && screenCaptureSession !is MediaProjection) {
+            Log.w(TAG, "setPendingScreenShareProjection: not a MediaProjection, ignoring")
+        }
+        pendingScreenShareProjection = screenCaptureSession as? MediaProjection
         Log.d(TAG, "setPendingScreenShareProjection: ${if (pendingScreenShareProjection != null) "set" else "cleared"}")
         if (pendingScreenShareProjection != null) {
             _screenShareReady.tryEmit(Unit)

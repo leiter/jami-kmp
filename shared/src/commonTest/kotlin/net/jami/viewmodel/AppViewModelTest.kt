@@ -30,7 +30,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
-class AppViewModelTest {
+open class AppViewModelTest {
 
     @Test
     fun initialStateIsLoading() = runTest {
