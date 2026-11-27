@@ -319,7 +319,17 @@ has since landed under other names. Treat each as a read-the-source check first:
 
 ## I. Test and harness infrastructure
 
-- **I1 — Robolectric: wired, one of four classes crossed over (2026-11-08).** Robolectric
+- **I1 — ~~Robolectric~~. Done 2026-11-27** (`af0e929`, `f845f49`): all four classes run, plus
+  three that had been failing in the open; `:shared:testDebugUnitTest` 1069 → 1116 tests, 0
+  failures. **The two blockers recorded below were misdiagnosed** — `AppViewModelTest` and
+  `CallViewModelTest` were not off the test scheduler at all, they were swallowing a thrown
+  exception (a `ContextWrapper(null)` in `testBiometricService()`, and missing Koin bindings
+  respectively). `HardwareServiceTest` did need the bridge behind an interface, as guessed, and
+  also a direct `JamiService` call removed. Full account, including the Compose-resources cause
+  behind eleven further failures: `doc/open-tasks-2026-11-24.md` → "Closed 2026-11-27". The
+  2026-11-08 state is kept below for the record.
+
+  **As of 2026-11-08 — wired, one of four classes crossed over.** Robolectric
   4.14.1 is in the Android unit-test source set (pinned to SDK 34: it ships a prebuilt runtime
   per API level and lags the compileSdk), `testOptions.unitTests.isIncludeAndroidResources`
   is on, and `ensurePlatformTestKoin()` now starts a real `Settings` over Robolectric's
@@ -572,7 +582,8 @@ in `AccountAdvancedSettingsScreen`, connectivity mode, video bitrate, "place sys
 Checked against source and found both true and already written down, so the screenshots carrying
 them add nothing: haptics on answer/decline (D2), language
 selector (E2), app shortcuts (E4), @mentions (C1), Markdown (C2), read markers (C3), the
-six-emoji reaction picker (C4), Robolectric for the four excluded Android tests (I1),
+six-emoji reaction picker (C4), Robolectric for the four excluded Android tests (I1, since done
+2026-11-27),
 `StubDaemonBridge` discarding its callbacks (I2), outbox device verification (I4), the microphone
 level ring (I5), per-file attribution (J4/J5, still blocked on J1), plugins (K1),
 and the file-picker/biometric-lock race (`doc/TODO.md`).

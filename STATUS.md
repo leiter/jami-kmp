@@ -157,10 +157,17 @@ See `doc/apple-bridge-rebuild.md`.
 
 ### Testing
 - 97 test files (70 in commonTest; the rest in desktopTest 9, iosTest 5, macosTest 4, jsTest 4,
-  androidUnitTest 4, androidInstrumentedTest 1)
+  androidUnitTest 5, androidInstrumentedTest 1)
 - `:shared:iosSimulatorArm64Test` — **0 failures** (last run 2026-11-25, 1133 tests). This is
-  the suite run on the Mac; `:shared:desktopTest` last passed with 871 tests on 2026-11-05 and on
-  2026-11-24 did not compile here because of stale generated Compose resources (not a code error)
+  the suite run on the Mac.
+- `:shared:desktopTest` — **1162 tests, 0 failures** (2026-11-27, on the Android machine).
+- `:shared:testDebugUnitTest` — **1116 tests, 0 failures** (2026-11-27). The common tests run
+  against the *Android* actuals here. Seven classes need a real Context (platform services, or
+  just reading a string resource, which on Android goes through the module's assets): they are
+  excluded from this task by name and re-run under Robolectric by `net.jami.robolectric.*`
+  subclasses in `src/androidUnitTest`, which inherit the test methods and add only the runtime
+  setup. **Keep both halves in step** — dropping an exclusion puts that class back to failing
+  here, not to being covered twice. Details: `doc/open-tasks-2026-11-24.md` → "Closed 2026-11-27".
 - ViewModel tests, model tests, service integration tests, utility tests
 - `runTest` + `advanceUntilIdle` pattern throughout
 - `TestFixtures.kt` with stub `DaemonBridgeApi` for isolated ViewModel testing

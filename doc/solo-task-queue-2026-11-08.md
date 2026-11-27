@@ -80,8 +80,10 @@ test proves each fix.
 
 ## Tier 3 — test infrastructure
 
-14. **I1 — Robolectric**, so `HardwareServiceTest`, `AppSettingsViewModelTest`, `AppViewModelTest`
-    and `CallViewModelTest` run against the Android actuals instead of the desktop ones only.
+14. ~~**I1 — Robolectric**, so `HardwareServiceTest`, `AppSettingsViewModelTest`, `AppViewModelTest`
+    and `CallViewModelTest` run against the Android actuals instead of the desktop ones only.~~
+    **Done 2026-11-27** (`af0e929`, `f845f49`) — see `doc/open-tasks-2026-11-24.md` →
+    "Closed 2026-11-27".
 
 15. **Wire `compose-ui-test-junit4`** — it sits in the version catalog (`libs.versions.toml:104`)
     unwired in `shared/build.gradle.kts`, so the `TestTags` added by L1 are decoration and the
@@ -153,7 +155,7 @@ changes are uncompiled, as every Apple change made on this host is.
 | 10 | D2 haptics | Compose haptics, not `Vibrator`: no permission, obeys the system setting | `a112a72` |
 | 11 | D5 video gating | **Half already done**; the setting was read by nothing, now it gates | `eab16b9` |
 | 12 | D4, H1 | **Already implemented**; premises stale | `a710d74` |
-| 13 | I1 Robolectric | Wired; one of four classes crossed over, the other three blocked for reasons now recorded | `ac242d7` |
+| 13 | I1 Robolectric | Wired; one of four classes crossed over, the other three blocked for reasons now recorded (**two of those reasons were wrong — finished 2026-11-27**) | `ac242d7` |
 | 14 | Compose UI tests + L1 leftovers | First UI test in the repo; both live regions; touch-target sweep found and fixed two sites | `b270171` |
 | 15 | I3 harness precondition | All three parts; the `pm clear` is conditional on a run marker, not unconditional | `155b183` |
 
@@ -163,11 +165,16 @@ skipped — the same failure mode the 2026-11-07 screenshot pass was written to 
 
 **New findings worth someone's time**, none of which could be seen before today:
 
-- `AppViewModelTest` and `CallViewModelTest` never leave `Loading` / `Outgoing` under
+- ~~`AppViewModelTest` and `CallViewModelTest` never leave `Loading` / `Outgoing` under
   Robolectric although `advanceUntilIdle()` returns — something in the Android path is off the
-  test scheduler.
+  test scheduler.~~ **Wrong (2026-11-27).** Nothing was off the scheduler: both were swallowing a
+  thrown exception inside a ViewModel `launch` — `testBiometricService()` passed the Android
+  actual a `ContextWrapper(null)`, and `HardwareService`'s other Koin dependencies were missing
+  from the test graph. A state machine that "never leaves Loading although advanceUntilIdle
+  returns" is worth suspecting as a swallowed throw first.
 - `HardwareServiceTest` cannot run on Android until `DaemonBridge` is behind an interface:
-  binding it in a unit test loads `libjami-core-jni.so`.
+  binding it in a unit test loads `libjami-core-jni.so`. **Correct, and done 2026-11-27** — it
+  also had a direct `JamiService.setAudioPlugin` call in `toggleSpeakerphone`.
 - `MessageInputBar` holds a `String`, not a `TextFieldValue`, so @mention completion works
   only at the end of the text.
 - The macOS notification service consults no notification setting at all — not the new one,

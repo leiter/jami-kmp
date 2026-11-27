@@ -1524,8 +1524,21 @@ be impossible to bypass by accident.
   lazily. Four classes (`HardwareServiceTest`, `AppSettingsViewModelTest`, `AppViewModelTest`,
   `CallViewModelTest`) need an Android runtime there (Koin-backed LocalPrefs, AudioManager,
   MediaProjection) and are excluded from the Android unit-test task only — they run on desktop.
-- [ ] **Robolectric for the Android unit tests** — would let the four excluded classes run against the
-  Android actuals too.
+- [x] **Robolectric for the Android unit tests (2026-11-27)** — `af0e929`, `f845f49`.
+  `:shared:testDebugUnitTest` 1069 → **1116 tests, 0 failures**. All four excluded classes run
+  against the Android actuals, plus `ContactDetailsViewModelTest`, `GroupMemberBanTest` and
+  `ImportAccountViewModelTest`, whose 11 tests had been failing in the open on this target while
+  passing on desktop. Four real defects came out of it: the Android `HardwareService` injected
+  the concrete JNI `DaemonBridge` and called `JamiService.setAudioPlugin` through SWIG (both now
+  go through `DaemonBridgeApi` / `restartAudioLayer()`); `setPendingScreenShareProjection`
+  hard-cast its `Any?` argument; `testBiometricService()` handed the Android actual a
+  `ContextWrapper(null)` whose `getSharedPreferences` threw inside `AppViewModel`'s collector,
+  where it was swallowed and left the state in `Loading`. The eleven share one cause: Compose
+  Multiplatform's resource reader has no Context in a library module's unit tests, so every
+  `getString` threw and was swallowed. **Robolectric alone does not fix that** — the Context has
+  to be handed to the resources library. Seven base classes stay excluded by name and are re-run
+  by `net.jami.robolectric.*` subclasses. Full account: `doc/open-tasks-2026-11-24.md` →
+  "Closed 2026-11-27".
 
 > *2026-11-24: the five boxes below are a checklist from the `viewModelScope()` migration and are obsolete — that migration is long done, and on the Mac the suite that runs is `:shared:iosSimulatorArm64Test` (green, 1133 tests on 2026-11-25).*
 

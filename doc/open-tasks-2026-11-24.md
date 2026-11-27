@@ -55,7 +55,7 @@ Android is built and tested on another machine, so a shared change is compiled o
 | S8 | ~~**Audio route picker** (earpiece / speaker / Bluetooth).~~ **Done 2026-11-25** (`1f653e8`) — see the closed list; Bluetooth/headset untested without hardware. | M | |
 | S9 | ~~**Tapping a 1:1 peer's avatar in details does nothing.**~~ **Done 2026-11-25** (`c99aeb1`): a real gap, the reference sets a custom photo and name. | M | |
 | S10 | ~~**Video recording in chat.**~~ **Done 2026-11-25** (`16c718fb`) — see the closed list; needs a device camera to try. | L | |
-| S11 | **Robolectric for the four shared test classes excluded from the Android unit-test task.** | M | Android machine |
+| S11 | ~~**Robolectric for the four shared test classes excluded from the Android unit-test task.**~~ **Done 2026-11-27** (`af0e929`, `f845f49`). All four run, plus three classes that had been failing in the open; `:shared:testDebugUnitTest` 1069 → 1116 tests, 0 failures. Four real defects in the Android actuals came out of it — see the closed list. | M | Android machine |
 | S12 | ~~**Calling F9: call/stream introspection.**~~ **Done 2026-11-25**, except `currentMediaList` (see the closed list). | S | |
 | S13 | ~~`Permissions.md` leftovers.~~ **Done 2026-11-25** (`deb1f39`); the Android half is unbuilt here. | S | |
 
@@ -317,3 +317,69 @@ I13 (macOS) was skipped, as agreed.
 **Extensions are simulator-only.** Device and Release builds compile them unsigned and leave
 them out, so archives and TestFlight are unchanged. Each extension's README lists the portal
 steps.
+
+## Closed 2026-11-27 (S11 — Robolectric, Android machine)
+
+`af0e929` and `f845f49`. `:shared:testDebugUnitTest` went 1069 → **1116 tests, 0 failures**;
+`:shared:desktopTest`, `:android-app:testStandardDebugUnitTest` and the Android app compile stay
+green. The point of the task was to run the Android actuals at all, and doing so surfaced four
+real defects rather than just filling in coverage.
+
+**S11 — the four excluded classes.** `AppSettingsViewModelTest` already had a Robolectric
+subclass (`ac242d7`, 2026-11-08); the other three did not, and the note left in the test file
+said two of them were blocked on a coroutine-scheduler difference. **That diagnosis was wrong.**
+What actually stopped each:
+
+- **`HardwareServiceTest`** — two routes straight to the JNI in the Android `HardwareService`.
+  It injected the concrete `DaemonBridge` where every other service injects `DaemonBridgeApi`
+  (the only such place in the module), and `toggleSpeakerphone` called
+  `JamiService.setAudioPlugin(getCurrentAudioOutputPlugin())` through SWIG. Both needed
+  `libjami-core-jni.so`. The injection is the interface now and the call goes through
+  `daemonBridge.restartAudioLayer()`, which wraps that exact pair; `platformModule` registers
+  both types, so production resolves the same object as before.
+- **`setPendingScreenShareProjection`** hard-cast its `Any?` argument to `MediaProjection`, so a
+  wrong-typed call crashed inside the service instead of being rejected. Checked cast now. The
+  shared signature is `Any?` because no other platform has a `MediaProjection`.
+- **`AppViewModelTest`** — not the scheduler. `testBiometricService()` handed the Android actual
+  a `ContextWrapper(null)`, whose `getSharedPreferences` throws — inside `AppViewModel`'s account
+  collector, where the throw was swallowed and the state never left `Loading`. Only the
+  `HasAccounts` cases failed, because `NoAccounts` does not reach the biometric check. The
+  platform test services take the Robolectric application now, as `testHardwareService()` did.
+- **`CallViewModelTest`** — needed nothing of its own. It failed on `HardwareService`'s other
+  Koin dependencies (`CameraService`, `SettingsRepository`, `NotificationGuard`) missing from the
+  test graph, swallowed the same way.
+
+**Beyond S11 — eleven tests that had been failing in the open.**
+`ContactDetailsViewModelTest` (3 of 14), `GroupMemberBanTest` (4 of 5) and
+`ImportAccountViewModelTest` (4 of 12) were never excluded, so they had been red on the Android
+target while green on desktop. One cause for all eleven: on Android, Compose Multiplatform reads
+generated strings out of the module's assets through a single global Context, set by an
+`AndroidContextProvider` ContentProvider registered in the merged manifest. **That provider never
+runs in a library module's JVM unit tests**, and it throws outright if its authority is still the
+library default — which it is without an `applicationId`. So every `getString(Res.string.x)`
+threw `IllegalStateException: Android context is not initialized`, inside a ViewModel `launch`
+where it was swallowed; the tests saw an empty display name, a null error message or an unloaded
+member list rather than an error. `ContactDetailsViewModel.loadContact` reaches `getString` while
+building `convType`, which is why 3 of its 14 failed — the rest assert state written before that
+line.
+
+**Robolectric alone does not fix this**, which is worth knowing before the next attempt: the
+Context has to be handed to the resources library explicitly. `ensureComposeResourceContext()`
+seeds the field reflectively (it is `internal`, and building the ContentProvider hits the
+authority check) and throws with an explanation if it ever moves, rather than letting the tests
+go back to reporting a swallowed throw as a wrong value.
+
+**How the Android suite is now arranged.** Seven common classes are excluded from
+`:shared:testDebugUnitTest` by name and re-run by `net.jami.robolectric.*` subclasses in
+`src/androidUnitTest`, which inherit the test methods and add only the runtime setup. The
+exclusions match the **base** classes, not the subclasses — dropping one puts that class back to
+failing on the bare task, not to being covered twice. `AndroidKoinRule` became
+`AndroidRuntimeRule`, since it now seeds the resource Context as well as Koin. Two environment
+facts live in `RobolectricHardwareServiceTest`: Robolectric's default device reports no network
+capabilities and no audio devices, while the Android `HardwareService` seeds `connectivityState`
+from a live snapshot in `init` and routes the speaker via `availableCommunicationDevices` — so
+unconfigured it came up offline and refused the speaker.
+
+**Still open:** the Robolectric SDK is pinned to 34 rather than the project's `compileSdk` 36,
+because Robolectric ships a prebuilt runtime per API level and lags the SDK. Nothing here
+branches on 34 versus 36.

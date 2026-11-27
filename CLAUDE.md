@@ -89,7 +89,7 @@ jami-kmp/
 | Navigation | Jetpack Navigation Compose — type-safe `Screen` sealed class, 3 graphs: Loading / Onboarding / Main |
 | UI | Material 3 with `JamiTheme` composition locals (colors, typography, tokens) |
 | Database | SQLDelight 2.0 — platform-specific `DatabaseDriverFactory` |
-| Testing | `runTest` + `advanceUntilIdle` + stub implementations in `TestFixtures.kt` |
+| Testing | `runTest` + `advanceUntilIdle` + stub implementations in `TestFixtures.kt`. `:shared:testDebugUnitTest` re-runs the common tests against the Android actuals; classes needing a real `Context` are excluded there by name and re-run by Robolectric subclasses in `src/androidUnitTest/.../robolectric/` — keep the two lists in step |
 
 ### Key Tech Versions
 

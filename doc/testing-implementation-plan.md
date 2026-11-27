@@ -5,7 +5,12 @@
 > and the suite is **97 test files — 70 in commonTest** — running **769 tests, 0 failures** on
 > `:shared:desktopTest`. Four classes (`HardwareServiceTest`, `AppSettingsViewModelTest`,
 > `AppViewModelTest`, `CallViewModelTest`) are excluded from the *Android* unit-test task only,
-> because they need an Android runtime; Robolectric would let them run there too (`doc/TODO.md`).
+> because they need an Android runtime.
+>
+> **Update 2026-11-27:** Robolectric now runs all of them there, via `net.jami.robolectric.*`
+> subclasses in `src/androidUnitTest` (`af0e929`, `f845f49`). Seven base classes are excluded by
+> name and re-run that way; `:shared:testDebugUnitTest` is 1116 tests, 0 failures. The account of
+> what it turned up is in `doc/open-tasks-2026-11-24.md` → "Closed 2026-11-27".
 
 ## Context
 

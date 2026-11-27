@@ -253,9 +253,19 @@ Unit tests run against a stub daemon bridge, no real daemon required:
 ```sh
 ./gradlew :shared:allTests          # all targets
 ./gradlew :shared:desktopTest       # JVM only — fastest
+./gradlew :shared:testDebugUnitTest # the same common tests, against the Android actuals
 ```
 
-`:shared:desktopTest` is **769 tests, 0 failures** as of 2026-10-26.
+As of 2026-11-27: `:shared:desktopTest` **1162 tests**, `:shared:testDebugUnitTest` **1116
+tests**, both 0 failures. (`:shared:iosSimulatorArm64Test` was 1133 tests, 0 failures on
+2026-11-25, run on the Mac.)
+
+The Android unit-test task runs the common tests against the Android `actual` implementations, so
+a divergence between the two shows up there rather than on a device. Classes that need a real
+`Context` — a platform service, or just reading a string resource, which on Android goes through
+the module's assets — are excluded from that task by name and re-run under Robolectric by
+subclasses in `shared/src/androidUnitTest/.../robolectric/`. The subclasses inherit the test
+methods, so they are the same assertions against the other set of actuals.
 
 A separate harness drives **real scenarios against the live daemon on USB-connected Android
 devices**, covering account setup, contact requests, and messaging across two physical devices:
